@@ -42,16 +42,18 @@ import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.ComConstants.DefectStatus;
 import com.tencent.devops.common.util.DateTimeUtils;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import jersey.repackaged.com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -153,7 +155,7 @@ public class LintDefectV2Dao
 
         // 把前端传入的小驼峰排序字段转换为小写下划线的数据库字段名
         String sortFieldInDb = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, sortField);
-        List<Sort.Order> sortList = Lists.newArrayList(new Sort.Order(sortType, sortFieldInDb));
+        List<Sort.Order> sortList = new ArrayList<>(Collections.singletonList(new Sort.Order(sortType, sortFieldInDb)));
 
         // 如果按文件名排序，那么还要再按行号排序
         if ("fileName".equals(sortField))
@@ -174,12 +176,12 @@ public class LintDefectV2Dao
                                         Map<String, Boolean> filedMap,
                                         List<String> toolNameSet)
     {
-        Query query = new BasicQuery(new BasicDBObject());
+        Query query = new BasicQuery(new Document());
         if (MapUtils.isNotEmpty(filedMap))
         {
-            BasicDBObject fieldsObj = new BasicDBObject();
+            Document fieldsObj = new Document();
             filedMap.forEach((filed, isNeedReturn) -> fieldsObj.put(filed, isNeedReturn));
-            query = new BasicQuery(new BasicDBObject(), fieldsObj);
+            query = new BasicQuery(new Document(), fieldsObj);
         }
         Criteria criteria = getQueryCriteria(taskId, defectQueryReqVO, defectIdSet, pkgChecker, newDefectJudgeTime, toolNameSet);
         query.addCriteria(criteria);

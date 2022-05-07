@@ -39,7 +39,7 @@ import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -130,7 +130,7 @@ public class BaseDataServiceImpl implements BaseDataService
 
     @Override
     public int deleteById(String id) {
-        baseDataRepository.delete(new ObjectId(id));
+        baseDataRepository.deleteById(new ObjectId(id));
         return 0;
     }
 

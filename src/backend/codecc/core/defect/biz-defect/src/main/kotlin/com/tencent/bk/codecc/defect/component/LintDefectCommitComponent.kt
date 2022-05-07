@@ -39,7 +39,7 @@ class LintDefectCommitComponent @Autowired constructor(
             logger.info("[lint cluster process] cluster process begin! defect cluster info: $defectClusterDTO")
             //1. 从nfs中读取本次上报告警清单
 
-            val aggregateDefectNewInputModel = getCurrentDefectList(inputPathName)
+            val aggregateDefectNewInputModel = getCurrentDefectList(inputFilePath)
             val inputDefects = aggregateDefectNewInputModel.defectList
             val relPathSet = aggregateDefectNewInputModel.relPathSet
             val filePathSet = aggregateDefectNewInputModel.filePathSet

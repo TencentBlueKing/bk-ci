@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.RedisTemplate
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisCluster
+import redis.clients.jedis.params.SetParams
 import java.util.*
 
 class RedisLock(
@@ -111,8 +112,8 @@ class RedisLock(
             val nativeConnection = connection.nativeConnection
             val result =
                     when (nativeConnection) {
-                        is JedisCluster -> nativeConnection.set(key, value, NX, EX, seconds)
-                        is Jedis -> nativeConnection.set(key, value, NX, EX, seconds)
+                        is JedisCluster -> nativeConnection.set(key, value, SetParams.setParams().nx().ex(seconds.toInt()))
+                        is Jedis -> nativeConnection.set(key, value, SetParams.setParams().nx().ex(seconds.toInt()))
                         else -> {
                             logger.warn("Unknown redis connection($nativeConnection)")
                             null
@@ -149,9 +150,9 @@ class RedisLock(
                                 0L
                             }
                         }
-                locked = result == 0
-                result == 1
-            }
+                locked = result == 0L
+                result == 1L
+            }?:false
         } else {
             logger.info("It's already unlock")
         }

@@ -102,7 +102,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -194,7 +194,7 @@ public class CheckerServiceImpl implements CheckerService
     public Map<String, CheckerDetailVO> queryOpenCheckers(long taskId, String toolName, String paramJson, long codeLang)
     {
         List<CheckerDetailVO> checkerDetailEntityList = queryAllChecker(taskId, toolName, paramJson, codeLang);
-        IgnoreCheckerEntity ignoreChecker = ignoreCheckerRepository.findByTaskIdAndToolName(taskId, toolName);
+        IgnoreCheckerEntity ignoreChecker = ignoreCheckerRepository.findFirstByTaskIdAndToolName(taskId, toolName);
 
         Map<String, CheckerDetailVO> opencheckersMap = Maps.newHashMap();
         if (CollectionUtils.isNotEmpty(checkerDetailEntityList))
@@ -395,7 +395,7 @@ public class CheckerServiceImpl implements CheckerService
     @Override
     public boolean updateCheckerConfigParam(Long taskId, String toolName, String checkerKey, String paramValue, String user)
     {
-        CheckerDetailEntity checkerDetailEntity = checkerRepository.findByToolNameAndCheckerKey(toolName, checkerKey);
+        CheckerDetailEntity checkerDetailEntity = checkerRepository.findFirstByToolNameAndCheckerKey(toolName, checkerKey);
         if (Objects.isNull(checkerDetailEntity))
         {
             log.info("the checker detail is null, taskId: {}, checkerKey: {}", taskId, checkerKey);
@@ -407,7 +407,7 @@ public class CheckerServiceImpl implements CheckerService
             throw new CodeCCException(DefectMessageCode.NOT_FIND_CHECKER, new String[]{checkerKey}, null);
         }
 
-        CheckerConfigEntity checkerConfigEntity = checkerConfigRepository.findByTaskIdAndToolNameAndCheckerKey(taskId, toolName, checkerKey);
+        CheckerConfigEntity checkerConfigEntity = checkerConfigRepository.findFirstByTaskIdAndToolNameAndCheckerKey(taskId, toolName, checkerKey);
         if (Objects.nonNull(checkerConfigEntity) && (paramValue.equals(checkerConfigEntity.getParamValue())))
         {
             log.info("The checker parameter configuration is the same and cannot be modified repeatedly, taskId: {}, checkerKey: {}", taskId, checkerKey);
@@ -487,7 +487,7 @@ public class CheckerServiceImpl implements CheckerService
     @Override
     public CheckerDetailVO queryCheckerDetail(String toolName, String checkerKey)
     {
-        CheckerDetailEntity checkerDetailEntity = checkerRepository.findByToolNameAndCheckerKey(toolName, checkerKey);
+        CheckerDetailEntity checkerDetailEntity = checkerRepository.findFirstByToolNameAndCheckerKey(toolName, checkerKey);
         CheckerDetailVO checkerDetailVO = new CheckerDetailVO();
         if (checkerDetailEntity != null)
         {
@@ -1182,7 +1182,7 @@ public class CheckerServiceImpl implements CheckerService
     {
         if (StringUtils.isNotEmpty(checkerSetId) && null != version)
         {
-            CheckerSetEntity checkerSetEntity = checkerSetRepository.findByCheckerSetIdAndVersion(checkerSetId, version);
+            CheckerSetEntity checkerSetEntity = checkerSetRepository.findFirstByCheckerSetIdAndVersion(checkerSetId, version);
             if (CollectionUtils.isNotEmpty(checkerSetEntity.getCheckerProps()))
             {
                 return checkerSetEntity.getCheckerProps().stream().map(CheckerPropsEntity::getCheckerKey).collect(Collectors.toSet());
@@ -1451,7 +1451,7 @@ public class CheckerServiceImpl implements CheckerService
     public boolean updateCheckerByCheckerKey(CheckerDetailVO checkerDetailVO) {
         // 根据ToolName和CheckerKey获取当前一条规则详情信息
         CheckerDetailEntity checkerDetailEntity = checkerRepository
-                .findByToolNameAndCheckerKey(checkerDetailVO.getToolName(), checkerDetailVO.getCheckerKey());
+                .findFirstByToolNameAndCheckerKey(checkerDetailVO.getToolName(), checkerDetailVO.getCheckerKey());
         if (checkerDetailEntity != null) {
             log.info("before: {}", checkerDetailEntity);
 

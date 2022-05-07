@@ -71,12 +71,12 @@ open class JobMessageListenerConfig {
         container.setQueueNames(externalJobMsgQueue.name)
         container.setConcurrentConsumers(5)
         container.setMaxConcurrentConsumers(10)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(10000)
         container.setConsecutiveActiveTrigger(5)
         val adapter = MessageListenerAdapter(jobChangeListener, jobChangeListener::externalJobMsg.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -111,12 +111,12 @@ open class JobMessageListenerConfig {
         container.setQueueNames(internalJobMsgQueue.name)
         container.setConcurrentConsumers(5)
         container.setMaxConcurrentConsumers(10)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(10000)
         container.setConsecutiveActiveTrigger(5)
         val adapter = MessageListenerAdapter(jobChangeListener, jobChangeListener::internalJobMsg.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -152,12 +152,12 @@ open class JobMessageListenerConfig {
         container.setQueueNames(deleteJobMsgQueue.name)
         container.setConcurrentConsumers(2)
         container.setMaxConcurrentConsumers(5)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(10000)
         container.setConsecutiveActiveTrigger(5)
         val adapter = MessageListenerAdapter(jobChangeListener, jobChangeListener::deleteJobMsg.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -193,12 +193,12 @@ open class JobMessageListenerConfig {
         container.setQueueNames(initJobMsgQueue.name)
         container.setConcurrentConsumers(2)
         container.setMaxConcurrentConsumers(5)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(10000)
         container.setConsecutiveActiveTrigger(5)
         val adapter = MessageListenerAdapter(jobChangeListener, jobChangeListener::initJobMsg.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 }

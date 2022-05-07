@@ -184,7 +184,7 @@ public class MetricsServiceImpl implements MetricsService {
 
     private MetricsVO getMerticsByBuildId(TaskDetailVO taskDetail, String buildId) {
         long startTime = System.currentTimeMillis();
-        MetricsEntity metricsEntity = metricsRepository.findByTaskIdAndBuildId(taskDetail.getTaskId(),
+        MetricsEntity metricsEntity = metricsRepository.findFirstByTaskIdAndBuildId(taskDetail.getTaskId(),
                 buildId);
         MetricsVO metricsVO = new MetricsVO();
         if (metricsEntity == null) {
@@ -330,7 +330,7 @@ public class MetricsServiceImpl implements MetricsService {
 
     @Override
     public MetricsVO getMetrics(Long taskId, String buildId) {
-        MetricsEntity metricsEntity = metricsRepository.findByTaskIdAndBuildId(taskId, buildId);
+        MetricsEntity metricsEntity = metricsRepository.findFirstByTaskIdAndBuildId(taskId, buildId);
         MetricsVO metricsVO = new MetricsVO();
         if (metricsEntity == null) {
             return metricsVO;

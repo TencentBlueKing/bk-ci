@@ -40,7 +40,7 @@ class DefectAuthTaskServiceImpl @Autowired constructor(
             }
 
         }
-        return createFrom
+        return createFrom ?: ""
     }
 
     override fun getGongfengProjInfo(taskId: Long): GongfengBaseInfo? {
@@ -65,7 +65,7 @@ class DefectAuthTaskServiceImpl @Autowired constructor(
                 }
             }
         }
-        return pipelineId
+        return pipelineId ?: ""
     }
 
     override fun getGongfengCIProjInfo(gongfengId: Int): GongfengBaseInfo? {

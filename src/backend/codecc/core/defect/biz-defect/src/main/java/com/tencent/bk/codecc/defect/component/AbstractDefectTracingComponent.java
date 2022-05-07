@@ -72,13 +72,14 @@ public abstract class AbstractDefectTracingComponent<T>
         String inputFilePath = scmJsonComponent.index(inputFileName, ScmJsonComponent.AGGREGATE);
         log.info("aggregate inputFilePath : {}", inputFilePath);
         File inputFile = new File(inputFilePath);
-        defectClusterDTO.setInputPathName(inputFilePath);
+        defectClusterDTO.setInputFileName(inputFileName);
+        defectClusterDTO.setInputFilePath(inputFilePath);
 
         try
         {
             //写入输入数据
-            if (!inputFile.exists())
-            {
+            if (!inputFile.exists()) {
+                inputFile.getParentFile().mkdirs();
                 inputFile.createNewFile();
             }
             Set<String> pathSet = new HashSet<>();
@@ -92,7 +93,7 @@ public abstract class AbstractDefectTracingComponent<T>
                             pathSet,
                             inputList);
             Files.write(JsonUtil.INSTANCE.toJson(aggregateDefectNewInputModel).getBytes(), inputFile);
-
+            scmJsonComponent.upload(inputFilePath, inputFileName, ScmJsonComponent.AGGREGATE);
             AsyncRabbitTemplate.RabbitConverterFuture<Boolean> asyncMsgFuture;
             if (ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value().equalsIgnoreCase(taskDetailVO.getCreateFrom()))
             {

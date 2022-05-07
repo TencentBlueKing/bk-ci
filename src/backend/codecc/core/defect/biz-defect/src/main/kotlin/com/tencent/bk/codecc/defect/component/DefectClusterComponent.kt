@@ -13,7 +13,8 @@ import java.io.File
 
 @Component
 class DefectClusterComponent @Autowired constructor(
-    private val toolMetaCacheService: ToolMetaCacheService
+    private val toolMetaCacheService: ToolMetaCacheService,
+    private val scmJsonComponent: ScmJsonComponent
 ){
 
     companion object {
@@ -30,8 +31,9 @@ class DefectClusterComponent @Autowired constructor(
                 File("/opt"), null
             )
             logger.info("execute cluster finish! result : $result")*/
+            scmJsonComponent.getFileIndex(aggregateDispatchFileName.inputFileName,ScmJsonComponent.AGGREGATE)
             ClusterCompareProcess.clusterMethod(aggregateDispatchFileName)
-            val outputFile = File(aggregateDispatchFileName.outputFileName)
+            val outputFile = File(aggregateDispatchFileName.outputFilePath)
             //排除读延时因素
             var i = 0
             while (!outputFile.exists() && i < 3){
@@ -39,7 +41,14 @@ class DefectClusterComponent @Autowired constructor(
                 Thread.sleep(2000L)
                 i++
             }
-            return outputFile.exists()
+            if(outputFile.exists()){
+                scmJsonComponent.upload(
+                    aggregateDispatchFileName.outputFilePath,
+                    aggregateDispatchFileName.outputFileName, ScmJsonComponent.AGGREGATE
+                )
+                return true
+            }
+            return false
         } catch (t: Throwable) {
             logger.error("execute cluster fail! error : ${t.message}", t)
             false
@@ -51,13 +60,15 @@ class DefectClusterComponent @Autowired constructor(
     fun executeClusterNew(defectClusterDTO : DefectClusterDTO) : Boolean{
         return try{
             with(defectClusterDTO){
+                //判断文件是否存在
+                scmJsonComponent.getFileIndex(inputFileName, ScmJsonComponent.AGGREGATE)
                 val toolPattern = toolMetaCacheService.getToolPattern(commitDefectVO.toolName)
                 val processComponent = SpringContextUtil.getBean(AbstractDefectCommitComponent::class.java, "${toolPattern}DefectCommitComponent")
                 processComponent.processCluster(defectClusterDTO)
             }
             true
         } catch (t : Throwable){
-            logger.info("cluster and save defect fail! input file name: ${defectClusterDTO.inputPathName}, error message: ${t.message}")
+            logger.info("cluster and save defect fail! input file path: ${defectClusterDTO.inputFilePath}, error message: ${t.message}")
             false
         }
 

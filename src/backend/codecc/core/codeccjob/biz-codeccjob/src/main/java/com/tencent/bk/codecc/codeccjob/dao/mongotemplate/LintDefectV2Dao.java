@@ -33,6 +33,7 @@ import com.tencent.bk.codecc.defect.vo.DefectAuthorGroupStatisticVO;
 import com.tencent.devops.common.constant.ComConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.BulkOperations;
@@ -110,10 +111,10 @@ public class LintDefectV2Dao
                                                           String toolName,
                                                           Set<Integer> excludeStatusSet,
                                                           Set<String> filterPaths) {
-        BasicDBObject fieldsObj = new BasicDBObject();
+        Document fieldsObj = new Document();
         fieldsObj.put("status", true);
         fieldsObj.put("exclude_time", true);
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        Query query = new BasicQuery(new Document(), fieldsObj);
 
         query.addCriteria(
             Criteria.where("task_id").is(taskId).and("tool_name").is(toolName).and("status").nin(excludeStatusSet));

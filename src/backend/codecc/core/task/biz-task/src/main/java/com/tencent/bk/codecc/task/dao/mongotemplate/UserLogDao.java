@@ -12,8 +12,8 @@
 
 package com.tencent.bk.codecc.task.dao.mongotemplate;
 
-import com.google.common.collect.Lists;
 import com.tencent.bk.codecc.task.model.UserLogInfoEntity;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -22,9 +22,11 @@ import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.SortOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -45,12 +47,8 @@ public class UserLogDao {
      * @return list
      */
     public List<String> findDistinctUserName() {
-        List<String> userNameList = Lists.newArrayList();
-        List distinct = mongoTemplate.getCollection("t_user_log_info").distinct("user_name");
-        for (Object obj : distinct) {
-            userNameList.add((String) obj);
-        }
-        return userNameList;
+        List<String> distinct = mongoTemplate.findDistinct(new Query(),"user_name","t_user_log_info",String.class);
+        return CollectionUtils.isEmpty(distinct)? Collections.emptyList() : distinct;
     }
 
 

@@ -150,12 +150,43 @@ object OkhttpUtils {
         }
     }
 
+    fun doFileStreamPut(url: String, file: File, headers: Map<String, String> = mapOf()): String {
+        val requestBuilder = Request.Builder()
+            .url(url)
+            .put(RequestBody.create(
+                MediaType.parse("application/octet-stream; charset=utf-8"), file))
+        if (headers.isNotEmpty()) {
+            headers.forEach { key, value ->
+                requestBuilder.addHeader(key, value)
+            }
+        }
+        val request = requestBuilder.build()
+        val client = okHttpClient.newBuilder().build()
+        client.newCall(request).execute().use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.warn("request failed, message: ${response.message()}")
+                throw CodeCCException(CommonMessageCode.THIRD_PARTY_SYSTEM_FAIL)
+            }
+            return responseContent
+        }
+    }
 
     fun downloadFile(url: String, destPath: File) {
-        val request = Request.Builder()
-                .url(url)
-                .get()
-                .build()
+        downloadFile(url, destPath, mapOf())
+    }
+
+    fun downloadFile(url: String, destPath: File, headers: Map<String, String> = mapOf()) {
+        val requestBuilder = Request.Builder()
+            .url(url)
+            .get()
+
+        if (headers.isNotEmpty()) {
+            headers.forEach { key, value ->
+                requestBuilder.addHeader(key, value)
+            }
+        }
+        val request = requestBuilder.build()
         okHttpClient.newCall(request).execute().use { response ->
             if (response.code() == HttpStatus.NOT_FOUND.value()) {
                 logger.warn("The file $url is not exist")

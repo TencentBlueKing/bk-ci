@@ -18,6 +18,7 @@ import com.tencent.bk.codecc.defect.model.DefectEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.BulkOperations;
@@ -157,14 +158,14 @@ public class DefectDao {
      */
     public List<DefectEntity> batchQueryDefect(String toolName, Collection<Long> taskIdSet,
                                                Set<String> checkerNameSet, Integer status) {
-        BasicDBObject fieldsObj = new BasicDBObject();
+        Document fieldsObj = new Document();
         fieldsObj.put("stream_name", false);
         fieldsObj.put("defect_instances", false);
         fieldsObj.put("ext_bug_id", false);
         fieldsObj.put("platform_build_id", false);
         fieldsObj.put("platform_project_id", false);
 
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        Query query = new BasicQuery(new Document(), fieldsObj);
         if (StringUtils.isNotBlank(toolName)) {
             query.addCriteria(Criteria.where("tool_name").is(toolName));
         }
@@ -189,7 +190,7 @@ public class DefectDao {
      * @return
      */
     public List<CLOCDefectEntity> batchQueryClocDefect(String toolName, Collection<Long> taskIdSet) {
-        Query query = new BasicQuery(new BasicDBObject());
+        Query query = new BasicQuery(new Document());
         if (StringUtils.isNotBlank(toolName)) {
             query.addCriteria(Criteria.where("tool_name").is(toolName));
         }
