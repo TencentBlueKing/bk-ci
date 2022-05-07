@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -42,6 +43,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.SubPipeline
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.store.api.container.ServiceContainerResource
 import org.slf4j.LoggerFactory
@@ -137,18 +139,26 @@ class ParamFacadeService @Autowired constructor(
         projectId: String,
         codelibFormProperty: BuildFormProperty
     ): BuildFormProperty {
-        val codeAliasName = codeService.listRepository(projectId, codelibFormProperty.scmType!!)
 
-        val aliasNames = if ((!userId.isNullOrBlank()) && codeAliasName.isNotEmpty()) {
+        val aliasNames = if ((!userId.isNullOrBlank())) {
             // 检查代码库的权限， 只返回用户有权限代码库
-            val hasPermissionCodelibs = getPermissionCodelibList(userId!!, projectId)
+            val hasPermissionCodelibs = getPermissionCodelibList(userId, projectId, codelibFormProperty.scmType!!)
             logger.info("[$userId|$projectId] Get the permission code lib list ($hasPermissionCodelibs)")
-            codeAliasName.filter { hasPermissionCodelibs.contains(it.repositoryHashId) }
-                .map { BuildFormValue(it.aliasName, it.aliasName) }
+            hasPermissionCodelibs.map { BuildFormValue(it.aliasName, it.aliasName) }
         } else {
+            val codeAliasName = codeService.listRepository(projectId, codelibFormProperty.scmType!!)
             codeAliasName.map { BuildFormValue(it.aliasName, it.aliasName) }
         }
-        return copyFormProperty(codelibFormProperty, aliasNames)
+        val searchUrl = "/ms/repository/api/user/repositories/$projectId/hasPermissionList?" +
+            "repositoryType=${codelibFormProperty.scmType!!}&&permission=${Permission.LIST.name}" +
+            "&&aliasName={words}&&page=1&&pageSize=1000"
+        val replaceKey = "{words}"
+        return copyFormProperty(
+            property = codelibFormProperty,
+            options = aliasNames,
+            searchUrl = searchUrl,
+            replaceKey = replaceKey
+        )
     }
 
     private fun addContainerTypeProperties(
@@ -261,27 +271,24 @@ class ParamFacadeService @Autowired constructor(
         )
     }
 
-    private fun getPermissionCodelibList(userId: String, projectId: String): List<String> {
-        val watcher = Watcher("getPermissionCodelibList_${userId}_$projectId")
-        val hashIdList = mutableListOf<String>()
-        try {
+    private fun getPermissionCodelibList(userId: String, projectId: String, scmType: ScmType?): List<RepositoryInfo> {
+        val watcher = Watcher("getPermissionCodelibList_${userId}_${projectId}_${scmType?.name}")
+        return try {
             client.get(ServiceRepositoryResource::class).hasPermissionList(
                 userId = userId,
                 projectId = projectId,
                 permission = Permission.LIST,
-                repositoryType = null
-            ).data?.records?.forEach { repo ->
-                if (!repo.repositoryHashId.isNullOrBlank()) {
-                    hashIdList.add(repo.repositoryHashId.toString())
-                }
-            }
+                repositoryType = scmType,
+                page = 1,
+                pageSize = 1000
+            ).data?.records ?: emptyList()
         } catch (e: RuntimeException) {
             logger.warn("[$userId|$projectId] Fail to get the permission code lib list", e)
+            emptyList()
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher, errorThreshold = 4000)
         }
-        return hashIdList
     }
 
     private fun getHasPermissionPipelineList(userId: String?, projectId: String): List<SubPipeline> {
