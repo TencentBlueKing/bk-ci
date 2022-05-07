@@ -149,7 +149,7 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     }
 
     override fun getBuildDetailUrl(): String {
-        val path = getRequestUrl(path = "api/build/builds/detail_url")
+        val path = getRequestUrl(path = "api/build/worker/detail_url")
         val request = buildGet(path)
         val errorMessage = "构建超时结束请求失败"
         val responseContent = try {
