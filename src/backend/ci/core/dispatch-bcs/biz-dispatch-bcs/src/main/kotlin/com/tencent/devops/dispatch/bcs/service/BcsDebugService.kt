@@ -266,7 +266,7 @@ class BcsDebugService @Autowired constructor(
                 env = mapOf(
                     ENV_KEY_PROJECT_ID to projectId,
                     "TERM" to "xterm-256color",
-                    SLAVE_ENVIRONMENT to "Bcs",
+                    SLAVE_ENVIRONMENT to "Bcs"
                 ),
                 command = listOf("/bin/sh", entrypoint)
             )
