@@ -180,37 +180,19 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         )
     }
 
-    override fun createUserPipelinePermissionByUser(
+    override fun createUserPipelinePermission(
         appCode: String?,
         apigwType: String?,
-        accessToken: String,
-        createUser: String,
-        createInfo: PipelinePermissionInfo
+        createUserId: String?,
+        checkManager: Boolean?,
+        createInfo: PipelinePermissionInfo,
     ): Result<Boolean?> {
         // 设置项目对应的consulTag
         apigwProjectService.setProjectRouteType(createInfo.projectId)
         return Result(
-            apigwProjectService.createPipelinePermissionByUser(
-                createUserId = createUser,
-                accessToken = accessToken,
-                createInfo = createInfo
-            )
-        )
-    }
-
-    override fun createUserPipelinePermissionByApp(
-        appCode: String?,
-        apigwType: String?,
-        organizationType: String,
-        organizationId: Long,
-        createInfo: PipelinePermissionInfo
-    ): Result<Boolean?> {
-        // 设置项目对应的consulTag
-        apigwProjectService.setProjectRouteType(createInfo.projectId)
-        return Result(
-            apigwProjectService.createPipelinePermissionByApp(
-                organizationType = organizationType,
-                organizationId = organizationId,
+            apigwProjectService.createPipelinePermission(
+                createUserId = createUserId,
+                checkManager = checkManager ?: true,
                 createInfo = createInfo
             )
         )

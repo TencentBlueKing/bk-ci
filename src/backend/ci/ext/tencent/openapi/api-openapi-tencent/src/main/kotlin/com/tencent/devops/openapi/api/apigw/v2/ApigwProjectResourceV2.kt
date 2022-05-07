@@ -211,39 +211,20 @@ interface ApigwProjectResourceV2 {
     ): Result<Boolean?>
 
     @POST
-    @Path("permissions/byUser")
-    fun createUserPipelinePermissionByUser(
+    @Path("/permissions")
+    fun createUserPipelinePermission(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam("AccessToken", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
-        @ApiParam("执行人Id", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        createUser: String,
-        @ApiParam("添加信息", required = true)
-        createInfo: PipelinePermissionInfo
-    ): Result<Boolean?>
-
-    @POST
-    @Path("/permissions/byApp")
-    fun createUserPipelinePermissionByApp(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @ApiParam("组织类型", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
-        organizationType: String,
-        @ApiParam("组织Id", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
-        organizationId: Long,
+        @ApiParam(value = "执行用户Id", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        createUserId: String?,
+        @ApiParam(value = "是否需要校验管理员", required = false)
+        @HeaderParam("checkManager")
+        checkManager: Boolean?,
         @ApiParam("添加信息", required = true)
         createInfo: PipelinePermissionInfo
     ): Result<Boolean?>
