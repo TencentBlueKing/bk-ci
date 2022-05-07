@@ -289,7 +289,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     override fun createProjectUser(
         createUser: String?,
         checkManager: Boolean,
-        createInfo: ProjectCreateUserDTO,
+        createInfo: ProjectCreateUserDTO
     ): Result<Boolean> {
         return Result(
             projectExtPermissionService.createUser2Project(
@@ -304,12 +304,12 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     }
 
     override fun createPipelinePermission(
-        createUser: String,
+        createUser: String?,
         checkManager: Boolean,
-        createInfo: PipelinePermissionInfo,
+        createInfo: PipelinePermissionInfo
     ): Result<Boolean> {
         return Result(projectLocalService.grantInstancePermission(
-            userId = createUser,
+            userId = createUser ?: "",
             projectId = createInfo.projectId,
             resourceType = createInfo.resourceType,
             resourceCode = createInfo.resourceTypeCode,
@@ -319,34 +319,6 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun createUserPipelinePermissionByUser(
-        createUser: String,
-        createInfo: PipelinePermissionInfo
-    ): Result<Boolean> {
-        return Result(projectLocalService.grantInstancePermission(
-            userId = createUser,
-            projectId = createInfo.projectId,
-            resourceType = createInfo.resourceType,
-            resourceCode = createInfo.resourceTypeCode,
-            permission = createInfo.permission,
-            createUserList = arrayListOf(createInfo.userId)
-        ))
-    }
-
-    override fun createUserPipelinePermissionByApp(
-        createInfo: PipelinePermissionInfo
-    ): Result<Boolean> {
-        // TODO:此处先临时支持流水线的权限
-        return Result(projectLocalService.grantInstancePermission(
-            userId = "",
-            projectId = createInfo.projectId,
-            resourceType = createInfo.resourceType,
-            resourceCode = createInfo.resourceTypeCode,
-            permission = createInfo.permission,
-            createUserList = arrayListOf(createInfo.userId),
-            checkManager = false // 应用态不做管理员校验,信任授权app
-        ))
-    }
     override fun getProjectRoles(
         projectCode: String
     ): Result<List<BKAuthProjectRolesResources>> {

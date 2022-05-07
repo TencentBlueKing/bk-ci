@@ -95,7 +95,7 @@ class ApigwProjectService(
         checkManager: Boolean,
         createInfo: ProjectCreateUserDTO
     ): Boolean? {
-        logger.info("createProjectUser:createUserId[$createUserId]|checkManager$checkManager|createInfo[$createInfo]")
+        logger.info("createProjectUser:$createUserId|$checkManager|$createInfo")
         return client.get(ServiceTxProjectResource::class).createProjectUser(
             createUser = createUserId,
             checkManager = checkManager,
@@ -108,7 +108,7 @@ class ApigwProjectService(
         checkManager: Boolean,
         createInfo: PipelinePermissionInfo
     ): Boolean? {
-        logger.info("createPipelinePermission createUserId[$createUserId]|checkManager$checkManager|createInfo[$createInfo]")
+        logger.info("createPipelinePermission $createUserId|$checkManager|$createInfo")
         return client.get(ServiceTxProjectResource::class).createPipelinePermission(
             createUser = createUserId ?: "",
             checkManager = checkManager,

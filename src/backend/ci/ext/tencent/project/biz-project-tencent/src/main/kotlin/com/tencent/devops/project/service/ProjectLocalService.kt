@@ -76,9 +76,6 @@ import org.springframework.amqp.core.MessageProperties
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.io.File
-import java.io.InputStream
-import java.nio.file.Files
 
 @Service
 @SuppressWarnings("LongParameterList", "TooManyFunctions", "LongMethod", "MagicNumber", "TooGenericExceptionCaught")

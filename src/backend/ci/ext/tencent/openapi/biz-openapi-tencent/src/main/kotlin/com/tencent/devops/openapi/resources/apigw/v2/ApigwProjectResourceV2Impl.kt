@@ -185,7 +185,7 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         apigwType: String?,
         createUserId: String?,
         checkManager: Boolean?,
-        createInfo: PipelinePermissionInfo,
+        createInfo: PipelinePermissionInfo
     ): Result<Boolean?> {
         // 设置项目对应的consulTag
         apigwProjectService.setProjectRouteType(createInfo.projectId)

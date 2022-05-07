@@ -320,29 +320,12 @@ interface ServiceTxProjectResource {
     @POST
     @Path("/create/permission/")
     fun createPipelinePermission(
-        @ApiParam("执行人Id", required = true)
+        @ApiParam("执行人Id", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        createUser: String,
+        createUser: String?,
         @ApiParam("是否校验管理员", required = true)
         @QueryParam("checkManager")
         checkManager: Boolean,
-        @ApiParam("添加信息", required = true)
-        createInfo: PipelinePermissionInfo
-    ): Result<Boolean>
-
-    @POST
-    @Path("/create/permission/byUser")
-    fun createUserPipelinePermissionByUser(
-        @ApiParam("执行人Id", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        createUser: String,
-        @ApiParam("添加信息", required = true)
-        createInfo: PipelinePermissionInfo
-    ): Result<Boolean>
-
-    @POST
-    @Path("/create/permission/byApp")
-    fun createUserPipelinePermissionByApp(
         @ApiParam("添加信息", required = true)
         createInfo: PipelinePermissionInfo
     ): Result<Boolean>
