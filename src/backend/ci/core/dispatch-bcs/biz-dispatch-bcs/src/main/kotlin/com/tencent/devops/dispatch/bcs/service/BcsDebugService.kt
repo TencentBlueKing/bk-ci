@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.dispatch.bcs.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -84,7 +111,11 @@ class BcsDebugService @Autowired constructor(
 
         // 查看当前容器的状态
         val statusResponse = bcsBuilderClient.getBuilderDetail(
-            buildId ?: "", vmSeqId, userId, containerName)
+            buildId = buildId ?: "",
+            vmSeqId = vmSeqId,
+            userId = userId,
+            name = containerName
+        )
         if (statusResponse.isOk()) {
             val status = statusResponse.data!!
 
@@ -127,7 +158,12 @@ class BcsDebugService @Autowired constructor(
         // 设置containerName缓存
         redisUtils.setDebugContainerName(userId, pipelineId, vmSeqId, containerName)
 
-        return BcsDebugResponse(bcsBuilderClient.getWebsocketUrl(projectId, pipelineId, userId, containerName).data!!, containerName)
+        return BcsDebugResponse(bcsBuilderClient.getWebsocketUrl(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            staffName = userId,
+            builderName = containerName
+        ).data!!, containerName)
     }
 
     fun stopDebug(
@@ -137,68 +173,62 @@ class BcsDebugService @Autowired constructor(
         vmSeqId: String,
         needCheckPermission: Boolean = true
     ): Boolean {
-        val debugContainerName = if (containerName.isBlank()) {
+        val debugBuilderName = containerName.ifBlank {
             redisUtils.getDebugContainerName(userId, pipelineId, vmSeqId) ?: ""
-        } else {
-            containerName
         }
 
-        logger.info("$userId stop debug bcs pipelineId: $pipelineId containName: $debugContainerName vmSeqId: $vmSeqId")
+        logger.info("$userId stop debug bcs pipelineId: $pipelineId containName: $debugBuilderName vmSeqId: $vmSeqId")
 
         // 检验权限
         if (needCheckPermission) {
-            checkPermission(userId, pipelineId, debugContainerName, vmSeqId)
+            checkPermission(userId, pipelineId, debugBuilderName, vmSeqId)
         }
 
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            val devcloudBuild =
-                bcsBuildDao.getBuilderStatus(transactionContext, pipelineId, vmSeqId, debugContainerName)
-            if (devcloudBuild != null) {
+            val bcsBuild =
+                bcsBuildDao.getBuilderStatus(transactionContext, pipelineId, vmSeqId, debugBuilderName)
+            if (bcsBuild != null) {
                 // 先更新debug状态
                 bcsBuildDao.updateDebugStatus(
                     transactionContext,
                     pipelineId,
                     vmSeqId,
-                    devcloudBuild.builderName,
+                    bcsBuild.builderName,
                     false
                 )
-                if (devcloudBuild.status == 0 && devcloudBuild.debugStatus) {
+                if (bcsBuild.status == 0 && bcsBuild.debugStatus) {
                     // 关闭容器
                     val taskId = bcsBuilderClient.operateBuilder(
                         buildId = "",
                         vmSeqId = vmSeqId,
                         userId = userId,
-                        name = debugContainerName,
+                        name = debugBuilderName,
                         param = BcsStopBuilderParams()
                     )
-                    val opResult = bcsTaskClient.waitTaskFinish(
-                        userId,
-                        taskId
-                    )
+                    val opResult = bcsTaskClient.waitTaskFinish(userId, taskId)
                     if (opResult.first == BcsTaskStatusEnum.SUCCEEDED) {
-                        logger.info("stopDebug stop dev cloud vm success.")
+                        logger.info("stop debug $debugBuilderName success.")
                     } else {
                         // 停不掉，尝试删除
-                        logger.info("stopDebug stop dev cloud vm failed, msg: ${opResult.second}")
-                        logger.info("stopDebug stop dev cloud vm failed, try to delete it, " +
-                                "containerName:${devcloudBuild.builderName}")
+                        logger.info("stop debug $debugBuilderName failed, msg: ${opResult.second}")
+                        logger.info("stop debug $debugBuilderName failed, try to delete it.")
                         bcsBuilderClient.operateBuilder(
                             buildId = "",
                             vmSeqId = vmSeqId,
                             userId = userId,
-                            name = debugContainerName,
+                            name = debugBuilderName,
                             param = BcsDeleteBuilderParams()
                         )
-                        bcsBuildDao.delete(dslContext, pipelineId, vmSeqId, devcloudBuild.poolNo)
+                        bcsBuildDao.delete(dslContext, pipelineId, vmSeqId, bcsBuild.poolNo)
                     }
                 } else {
-                    logger.info("stopDebug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
-                            "containerName:$debugContainerName 容器没有处于debug或正在占用中")
+                    logger.info("stop debug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
+                            "debugBuilderName:$debugBuilderName 容器没有处于debug或正在占用中")
                 }
             } else {
-                logger.info("stopDebug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
-                        "containerName:$debugContainerName 容器已不存在")
+                logger.info("stop debug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
+                        "debugBuilderName:$debugBuilderName 容器已不存在")
             }
         }
 

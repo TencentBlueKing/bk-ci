@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.dispatch.bcs.actions
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -125,11 +152,13 @@ class BuilderAction @Autowired constructor(
                 val builderName = dispatchMessage.createNewBuilder(containerPool, poolNo)
                 dispatchMessage.startBuilder(builderName, poolNo)
             } else {
-                logger.info("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} start idle builder, builderName: $lastIdleBuilder")
+                logger.info("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} start idle " +
+                        "builder, builderName: $lastIdleBuilder")
                 dispatchMessage.startBuilder(lastIdleBuilder, poolNo)
             }
         } catch (e: BuildFailureException) {
-            logger.error("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} create builder failed. msg:${e.message}. \n$bcsHelpUrl")
+            logger.error("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} create builder " +
+                    "failed. msg:${e.message}. \n$bcsHelpUrl")
             throw BuildFailureException(
                 e.errorType,
                 e.errorCode,
@@ -137,7 +166,8 @@ class BuilderAction @Autowired constructor(
                 (e.message ?: "启动BCS构建容器失败，请联系BCS(蓝鲸容器助手)反馈处理.") + "\n容器构建异常请参考：$bcsHelpUrl"
             )
         } catch (e: Exception) {
-            logger.error("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} create builder failed, msg:${e.message}")
+            logger.error("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} create builder " +
+                    "failed, msg:${e.message}")
             if (e.message.equals("timeout")) {
                 throw BuildFailureException(
                     ErrorCodeEnum.BCS_INTERFACE_TIMEOUT.errorType,
@@ -181,38 +211,7 @@ class BuilderAction @Autowired constructor(
             }
 
             builderNameList.filter { it.second != null }.forEach { (vmSeqId, builderName) ->
-                try {
-                    logger.info(
-                        "[$buildId]|[$vmSeqId]|[$executeCount] stop bcs builder,vmSeqId: " +
-                            "$vmSeqId, builderName:$builderName"
-                    )
-                    val taskId = bcsBuilderClient.operateBuilder(
-                        buildId = buildId,
-                        vmSeqId = vmSeqId,
-                        userId = userId,
-                        name = builderName!!,
-                        param = BcsStopBuilderParams()
-                    )
-                    val (taskStatus, failMsg) = bcsTaskClient.waitTaskFinish(userId, taskId)
-                    if (taskStatus == BcsTaskStatusEnum.SUCCEEDED) {
-                        logger.info("[$buildId]|[$vmSeqId]|[$executeCount] stop bcs builder success.")
-                    } else {
-                        // TODO 告警通知
-                        logger.info(
-                            "[$buildId]|[$vmSeqId]|[$executeCount] stop bcs builder " +
-                                "failed, msg: ${failMsg ?: taskStatus.message}"
-                        )
-                    }
-                } catch (e: Exception) {
-                    logger.error(
-                        "[$buildId]|[$vmSeqId]|[$executeCount] stop bcs builder failed. builderName: " +
-                            "$builderName",
-                        e
-                    )
-                } finally {
-                    // 清除job创建记录
-                    bcsJobRedisUtils.deleteJobCount(buildId, builderName!!)
-                }
+                stopBcsBuilder(vmSeqId, builderName, event)
             }
 
             val builderPoolList = builderPoolNoDao.getBcsBuildLastPoolNo(
@@ -222,7 +221,8 @@ class BuilderAction @Autowired constructor(
                 executeCount = executeCount ?: 1
             )
             builderPoolList.filter { it.second != null }.forEach { (vmSeqId, poolNo) ->
-                logger.info("[$buildId]|[$vmSeqId]|[$executeCount] update status in db,vmSeqId: $vmSeqId, poolNo:$poolNo")
+                logger.info("[$buildId]|[$vmSeqId]|[$executeCount] update status in db,vmSeqId: $vmSeqId, " +
+                        "poolNo:$poolNo")
                 bcsBuildDao.updateStatus(
                     dslContext,
                     pipelineId,
@@ -239,6 +239,47 @@ class BuilderAction @Autowired constructor(
                 vmSeqId = vmSeqId,
                 executeCount = executeCount ?: 1
             )
+        }
+    }
+
+    private fun stopBcsBuilder(
+        vmSeqId: String,
+        builderName: String?,
+        event: PipelineAgentShutdownEvent
+    ) {
+        with(event) {
+            try {
+                logger.info(
+                    "[$buildId]|[$vmSeqId]|[$executeCount] stop bcs builder,vmSeqId: " +
+                            "$vmSeqId, builderName:$builderName"
+                )
+                val taskId = bcsBuilderClient.operateBuilder(
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    userId = userId,
+                    name = builderName!!,
+                    param = BcsStopBuilderParams()
+                )
+                val (taskStatus, failMsg) = bcsTaskClient.waitTaskFinish(userId, taskId)
+                if (taskStatus == BcsTaskStatusEnum.SUCCEEDED) {
+                    logger.info("[$buildId]|[$vmSeqId]|[$executeCount] stop bcs builder success.")
+                } else {
+                    // TODO 告警通知
+                    logger.info(
+                        "[$buildId]|[$vmSeqId]|[$executeCount] stop bcs builder " +
+                                "failed, msg: ${failMsg ?: taskStatus.message}"
+                    )
+                }
+            } catch (e: Exception) {
+                logger.error(
+                    "[$buildId]|[$vmSeqId]|[$executeCount] stop bcs builder failed. builderName: " +
+                            "$builderName",
+                    e
+                )
+            } finally {
+                // 清除job创建记录
+                bcsJobRedisUtils.deleteJobCount(buildId, builderName!!)
+            }
         }
     }
 
@@ -279,7 +320,8 @@ class BuilderAction @Autowired constructor(
             "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo createBuilder, " +
                 "taskId:($bcsTaskId)"
         )
-        logsPrinter.printLogs(this, "下发创建构建机请求成功，builderName: $builderName 等待机器创建...")
+        logsPrinter.printLogs(this, "下发创建构建机请求成功，" +
+                "builderName: $builderName 等待机器创建...")
 
         val (taskStatus, failedMsg) = bcsTaskClient.waitTaskFinish(userId, bcsTaskId)
 
@@ -331,7 +373,8 @@ class BuilderAction @Autowired constructor(
             "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start builder, " +
                 "taskId:($bcsTaskId)"
         )
-        logsPrinter.printLogs(this, "下发启动构建机请求成功，builderName: $builderName 等待机器启动...")
+        logsPrinter.printLogs(this, "下发启动构建机请求成功，" +
+                "builderName: $builderName 等待机器启动...")
         builderPoolNoDao.setBcsBuildLastBuilder(
             dslContext = dslContext,
             buildId = buildId,
@@ -387,6 +430,7 @@ class BuilderAction @Autowired constructor(
         }
     }
 
+    @Suppress("ALL")
     private fun DispatchMessage.getIdleBuilder(): Triple<String?, Int, Boolean> {
         val lock = PipelineBuilderLock(redisOperation, pipelineId, vmSeqId)
         try {
@@ -410,12 +454,65 @@ class BuilderAction @Autowired constructor(
                         disk = threadLocalDisk.get()
                     )
                     return Triple(null, i, true)
-                } else {
-                    if (builderInfo.status == DispatchBuilderStatus.BUSY.status) {
-                        continue
-                    }
+                }
 
-                    if (builderInfo.builderName.isEmpty()) {
+                if (builderInfo.status == DispatchBuilderStatus.BUSY.status) {
+                    continue
+                }
+
+                if (builderInfo.builderName.isEmpty()) {
+                    bcsBuildDao.createOrUpdate(
+                        dslContext = dslContext,
+                        pipelineId = pipelineId,
+                        vmSeqId = vmSeqId,
+                        poolNo = i,
+                        projectId = projectId,
+                        builderName = "",
+                        image = dispatchMessage,
+                        status = DispatchBuilderStatus.BUSY.status,
+                        userId = userId,
+                        cpu = threadLocalCpu.get(),
+                        memory = threadLocalMemory.get(),
+                        disk = threadLocalDisk.get()
+                    )
+                    return Triple(null, i, true)
+                }
+
+                val detailResponse = bcsBuilderClient.getBuilderDetail(
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    userId = userId,
+                    name = builderInfo.builderName
+                )
+
+                if (detailResponse.isOk()) {
+                    if (detailResponse.data!!.readyToStart()) {
+                        var containerChanged = false
+                        // 查看构建性能配置是否变更
+                        if (threadLocalCpu.get() != builderInfo.cpu
+                            || threadLocalDisk.get() != builderInfo.disk
+                            || threadLocalMemory.get() != builderInfo.memory) {
+                            containerChanged = true
+                            logger.info("buildId: $buildId, vmSeqId: $vmSeqId performanceConfig changed.")
+                        }
+
+                        // 镜像是否变更
+                        if (checkImageChanged(builderInfo.images)) {
+                            containerChanged = true
+                        }
+
+                        bcsBuildDao.updateStatus(
+                            dslContext,
+                            pipelineId,
+                            vmSeqId,
+                            i,
+                            DispatchBuilderStatus.BUSY.status
+                        )
+                        return Triple(builderInfo.builderName, i, containerChanged)
+                    }
+                    if (detailResponse.data!!.hasException()) {
+                        clearExceptionBuilder(builderInfo.builderName)
+                        bcsBuildDao.delete(dslContext, pipelineId, vmSeqId, i)
                         bcsBuildDao.createOrUpdate(
                             dslContext = dslContext,
                             pipelineId = pipelineId,
@@ -432,60 +529,10 @@ class BuilderAction @Autowired constructor(
                         )
                         return Triple(null, i, true)
                     }
-
-                    val detailResponse = bcsBuilderClient.getBuilderDetail(
-                        buildId = buildId,
-                        vmSeqId = vmSeqId,
-                        userId = userId,
-                        name = builderInfo.builderName
-                    )
-
-                    if (detailResponse.isOk()) {
-                        if (detailResponse.data!!.readyToStart()) {
-                            var containerChanged = false
-                            // 查看构建性能配置是否变更
-                            if (threadLocalCpu.get() != builderInfo.cpu || threadLocalDisk.get() != builderInfo.disk || threadLocalMemory.get() != builderInfo.memory) {
-                                containerChanged = true
-                                logger.info("buildId: $buildId, vmSeqId: $vmSeqId performanceConfig changed.")
-                            }
-
-                            // 镜像是否变更
-                            if (checkImageChanged(builderInfo.images)) {
-                                containerChanged = true
-                            }
-
-                            bcsBuildDao.updateStatus(
-                                dslContext,
-                                pipelineId,
-                                vmSeqId,
-                                i,
-                                DispatchBuilderStatus.BUSY.status
-                            )
-                            return Triple(builderInfo.builderName, i, containerChanged)
-                        }
-                        if (detailResponse.data!!.hasException()) {
-                            clearExceptionBuilder(builderInfo.builderName)
-                            bcsBuildDao.delete(dslContext, pipelineId, vmSeqId, i)
-                            bcsBuildDao.createOrUpdate(
-                                dslContext = dslContext,
-                                pipelineId = pipelineId,
-                                vmSeqId = vmSeqId,
-                                poolNo = i,
-                                projectId = projectId,
-                                builderName = "",
-                                image = dispatchMessage,
-                                status = DispatchBuilderStatus.BUSY.status,
-                                userId = userId,
-                                cpu = threadLocalCpu.get(),
-                                memory = threadLocalMemory.get(),
-                                disk = threadLocalDisk.get()
-                            )
-                            return Triple(null, i, true)
-                        }
-                    }
-                    // continue to find idle builder
                 }
+                // continue to find idle builder
             }
+
             throw BuildFailureException(
                 ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
                 ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode,
@@ -582,13 +629,16 @@ class BuilderAction @Autowired constructor(
 
         // 兼容旧版本，数据库中存储的非pool结构值
         if (lastContainerPool != null) {
-            if (lastContainerPool.container != containerPool.container || lastContainerPool.credential != containerPool.credential) {
-                logger.info("buildId: $buildId, vmSeqId: $vmSeqId image changed. old image: $lastContainerPool, new image: $containerPool")
+            if (lastContainerPool.container != containerPool.container
+                || lastContainerPool.credential != containerPool.credential) {
+                logger.info("buildId: $buildId, vmSeqId: $vmSeqId image changed. old image: $lastContainerPool, " +
+                        "new image: $containerPool")
                 return true
             }
         } else {
             if (containerPool.container != images && dispatchMessage != images) {
-                logger.info("buildId: $buildId, vmSeqId: $vmSeqId image changed. old image: $images, new image: $dispatchMessage")
+                logger.info("buildId: $buildId, vmSeqId: $vmSeqId image changed. old image: $images, " +
+                        "new image: $dispatchMessage")
                 return true
             }
         }

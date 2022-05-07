@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.dispatch.bcs.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -41,30 +68,17 @@ class BcsTaskClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
-                if (!response.isSuccessful) {
-                    logger.error("Get task status failed, responseCode: ${response.code()}")
-
-                    // 接口请求失败时，sleep 5s，再查一次
-                    Thread.sleep(5 * 1000)
-                    OkhttpUtils.doHttp(request).use {
-                        val retryResponseContent = it.body()!!.string()
-                        if (!it.isSuccessful) {
-                            // 没机会了，只能失败
-                            logger.error("$taskId retry get task status failed, retry responseCode: ${it.code()}")
-                            throw BuildFailureException(
-                                ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
-                                ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                                ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                                "获取BCS TASK状态接口异常：http response code: ${response.code()}"
-                            )
-                        }
-
-                        logger.info("retry response: $retryResponseContent")
-                        return objectMapper.readValue(retryResponseContent)
-                    }
+                if (response.isSuccessful) {
+                    return objectMapper.readValue(responseContent)
                 }
 
-                return objectMapper.readValue(responseContent)
+                logger.error("Get task status failed, responseCode: ${response.code()}")
+                throw BuildFailureException(
+                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
+                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
+                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                    "获取BCS TASK状态接口异常：http response code: ${response.code()}"
+                )
             }
         } catch (e: SocketTimeoutException) {
             // 接口超时失败，重试三次

@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.dispatch.bcs.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -53,25 +80,28 @@ class BcsBuilderClient @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
                 logger.info("[$buildId]|[$vmSeqId] builderName: $name response: $responseContent")
-                if (!response.isSuccessful) {
-                    if (retryTime > 0) {
-                        val retryTimeLocal = retryTime - 1
-                        return getBuilderDetail(buildId, vmSeqId, userId, name, retryTimeLocal)
-                    }
-                    throw BuildFailureException(
-                        ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                        "${ConstantsMessage.TROUBLE_SHOOTING}获取构建机详情接口异常" +
-                            "（Fail to get builder detail, http response code: ${response.code()}"
-                    )
+                if (response.isSuccessful) {
+                    return objectMapper.readValue(responseContent)
                 }
-                return objectMapper.readValue(responseContent)
+
+                if (retryTime > 0) {
+                    val retryTimeLocal = retryTime - 1
+                    return getBuilderDetail(buildId, vmSeqId, userId, name, retryTimeLocal)
+                }
+
+                throw BuildFailureException(
+                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
+                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
+                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                    "${ConstantsMessage.TROUBLE_SHOOTING}获取构建机详情接口异常" +
+                            "（Fail to get builder detail, http response code: ${response.code()}"
+                )
             }
         } catch (e: SocketTimeoutException) {
             // 接口超时失败，重试三次
             if (retryTime > 0) {
-                logger.info("[$buildId]|[$vmSeqId] builderName: $name getBuilderDetail SocketTimeoutException. retry:$retryTime")
+                logger.info("[$buildId]|[$vmSeqId] builderName: $name getBuilderDetail SocketTimeoutException." +
+                        " retry:$retryTime")
                 return getBuilderDetail(buildId, vmSeqId, userId, name, retryTime - 1)
             } else {
                 logger.error("[$buildId]|[$vmSeqId] builderName: $name getBuilderDetail failed.", e)
