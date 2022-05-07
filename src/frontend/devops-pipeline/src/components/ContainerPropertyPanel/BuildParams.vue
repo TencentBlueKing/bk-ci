@@ -509,7 +509,7 @@
             },
 
             getSearchUrl () {
-                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT&page=1&pageSize=200&aliasName={keyword}`
+                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.$route.params.projectId}/hasPermissionList?permission=USE&repositoryType=CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT&page=1&pageSize=200&aliasName={keyword}`
             },
 
             handleChange (params) {
