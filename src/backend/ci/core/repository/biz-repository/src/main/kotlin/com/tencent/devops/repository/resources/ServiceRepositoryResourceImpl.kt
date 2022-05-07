@@ -107,7 +107,9 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         repositoryType: ScmType?,
-        permission: Permission
+        permission: Permission,
+        page: Int?,
+        pageSize: Int?,
     ): Result<Page<RepositoryInfo>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -122,16 +124,18 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
             Permission.EDIT -> AuthPermission.EDIT
             Permission.USE -> AuthPermission.USE
         }
-        val limit = PageUtil.convertPageSizeToSQLLimit(0, 9999)
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 9999
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val result = repositoryService.hasPermissionList(
             userId = userId,
             projectId = projectId,
-            repositoryType = repositoryType,
+            repositoryType = repositoryType?.name,
             authPermission = bkAuthPermission,
             offset = limit.offset,
             limit = limit.limit
         )
-        return Result(Page(0, 9999, result.count, result.records))
+        return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
     override fun listByProjects(projectIds: Set<String>, page: Int?, pageSize: Int?): Result<Page<RepositoryInfo>> {
