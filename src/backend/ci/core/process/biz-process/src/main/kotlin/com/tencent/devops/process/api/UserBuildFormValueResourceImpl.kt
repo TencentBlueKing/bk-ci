@@ -64,7 +64,8 @@ class UserBuildFormValueResourceImpl @Autowired constructor(
                     permission = Permission.LIST,
                     repositoryType = repositoryType,
                     page = 1,
-                    pageSize = 1000
+                    pageSize = 1000,
+                    aliasName = aliasName
                 ).data?.records ?: emptyList()
             } catch (ignore: Exception) {
                 logger.warn("[$userId|$projectId] Fail to get the permission repository list", ignore)
