@@ -464,12 +464,12 @@
                 }
             },
 
-            handleSearchCodeLib (aliasName) {
+            handleSearchCodeLib (search) {
                 const { projectId, codelibTypeConstants } = this
                 this.checkOAuth({
                     projectId,
                     type: codelibTypeConstants,
-                    aliasName
+                    search
                 })
             },
 
