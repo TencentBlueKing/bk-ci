@@ -33,7 +33,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.springframework.beans.factory.annotation.Value
 
 class GitCIPipelineUrlBeanImpl constructor(
@@ -54,9 +53,6 @@ class GitCIPipelineUrlBeanImpl constructor(
     ): String {
         logger.info("[$buildId]|genGitCIBuildDetailUrl| host=$v2GitUrl")
         try {
-            val project = client.getScm(ServiceGitCiResource::class)
-                .getGitCodeProjectInfo(projectCode.removePrefix("git_"))
-                .data ?: return ""
             val urlParam = StringBuffer("")
             if (!position.isNullOrBlank() && !stageId.isNullOrBlank()) {
                 when (position) {
@@ -68,7 +64,7 @@ class GitCIPipelineUrlBeanImpl constructor(
                     }
                 }
             }
-            val url = "$v2GitUrl/pipeline/$pipelineId/detail/$buildId$urlParam#${project.pathWithNamespace}"
+            val url = "$v2GitUrl/pipeline/$pipelineId/detail/$buildId$urlParam#${projectCode.removePrefix("git_")}"
 
             logger.info("[$buildId]|genGitCIBuildDetailUrl| url=$url")
 
