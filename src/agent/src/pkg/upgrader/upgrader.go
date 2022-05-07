@@ -35,10 +35,10 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
-	"github.com/astaxie/beego/logs"
 	"github.com/gofrs/flock"
 )
 
@@ -61,14 +61,14 @@ func DoUpgradeAgent() error {
 
 	daemonChange, _ := checkUpgradeFileChange(config.GetClientDaemonFile())
 	/*
-	#4686
-	 1、kill devopsDaemon进程的行为在 macos 下， 如果当前是由 launchd 启动的（比如mac重启之后，devopsDaemon会由launchd接管启动）
-		当upgrader进程触发kill devopsDaemon时，会导致当前upgrader进程也被系统一并停掉，所以要排除macos的进程停止操作，否则会导致升级中断
+		#4686
+		 1、kill devopsDaemon进程的行为在 macos 下， 如果当前是由 launchd 启动的（比如mac重启之后，devopsDaemon会由launchd接管启动）
+			当upgrader进程触发kill devopsDaemon时，会导致当前upgrader进程也被系统一并停掉，所以要排除macos的进程停止操作，否则会导致升级中断
 
-	 2、windows 因早期daemon缺失 pid文件，在安装多个agent的机器上无法很正确的寻找到正确的进程，并且windows的启动方式较多，早期用户会使用
-	直接双击devopsDaemon.exe文件来启动，以此来保证构建进程能够正确拉起带UI的程序，所以这块无法正确查找到进程，因此暂时也不考虑windows的
-	devopsDaemon.exe文件升级。 windows需要手动升级
-	 */
+		 2、windows 因早期daemon缺失 pid文件，在安装多个agent的机器上无法很正确的寻找到正确的进程，并且windows的启动方式较多，早期用户会使用
+		直接双击devopsDaemon.exe文件来启动，以此来保证构建进程能够正确拉起带UI的程序，所以这块无法正确查找到进程，因此暂时也不考虑windows的
+		devopsDaemon.exe文件升级。 windows需要手动升级
+	*/
 	if daemonChange && systemutil.IsLinux() {
 		tryKillAgentProcess(daemonProcess) // macos 在升级后只能使用手动重启
 	}
@@ -183,7 +183,6 @@ func StartDaemon() error {
 
 	workDir := systemutil.GetWorkDir()
 	startCmd := workDir + "/" + config.GetClientDaemonFile()
-
 
 	if err := fileutil.SetExecutable(startCmd); err != nil {
 		logs.Warn(fmt.Errorf("chmod daemon file failed: %v", err))

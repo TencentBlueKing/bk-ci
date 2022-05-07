@@ -38,8 +38,8 @@ import (
 	"path/filepath"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/astaxie/beego/logs"
 )
 
 type DevopsResult struct {
