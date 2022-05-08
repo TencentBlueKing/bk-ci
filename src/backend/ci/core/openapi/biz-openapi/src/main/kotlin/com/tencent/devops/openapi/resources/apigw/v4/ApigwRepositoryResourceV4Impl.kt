@@ -71,7 +71,7 @@ class ApigwRepositoryResourceV4Impl @Autowired constructor(private val client: C
         return client.get(ServiceRepositoryResource::class).hasPermissionList(
             userId = userId,
             projectId = projectId,
-            repositoryType = repositoryType,
+            repositoryType = repositoryType?.name,
             permission = Permission.USE)
     }
 

@@ -71,8 +71,9 @@ class ApigwRepositoryResourceV3Impl @Autowired constructor(private val client: C
         return client.get(ServiceRepositoryResource::class).hasPermissionList(
             userId = userId,
             projectId = projectId,
-            repositoryType = repositoryType,
-            permission = Permission.USE)
+            repositoryType = repositoryType?.name,
+            permission = Permission.USE
+        )
     }
 
     override fun delete(

@@ -28,7 +28,9 @@
 package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserBuildParametersResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
@@ -40,11 +42,21 @@ import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PROJECT_NAME
+import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.store.pojo.app.BuildEnvParameters
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("UNUSED")
 @RestResource
-class UserBuildParametersResourceImpl : UserBuildParametersResource {
+class UserBuildParametersResourceImpl @Autowired constructor(
+    private val client: Client
+) : UserBuildParametersResource {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(UserBuildParametersResourceImpl::class.java)
+    }
 
     private val result = Result(
         data = listOf(
@@ -65,5 +77,70 @@ class UserBuildParametersResourceImpl : UserBuildParametersResource {
 
     override fun getCommonBuildParams(userId: String): Result<List<BuildEnvParameters>> {
         return result
+    }
+
+    override fun listRepositoryAliasName(
+        userId: String,
+        projectId: String,
+        repositoryType: String?,
+        permission: Permission,
+        aliasName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<BuildFormValue>> {
+        return Result(
+            listRepositoryInfo(
+                userId = userId,
+                projectId = projectId,
+                repositoryType = repositoryType,
+                page = page,
+                pageSize = pageSize,
+                aliasName = aliasName
+            ).map { BuildFormValue(it.aliasName, it.aliasName) }.toList()
+        )
+    }
+
+    @SuppressWarnings("LongParameterList")
+    private fun listRepositoryInfo(
+        userId: String,
+        projectId: String,
+        repositoryType: String?,
+        page: Int?,
+        pageSize: Int?,
+        aliasName: String?
+    ) = try {
+        client.get(ServiceRepositoryResource::class).hasPermissionList(
+            userId = userId,
+            projectId = projectId,
+            permission = Permission.LIST,
+            repositoryType = repositoryType,
+            page = page,
+            pageSize = pageSize,
+            aliasName = aliasName
+        ).data?.records ?: emptyList()
+    } catch (ignore: Exception) {
+        logger.warn("[$userId|$projectId] Fail to get the repository list", ignore)
+        emptyList()
+    }
+
+    override fun listRepositoryHashId(
+        userId: String,
+        projectId: String,
+        repositoryType: String?,
+        permission: Permission,
+        aliasName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<BuildFormValue>> {
+        return Result(
+            listRepositoryInfo(
+                userId = userId,
+                projectId = projectId,
+                repositoryType = repositoryType,
+                page = page,
+                pageSize = pageSize,
+                aliasName = aliasName
+            ).map { BuildFormValue(it.repositoryHashId!!, it.aliasName) }.toList()
+        )
     }
 }
