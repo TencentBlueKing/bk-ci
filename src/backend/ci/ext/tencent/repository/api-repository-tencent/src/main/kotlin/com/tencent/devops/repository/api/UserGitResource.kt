@@ -68,7 +68,7 @@ interface UserGitResource {
         repoHashId: String?,
         @ApiParam(value = "工蜂代码库名字", required = false)
         @QueryParam("name")
-        name: String?
+        search: String? = null
     ): Result<AuthorizeResult>
 
     @ApiOperation("根据用户ID, 通过oauth方式获取项目")
