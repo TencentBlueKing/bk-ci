@@ -33,6 +33,7 @@ import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
@@ -109,4 +110,6 @@ class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
     override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) {
         action.registerCheckRepoTriggerCredentials(repoHook)
     }
+
+    override fun needAddWebhookParams() = action is GitBaseAction
 }
