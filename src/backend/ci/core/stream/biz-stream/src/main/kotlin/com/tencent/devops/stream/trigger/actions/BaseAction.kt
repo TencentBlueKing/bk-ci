@@ -135,4 +135,6 @@ interface BaseAction {
      * 远程仓库校验凭据信息
      */
     fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook)
+
+    fun needAddWebhookParams() = false
 }

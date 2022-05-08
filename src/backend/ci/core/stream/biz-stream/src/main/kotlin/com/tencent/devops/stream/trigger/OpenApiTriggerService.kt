@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.stream.config.StreamGitConfig
@@ -45,7 +46,6 @@ import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamOpenApiAction
 import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamManualEvent
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBuilder
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
@@ -107,7 +107,6 @@ class OpenApiTriggerService @Autowired constructor(
     override fun getStartParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String> {
         return if (!triggerBuildReq.payload.isNullOrBlank()) {
             (action as StreamOpenApiAction).getStartParams(
-                triggerOn = TriggerBuilder.buildManualTriggerOn(action.metaData.streamObjectKind),
                 scmType = streamGitConfig.getScmType()
             )
         } else {
@@ -136,10 +135,12 @@ class OpenApiTriggerService @Autowired constructor(
             )
         }
 
-        val request = action.buildRequestEvent(triggerBuildReq.payload!!) ?: throw CustomException(
-            status = Response.Status.BAD_REQUEST,
-            message = "event invalid"
-        )
+        val request =
+            action.buildRequestEvent(triggerBuildReq.payload!!)?.copy(objectKind = TGitObjectKind.OBJECT_KIND_OPENAPI)
+                ?: throw CustomException(
+                    status = Response.Status.BAD_REQUEST,
+                    message = "event invalid"
+                )
         val id = gitRequestEventDao.saveGitRequest(dslContext, request)
         action.data.context.requestEventId = id
 
@@ -189,10 +190,11 @@ class OpenApiTriggerService @Autowired constructor(
                 )
             )
         )
-        val request = action.buildRequestEvent("") ?: throw CustomException(
-            status = Response.Status.BAD_REQUEST,
-            message = "event invalid"
-        )
+        val request = action.buildRequestEvent("")?.copy(objectKind = TGitObjectKind.OBJECT_KIND_OPENAPI)
+            ?: throw CustomException(
+                status = Response.Status.BAD_REQUEST,
+                message = "event invalid"
+            )
         val id = gitRequestEventDao.saveGitRequest(dslContext, request)
         action.data.context.requestEventId = id
 
