@@ -29,7 +29,6 @@ package com.tencent.devops.stream.common
 
 object CommonVariables {
     const val CI_PIPELINE_NAME = "ci.pipeline_name"
-    const val CI_BUILD_URL = "ci.build_url"
     const val CI_ACTOR = "ci.actor"
     const val CI_REPO = "ci.repo"
     const val CI_REPO_NAME = "ci.repo_name"
