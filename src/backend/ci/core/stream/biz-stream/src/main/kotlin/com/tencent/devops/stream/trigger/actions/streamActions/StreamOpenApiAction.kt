@@ -38,6 +38,7 @@ import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBuilder
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 
@@ -75,10 +76,13 @@ class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
 
     override fun isMatch(triggerOn: TriggerOn) = action.isMatch(triggerOn)
 
-    fun getStartParams(triggerOn: TriggerOn?, scmType: ScmType): Map<String, String> {
+    fun getStartParams(scmType: ScmType): Map<String, String> {
         return when (scmType) {
             ScmType.CODE_GIT -> {
-                TGitActionCommon.getStartParams(action, triggerOn)
+                TGitActionCommon.getStartParams(
+                    action = action,
+                    triggerOn = TriggerBuilder.buildManualTriggerOn(action.metaData.streamObjectKind)
+                )
             }
             else -> TODO("对接其他Git平台时需要补充")
         }

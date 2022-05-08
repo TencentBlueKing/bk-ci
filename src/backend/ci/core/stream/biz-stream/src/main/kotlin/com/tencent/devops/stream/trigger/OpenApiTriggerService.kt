@@ -46,7 +46,6 @@ import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamOpenApiAction
 import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamManualEvent
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBuilder
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
@@ -108,7 +107,6 @@ class OpenApiTriggerService @Autowired constructor(
     override fun getStartParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String> {
         return if (!triggerBuildReq.payload.isNullOrBlank()) {
             (action as StreamOpenApiAction).getStartParams(
-                triggerOn = TriggerBuilder.buildManualTriggerOn(action.metaData.streamObjectKind),
                 scmType = streamGitConfig.getScmType()
             )
         } else {
