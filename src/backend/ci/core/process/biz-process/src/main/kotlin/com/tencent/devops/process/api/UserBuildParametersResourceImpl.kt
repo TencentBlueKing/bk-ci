@@ -43,6 +43,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.store.pojo.app.BuildEnvParameters
 import org.slf4j.LoggerFactory
@@ -131,7 +132,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         aliasName: String?,
         page: Int?,
         pageSize: Int?
-    ): Result<List<BuildFormValue>> {
+    ): Result<List<RepositoryInfo>> {
         return Result(
             listRepositoryInfo(
                 userId = userId,
@@ -140,7 +141,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize,
                 aliasName = aliasName
-            ).map { BuildFormValue(it.repositoryHashId!!, it.aliasName) }.toList()
+            )
         )
     }
 }
