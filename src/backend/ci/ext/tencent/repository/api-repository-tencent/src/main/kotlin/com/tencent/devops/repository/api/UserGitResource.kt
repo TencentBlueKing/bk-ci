@@ -67,7 +67,7 @@ interface UserGitResource {
         @QueryParam("repoHashId")
         repoHashId: String?,
         @ApiParam(value = "工蜂代码库名字", required = false)
-        @QueryParam("name")
+        @QueryParam("search")
         search: String? = null
     ): Result<AuthorizeResult>
 
