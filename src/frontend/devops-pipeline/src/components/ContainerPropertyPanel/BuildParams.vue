@@ -155,7 +155,7 @@
     import validMixins from '../validMixins'
     import draggable from 'vuedraggable'
     import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { STORE_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
+    import { STORE_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, PROCESS_API_URL_PREFIX } from '@/store/constants'
     import {
         isTextareaParam,
         isStringParam,
@@ -509,7 +509,7 @@
             },
 
             getSearchUrl () {
-                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.$route.params.projectId}/hasPermissionList?permission=USE&repositoryType=CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT&page=1&pageSize=200&aliasName={keyword}`
+                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/repository/${this.$route.params.projectId}/hashId?repositoryType=CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT&permission=LIST&aliasName={keyword}&page=1&pageSize=200`
             },
 
             handleChange (params) {
