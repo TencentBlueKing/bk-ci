@@ -85,7 +85,7 @@ interface UserBuildParametersResource {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?,
+        pageSize: Int?
     ): Result<List<BuildFormValue>>
 
     @ApiOperation("构建表单查询代码库hashId列表")
@@ -112,6 +112,6 @@ interface UserBuildParametersResource {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?,
+        pageSize: Int?
     ): Result<List<BuildFormValue>>
 }
