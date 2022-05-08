@@ -156,16 +156,15 @@ class GitService @Autowired constructor(
 
     private val executorService = Executors.newFixedThreadPool(2)
 
-    fun getProject(accessToken: String, userId: String, name: String?): List<Project> {
+    fun getProject(accessToken: String, userId: String, search: String?): List<Project> {
 
         logger.info("Start to get the projects by user $userId with token $accessToken")
 
         val startEpoch = System.currentTimeMillis()
         try {
-            val projectUrl = if (name.isNullOrBlank()) {
-                "${gitConfig.gitApiUrl}/projects?access_token=$accessToken&page=1&per_page=100"
-            } else {
-                "${gitConfig.gitApiUrl}/projects?access_token=$accessToken&page=1&per_page=100&search=$name"
+            var projectUrl = "${gitConfig.gitApiUrl}/projects?access_token=$accessToken&page=1&per_page=100"
+            if (!search.isNullOrBlank()) {
+                projectUrl = "$projectUrl&search=$search"
             }
 
             val request = Request.Builder()
@@ -186,7 +185,7 @@ class GitService @Autowired constructor(
                             obj["name"].asString,
                             obj["name_with_namespace"].asString,
                             obj["ssh_url_to_repo"].asString,
-                            obj["http_url_to_repo"].asString,
+                            obj["https_url_to_repo"].asString,
                             DateTimeUtil.convertLocalDateTimeToTimestamp(
                                 LocalDateTime.parse(lastActivityTime)
                             ) * 1000L
