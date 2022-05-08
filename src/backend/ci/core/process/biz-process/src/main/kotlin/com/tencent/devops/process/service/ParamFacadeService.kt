@@ -149,9 +149,9 @@ class ParamFacadeService @Autowired constructor(
             val codeAliasName = codeService.listRepository(projectId, codelibFormProperty.scmType!!)
             codeAliasName.map { BuildFormValue(it.aliasName, it.aliasName) }
         }
-        val searchUrl = "/ms/process/api/user/buildForm/repository/$projectId/hasPermissionList?" +
-            "repositoryType=${codelibFormProperty.scmType!!}&&permission=${Permission.LIST.name}" +
-            "&&aliasName={words}&&page=1&&pageSize=500"
+        val searchUrl = "/ms/process/api/user/buildParam/repository/$projectId/aliasName?" +
+            "repositoryType=${codelibFormProperty.scmType!!}&permission=${Permission.LIST.name}" +
+            "&aliasName={words}&&page=1&&pageSize=100"
         val replaceKey = "{words}"
         return copyFormProperty(
             property = codelibFormProperty,
@@ -278,9 +278,9 @@ class ParamFacadeService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 permission = Permission.LIST,
-                repositoryType = scmType,
+                repositoryType = scmType?.name,
                 page = 1,
-                pageSize = 500
+                pageSize = 100
             ).data?.records ?: emptyList()
         } catch (e: RuntimeException) {
             logger.warn("[$userId|$projectId] Fail to get the permission code lib list", e)

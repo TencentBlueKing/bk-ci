@@ -291,16 +291,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             }
             is GithubRepository -> {
                 val token = getGithubAccessToken(repo.userName)
-                return client.get(ServiceScmOauthResource::class).listBranches(
+                return client.get(ServiceGithubResource::class).listBranches(
                     projectName = repo.projectName,
-                    url = repo.url,
-                    type = ScmType.GITHUB,
-                    privateKey = null,
-                    passPhrase = null,
-                    token = token,
-                    region = null,
-                    userName = repo.userName,
-                    search = search
+                    accessToken = token
                 )
             }
             is CodeTGitRepository -> {
@@ -308,7 +301,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 return client.get(ServiceScmResource::class).listBranches(
                     projectName = repo.projectName,
                     url = repo.url,
-                    type = ScmType.CODE_GIT,
+                    type = ScmType.CODE_TGIT,
                     privateKey = null,
                     passPhrase = null,
                     token = credInfo.privateKey,
@@ -367,6 +360,24 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     projectName = repo.projectName,
                     url = repo.url,
                     type = ScmType.CODE_GITLAB,
+                    token = credInfo.privateKey,
+                    userName = credInfo.username,
+                    search = search
+                )
+            }
+            is GithubRepository -> {
+                val token = getGithubAccessToken(repo.userName)
+                return client.get(ServiceGithubResource::class).listTags(
+                    projectName = repo.projectName,
+                    accessToken = token
+                )
+            }
+            is CodeTGitRepository -> {
+                val credInfo = getCredential(projectId, repo)
+                return client.get(ServiceScmResource::class).listTags(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = ScmType.CODE_GIT,
                     token = credInfo.privateKey,
                     userName = credInfo.username,
                     search = search

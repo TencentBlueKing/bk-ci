@@ -106,7 +106,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
     override fun hasPermissionList(
         userId: String,
         projectId: String,
-        repositoryType: ScmType?,
+        repositoryType: String?,
         permission: Permission,
         page: Int?,
         pageSize: Int?,
@@ -131,7 +131,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         val result = repositoryService.hasPermissionList(
             userId = userId,
             projectId = projectId,
-            repositoryType = repositoryType?.name,
+            repositoryType = repositoryType,
             authPermission = bkAuthPermission,
             offset = limit.offset,
             limit = limit.limit,
