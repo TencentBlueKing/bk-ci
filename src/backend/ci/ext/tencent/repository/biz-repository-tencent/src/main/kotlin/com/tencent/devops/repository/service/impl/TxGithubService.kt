@@ -133,4 +133,18 @@ class TxGithubService @Autowired constructor(
             filePath = filePath
         ).data ?: ""
     }
+
+    override fun listBranches(token: String, projectName: String): List<String> {
+        return client.get(ServiceGithubResource::class).listBranches(
+            accessToken = token,
+            projectName = projectName
+        ).data!!
+    }
+
+    override fun listTags(token: String, projectName: String): List<String> {
+        return client.get(ServiceGithubResource::class).listTags(
+            accessToken = token,
+            projectName = projectName
+        ).data!!
+    }
 }
