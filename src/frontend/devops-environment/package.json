@@ -5,7 +5,7 @@
   "dependencies": {
     "clipboard": "^1.7.1",
     "vee-validate": "^2.0.3",
-    "vue-echarts": "^3.0.9",
+    "vue-echarts": "^6.0.2",
     "vue-file-upload": "^0.1.12",
     "vuex-class": "^0.3.0"
   },
