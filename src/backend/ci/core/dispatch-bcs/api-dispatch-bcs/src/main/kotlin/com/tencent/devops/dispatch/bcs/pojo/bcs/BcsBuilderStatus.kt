@@ -82,7 +82,7 @@ fun BcsBuilderStatus.hasException(): Boolean {
 fun BcsBuilderStatus.canReStart(): Boolean {
     return when (status) {
         BcsBuilderStatusEnum.READY_TO_RUN.realName,
-        BcsBuilderStatusEnum.STOP_FAILED.realName,
+        BcsBuilderStatusEnum.STOP_FAILED.realName
         -> true
         else -> false
     }
