@@ -156,7 +156,7 @@ class StreamHistoryService @Autowired constructor(
                 StreamBuildHistory(
                     displayName = pipeline.displayName,
                     pipelineId = pipeline.pipelineId,
-                    gitRequestEvent = StreamGitRequestEventReq(realEvent),
+                    gitRequestEvent = StreamGitRequestEventReq(realEvent, conf.homepage),
                     buildHistory = buildHistory,
                     reason = StreamTriggerMessageUtils.getEventMessageTitle(realEvent)
                 )
