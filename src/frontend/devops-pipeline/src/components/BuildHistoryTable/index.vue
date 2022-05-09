@@ -222,27 +222,31 @@
                     let shortUrl = ''
                     const appVersions = []
                     let sumSize = 0
-                    const artifactories = hasArtifactories ? item.artifactList.map(artifactory => {
-                        if (artifactory.shortUrl) {
-                            shortUrl = artifactory.shortUrl
-                        }
-                        if (artifactory.appVersion) {
-                            appVersions.push(artifactory.appVersion)
-                        }
-                        sumSize += artifactory.size
-                        return {
-                            ...artifactory,
-                            name: artifactory.name,
-                            size: convertFileSize(artifactory.size, 'B')
-                        }
-                    }) : []
+                    const artifactories = hasArtifactories
+                        ? item.artifactList.map(artifactory => {
+                            if (artifactory.shortUrl) {
+                                shortUrl = artifactory.shortUrl
+                            }
+                            if (artifactory.appVersion) {
+                                appVersions.push(artifactory.appVersion)
+                            }
+                            sumSize += artifactory.size
+                            return {
+                                ...artifactory,
+                                name: artifactory.name,
+                                size: convertFileSize(artifactory.size, 'B')
+                            }
+                        })
+                        : []
                     const needShowAll = hasArtifactories && item.artifactList.length > 11 && !this.isShowAll
-                    const stageStatus = item.stageStatus ? item.stageStatus.slice(1).map(stage => ({
-                        ...stage,
-                        tooltip: this.getStageTooltip(stage),
-                        icon: this.statusIconMap[stage.status] || 'circle',
-                        statusCls: `${stage.status}${stage.status === 'RUNNING' ? ' spin-icon' : ''}`
-                    })) : null
+                    const stageStatus = item.stageStatus
+                        ? item.stageStatus.slice(1).map(stage => ({
+                            ...stage,
+                            tooltip: this.getStageTooltip(stage),
+                            icon: this.statusIconMap[stage.status] || 'circle',
+                            statusCls: `${stage.status}${stage.status === 'RUNNING' ? ' spin-icon' : ''}`
+                        }))
+                        : null
                     return {
                         ...item,
                         index,
@@ -286,6 +290,7 @@
                             this.BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal
                         }
                     }
+                    return item
                 })
                 return this.BUILD_HISTORY_TABLE_COLUMNS_MAP
             }
@@ -779,7 +784,7 @@
                     @include ellipsis();
                 }
                 .artifact-size {
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                     margin-left: 30px;
                 }
                 .download-link {

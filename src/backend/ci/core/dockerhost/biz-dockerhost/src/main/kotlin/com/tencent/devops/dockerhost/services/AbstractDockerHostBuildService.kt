@@ -46,7 +46,9 @@ import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
+import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
+import java.io.File
 
 abstract class AbstractDockerHostBuildService constructor(
     private val dockerHostConfig: DockerHostConfig,
@@ -229,10 +231,38 @@ abstract class AbstractDockerHostBuildService constructor(
         }
     }
 
-    fun getWorkspace(dockerHostBuildInfo: DockerHostBuildInfo): String {
-        with(dockerHostBuildInfo) {
-            return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
+    fun afterOverlayFs(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: Int,
+        poolNo: Int
+    ) {
+        try {
+            val qpcGitProjectList = dockerHostBuildApi.getQpcGitProjectList(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId.toString(),
+                poolNo = poolNo
+            )?.data
+
+            // 针对overlayfs白名单项目清理工作空间
+            if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
+                val upperDir = "${dockerHostConfig.hostPathWorkspace}/$buildId/${getTailPath(vmSeqId, poolNo)}"
+                FileUtils.deleteQuietly(File(upperDir))
+            }
+        } catch (e: Throwable) {
+            logger.info("afterOverlayFs $buildId $vmSeqId $poolNo error: ${e.message}")
         }
+    }
+
+    fun getWorkspace(
+        pipelineId: String,
+        vmSeqId: Int,
+        poolNo: Int,
+        path: String
+    ): String {
+        return "$path/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
     private fun getTailPath(vmSeqId: Int, poolNo: Int): String {

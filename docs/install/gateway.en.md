@@ -4,7 +4,7 @@ The gateway service of BlueKing ci is based on Nginx and OpenResty. It is deploy
 
 ## System Requirement
 
-- OpenResty 1.13.6+
+- OpenResty 1.17.8.2+
 
 ## Installation Guide
 
@@ -17,31 +17,31 @@ Here the CentOS 7.x environment is used for illustration purpose.
 Before installing and deploying the gateway, upload relevant installation and deployment packages to the corresponding servers. Below are files to upload.
 |   File Name   |   File Description     |
 | ------------ | ---------------- |
-|   [openresty-openssl-1.1.0h-3.el7.centos.x86_64.rpm](https://openresty.org/package/centos/7/x86_64/openresty-openssl-1.1.0h-3.el7.centos.x86_64.rpm)   |  OpenSSL package OpenResty depends on    |
-|   [openresty-pcre-8.42-1.el7.centos.x86_64.rpm](https://openresty.org/package/centos/7/x86_64/openresty-pcre-8.42-1.el7.centos.x86_64.rpm)   | PCRE package OpenResty depends on |
+|   [openresty-openssl111-1.1.1g-3.el7.centos.x86_64.rpm](https://openresty.org/package/centos/7/x86_64/openresty-openssl111-1.1.1g-3.el7.centos.x86_64.rpm)   |  OpenSSL package OpenResty depends on    |
+|   [openresty-pcre-8.44-1.el7.x86_64.rpm](https://openresty.org/package/centos/7/x86_64/openresty-pcre-8.44-1.el7.x86_64.rpm)   | PCRE package OpenResty depends on |
 |   [openresty-zlib-1.2.11-3.el7.centos.x86_64.rpm](https://openresty.org/package/centos/7/x86_64/openresty-zlib-1.2.11-3.el7.centos.x86_64.rpm)   |  zlib package OpenResty depends on |
-|   [openresty-1.13.6.2-1.el7.centos.x86_64.rpm](https://openresty.org/package/centos/7/x86_64/openresty-1.13.6.2-1.el7.centos.x86_64.rpm)   |  OpenResty installation package |
+|   [openresty-1.17.8.2-1.el7.x86_64.rpm](https://openresty.org/package/centos/7/x86_64/openresty-1.17.8.2-1.el7.x86_64.rpm)   |  OpenResty installation package |
 
 - Install OpenResty
 
-Since the gateway deployment depends on Lua scripts for authentication and forwarding, you need to install OpenResty 1.13.6.2. Attached are RPM installation packages. Below are installation commands.
+Since the gateway deployment depends on Lua scripts for authentication and forwarding, you need to install OpenResty 1.17.8.2+. Attached are RPM installation packages. Below are installation commands.
 
 ```shell
 # Modify the permission of installation packages
-chmod 644 openresty-1.13.6.2-1.el7.centos.x86_64.rpm
-chmod 644 openresty-openssl-1.1.0h-3.el7.centos.x86_64.rpm
-chmod 644 openresty-pcre-8.42-1.el7.centos.x86_64.rpm
+chmod 644 openresty-1.17.8.2-1.el7.x86_64.rpm
+chmod 644 openresty-openssl111-1.1.1g-3.el7.x86_64.rpm
+chmod 644 openresty-pcre-8.44-1.el7.x86_64.rpm
 chmod 644 openresty-zlib-1.2.11-3.el7.centos.x86_64.rpm
 # Start installation
-rpm -ivh openresty-pcre-8.42-1.el7.centos.x86_64.rpm
+rpm -ivh openresty-pcre-8.44-1.el7.x86_64.rpm
 rpm -ivh openresty-zlib-1.2.11-3.el7.centos.x86_64.rpm
-rpm -ivh openresty-openssl-1.1.0h-3.el7.centos.x86_64.rpm  --replacefiles
-rpm -ivh openresty-1.13.6.2-1.el7.centos.x86_64.rpm
+rpm -ivh openresty-openssl111-1.1.1g-3.el7.x86_64.rpm  --replacefiles
+rpm -ivh openresty-1.17.8.2-1.el7.x86_64.rpm
 # Check installation status
 cd /usr/local/openresty/nginx && ./sbin/nginx -v
 ```
 
-`"nginx version: openresty/1.13.6.2"` means the installation is successful.
+`"nginx version: openresty/1.17.8.2"` means the installation is successful.
 
 ### Deploy and Start bk-ci Gateway
 

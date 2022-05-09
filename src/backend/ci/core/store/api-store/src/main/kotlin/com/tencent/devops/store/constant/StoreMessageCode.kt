@@ -55,7 +55,8 @@ object StoreMessageCode {
     const val USER_QUERY_PROJECT_PERMISSION_IS_INVALID = "2120002" // 研发商店：没有项目的查看权限
     const val USER_CREATE_REPOSITORY_FAIL = "2120003" // 研发商店：创建代码库失败，请稍后再试
     const val USER_INSTALL_ATOM_CODE_IS_INVALID = "2120004" // 研发商店：安装插件失败
-    const val USER_REPOSITORY_PULL_TASK_JSON_FILE_FAIL = "2120005" // 研发商店：拉取插件配置文件[task.json]失败,请确认OAUTH授权、文件是否上传代码库等
+    // 研发商店：从[{0}]分支拉取插件配置文件[task.json]失败,请确认是否OAUTH授权、文件是否正确上传代码库等
+    const val USER_REPOSITORY_PULL_TASK_JSON_FILE_FAIL = "2120005"
     const val USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL = "2120006" // 研发商店：插件配置文件[task.json]{0}字段不能为空
     const val USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_MATCH = "2120007" // 研发商店：插件配置文件[task.json]{0}字段与工作台录入的不一致
     const val USER_ATOM_RELEASE_STEPS_ERROR = "2120008" // 研发商店：插件发布流程状态变更顺序不正确
@@ -68,7 +69,8 @@ object StoreMessageCode {
     const val USER_ATOM_VISIBLE_DEPT_IS_INVALID = "2120015" // 研发商店：你不在{0}插件的可见范围之内，请联系插件发布者
     const val USER_COMPONENT_ADMIN_COUNT_ERROR = "2120016" // 研发商店：管理员个数不能少于1个
     const val USER_ATOM_QUALITY_CONF_INVALID = "2120018" // 研发商店：插件配置文件[quality.json]{0}格式不正确，请检查
-    const val USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL = "2120019" // 研发商店：拉取插件配置[quality.json]失败,请确认文件是否正确上传至代码库
+    // 研发商店：从[{0}]分支拉取插件配置文件[quality.json失败,请确认是否OAUTH授权、文件是否正确上传代码库等
+    const val USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL = "2120019"
     const val USER_ATOM_USED = "2120020" // 研发商店：插件{0}已被项目{1}下的流水线使用，不可以卸载
     const val USER_ATOM_UNINSTALL_REASON_USED = "2120021" // 研发商店：插件卸载原因{0}已被使用，不能删除。建议禁用
     const val USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE = "2120022" // 研发商店：插件{0}已发布到商店，请先下架再删除
@@ -135,4 +137,5 @@ object StoreMessageCode {
     const val SENSITIVE_API_PASSED_IS_NOT_ALLOW_CANCEL = "2120910" // 研发商店：敏感API已经审批通过不能取消
     const val SENSITIVE_API_APPROVED_IS_NOT_ALLOW_PASS = "2120911" // 研发商店：敏感API已经取消不能审批
     const val SENSITIVE_API_NOT_EXIST = "2120912" // 研发商店：敏感API[{0}]不存在
+    const val USER_HIS_VERSION_UPGRADE_INVALID = "2120913" // 研发商店：当前发布类型下仅能新增历史大版本下的小版本，请修改版本号或者发布类型
 }

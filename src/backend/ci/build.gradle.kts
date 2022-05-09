@@ -1,29 +1,16 @@
-import com.tencent.devops.utils.findPropertyOrNull
-
 plugins {
-    id("com.tencent.devops.boot")
+    id("com.tencent.devops.boot") version "0.0.5"
     detektCheck
 }
 
 allprojects {
     apply(plugin = "com.tencent.devops.boot")
 
-    // 特殊的maven仓库
-    project.findPropertyOrNull("mavenRepoUrl")?.let {
-        project.repositories {
-            all {
-                if (this is MavenArtifactRepository && this.name == "TencentMirrors") {
-                    this.setUrl(it)
-                }
-            }
-        }
-    }
-
     // 包路径
     group = "com.tencent.bk.devops.ci"
     // 版本
-    version = (System.getProperty("ci_version") ?: "1.6.0") +
-        if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
+    version = (System.getProperty("ci_version") ?: "1.9.0") +
+            if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
 
     // 版本管理
     dependencyManagement {
@@ -32,9 +19,12 @@ allprojects {
             dependency("org.mockito:mockito-all:${Versions.Mockito}")
             dependency("com.nhaarman:mockito-kotlin-kt1.1:${Versions.MockitoKt}")
             dependency("javax.ws.rs:javax.ws.rs-api:${Versions.Jaxrs}")
+            dependency("org.bouncycastle:bcpkix-jdk15on:${Versions.BouncyCastle}")
             dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
             dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
+            dependency("com.networknt:json-schema-validator:${Versions.YamlSchema}")
             dependency("org.apache.commons:commons-exec:${Versions.CommonExec}")
+            dependency("org.apache.commons:commons-text:${Versions.CommonText}")
             dependency("com.vdurmont:emoji-java:${Versions.EmojiJava}")
             dependency("org.apache.lucene:lucene-core:${Versions.Lucene}")
             dependency("org.apache.commons:commons-csv:${Versions.CommonCsv}")
@@ -44,10 +34,8 @@ allprojects {
             dependency("org.apache.commons:commons-collections4:${Versions.CommonCollections4}")
             dependency("net.coobird:thumbnailator:${Versions.Thumbnailator}")
             dependency("com.vmware:vijava:${Versions.Vmware}")
-            dependency("com.tencent.devops.ci-plugins:sigar:${Versions.SigarPlugin}")
             dependency("net.sf.json-lib:json-lib:${Versions.JsonLib}")
             dependency("com.googlecode.plist:dd-plist:${Versions.DdPlist}")
-            dependency("com.github.oshi:oshi-core:${Versions.OshiCore}")
             dependency("net.dongliu:apk-parser:${Versions.ApkParser}")
             dependency("dom4j:dom4j:${Versions.Dom4j}")
             dependency("org.apache.ant:ant:${Versions.Ant}")
@@ -60,12 +48,9 @@ allprojects {
             dependency("org.elasticsearch:elasticsearch:${Versions.Elasticsearch}")
             dependency("org.elasticsearch.client:elasticsearch-rest-client:${Versions.Elasticsearch}")
             dependency("org.elasticsearch.client:elasticsearch-rest-high-level-client:${Versions.Elasticsearch}")
-            dependencySet("io.github.openfeign:${Versions.Feign}") {
-                entry("feign-core")
-                entry("feign-jackson")
-                entry("feign-jaxrs")
-                entry("feign-okhttp")
-            }
+            dependency("org.apache.pulsar:pulsar-client:${Versions.Pulsar}")
+            dependency("com.github.oshi:oshi-core:${Versions.Oshi}")
+            dependency("com.tencent.devops.leaf:leaf-boot-starter:${Versions.Leaf}")
             dependencySet("io.swagger:${Versions.Swagger}") {
                 entry("swagger-annotations")
                 entry("swagger-jersey2-jaxrs")
@@ -86,6 +71,7 @@ allprojects {
             dependencySet("com.github.taptap:${Versions.PinyinPlus}") {
                 entry("pinyin-plus")
             }
+            dependency("com.perforce:p4java:${Versions.p4}")
         }
     }
 
@@ -95,7 +81,6 @@ allprojects {
     }
     // 兼容 Log4j
     configurations.forEach {
-        it.exclude("org.springframework.boot", "spring-boot-starter-logging")
         it.exclude("org.springframework.boot", "spring-boot-starter-tomcat")
         it.exclude("org.apache.tomcat", "tomcat-jdbc")
         it.exclude("org.slf4j", "log4j-over-slf4j")

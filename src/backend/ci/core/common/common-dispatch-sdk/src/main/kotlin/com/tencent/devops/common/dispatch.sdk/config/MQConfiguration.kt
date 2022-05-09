@@ -107,11 +107,41 @@ class MQConfiguration @Autowired constructor() {
     }
 
     /**
+     * 构建审核步骤广播交换机
+     */
+    @Bean
+    fun pipelineBuildReviewFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    /**
+     * 构建红线检查步骤广播交换机
+     */
+    @Bean
+    fun pipelineBuildQualityCheckFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_QUALITY_CHECK_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    /**
      * 构建结束广播交换机
      */
     @Bean
     fun pipelineBuildFinishFanoutExchange(): FanoutExchange {
         val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    /**
+     * 构建流水线取消广播交换机
+     */
+    @Bean
+    fun pipelineCancelFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT, true, false)
         fanoutExchange.isDelayed = true
         return fanoutExchange
     }
@@ -158,6 +188,9 @@ class MQConfiguration @Autowired constructor() {
         return directExchange
     }
 
+    /**
+     * 启动构建队列
+     */
     @Bean
     fun buildAgentStartQueue(@Autowired buildListener: BuildListener): Queue {
         return Queue(ROUTE_AGENT_STARTUP + getStartQueue(buildListener))
@@ -192,6 +225,45 @@ class MQConfiguration @Autowired constructor() {
             consecutiveActiveTrigger = 5,
             concurrency = 60,
             maxConcurrency = 100,
+            adapter = adapter,
+            prefetchCount = 1
+        )
+    }
+
+    /**
+     * 啓動构建降级队列
+     */
+    @Bean
+    fun buildAgentStartDemoteQueue(@Autowired buildListener: BuildListener): Queue {
+        return Queue(ROUTE_AGENT_STARTUP + getStartDemoteQueue(buildListener))
+    }
+
+    @Bean
+    fun buildAgentStartDemoteQueueBind(
+        @Autowired buildAgentStartDemoteQueue: Queue,
+        @Autowired exchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(buildAgentStartDemoteQueue).to(exchange).with(buildAgentStartDemoteQueue.name)
+    }
+
+    @Bean
+    fun startDemoteListener(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired buildAgentStartDemoteQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired buildListener: BuildListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val adapter = MessageListenerAdapter(buildListener, buildListener::handleStartDemoteMessage.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = buildAgentStartDemoteQueue,
+            rabbitAdmin = rabbitAdmin,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 10,
+            maxConcurrency = 20,
             adapter = adapter,
             prefetchCount = 1
         )
@@ -244,6 +316,15 @@ class MQConfiguration @Autowired constructor() {
             throw RuntimeException("The startup queue is blank")
         }
         return startupQueue
+    }
+
+    private fun getStartDemoteQueue(buildListener: BuildListener): String {
+        val startupDemoteQueue = buildListener.getStartupDemoteQueue()
+        logger.info("Get the startupDemoteQueue ($startupDemoteQueue)")
+        if (startupDemoteQueue.isBlank()) {
+            throw RuntimeException("The startupDemoteQueue is blank")
+        }
+        return startupDemoteQueue
     }
 
     private fun getShutdownQueue(buildListener: BuildListener): String {

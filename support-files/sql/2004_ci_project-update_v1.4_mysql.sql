@@ -16,7 +16,7 @@ BEGIN
                         AND TABLE_NAME = 'T_PROJECT'
                         AND COLUMN_NAME = 'router_tag') THEN
         ALTER TABLE T_PROJECT
-            ADD COLUMN `router_tag` VARCHAR(32);
+            ADD COLUMN `router_tag` VARCHAR(32) COMMENT '网关路由tags';
     END IF;
 
     COMMIT;

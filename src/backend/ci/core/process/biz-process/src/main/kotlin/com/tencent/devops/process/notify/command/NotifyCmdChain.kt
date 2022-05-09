@@ -27,18 +27,13 @@
 
 package com.tencent.devops.process.notify.command
 
+import com.tencent.devops.process.command.Cmd
 import com.tencent.devops.process.command.CmdChain
 
 class NotifyCmdChain(private val commandList: List<NotifyCmd>) : CmdChain<BuildNotifyContext> {
 
-    override fun doCommand(commandContextBuild: BuildNotifyContext) {
-        if (commandContextBuild.cmdFlowSeq < 0) { // 校正
-            commandContextBuild.cmdFlowSeq = 0
-        }
+    override fun nextCommand(commandContext: BuildNotifyContext): Cmd<BuildNotifyContext>? {
         // 每次调用，都增1，走向下一条命令链
-        commandList.getOrNull(commandContextBuild.cmdFlowSeq++)?.doExecute(
-            commandContext = commandContextBuild,
-            chain = this
-        )
+        return commandList.getOrNull(commandContext.cmdFlowSeq++)
     }
 }

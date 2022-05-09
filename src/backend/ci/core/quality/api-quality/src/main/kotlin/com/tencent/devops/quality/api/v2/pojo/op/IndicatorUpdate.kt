@@ -36,33 +36,33 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("质量红线-指标配置修改信息")
 data class IndicatorUpdate(
     @ApiModelProperty("原子的ClassType")
-    val elementType: String?,
+    val elementType: String? = null,
     @ApiModelProperty("原子名称")
-    val elementName: String?,
+    val elementName: String? = null,
     @ApiModelProperty("工具/原子子类")
-    val elementDetail: String?,
+    val elementDetail: String? = null,
     @ApiModelProperty("工具/原子版本")
-    val elementVersion: String?,
+    val elementVersion: String? = null,
     @ApiModelProperty("指标英文名")
-    val enName: String?,
+    val enName: String? = null,
     @ApiModelProperty("指标中文名")
-    val cnName: String?,
+    val cnName: String? = null,
     @ApiModelProperty("指标所包含基础数据")
-    val metadataIds: String?,
+    val metadataIds: String? = null,
     @ApiModelProperty("默认操作类型")
-    val defaultOperation: String?,
+    val defaultOperation: String? = null,
     @ApiModelProperty("可用操作")
-    val operationAvailable: String?,
+    val operationAvailable: String? = null,
     @ApiModelProperty("默认阈值")
-    val threshold: String?,
+    val threshold: String? = null,
     @ApiModelProperty("阈值类型")
-    val thresholdType: String?,
+    val thresholdType: String? = null,
     @ApiModelProperty("描述")
-    val desc: String?,
+    val desc: String? = null,
     @ApiModelProperty("是否可修改")
-    val readOnly: Boolean?,
+    val readOnly: Boolean? = null,
     @ApiModelProperty("阶段")
-    val stage: String?,
+    val stage: String? = null,
     @ApiModelProperty("可见范围")
     val range: String? = null,
     @ApiModelProperty("指标标签，用于前端区分控制")

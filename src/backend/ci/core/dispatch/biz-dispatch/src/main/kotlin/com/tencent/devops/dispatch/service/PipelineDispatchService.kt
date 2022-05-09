@@ -110,29 +110,7 @@ class PipelineDispatchService @Autowired constructor(
 
         val dispatcher = findDispatch(startupEvent) // 最少只有一个Dispatcher
         if (dispatcher != null) {
-//            // JOB配额判断
-//            if (!jobQuotaBusinessService.checkJobQuota(startupEvent, buildLogPrinter)) {
-//                dispatcher.onFailBuild(
-//                    client = client,
-//                    buildLogPrinter = buildLogPrinter,
-//                    event = startupEvent,
-//                    errorType = ErrorType.USER,
-//                    errorCode = ErrorCodeEnum.JOB_QUOTA_EXCESS.errorCode,
-//                    errorMsg = "系统JOB配额超限"
-//                )
             dispatcher.startUp(startupEvent)
-//            } else {
-//                // 到这里说明JOB已经启动成功(但是不代表Agent启动成功)，开始累加使用额度
-//                val vmType = JobQuotaVmType.parse(startupEvent.dispatchType)
-//                if (null != vmType) {
-//                    jobQuotaBusinessService.insertRunningJob(
-//                        projectId = startupEvent.projectId,
-//                        vmType = vmType,
-//                        buildId = startupEvent.buildId,
-//                        vmSeqId = startupEvent.vmSeqId
-//                    )
-//                }
-//            }
         } else {
             logger.error("BKSystemErrorMonitor|ENGINE|${startupEvent.buildId}|VM_START|j(${startupEvent.vmSeqId})|" +
                 "dispatchType=${startupEvent.dispatchType}")
@@ -154,16 +132,7 @@ class PipelineDispatchService @Autowired constructor(
     fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
         logger.info("Start to finish the pipeline build($pipelineAgentShutdownEvent)")
         getDispatchers().forEach {
-//            try {
             it.shutdown(pipelineAgentShutdownEvent)
-//            } finally {
-//                // 不管shutdown成功失败，都要回收配额；这里回收job，将自动累加agent执行时间
-//                jobQuotaBusinessService.deleteRunningJob(
-//                    projectId = pipelineAgentShutdownEvent.projectId,
-//                    buildId = pipelineAgentShutdownEvent.buildId,
-//                    vmSeqId = pipelineAgentShutdownEvent.vmSeqId
-//                )
-//            }
         }
     }
 

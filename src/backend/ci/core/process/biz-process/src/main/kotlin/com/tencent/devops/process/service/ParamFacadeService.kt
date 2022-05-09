@@ -194,6 +194,7 @@ class ParamFacadeService @Autowired constructor(
             }
 
             val listResult = client.get(ServiceArtifactoryResource::class).searchCustomFiles(
+                userId ?: "",
                 projectId,
                 CustomFileSearchCondition(
                     property.glob,
@@ -293,7 +294,7 @@ class ParamFacadeService @Autowired constructor(
                     null
                 } else {
                     pipelinePermissionService.getResourceByPermission(
-                        userId = userId!!,
+                        userId = userId,
                         projectId = projectId,
                         permission = AuthPermission.EXECUTE
                     )
@@ -302,13 +303,13 @@ class ParamFacadeService @Autowired constructor(
 
             // 获取项目下所有流水线，并过滤出有权限部分，有权限列表为空时返回项目所有流水线
             watcher.start("s_r_summary")
-            val pipelineBuildSummary =
-                pipelineRuntimeService.getBuildSummaryRecords(projectId, ChannelCode.BS, hasPermissionList)
+            val buildPipelineRecords =
+                pipelineRuntimeService.getBuildPipelineRecords(projectId, ChannelCode.BS, hasPermissionList)
             watcher.stop()
 
-            return pipelineBuildSummary.map {
-                val pipelineId = it["PIPELINE_ID"] as String
-                val pipelineName = it["PIPELINE_NAME"] as String
+            return buildPipelineRecords.map {
+                val pipelineId = it.pipelineId
+                val pipelineName = it.pipelineName
                 SubPipeline(pipelineName, pipelineId)
             }
         } catch (t: Throwable) {

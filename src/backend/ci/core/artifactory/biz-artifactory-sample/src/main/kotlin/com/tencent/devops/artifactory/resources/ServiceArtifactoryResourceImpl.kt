@@ -52,13 +52,18 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService
 ) : ServiceArtifactoryResource {
 
-    override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Boolean> {
-        val fileDetail =
-            archiveFileService.show(userId = "", projectId = projectId, artifactoryType = artifactoryType, path = path)
+    override fun check(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Boolean> {
+        val fileDetail = archiveFileService.show(userId, projectId, artifactoryType, path)
         return Result(fileDetail.name.isNotBlank())
     }
 
     override fun acrossProjectCopy(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
@@ -68,13 +73,19 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         TODO("not implemented")
     }
 
-    override fun properties(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<List<Property>> {
+    override fun properties(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<List<Property>> {
         TODO("not implemented")
     }
 
     override fun externalUrl(
         projectId: String,
         artifactoryType: ArtifactoryType,
+        creatorId: String?,
         userId: String,
         path: String,
         ttl: Int,
@@ -90,7 +101,10 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         val urls = archiveFileService.getFileDownloadUrls(
-            fileChannelType = FileChannelTypeEnum.WEB_DOWNLOAD, filePath = path, artifactoryType = artifactoryType
+            userId = userId,
+            fileChannelType = FileChannelTypeEnum.WEB_DOWNLOAD,
+            filePath = path,
+            artifactoryType = artifactoryType
         )
         return Result(Url(urls.fileUrlList[0], urls.fileUrlList[0]))
     }
@@ -106,7 +120,12 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         TODO("not implemented")
     }
 
-    override fun show(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<FileDetail> {
+    override fun show(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<FileDetail> {
         TODO("not implemented")
     }
 
@@ -133,6 +152,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun searchFileAndPropertyByAnd(
+        userId: String,
         projectId: String,
         page: Int?,
         pageSize: Int?,
@@ -142,6 +162,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun searchFileAndPropertyByOr(
+        userId: String,
         projectId: String,
         page: Int?,
         pageSize: Int?,
@@ -163,7 +184,11 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         TODO("not implemented")
     }
 
-    override fun searchCustomFiles(projectId: String, condition: CustomFileSearchCondition): Result<List<String>> {
+    override fun searchCustomFiles(
+        userId: String,
+        projectId: String,
+        condition: CustomFileSearchCondition
+    ): Result<List<String>> {
         TODO("not implemented")
     }
 
@@ -213,6 +238,27 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
             page = page,
             pageSize = pageSize,
             searchProps = searchProps
+        )
+        return Result(fileList)
+    }
+
+    override fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        fullPath: String,
+        includeFolder: Boolean?,
+        deep: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<FileInfo>> {
+        val fileList = archiveFileService.listCustomFiles(
+            userId = userId,
+            projectId = projectId,
+            filePath = fullPath,
+            includeFolder = includeFolder,
+            deep = deep,
+            page = page,
+            pageSize = pageSize
         )
         return Result(fileList)
     }

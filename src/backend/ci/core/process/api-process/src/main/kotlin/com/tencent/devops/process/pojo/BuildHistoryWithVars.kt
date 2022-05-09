@@ -68,15 +68,15 @@ data class BuildHistoryWithVars(
     val artifactList: List<FileInfo>?,
     @ApiModelProperty("备注", required = false)
     val remark: String?,
-    @ApiModelProperty("总耗时(秒)", required = false)
+    @ApiModelProperty("总耗时(毫秒)", required = false)
     val totalTime: Long?,
-    @ApiModelProperty("运行耗时(秒，不包括人工审核时间)", required = false)
+    @ApiModelProperty("运行耗时(毫秒，不包括人工审核时间)", required = false)
     val executeTime: Long?,
     @ApiModelProperty("启动参数", required = false)
     val buildParameters: List<BuildParameters>?,
-    @ApiModelProperty("WebHookType", required = false)
+    @ApiModelProperty("WebHook类型", required = false)
     val webHookType: String?,
-    @ApiModelProperty("webhookInfo", required = false)
+    @ApiModelProperty("webhook信息", required = false)
     val webhookInfo: WebhookInfo?,
     @ApiModelProperty("启动类型(新)", required = false)
     val startType: String?,

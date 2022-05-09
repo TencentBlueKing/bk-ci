@@ -5,12 +5,14 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.notify.command.NotifyCmd
 import com.tencent.devops.process.notify.command.BuildNotifyContext
 import com.tencent.devops.process.notify.command.ExecutionVariables
+import com.tencent.devops.process.notify.command.NotifyCmd
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
+import com.tencent.devops.process.utils.PIPELINE_TIME_END
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDateTime
@@ -22,38 +24,58 @@ abstract class NotifyPipelineCmd @Autowired constructor(
     open val pipelineRepositoryService: PipelineRepositoryService,
     open val pipelineRuntimeService: PipelineRuntimeService,
     open val pipelineBuildFacadeService: PipelineBuildFacadeService,
-    open val client: Client
+    open val client: Client,
+    open val buildVariableService: BuildVariableService
 ) : NotifyCmd {
     override fun canExecute(commandContextBuild: BuildNotifyContext): Boolean {
         return true
     }
 
     override fun execute(commandContextBuild: BuildNotifyContext) {
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(commandContextBuild.pipelineId) ?: return
-        var pipelineName = pipelineInfo.pipelineName
+        val projectId = commandContextBuild.projectId
+        val pipelineId = commandContextBuild.pipelineId
+        val buildId = commandContextBuild.buildId
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
+        val pipelineName = pipelineInfo.pipelineName
         val executionVar = getExecutionVariables(
-            pipelineId = commandContextBuild.pipelineId,
+            pipelineId = pipelineId,
             vars = commandContextBuild.variables as MutableMap<String, String>)
-        val buildInfo = pipelineRuntimeService.getBuildInfo(commandContextBuild.buildId) ?: return
-        val startTime = buildInfo.startTime
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId) ?: return
         val endTime = System.currentTimeMillis()
-        val duration = endTime - startTime!!
+        val timeDuration = (endTime - buildInfo.startTime!!)
+        commandContextBuild.variables[PIPELINE_TIME_DURATION] = DateTimeUtil.formatMillSecond(timeDuration)
 
-        commandContextBuild.variables[PIPELINE_TIME_DURATION] = (duration / 1000).toString()
+        buildVariableService.setVariable(
+            projectId = commandContextBuild.projectId,
+            pipelineId = commandContextBuild.pipelineId,
+            buildId = commandContextBuild.buildId,
+            varName = PIPELINE_TIME_END,
+            varValue = endTime
+        )
+        // 设置总耗时
+        buildVariableService.setVariable(
+            projectId = commandContextBuild.projectId,
+            pipelineId = commandContextBuild.pipelineId,
+            buildId = commandContextBuild.buildId,
+            varName = PIPELINE_TIME_DURATION,
+            varValue = timeDuration.toString()
+        )
 
         val trigger = executionVar.trigger
         val buildNum = buildInfo.buildNum
         val user = executionVar.user
-        val detail = pipelineBuildFacadeService.getBuildDetail(buildInfo.startUser,
-            commandContextBuild.projectId,
-            commandContextBuild.pipelineId,
-            commandContextBuild.buildId,
-            ChannelCode.BS,
-            false)
+        val detail = pipelineBuildFacadeService.getBuildDetail(
+            userId = buildInfo.startUser,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            channelCode = ChannelCode.BS,
+            checkPermission = false
+        )
         val failTask = getFailTaskName(detail)
         commandContextBuild.notifyValue["failTask"] = failTask
         val projectName =
-            client.get(ServiceProjectResource::class).get(commandContextBuild.projectId).data?.projectName.toString()
+            client.get(ServiceProjectResource::class).get(projectId).data?.projectName.toString()
         val pipelineMap = mutableMapOf(
             "pipelineName" to pipelineName,
             "buildNum" to buildNum.toString(),
@@ -62,7 +84,7 @@ abstract class NotifyPipelineCmd @Autowired constructor(
             "trigger" to trigger,
             "username" to user,
             "failTask" to failTask,
-            "duration" to DateTimeUtil.formatMillSecond(duration).removeSuffix("秒")
+            "duration" to DateTimeUtil.formatMillSecond(timeDuration)
         )
         commandContextBuild.notifyValue.putAll(pipelineMap)
     }

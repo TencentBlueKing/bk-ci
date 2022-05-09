@@ -1247,3 +1247,213 @@
   "create_date" : 1586485440000,
   "created_by" : "admin"
 }
+
+{
+    "_id" : {"$oid": "5eeaea893ca6b859f934b994"},
+    "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+    "name" : "CLANG",
+    "pattern" : "LINT",
+    "display_name" : "Clang",
+    "type" : "STANDARD",
+    "lang" : 16,
+    "brief_introduction" : "开源工具Clang Static Analyzer，可对Objective-C项目检查潜在的代码bug",
+    "status" : "P",
+    "privated" : true,
+    "docker_trigger_shell" : "python3 ./src/scan.py --input={input.json} --output={output.json}",
+    "docker_image_url" : "bkcodecc/bkcheck-cpp",
+    "docker_image_version" : "latest",
+    "debug_pipeline_id" : "p-e6f18d4a53e94e1283440cceb6ab72d0",
+    "tool_scan_command" : "python3 ./src/scan.py --input={input.json} --output={output.json}",
+    "tool_run_type" : "local",
+    "tool_image_revision" : "sha256:c3fd066cb13c812df1bd2f425d815397dc0a58b4eba234304b2eb5aa6328ec98",
+    "tool_versions" : [ 
+        {
+            "version_type" : "T",
+            "docker_trigger_shell" : "python3 ./src/scan.py --input={input.json} --output={output.json}",
+            "docker_image_url" : "bkcodecc/bkcheck-cpp",
+            "docker_image_version" : "v-1632745036411",
+            "foreign_docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:c3fd066cb13c812df1bd2f425d815397dc0a58b4eba234304b2eb5aa6328ec98",
+            "create_date" : 1632745097137,
+            "created_by" : "admin",
+            "updated_date" : 1632745097137,
+            "updated_by" : "admin"
+        }, 
+        {
+            "version_type" : "G",
+            "docker_trigger_shell" : "/bin/bash##-c##\"python3 ./clangstaticanalyzer.py --input={input.json} --output={output.json}\"",
+            "docker_image_url" : "bkcodecc/bkcheck-cpp",
+            "docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:c3fd066cb13c812df1bd2f425d815397dc0a58b4eba234304b2eb5aa6328ec98",
+            "create_date" : 1611233147466,
+            "created_by" : "admin",
+            "updated_date" : 1611233147466,
+            "updated_by" : "admin"
+        }, 
+        {
+            "version_type" : "P",
+            "docker_trigger_shell" : "/bin/bash##-c##\"python3 ./clangstaticanalyzer.py --input={input.json} --output={output.json}\"",
+            "docker_image_url" : "bkcodecc/bkcheck-cpp",
+            "docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:c3fd066cb13c812df1bd2f425d815397dc0a58b4eba234304b2eb5aa6328ec98",
+            "create_date" : 1611233147466,
+            "created_by" : "admin",
+            "updated_date" : 1611233147466,
+            "updated_by" : "admin"
+        }
+    ],
+    "create_date" : 1592453769134,
+    "created_by" : "admin",
+    "updated_date" : 1632745097129,
+    "updated_by" : "admin"
+}
+
+{
+    "_id" : {"$oid": "5ef16e608a64a738fe216e2f"},
+    "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+    "name" : "CLANGWARNING",
+    "pattern" : "LINT",
+    "display_name" : "ClangWarning",
+    "type" : "STANDARD",
+    "lang" : 16,
+    "brief_introduction" : "Clang编译器提供的警告信息，可在项目编译过程中扫描出代码警告",
+    "status" : "P",
+    "privated" : true,
+    "docker_trigger_shell" : "python3 ./src/clangwarning.py --input={input.json} --output={output.json}",
+    "docker_image_url" : "bkcodecc/bkcheck-cpp",
+    "docker_image_version" : "latest",
+    "debug_pipeline_id" : "p-3682f62c0b17499c8d32dff92f08639c",
+    "tool_scan_command" : "python3 ./src/clangwarning.py --input={input.json} --output={output.json}",
+    "tool_run_type" : "local",
+    "tool_image_revision" : "sha256:e4d458a060d90dad2cf552c1e80068d39c7d2059cea551d55613657b50572c54",
+    "tool_versions" : [ 
+        {
+            "version_type" : "T",
+            "docker_trigger_shell" : "python3 ./src/clangwarning.py --input={input.json} --output={output.json}",
+            "docker_image_url" : "bkcodecc/bkcheck-cpp",
+            "docker_image_version" : "v-1632750046252",
+            "foreign_docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:e4d458a060d90dad2cf552c1e80068d39c7d2059cea551d55613657b50572c54",
+            "create_date" : 1632750051949,
+            "created_by" : "admin",
+            "updated_date" : 1632750051949,
+            "updated_by" : "admin"
+        }, 
+        {
+            "version_type" : "G",
+            "docker_trigger_shell" : "/bin/bash##-c##\"python3 ./src/clangwarning.py --input={input.json} --output={output.json}\"",
+            "docker_image_url" : "bkcodecc/bkcheck-cpp",
+            "docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:e4d458a060d90dad2cf552c1e80068d39c7d2059cea551d55613657b50572c54",
+            "create_date" : 1611233147466,
+            "created_by" : "admin",
+            "updated_date" : 1611233147466,
+            "updated_by" : "admin"
+        }, 
+        {
+            "version_type" : "P",
+            "docker_trigger_shell" : "/bin/bash##-c##\"python3 ./src/clangwarning.py --input={input.json} --output={output.json}\"",
+            "docker_image_url" : "bkcodecc/bkcheck-cpp",
+            "docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:e4d458a060d90dad2cf552c1e80068d39c7d2059cea551d55613657b50572c54",
+            "create_date" : 1611233147466,
+            "created_by" : "admin",
+            "updated_date" : 1611233147466,
+            "updated_by" : "admin"
+        }
+    ],
+    "create_date" : 1592880736325,
+    "created_by" : "admin",
+    "updated_date" : 1632750051937,
+    "updated_by" : "admin"
+}
+
+{
+    "_id" : {"$oid": "5dafd281dd86e07a04fbb544"},
+    "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+    "name" : "WOODPECKER_SENSITIVE",
+    "pattern" : "LINT",
+    "display_name" : "啄木鸟敏感信息",
+    "type" : "SECURITY",
+    "lang" : 1073872639,
+    "brief_introduction" : "啄木鸟敏感信息泄漏风险检测",
+    "description" : "由腾讯TEG安全平台部打造的工具，专注于检测代码及配置文件中存在的敏感信息，包括密钥证书、员工信息、可能对公司造成负面影响的不和谐内容等",
+    "graphic_details" : "",
+    "status" : "P",
+    "privated" : false,
+    "docker_trigger_shell" : "/bin/bash##-c##\"chmod +x /workspace/CodeSecurityScan && /workspace/CodeSecurityScan --input={input.json} --output={output.json}\"",
+    "docker_image_url" : "bkcodecc/woodpecker-sensitive_scan",
+    "docker_image_version" : "latest",
+    "debug_pipeline_id" : "p-6246697ea1074b53a058e2b7eb4c4cd3",
+    "tool_env" : "",
+    "tool_run_type" : "docker",
+    "tool_image_revision" : "sha256:0c70b5ab65825d9dc6b857fbf0cdb17f1c1b764da204ae4b2cc3b3a13dea523d",
+    "tool_versions" : [ 
+        {
+            "version_type" : "P",
+            "docker_trigger_shell" : "/bin/bash##-c##\"chmod +x /workspace/CodeSecurityScan && /workspace/CodeSecurityScan --input={input.json} --output={output.json}\"",
+            "docker_image_url" : "bkcodecc/woodpecker-sensitive_scan",
+            "docker_image_version" : "latest",
+            "foreign_docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:e321bbf6f9600abd8ec881172307f287be7dcc9bf91426042ece4aa2803c7834",
+            "create_date" : 1640161640021,
+            "created_by" : "admin",
+            "updated_date" : 1640685730011,
+            "updated_by" : "admin"
+        }, 
+        {
+            "version_type" : "T",
+            "docker_trigger_shell" : "/bin/bash##-c##\"chmod +x /workspace/CodeSecurityScan && /workspace/CodeSecurityScan --input={input.json} --output={output.json}\"",
+            "docker_image_url" : "bkcodecc/woodpecker-sensitive_scan",
+            "docker_image_version" : "latest",
+            "foreign_docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:e321bbf6f9600abd8ec881172307f287be7dcc9bf91426042ece4aa2803c7834",
+            "create_date" : 1640161640021,
+            "created_by" : "admin",
+            "updated_date" : 1640161640021,
+            "updated_by" : "admin"
+        }, 
+        {
+            "version_type" : "G",
+            "docker_trigger_shell" : "/bin/bash##-c##\"chmod +x /workspace/CodeSecurityScan && /workspace/CodeSecurityScan --input={input.json} --output={output.json}\"",
+            "docker_image_url" : "bkcodecc/woodpecker-sensitive_scan",
+            "docker_image_version" : "latest",
+            "foreign_docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:e321bbf6f9600abd8ec881172307f287be7dcc9bf91426042ece4aa2803c7834",
+            "create_date" : 1640161640021,
+            "created_by" : "admin",
+            "updated_date" : 1640179714581,
+            "updated_by" : "admin"
+        }
+    ],
+    "last_tool_versions" : [ 
+        {
+            "version_type" : "P",
+            "docker_trigger_shell" : "/bin/bash##-c##\"chmod +x /workspace/CodeSecurityScan && /workspace/CodeSecurityScan --input={input.json} --output={output.json}\"",
+            "docker_image_url" : "bkcodecc/woodpecker-sensitive_scan",
+            "docker_image_version" : "latest",
+            "foreign_docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:a0177805d5bb1cb4fef351e7e311e43fea404bab0e404e91331957cc49b8c46d",
+            "create_date" : 1640057541371,
+            "created_by" : "admin",
+            "updated_date" : 1640685730011,
+            "updated_by" : "admin"
+        }, 
+        {
+            "version_type" : "G",
+            "docker_trigger_shell" : "/bin/bash##-c##\"chmod +x /workspace/CodeSecurityScan && /workspace/CodeSecurityScan --input={input.json} --output={output.json}\"",
+            "docker_image_url" : "bkcodecc/woodpecker-sensitive_scan",
+            "docker_image_version" : "latest",
+            "foreign_docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:a0177805d5bb1cb4fef351e7e311e43fea404bab0e404e91331957cc49b8c46d",
+            "create_date" : 1640057541371,
+            "created_by" : "admin",
+            "updated_date" : 1640179714581,
+            "updated_by" : "admin"
+        }
+    ],
+    "create_date" : 1571803777729,
+    "created_by" : "admin",
+    "updated_date" : 1640161640009,
+    "updated_by" : "admin"
+}

@@ -103,19 +103,31 @@
                         :required="true"
                         property="imageName"
                         :desc="$t('store.镜像在研发商店中的别名')"
-                        :rules="[requireRule, nameRule, numMax]"
+                        :rules="[requireRule, nameRule]"
                         error-display-type="normal"
                     >
-                        <bk-input v-model="relateImageData.form.imageName" :placeholder="$t('store.请输入镜像名称，不超过20个字符')"></bk-input>
+                        <bk-input v-model="relateImageData.form.imageName" :placeholder="$t('store.请输入镜像名称，不超过20个字符')" style="width: 96%;"></bk-input>
+                        <bk-popover placement="right" class="is-tooltips">
+                            <i class="devops-icon icon-info-circle"></i>
+                            <template slot="content">
+                                <p> {{ $t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过20个字符') }} </p>
+                            </template>
+                        </bk-popover>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.镜像标识')"
                         :required="true"
                         property="imageCode"
                         :desc="$t('store.镜像英文名，为当前镜像在研发商店中的唯一标识')"
-                        :rules="[requireRule, alpRule, numMax]"
+                        :rules="[requireRule, alpRule]"
                         error-display-type="normal"
                     >
-                        <bk-input v-model="relateImageData.form.imageCode" :placeholder="$t('store.请输入镜像标识，不超过20个字符')"></bk-input>
+                        <bk-input v-model="relateImageData.form.imageCode" :placeholder="$t('store.请输入镜像标识，不超过30个字符')" style="width: 96%;"></bk-input>
+                        <bk-popover placement="right" class="is-tooltips">
+                            <i class="devops-icon icon-info-circle"></i>
+                            <template slot="content">
+                                <p> {{ $t('store.由英文字母、数字、连字符(-)或下划线(_)组成，以英文字母开头，不超过30个字符') }} </p>
+                            </template>
+                        </bk-popover>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.镜像源')" :required="true" property="imageSourceType" class="h32" :rules="[requireRule]">
                         <bk-radio-group v-model="relateImageData.form.imageSourceType" class="mt6">
@@ -253,18 +265,13 @@
                     trigger: 'blur'
                 },
                 alpRule: {
-                    validator: (val) => (/^[a-zA-Z0-9-_]+$/.test(val)),
-                    message: this.$t('store.标识需要是大小写字母、数字、中划线或下划线'),
+                    validator: (val) => (/^[a-zA-Z][a-zA-Z0-9-_]{1,30}$/.test(val)),
+                    message: this.$t('store.由英文字母、数字、连字符(-)或下划线(_)组成，以英文字母开头，不超过30个字符'),
                     trigger: 'blur'
                 },
                 nameRule: {
-                    validator: (val) => (/^[\u4e00-\u9fa5a-zA-Z0-9-]+$/.test(val)),
-                    message: this.$t('store.由汉字、英文字母、数字、连字符(-)组成，长度小于20个字符'),
-                    trigger: 'blur'
-                },
-                numMax: {
-                    validator: (val = '') => (val.length <= 20),
-                    message: this.$t('store.字段不超过20个字符'),
+                    validator: (val) => (/^[\u4e00-\u9fa5a-zA-Z0-9-_.]{1,20}$/.test(val)),
+                    message: this.$t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过20个字符'),
                     trigger: 'blur'
                 }
             }
@@ -466,6 +473,10 @@
     .relate-form {
         margin: 30px 20px;
         min-height: 700px;
+        position: relative;
+        .is-tooltips {
+            position: absolute;
+        }
     }
     .h32 {
         height: 32px;

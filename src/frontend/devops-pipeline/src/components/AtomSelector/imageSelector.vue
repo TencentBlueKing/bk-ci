@@ -338,7 +338,7 @@
     .uninstall{
         position: relative;
         cursor: pointer;
-        /deep/ .bk-tooltip {
+        ::v-deep .bk-tooltip {
             vertical-align: bottom;
         }
         &:after {
@@ -409,7 +409,7 @@
                 margin-left: 3px;
                 color: $primaryColor;
                 &.spin-icon {
-                    color: $fontLigtherColor
+                    color: $fontLighterColor
                 }
             }
             > h3 {

@@ -1,40 +1,43 @@
 <template>
     <article class="overview-home">
-        <ul class="overview-cards">
-            <li class="card g-turbo-box" v-for="card in taskCards" :key="card.label">
-                <logo :name="card.icon" size="42" class="card-logo"></logo>
-                <h5>
-                    <p class="g-turbo-black-font">
-                        <bk-animate-number :value="card.num" :digits="card.digit"></bk-animate-number>
-                    </p>
-                    <span class="g-turbo-gray-font">{{ card.label }}</span>
-                </h5>
-            </li>
-        </ul>
+        <template v-if="hasPermission">
+            <ul class="overview-cards">
+                <li class="card g-turbo-box" v-for="card in taskCards" :key="card.label">
+                    <logo :name="card.icon" size="42" class="card-logo"></logo>
+                    <h5>
+                        <p class="g-turbo-black-font">
+                            <bk-animate-number :value="card.num" :digits="card.digit"></bk-animate-number>
+                        </p>
+                        <span class="g-turbo-gray-font">{{ card.label }}</span>
+                    </h5>
+                </li>
+            </ul>
 
-        <section class="g-turbo-chart-box chart">
-            <header class="chart-head">
-                <span class="g-turbo-black-font"> {{ $t('turbo.耗时分布') }} </span>
-                <bk-tab :active.sync="takeTimeDateType" type="unborder-card">
-                    <bk-tab-panel v-for="(panel, index) in timeGap" v-bind="panel" :key="index"></bk-tab-panel>
-                </bk-tab>
-            </header>
-            <div class="canvas-wrapper">
-                <canvas class="take-time"></canvas>
-            </div>
-        </section>
+            <section class="g-turbo-chart-box chart">
+                <header class="chart-head">
+                    <span class="g-turbo-black-font"> {{ $t('turbo.耗时分布') }} </span>
+                    <bk-tab :active.sync="takeTimeDateType" type="unborder-card">
+                        <bk-tab-panel v-for="(panel, index) in timeGap" v-bind="panel" :key="index"></bk-tab-panel>
+                    </bk-tab>
+                </header>
+                <div class="canvas-wrapper">
+                    <canvas class="take-time"></canvas>
+                </div>
+            </section>
 
-        <section class="g-turbo-chart-box chart">
-            <header class="chart-head build-trend">
-                <span class="g-turbo-black-font"> {{ $t('turbo.编译次数趋势') }} </span>
-                <bk-tab :active.sync="buildNumDateType" type="unborder-card">
-                    <bk-tab-panel v-for="(panel, index) in timeGap" v-bind="panel" :key="index"></bk-tab-panel>
-                </bk-tab>
-            </header>
-            <div class="canvas-wrapper">
-                <canvas class="build-num"></canvas>
-            </div>
-        </section>
+            <section class="g-turbo-chart-box chart">
+                <header class="chart-head build-trend">
+                    <span class="g-turbo-black-font"> {{ $t('turbo.编译次数趋势') }} </span>
+                    <bk-tab :active.sync="buildNumDateType" type="unborder-card">
+                        <bk-tab-panel v-for="(panel, index) in timeGap" v-bind="panel" :key="index"></bk-tab-panel>
+                    </bk-tab>
+                </header>
+                <div class="canvas-wrapper">
+                    <canvas class="build-num"></canvas>
+                </div>
+            </section>
+        </template>
+        <permission-exception v-else :message="errMessage" />
     </article>
 </template>
 
@@ -42,10 +45,12 @@
     import { getOverViewStatData, getCompileNumberTrend, getTimeConsumingTrend } from '@/api'
     import BKChart from '@blueking/bkcharts'
     import logo from '../../components/logo'
+    import permissionException from '../../components/exception/permission.vue'
 
     export default {
         components: {
-            logo
+            logo,
+            permissionException
         },
 
         data () {
@@ -84,7 +89,9 @@
                 takeTimeDateType: 'week',
                 buildNumDateType: 'week',
                 takeTimeChart: {},
-                buildNumChart: {}
+                buildNumChart: {},
+                hasPermission: true,
+                errMessage: ''
             }
         },
 
@@ -121,13 +128,25 @@
         },
 
         methods: {
+            handleError (err) {
+                if (err.code === 2300017) {
+                    this.hasPermission = false
+                    this.errMessage = err.message
+                } else {
+                    this.$bkMessage({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
+                }
+            },
+
             getSummaryCount () {
                 getOverViewStatData(this.projectId).then((res) => {
                     this.taskCards.instanceNum.num = res.instanceNum || 0
                     this.taskCards.executeCount.num = res.executeCount || 0
                     this.taskCards.executeTimeHour.num = res.executeTimeHour || 0
                     this.taskCards.savingRate.num = res.savingRate || 0
-                })
+                }).catch(this.handleError)
             },
 
             drawTakeTimeChart () {
@@ -234,7 +253,7 @@
                             }
                         }
                     })
-                })
+                }).catch(this.handleError)
             },
 
             drawBuildNum () {
@@ -322,7 +341,7 @@
                             }
                         }
                     })
-                })
+                }).catch(this.handleError)
             }
         }
     }
@@ -386,7 +405,7 @@
         align-items: center;
         justify-content: space-between;
         padding: 0 22px;
-        /deep/ .bk-tab-header {
+        ::v-deep .bk-tab-header {
             background-color: #fff;
             height: 25px !important;
             line-height: 25px !important;
@@ -419,7 +438,7 @@
                 line-height: 25px !important;
             }
         }
-        /deep/ .bk-tab-section {
+        ::v-deep .bk-tab-section {
             padding: 0;
         }
     }

@@ -28,15 +28,22 @@
 package com.tencent.devops.process.pojo.template
 
 import com.tencent.devops.process.pojo.PipelineId
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@ApiModel("")
 data class TemplateListModel(
+    @ApiModelProperty("项目id", required = false)
     val projectId: String,
+    @ApiModelProperty("是否有操作权限", required = false)
     val hasPermission: Boolean, // 是否有操作权限，当前只有管理员才有操作权限
+    @ApiModelProperty("模型", required = false)
     val models: List<TemplateModel>,
+    @ApiModelProperty("数量", required = false)
     val count: Int
 )
 
+@ApiModel("模板模型")
 data class TemplateModel(
     @ApiModelProperty("模版名称", required = true)
     val name: String,

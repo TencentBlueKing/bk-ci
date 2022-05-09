@@ -237,8 +237,8 @@
 
         computed: {
             ...mapGetters({
-                'statusMap': 'pipelines/getStatusMap',
-                'tagGroupList': 'pipelines/getTagGroupList'
+                statusMap: 'pipelines/getStatusMap',
+                tagGroupList: 'pipelines/getTagGroupList'
             }),
             ...mapState('pipelines', [
                 'currentViewId',
@@ -400,7 +400,7 @@
 
                 const calcTime = Math.ceil((time - latestBuildStartTime) / (latestBuildEstimatedExecutionSeconds * 100 * 1000))
 
-                if (this.statusMap[item.latestBuildStatus] === 'error') {
+                if (this.statusMap[item.latestBuildStatus] === 'error' || this.statusMap[item.latestBuildStatus] === 'cancel') {
                     return '100%'
                 }
 
@@ -470,11 +470,11 @@
                             content: [
                                 {
                                     key: this.$t('lastBuildNum'),
-                                    value: `${item.latestBuildNum ? `#${item.latestBuildNum}` : '--'}`
+                                    value: item.buildNumRule ? (item.latestBuildNumAlias ? item.latestBuildNumAlias : `#${item.latestBuildNum}`) : (item.latestBuildNum ? `#${item.latestBuildNum}` : '--')
                                 },
                                 {
                                     key: this.$t('lastExecTime'),
-                                    value: ''
+                                    value: item.latestBuildStartTime ? this.calcLatestStartBuildTime(item) : this.$t('newlist.noExecution')
                                 }
                             ],
                             runningInfo: {
@@ -623,7 +623,7 @@
                     statusMap
                 } = this
                 const knownErrorList = JSON.parse(localStorage.getItem('pipelineKnowError')) || {}
-                Object.keys(data).map(pipelineId => {
+                Object.keys(data).forEach(pipelineId => {
                     const item = data[pipelineId]
                     if (item) {
                         const status = statusMap[item.latestBuildStatus]
@@ -633,32 +633,38 @@
                         }
                         // 单独修改当前任务是否在执行的状态, 拼接右下角按钮
                         switch (feConfig.status) {
-                            case 'error':
+                            case 'error': {
                                 const isKnowErrorPipeline = !!knownErrorList[`${this.projectId}_${pipelineId}_${item.latestBuildId}`]
                                 feConfig = {
                                     ...feConfig,
-                                    customBtns: isKnowErrorPipeline ? [] : [{
-                                        icon: 'check-1',
-                                        text: this.$t('newlist.known'),
-                                        handler: 'error-noticed'
-                                    }],
+                                    customBtns: isKnowErrorPipeline
+                                        ? []
+                                        : [{
+                                            icon: 'check-1',
+                                            text: this.$t('newlist.known'),
+                                            handler: 'error-noticed'
+                                        }],
                                     isRunning: !isKnowErrorPipeline,
                                     status: isKnowErrorPipeline ? 'known_error' : 'error'
                                 }
                                 break
-                            case 'cancel':
+                            }
+                            case 'cancel': {
                                 const isKnowCancelPipeline = !!knownErrorList[`${this.projectId}_${pipelineId}_${item.latestBuildId}`]
                                 feConfig = {
                                     ...feConfig,
-                                    customBtns: isKnowCancelPipeline ? [] : [{
-                                        icon: 'check-1',
-                                        text: this.$t('newlist.known'),
-                                        handler: 'error-noticed'
-                                    }],
+                                    customBtns: isKnowCancelPipeline
+                                        ? []
+                                        : [{
+                                            icon: 'check-1',
+                                            text: this.$t('newlist.known'),
+                                            handler: 'error-noticed'
+                                        }],
                                     isRunning: !isKnowCancelPipeline,
                                     status: isKnowCancelPipeline ? 'known_cancel' : 'cancel'
                                 }
                                 break
+                            }
                             case 'running':
                                 feConfig = {
                                     ...feConfig,
@@ -691,16 +697,6 @@
 
                         feConfig = {
                             ...feConfig,
-                            content: [
-                                {
-                                    key: this.$t('lastBuildNum'),
-                                    value: item.latestBuildNumAlias ? item.latestBuildNumAlias : (item.latestBuildNum ? `#${item.latestBuildNum}` : '--')
-                                },
-                                {
-                                    key: this.$t('lastExecTime'),
-                                    value: item.latestBuildStartTime ? this.calcLatestStartBuildTime(item) : this.$t('newlist.noExecution')
-                                }
-                            ],
                             footer: [
                                 {
                                     upperText: item.taskCount,
@@ -956,7 +952,7 @@
                 this.$router.push({
                     name: 'templateEdit',
                     params: {
-                        'templateId': templateId
+                        templateId: templateId
                     }
                 })
             },

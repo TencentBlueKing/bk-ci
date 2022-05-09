@@ -30,8 +30,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -42,11 +42,11 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
@@ -59,7 +59,7 @@ interface ApigwProjectResourceV3 {
 
     @POST
     @Path("/")
-    @ApiOperation("创建项目")
+    @ApiOperation("创建项目", tags = ["v3_app_project_create", "v3_user_project_create"])
     fun create(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -79,7 +79,7 @@ interface ApigwProjectResourceV3 {
 
     @PUT
     @Path("/{projectId}")
-    @ApiOperation("修改项目")
+    @ApiOperation("修改项目", tags = ["v3_user_project_edit", "v3_app_project_edit"])
     fun update(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -102,7 +102,7 @@ interface ApigwProjectResourceV3 {
 
     @GET
     @Path("/{projectId}")
-    @ApiOperation("获取项目信息")
+    @ApiOperation("获取项目信息", tags = ["v3_user_project_get", "v3_app_project_get"])
     fun get(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -123,7 +123,7 @@ interface ApigwProjectResourceV3 {
 
     @GET
     @Path("/")
-    @ApiOperation("查询所有项目")
+    @ApiOperation("查询所有项目", tags = ["v3_user_project_list", "v3_app_project_list"])
     fun list(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -141,7 +141,7 @@ interface ApigwProjectResourceV3 {
 
     @GET
     @Path("/{validateType}/names/validate")
-    @ApiOperation("校验项目名称和项目英文名")
+    @ApiOperation("校验项目名称和项目英文名", tags = ["v3_app_project_name_validate", "v3_user_project_name_validate"])
     fun validate(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -165,7 +165,7 @@ interface ApigwProjectResourceV3 {
 
     @POST
     @Path("/{projectId}/createUser")
-    @ApiOperation("添加指定用户到指定项目用户组")
+    @ApiOperation("添加指定用户到指定项目用户组", tags = ["v3_app_project_create_users", "v3_user_project_create_users"])
     fun createProjectUser(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

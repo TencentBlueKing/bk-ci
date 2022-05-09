@@ -39,23 +39,45 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
+@ApiModel("")
 data class PipelineSetting(
-    val projectId: String = "",
+    @ApiModelProperty("项目id", required = false)
+    var projectId: String = "",
+    @ApiModelProperty("流水线id", required = false)
     var pipelineId: String = "",
+    @ApiModelProperty("流水线名称", required = false)
     var pipelineName: String = "",
+    @ApiModelProperty("描述", required = false)
     val desc: String = "",
+    @ApiModelProperty("Lock 类型", required = false)
     val runLockType: PipelineRunLockType = PipelineRunLockType.SINGLE_LOCK,
+    @ApiModelProperty("订阅成功相关", required = false)
     var successSubscription: Subscription = Subscription(),
+    @ApiModelProperty("订阅失败相关", required = false)
     var failSubscription: Subscription = Subscription(),
+    @ApiModelProperty("标签列表", required = false)
     var labels: List<String> = emptyList(),
+    @ApiModelProperty("最大排队时长", required = false)
     val waitQueueTimeMinute: Int = PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT,
+    @ApiModelProperty("最大排队数量", required = false)
     val maxQueueSize: Int = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
+    @ApiModelProperty("并发时,设定的group", required = false)
+    var concurrencyGroup: String? = null,
+    @ApiModelProperty("并发时,是否相同group取消正在执行的流水线", required = false)
+    val concurrencyCancelInProgress: Boolean = false,
+    @ApiModelProperty("是否有操作权限", required = false)
     var hasPermission: Boolean? = null,
+    @ApiModelProperty("保存流水线编排的最大个数", required = false)
     val maxPipelineResNum: Int = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
+    @ApiModelProperty("并发构建数量限制", required = false)
     val maxConRunningQueueSize: Int = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT, // MULTIPLE类型时，并发构建数量限制
+    @ApiModelProperty("版本", required = false)
     var version: Int = 0,
     @field:BkField(patternStyle = BkStyleEnum.BUILD_NUM_RULE_STYLE, required = false)
+    @ApiModelProperty("构建号生成规则", required = false)
     val buildNumRule: String? = null // 构建号生成规则
 ) {
 

@@ -30,6 +30,7 @@ package com.tencent.devops.common.api.util
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_HTTP_RESPONSE_BODY_TOO_LARGE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import okhttp3.ConnectionPool
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.MultipartBody
@@ -43,6 +44,7 @@ import java.io.CharArrayWriter
 import java.io.File
 import java.io.FileOutputStream
 import java.io.UnsupportedEncodingException
+import java.net.HttpURLConnection
 import java.net.URLEncoder
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
@@ -83,6 +85,15 @@ object OkhttpUtils {
         logger.info("[OkhttpUtils init]")
     }
 
+    private val shortOkHttpClient = OkHttpClient.Builder()
+        .connectionPool(ConnectionPool())
+        .connectTimeout(connectTimeout, TimeUnit.SECONDS)
+        .readTimeout(connectTimeout, TimeUnit.SECONDS)
+        .writeTimeout(connectTimeout, TimeUnit.SECONDS)
+        .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+        .hostnameVerifier { _, _ -> true }
+        .build()
+
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(connectTimeout, TimeUnit.SECONDS)
         .readTimeout(readTimeout, TimeUnit.SECONDS)
@@ -97,6 +108,16 @@ object OkhttpUtils {
         .readTimeout(readTimeout, TimeUnit.MINUTES)
         .writeTimeout(readTimeout, TimeUnit.MINUTES)
         .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+        .hostnameVerifier { _, _ -> true }
+        .build()
+
+    // 服务端返回301、302状态码，okhttp会把post请求转换成get请求，导致请求异常,通过followRedirects设置关闭跳转，自定义重定向
+    private val redirectOkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(connectTimeout, TimeUnit.SECONDS)
+        .readTimeout(readTimeout, TimeUnit.SECONDS)
+        .writeTimeout(writeTimeout, TimeUnit.SECONDS)
+        .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+        .followRedirects(false)
         .hostnameVerifier { _, _ -> true }
         .build()
 
@@ -123,6 +144,27 @@ object OkhttpUtils {
 
     fun doLongHttp(request: Request): Response {
         return doHttp(longHttpClient, request)
+    }
+
+    fun doShortHttp(request: Request): Response {
+        return doHttp(shortOkHttpClient, request)
+    }
+
+    fun <R> doRedirectHttp(request: Request, handleResponse: (Response) -> R): R {
+        doHttp(redirectOkHttpClient, request).use { response ->
+            if (
+                request.method() == "POST" &&
+                (response.code() == HttpURLConnection.HTTP_MOVED_PERM ||
+                    response.code() == HttpURLConnection.HTTP_MOVED_TEMP)
+            ) {
+                val location = response.header("Location")
+                if (location != null) {
+                    val newRequest = request.newBuilder().url(location).build()
+                    return handleResponse(doHttp(okHttpClient, newRequest))
+                }
+            }
+            return handleResponse(response)
+        }
     }
 
     private fun doGet(okHttpClient: OkHttpClient, url: String, headers: Map<String, String> = mapOf()): Response {

@@ -22,7 +22,7 @@ import store from './store'
 import './scss/app.scss'
 
 window.Pages = window.Pages || {}
-window.Pages['environment'] = {
+window.Pages.environment = {
     title: 'environmentManage',
     routes,
     store

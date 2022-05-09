@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.common
 
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
@@ -48,12 +49,21 @@ interface StoreCommonService {
     ): String
 
     /**
+     * 根据标识获取组件公共标识
+     */
+    fun getStorePublicFlagByCode(
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Boolean
+
+    /**
      * 获取正确的升级版本号
      */
     fun getRequireVersion(
         dbVersion: String,
-        releaseType: ReleaseTypeEnum
-    ): String
+        releaseType: ReleaseTypeEnum,
+        reqVersion: String? = null
+    ): List<String>
 
     /**
      * 设置进度
@@ -91,4 +101,13 @@ interface StoreCommonService {
         storeCode: String,
         storeType: Byte
     ): Boolean
+
+    /**
+     * 获取回显版本信息
+     */
+    fun getStoreShowVersionInfo(
+        cancelFlag: Boolean,
+        releaseType: ReleaseTypeEnum?,
+        version: String?
+    ): StoreShowVersionInfo
 }

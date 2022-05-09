@@ -135,13 +135,13 @@
         left: 85px;
         top: -31px;
         font-size: 12px;
-        /deep/ .bk-icon {
+        ::v-deep .bk-icon {
             top: 0;
             margin-right: 1px;
         }
     }
 
-    /deep/ .bk-table .cell {
+    ::v-deep .bk-table .cell {
         overflow: hidden;
     }
 </style>

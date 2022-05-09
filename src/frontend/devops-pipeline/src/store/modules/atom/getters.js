@@ -77,7 +77,7 @@ export default {
             }
         })
 
-        atomCodeList.map(atomCode => {
+        atomCodeList.forEach(atomCode => {
             const atom = atomMap[atomCode]
             const parent = atomTree[atom.classifyCode]
             if (parent && Array.isArray(parent.children)) {
@@ -89,7 +89,7 @@ export default {
             }
         })
 
-        Object.keys(atomTree).map(classify => { // 按disable排序
+        Object.keys(atomTree).forEach(classify => { // 按disable排序
             if (atomTree[classify] && Array.isArray(atomTree[classify].children)) {
                 atomTree[classify].children.sort((a, b) => a.disabled - b.disabled)
             }
@@ -120,10 +120,12 @@ export default {
     },
     getAppEnvs: state => os => {
         const containerModal = state.containerModalMap[os]
-        return Array.isArray(containerModal.apps) ? containerModal.apps.reduce((appEnvs, app) => {
-            appEnvs[app.name] = app.env
-            return appEnvs
-        }, {}) : {}
+        return Array.isArray(containerModal.apps)
+            ? containerModal.apps.reduce((appEnvs, app) => {
+                appEnvs[app.name] = app.env
+                return appEnvs
+            }, {})
+            : {}
     },
     getBuildResourceTypeList: state => os => {
         try {
@@ -140,10 +142,12 @@ export default {
     },
     getContainerApps: state => os => {
         const containerModal = state.containerModalMap[os]
-        return containerModal ? containerModal.apps.reduce((apps, item) => {
-            apps[item.name] = item
-            return apps
-        }, {}) : {}
+        return containerModal
+            ? containerModal.apps.reduce((apps, item) => {
+                apps[item.name] = item
+                return apps
+            }, {})
+            : {}
     },
     osList: state => {
         return state.containerTypeList.filter(type => type !== 'TRIGGER').map(type => {
@@ -163,7 +167,11 @@ export default {
             let manualTriggerCount = 0
             let timerTriggerCount = 0
             let remoteTriggerCount = 0
-            
+
+            if (pipelineSetting && !pipelineSetting.pipelineName) {
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.emptyPipelineName'))
+            }
+           
             if (pipelineSetting && pipelineSetting.buildNumRule && !/^[\w-{}() +?.:$"]{1,256}$/.test(pipelineSetting.buildNumRule)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.correctBuildNumber'))
             }
@@ -182,6 +190,16 @@ export default {
 
             const allContainers = getters.getAllContainers(stages)
 
+            // 当前所有插件element
+            const elementsMap = allContainers.reduce(function (prev, cur) {
+                prev.push(...cur.elements)
+                return prev
+            }, [])
+
+            if (elementsMap.some(element => !element.atomCode)) {
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.PleaseSelectAtom'))
+            }
+
             if (allContainers.some(container => container.isError)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
             }
@@ -193,11 +211,15 @@ export default {
             const allElements = getters.getAllElements(stages)
 
             const elementValid = allElements.some(ele => {
-                ele['@type'] === 'linuxPaasCodeCCScript' && codeccCount++
-                ele.atomCode === 'CodeccCheckAtom' && codeccCount++
-                ele['@type'] === 'manualTrigger' && manualTriggerCount++
-                ele['@type'] === 'timerTrigger' && timerTriggerCount++
-                ele['@type'] === 'remoteTrigger' && remoteTriggerCount++
+                const atomCode = ele.atomCode || ele['@type']
+                if (!atomCode) {
+                    throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.PleaseSelectAtom'))
+                }
+                atomCode === 'linuxPaasCodeCCScript' && codeccCount++
+                atomCode === 'CodeccCheckAtom' && codeccCount++
+                atomCode === 'manualTrigger' && manualTriggerCount++
+                atomCode === 'timerTrigger' && timerTriggerCount++
+                atomCode === 'remoteTrigger' && remoteTriggerCount++
 
                 return codeccCount > 1 || manualTriggerCount > 1 || timerTriggerCount > 1 || remoteTriggerCount > 1 || ele.isError
             })
@@ -247,8 +269,17 @@ export default {
     getContainers: state => stage => {
         return stage && Array.isArray(stage.containers) ? stage.containers : []
     },
-    getContainer: (state, getters) => (containers, containerIndex) => {
-        const container = Array.isArray(containers) ? containers[containerIndex] : null
+    getContainer: (state, getters) => (containers, containerIndex, containerGroupIndex = undefined) => {
+        let container = null
+        try {
+            if (containerGroupIndex !== undefined) {
+                container = Array.isArray(containers) ? containers[containerIndex].groupContainers[containerGroupIndex] : null
+            } else {
+                container = Array.isArray(containers) ? containers[containerIndex] : null
+            }
+        } catch (_) {
+            container = null
+        }
         if (container !== null) {
             if (isVmContainer(container['@type']) && !container.buildEnv) {
                 Vue.set(container, 'buildEnv', {})
@@ -290,11 +321,13 @@ export default {
         return container && container.dispatchType && container.dispatchType.buildType === 'ESXi'
     },
     getElements: state => container => {
-        return container && Array.isArray(container.elements) ? container.elements.map(element => {
-            return Object.assign(element, {
-                atomCode: element.atomCode && element['@type'] !== element.atomCode ? element.atomCode : element['@type']
+        return container && Array.isArray(container.elements)
+            ? container.elements.map(element => {
+                return Object.assign(element, {
+                    atomCode: element.atomCode && element['@type'] !== element.atomCode ? element.atomCode : element['@type']
+                })
             })
-        }) : []
+            : []
     },
     getElement: state => (container, index) => {
         const element = container && Array.isArray(container.elements) ? container.elements[index] : null

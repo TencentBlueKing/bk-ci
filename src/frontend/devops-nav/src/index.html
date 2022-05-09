@@ -84,14 +84,13 @@
         var ENTERPRISE_VERSION = false
     </script>
     
-    
     <script>
         // 动态加载js
         function importScript (src, oHead, fOnload) {
             var oScript = document.createElement('script')
             oScript.type = 'text\/javascript'
             
-            if (fOnload) { 
+            if (fOnload) {
                 oScript.onload = fOnload
             }
             
@@ -150,13 +149,20 @@
         function setCookie(cname, cvalue, domain){
             document.cookie = cname + "=" + cvalue + "; " + 'domain=' + domain + '; path=/';
         }
-        
+
+        function deleteCookie(cname, domain) {
+            var date = new Date()
+            date.setTime(date.getTime() - 10000)
+            document.cookie = cname + "=0;" + "domain=" + domain + "; expires=" + date.toGMTString() + "; path=/"
+        }
+
         window.setProjectIdCookie = function (projectId) {
             try {
                 var domainMatch = location.hostname.match(/([^.]+\.)?([^\.]+\..+)/)
                 var topDomain = domainMatch.length > 2 ? domainMatch[2] : location.hostname
                 if (projectId) {
-                    setCookie(X_DEVOPS_PROJECT_ID, projectId, topDomain)
+                    deleteCookie(X_DEVOPS_PROJECT_ID, topDomain)
+                    setCookie(X_DEVOPS_PROJECT_ID, projectId, location.hostname)
                     window.GLOBAL_PID = projectId
                 }
             } catch (e) {
@@ -175,11 +181,11 @@
                         var key = decodeURIComponent(item[0])
                         if (key === 'projectCode') {
                             return decodeURIComponent(item[1])
-                        } 
+                        }
                     }
-                    return ''    
+                    return ''
                 }else if (location.pathname.match(/^\/console\/store\/(\w+)?/)){ // TODO store没有projectId
-                    return ''    
+                    return ''
                 } else {
                     var res = location.pathname.match(reg)
                     return res ? res[1] : ''
@@ -199,7 +205,7 @@
         
         window.getLoginUrl = function () {
             var cUrl = location.origin + location.pathname + encodeURIComponent(location.search)
-            if (/=%s/.test(LOGIN_SERVICE_URL)) { 
+            if (/=%s/.test(LOGIN_SERVICE_URL)) {
                 return LOGIN_SERVICE_URL.replace(/%s/, cUrl)
             }else {
                 const loginUrl = new URL(LOGIN_SERVICE_URL)
@@ -260,7 +266,7 @@
 
         function joinUrl (urlArr) {
             const link = urlArr[urlArr.length - 1]
-            if (/http(s)?:\/\//.test(link)) {
+            if (/^(http(s)?:)?\/\//.test(link)) {
                 return link
             }
             if (Array.isArray(urlArr)) {
@@ -312,7 +318,7 @@
             if (Array.isArray(projectList) && projectList.length > 0) {
                 var firstProj = projectList[0]
                 var firstPid = firstProj && firstProj.projectCode ? firstProj.projectCode : undefined
-                for(var i = 0; i < projectList.length; i++) { 
+                for(var i = 0; i < projectList.length; i++) {
                     var proj = projectList[i]
                     if (proj && !proj.gray) {
                         return proj.projectCode
@@ -341,7 +347,6 @@
                 window.setProjectIdCookie(defaultPid)
             }
 
-
             window.allServices = allServices
             window.serviceObject = serviceObject
             window.currentPage = page
@@ -362,7 +367,6 @@
                 loadJsAssets()
             }
         }
-        
         
         var CACHE_PREFIX = '_cache_'
         window.setLsCacheItem = function (key, value) {
@@ -442,7 +446,7 @@
                     }
 
                     reject(e)
-                }) 
+                })
             })
         }
 
@@ -451,14 +455,13 @@
         }).catch(function (e) {
             console.log(e)
             printError(e.status)
-        })  
-        
+        })
 
         function printError (status) {
             const locale = getCookie('blueking_language')
             const msg = locale === 'en' ? 'Oops! Looks like something went wrong' : '后端服务异常，请稍后重试'
             document.writeln(
-                '<div style="height: 100%; width: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column;">' 
+                '<div style="height: 100%; width: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column;">'
                 + '<img src="/console/static/' + (status || 503) + '.png" />'
                 + '<p style="font-size: 20px; color: #979797; margin: 32px 0;">' + msg + '</p>'
                 + '</div>'

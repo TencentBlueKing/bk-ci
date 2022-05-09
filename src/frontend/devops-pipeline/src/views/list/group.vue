@@ -160,7 +160,7 @@
         },
         components: {
             'empty-tips': imgemptyTips,
-            'logo': Logo
+            logo: Logo
         },
         data () {
             return {
@@ -217,7 +217,7 @@
         },
         computed: {
             ...mapGetters({
-                'tagGroupList': 'pipelines/getTagGroupList'
+                tagGroupList: 'pipelines/getTagGroupList'
             }),
             hasGroup () {
                 return (!this.tagGroupList.length || this.tagGroupList.length < 1)
@@ -405,6 +405,7 @@
                     confirmFn: async () => {
                         try {
                             await $store.dispatch('pipelines/deleteGroup', {
+                                projectId: this.projectId,
                                 groupId: this.tagGroupList[groupIndex].id
                             }).then(res => {
                                 theme = res ? 'success' : 'error'
@@ -436,6 +437,7 @@
                     title: '确认删除该标签?',
                     confirmFn: () => {
                         this.REQUEST('deleteTag', {
+                            projectId: this.projectId,
                             labelId: this.tagGroupList[groupIndex].labels[tagIndex].id
                         })
                     }
@@ -552,7 +554,10 @@
                         }
                         this.isAddTagEnter = true
                     }
-                    this.REQUEST(path, params, () => {
+                    this.REQUEST(path, {
+                        ...params,
+                        projectId: this.projectId
+                    }, () => {
                         this.reset(groupIndex, tagIndex)
                     })
                     return false
@@ -565,7 +570,7 @@
                     const group = this.tagGroupList[this.addTagGroupIndex]
                     this.btnIsdisable = false
                     this.active.isGroupEdit = false
-                    if (!group.labels[this.addTagIndex].hasOwnProperty('groupId')) {
+                    if (!Object.prototype.hasOwnProperty.call(group.labels[this.addTagIndex], 'groupId')) {
                         this.$store.commit('pipelines/resetTag', {
                             groupIndex: this.addTagGroupIndex,
                             boolean: false
@@ -661,7 +666,7 @@
         position: relative;
     }
     ::-webkit-input-placeholder{
-        color: $fontLigtherColor;
+        color: $fontLighterColor;
     }
     .bk-sideslider-wrapper {
         top: 0;
@@ -709,7 +714,7 @@
                     height: 36px;
                     padding: 0 12px;
                     line-height: 36px;
-                    border: 1px solid $fontLigtherColor;
+                    border: 1px solid $fontLighterColor;
                     border-radius: 2px;
                     outline: none;
                     font-size: 14px;
@@ -789,7 +794,7 @@
                 font-size: 0;
                 .devops-icon {
                     font-size: 10px;
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                 }
                 .group-card-icon,
                 .group-card-edit-icon {
@@ -918,7 +923,7 @@
             }
             .icon-more {
                 margin-left: -6px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 vertical-align: middle;
             }
         }

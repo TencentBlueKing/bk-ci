@@ -104,7 +104,7 @@ class PipelineDockerPoolDao @Autowired constructor() {
         with(TDispatchPipelineDockerPool.T_DISPATCH_PIPELINE_DOCKER_POOL) {
             return dslContext.selectFrom(this)
                 .where(STATUS.eq(2))
-                .and(GMT_MODIFIED.lessOrEqual(timestampSubDay(2)))
+                .and(GMT_MODIFIED.lessOrEqual(timestampSubDay(7)))
                 .fetch()
         }
     }
@@ -115,7 +115,7 @@ class PipelineDockerPoolDao @Autowired constructor() {
                 .set(STATUS, PipelineTaskStatus.DONE.status)
                 .set(GMT_MODIFIED, LocalDateTime.now())
                 .where(STATUS.eq(2))
-                .and(GMT_MODIFIED.lessOrEqual(timestampSubDay(2)))
+                .and(GMT_MODIFIED.lessOrEqual(timestampSubDay(7)))
                 .execute() == 1
         }
     }

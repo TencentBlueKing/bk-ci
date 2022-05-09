@@ -30,11 +30,14 @@ package com.tencent.devops.environment.resources.thirdPartyAgent
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ExternalThirdPartyAgentResource
 import com.tencent.devops.environment.service.thirdPartyAgent.DownloadAgentInstallService
+import com.tencent.devops.environment.service.thirdPartyAgent.ImportService
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
 class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
-    private val downloadAgentInstallService: DownloadAgentInstallService
+    private val downloadAgentInstallService: DownloadAgentInstallService,
+    private val importService: ImportService
 ) : ExternalThirdPartyAgentResource {
     override fun downloadAgentInstallScript(agentId: String) =
         downloadAgentInstallService.downloadInstallScript(agentId)
@@ -44,4 +47,9 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
 
     override fun downloadJRE(agentId: String, eTag: String?) =
         downloadAgentInstallService.downloadJre(agentId, eTag)
+
+    override fun downloadNewInstallAgentBatchFile(agentHashId: String): Response {
+        val newAgentId = importService.generateAgentByOtherAgentId(agentHashId)
+        return downloadAgentInstallService.downloadInstallAgentBatchFile(newAgentId)
+    }
 }

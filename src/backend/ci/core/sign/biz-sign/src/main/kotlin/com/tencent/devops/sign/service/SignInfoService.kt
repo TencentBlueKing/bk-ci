@@ -29,10 +29,13 @@ package com.tencent.devops.sign.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
+import com.tencent.devops.sign.api.pojo.SignHistory
 import com.tencent.devops.sign.dao.SignHistoryDao
 import com.tencent.devops.sign.dao.SignIpaInfoDao
 import com.tencent.devops.sign.utils.IpaFileUtil
@@ -41,6 +44,9 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Service
 @Suppress("TooManyFunctions")
@@ -49,6 +55,48 @@ class SignInfoService(
     private val signIpaInfoDao: SignIpaInfoDao,
     private val signHistoryDao: SignHistoryDao
 ) {
+
+    fun listHistory(
+        userId: String,
+        startTime: Long?,
+        endTime: Long?,
+        offset: Int,
+        limit: Int
+    ): SQLPage<SignHistory> {
+        var startTimeTemp = startTime
+        if (startTimeTemp == null) {
+            startTimeTemp = LocalDateTime.of(LocalDate.now(), LocalTime.MIN).timestampmilli()
+        }
+        var endTimeTemp = endTime
+        if (endTimeTemp == null) {
+            endTimeTemp = LocalDateTime.of(LocalDate.now(), LocalTime.MAX).timestampmilli()
+        }
+
+        logger.info("list sign history param|$userId|$startTimeTemp|$endTimeTemp")
+        val count = signHistoryDao.count(
+            dslContext = dslContext,
+            startTime = startTimeTemp,
+            endTime = endTimeTemp
+        )
+        val records = signHistoryDao.list(
+            dslContext = dslContext,
+            startTime = startTimeTemp,
+            endTime = endTimeTemp,
+            offset = offset,
+            limit = limit
+        )
+        return SQLPage(
+            count,
+            records.map {
+                val history = signHistoryDao.convert(it)
+                val content = signIpaInfoDao.getSignInfoRecord(dslContext, history.resignId)
+                content?.let { info ->
+                    history.ipaSignInfoStr = String(Base64Util.decode(info.requestContent))
+                }
+                history
+            }
+        )
+    }
 
     fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo): Int {
         logger.info("[$resignId] save ipaSignInfo|header=$ipaSignInfoHeader|info=$info")

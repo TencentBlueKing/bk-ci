@@ -27,9 +27,7 @@
 
 package com.tencent.devops.process.engine.control.command.container.impl
 
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.process.engine.common.BS_MANUAL_STOP_PAUSE_ATOM
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
@@ -53,13 +51,11 @@ class CheckPauseContainerCmd : ContainerCmd {
     override fun execute(commandContext: ContainerContext) {
         val container = commandContext.container
         val event = commandContext.event
-        if (container.status.isPause() &&
-            event.actionType == ActionType.END &&
-            event.source == BS_MANUAL_STOP_PAUSE_ATOM
-        ) {
+        // #5244 暂停时收到取消指令[ActionType.END]
+        if (container.status.isPause() && event.actionType.isEnd() && event.source != "completeClaimBuildTask") {
             LOG.info("ENGINE|${event.buildId}|${event.source}|PAUSE_CANCEL|${event.stageId}|j(${event.containerId})")
             commandContext.buildStatus = BuildStatus.CANCELED
-            commandContext.latestSummary = "j(${container.containerId}) pause"
+            commandContext.latestSummary = "j(${container.containerId}) pause cancel"
             commandContext.cmdFlowState = CmdFlowState.FINALLY
         }
     }

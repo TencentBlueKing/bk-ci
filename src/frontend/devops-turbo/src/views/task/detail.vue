@@ -1,41 +1,44 @@
 <template>
     <article class="task-detail-home" v-bkloading="{ isLoading }">
-        <bk-breadcrumb separator-class="bk-icon icon-angle-right" class="bread-crumb">
-            <bk-breadcrumb-item :to="{ name: 'taskList' }"> {{ $t('turbo.方案列表') }} </bk-breadcrumb-item>
-            <bk-breadcrumb-item> {{ $t('turbo.查看加速方案') }} </bk-breadcrumb-item>
-        </bk-breadcrumb>
+        <template v-if="hasPermission">
+            <bk-breadcrumb separator-class="bk-icon icon-angle-right" class="bread-crumb">
+                <bk-breadcrumb-item :to="{ name: 'taskList' }"> {{ $t('turbo.方案列表') }} </bk-breadcrumb-item>
+                <bk-breadcrumb-item> {{ $t('turbo.查看加速方案') }} </bk-breadcrumb-item>
+            </bk-breadcrumb>
 
-        <section class="task-detail-body" v-if="!isLoading">
-            <main class="task-detail-left">
-                <task-basic :form-data.sync="formData" :only-edit="false" ref="basic" />
-                <task-param :form-data.sync="formData" :only-edit="false" />
-            </main>
+            <section class="task-detail-body" v-if="!isLoading">
+                <main class="task-detail-left">
+                    <task-basic :form-data.sync="formData" :only-edit="false" ref="basic" />
+                    <task-param :form-data.sync="formData" :only-edit="false" />
+                </main>
 
-            <main class="task-detail-right g-turbo-box">
-                <section class="g-turbo-task-tip task-use">
-                    <h3 class="create-title g-turbo-deep-black-font"> {{ $t('turbo.使用方式') }} </h3>
-                    <section v-html="formData.userManual"></section>
-                </section>
+                <main class="task-detail-right g-turbo-box">
+                    <section class="g-turbo-task-tip task-use">
+                        <h3 class="create-title g-turbo-deep-black-font"> {{ $t('turbo.使用方式') }} </h3>
+                        <section v-html="formData.userManual"></section>
+                    </section>
 
-                <section class="task-record">
-                    <h3 class="create-title g-turbo-deep-black-font"> {{ $t('turbo.更新记录') }} </h3>
-                    <bk-form :label-width="130" class="g-turbo-form-left record-form">
-                        <bk-form-item :label="$t('turbo.创建人：')">
-                            {{ formData.createdBy }}
-                        </bk-form-item>
-                        <bk-form-item :label="$t('turbo.创建时间：')">
-                            {{ formData.createdDate }}
-                        </bk-form-item>
-                        <bk-form-item :label="$t('turbo.最近修改人：')">
-                            {{ formData.updatedBy }}
-                        </bk-form-item>
-                        <bk-form-item :label="$t('turbo.修改时间：')">
-                            {{ formData.updatedDate }}
-                        </bk-form-item>
-                    </bk-form>
-                </section>
-            </main>
-        </section>
+                    <section class="task-record">
+                        <h3 class="create-title g-turbo-deep-black-font"> {{ $t('turbo.更新记录') }} </h3>
+                        <bk-form :label-width="130" class="g-turbo-form-left record-form">
+                            <bk-form-item :label="$t('turbo.创建人：')">
+                                {{ formData.createdBy }}
+                            </bk-form-item>
+                            <bk-form-item :label="$t('turbo.创建时间：')">
+                                {{ formData.createdDate }}
+                            </bk-form-item>
+                            <bk-form-item :label="$t('turbo.最近修改人：')">
+                                {{ formData.updatedBy }}
+                            </bk-form-item>
+                            <bk-form-item :label="$t('turbo.修改时间：')">
+                                {{ formData.updatedDate }}
+                            </bk-form-item>
+                        </bk-form>
+                    </section>
+                </main>
+            </section>
+        </template>
+        <permission-exception v-else :message="errMessage" />
     </article>
 </template>
 
@@ -43,17 +46,21 @@
     import { getPlanDetailById } from '@/api'
     import taskBasic from '@/components/task/basic'
     import taskParam from '@/components/task/param'
+    import permissionException from '@/components/exception/permission.vue'
 
     export default {
         components: {
             taskBasic,
-            taskParam
+            taskParam,
+            permissionException
         },
 
         data () {
             return {
                 formData: {},
-                isLoading: false
+                isLoading: false,
+                hasPermission: true,
+                errMessage: ''
             }
         },
 
@@ -68,7 +75,15 @@
                 getPlanDetailById(planId).then((res) => {
                     this.formData = res
                 }).catch((err) => {
-                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                    if (err.code === 2300017) {
+                        this.hasPermission = false
+                        this.errMessage = err.message
+                    } else {
+                        this.$bkMessage({
+                            message: err.message || err,
+                            theme: 'error'
+                        })
+                    }
                 }).finally(() => {
                     this.isLoading = false
                 })
@@ -84,7 +99,7 @@
         .bread-crumb {
             font-size: 12px;
             margin-bottom: 10px;
-            /deep/ .bk-breadcrumb-separator {
+            ::v-deep .bk-breadcrumb-separator {
                 font-size: 14px;
             }
             .bk-breadcrumb-item:last-child {
@@ -110,7 +125,7 @@
                 border-top: 1px solid #DCDEE5;
                 padding: 26px 0;
             }
-            /deep/ .bk-form {
+            ::v-deep .bk-form {
                 .bk-label {
                     color: #999;
                     min-height: 14px;

@@ -40,9 +40,9 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_COMMIT_TIME
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_REVERSION
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_USERNAME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_COMMIT_TIME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_REVERSION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_USERNAME
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")

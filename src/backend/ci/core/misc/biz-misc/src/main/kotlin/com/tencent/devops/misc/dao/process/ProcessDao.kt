@@ -40,6 +40,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("LongParameterList", "TooManyFunctions")
 @Repository
 class ProcessDao {
 
@@ -59,7 +60,6 @@ class ProcessDao {
                     pipelineId,
                     buildId
                 ).onDuplicateKeyUpdate()
-                .set(PROJECT_ID, projectId)
                 .set(BUILD_ID, buildId)
                 .execute()
         }
@@ -80,7 +80,6 @@ class ProcessDao {
                     projectId,
                     pipelineId
                 ).onDuplicateKeyUpdate()
-                .set(PROJECT_ID, projectId)
                 .set(PIPELINE_ID, pipelineId)
                 .execute()
         }
@@ -106,16 +105,17 @@ class ProcessDao {
 
     fun getPipelineInfoByPipelineId(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String
     ): TPipelineInfoRecord? {
         with(TPipelineInfo.T_PIPELINE_INFO) {
             return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchAny()
         }
     }
 
-    fun getMinPipelineInfoIdListByProjectId(
+    fun getMinPipelineInfoIdByProjectId(
         dslContext: DSLContext,
         projectId: String
     ): Long {
@@ -140,14 +140,35 @@ class ProcessDao {
         }
     }
 
-    fun getTotalBuildCount(
+    fun getMinPipelineBuildNum(
         dslContext: DSLContext,
-        pipelineId: String,
-        maxBuildNum: Int? = null,
-        maxStartTime: LocalDateTime? = null
+        projectId: String,
+        pipelineId: String
     ): Long {
         with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
-            val conditions = getQueryBuildHistoryCondition(pipelineId, maxBuildNum, maxStartTime)
+            return dslContext.select(DSL.min(BUILD_NUM))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun getTotalBuildCount(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        maxBuildNum: Int? = null,
+        maxStartTime: LocalDateTime? = null,
+        geTimeFlag: Boolean? = null
+    ): Long {
+        with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
+            val conditions = getQueryBuildHistoryCondition(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                maxBuildNum = maxBuildNum,
+                maxStartTime = maxStartTime,
+                geTimeFlag = geTimeFlag
+            )
             return dslContext.select(DSL.max(BUILD_NUM))
                 .from(this)
                 .where(conditions)
@@ -156,32 +177,48 @@ class ProcessDao {
     }
 
     private fun TPipelineBuildHistory.getQueryBuildHistoryCondition(
+        projectId: String,
         pipelineId: String,
         maxBuildNum: Int?,
-        maxStartTime: LocalDateTime?
+        maxStartTime: LocalDateTime?,
+        geTimeFlag: Boolean?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
+        conditions.add(PROJECT_ID.eq(projectId))
         conditions.add(PIPELINE_ID.eq(pipelineId))
         if (maxBuildNum != null) {
             conditions.add(BUILD_NUM.le(maxBuildNum))
         }
         if (maxStartTime != null) {
-            conditions.add(START_TIME.lt(maxStartTime))
+            if (geTimeFlag != true) {
+                conditions.add(START_TIME.lt(maxStartTime))
+            } else {
+                conditions.add(START_TIME.ge(maxStartTime))
+            }
         }
         return conditions
     }
 
+    @Suppress("LongParameterList")
     fun getHistoryBuildIdList(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         totalHandleNum: Int,
         handlePageSize: Int,
         isCompletelyDelete: Boolean,
         maxBuildNum: Int? = null,
-        maxStartTime: LocalDateTime? = null
+        maxStartTime: LocalDateTime? = null,
+        geTimeFlag: Boolean? = null
     ): Result<out Record>? {
         with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
-            val conditions = getQueryBuildHistoryCondition(pipelineId, maxBuildNum, maxStartTime)
+            val conditions = getQueryBuildHistoryCondition(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                maxBuildNum = maxBuildNum,
+                maxStartTime = maxStartTime,
+                geTimeFlag = geTimeFlag
+            )
             val baseStep = dslContext.select(BUILD_ID)
                 .from(this)
                 .where(conditions)
@@ -190,7 +227,7 @@ class ProcessDao {
             } else {
                 baseStep.limit(totalHandleNum, handlePageSize)
             }
-            return baseStep.fetch()
+            return baseStep.orderBy(BUILD_ID).fetch()
         }
     }
 

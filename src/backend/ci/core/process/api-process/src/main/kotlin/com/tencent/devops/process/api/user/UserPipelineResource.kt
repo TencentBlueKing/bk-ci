@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
@@ -340,7 +341,6 @@ interface UserPipelineResource {
 
     @ApiOperation("用户获取视图流水线编排列表")
     @GET
-    // @Path("/projects/{projectId}/listViewPipelines")
     @Path("/projects/{projectId}/listViewPipelines")
     fun listViewPipelines(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -374,7 +374,6 @@ interface UserPipelineResource {
 
     @ApiOperation("有权限流水线编排列表")
     @GET
-    // @Path("/projects/{projectId}/authPipelines")
     @Path("/{projectId}/")
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -559,4 +558,21 @@ interface UserPipelineResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
+
+    @ApiOperation("校验matrix yaml格式")
+    @POST
+    @Path("/{projectId}/{pipelineId}/matrix/check")
+    fun checkYaml(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("yaml内容", required = true)
+        yaml: MatrixPipelineInfo
+    ): Result<MatrixPipelineInfo>
 }

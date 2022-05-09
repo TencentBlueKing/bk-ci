@@ -31,10 +31,12 @@ import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
+import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.service.PipelineAgentLessDispatchService
+import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
@@ -47,12 +49,20 @@ import org.springframework.stereotype.Component
 class AgentLessListener @Autowired constructor(
     private val pipelineAgentLessDispatchService: PipelineAgentLessDispatchService,
     private val client: Client,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val jobQuotaService: JobQuotaService
 ) {
 
     fun listenAgentStartUpEvent(event: PipelineBuildLessStartupDispatchEvent) {
         try {
             logger.info("start build less($event)")
+
+            // 开始启动无编译构建，增加构建次数
+            if (!jobQuotaService.checkAndAddRunningJob(event, JobQuotaVmType.AGENTLESS)) {
+                logger.error("[${event.buildId}]|BUILD_LESS| AgentLess Job quota exceed quota.")
+                return
+            }
+
             pipelineAgentLessDispatchService.startUpBuildLess(event)
         } catch (discard: Throwable) {
             logger.warn("[${event.buildId}|${event.vmSeqId}] Container startup failure")
@@ -96,6 +106,15 @@ class AgentLessListener @Autowired constructor(
             pipelineAgentLessDispatchService.shutdown(pipelineBuildLessDockerAgentShutdownEvent)
         } catch (ignored: Throwable) {
             logger.error("Fail to start the pipe build($pipelineBuildLessDockerAgentShutdownEvent)", ignored)
+        } finally {
+            // 不管shutdown成功失败，都要回收配额；这里回收job，将自动累加agent执行时间
+            jobQuotaService.removeRunningJob(
+                projectId = pipelineBuildLessDockerAgentShutdownEvent.projectId,
+                pipelineId = pipelineBuildLessDockerAgentShutdownEvent.pipelineId,
+                buildId = pipelineBuildLessDockerAgentShutdownEvent.buildId,
+                vmSeqId = pipelineBuildLessDockerAgentShutdownEvent.vmSeqId,
+                executeCount = pipelineBuildLessDockerAgentShutdownEvent.executeCount
+            )
         }
     }
 

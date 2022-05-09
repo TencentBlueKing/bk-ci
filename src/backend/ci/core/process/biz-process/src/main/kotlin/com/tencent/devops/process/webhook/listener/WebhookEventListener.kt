@@ -39,6 +39,7 @@ import com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GitlabWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.ICodeWebhookEvent
+import com.tencent.devops.process.webhook.pojo.event.commit.P4WebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.SvnWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.TGitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType
@@ -89,6 +90,7 @@ class WebhookEventListener constructor(
                         body = event.requestContent
                     )
                 }
+                CommitEventType.P4 -> pipelineBuildService.externalP4Build(event.requestContent)
             }
             result = true
         } catch (ignore: Throwable) {
@@ -138,6 +140,14 @@ class WebhookEventListener constructor(
                                 delayMills = DELAY_MILLS,
                                 event = event.event,
                                 secret = event.secret
+                            )
+                        }
+                        CommitEventType.P4 -> {
+                            event as P4WebhookEvent
+                            P4WebhookEvent(
+                                requestContent = requestContent,
+                                retryTime = retryTime - 1,
+                                delayMills = DELAY_MILLS
                             )
                         }
                     }

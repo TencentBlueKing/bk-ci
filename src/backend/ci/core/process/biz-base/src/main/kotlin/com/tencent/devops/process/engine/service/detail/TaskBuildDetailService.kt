@@ -31,7 +31,6 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
@@ -39,27 +38,27 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
-import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
+import com.tencent.devops.store.api.atom.ServiceAtomResource
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
-@Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions")
+@Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions", "ComplexCondition")
 @Service
 class TaskBuildDetailService(
     private val client: Client,
     private val buildVariableService: BuildVariableService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val buildLogPrinter: BuildLogPrinter,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
@@ -73,8 +72,15 @@ class TaskBuildDetailService(
     redisOperation
 ) {
 
-    fun taskPause(buildId: String, stageId: String, containerId: String, taskId: String, buildStatus: BuildStatus) {
-        update(buildId = buildId, modelInterface = object : ModelInterface {
+    fun taskPause(
+        projectId: String,
+        buildId: String,
+        stageId: String,
+        containerId: String,
+        taskId: String,
+        buildStatus: BuildStatus
+    ) {
+        update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
             var update = false
 
             override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
@@ -94,11 +100,12 @@ class TaskBuildDetailService(
             }
         },
             buildStatus = BuildStatus.RUNNING,
-            operation = "taskPause"
+            operation = "taskPause#$taskId"
         )
     }
 
     fun updateTaskStatus(
+        projectId: String,
         buildId: String,
         taskId: String,
         taskStatus: BuildStatus,
@@ -106,6 +113,7 @@ class TaskBuildDetailService(
         operation: String
     ) {
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
@@ -123,12 +131,13 @@ class TaskBuildDetailService(
                 }
             },
             buildStatus = buildStatus,
-            operation = operation
+            operation = "$operation#$taskId"
         )
     }
 
-    fun taskStart(buildId: String, taskId: String) {
+    fun taskStart(projectId: String, buildId: String, taskId: String) {
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
@@ -137,15 +146,27 @@ class TaskBuildDetailService(
                     if (e.id == taskId) {
                         if (e is ManualReviewUserTaskElement) {
                             e.status = BuildStatus.REVIEWING.name
-                            //                        c.status = BuildStatus.REVIEWING.name
                             // Replace the review user with environment
                             val list = mutableListOf<String>()
                             e.reviewUsers.forEach { reviewUser ->
-                                list.addAll(buildVariableService.replaceTemplate(buildId, reviewUser).split(delimiters))
+                                list.addAll(buildVariableService.replaceTemplate(projectId, buildId, reviewUser)
+                                    .split(delimiters))
                             }
                             e.reviewUsers.clear()
                             e.reviewUsers.addAll(list)
-                        } else if (e is QualityGateInElement || e is QualityGateOutElement) {
+                        } else if (e is MatrixStatusElement &&
+                            e.originClassType == ManualReviewUserTaskElement.classType) {
+                            e.status = BuildStatus.REVIEWING.name
+                            // Replace the review user with environment
+                            val list = mutableListOf<String>()
+                            e.reviewUsers?.forEach { reviewUser ->
+                                list.addAll(buildVariableService.replaceTemplate(projectId, buildId, reviewUser)
+                                    .split(delimiters))
+                            }
+                            e.reviewUsers = list
+                        } else if (e is QualityGateInElement || e is QualityGateOutElement ||
+                            e.getTaskAtom() == QualityGateInElement.classType ||
+                            e.getTaskAtom() == QualityGateOutElement.classType) {
                             e.status = BuildStatus.REVIEWING.name
                             c.status = BuildStatus.REVIEWING.name
                         } else {
@@ -165,7 +186,12 @@ class TaskBuildDetailService(
                         e.errorType = null
                         e.errorCode = null
                         e.errorMsg = null
-                        e.version = findTaskVersion(buildId, e.getAtomCode(), e.version, e.getClassType())
+                        e.version = findTaskVersion(
+                            projectId = projectId,
+                            atomCode = e.getAtomCode(),
+                            atomVersion = e.version,
+                            atomClass = e.getClassType()
+                        )
                         update = true
                         return Traverse.BREAK
                     }
@@ -177,12 +203,13 @@ class TaskBuildDetailService(
                 }
             },
             buildStatus = BuildStatus.RUNNING,
-            operation = "taskStart"
+            operation = "taskStart#$taskId"
         )
     }
 
-    fun taskCancel(buildId: String, containerId: String, taskId: String, cancelUser: String?) {
+    fun taskCancel(projectId: String, buildId: String, containerId: String, taskId: String, cancelUser: String?) {
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
@@ -205,11 +232,12 @@ class TaskBuildDetailService(
             },
             buildStatus = BuildStatus.RUNNING,
             cancelUser = cancelUser,
-            operation = "taskCancel"
+            operation = "taskCancel#$taskId"
         )
     }
 
     fun taskEnd(
+        projectId: String,
         buildId: String,
         taskId: String,
         buildStatus: BuildStatus,
@@ -218,7 +246,7 @@ class TaskBuildDetailService(
         errorMsg: String? = null
     ): List<PipelineTaskStatusInfo> {
         val updateTaskStatusInfos = mutableListOf<PipelineTaskStatusInfo>()
-        update(buildId, object : ModelInterface {
+        update(projectId, buildId, object : ModelInterface {
 
             var update = false
             override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
@@ -271,25 +299,8 @@ class TaskBuildDetailService(
             }
         },
             buildStatus = BuildStatus.RUNNING,
-            operation = "taskEnd"
+            operation = "taskEnd#$taskId"
         )
-        updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
-            pipelineRuntimeService.updateTaskStatusInfo(
-                buildId = buildId,
-                taskId = updateTaskStatusInfo.taskId,
-                taskStatus = updateTaskStatusInfo.buildStatus,
-                transactionContext = dslContext
-            )
-            if (!updateTaskStatusInfo.message.isNullOrBlank()) {
-                buildLogPrinter.addLine(
-                    buildId = buildId,
-                    message = updateTaskStatusInfo.message,
-                    tag = updateTaskStatusInfo.taskId,
-                    jobId = updateTaskStatusInfo.containerHashId,
-                    executeCount = updateTaskStatusInfo.executeCount
-                )
-            }
-        }
         return updateTaskStatusInfos
     }
 
@@ -453,8 +464,16 @@ class TaskBuildDetailService(
     }
 
     @Suppress("NestedBlockDepth")
-    fun taskContinue(buildId: String, stageId: String, containerId: String, taskId: String, element: Element?) {
+    fun taskContinue(
+        projectId: String,
+        buildId: String,
+        stageId: String,
+        containerId: String,
+        taskId: String,
+        element: Element?
+    ) {
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
 
@@ -465,13 +484,14 @@ class TaskBuildDetailService(
                     return if (stage.id.equals(stageId)) Traverse.CONTINUE else Traverse.SKIP
                 }
 
-                override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
-                    if (container.id.equals(containerId)) {
-                        val newElement: ArrayList<Element> by lazy { ArrayList<Element>(container.elements.size) }
-                        container.elements.forEach { e ->
+                override fun onFindContainer(container: Container, stage: Stage): Traverse {
+                    val targetContainer = container.getContainerById(containerId)
+                    if (targetContainer != null) {
+                        val newElement: ArrayList<Element> by lazy { ArrayList(targetContainer.elements.size) }
+                        targetContainer.elements.forEach { e ->
                             if (e.id.equals(taskId)) {
                                 // 设置插件状态为排队状态
-                                container.status = BuildStatus.QUEUE.name
+                                targetContainer.status = BuildStatus.QUEUE.name
                                 update = true
                                 if (element != null) { // 若element不为null，说明element内的input有改动，需要替换
                                     element.status = null
@@ -487,7 +507,7 @@ class TaskBuildDetailService(
                             }
                         }
                         if (element != null) {
-                            container.elements = newElement
+                            targetContainer.elements = newElement
                         }
                         return Traverse.BREAK
                     }
@@ -499,38 +519,31 @@ class TaskBuildDetailService(
                 }
             },
             buildStatus = BuildStatus.RUNNING,
-            operation = "updateElementWhenPauseContinue"
+            operation = "updateElementWhenPauseContinue#$taskId"
         )
     }
 
-    private val projectCache = Caffeine.newBuilder()
-        .maximumSize(50000)
-        .expireAfterAccess(30, TimeUnit.MINUTES)
-        .build<String/*BuildId*/, String/*projectId*/> { buildId ->
-            pipelineBuildDao.getBuildInfo(dslContext, buildId)?.projectId
-        }
-
     private val atomCache = Caffeine.newBuilder()
-        .maximumSize(2000)
-        .expireAfterAccess(30, TimeUnit.MINUTES)
+        .maximumSize(20000)
+        .expireAfterAccess(6, TimeUnit.HOURS)
         .build<String/*projectCode VS atomCode VS atomVersion*/, String/*true version*/> { mix ->
             val keys = mix.split(" VS ")
-            client.get(ServiceMarketAtomEnvResource::class)
-                .getAtomEnv(projectCode = keys[0], atomCode = keys[1], version = keys[2]).data?.version
+            client.get(ServiceAtomResource::class)
+                .getAtomRealVersion(projectCode = keys[0], atomCode = keys[1], version = keys[2]).data
         }
 
-    fun findTaskVersion(buildId: String, atomCode: String, atomVersion: String, atomClass: String): String {
+    fun findTaskVersion(
+        projectId: String,
+        atomCode: String,
+        atomVersion: String,
+        atomClass: String
+    ): String {
         // 只有是研发商店插件,获取插件的版本信息
-        if (atomClass != "marketBuild" && atomClass != "marketBuildLess") {
+        if (atomClass != MarketBuildAtomElement.classType && atomClass != MarketBuildLessAtomElement.classType) {
             return atomVersion
         }
         return if (atomVersion.contains("*")) {
-            val projectCode = projectCache.get(buildId)
-            if (projectCode != null) {
-                atomCache.get("$projectCode VS $atomCode VS $atomVersion") ?: atomVersion
-            } else {
-                atomVersion
-            }
+            atomCache.get("$projectId VS $atomCode VS $atomVersion") ?: atomVersion
         } else {
             atomVersion
         }

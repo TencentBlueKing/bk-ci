@@ -47,7 +47,7 @@
                     </section>
                 </triggers>
 
-                <div :class="{ 'more-operation-entry': true, 'active': isDropmenuShow }">
+                <div :class="{ 'more-operation-entry': true }">
                     <show-tooltip placement="bottom-end" :content="$t('subpage.saveTempTooltips')" key="more_operation" name="more_operation" style="z-index: 1">
                         <div class="entry-btn">
                             <i class="entry-circle" v-for="i in [1, 2, 3]" :key="i" />
@@ -118,7 +118,7 @@
         data () {
             return {
                 tabMap: {
-                    'trendData': this.$t('history.trendData')
+                    trendData: this.$t('history.trendData')
                 },
                 pipelineListSearching: false,
                 breadCrumbPath: [],
@@ -128,7 +128,7 @@
                 dialogConfig: {
                     title: '',
                     loading: false,
-                    formData: [],
+                    formData: {},
                     formConfig: [],
                     handleDialogConfirm: () => {},
                     handleDialogCancel: () => {}
@@ -152,8 +152,8 @@
                 'isPropertyPanelVisible',
                 'showReviewDialog']),
             ...mapGetters({
-                'isEditing': 'atom/isEditing',
-                'getAllElements': 'atom/getAllElements'
+                isEditing: 'atom/isEditing',
+                getAllElements: 'atom/getAllElements'
             }),
             isEditPage () {
                 return this.$route.name === 'pipelinesEdit'
@@ -243,9 +243,11 @@
                     showTips: true,
                     tipsName: 'switch_pipeline_hint',
                     tipsContent: this.$t('subpage.switchPipelineTooltips'),
-                    to: this.$route.name === 'pipelinesHistory' ? null : {
-                        name: 'pipelinesHistory'
-                    },
+                    to: this.$route.name === 'pipelinesHistory'
+                        ? null
+                        : {
+                            name: 'pipelinesHistory'
+                        },
                     handleSelected: this.handleSelected,
                     searching: this.pipelineListSearching,
                     handleSearch: debounce(this.handleSearchPipeline, 300)
@@ -470,7 +472,7 @@
                 this.$router.push({
                     name: 'templateEdit',
                     params: {
-                        'templateId': templateId
+                        templateId: templateId
                     }
                 })
             },
@@ -615,7 +617,7 @@
                         font-size: 10px;
 
                         &[disabled] {
-                            color: $fontLigtherColor;
+                            color: $fontLighterColor;
                             cursor: auto;
                         }
                     }
@@ -655,7 +657,7 @@
             height: 100%;
 
             .devops-icon {
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 padding-left: 16px;
                 cursor: pointer;
                 &:hover,

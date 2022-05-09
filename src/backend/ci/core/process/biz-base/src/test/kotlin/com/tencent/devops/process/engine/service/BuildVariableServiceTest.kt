@@ -58,7 +58,7 @@ class BuildVariableServiceTest {
 
     @Test
     fun getAllVariable() {
-
+        val projectId = "devops"
         val buildId = "b-1234567890"
 
         val mockVars = mutableMapOf(
@@ -72,8 +72,8 @@ class BuildVariableServiceTest {
             "pipeline.version" to "34"
         )
 
-        whenever(pipelineBuildVarDao.getVars(dslContext, buildId)).thenReturn(mockVars)
-        val allVariable = buildVariableService.getAllVariable(buildId)
+        whenever(pipelineBuildVarDao.getVars(dslContext, projectId, buildId)).thenReturn(mockVars)
+        val allVariable = buildVariableService.getAllVariable(projectId, buildId)
 
         Assert.assertEquals(mockVars["pipeline.start.channel"], allVariable[PIPELINE_START_CHANNEL])
         Assert.assertEquals(allVariable["pipeline.start.channel"], allVariable[PIPELINE_START_CHANNEL])

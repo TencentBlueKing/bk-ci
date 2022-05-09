@@ -4,7 +4,7 @@
             <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'key')" :param-values="paramValues" :url-query="parameter.keyUrlQuery" :multiple="parameter.keyMultiple" :value="parameter.key" :disabled="!parameter.enable || parameter.keyDisable" :type="parameter.keyType" :list-type="parameter.keyListType" :url="parameter.keyUrl" :list="parameter.keyList"></parameter-input>
             <span class="input-seg">=</span>
             <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'value')" :param-values="paramValues" :url-query="parameter.valueUrlQuery" :multiple="parameter.valueMultiple" :value="parameter.value" :disabled="!parameter.enable || parameter.valueDisable" :type="parameter.valueType" :list-type="parameter.valueListType" :url="parameter.valueUrl" :list="parameter.valueList"></parameter-input>
-            <bk-checkbox @change="updateParameters" v-model="parameter.enable" class="param-enable" v-if="param.showEnable"></bk-checkbox>
+            <bk-checkbox @change="updateParameters" v-model="parameter.enable" class="param-enable" v-if="param.showEnable" v-bk-tooltips="{ content: param.enableTips, disabled: !param.enableTips }"></bk-checkbox>
         </li>
     </ul>
 </template>
@@ -61,6 +61,12 @@
 
         methods: {
             initData () {
+                if (this.disabled) {
+                    let values = this.atomValue[this.name] || []
+                    if (!Array.isArray(values)) values = JSON.parse(values)
+                    this.parameters = values
+                    return
+                }
                 if (this.param.paramType === 'list') {
                     const list = this.param.parameters || []
                     this.parameters = JSON.parse(JSON.stringify(list))
@@ -79,6 +85,7 @@
                 //     if (typeof value === 'undefined') isErrorParam = true
                 //     return value
                 // })
+                
                 let [url] = this.generateReqUrl(this.param.url, this.paramValues)
 
                 if (!url) return

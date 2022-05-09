@@ -27,7 +27,6 @@
 
 package com.tencent.devops.worker.common.api.atom
 
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
@@ -63,17 +62,46 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
      */
     fun getAtomSensitiveConf(atomCode: String): Result<List<SensitiveConfResp>?>
 
-    fun archiveAtom(filePath: String, destPath: String, workspace: File, buildVariables: BuildVariables): String?
+    fun archiveAtom(
+        atomCode: String,
+        atomVersion: String,
+        file: File,
+        destPath: String,
+        buildVariables: BuildVariables
+    ): String
 
-    fun uploadAtom(file: File, destPath: String, buildVariables: BuildVariables)
+    fun uploadAtomPkgFile(
+        atomCode: String,
+        atomVersion: String,
+        file: File,
+        destPath: String,
+        buildVariables: BuildVariables
+    )
 
-    fun uploadAtomFile(file: File, fileType: FileTypeEnum, destPath: String)
+    fun uploadAtomStaticFile(
+        atomCode: String,
+        atomVersion: String,
+        file: File,
+        destPath: String,
+        buildVariables: BuildVariables
+    )
 
-    fun downloadAtom(atomFilePath: String, file: File)
+    fun downloadAtom(
+        projectId: String,
+        atomFilePath: String,
+        atomCreateTime: Long,
+        file: File,
+        isVmBuildEnv: Boolean
+    )
 
     fun getAtomDevLanguageEnvVars(
         language: String,
         buildHostType: String,
         buildHostOs: String
     ): Result<List<AtomDevLanguageEnvVar>?>
+
+    fun addAtomDockingPlatforms(
+        atomCode: String,
+        platformCodes: Set<String>
+    ): Result<Boolean>
 }

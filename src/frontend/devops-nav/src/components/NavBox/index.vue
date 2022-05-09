@@ -20,8 +20,9 @@
                         :href="addConsole(child.link_new)"
                         @click.prevent="gotoPage(child)"
                     >
+                        <img class="service-url-icon" v-if="isAbsoluteUrl(child.logoUrl)" :src="child.logoUrl" />
                         <i
-                            v-if="serviceIcon(child.logoUrl) === 'logo-bcs'"
+                            v-else-if="serviceIcon(child.logoUrl) === 'logo-bcs'"
                             class="devops-icon service-icon icon-logo-bcs"
                         >
                             <span
@@ -66,7 +67,7 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component, Prop } from 'vue-property-decorator'
-    import { urlJoin, getServiceAliasByPath } from '../../utils/util'
+    import { urlJoin, getServiceAliasByPath, isAbsoluteUrl } from '../../utils/util'
     import eventBus from '../../utils/eventBus'
 
     @Component
@@ -75,6 +76,7 @@
 
         @Prop()
         currentPage
+
         @Prop({ required: true })
         services
 
@@ -87,12 +89,14 @@
         @Prop({ default: true })
         withHover: boolean
 
+        isAbsoluteUrl = isAbsoluteUrl
+        
        gotoPage ({ link_new: linkNew }) {
-           const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage['link_new'])
+           const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage.link_new)
            const nAlias = getServiceAliasByPath(linkNew)
            const destUrl = this.addConsole(linkNew)
 
-           if (cAlias === nAlias && this.currentPage && this.currentPage['inject_type'] === 'iframe') {
+           if (cAlias === nAlias && this.currentPage && this.currentPage.inject_type === 'iframe') {
                eventBus.$emit('goHome')
                return
            }
@@ -183,6 +187,11 @@
                         font-size: 20px;
                         margin-right: 12px;
                         color: #6b798e;
+                    }
+                    .service-url-icon {
+                        margin-right: 12px;
+                        width: 20px;
+                        height: 20px;
                     }
                     .service-name {
                         @include ellipsis();

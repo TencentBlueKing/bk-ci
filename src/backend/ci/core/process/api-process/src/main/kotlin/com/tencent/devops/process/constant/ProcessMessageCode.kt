@@ -74,7 +74,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_IS_EXISTS = "2101016" // 流水线: 流水线已存在
     const val ERROR_QUALITY_TASK_NOT_FOUND = "2101017" // 流水线: 质量红线拦截的任务[${elementId}]不存在
     const val ERROR_QUALITY_REVIEWER_NOT_MATCH = "2101018" // 流水线: 用户({0})不在审核人员名单中
-    const val CANCEL_BUILD_BY_OTHER_USER = "2101019" // 流水线: 流水线已经被{0}取消构建
+    const val CANCEL_BUILD_BY_OTHER_USER = "2101019" // 流水线: 流水线已经被{0}取消构建，请过{0}秒后再试
     const val ERROR_START_BUILD_FREQUENT_LIMIT = "2101020" // 流水线: 不能太频繁启动构建
     const val DENY_START_BY_MANUAL = "2101021" // 流水线: 该流水线不能手动启动
     const val DENY_START_BY_REMOTE = "2101022" // 流水线: 该流水线不能远程触发
@@ -113,7 +113,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_STAGE_NO_REVIEW_GROUP = "2101055" // Stage[{0}]准入配置不正确
     const val ERROR_PIPELINE_DESC_TOO_LONG = "2101056" // 流水线描述过长
     const val ILLEGAL_TIMER_INTERVAL_CRONTAB = "2101057" // 定时触发器的定时参数[{0}]不能秒级触发
-    const val ERROR_PIPLEINE_INPUT = "2101058" // 流水线: 前端缓存异常,请刷新后重新操作
+    const val ERROR_PIPLEINE_INPUT = "2101058" // 流水线: 入参buildId与pipelineId不匹配
     const val MODEL_ATOMCODE_NOT_EXSIT = "2101059" // 流水线内包含插件市场不存在的插件
     const val MODEL_ATOMCODE_PROJECT_NOT_INSTALL = "2101060" // 流水线内存在该项目未安装的插件:[{0}]. 请先安装插件
     const val MODEL_DEFAULT_ATOMCODE_NOT_EXSIT = "2101061" // Model内包含不存在的内置插件
@@ -128,6 +128,11 @@ object ProcessMessageCode {
     const val ERROR_ATOM_PARAM_VALUE_TOO_LARGE = "2101070" // 流水线: 插件[{0}]的参数[{1}]值超限，阈值为[{2}]个字符，请联系发布者
     const val ERROR_PIPELINE_STAGE_REVIEW_GROUP_NO_USER = "2101072" // Stage[{0}]的审核组[{1}]没有未配置可执行人
     const val ERROR_PIPELINE_STAGE_REVIEW_GROUP_NOT_FOUND = "2101073" // Stage[{0}]的审核组ID[{1}]不存在
+    const val ERROR_PIPELINE_STAGE_POSITION_NOT_FOUND = "2101074" // Stage[{0}]的准入准出标识[{1}]不正确
+    const val ERROR_PIPELINE_START_WITH_ERROR = "2101075" // 流水线启动准备失败
+    const val ERROR_TEMPLATE_NOT_UPDATE = "2101076" // 该模板无法更新
+    const val ERROR_PIPELINE_MODEL_MATRIX_YAML_CHECK_ERROR = "2101077" // matrix yaml 格式错误
+    const val ERROR_TEMPLATE_VERSION_COUNT_EXCEEDS_LIMIT = "2101078" // 模板的版本数量不能超过{0}个
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败
@@ -139,12 +144,13 @@ object ProcessMessageCode {
     const val ERROR_TIMEOUT_IN_BUILD_QUEUE = "2101904" //  排队超时，取消运行! [{0}]
     const val ERROR_PARUS_PIEPLINE_IS_RUNNINT = "2101905" // 暂停的流水线已开始运行
     const val ERROR_ELEMENT_TOO_LONG = "2101906" // {0} element大小越界
+    const val ERROR_JOB_RUNNING = "2101907" // job非完成态，不能进行重试
 
     const val ERROR_NO_BUILD_EXISTS_BY_ID = "2101100" // 流水线构建[{0}]不存在
     const val ERROR_NO_PIPELINE_EXISTS_BY_ID = "2101101" // 流水线[{0}]不存在
     const val ERROR_SUBPIPELINE_CYCLE_CALL = "2101102" // 子流水线循环调用
     const val ERROR_NO_STAGE_EXISTS_BY_ID = "2101106" // 构建中Stage[{0}]不存在
-    const val ERROR_STAGE_IS_NOT_PAUSED = "2101108" // 构建中Stage[{0}]未处于等待审核
+    const val ERROR_STAGE_IS_NOT_PAUSED = "2101108" // 构建中Stage[{0}]未处于等待把关状态
 
     // 导出数据错误
     const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101200" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}
@@ -195,6 +201,7 @@ object ProcessMessageCode {
     const val ERROR_PERMISSION_DELETE_NEED = "2101984" // 无删除权限
     const val ERROR_PERMISSION_LIST_NEED = "2101985" // 无列表权限
     const val ERROR_PERMISSION_NOT_IN_PROJECT = "2101990" // 非项目成员
+    const val ERROR_PERMISSION_NOT_PROJECT_MANAGER = "2101991" // {0}非项目{1}管理员
 
     // 流水线模块业务错误21011
     const val ERROR_DEL_PIPELINE_TIMER_QUARTZ = "2101107" // 流水线的定时Quartz任务删除失败
@@ -204,6 +211,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_TIMER_SCM_NO_CHANGE = "2101190" // 流水线定时触发时代码没有变更
     const val ERROR_PIPELINE_SUMMARY_NOT_FOUND = "2101191" // 异常：流水线的基础构建数据Summary不存在，请联系管理员
     const val ERROR_PIPELINE_IS_NOT_THE_LATEST = "2101192" // 异常：保存已拒绝，因为保存流水线时已不是最新版本
+    const val ERROR_RESTART_EXSIT = "2101193" // 流水线: 待restart构建{0}已在restart中
 
     // callback error
     const val ERROR_CALLBACK_URL_INVALID = "2101180" // 回调的url非法
@@ -211,6 +219,7 @@ object ProcessMessageCode {
     const val ERROR_CALLBACK_HISTORY_NOT_FOUND = "2101182" // 回调历史记录({0})不存在
     const val ERROR_CALLBACK_REPLY_FAIL = "2101183" // 回调重试失败
     const val ERROR_CALLBACK_NOT_FOUND = "2101184" // 回调记录({0})不存在
+    const val ERROR_CALLBACK_SAVE_FAIL = "2101185" // 创建callback失败,失败原因:{0}
 
     const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101301" // ({0})与({1})的jobId循环依赖
     const val ERROR_PIPELINE_JOBID_EXIST = "2101302" // ({0})的jobId({1})已存在
@@ -225,6 +234,11 @@ object ProcessMessageCode {
     const val BUILD_MSG_PIPELINE = "2101316" // 流水线触发
     const val BUILD_MSG_DESC = "2101317" // 构建信息描述
 
+    // 其他构建进程挂掉的参考信息，自由添加方便打印卫通日志里
+    const val BUILD_WORKER_DEAD_ERROR = "2101318"
+    // 构建机Agent详情链接
+    const val BUILD_AGENT_DETAIL_LINK_ERROR = "2101319"
+
     // 人工审核插件编辑时输入参数错误
     const val ERROR_PARAM_MANUALREVIEW = "2101105"
 
@@ -232,4 +246,11 @@ object ProcessMessageCode {
     const val ERROR_GROUP_COUNT_EXCEEDS_LIMIT = "2101401" // 一个项目标签组不能超过10个
     const val ERROR_LABEL_COUNT_EXCEEDS_LIMIT = "2101402" // 同一分组下最多可添加12个标签
     const val ERROR_LABEL_NAME_TOO_LONG = "2101403" // 一个标签最多输入20个字符
+
+    // 插件级别执行失败log错误组 21015开头
+    const val ERROR_TASK_LOG_USER_FAILED = "2101501" // 【ERROR】请检查脚本代码逻辑是否正确
+    const val ERROR_TASK_LOG_SYSTEM_FAILED = "2101502" // 【ERROR】请联系蓝盾助手DevOps-helper协助定位
+    const val ERROR_TASK_LOG_THIRD_PARTY_FAILED = "2101503" // 【ERROR】请联系该插件所属第三方服务的助手协助定位
+    const val ERROR_TASK_LOG_PLUGIN_FAILED = "2101504" // 【ERROR】请联系插件开发者{0}协助定位
+    const val ERROR_TASK_LOG_OVERVIEW = "2101505" // 错误类型：{0} \n错误代码：{1}
 }

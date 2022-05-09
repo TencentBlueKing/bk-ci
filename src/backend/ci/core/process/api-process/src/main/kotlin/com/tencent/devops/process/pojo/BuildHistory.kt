@@ -68,9 +68,9 @@ data class BuildHistory(
     val artifactList: List<FileInfo>?,
     @ApiModelProperty("备注", required = false)
     val remark: String?,
-    @ApiModelProperty("总耗时(秒)", required = false)
+    @ApiModelProperty("总耗时(毫秒)", required = false)
     val totalTime: Long?,
-    @ApiModelProperty("运行耗时(秒，不包括人工审核时间)", required = false)
+    @ApiModelProperty("运行耗时(毫秒，不包括人工审核时间)", required = false)
     val executeTime: Long?,
     @ApiModelProperty("启动参数", required = false)
     val buildParameters: List<BuildParameters>?,
@@ -89,5 +89,9 @@ data class BuildHistory(
     @ApiModelProperty("构建信息", required = false)
     var buildMsg: String?,
     @ApiModelProperty("自定义构建版本号", required = false)
-    val buildNumAlias: String? = null
+    val buildNumAlias: String? = null,
+    @ApiModelProperty("更新时间", required = false)
+    val updateTime: Long? = null,
+    @ApiModelProperty("并发时,设定的group", required = false)
+    var concurrencyGroup: String? = null
 )

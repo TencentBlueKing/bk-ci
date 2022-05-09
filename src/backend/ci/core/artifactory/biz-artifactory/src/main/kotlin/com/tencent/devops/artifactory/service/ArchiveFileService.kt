@@ -60,7 +60,8 @@ interface ArchiveFileService {
         fileName: String? = null,
         fileType: FileTypeEnum? = null,
         props: Map<String, String?>? = null,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        logo: Boolean? = false
     ): String
 
     /**
@@ -74,7 +75,8 @@ interface ArchiveFileService {
         filePath: String? = null,
         fileType: FileTypeEnum? = null,
         props: Map<String, String?>? = null,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        logo: Boolean? = false
     ): String
 
     /**
@@ -95,17 +97,17 @@ interface ArchiveFileService {
     /**
      * 下载文件至输出流
      */
-    fun downloadFile(filePath: String, outputStream: OutputStream)
+    fun downloadFile(userId: String, filePath: String, outputStream: OutputStream)
 
     /**
      * 下载文件
      */
-    fun downloadFile(filePath: String, response: HttpServletResponse)
+    fun downloadFile(userId: String, filePath: String, response: HttpServletResponse, logo: Boolean? = false)
 
     /**
      * 下载文件到本地
      */
-    fun downloadFileToLocal(filePath: String, response: HttpServletResponse)
+    fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse)
 
     /**
      * 下载报告文件
@@ -151,6 +153,7 @@ interface ArchiveFileService {
      * [fullUrl]表示是否返回包含域名的全url地址
      */
     fun getFileDownloadUrls(
+        userId: String,
         filePath: String,
         artifactoryType: ArtifactoryType,
         fileChannelType: FileChannelTypeEnum,
@@ -207,6 +210,7 @@ interface ArchiveFileService {
      * 跨项目拷贝文件
      */
     fun acrossProjectCopy(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
@@ -218,6 +222,20 @@ interface ArchiveFileService {
      * 删除文件
      */
     fun deleteFile(
+        userId: String,
         filePath: String
     )
+
+    /**
+     * 查询自定义仓库文件
+     */
+    fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        filePath: String,
+        includeFolder: Boolean?,
+        deep: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Page<FileInfo>
 }

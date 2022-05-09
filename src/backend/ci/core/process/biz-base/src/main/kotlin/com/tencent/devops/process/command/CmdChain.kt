@@ -31,9 +31,18 @@ package com.tencent.devops.process.command
  * 引擎控制命令链
  */
 interface CmdChain<T : CmdContext> {
+
     /**
      * 使用泛型的命令上下文[commandContext]执行命令
      * [commandContext]具备传递和存储中间数据，由各部件定义
      */
-    fun doCommand(commandContext: T)
+    fun doCommand(commandContext: T) {
+        if (commandContext.cmdFlowSeq < 0) { // 校正
+            commandContext.cmdFlowSeq = 0
+        }
+        // 每次调用，都增1，走向下一条命令链
+        nextCommand(commandContext)?.doExecute(commandContext = commandContext, chain = this)
+    }
+
+    fun nextCommand(commandContext: T): Cmd<T>?
 }

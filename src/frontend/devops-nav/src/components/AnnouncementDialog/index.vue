@@ -32,13 +32,16 @@
             const announcementHistory = localStorage.getItem('announcementHistory')
             return announcementHistory ? JSON.parse(announcementHistory) : []
         }
+
         @Watch('currentNotice')
         handleWatchValue (currentNotice) {
             this.init(currentNotice)
         }
+
         mounted () {
             this.init(this.currentNotice)
         }
+
         init (currentNotice) {
             if (currentNotice && currentNotice.id && currentNotice.noticeType === 0 && this.announcementHistory.indexOf(currentNotice.id) === -1) {
                 this.announcementHistory.push(currentNotice.id)
@@ -46,6 +49,7 @@
                 this.showDialog = true
             }
         }
+
         toLink (url) {
             if (url) {
                 window.location.href = url
@@ -53,6 +57,7 @@
                 this.showDialog = false
             }
         }
+
         closeDialog () {
             this.showDialog = false
         }
@@ -73,6 +78,7 @@
             height: 547px;
             background-image: url('../../assets/images/guide-foot.png');
             background-size: 100% 100%;
+            overflow-y: scroll;
         }
         .announcement-title {
             text-align: center;

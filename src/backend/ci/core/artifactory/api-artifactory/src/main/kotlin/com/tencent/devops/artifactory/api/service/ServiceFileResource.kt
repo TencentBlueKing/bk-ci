@@ -28,6 +28,7 @@
 package com.tencent.devops.artifactory.api.service
 
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -38,6 +39,7 @@ import java.io.InputStream
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -73,13 +75,19 @@ interface ServiceFileResource {
         projectCode: String? = null,
         @ApiParam("渠道类型", required = true)
         @QueryParam("fileChannelType")
-        fileChannelType: FileChannelTypeEnum = FileChannelTypeEnum.SERVICE
+        fileChannelType: FileChannelTypeEnum = FileChannelTypeEnum.SERVICE,
+        @ApiParam("是否为插件logo", required = false)
+        @QueryParam("logo")
+        logo: Boolean? = false
     ): Result<String?>
 
     @ApiOperation("下载文件")
     @GET
     @Path("/file/download")
     fun downloadFile(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("文件路径", required = true)
         @QueryParam("filePath")
         filePath: String,

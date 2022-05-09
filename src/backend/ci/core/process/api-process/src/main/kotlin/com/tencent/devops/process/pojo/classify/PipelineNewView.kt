@@ -28,15 +28,27 @@
 package com.tencent.devops.process.pojo.classify
 
 import com.tencent.devops.process.pojo.classify.enums.Logic
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
+@ApiModel("流水线视图")
 data class PipelineNewView(
+    @ApiModelProperty("流水线id", required = false)
     val id: String,
+    @ApiModelProperty("项目id", required = false)
     val projectId: String,
+    @ApiModelProperty("名称", required = false)
     val name: String,
+    @ApiModelProperty("是否项目", required = false)
     val projected: Boolean,
+    @ApiModelProperty("创建时间", required = false)
     val createTime: Long,
+    @ApiModelProperty("更新时间", required = false)
     val updateTime: Long,
+    @ApiModelProperty("创建者", required = false)
     val creator: String,
+    @ApiModelProperty("逻辑符", required = false)
     val logic: Logic,
+    @ApiModelProperty("流水线视图过滤器列表", required = false)
     val filters: List<PipelineViewFilter>
 )

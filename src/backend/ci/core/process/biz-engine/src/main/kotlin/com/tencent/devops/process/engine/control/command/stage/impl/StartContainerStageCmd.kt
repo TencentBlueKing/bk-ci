@@ -38,8 +38,9 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineStageService
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -125,6 +126,7 @@ class StartContainerStageCmd(
      * 所有容器都结束，但有失败的容器，则根据容器的状态判断[BuildStatusSwitcher.stageStatusMaker]决定哪种失败状态设置stageStatus
      * 所有容器都结束，但有取消的容器，则直接返回[BuildStatusSwitcher.stageStatusMaker] 决定取消的状态设置stageStatus
      */
+    @Suppress("ComplexMethod")
     private fun pickJob(commandContext: StageContext, actionType: ActionType, userId: String): BuildStatus {
         // hotfix：可能在出现最后的Job失败将前面的运行中的Job中断
         var running: BuildStatus? = null
@@ -132,15 +134,23 @@ class StartContainerStageCmd(
         var cancel: BuildStatus? = null
 
         // 查找最后一个结束状态的Stage (排除Finally）
-        if (commandContext.stage.controlOption?.finally == true) {
-            commandContext.previousStageStatus = pipelineStageService.listStages(commandContext.stage.buildId)
+        val stage = commandContext.stage
+        if (stage.controlOption?.finally == true) {
+            val previousStage = pipelineStageService.listStages(stage.projectId, stage.buildId)
                 .lastOrNull {
                     it.stageId != commandContext.stage.stageId &&
-                        (it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS)
-                }?.status
+                        (it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS || hasFailedCheck(it))
+                }
+            // #5246 前序中如果有准入准出失败的stage则直接作为前序stage并把构建状态设为红线失败
+            commandContext.previousStageStatus = if (hasFailedCheck(previousStage)) {
+                BuildStatus.QUALITY_CHECK_FAIL
+            } else {
+                previousStage?.status
+            }
         }
         // 同一Stage下的多个Container是并行
         commandContext.containers.forEach { container ->
+            val jobCount = container.controlOption?.matrixControlOption?.totalCount ?: 1 // MatrixGroup存在裂变计算
             if (container.status.isCancel()) {
                 commandContext.cancelContainerNum++
                 cancel = BuildStatusSwitcher.stageStatusMaker.cancel(container.status)
@@ -150,10 +160,12 @@ class StartContainerStageCmd(
             } else if (container.status == BuildStatus.SKIP) {
                 commandContext.skipContainerNum++
             } else if (container.status.isRunning() && !actionType.isEnd()) {
+                commandContext.concurrency += jobCount
                 // 已经在运行中的, 只接受终止
                 running = BuildStatus.RUNNING
             } else if (!container.status.isFinish()) {
                 running = BuildStatus.RUNNING
+                commandContext.concurrency += jobCount
                 sendBuildContainerEvent(commandContext, container, actionType = actionType, userId = userId)
 
                 LOG.info("ENGINE|${container.buildId}|STAGE_CONTAINER_SEND|s(${container.stageId})|" +
@@ -161,7 +173,12 @@ class StartContainerStageCmd(
             }
         }
 
-        // 如果有运行态,否则返回失败，如无失败，则返回取消，最后是成功
+        if (commandContext.concurrency > commandContext.maxConcurrency) { // #5109 增加日志埋点监控，以免影响Redis性能
+            LOG.warn("ENGINE|${stage.buildId}|JOB_BOMB_CK|${stage.projectId}|${stage.pipelineId}|s(${stage.stageId})" +
+                    "|concurrency=${commandContext.concurrency}")
+        }
+
+        // 如果有运行态,否则返回失败，如无失败，则返回取消，最后成功
         return running ?: fail ?: cancel ?: BuildStatus.SUCCEED
     }
 
@@ -193,11 +210,17 @@ class StartContainerStageCmd(
                 previousStageStatus = commandContext.previousStageStatus,
                 containerType = container.containerType,
                 containerId = container.containerId,
+                containerHashId = container.containerHashId,
                 actionType = actionType,
                 errorCode = errorCode,
                 errorTypeName = errorTypeName,
                 reason = commandContext.latestSummary
             )
         )
+    }
+
+    private fun hasFailedCheck(stage: PipelineBuildStage?): Boolean {
+        return stage?.checkIn?.status == BuildStatus.QUALITY_CHECK_FAIL.name ||
+            stage?.checkOut?.status == BuildStatus.QUALITY_CHECK_FAIL.name
     }
 }

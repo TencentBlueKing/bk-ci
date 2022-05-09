@@ -1,12 +1,22 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package config
 
 import (
 	"strings"
 
-	"build-booster/common/conf"
-	"build-booster/common/encrypt"
-	"build-booster/common/net"
-	"build-booster/common/static"
+	"github.com/Tencent/bk-ci/src/booster/common/conf"
+	"github.com/Tencent/bk-ci/src/booster/common/encrypt"
+	"github.com/Tencent/bk-ci/src/booster/common/net"
+	"github.com/Tencent/bk-ci/src/booster/common/static"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
 )
 
 // ServerConfig
@@ -36,8 +46,9 @@ type ServerConfig struct {
 	DistCCQueueList    []string           `json:"distcc_queue_list" value:"[]" usage:"queue name list for engine distcc"`
 	EngineDistCCConfig EngineDistCCConfig `json:"engine_distcc"`
 
-	DisttaskQueueList    []string             `json:"disttask_queue_list" value:"[]" usage:"queue name list for engine disttask"`
-	EngineDisttaskConfig EngineDisttaskConfig `json:"engine_disttask"`
+	DisttaskQueueList      []string                         `json:"disttask_queue_list" value:"[]" usage:"queue name list for engine disttask"`
+	DisttaskQueueShareType map[string]engine.QueueShareType `json:"disttask_queue_share_type" usage:"queue name map for share type, default is all allowed"`
+	EngineDisttaskConfig   EngineDisttaskConfig             `json:"engine_disttask"`
 
 	DistccMacQueueList    []string              `json:"distcc_mac_queue_list" value:"[]" usage:"queue name list for engine distcc_mac"`
 	EngineDistCCMacConfig EngineDistCCMacConfig `json:"engine_distcc_mac"`
@@ -53,36 +64,52 @@ type ServerConfig struct {
 
 	K8sContainerResourceConfig ContainerResourceConfig `json:"k8s_container_resource"`
 
+	DCMacContainerResourceConfig ContainerResourceConfig `json:"dc_mac_container_resource"`
+
 	// cert of the server
 	ServerCert *CertConfig
 }
 
 // DirectResourceConfig defines configs for resource which agent connect to us directly.
 type DirectResourceConfig struct {
-	Enable     bool   `json:"direct_enable" value:"false" usage:"enable direct resource manager"`
-	ListenPort uint   `json:"direct_resource_port" value:"" usage:"port to listen for direct resource agent report"`
-	ListenIP   string `json:"direct_resource_ip" value:"" usage:"ip to listen for direct resource agent report"`
+	Enable     bool        `json:"direct_enable" value:"false" usage:"enable direct resource manager"`
+	ListenPort uint        `json:"direct_resource_port" value:"" usage:"port to listen for direct resource agent report"`
+	ListenIP   string      `json:"direct_resource_ip" value:"" usage:"ip to listen for direct resource agent report"`
 	ServerCert *CertConfig // cert of the server
 
 	Agent4OneTask bool `json:"agent_4_one_task" value:"true" usage:"if set true, one agent will only be used by one task,no matter it has free resource"`
 
-	MySQLStorage     string `json:"direct_resource_mysql" value:"" usage:"mysql address for storage, e.g. 127.0.0.1:3306"`
+	MySQLStorage     string `json:"direct_resource_mysql" value:"" usage:"mysql address for storage"`
 	MySQLDatabase    string `json:"direct_resource_mysql_db" value:"" usage:"mysql database for connecting."`
 	MySQLUser        string `json:"direct_resource_mysql_user" value:"root" usage:"mysql username"`
 	MySQLPwd         string `json:"direct_resource_mysql_pwd" value:"" usage:"mysql password, encrypted"`
 	MysqlTableOption string `json:"direct_resource_mysql_table_option" value:"" usage:"mysql table option"`
 }
 
+//InstanceType define type of an instance
+type InstanceType struct {
+	Platform              string  `json:"platform"`
+	Group                 string  `json:"group"`
+	CPUPerInstance        float64 `json:"cpu_per_instance"`
+	MemPerInstance        float64 `json:"mem_per_instance"`
+	CPURequestPerInstance float64 `json:"cpu_request_per_instance,omitempty"`
+	MemRequestPerInstance float64 `json:"mem_request_per_instance,omitempty"`
+}
+
 // ContainerResourceConfig defines configs for resource from bcs.
 type ContainerResourceConfig struct {
-	Enable            bool    `json:"crm_enable"`
-	Operator          string  `json:"crm_operator"`
-	BcsAPIToken       string  `json:"crm_bcs_api_token"`
-	BcsAPIAddress     string  `json:"crm_bcs_api_address"`
-	BcsCPUPerInstance float64 `json:"crm_bcs_cpu_per_instance"`
-	BcsMemPerInstance float64 `json:"crm_bcs_mem_per_instance"`
-	BcsClusterID      string  `json:"crm_bcs_cluster_id"`
-	BcsAppTemplate    string  `json:"crm_bcs_template_file"`
+	Enable              bool           `json:"crm_enable"`
+	Operator            string         `json:"crm_operator"`
+	BcsAPIToken         string         `json:"crm_bcs_api_token"`
+	BcsAPIAddress       string         `json:"crm_bcs_api_address"`
+	BcsCPUPerInstance   float64        `json:"crm_bcs_cpu_per_instance"`
+	BcsMemPerInstance   float64        `json:"crm_bcs_mem_per_instance"`
+	InstanceType        []InstanceType `json:"instance_type"`
+	BcsClusterID        string         `json:"crm_bcs_cluster_id"`
+	BcsAppTemplate      string         `json:"crm_bcs_template_file"`
+	BcsGroupLabelKey    string         `json:"crm_bcs_group_label_key"`
+	BcsPlatformLabelKey string         `json:"crm_bcs_platform_label_key"`
+	BcsDisableWinHostNW bool           `json:"crm_bcs_disable_win_host_network"`
 
 	MySQLStorage     string `json:"crm_resource_mysql"`
 	MySQLDatabase    string `json:"crm_resource_mysql_db"`
@@ -90,6 +117,7 @@ type ContainerResourceConfig struct {
 	MySQLUser        string `json:"crm_resource_mysql_user"`
 	MySQLPwd         string `json:"crm_resource_mysql_pwd"`
 	MysqlTableOption string `json:"crm_resource_mysql_table_option"`
+	MysqlSkipEnsure  bool   `json:"crm_resource_mysql_skip_ensure"`
 
 	BcsAPIPool *net.ConnectPool
 }
@@ -97,13 +125,14 @@ type ContainerResourceConfig struct {
 const (
 	CRMOperatorMesos = "mesos"
 	CRMOperatorK8S   = "k8s"
+	CRMOperatorDCMac = "dc_mac"
 )
 
 // EngineDistCCConfig define the distcc engine config.
 type EngineDistCCConfig struct {
 	Enable bool `json:"engine_distcc_enable" value:"false" usage:"enable engine distcc"`
 
-	MySQLStorage     string `json:"engine_distcc_mysql" value:"" usage:"mysql address for storage, e.g. 127.0.0.1:3306"`
+	MySQLStorage     string `json:"engine_distcc_mysql" value:"" usage:"mysql address for storage"`
 	MySQLDatabase    string `json:"engine_distcc_mysql_db" value:"" usage:"mysql database for connecting."`
 	MySQLUser        string `json:"engine_distcc_mysql_user" value:"root" usage:"mysql username"`
 	MySQLPwd         string `json:"engine_distcc_mysql_pwd" value:"" usage:"mysql password, encrypted"`
@@ -129,7 +158,7 @@ type EngineDistCCBrokerConfig struct {
 type EngineDisttaskConfig struct {
 	Enable bool `json:"engine_disttask_enable" value:"false" usage:"enable engine disttask"`
 
-	MySQLStorage     string `json:"engine_disttask_mysql" value:"" usage:"mysql address for storage, e.g. 127.0.0.1:3306"`
+	MySQLStorage     string `json:"engine_disttask_mysql" value:"" usage:"mysql address for storage"`
 	MySQLDatabase    string `json:"engine_disttask_mysql_db" value:"" usage:"mysql database for connecting."`
 	MySQLUser        string `json:"engine_disttask_mysql_user" value:"root" usage:"mysql username"`
 	MySQLPwd         string `json:"engine_disttask_mysql_pwd" value:"" usage:"mysql password, encrypted"`
@@ -143,13 +172,22 @@ type EngineDisttaskConfig struct {
 
 // EngineDisttaskBrokerConfig define the broker config used by engine disttask.
 type EngineDisttaskBrokerConfig struct {
-	WorkerVersion  string `json:"worker_version"`
-	Scene          string `json:"scene"`
-	City           string `json:"city"`
-	Instance       int    `json:"instance"`
-	ConstNum       int    `json:"const_num"`
-	JobPerInstance int    `json:"job_per_instance"`
-	Allow          string `json:"allow"`
+	WorkerVersion   string                        `json:"worker_version"`
+	Scene           string                        `json:"scene"`
+	City            string                        `json:"city"`
+	Instance        int                           `json:"instance"`
+	ConstNum        int                           `json:"const_num"`
+	IdleKeepSeconds int                           `json:"idle_keep_seconds" value:"-1" usage:"seconds to keep with idle status before release"`
+	ReleaseLoop     bool                          `json:"release_loop" value:"false" usage:"whether realease resource with loop until succeed"`
+	JobPerInstance  int                           `json:"job_per_instance"`
+	Allow           string                        `json:"allow"`
+	Volumes         []EngineDisttaskBrokerVolumes `json:"volumes"`
+}
+
+// EngineDisttaskBrokerVolumes describe the volumes for broker
+type EngineDisttaskBrokerVolumes struct {
+	HostDir      string `json:"host_dir"`
+	ContainerDir string `json:"container_dir"`
 }
 
 // EngineDisttaskQueueInstanceConfig define the specific config for some queue.
@@ -163,7 +201,7 @@ type EngineDisttaskQueueConfig struct {
 type EngineDistCCMacConfig struct {
 	Enable bool `json:"engine_distcc_mac_enable" value:"false" usage:"enable engine distcc_mac"`
 
-	MySQLStorage     string `json:"engine_distcc_mac_mysql" value:"" usage:"mysql address for storage, e.g. 127.0.0.1:3306"`
+	MySQLStorage     string `json:"engine_distcc_mac_mysql" value:"" usage:"mysql address for storage"`
 	MySQLDatabase    string `json:"engine_distcc_mac_mysql_db" value:"" usage:"mysql database for connecting."`
 	MySQLUser        string `json:"engine_distcc_mac_mysql_user" value:"root" usage:"mysql username"`
 	MySQLPwd         string `json:"engine_distcc_mac_mysql_pwd" value:"" usage:"mysql password, encrypted"`
@@ -178,7 +216,7 @@ type EngineDistCCMacConfig struct {
 type EngineFastBuildConfig struct {
 	Enable bool `json:"engine_fastbuild_enable" value:"false" usage:"enable engine fastbuild"`
 
-	MySQLStorage     string `json:"engine_fastbuild_mysql" value:"" usage:"mysql address for storage, e.g. 127.0.0.1:3306"`
+	MySQLStorage     string `json:"engine_fastbuild_mysql" value:"" usage:"mysql address for storage"`
 	MySQLDatabase    string `json:"engine_fastbuild_mysql_db" value:"" usage:"mysql database for connecting."`
 	MySQLUser        string `json:"engine_fastbuild_mysql_user" value:"root" usage:"mysql username"`
 	MySQLPwd         string `json:"engine_fastbuild_mysql_pwd" value:"" usage:"mysql password, encrypted"`
@@ -194,7 +232,7 @@ type EngineFastBuildConfig struct {
 type EngineApisJobConfig struct {
 	Enable bool `json:"engine_apisjob_enable" value:"false" usage:"enable engine apisjob"`
 
-	MySQLStorage     string `json:"engine_apisjob_mysql" value:"" usage:"mysql address for storage, e.g. 127.0.0.1:3306"`
+	MySQLStorage     string `json:"engine_apisjob_mysql" value:"" usage:"mysql address for storage"`
 	MySQLDatabase    string `json:"engine_apisjob_mysql_db" value:"" usage:"mysql database for connecting."`
 	MySQLUser        string `json:"engine_apisjob_mysql_user" value:"root" usage:"mysql username"`
 	MySQLPwd         string `json:"engine_apisjob_mysql_pwd" value:"" usage:"mysql password, encrypted"`

@@ -28,8 +28,13 @@
 package com.tencent.devops.auth.pojo.vo
 
 import com.tencent.devops.auth.pojo.DeptInfo
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
+@ApiModel("组织列表返回")
 data class DeptInfoVo(
+    @ApiModelProperty("数量")
     val count: Int,
+    @ApiModelProperty("返回列表内容")
     val results: List<DeptInfo>
 )

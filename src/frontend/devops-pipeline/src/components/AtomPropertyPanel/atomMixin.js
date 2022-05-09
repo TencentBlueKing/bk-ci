@@ -47,7 +47,7 @@ import FormField from './FormField'
 import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
 import RemoteCurlUrl from '@/components/atomFormField/RemoteCurlUrl'
 import AutoComplete from '@/components/atomFormField/AutoComplete'
-import { urlJoin, rely } from '../../utils/util'
+import { urlJoin, rely, bkVarWrapper } from '../../utils/util'
 
 const atomMixin = {
     props: {
@@ -121,6 +121,7 @@ const atomMixin = {
             'updateAtom',
             'deleteAtomProps'
         ]),
+        bkVarWrapper,
         deletePropKey (propKey) {
             this.deleteAtomProps({
                 element: this.element,

@@ -8,7 +8,7 @@
                             :data-vv-scope="`param-${index}`"
                             :disabled="disabled || editValueOnly"
                             :handle-change="(name, value) => handleParamChange(name, value, index)"
-                            v-validate.initial="`required|unique:${paramList.map(p => p.key).join(&quot;,&quot;)}|max: 50|${snonVarRule}`"
+                            v-validate.initial="`required|unique:${paramList.map(p => p.key).join(',')}|max: 50|${snonVarRule}`"
                             name="key"
                             :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
                             :value="param.key" />
@@ -158,7 +158,7 @@
         }
         .param-item-empty {
             text-align: center;
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
         }
         .hover-click {
             cursor: pointer;

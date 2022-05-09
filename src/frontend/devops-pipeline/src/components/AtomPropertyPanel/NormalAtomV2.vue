@@ -4,7 +4,7 @@
             <template v-if="groupKey === 'rootProps'">
                 <template v-for="(obj, key) in group.props">
                     <form-field v-if="!isHidden(obj, atomValue) && rely(obj, atomValue)" :class="{ 'changed-prop': atomVersionChangedKeys.includes(key) }" :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                        <component :is="obj.type" :container="container" :atom-value="atomValue" :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateAtomInput" :value="atomValue[key]" v-bind="obj" :get-atom-key-modal="getAtomKeyModal" :placeholder="getPlaceholder(obj, atomValue)"></component>
+                        <component :is="obj.type" :container="container" :atom-value="atomValue" :disabled="disabled" :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateAtomInput" :value="atomValue[key]" v-bind="obj" :get-atom-key-modal="getAtomKeyModal" :placeholder="getPlaceholder(obj, atomValue)"></component>
                         <route-tips v-bind="getComponentTips(obj, atomValue)"></route-tips>
                     </form-field>
                 </template>
@@ -24,30 +24,7 @@
                 </div>
             </accordion>
         </template>
-        <accordion v-if="outputProps && Object.keys(outputProps).length > 0" show-checkbox show-content>
-            <header class="var-header" slot="header">
-                <span>{{ $t('editPage.atomOutput') }}</span>
-                <i class="devops-icon icon-angle-down" style="display: block"></i>
-            </header>
-            <div slot="content">
-                <form-field class="output-namespace" :desc="outputNamespaceDesc" :label="$t('editPage.outputNamespace')" :is-error="errors.has('namespace')" :error-msg="errors.first('namespace')">
-                    <vuex-input name="namespace" v-validate.initial="{ varRule: true }" :handle-change="handleUpdateAtomOutputNameSpace" :value="namespace" placeholder="" />
-                </form-field>
-                <div class="atom-output-var-list">
-                    <h4>{{ $t('editPage.outputItemList') }}：</h4>
-                    <p v-for="(output, key) in outputProps" :key="key">
-                        {{ namespace ? `${namespace}_` : '' }}{{ key }}
-                        <bk-popover placement="right">
-                            <i class="bk-icon icon-info-circle" />
-                            <div slot="content">
-                                {{ output.description }}
-                            </div>
-                        </bk-popover>
-                        <copy-icon :value="`\${${namespace ? `${namespace}_${key}` : key}}`"></copy-icon>
-                    </p>
-                </div>
-            </div>
-        </accordion>
+        <atom-output :element="element" :atom-props-model="atomPropsModel" :set-parent-validate="() => {}"></atom-output>
     </section>
     <section v-else>
         <div class="empty-tips">{{ $t('editPage.noAppIdTips') }}</div>
@@ -67,7 +44,8 @@
     import DynamicParameter from '@/components/AtomFormComponent/DynamicParameter'
     import DynamicParameterSimple from '@/components/AtomFormComponent/DynamicParameterSimple'
     import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
-    import copyIcon from '@/components/copyIcon'
+    import AtomOutput from './AtomOutput'
+    
     export default {
         name: 'normal-atom-v2',
         components: {
@@ -80,7 +58,7 @@
             Tips,
             DynamicParameter,
             DynamicParameterSimple,
-            copyIcon
+            AtomOutput
         },
         mixins: [atomMixin, validMixins],
         computed: {
@@ -119,16 +97,15 @@
             showFormUI () {
                 return !this.appIdProps || (this.appIdPropsKey && this.hasAppId)
             },
-            outputNamespaceDesc () {
-                return this.$t('editPage.namespaceTips')
-            },
             inputProps () {
                 try {
                     const { [this.appIdPropsKey]: ccAppId, ...restProps } = this.atomPropsModel.input
                     return {
-                        ...(ccAppId ? {
-                            [this.appIdPropsKey]: ccAppId
-                        } : {}),
+                        ...(ccAppId
+                            ? {
+                                [this.appIdPropsKey]: ccAppId
+                            }
+                            : {}),
                         ...restProps
                     }
                 } catch (e) {
@@ -149,36 +126,19 @@
                         props: {}
                     }
                 })
-                Object.keys(this.inputProps).map(key => {
+                Object.keys(this.inputProps).forEach(key => {
                     const prop = this.inputProps[key]
-                    const group = prop.groupName && groupMap[prop.groupName] ? groupMap[prop.groupName] : groupMap['rootProps']
+                    const group = prop.groupName && groupMap[prop.groupName] ? groupMap[prop.groupName] : groupMap.rootProps
                     group.props[key] = prop
                 })
                 return groupMap
-            },
-            outputProps () {
-                try {
-                    return this.atomPropsModel.output
-                } catch (e) {
-                    console.warn('getAtomModalOpt error', e)
-                    return null
-                }
-            },
-            namespace () {
-                try {
-                    const ns = this.element.data.namespace || ''
-                    return ns.trim().replace(/(.+)?\_$/, '$1')
-                } catch (e) {
-                    console.warn('getAtomOutput namespace error', e)
-                    return ''
-                }
             },
             atomValue () {
                 try {
                     const atomDefaultValue = getAtomDefaultValue(this.atomPropsModel.input)
                     // 新增字段，已添加插件读取默认值
                     const atomValue = Object.keys(this.element.data.input).reduce((res, key) => {
-                        if (atomDefaultValue.hasOwnProperty(key)) {
+                        if (Object.prototype.hasOwnProperty.call(atomDefaultValue, key)) {
                             res[key] = this.element.data.input[key]
                         }
                         return res
@@ -205,9 +165,6 @@
 </script>
 
 <style lang="scss">
-    .output-namespace {
-        margin-bottom: 12px;
-    }
     .atom-output-var-list {
         > h4,
         > p {

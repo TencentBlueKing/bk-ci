@@ -118,19 +118,19 @@
                 if (val) {
                     val.forEach(stage => {
                         const stageDisabled = stage.stageControlOption && stage.stageControlOption.enable === false
-                        if (!stage.hasOwnProperty('runStage')) {
+                        if (!Object.prototype.hasOwnProperty.call(stage, 'runStage')) {
                             Vue.set(stage, 'runStage', !stageDisabled)
                         }
                         stage.containers.forEach(container => {
                             if (container['@type'] !== 'trigger') {
                                 const containerDisabled = container.jobControlOption && container.jobControlOption.enable === false
-                                if (!container.hasOwnProperty('runContainer')) {
+                                if (!Object.prototype.hasOwnProperty.call(container, 'runContainer')) {
                                     Vue.set(container, 'runContainer', !containerDisabled)
                                 }
 
                                 container.elements.forEach(element => {
                                     const isSkipEle = (element.additionalOptions && element.additionalOptions.enable === false) || containerDisabled
-                                    if (!element.hasOwnProperty('canElementSkip')) {
+                                    if (!Object.prototype.hasOwnProperty.call(element, 'canElementSkip')) {
                                         Vue.set(element, 'canElementSkip', !isSkipEle)
                                     }
                                 })
@@ -210,16 +210,17 @@
                 const skipAtoms = allElements.filter(element => !element.canElementSkip).map(element => `devops_container_condition_skip_atoms_${element.id}`)
                 const versionValid = this.$refs.versionForm ? await this.$refs.versionForm.$validator.validateAll() : true
 
-                let valid = true
+                let paramsFormValid = true
+                let buildFormValid = true
                 if (this.$refs.paramsForm) {
-                    valid = await this.$refs.paramsForm.$validator.validateAll()
+                    paramsFormValid = await this.$refs.paramsForm.$validator.validateAll()
                     this.$refs.paramsForm.submitForm()
                 }
                 if (this.$refs.buildForm) {
-                    valid = await this.$refs.buildForm.$validator.validateAll()
+                    buildFormValid = await this.$refs.buildForm.$validator.validateAll()
                     this.$refs.buildForm.submitForm()
                 }
-                if (valid && versionValid) {
+                if (buildFormValid && paramsFormValid && versionValid) {
                     const { paramValues, versionParamValues, buildNo, buildValues } = this
                     const newParams = Object.assign({}, paramValues, versionParamValues, buildValues)
                     if (this.isVisibleVersion) Object.assign(newParams, { buildNo })

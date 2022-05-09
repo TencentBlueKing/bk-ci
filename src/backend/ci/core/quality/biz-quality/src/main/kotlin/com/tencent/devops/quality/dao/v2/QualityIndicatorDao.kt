@@ -40,6 +40,7 @@ import java.time.LocalDateTime
 
 @Repository@Suppress("ALL")
 class QualityIndicatorDao {
+    // todo performance
     fun listByType(dslContext: DSLContext, type: IndicatorType = IndicatorType.SYSTEM): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             return dslContext.selectFrom(this)
@@ -80,7 +81,8 @@ class QualityIndicatorDao {
         dslContext: DSLContext,
         elementType: String,
         type: IndicatorType? = IndicatorType.MARKET,
-        enNameSet: Collection<String>? = null
+        enNameSet: Collection<String>? = null,
+        projectId: String? = null
     ): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             val conditions = mutableListOf<Condition>()
@@ -90,6 +92,9 @@ class QualityIndicatorDao {
             }
             if (!enNameSet.isNullOrEmpty()) {
                 conditions.add(EN_NAME.`in`(enNameSet))
+            }
+            if (projectId != null) {
+                conditions.add(INDICATOR_RANGE.eq(projectId))
             }
             return dslContext.selectFrom(this)
                 .where(conditions)

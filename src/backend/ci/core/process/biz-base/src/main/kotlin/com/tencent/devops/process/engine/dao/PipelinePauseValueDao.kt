@@ -67,7 +67,8 @@ class PipelinePauseValueDao {
 
     fun save(dslContext: DSLContext, pipelinePauseValue: PipelinePauseValue) {
         with(Tables.T_PIPELINE_PAUSE_VALUE) {
-            val set = dslContext.insertInto(this)
+            dslContext.insertInto(this)
+                .set(PROJECT_ID, pipelinePauseValue.projectId)
                 .set(BUILD_ID, pipelinePauseValue.buildId)
                 .set(TASK_ID, pipelinePauseValue.taskId)
                 .set(DEFAULT_VALUE, pipelinePauseValue.defaultValue)
@@ -82,11 +83,12 @@ class PipelinePauseValueDao {
         }
     }
 
-    fun get(dslContext: DSLContext, buildId: String, taskId: String): TPipelinePauseValueRecord? {
+    fun get(dslContext: DSLContext, projectId: String, buildId: String, taskId: String): TPipelinePauseValueRecord? {
         return with(Tables.T_PIPELINE_PAUSE_VALUE) {
             val query = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(TASK_ID.eq(taskId))
+                .and(PROJECT_ID.eq(projectId))
             query.fetchAny()
         }
     }
@@ -94,6 +96,7 @@ class PipelinePauseValueDao {
     fun convert(t: TPipelinePauseValueRecord?): PipelinePauseValue? {
         return if (t != null) {
             PipelinePauseValue(
+                projectId = t.projectId,
                 buildId = t.buildId,
                 taskId = t.taskId,
                 defaultValue = t.defaultValue,

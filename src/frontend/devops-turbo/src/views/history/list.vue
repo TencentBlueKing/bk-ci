@@ -1,6 +1,6 @@
 <template>
     <article class="history-list-home">
-        <main class="g-turbo-box history-list-main">
+        <main class="g-turbo-box history-list-main" v-if="hasPermission">
             <header class="filter-area">
                 <bk-select multiple
                     :value="filter.value"
@@ -56,6 +56,7 @@
                 <bk-table-column :label="$t('turbo.节省率')" prop="turboRatio" sortable></bk-table-column>
             </bk-table>
         </main>
+        <permission-exception v-else :message="errMessage" />
     </article>
 </template>
 
@@ -63,11 +64,13 @@
     import { getHistoryList, getHistorySearchList } from '@/api'
     import taskStatus from '../../components/task-status.vue'
     import logo from '../../components/logo'
+    import permissionException from '../../components/exception/permission.vue'
 
     export default {
         components: {
             taskStatus,
-            logo
+            logo,
+            permissionException
         },
 
         data () {
@@ -92,7 +95,9 @@
                 statusInfo: {},
                 clientIpInfo: [],
                 sortField: undefined,
-                sortType: undefined
+                sortType: undefined,
+                hasPermission: true,
+                errMessage: ''
             }
         },
 
@@ -179,7 +184,15 @@
                     this.historyList = res.records || []
                     this.pagination.count = res.count
                 }).catch((err) => {
-                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                    if (err.code === 2300017) {
+                        this.hasPermission = false
+                        this.errMessage = err.message
+                    } else {
+                        this.$bkMessage({
+                            message: err.message || err,
+                            theme: 'error'
+                        })
+                    }
                 }).finally(() => {
                     this.isLoading = false
                 })
@@ -190,6 +203,8 @@
                 this.pipelineId = []
                 this.status = []
                 this.timeRange = []
+                this.startTime = ''
+                this.endTime = ''
                 this.getHistoryList()
             },
 
@@ -248,7 +263,7 @@
     .jump-link {
         vertical-align: sub;
     }
-    /deep/ .bk-table-row {
+    ::v-deep .bk-table-row {
         cursor: pointer;
     }
 </style>

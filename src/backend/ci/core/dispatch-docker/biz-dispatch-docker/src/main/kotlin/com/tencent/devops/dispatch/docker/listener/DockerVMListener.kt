@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.dispatch.docker.client.DockerHostClient
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
@@ -69,11 +70,15 @@ class DockerVMListener @Autowired constructor(
     }
 
     override fun getShutdownQueue(): String {
-        return ".docker.vm"
+        return DispatchRouteKeySuffix.DOCKER_VM.routeKeySuffix
     }
 
     override fun getStartupQueue(): String {
-        return ".docker.vm"
+        return DispatchRouteKeySuffix.DOCKER_VM.routeKeySuffix
+    }
+
+    override fun getStartupDemoteQueue(): String {
+        return DispatchRouteKeySuffix.DOCKER_VM_DEMOTE.routeKeySuffix
     }
 
     override fun getVmType(): JobQuotaVmType? {
@@ -81,8 +86,22 @@ class DockerVMListener @Autowired constructor(
     }
 
     override fun onStartup(dispatchMessage: DispatchMessage) {
-        logger.info("On start up - ($dispatchMessage)")
+        logger.info("On startup - ($dispatchMessage)")
+        startup(dispatchMessage)
+    }
 
+    override fun onStartupDemote(dispatchMessage: DispatchMessage) {
+        logger.info("On startup demote - ($dispatchMessage)")
+        startup(dispatchMessage)
+    }
+
+    override fun onShutdown(event: PipelineAgentShutdownEvent) {
+        logger.info("On shutdown - ($event)")
+
+        dockerHostBuildService.finishDockerBuild(event)
+    }
+
+    private fun startup(dispatchMessage: DispatchMessage) {
         val dockerDispatch = dispatchMessage.dispatchType as DockerDispatchType
         buildLogPrinter.addLine(
             buildId = dispatchMessage.buildId,
@@ -95,8 +114,8 @@ class DockerVMListener @Autowired constructor(
         var poolNo = 0
         try {
             // 先判断是否OP已配置专机，若配置了专机，看当前ip是否在专机列表中，若在 选择当前IP并检查负载，若不在从专机列表中选择一个容量最小的
-            val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, dispatchMessage.projectId).toSet()
-            logger.info("${dispatchMessage.projectId}| specialIpSet: $specialIpSet")
+            val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, dispatchMessage.projectId)
+            logger.info("${dispatchMessage.projectId}| specialIpSet: $specialIpSet -- ${specialIpSet.size}")
 
             val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
                 dslContext = dslContext,
@@ -119,31 +138,9 @@ class DockerVMListener @Autowired constructor(
                     )
                 } else {
                     driftIpInfo = JsonUtil.toJson(dockerIpInfo.intoMap())
-
-                    dockerPair = if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
-                        // 该项目工程配置了专机
-                        if (specialIpSet.contains(taskHistory.dockerIp) && dockerIpInfo.enable) {
-                            // 上一次构建IP在专机列表中，直接重用
-                            Pair(taskHistory.dockerIp, dockerIpInfo.dockerHostPort)
-                        } else {
-                            // 不在专机列表中，重新依据专机列表去选择负载最小的
-                            driftIpInfo = "专机漂移"
-
-                            dockerHostUtils.getAvailableDockerIpWithSpecialIps(
-                                dispatchMessage.projectId,
-                                dispatchMessage.pipelineId,
-                                dispatchMessage.vmSeqId,
-                                specialIpSet
-                            )
-                        }
-                    } else {
-                        // 没有配置专机，根据当前IP负载选择IP
-                        val triple = dockerHostUtils.checkAndSetIP(dispatchMessage, specialIpSet, dockerIpInfo, poolNo)
-                        if (triple.third.isNotEmpty()) {
-                            driftIpInfo = triple.third
-                        }
-                        Pair(triple.first, triple.second)
-                    }
+                    // 根据当前IP负载选择IP
+                    val pair = dockerHostUtils.checkAndSetIP(dispatchMessage, specialIpSet, dockerIpInfo, poolNo)
+                    dockerPair = Pair(pair.first, pair.second)
                 }
             } else {
                 // 第一次构建，根据负载条件选择可用IP
@@ -182,7 +179,7 @@ class DockerVMListener @Autowired constructor(
             )
 
             if (!result) {
-                pipelineDockerBuildDao.startBuild(
+                pipelineDockerBuildDao.saveBuildHistory(
                     dslContext = dslContext,
                     projectId = dispatchMessage.projectId,
                     pipelineId = dispatchMessage.pipelineId,
@@ -207,11 +204,5 @@ class DockerVMListener @Autowired constructor(
                 message = errMsgTriple.third
             )
         }
-    }
-
-    override fun onShutdown(event: PipelineAgentShutdownEvent) {
-        logger.info("On shutdown - ($event)")
-
-        dockerHostBuildService.finishDockerBuild(event)
     }
 }

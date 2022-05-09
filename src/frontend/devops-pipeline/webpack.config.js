@@ -17,6 +17,8 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 const path = require('path')
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
+
 const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
@@ -39,10 +41,10 @@ module.exports = (env, argv) => {
     config.plugins.pop()
     config.plugins = [
         ...config.plugins,
-        // brace 优化，只提取需要的语法
-        new webpack.ContextReplacementPlugin(/brace\/mode$/, /^\.\/(javascript|typescript|kotlin|rust|lua|yaml|json|python|sh|text|powershell|batchfile)$/),
-        // brace 优化，只提取需要的 theme
-        new webpack.ContextReplacementPlugin(/brace\/theme$/, /^\.\/(monokai)$/),
+        new MonacoWebpackPlugin({
+            publicPath: '/pipeline/',
+            languages: ['bat', 'javascript', 'dockerfile', 'typescript', 'kotlin', 'rust', 'go', 'yaml', 'json', 'python', 'shell', 'powershell', 'markdown', 'lua', 'php']
+        }),
         new HtmlWebpackPlugin({
             filename: isProd ? `${dist}/frontend#pipeline#index.html` : `${dist}/index.html`,
             template: 'index.html',
@@ -54,7 +56,9 @@ module.exports = (env, argv) => {
             context: __dirname,
             manifest: require('./dist/manifest.json')
         }),
-        new CopyWebpackPlugin([{ from: path.join(__dirname, './dist'), to: dist }])
+        new CopyWebpackPlugin({
+            patterns: [{ from: path.join(__dirname, './dist'), to: dist }]
+        })
     ]
     config.devServer.historyApiFallback = {
         rewrites: [

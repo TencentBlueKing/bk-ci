@@ -58,7 +58,7 @@
     import { mapActions } from 'vuex'
     import { getEngineList, modifyTaskBasic } from '@/api'
     import logo from '@/components/logo'
-    import { copy } from '@/assets/js/util'
+    import { copyText } from '@/assets/js/util'
 
     export default {
         components: {
@@ -118,7 +118,7 @@
             },
 
             copyValue (planId) {
-                copy(planId, this.$t.bind(this))
+                copyText(planId, this.$t.bind(this))
             },
 
             requireRule (name) {

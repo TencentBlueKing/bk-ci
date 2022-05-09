@@ -33,5 +33,5 @@ import io.swagger.annotations.ApiModel
 enum class IndicatorType {
     SYSTEM, // op定义的指标
     CUSTOM, // 标志是用户创建的指标
-    MARKET  // 原子市场指标
+    MARKET // 原子市场指标
 }

@@ -66,7 +66,7 @@ open class TestBase {
         const val stageId = "stage-1"
         const val firstContainerId = "1"
         const val firstContainerIdInt = 1
-        const val taskId = "e-12345678901234567890123456789012"
+        const val containerHashId = "c-12345678901234567890123456789012"
         const val atomCode = "atomCode"
         const val userId = "user0"
     }
@@ -230,7 +230,10 @@ open class TestBase {
                 ),
                 mutexGroup = null
             ),
-            cost = containerCost
+            cost = containerCost,
+            matrixGroupId = null,
+            matrixGroupFlag = false,
+            containerHashId = containerHashId
         )
     }
 
@@ -245,8 +248,8 @@ open class TestBase {
                 containerType = vmContainer.containerType, containerId = containerId,
                 startTime = startTime?.plusSeconds(vmContainer.cost.toLong()), status = status, stageId = stageId,
                 taskId = taskId, taskAtom = "", taskName = "Demo", taskParams = mutableMapOf(), taskSeq = 1,
-                taskType = vmContainer.containerType, starter = "user1",
-                containerHashId = containerId, approver = null, subBuildId = null,
+                taskType = vmContainer.containerType, starter = "user1", stepId = null,
+                containerHashId = containerId, approver = null, subProjectId = null, subBuildId = null,
                 additionalOptions = elementAdditionalOptions ?: elementAdditionalOptions()
             )
         }

@@ -228,7 +228,9 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                             collected = favor,
                             weigHt = it.weight ?: 0,
                             logoUrl = it.logoUrl,
-                            webSocket = it.webSocket
+                            webSocket = it.webSocket,
+                            newWindow = it.newWindow,
+                            newWindowUrl = it.newWindowurl
                         )
                     )
                 }

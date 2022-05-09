@@ -58,8 +58,10 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.slf4j.LoggerFactory
@@ -75,9 +77,11 @@ class BuildEndControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineTaskService: PipelineTaskService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val pipelineRedisService: PipelineRedisService
 ) {
 
     companion object {
@@ -124,7 +128,7 @@ class BuildEndControl @Autowired constructor(
         // 将状态设置正确
         val buildStatus = BuildStatusSwitcher.pipelineStatusMaker.finish(status)
 
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
 
         // 当前构建整体的状态，可能是运行中，也可能已经失败
         // 已经结束的构建，不再受理，抛弃消息 #5090 STAGE_SUCCESS 状态的也可能是已经处理完成
@@ -150,16 +154,17 @@ class BuildEndControl @Autowired constructor(
 
         // 更新buildNo
         if (!buildStatus.isCancel() && !buildStatus.isFailure()) {
-            setBuildNoWhenBuildSuccess(pipelineId = pipelineId, buildId = buildId)
+            setBuildNoWhenBuildSuccess(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
         }
 
         // 设置状态
         val allStageStatus = pipelineBuildDetailService.buildEnd(
+            projectId = projectId,
             buildId = buildId,
             buildStatus = buildStatus
         )
 
-        pipelineRuntimeService.updateBuildHistoryStageState(buildId, allStageStatus)
+        pipelineRuntimeService.updateBuildHistoryStageState(projectId, buildId, allStageStatus)
 
         // 广播结束事件
         pipelineEventDispatcher.dispatch(
@@ -193,8 +198,8 @@ class BuildEndControl @Autowired constructor(
         buildLogPrinter.stopLog(buildId = buildId, tag = "", jobId = null)
     }
 
-    private fun setBuildNoWhenBuildSuccess(pipelineId: String, buildId: String) {
-        val model = pipelineBuildDetailService.getBuildModel(buildId) ?: return
+    private fun setBuildNoWhenBuildSuccess(projectId: String, pipelineId: String, buildId: String) {
+        val model = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         val buildNoObj = triggerContainer.buildNo ?: return
 
@@ -203,23 +208,24 @@ class BuildEndControl @Autowired constructor(
             val buildNoLock = PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId)
             try {
                 buildNoLock.lock()
-                updateBuildNoInfo(pipelineId, buildId)
+                updateBuildNoInfo(projectId, pipelineId, buildId)
             } finally {
                 buildNoLock.unlock()
             }
         }
     }
 
-    private fun updateBuildNoInfo(pipelineId: String, buildId: String) {
-        val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(pipelineId = pipelineId)
+    private fun updateBuildNoInfo(projectId: String, pipelineId: String, buildId: String) {
+        val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(projectId = projectId, pipelineId = pipelineId)
         val buildNo = buildSummary?.buildNo
-        if (buildNo != null && pipelineRuntimeService.getBuildInfo(buildId)?.retryFlag != true) {
-            pipelineRuntimeService.updateBuildNo(pipelineId = pipelineId, buildNo = buildNo + 1)
+        if (buildNo != null && pipelineRuntimeService.getBuildInfo(projectId, buildId)?.retryFlag != true) {
+            pipelineRuntimeService.updateBuildNo(projectId = projectId, pipelineId = pipelineId, buildNo = buildNo + 1)
             // 更新历史表的推荐版本号
-            val buildParameters = pipelineRuntimeService.getBuildParametersFromStartup(buildId)
+            val buildParameters = pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId)
             val recommendVersionPrefix = pipelineRuntimeService.getRecommendVersionPrefix(buildParameters)
             if (recommendVersionPrefix != null) {
                 pipelineRuntimeService.updateRecommendVersion(
+                    projectId = projectId,
                     buildId = buildId,
                     recommendVersion = "$recommendVersionPrefix.$buildNo"
                 )
@@ -228,14 +234,14 @@ class BuildEndControl @Autowired constructor(
     }
 
     private fun PipelineBuildFinishEvent.fixTask(buildInfo: BuildInfo) {
-        val allBuildTask = pipelineRuntimeService.getAllBuildTask(buildId)
+        val allBuildTask = pipelineTaskService.getAllBuildTask(projectId, buildId)
         val errorInfos = mutableListOf<ErrorInfo>()
         allBuildTask.forEach {
             // 将所有还在运行中的任务全部结束掉
             if (it.status.isRunning()) {
                 // 构建机直接结束
                 if (it.containerType == VMBuildContainer.classType) {
-                    pipelineRuntimeService.updateTaskStatus(
+                    pipelineTaskService.updateTaskStatus(
                         task = it, userId = userId, buildStatus = BuildStatus.TERMINATE,
                         errorType = errorType, errorCode = errorCode, errorMsg = errorMsg
                     )
@@ -245,8 +251,8 @@ class BuildEndControl @Autowired constructor(
                             source = javaClass.simpleName,
                             projectId = projectId, pipelineId = pipelineId, userId = it.starter,
                             stageId = it.stageId, buildId = it.buildId, containerId = it.containerId,
-                            containerType = it.containerType, taskId = it.taskId,
-                            taskParam = it.taskParams, actionType = ActionType.TERMINATE
+                            containerHashId = it.containerHashId, containerType = it.containerType,
+                            taskId = it.taskId, taskParam = it.taskParams, actionType = ActionType.TERMINATE
                         )
                     )
                 }
@@ -272,6 +278,10 @@ class BuildEndControl @Autowired constructor(
     }
 
     private fun PipelineBuildFinishEvent.popNextBuild() {
+        if (pipelineRedisService.getBuildRestartValue(this.buildId) != null) {
+            // 删除buildId占用的refresh锁
+            pipelineRedisService.deleteRestartBuild(this.buildId)
+        }
 
         // 获取下一个排队的
         val nextBuild = pipelineRuntimeExtService.popNextQueueBuildInfo(projectId = projectId, pipelineId = pipelineId)
@@ -281,10 +291,11 @@ class BuildEndControl @Autowired constructor(
         }
 
         LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|next build: ${nextBuild.buildId} ${nextBuild.status}")
-        val model = pipelineBuildDetailService.getBuildModel(nextBuild.buildId) ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-            params = arrayOf(nextBuild.buildId)
-        )
+        val model = pipelineBuildDetailService.getBuildModel(nextBuild.projectId, nextBuild.buildId)
+            ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                params = arrayOf(nextBuild.buildId)
+            )
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         pipelineEventDispatcher.dispatch(
             PipelineBuildStartEvent(

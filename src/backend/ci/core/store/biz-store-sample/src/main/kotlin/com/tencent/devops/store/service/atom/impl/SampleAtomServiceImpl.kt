@@ -30,13 +30,10 @@ package com.tencent.devops.store.service.atom.impl
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.service.atom.SampleAtomService
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class SampleAtomServiceImpl : SampleAtomService, AtomServiceImpl() {
-
-    private val logger = LoggerFactory.getLogger(SampleAtomServiceImpl::class.java)
 
     override fun hasManagerPermission(projectCode: String, userId: String): Boolean {
         return true

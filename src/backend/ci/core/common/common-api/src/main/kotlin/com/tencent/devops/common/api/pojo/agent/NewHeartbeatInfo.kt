@@ -27,18 +27,35 @@
 
 package com.tencent.devops.common.api.pojo.agent
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("心跳信息模型")
 data class NewHeartbeatInfo(
+    @ApiModelProperty("主版本")
     val masterVersion: String,
+    @ApiModelProperty("从属版本")
     val slaveVersion: String,
+    @ApiModelProperty("主机名")
     val hostName: String,
+    @ApiModelProperty("构建机模型")
     val agentIp: String,
+    @ApiModelProperty("并行任务计数")
     val parallelTaskCount: Int,
+    @ApiModelProperty("构建机安装路径")
     val agentInstallPath: String,
+    @ApiModelProperty("启动者")
     val startedUser: String,
-    val taskList: List<ThirdPartyBuildInfo>,
+    @ApiModelProperty("第三方构建信息列表")
+    var taskList: List<ThirdPartyBuildInfo>,
+    @ApiModelProperty("构建机id")
     var agentId: Long?,
+    @ApiModelProperty("项目id")
     var projectId: String?,
-    var heartbeatTime: Long?
+    @ApiModelProperty("心跳时间戳")
+    var heartbeatTime: Long?,
+    @ApiModelProperty("忙碌运行中任务数量")
+    var busyTaskSize: Int = 0
 ) {
     companion object {
         fun dummyHeartbeat(projectId: String, agentId: Long): NewHeartbeatInfo {

@@ -35,13 +35,15 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
@@ -55,7 +57,7 @@ import org.springframework.stereotype.Service
 @Service
 class TaskAtomService @Autowired(required = false) constructor(
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineTaskService: PipelineTaskService,
     private val pipelineBuildDetailService: TaskBuildDetailService,
     private val buildVariableService: BuildVariableService,
     private val jmxElements: JmxElements,
@@ -76,14 +78,18 @@ class TaskAtomService @Autowired(required = false) constructor(
                 dispatchBroadCastEvent(task, ActionType.START)
             }
             // 更新状态
-            pipelineRuntimeService.updateTaskStatus(
+            pipelineTaskService.updateTaskStatus(
                 task = task,
                 userId = task.starter,
                 buildStatus = BuildStatus.RUNNING
             )
             // 插件状态变化-启动
-            pipelineBuildDetailService.taskStart(buildId = task.buildId, taskId = task.taskId)
-            val runVariables = buildVariableService.getAllVariable(task.buildId)
+            pipelineBuildDetailService.taskStart(
+                projectId = task.projectId,
+                buildId = task.buildId,
+                taskId = task.taskId
+            )
+            val runVariables = buildVariableService.getAllVariable(task.projectId, task.buildId)
             // 动态加载内置插件业务逻辑并执行
             atomResponse = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom).execute(task, runVariables)
         } catch (t: BuildTaskException) {
@@ -157,7 +163,7 @@ class TaskAtomService @Autowired(required = false) constructor(
     fun taskEnd(task: PipelineBuildTask, startTime: Long, atomResponse: AtomResponse) {
         try {
             // 更新状态
-            pipelineRuntimeService.updateTaskStatus(
+            pipelineTaskService.updateTaskStatus(
                 task = task,
                 userId = task.starter,
                 buildStatus = atomResponse.buildStatus,
@@ -165,25 +171,50 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorCode = atomResponse.errorCode,
                 errorMsg = atomResponse.errorMsg
             )
-            pipelineBuildDetailService.taskEnd(
-                buildId = task.buildId,
-                taskId = task.taskId,
-                buildStatus = atomResponse.buildStatus,
-                errorType = atomResponse.errorType,
-                errorCode = atomResponse.errorCode,
-                errorMsg = atomResponse.errorMsg
-            )
-            measureService?.postTaskData(
-                task = task,
-                startTime = task.startTime?.timestampmilli() ?: startTime,
-                status = atomResponse.buildStatus,
-                type = task.taskType,
-                errorType = atomResponse.errorType?.name,
-                errorCode = atomResponse.errorCode,
-                errorMsg = atomResponse.errorMsg
-            )
-            if (atomResponse.buildStatus.isFailure()) {
-                jmxElements.fail(task.taskType)
+            // 系统控制类插件不涉及到Detail编排状态修改
+            if (EnvControlTaskType.parse(task.taskType) == null) {
+                val updateTaskStatusInfos = pipelineBuildDetailService.taskEnd(
+                    projectId = task.projectId,
+                    buildId = task.buildId,
+                    taskId = task.taskId,
+                    buildStatus = atomResponse.buildStatus,
+                    errorType = atomResponse.errorType,
+                    errorCode = atomResponse.errorCode,
+                    errorMsg = atomResponse.errorMsg
+                )
+                updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
+                    val updateTaskInfo = UpdateTaskInfo(
+                        projectId = task.projectId,
+                        buildId = task.buildId,
+                        taskId = updateTaskStatusInfo.taskId,
+                        taskStatus = updateTaskStatusInfo.buildStatus
+                    )
+                    pipelineTaskService.updateTaskStatusInfo(
+                        transactionContext = null,
+                        updateTaskInfo = updateTaskInfo
+                    )
+                    if (!updateTaskStatusInfo.message.isNullOrBlank()) {
+                        buildLogPrinter.addLine(
+                            buildId = task.buildId,
+                            message = updateTaskStatusInfo.message!!,
+                            tag = updateTaskStatusInfo.taskId,
+                            jobId = updateTaskStatusInfo.containerHashId,
+                            executeCount = updateTaskStatusInfo.executeCount
+                        )
+                    }
+                }
+                measureService?.postTaskData(
+                    task = task,
+                    startTime = task.startTime?.timestampmilli() ?: startTime,
+                    status = atomResponse.buildStatus,
+                    type = task.taskType,
+                    errorType = atomResponse.errorType?.name,
+                    errorCode = atomResponse.errorCode,
+                    errorMsg = atomResponse.errorMsg
+                )
+                if (atomResponse.buildStatus.isFailure()) {
+                    jmxElements.fail(task.taskType)
+                }
             }
         } catch (ignored: Throwable) {
             logger.warn("Fail to post the task($task): ${ignored.message}")
@@ -209,7 +240,7 @@ class TaskAtomService @Autowired(required = false) constructor(
         var atomResponse = AtomResponse(BuildStatus.FAILED)
 
         try {
-            val runVariables = buildVariableService.getAllVariable(task.buildId)
+            val runVariables = buildVariableService.getAllVariable(task.projectId, task.buildId)
             // 动态加载插件业务逻辑
             val iAtomTask = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom)
             atomResponse = iAtomTask.tryFinish(task = task, runVariables = runVariables, actionType = actionType)

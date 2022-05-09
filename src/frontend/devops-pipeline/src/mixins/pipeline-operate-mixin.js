@@ -533,7 +533,7 @@ export default {
                 const responses = await saveAction()
 
                 if (responses.code === 403) {
-                    throw HttpError(403)
+                    throw new HttpError(403, responses.message)
                 }
                 this.setPipelineEditing(false)
                 this.$showTips({
@@ -618,7 +618,10 @@ export default {
                     instanceId: [{
                         id: projectId,
                         type: this.$permissionResourceTypeMap.PROJECT
-                    }, pipeline]
+                    }, {
+                        type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT,
+                        ...pipeline
+                    }]
                 }])
                 console.log('redirectUrl', redirectUrl)
                 window.open(redirectUrl, '_blank')

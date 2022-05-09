@@ -34,9 +34,9 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("灰度项目设置请求实体")
 data class OpProjectGraySetRequest(
     @JsonProperty(value = "operateFlag", required = true)
-    @ApiModelProperty("操作标识 1：设置灰度 2：取消灰度")
+    @ApiModelProperty("操作标识 1：设置灰度 2：取消灰度", name = "operateFlag")
     val operateFlag: Int,
     @JsonProperty(value = "projectCodeList", required = true)
-    @ApiModelProperty("项目编码集合")
+    @ApiModelProperty("项目编码集合", name = "projectCodeList")
     val projectCodeList: List<String>
 )

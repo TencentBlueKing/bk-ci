@@ -27,10 +27,15 @@
 
 package com.tencent.devops.process.pojo.template
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
 /**
  * deng
  * 2019-01-08
  */
+@ApiModel("模板id")
 data class TemplateId(
+    @ApiModelProperty("模板id", required = false)
     val id: String
 )

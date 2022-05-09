@@ -40,7 +40,7 @@ data class Result<out T>(
     val message: String? = null,
     @ApiModelProperty("数据", required = false)
     val data: T? = null,
-    @ApiModelProperty("请求ID", required = false)
+    @ApiModelProperty("请求ID", required = false, name = "request_id")
     @JsonProperty("request_id")
     val requestId: String? = null,
     @ApiModelProperty("请求结果", required = false)

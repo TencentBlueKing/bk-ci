@@ -80,15 +80,17 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         templateType: TemplateType?,
-        storeFlag: Boolean?
+        storeFlag: Boolean?,
+        page: Int?,
+        pageSize: Int?
     ): Result<TemplateListModel> {
         return Result(templateFacadeService.listTemplate(
             projectId = projectId,
             userId = userId,
             templateType = templateType,
             storeFlag = storeFlag,
-            page = 1,
-            pageSize = 1000
+            page = page ?: 1,
+            pageSize = pageSize ?: 1000
         ))
     }
 
@@ -109,14 +111,16 @@ class ServicePTemplateResourceImpl @Autowired constructor(
     override fun listAllTemplate(
         userId: String,
         projectId: String,
-        templateType: TemplateType?
+        templateType: TemplateType?,
+        page: Int?,
+        pageSize: Int?
     ): Result<OptionalTemplateList> {
         return Result(templateFacadeService.listAllTemplate(
             projectId = projectId,
             templateType = templateType,
             templateIds = null,
-            page = 1,
-            pageSize = 1000
+            page = page ?: 1,
+            pageSize = pageSize ?: 1000
         ))
     }
 
@@ -130,10 +134,11 @@ class ServicePTemplateResourceImpl @Autowired constructor(
 
     override fun listTemplateById(
         templateIds: Collection<String>,
+        projectId: String?,
         templateType: TemplateType?
     ): Result<OptionalTemplateList> {
-        return Result(templateFacadeService.listOriginTemplate(
-            projectId = null,
+        return Result(templateFacadeService.listAllTemplate(
+            projectId = projectId,
             templateType = templateType,
             templateIds = templateIds
         ))

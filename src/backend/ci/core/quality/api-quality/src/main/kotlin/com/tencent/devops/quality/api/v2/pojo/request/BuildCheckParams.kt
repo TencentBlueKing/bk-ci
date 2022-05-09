@@ -40,5 +40,6 @@ data class BuildCheckParams(
     val taskId: String,
     val position: String,
     val templateId: String?,
+    val stageId: String?,
     val runtimeVariable: Map<String, String>?
 )

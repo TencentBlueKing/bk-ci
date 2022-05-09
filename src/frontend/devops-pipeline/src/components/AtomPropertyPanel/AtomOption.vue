@@ -46,7 +46,7 @@
                     id: 'MANUAL_RETRY',
                     name: this.$t('storeMap.manualRetry')
                 }
-                model['failControl'].list = [
+                model.failControl.list = [
                     {
                         id: 'continueWhenFailed',
                         name: this.$t('storeMap.continueWhenFailed')
@@ -57,13 +57,13 @@
                     }
                 ]
 
-                if (!(this.atomOption['manualSkip'] === false && this.atomOption['failControl'].includes('continueWhenFailed'))) {
-                    model['failControl'].list.push(failControlManualRetryOption)
+                if (!(this.atomOption.manualSkip === false && this.atomOption.failControl && this.atomOption.failControl.includes('continueWhenFailed'))) {
+                    model.failControl.list.push(failControlManualRetryOption)
                 }
 
                 // 编辑状态
                 if (!this.disabled) {
-                    model['runCondition'].list = model['runCondition'].list.filter(item => {
+                    model.runCondition.list = model.runCondition.list.filter(item => {
                         return item.id !== 'PARENT_TASK_CANCELED_OR_TIMEOUT'
                     })
                 }
@@ -95,16 +95,15 @@
                     Vue.set(this.element.additionalOptions, name, value)
                 }
 
-                const currentfailControl = [...new Set(name === 'failControl' ? value : this.atomOption['failControl'])] // 去重
+                const currentfailControl = [...new Set(name === 'failControl' ? value : this.atomOption.failControl)] // 去重
 
                 const includeManualRetry = currentfailControl.includes('MANUAL_RETRY')
                 const continueable = currentfailControl.includes('continueWhenFailed')
-                const isAutoSkip = continueable && (this.atomOption['manualSkip'] === false || (name === 'manualSkip' && value === false))
+                const isAutoSkip = continueable && (this.atomOption.manualSkip === false || (name === 'manualSkip' && value === false))
                 const retryable = currentfailControl.includes('retryWhenFailed')
                 const manualRetry = !isAutoSkip && includeManualRetry
-                // debugger
 
-                console.log(currentfailControl, isAutoSkip, this.atomOption['failControl'], value)
+                console.log(currentfailControl, isAutoSkip, this.atomOption.failControl, value)
                 const failControl = isAutoSkip ? currentfailControl.filter(item => item !== 'MANUAL_RETRY') : [...currentfailControl]
                 this.setPipelineEditing(true)
 
@@ -125,6 +124,9 @@
 </script>
 
 <style lang="scss">
+    .header {
+        pointer-events: auto;
+    }
     .atom-control-option {
         position: relative;
         .atom-checkbox-list-item {

@@ -8,6 +8,7 @@ build_linux:
 	GO111MODULE=on go build -o $(BINDIR)/devopsDaemon_linux $(CMDDIR)/daemon
 	GO111MODULE=on go build -o $(BINDIR)/devopsAgent_linux $(CMDDIR)/agent
 	GO111MODULE=on go build -o $(BINDIR)/upgrader_linux $(CMDDIR)/upgrader
+	GO111MODULE=on go build -o $(BINDIR)/installer_linux $(CMDDIR)/installer
 	ls -la $(BINDIR)
 build_macos:
 	mkdir -p $(BINDIR)
@@ -15,6 +16,7 @@ build_macos:
 	GO111MODULE=on go build -o $(BINDIR)/devopsDaemon_macos $(CMDDIR)/daemon
 	GO111MODULE=on go build -o $(BINDIR)/devopsAgent_macos $(CMDDIR)/agent
 	GO111MODULE=on go build -o $(BINDIR)/upgrader_macos $(CMDDIR)/upgrader
+	GO111MODULE=on go build -o $(BINDIR)/installer_macos $(CMDDIR)/installer
 	ls -la $(BINDIR)
 clean:
 	mkdir -p $(BINDIR)

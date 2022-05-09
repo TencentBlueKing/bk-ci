@@ -68,34 +68,38 @@ class ApigwPipelineGroupResourceV3Impl @Autowired constructor(private val client
         )
     }
 
-    override fun deleteGroup(userId: String, groupId: String): Result<Boolean> {
+    override fun deleteGroup(userId: String, projectId: String, groupId: String): Result<Boolean> {
         logger.info("Get pipeline groups at groupId:$groupId, userId:$userId")
         return client.get(ServicePipelineGroupResource::class).deleteGroup(
             userId = userId,
+            projectId = projectId,
             groupId = groupId
         )
     }
 
-    override fun addLabel(userId: String, pipelineLabel: PipelineLabelCreate): Result<Boolean> {
+    override fun addLabel(userId: String, projectId: String, pipelineLabel: PipelineLabelCreate): Result<Boolean> {
         logger.info("Add pipeline label at pipelineLabel:$pipelineLabel, userId:$userId")
         return client.get(ServicePipelineGroupResource::class).addLabel(
             userId = userId,
+            projectId = projectId,
             pipelineLabel = pipelineLabel
         )
     }
 
-    override fun deleteLabel(userId: String, labelId: String): Result<Boolean> {
+    override fun deleteLabel(userId: String, projectId: String, labelId: String): Result<Boolean> {
         logger.info("Get pipeline groups at labelId:$labelId, userId:$userId")
         return client.get(ServicePipelineGroupResource::class).deleteLabel(
             userId = userId,
+            projectId = projectId,
             labelId = labelId
         )
     }
 
-    override fun updateLabel(userId: String, pipelineLabel: PipelineLabelUpdate): Result<Boolean> {
+    override fun updateLabel(userId: String, projectId: String, pipelineLabel: PipelineLabelUpdate): Result<Boolean> {
         logger.info("Get pipeline groups at pipelineLabel:$pipelineLabel, userId:$userId")
         return client.get(ServicePipelineGroupResource::class).updateLabel(
             userId = userId,
+            projectId = projectId,
             pipelineLabel = pipelineLabel
         )
     }

@@ -16,3 +16,27 @@ bk_login:
   getAllUser: get_all_users/
   bk_app_code: __BK_CI_APP_CODE__
   bk_app_secret: __BK_CI_APP_TOKEN__
+  
+# 分布式ID配置
+leaf:
+  segment:
+    allocStrategyDaoBeanName: jooqIDAllocDaoImpl
+    enable: true
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_project?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+    username: __BK_CI_MYSQL_USER__
+    password: __BK_CI_MYSQL_PASSWORD__
+  name: leaf
+
+# 多集群下合法集群标识
+system:
+  router: __BK_CI_PROJECT_ROUTER_TAG__
+
+# 生产集群tag标识
+tag:
+  prod: __BK_CI_CONSUL_DISCOVERY_TAG__
+
+# db分片配置
+sharding:
+  database:
+     assign: 
+      fusibleSwitch: false

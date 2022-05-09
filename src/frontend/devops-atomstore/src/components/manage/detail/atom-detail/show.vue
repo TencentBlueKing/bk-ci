@@ -76,12 +76,12 @@
             return {
                 defaultPic,
                 categoryMap: {
-                    'TASK': this.$t('store.流水线插件'),
-                    'TRIGGER': this.$t('store.流水线触发器')
+                    TASK: this.$t('store.流水线插件'),
+                    TRIGGER: this.$t('store.流水线触发器')
                 },
                 jobTypeMap: {
-                    'AGENT': this.$t('store.编译环境'),
-                    'AGENT_LESS': this.$t('store.无编译环境')
+                    AGENT: this.$t('store.编译环境'),
+                    AGENT_LESS: this.$t('store.无编译环境')
                 }
             }
         }

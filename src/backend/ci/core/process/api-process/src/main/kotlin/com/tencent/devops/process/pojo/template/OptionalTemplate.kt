@@ -28,15 +28,22 @@
 package com.tencent.devops.process.pojo.template
 
 import com.tencent.devops.common.pipeline.container.Stage
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@ApiModel("模板列表")
 data class OptionalTemplateList(
+    @ApiModelProperty("数量", required = false)
     val count: Int,
+    @ApiModelProperty("页数", required = false)
     val page: Int?,
+    @ApiModelProperty("每页数量", required = false)
     val pageSize: Int?,
+    @ApiModelProperty("模板列表", required = false)
     val templates: Map<String, OptionalTemplate>
 )
 
+@ApiModel("模板")
 data class OptionalTemplate(
     @ApiModelProperty("模版名称", required = true)
     val name: String,

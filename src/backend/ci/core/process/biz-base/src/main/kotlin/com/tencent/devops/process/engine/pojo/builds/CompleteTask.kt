@@ -31,11 +31,14 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 
 data class CompleteTask(
+    val projectId: String,
     val buildId: String,
     val taskId: String,
     val userId: String,
     val buildStatus: BuildStatus, // 构建任务结束状态
     val errorType: ErrorType? = null,
     val errorCode: Int? = null,
-    val errorMsg: String? = null
+    val errorMsg: String? = null,
+    val platformCode: String? = null, // 对接平台代码
+    val platformErrorCode: Int? = null // 对接平台错误码
 )

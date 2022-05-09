@@ -30,6 +30,8 @@ package com.tencent.devops.process.api.template
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
@@ -135,7 +137,14 @@ interface ServicePTemplateResource {
         projectId: String,
         @ApiParam("模版类型", required = false)
         @QueryParam("templateType")
-        templateType: TemplateType?
+        templateType: TemplateType?,
+        @ApiParam("页码", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数量", required = false)
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = false)
+        pageSize: Int?
     ): Result<OptionalTemplateList>
 
     @ApiOperation("获取列表流水线模板")
@@ -171,7 +180,14 @@ interface ServicePTemplateResource {
         templateType: TemplateType?,
         @ApiParam("是否已关联到store", required = false)
         @QueryParam("storeFlag")
-        storeFlag: Boolean?
+        storeFlag: Boolean?,
+        @ApiParam("页码", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数量", required = false)
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = false)
+        pageSize: Int?
     ): Result<TemplateListModel>
 
     @ApiOperation("根据id获取模版列表")
@@ -180,6 +196,9 @@ interface ServicePTemplateResource {
     fun listTemplateById(
         @ApiParam("模板ID", required = true)
         templateIds: Collection<String>,
+        @ApiParam("项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
         @ApiParam("模版类型", required = false)
         @QueryParam("templateType")
         templateType: TemplateType?

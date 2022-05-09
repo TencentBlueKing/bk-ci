@@ -49,6 +49,8 @@ data class PipelineBuildNotifyEvent(
     val notifyTemplateEnum: String, // 模板, 枚举保护： PipelineNotifyTemplateEnum.name传值
     val titleParams: MutableMap<String, String>,
     val bodyParams: MutableMap<String, String>,
+    val position: String?,
+    val stageId: String?,
     override var actionType: ActionType = ActionType.START,
     override var delayMills: Int = 0,
     override var routeKeySuffix: String? = null

@@ -27,7 +27,12 @@
 
 package com.tencent.devops.dispatch.listener
 
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.dispatch.service.PipelineDispatchService
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import feign.RetryableException
@@ -36,11 +41,16 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ThirdPartyAgentListener @Autowired
-constructor(private val pipelineDispatchService: PipelineDispatchService) {
+class ThirdPartyAgentListener @Autowired constructor(
+    private val pipelineDispatchService: PipelineDispatchService,
+    private val client: Client
+) {
+    @BkTimed
     fun listenAgentStartUpEvent(pipelineAgentStartupEvent: PipelineAgentStartupEvent) {
         try {
-            pipelineDispatchService.startUp(pipelineAgentStartupEvent)
+            if (checkRunning(pipelineAgentStartupEvent)) {
+                pipelineDispatchService.startUp(pipelineAgentStartupEvent)
+            }
         } catch (e: RetryableException) {
             logger.warn("[${pipelineAgentStartupEvent.buildId}]|feign fail, do retry again", e)
             pipelineDispatchService.reDispatch(pipelineAgentStartupEvent)
@@ -55,6 +65,30 @@ constructor(private val pipelineDispatchService: PipelineDispatchService) {
         } catch (ignored: Throwable) {
             logger.error("Fail to start the pipe build($pipelineAgentShutdownEvent)", ignored)
         }
+    }
+
+    private fun checkRunning(event: PipelineAgentStartupEvent): Boolean {
+        // 判断流水线是否还在运行，如果已经停止则不在运行
+        // 只有detail的信息是在shutdown事件发出之前就写入的，所以这里去builddetail的信息。
+        // 为了兼容gitci的权限，这里把渠道号都改成GIT,以便去掉用户权限验证
+        val record = client.get(ServiceBuildResource::class).getBuildDetailStatusWithoutPermission(
+            event.userId,
+            event.projectId,
+            event.pipelineId,
+            event.buildId,
+            ChannelCode.BS
+        )
+        if (record.isNotOk() || record.data == null) {
+            logger.warn("The build event($event) fail to check if pipeline is running because of ${record.message}")
+            return false
+        }
+        val status = BuildStatus.parse(record.data)
+        if (!status.isRunning()) {
+            logger.error("The build event($event) is not running")
+            return false
+        }
+
+        return true
     }
 
     companion object {

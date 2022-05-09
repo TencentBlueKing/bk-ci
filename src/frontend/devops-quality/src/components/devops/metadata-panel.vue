@@ -235,7 +235,7 @@
 
                     this.indicatorSetList.splice(0, this.indicatorSetList.length)
                     if (res) {
-                        res.map(item => {
+                        res.forEach(item => {
                             this.indicatorSetList.push(item)
                         })
                     }
@@ -261,7 +261,7 @@
 
                     this.indicatorList.splice(0, this.indicatorList.length)
                     if (res) {
-                        res.map(item => {
+                        res.forEach(item => {
                             this.indicatorList.push(item)
                         })
                     }
@@ -285,7 +285,7 @@
 
                     this.controlPointList.splice(0, this.controlPointList.length)
                     if (res) {
-                        res.map(item => {
+                        res.forEach(item => {
                             this.controlPointList.push(item)
                         })
                     }

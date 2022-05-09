@@ -42,11 +42,13 @@ class BuildDetailDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         model: String
     ) {
         create(
             dslContext = dslContext,
+            projectId = projectId,
             buildId = buildId,
             startUser = "",
             startType = null,
@@ -57,6 +59,7 @@ class BuildDetailDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         startUser: String,
         startType: StartType?,
@@ -67,6 +70,7 @@ class BuildDetailDao {
         with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 BUILD_ID,
                 TRIGGER,
                 BUILD_NUM,
@@ -75,6 +79,7 @@ class BuildDetailDao {
                 STATUS,
                 START_USER
             ).values(
+                projectId,
                 buildId,
                 startType?.name,
                 buildNum ?: 0,
@@ -88,19 +93,22 @@ class BuildDetailDao {
 
     fun updateBuildCancelUser(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         cancelUser: String
     ) {
         with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
             dslContext.update(this)
                 .set(CANCEL_USER, cancelUser)
-                .where(BUILD_ID.eq(buildId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
                 .execute()
         }
     }
 
     fun update(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         model: String?,
         buildStatus: BuildStatus,
@@ -118,7 +126,7 @@ class BuildDetailDao {
             if (cancelUser != null) {
                 update.set(CANCEL_USER, cancelUser)
             }
-            update.where(BUILD_ID.eq(buildId)).execute()
+            update.where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId))).execute()
         }
         logger.info("[$buildId]|Update the build|status=$buildStatus|ret=$count")
         return count
@@ -126,6 +134,7 @@ class BuildDetailDao {
 
     fun updateStatus(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         buildStatus: BuildStatus,
         startTime: LocalDateTime? = null,
@@ -141,27 +150,30 @@ class BuildDetailDao {
             } else if (buildStatus.isFinish()) {
                 execute.set(END_TIME, LocalDateTime.now())
             }
-            execute.where(BUILD_ID.eq(buildId)).execute()
+            execute.where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId))).execute()
         }
     }
 
     fun updateModel(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         model: String
     ) {
         with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
-            dslContext.update(this).set(MODEL, model).where(BUILD_ID.eq(buildId)).execute()
+            dslContext.update(this).set(MODEL, model)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId))).execute()
         }
     }
 
     fun get(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String
     ): TPipelineBuildDetailRecord? {
         with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
             return dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
                 .fetchAny()
         }
     }

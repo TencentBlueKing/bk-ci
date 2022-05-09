@@ -31,7 +31,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.dispatch.sdk.jmx.BuildBean
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,6 +40,7 @@ import org.springframework.context.annotation.Configuration
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
+import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
 
 @Configuration
 class SDKConfiguration {
@@ -53,9 +53,11 @@ class SDKConfiguration {
         @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
         @Autowired objectMapper: ObjectMapper,
         @Autowired client: Client,
+        @Autowired channelUtils: ChannelUtils,
         @Autowired buildLogPrinter: BuildLogPrinter
     ) =
-        DispatchService(redisOperation, objectMapper, pipelineEventDispatcher, gateway, client, buildLogPrinter)
+        DispatchService(redisOperation, objectMapper, pipelineEventDispatcher, gateway,
+            client, channelUtils, buildLogPrinter)
 
     @Bean
     fun jobQuotaService(
@@ -68,7 +70,4 @@ class SDKConfiguration {
     fun pipelineEventDispatcher(@Autowired rabbitTemplate: RabbitTemplate): PipelineEventDispatcher {
         return MQEventDispatcher(rabbitTemplate)
     }
-
-    @Bean
-    fun buildBean() = BuildBean()
 }

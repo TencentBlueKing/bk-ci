@@ -27,11 +27,13 @@
 
 package com.tencent.devops.process.plugin.trigger.timer.quartz
 
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
@@ -90,7 +92,7 @@ class PipelineQuartzService @Autowired constructor(
             list.forEach { timer ->
                 logger.info("TIMER_RELOAD| load crontab($timer)")
                 timer.crontabExpressions.forEach { crontab ->
-                    addJob(pipelineId = timer.pipelineId, crontab = crontab)
+                    addJob(projectId = timer.projectId, pipelineId = timer.pipelineId, crontab = crontab)
                 }
             }
             start += limit
@@ -99,16 +101,16 @@ class PipelineQuartzService @Autowired constructor(
         logger.warn("TIMER_RELOAD| reload ok!")
     }
 
-    fun addJob(pipelineId: String, crontab: String) {
+    fun addJob(projectId: String, pipelineId: String, crontab: String) {
         try {
             val md5 = DigestUtils.md5Hex(crontab)
-            val comboKey = "${pipelineId}_$md5"
+            val comboKey = "${pipelineId}_${md5}_$projectId"
             schedulerManager.addJob(
                 comboKey, crontab,
                 jobBeanClass
             )
-        } catch (e: Exception) {
-            logger.error("TIMER_RELOAD| add job error|pipelineId=$pipelineId|crontab=$crontab", e)
+        } catch (ignore: Exception) {
+            logger.error("TIMER_RELOAD| add job error|pipelineId=$pipelineId|crontab=$crontab", ignore)
         }
     }
 
@@ -145,67 +147,71 @@ class PipelineJobBean(
     fun execute(context: JobExecutionContext?) {
         val jobKey = context?.jobDetail?.key ?: return
         val comboKey = jobKey.name
-        val comboKeys = comboKey.split("_")
+        val comboKeys = comboKey.split(Regex("_"), 3)
         val pipelineId = comboKeys[0]
         val crontabMd5 = comboKeys[1]
-        val pipelineTimer = pipelineTimerService.get(pipelineId)
-        if (null == pipelineTimer) {
-            logger.info("[$comboKey]|PIPELINE_TIMER_EXPIRED|Timer is expire, delete it from queue!")
-            schedulerManager.deleteJob(comboKey)
-            return
-        }
-
-        val projectRouterTagCheck = client.get(ServiceProjectTagResource::class)
-            .checkProjectRouter(pipelineTimer.projectId).data ?: return
-        if (!projectRouterTagCheck) {
-            logger.warn("timePipeline ${pipelineTimer.projectId} router tag is not this cluster")
-            return
-        }
-
-        if (gray.isGray()) {
-            // 灰度环境只加载灰度项目的流水线
-            if (!gray.isGrayProject(pipelineTimer.projectId, redisOperation)) {
-                logger.info("[$comboKey]|PIPELINE_TIMER_GRAY|${pipelineTimer.projectId} is prod, discard!")
+        val projectId = comboKeys[2]
+        val watcher = Watcher(id = "timer|[$comboKey]")
+        try {
+            val pipelineTimer = pipelineTimerService.get(projectId, pipelineId)
+            if (null == pipelineTimer) {
+                logger.info("[$comboKey]|PIPELINE_TIMER_EXPIRED|Timer is expire, delete it from queue!")
+                schedulerManager.deleteJob(comboKey)
                 return
             }
-        } else {
-            // 生产环境只加载生产项目的流水线
-            if (gray.isGrayProject(pipelineTimer.projectId, redisOperation)) {
-                logger.info("[$comboKey]|PIPELINE_TIMER_PROD|${pipelineTimer.projectId} is gray, discard!")
+
+            watcher.start("projectRouterTagCheck")
+            val projectRouterTagCheck = client.get(ServiceProjectTagResource::class)
+                .checkProjectRouter(pipelineTimer.projectId).data ?: return
+            if (!projectRouterTagCheck) {
+                logger.warn("timePipeline ${pipelineTimer.projectId} router tag is not this cluster")
                 return
             }
-        }
 
-        var find = false
-        pipelineTimer.crontabExpressions.forEach {
-            if (DigestUtils.md5Hex(it) == crontabMd5) {
-                find = true
+            var find = false
+            pipelineTimer.crontabExpressions.forEach {
+                if (DigestUtils.md5Hex(it) == crontabMd5) {
+                    find = true
+                }
             }
-        }
-        if (!find) {
-            logger.info("[$comboKey]|PIPELINE_TIMER_EXPIRED|can not find crontab, delete it from queue!")
-            schedulerManager.deleteJob(comboKey)
-            return
-        }
-        val scheduledFireTime = DateFormatUtils.format(context.scheduledFireTime, "yyyyMMddHHmmss")
-        // 相同触发的要锁定，防止误差导致重复执行
-        val redisLock = RedisLock(redisOperation, "process:pipeline:timer:trigger:$pipelineId:$scheduledFireTime", 58)
-        if (redisLock.tryLock()) {
-            try {
-                logger.info("[$comboKey]|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime")
-                pipelineEventDispatcher.dispatch(
-                    PipelineTimerBuildEvent(
-                        source = "timer_trigger", projectId = pipelineTimer.projectId, pipelineId = pipelineId,
-                        userId = pipelineTimer.startUser, channelCode = pipelineTimer.channelCode
+            if (!find) {
+                logger.info("[$comboKey]|PIPELINE_TIMER_EXPIRED|can not find crontab, delete it from queue!")
+                schedulerManager.deleteJob(comboKey)
+                return
+            }
+
+            val scheduledFireTime = DateFormatUtils.format(context.scheduledFireTime, "yyyyMMddHHmmss")
+            // 相同触发的要锁定，防止误差导致重复执行
+            watcher.start("redisLock")
+            val redisLock = RedisLock(
+                redisOperation = redisOperation,
+                lockKey = "process:pipeline:timer:trigger:$pipelineId:$scheduledFireTime",
+                expiredTimeInSeconds = 58
+            )
+            if (redisLock.tryLock()) {
+                try {
+                    logger.info("[$comboKey]|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime")
+                    watcher.start("dispatch")
+                    pipelineEventDispatcher.dispatch(
+                        PipelineTimerBuildEvent(
+                            source = "timer_trigger", projectId = pipelineTimer.projectId, pipelineId = pipelineId,
+                            userId = pipelineTimer.startUser, channelCode = pipelineTimer.channelCode
+                        )
                     )
-                )
-            } catch (ignored: Exception) {
-                logger.error(
-                    "[$comboKey]|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime|Dispatch event fail, e=$ignored"
+                } catch (ignored: Exception) {
+                    logger.error(
+                        "[$comboKey]|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime|Dispatch event fail, " +
+                            "e=$ignored"
+                    )
+                }
+            } else {
+                logger.info(
+                    "[$comboKey]|PIPELINE_TIMER_CONCURRENT|scheduledFireTime=$scheduledFireTime| lock fail, skip!"
                 )
             }
-        } else {
-            logger.info("[$comboKey]|PIPELINE_TIMER_CONCURRENT|scheduledFireTime=$scheduledFireTime| lock fail, skip!")
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 50)
         }
     }
 }

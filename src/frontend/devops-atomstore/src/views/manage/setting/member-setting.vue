@@ -86,8 +86,8 @@
                 memberCount: 0,
                 memberList: [],
                 memberType: {
-                    'ADMIN': 'Owner',
-                    'DEVELOPER': 'Developer'
+                    ADMIN: 'Owner',
+                    DEVELOPER: 'Developer'
                 },
                 permissionMap: {
                     atom: [
@@ -125,8 +125,8 @@
 
         computed: {
             ...mapGetters('store', {
-                'detail': 'getDetail',
-                'userInfo': 'getUserInfo'
+                detail: 'getDetail',
+                userInfo: 'getUserInfo'
             }),
 
             storeType () {
@@ -295,7 +295,7 @@
         }
         .add-member {
             padding: 32px;
-            /deep/ .bk-form-radio:not(:last-child) {
+            ::v-deep .bk-form-radio:not(:last-child) {
                 margin-right: 32px;
             }
         }
@@ -308,7 +308,7 @@
             }
         }
         .g-scroll-table {
-            /deep/ .bk-table .bk-table-body-wrapper {
+            ::v-deep .bk-table .bk-table-body-wrapper {
                 height: calc(100% - 43px);
             }
         }

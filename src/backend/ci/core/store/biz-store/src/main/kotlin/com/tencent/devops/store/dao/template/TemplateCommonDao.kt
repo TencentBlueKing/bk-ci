@@ -55,6 +55,14 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
         }
     }
 
+    override fun getStorePublicFlagByCode(dslContext: DSLContext, storeCode: String): Boolean {
+        return with(TTemplate.T_TEMPLATE) {
+            dslContext.select(PUBLIC_FLAG).from(this)
+                .where(TEMPLATE_CODE.eq(storeCode).and(LATEST_FLAG.eq(true)))
+                .fetchOne(0, Boolean::class.java)!!
+        }
+    }
+
     override fun getStoreCodeListByName(dslContext: DSLContext, storeName: String): Result<out Record>? {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.select(TEMPLATE_CODE.`as`("storeCode")).from(this)

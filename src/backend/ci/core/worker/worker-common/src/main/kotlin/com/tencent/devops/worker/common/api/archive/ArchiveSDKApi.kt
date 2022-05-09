@@ -37,6 +37,10 @@ import java.io.File
 interface ArchiveSDKApi : WorkerRestApiSDK {
 
     /**
+     * 获取Api对应的Realm
+     */
+    fun getRealm(): String
+    /**
      * 归档构件到仓库中自定义路径
      * @param file 构件
      * @param destPath 要上传的文件而指定的自定义路径
@@ -120,14 +124,12 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
     /**
      * 通用上传文件接口
      * @param url 请求地址
-     * @param destPath 上传目标文件路径
      * @param file 上传的文件
      * @param headers 请求头
      * @param isVmBuildEnv 是否是有编译环境
      */
     fun uploadFile(
         url: String,
-        destPath: String,
         file: File,
         headers: Map<String, String>? = emptyMap(),
         isVmBuildEnv: Boolean

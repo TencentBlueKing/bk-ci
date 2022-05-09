@@ -3,7 +3,6 @@ package com.tencent.devops.process.engine.service
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -16,7 +15,6 @@ import com.tencent.devops.process.notify.command.impl.NotifyReceiversCmd
 import com.tencent.devops.process.notify.command.impl.NotifySendCmd
 import com.tencent.devops.process.notify.command.impl.NotifyUrlBuildCmd
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -42,11 +40,9 @@ abstract class PipelineNotifyService @Autowired constructor(
     ) {
         logger.info("onPipelineShutdown new $pipelineId|$buildId|$buildStatus")
 
-        val vars = buildVariableService.getAllVariable(buildId).toMutableMap()
-        vars[PIPELINE_TIME_DURATION]?.takeIf { it.isNotBlank() }?.toLongOrNull()?.let {
-            vars[PIPELINE_TIME_DURATION] = DateTimeUtil.formatMillSecond(it * 1000)
-        }
-        val setting = pipelineRepositoryService.getSetting(pipelineId) ?: return
+        val vars = buildVariableService.getAllVariable(projectId, buildId).toMutableMap()
+
+        val setting = pipelineRepositoryService.getSetting(projectId, pipelineId) ?: return
 
         val context = BuildNotifyContext(
             buildId = buildId,

@@ -31,6 +31,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwTemplateInstanceResourceV3
 import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
+import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
@@ -91,7 +92,9 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val cli
         templateId: String,
         page: Int?,
         pageSize: Int?,
-        searchKey: String?
+        searchKey: String?,
+        sortType: TemplateSortTypeEnum?,
+        desc: Boolean?
     ): Result<TemplateInstancePage> {
         logger.info("listTemplateInstances|userId=$userId|projectId=$projectId|templateId=$templateId|" +
             "page=$page|pageSize=$pageSize|searchKey=$searchKey")
@@ -99,9 +102,11 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val cli
             userId = userId,
             projectId = projectId,
             templateId = templateId,
-            page = page,
-            pageSize = pageSize,
-            searchKey = searchKey
+            page = page ?: 1,
+            pageSize = pageSize ?: 30,
+            searchKey = searchKey,
+            sortType = sortType,
+            desc = desc
         )
     }
 

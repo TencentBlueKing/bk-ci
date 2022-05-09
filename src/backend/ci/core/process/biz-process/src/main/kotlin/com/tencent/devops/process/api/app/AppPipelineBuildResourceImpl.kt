@@ -44,6 +44,7 @@ import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.service.app.AppBuildService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
+import org.apache.commons.lang3.math.NumberUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL", "UNUSED")
@@ -252,6 +253,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
 
         val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
 
+        val buildNo = values["buildNo"]?.let { NumberUtils.toInt(it) }
+
         return Result(
             BuildId(
                 pipelineBuildFacadeService.buildManualStartup(
@@ -259,8 +262,9 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
                     startType = StartType.MANUAL,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    values = values,
-                    channelCode = channelCode
+                    values = values.filter { it.key != "buildNo" },
+                    channelCode = channelCode,
+                    buildNo = buildNo
                 )
             )
         )

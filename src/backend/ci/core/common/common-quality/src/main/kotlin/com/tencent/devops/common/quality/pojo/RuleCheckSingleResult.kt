@@ -35,5 +35,5 @@ data class RuleCheckSingleResult(
     @ApiModelProperty("规则名称", required = true)
     val ruleName: String,
     @ApiModelProperty("失败信息", required = true)
-    val messagePairs: List<Pair<String, String/*detail*/>>
+    val messagePairs: List<Triple<String, String/*detail*/, Boolean>>
 )

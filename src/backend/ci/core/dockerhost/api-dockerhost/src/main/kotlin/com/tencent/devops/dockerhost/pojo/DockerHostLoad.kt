@@ -27,10 +27,19 @@
 
 package com.tencent.devops.dockerhost.pojo
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("Docker母机负载模型")
 data class DockerHostLoad(
+    @ApiModelProperty("容器使用数量")
     val usedContainerNum: Int,
+    @ApiModelProperty("平均处理器负载")
     val averageCpuLoad: Int,
+    @ApiModelProperty("平均内存负载")
     val averageMemLoad: Int,
+    @ApiModelProperty("平均存储器负载")
     val averageDiskLoad: Int,
+    @ApiModelProperty("平均存储器IO负载")
     val averageDiskIOLoad: Int
 )

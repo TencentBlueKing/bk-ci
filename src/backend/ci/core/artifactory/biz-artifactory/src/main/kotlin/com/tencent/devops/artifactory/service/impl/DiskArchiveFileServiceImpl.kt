@@ -131,10 +131,11 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
             buildId = buildId
         )
         val destPath = path.substring(getBasePath().length)
-        downloadFileToLocal(destPath, response)
+        downloadFileToLocal(userId, destPath, response)
     }
 
     override fun acrossProjectCopy(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
@@ -144,6 +145,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         val sourcePathPattern = getSourcePath(projectId, artifactoryType, path)
         val sourceParentPath = sourcePathPattern.substring(0, sourcePathPattern.lastIndexOf(fileSeparator))
         return doAcrossProjectCopy(
+            userId = userId,
             sourceParentPath = sourceParentPath,
             sourcePathPattern = sourcePathPattern,
             destPath = targetPath,
@@ -196,7 +198,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         ) ?: ""
     }
 
-    override fun downloadFile(filePath: String, outputStream: OutputStream) {
+    override fun downloadFile(userId: String, filePath: String, outputStream: OutputStream) {
         logger.info("downloadFile, filePath: $filePath")
         if (filePath.contains("..")) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf("filePath"))
@@ -296,7 +298,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         return destPath
     }
 
-    override fun downloadFile(filePath: String, response: HttpServletResponse) {
+    override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse, logo: Boolean?) {
         logger.info("downloadFile, filePath: $filePath")
         if (filePath.contains("..")) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
@@ -306,7 +308,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         FileCopyUtils.copy(FileInputStream(file), response.outputStream)
     }
 
-    override fun downloadFileToLocal(filePath: String, response: HttpServletResponse) {
+    override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
         logger.info("downloadFileToLocal, filePath: $filePath")
         val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
         // 如果文件不存在，提示404
@@ -332,7 +334,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
     ) {
         val filePath = "${FileTypeEnum.BK_REPORT.fileType}/$projectId/$pipelineId/$buildId/$elementId/$path"
         val response = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).response!!
-        downloadFile(filePath, response)
+        downloadFile(userId, filePath, response)
     }
 
     fun getBasePath(): String {
@@ -351,7 +353,8 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         fileName: String?,
         fileType: FileTypeEnum?,
         props: Map<String, String?>?,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        logo: Boolean?
     ): String {
         logger.info("uploadFile|filePath=$filePath|fileName=$fileName|props=$props")
         val uploadFileName = fileName ?: file.name
@@ -415,10 +418,11 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
             pipelineId = pipelineId,
             buildId = buildId
         )
-        return getFileDownloadUrls(filePath, artifactoryType, fileChannelType, fullUrl = fullUrl)
+        return getFileDownloadUrls(userId, filePath, artifactoryType, fileChannelType, fullUrl = fullUrl)
     }
 
     override fun getFileDownloadUrls(
+        userId: String,
         filePath: String,
         artifactoryType: ArtifactoryType,
         fileChannelType: FileChannelTypeEnum,
@@ -521,6 +525,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
     }
 
     private fun doAcrossProjectCopy(
+        userId: String,
         sourceParentPath: String,
         sourcePathPattern: String,
         destPath: String,
@@ -548,7 +553,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         }
         fileList.forEach {
             uploadFile(
-                userId = "",
+                userId = userId,
                 file = it,
                 projectId = targetProjectId,
                 filePath = "$destPath$fileSeparator${it.name}",
@@ -597,8 +602,20 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         return flag
     }
 
-    override fun deleteFile(filePath: String) {
+    override fun deleteFile(userId: String, filePath: String) {
         FileSystemUtils.deleteRecursively(File("$archiveLocalBasePath/$filePath"))
+    }
+
+    override fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        filePath: String,
+        includeFolder: Boolean?,
+        deep: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Page<FileInfo> {
+        TODO("Not yet implemented")
     }
 
     companion object {

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.environment.service.thirdPartyAgent
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.AgentPipelineRefDao
@@ -48,8 +47,7 @@ class AgentPipelineService @Autowired constructor(
     private val dslContext: DSLContext,
     private val agentPipelineRefDao: AgentPipelineRefDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
-    private val nodeDao: NodeDao,
-    private val objectMapper: ObjectMapper
+    private val nodeDao: NodeDao
 ) {
     fun updatePipelineRef(
         userId: String,
@@ -57,8 +55,6 @@ class AgentPipelineService @Autowired constructor(
         request: AgentPipelineRefRequest
     ) {
         logger.info("updatePipelineRef: [$userId|$projectId|${request.action}|${request.pipelineId}}]")
-        val agentBuffer = mutableMapOf<Long, TEnvironmentThirdpartyAgentRecord>()
-        val agentPipelineRefs = mutableListOf<AgentPipelineRef>()
         when (request.action) {
             "create_pipeline", "update_pipeline", "restore_pipeline", "op" -> {
                 if (request.pipelineRefInfos.isEmpty()) {
@@ -83,9 +79,9 @@ class AgentPipelineService @Autowired constructor(
     ) {
         val agentBuffer = mutableMapOf<Long, TEnvironmentThirdpartyAgentRecord>()
         val agentPipelineRefs = mutableListOf<AgentPipelineRef>()
-        agentPipelineRefInfos.forEach { refInfo ->
+        agentPipelineRefInfos.forEach next@{ refInfo ->
             val agentId = HashUtil.decodeIdToLong(refInfo.agentHashId)
-            val agent = agentBuffer[agentId] ?: thirdPartyAgentDao.getAgent(dslContext, agentId)!!
+            val agent = agentBuffer[agentId] ?: thirdPartyAgentDao.getAgent(dslContext, agentId) ?: return@next
             agentPipelineRefs.add(
                 AgentPipelineRef(
                     agentId = agent.id,
@@ -138,17 +134,17 @@ class AgentPipelineService @Autowired constructor(
     private fun updateRefCount(agentId: Long) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            val agent = thirdPartyAgentDao.getAgent(dslContext, agentId)
+            val agent = thirdPartyAgentDao.getAgent(transactionContext, agentId)
             if (agent != null) {
-                val agentRefCount = agentPipelineRefDao.countPipelineRef(dslContext, agentId)
-                nodeDao.updatePipelineRefCount(dslContext, agent.nodeId, agentRefCount)
+                val agentRefCount = agentPipelineRefDao.countPipelineRef(transactionContext, agentId)
+                nodeDao.updatePipelineRefCount(transactionContext, agent.nodeId, agentRefCount)
             } else {
                 logger.warn("agent[$agentId] not found")
             }
         }
     }
 
-    fun listPipelineRef(userId: String, projectId: String, nodeHashId: String): List<AgentPipelineRef> {
+    fun listPipelineRef(projectId: String, nodeHashId: String): List<AgentPipelineRef> {
         val nodeLongId = HashUtil.decodeIdToLong(nodeHashId)
         return agentPipelineRefDao.listByNodeId(dslContext, projectId, nodeLongId).map {
             AgentPipelineRef(

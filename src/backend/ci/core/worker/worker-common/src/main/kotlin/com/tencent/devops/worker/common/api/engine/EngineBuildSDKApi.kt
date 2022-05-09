@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.api.engine
 
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.pojo.BuildTask
@@ -36,7 +37,7 @@ import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
 interface EngineBuildSDKApi : WorkerRestApiSDK {
 
-    fun getRequestUrl(path: String, retryCount: Int = 0): String
+    fun getRequestUrl(path: String, retryCount: Int = 0, executeCount: Int = 1): String
 
     fun setStarted(retryCount: Int): Result<BuildVariables>
 
@@ -46,11 +47,13 @@ interface EngineBuildSDKApi : WorkerRestApiSDK {
 
     fun endTask(buildVariables: BuildVariables, retryCount: Int): Result<Boolean>
 
-    fun heartbeat(): Result<HeartBeatInfo>
+    fun heartbeat(executeCount: Int = 1): Result<HeartBeatInfo>
 
     fun timeout(): Result<Boolean>
 
+    fun submitError(errorInfo: ErrorInfo): Result<Boolean>
+
     fun getJobContext(): Map<String, String>
 
-    fun getBuildDetailUrl(): String
+    fun getBuildDetailUrl(): Result<String>
 }

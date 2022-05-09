@@ -91,103 +91,102 @@ class MarketAtomEnvInfoDao {
         atomDefaultFlag: Boolean,
         atomStatusList: List<Byte>?
     ): Record? {
-        val a = TAtom.T_ATOM.`as`("a")
-        val b = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("b")
-        val c = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("c")
-        val t = if (atomDefaultFlag) {
-            getAtomEnvInfoBaseStep(dslContext, a, b)
+        val tAtom = TAtom.T_ATOM
+        val tAtomEnvInfo = TAtomEnvInfo.T_ATOM_ENV_INFO
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
+        return if (atomDefaultFlag) {
+            getAtomEnvInfoBaseStep(dslContext, tAtom, tAtomEnvInfo)
                 .where(queryDefaultAtomCondition(
-                    a = a,
+                    tAtom = tAtom,
                     atomCode = atomCode,
                     version = version,
                     atomStatusList = atomStatusList
-                ))
+                )).orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne()
         } else {
-            getAtomEnvInfoBaseStep(dslContext, a, b)
-                .join(c)
-                .on(a.ATOM_CODE.eq(c.STORE_CODE))
+            getAtomEnvInfoBaseStep(dslContext, tAtom, tAtomEnvInfo)
+                .join(tStoreProjectRel)
+                .on(tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE))
                 .where(queryNormalAtomCondition(
-                    a = a,
-                    c = c,
+                    tAtom = tAtom,
+                    tStoreProjectRel = tStoreProjectRel,
                     projectCode = projectCode,
                     atomCode = atomCode,
                     version = version,
                     atomStatusList = atomStatusList
-                ))
-        }.asTable("t")
-        return dslContext.selectFrom(t).orderBy(t.field("createTime")!!.desc()).limit(1).fetchOne()
+                )).orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne()
+        }
     }
 
     private fun getAtomEnvInfoBaseStep(
         dslContext: DSLContext,
-        a: TAtom,
-        b: TAtomEnvInfo
-    ): SelectOnConditionStep<Record21<String, String, Byte, String, String, String, String, String, String, Boolean, String, LocalDateTime, LocalDateTime, String, String, String, String, String, String, String, String>> {
+        tAtom: TAtom,
+        tAtomEnvInfo: TAtomEnvInfo
+    ): SelectOnConditionStep<Record21<String, String, Byte, String, String, String, Boolean, String, String, Boolean, String, LocalDateTime, LocalDateTime, String, String, String, String, String, String, String, String>> {
         return dslContext.select(
-            a.ID.`as`("atomId"),
-            a.ATOM_CODE.`as`("atomCode"),
-            a.ATOM_STATUS.`as`("atomStatus"),
-            a.NAME.`as`("atomName"),
-            a.CREATOR.`as`("creator"),
-            a.VERSION.`as`("version"),
-            a.SUMMARY.`as`("summary"),
-            a.DOCS_LINK.`as`("docsLink"),
-            a.PROPS.`as`("props"),
-            a.BUILD_LESS_RUN_FLAG.`as`("buildLessRunFlag"),
-            a.JOB_TYPE.`as`("jobType"),
-            a.CREATE_TIME.`as`("createTime"),
-            a.UPDATE_TIME.`as`("updateTime"),
-            b.PKG_PATH.`as`("pkgPath"),
-            b.LANGUAGE.`as`("language"),
-            b.MIN_VERSION.`as`("minVersion"),
-            b.TARGET.`as`("target"),
-            b.SHA_CONTENT.`as`("shaContent"),
-            b.PRE_CMD.`as`("preCmd"),
-            b.POST_ENTRY_PARAM.`as`("postEntryParam"),
-            b.POST_CONDITION.`as`("postCondition")
-        ).from(a)
-            .join(b)
-            .on(a.ID.eq(b.ATOM_ID))
+            tAtom.ID,
+            tAtom.ATOM_CODE,
+            tAtom.ATOM_STATUS,
+            tAtom.NAME,
+            tAtom.CREATOR,
+            tAtom.VERSION,
+            tAtom.DEFAULT_FLAG,
+            tAtom.SUMMARY,
+            tAtom.DOCS_LINK,
+            tAtom.BUILD_LESS_RUN_FLAG,
+            tAtom.JOB_TYPE,
+            tAtom.CREATE_TIME,
+            tAtom.UPDATE_TIME,
+            tAtomEnvInfo.PKG_PATH,
+            tAtomEnvInfo.LANGUAGE,
+            tAtomEnvInfo.MIN_VERSION,
+            tAtomEnvInfo.TARGET,
+            tAtomEnvInfo.SHA_CONTENT,
+            tAtomEnvInfo.PRE_CMD,
+            tAtomEnvInfo.POST_ENTRY_PARAM,
+            tAtomEnvInfo.POST_CONDITION
+        ).from(tAtom)
+            .join(tAtomEnvInfo)
+            .on(tAtom.ID.eq(tAtomEnvInfo.ATOM_ID))
     }
 
     private fun getBaseQueryCondition(
-        a: TAtom,
+        tAtom: TAtom,
         atomCode: String,
         version: String,
         atomStatusList: List<Byte>?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        conditions.add(a.ATOM_CODE.eq(atomCode))
-        conditions.add(a.VERSION.like(VersionUtils.generateQueryVersion(version)))
+        conditions.add(tAtom.ATOM_CODE.eq(atomCode))
+        conditions.add(tAtom.VERSION.like(VersionUtils.generateQueryVersion(version)))
         if (atomStatusList != null && atomStatusList.isNotEmpty()) {
-            conditions.add(a.ATOM_STATUS.`in`(atomStatusList))
+            conditions.add(tAtom.ATOM_STATUS.`in`(atomStatusList))
         }
         return conditions
     }
 
     private fun queryDefaultAtomCondition(
-        a: TAtom,
+        tAtom: TAtom,
         atomCode: String,
         version: String,
         atomStatusList: List<Byte>?
     ): MutableList<Condition> {
-        val conditions = getBaseQueryCondition(a, atomCode, version, atomStatusList)
-        conditions.add(a.DEFAULT_FLAG.eq(true)) // 查默认插件（所有项目都可用）
+        val conditions = getBaseQueryCondition(tAtom, atomCode, version, atomStatusList)
+        conditions.add(tAtom.DEFAULT_FLAG.eq(true)) // 查默认插件（所有项目都可用）
         return conditions
     }
 
     private fun queryNormalAtomCondition(
-        a: TAtom,
-        c: TStoreProjectRel,
+        tAtom: TAtom,
+        tStoreProjectRel: TStoreProjectRel,
         projectCode: String,
         atomCode: String,
         version: String,
         atomStatusList: List<Byte>?
     ): MutableList<Condition> {
-        val conditions = getBaseQueryCondition(a, atomCode, version, atomStatusList)
-        conditions.add(a.DEFAULT_FLAG.eq(false)) // 查普通插件
-        conditions.add(c.PROJECT_CODE.eq(projectCode))
-        conditions.add(c.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+        val conditions = getBaseQueryCondition(tAtom, atomCode, version, atomStatusList)
+        conditions.add(tAtom.DEFAULT_FLAG.eq(false)) // 查普通插件
+        conditions.add(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
+        conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         return conditions
     }
 

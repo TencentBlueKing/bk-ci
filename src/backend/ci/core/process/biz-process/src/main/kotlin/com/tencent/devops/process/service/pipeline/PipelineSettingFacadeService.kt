@@ -72,7 +72,8 @@ class PipelineSettingFacadeService @Autowired constructor(
         userId: String,
         setting: PipelineSetting,
         checkPermission: Boolean = true,
-        version: Int = 0
+        version: Int = 0,
+        updateLastModifyUser: Boolean? = true
     ): String {
         if (checkPermission) {
             checkEditPermission(
@@ -83,7 +84,12 @@ class PipelineSettingFacadeService @Autowired constructor(
             )
         }
 
-        pipelineRepositoryService.saveSetting(userId, setting, version)
+        pipelineRepositoryService.saveSetting(
+            userId = userId,
+            setting = setting,
+            version = version,
+            updateLastModifyUser = updateLastModifyUser
+        )
 
         if (checkPermission) {
             pipelinePermissionService.modifyResource(
@@ -95,6 +101,7 @@ class PipelineSettingFacadeService @Autowired constructor(
 
         pipelineGroupService.updatePipelineLabel(
             userId = userId,
+            projectId = setting.projectId,
             pipelineId = setting.pipelineId,
             labelIds = setting.labels
         )
@@ -106,9 +113,21 @@ class PipelineSettingFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode = ChannelCode.BS,
-        version: Int = 0
+        version: Int = 0,
+        checkPermission: Boolean = false
     ): PipelineSetting {
-        var settingInfo = pipelineRepositoryService.getSetting(pipelineId)
+
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = "用户($userId)无权限在工程($projectId)下获取流水线($pipelineId)"
+            )
+        }
+
+        var settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
         val groups = pipelineGroupService.getGroups(userId, projectId, pipelineId)
         val labels = ArrayList<String>()
         groups.forEach {
@@ -178,8 +197,8 @@ class PipelineSettingFacadeService @Autowired constructor(
         )
     }
 
-    fun getSettingInfo(pipelineId: String): PipelineSetting? {
-        return pipelineRepositoryService.getSetting(pipelineId)
+    fun getSettingInfo(projectId: String, pipelineId: String): PipelineSetting? {
+        return pipelineRepositoryService.getSetting(projectId, pipelineId)
     }
 
     private fun checkEditPermission(userId: String, projectId: String, pipelineId: String, message: String) {

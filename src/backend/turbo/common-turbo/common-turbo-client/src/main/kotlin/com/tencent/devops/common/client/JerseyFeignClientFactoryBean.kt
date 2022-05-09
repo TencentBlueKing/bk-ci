@@ -1,13 +1,11 @@
 package com.tencent.devops.common.client
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.client.ms.MicroServiceTarget
-import com.tencent.devops.web.util.SpringContextHolder
+import com.tencent.devops.utils.jackson.JsonUtils
 import feign.Feign
 import feign.Request
-import feign.RequestInterceptor
 import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import feign.jaxrs.JAXRSContract
@@ -23,8 +21,8 @@ import kotlin.reflect.KClass
 
 @Suppress("EmptyFunctionBlock", "MaxLineLength")
 class JerseyFeignClientFactoryBean(
-    private var type: Class<*>,
-    private var applicationContext: ApplicationContext
+    private val type: Class<*>,
+    private val tag: String
 ) : FactoryBean<Any>, InitializingBean, ApplicationContextAware {
 
     companion object {
@@ -33,6 +31,8 @@ class JerseyFeignClientFactoryBean(
         const val devopsPackagePath =
             """com.tencent.devops.([a-z]+).api.([a-zA-Z]+)"""
     }
+
+    private var applicationContext: ApplicationContext? = null
 
     private val interfaces = ConcurrentHashMap<KClass<*>, String>()
 
@@ -44,25 +44,25 @@ class JerseyFeignClientFactoryBean(
 
     private val feignClient = feign.okhttp.OkHttpClient(okHttpClient)
     private val jaxRsContract = JAXRSContract()
-    private val jacksonDecoder = JacksonDecoder(applicationContext.getBean(ObjectMapper::class.java))
-    private val jacksonEncoder = JacksonEncoder(applicationContext.getBean(ObjectMapper::class.java))
+    private val jacksonDecoder = JacksonDecoder(JsonUtils.objectMapper)
+    private val jacksonEncoder = JacksonEncoder(JsonUtils.objectMapper)
+    private val clientErrorDecoder = ClientErrorDecoder()
 
-    // todo 从属性文件中读tag值
-    private val tag: String = ""
+
 
     override fun getObject(): Any? {
         return Feign.builder()
             .client(feignClient)
-            .errorDecoder(applicationContext.getBean(ClientErrorDecoder::class.java))
+            .errorDecoder(clientErrorDecoder)
             .encoder(jacksonEncoder)
             .decoder(jacksonDecoder)
             .contract(jaxRsContract)
-            .options(Request.Options(10000, 30000))
-            .requestInterceptor(SpringContextHolder.getBean(RequestInterceptor::class.java, "devopsRequestInterceptor"))
-            .target(MicroServiceTarget(findServiceName(type.kotlin), type, applicationContext.getBean(ConsulDiscoveryClient::class.java), tag))
+            .options(Request.Options(10000L, TimeUnit.MILLISECONDS, 30000, TimeUnit.MILLISECONDS, true))
+//            .requestInterceptor(applicationContext!!.getBean(RequestInterceptor::class.java, "devopsRequestInterceptor"))
+            .target(MicroServiceTarget(findServiceName(type.kotlin), type, applicationContext!!.getBean(ConsulDiscoveryClient::class.java), tag))
     }
 
-    override fun getObjectType(): Class<*>? {
+    override fun getObjectType(): Class<*> {
         return this.type
     }
 
@@ -83,7 +83,7 @@ class JerseyFeignClientFactoryBean(
                 val codeccRegex = Regex(codeccPackagePath)
                 val devopsRegex = Regex(devopsPackagePath)
                 val matches = codeccRegex.find(packageName) ?: devopsRegex.find(packageName)
-                    ?: throw ClientException("无法根据接口[$packageName]分析所属的服务")
+                ?: throw ClientException("can not find service according to package [$packageName]")
                 matches.groupValues[1]
             }
         }

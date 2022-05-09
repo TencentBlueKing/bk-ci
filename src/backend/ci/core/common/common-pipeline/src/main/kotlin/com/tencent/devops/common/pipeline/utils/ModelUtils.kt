@@ -113,16 +113,19 @@ object ModelUtils {
             s.canRetry = stageStatus.isFailure() || stageStatus.isCancel()
             s.containers.forEach { c ->
                 initContainerOldData(c)
-                if (c is VMBuildContainer) {
-                    val jobStatus = BuildStatus.parse(c.status)
-                    c.canRetry = jobStatus.isFailure() || jobStatus.isCancel()
-                }
-
-                val failElements = mutableListOf<Element>()
-                c.elements.forEach { e ->
-                    refreshElement(element = e, failElements = failElements)
+                val jobStatus = BuildStatus.parse(c.status)
+                c.canRetry = jobStatus.isFailure() || jobStatus.isCancel()
+                if (c.canRetry == true) {
+                    refreshContainer(c)
                 }
             }
+        }
+    }
+
+    private fun refreshContainer(container: Container) {
+        val failElements = mutableListOf<Element>()
+        container.elements.forEach { e ->
+            refreshElement(element = e, failElements = failElements)
         }
     }
 
@@ -140,9 +143,7 @@ object ModelUtils {
             return
         }
 
-        if (additionalOptions.manualRetry == null || additionalOptions.manualRetry == true) {
-            element.canRetry = true
-        }
+        element.canRetry = additionalOptions.manualRetry
 
         if (additionalOptions.continueWhenFailed) { // 开启了自动跳过
             if (additionalOptions.manualSkip == true) { // 开启了手动跳过 会覆盖自动跳过

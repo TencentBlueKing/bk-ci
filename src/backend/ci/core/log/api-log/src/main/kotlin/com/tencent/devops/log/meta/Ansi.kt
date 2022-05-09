@@ -323,8 +323,11 @@ open class Ansi(private var builder: StringBuilder) {
     }
 
     fun a(value: String?): Ansi {
+        // 修复换行后ansi编码问
+        val strLF = innerAppendEscapeSequenceStr('m', attributeOptions)
         flushAttributes()
-        builder.append(value)
+        val fixLF = value?.replace("\n", "\n$strLF")
+        builder.append(fixLF)
         return this
     }
 
@@ -465,5 +468,20 @@ open class Ansi(private var builder: StringBuilder) {
         }
         builder.append(command)
         return this
+    }
+
+    private fun innerAppendEscapeSequenceStr(command: Char, options: ArrayList<Int>): String {
+        val str = StringBuilder()
+        str.append(FIRST_ESC_CHAR)
+        str.append(SECOND_ESC_CHAR)
+        val size = options.size
+        for (i in 0 until size) {
+            if (i != 0) {
+                str.append(';')
+            }
+            str.append(options[i])
+        }
+        str.append(command)
+        return str.toString()
     }
 }

@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
+@Suppress("LongParameterList", "TooManyFunctions")
 @Service
 class ProcessMiscService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -42,21 +43,25 @@ class ProcessMiscService @Autowired constructor(
 ) {
 
     fun getHistoryBuildIdList(
+        projectId: String,
         pipelineId: String,
         totalHandleNum: Int,
         handlePageSize: Int,
         isCompletelyDelete: Boolean,
         maxBuildNum: Int? = null,
-        maxStartTime: LocalDateTime? = null
+        maxStartTime: LocalDateTime? = null,
+        geTimeFlag: Boolean? = null
     ): List<String>? {
         val historyBuildIdRecords = processDao.getHistoryBuildIdList(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             totalHandleNum = totalHandleNum,
             handlePageSize = handlePageSize,
             isCompletelyDelete = isCompletelyDelete,
             maxBuildNum = maxBuildNum,
-            maxStartTime = maxStartTime
+            maxStartTime = maxStartTime,
+            geTimeFlag = geTimeFlag
         )
         return generateIdList(historyBuildIdRecords)
     }
@@ -101,12 +106,12 @@ class ProcessMiscService @Autowired constructor(
         }
     }
 
-    fun getMinPipelineInfoIdListByProjectId(projectId: String): Long {
-        return processDao.getMinPipelineInfoIdListByProjectId(dslContext, projectId)
+    fun getMinPipelineInfoIdByProjectId(projectId: String): Long {
+        return processDao.getMinPipelineInfoIdByProjectId(dslContext, projectId)
     }
 
-    fun getPipelineInfoIdListByPipelineId(pipelineId: String): Long {
-        return processDao.getPipelineInfoByPipelineId(dslContext, pipelineId)?.id ?: 0L
+    fun getPipelineInfoIdByPipelineId(projectId: String, pipelineId: String): Long {
+        return processDao.getPipelineInfoByPipelineId(dslContext, projectId, pipelineId)?.id ?: 0L
     }
 
     fun getMaxPipelineBuildNum(
@@ -116,16 +121,27 @@ class ProcessMiscService @Autowired constructor(
         return processDao.getMaxPipelineBuildNum(dslContext, projectId, pipelineId)
     }
 
+    fun getMinPipelineBuildNum(
+        projectId: String,
+        pipelineId: String
+    ): Long {
+        return processDao.getMinPipelineBuildNum(dslContext, projectId, pipelineId)
+    }
+
     fun getTotalBuildCount(
+        projectId: String,
         pipelineId: String,
         maxBuildNum: Int? = null,
-        maxStartTime: LocalDateTime? = null
+        maxStartTime: LocalDateTime? = null,
+        geTimeFlag: Boolean? = null
     ): Long {
         return processDao.getTotalBuildCount(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             maxBuildNum = maxBuildNum,
-            maxStartTime = maxStartTime
+            maxStartTime = maxStartTime,
+            geTimeFlag = geTimeFlag
         )
     }
 }

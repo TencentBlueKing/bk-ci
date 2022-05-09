@@ -35,6 +35,14 @@
     }
 }
 
+.g-text-link {
+    cursor: pointer;
+    color: #3a84ff;
+    &:hover {
+        border-bottom: 1px solid #3a84ff;
+    }
+}
+
 .g-store-text-underline {
     border-bottom: 1px dashed #999;
 }
@@ -454,7 +462,7 @@ input[disabled="disabled"] {
         color: $fontBlack;
         word-break: break-all;
         max-width: calc(100vw - 400px);
-        /deep/ .v-note-panel {
+        ::v-deep .v-note-panel {
             border: none;
             .v-show-content {
                 padding: 0 !important;

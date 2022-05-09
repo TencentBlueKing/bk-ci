@@ -11,6 +11,28 @@ spring:
       discovery:
         tags: __BK_CI_CONSUL_DISCOVERY_TAG__
         instanceId: ${spring.application.name}-${server.port}-${spring.cloud.client.hostname}
+# spring cloud stream 配置，common-stream
+    stream:
+      binders:
+        extend-rabbit:
+          type: rabbit
+          environment:
+            spring:
+              rabbitmq:
+                virtual-host: __BK_CI_RABBITMQ_VHOST__
+                username: __BK_CI_RABBITMQ_USER__
+                password: __BK_CI_RABBITMQ_PASSWORD__
+                addresses: __BK_CI_RABBITMQ_ADDR__
+#        extend-pulsar:
+#          type: pulsar
+#          environment:
+#            spring:
+#              pulsar:
+#                serviceUrl: __BK_CI_PULSAR_URL__
+#                tokenAuthValue: __BK_CI_PULSAR_TOKEN__
+#                tenant: __BK_CI_PULSAR_TENANT__
+#                namespace: __BK_CI_PULSAR_NAMESPACE__
+      default-binder: extend-rabbit
 # redis config
   redis:
 #   # Redis sentinel 集群方式配置
@@ -100,6 +122,12 @@ auth:
   iamCallBackUser: __BK_CI_IAM_CALLBACK_USER__
   # 用户组权限申请前端跳转页面HOST
   webHost: __BK_CI_IAM_WEB_URL__
+  token: __BK_CI_APP_TOKEN__
+  #  openapi服务需要配置accessToken鉴权时将enabled设为true，secret设为任意字符串string，expirationTime过期时间（毫秒）
+  accessToken:
+    enabled: __BK_CI_API_TOKEN_ENABLED__
+    secret: __BK_CI_API_TOKEN_SECRET__
+    expirationTime: __BK_CI_API_TOKEN_EXPIRED_MILLISECOND__
 
 #bk esb config for cd plugin in pipeline
 esb:
@@ -152,3 +180,14 @@ net:
       host: 127.0.0.1
       # 代理服务器端口
       port: 8080
+
+# shardingsphere分片规则配置
+sharding:
+  routing:
+    cacheSize: 100000  # 缓存分片规则最大数量
+  projectStrategy:
+    tableConfig: "T_AUDIT_RESOURCE,T_BUILD_STARTUP_PARAM,T_METADATA,T_PIPELINE_BUILD_CONTAINER,T_PIPELINE_BUILD_DETAIL,T_PIPELINE_BUILD_HIS_DATA_CLEAR,T_PIPELINE_BUILD_HISTORY,T_PIPELINE_BUILD_STAGE,T_PIPELINE_BUILD_SUMMARY,T_PIPELINE_BUILD_TASK,T_PIPELINE_BUILD_VAR,T_PIPELINE_DATA_CLEAR,T_PIPELINE_FAILURE_NOTIFY_USER,T_PIPELINE_FAVOR,T_PIPELINE_GROUP,T_PIPELINE_INFO,T_PIPELINE_JOB_MUTEX_GROUP,T_PIPELINE_LABEL,T_PIPELINE_LABEL_PIPELINE,T_PIPELINE_MODEL_TASK,T_PIPELINE_PAUSE_VALUE,T_PIPELINE_RESOURCE,T_PIPELINE_RESOURCE_VERSION,T_PIPELINE_SETTING,T_PIPELINE_SETTING_VERSION,T_PIPELINE_VIEW,T_PIPELINE_VIEW_PROJECT,T_PIPELINE_VIEW_USER_LAST_VIEW,T_PIPELINE_VIEW_USER_SETTINGS,T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL,T_PIPELINE_WEBHOOK_QUEUE,T_PROJECT_PIPELINE_CALLBACK,T_PROJECT_PIPELINE_CALLBACK_HISTORY,T_REPORT,T_TEMPLATE,T_TEMPLATE_PIPELINE"
+  broadcastStrategy:
+    tableConfig: "T_PIPELINE_RULE,T_PIPELINE_STAGE_TAG,T_PIPELINE_TIMER,T_PIPELINE_REMOTE_AUTH,T_PIPELINE_WEBHOOK,T_TEMPLATE_INSTANCE_BASE,T_TEMPLATE_INSTANCE_ITEM"
+  specifyDataSourceStrategy:
+    tableConfig: "T_PIPELINE_ATOM_REPLACE_BASE,T_PIPELINE_ATOM_REPLACE_ITEM,T_PIPELINE_ATOM_REPLACE_HISTORY"

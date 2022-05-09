@@ -74,6 +74,7 @@ class UserPipelineFileResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         val urls = archiveFileService.getFileDownloadUrls(
+            userId = userId,
             fileChannelType = FileChannelTypeEnum.WEB_DOWNLOAD,
             filePath = path,
             artifactoryType = artifactoryType,

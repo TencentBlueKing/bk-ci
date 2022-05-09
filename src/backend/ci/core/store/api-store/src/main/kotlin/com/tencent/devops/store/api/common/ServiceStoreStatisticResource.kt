@@ -63,7 +63,7 @@ interface ServiceStoreStatisticResource {
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: StoreTypeEnum,
-        @ApiParam("插件标识", required = true)
+        @ApiParam("组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String
     ): Result<StoreStatistic>

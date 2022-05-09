@@ -34,6 +34,7 @@ import com.tencent.devops.dispatch.docker.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.DockerIpListPage
 import com.tencent.devops.dispatch.docker.pojo.DockerIpUpdateVO
+import com.tencent.devops.dispatch.docker.pojo.HostDriftLoad
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -167,6 +168,6 @@ interface OPDispatchDockerResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam("阈值", required = true)
-        thresholdMap: Map<String, String>
+        hostDriftLoad: HostDriftLoad
     ): Result<Boolean>
 }

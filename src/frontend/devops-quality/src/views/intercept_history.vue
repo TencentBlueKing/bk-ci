@@ -47,7 +47,7 @@
                             :placement="'bottom-end'"
                             :placeholder="'起止时间'"
                             :type="'daterange'"
-                            @change="cahngeDate"
+                            @change="changeDate"
                         ></bk-date-picker>
                     </div>
                     <div class="search-button">
@@ -209,7 +209,7 @@
                     
                     this.interceptList.splice(0, this.interceptList.length)
                     if (res.records) {
-                        res.records.map(item => {
+                        res.records.forEach(item => {
                             this.interceptList.push(item)
                         })
                         this.pagination.count = res.count
@@ -250,7 +250,7 @@
 
                     if (res) {
                         this.pipelineList.splice(0, this.pipelineList.length)
-                        res.map(item => {
+                        res.forEach(item => {
                             this.pipelineList.push(item)
                         })
                         this.pipelineList.unshift({ pipelineId: 'all', pipelineName: '全部' })
@@ -275,7 +275,7 @@
                     
                     this.ruleList.splice(0, this.ruleList.length)
                     if (res.records) {
-                        res.records.map(item => {
+                        res.records.forEach(item => {
                             this.ruleList.push(item)
                         })
                         this.ruleList.unshift({ ruleHashId: 'all', name: '全部' })
@@ -303,7 +303,7 @@
                 await this.requestList(this.pagination.current, this.pagination.limit)
                 this.loading.isLoading = false
             },
-            cahngeDate (newValue) {
+            changeDate (newValue) {
                 const start = newValue[0]
                 const end = newValue[1]
                 this.searchInfo.startTime = Date.parse(new Date(start)) / 1000

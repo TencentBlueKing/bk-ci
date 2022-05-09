@@ -85,7 +85,13 @@ export function actionCreator (mutation) {
  * @param {STRING} mutation 更新动作常量
  */
 export function PipelineEditActionCreator (mutation) {
-    return ({ commit }, payload = {}) => {
+    return ({ state, commit }, payload = {}) => {
+        if (!state.pipeline) return
+        if (state.pipeline?.editing) {
+            commit(mutation, payload)
+            return
+        }
+        
         if (payload.container && payload.newParam) {
             if (compareParam(payload.newParam, payload.container)) {
                 commit(SET_PIPELINE_EDITING, true)
@@ -144,7 +150,7 @@ export function getAtomOutputObj (output = {}) {
     try {
         const outputObj = {}
         for (const key in output) {
-            if (output.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(output, key)) {
                 outputObj[key] = output[key].type
             }
         }
