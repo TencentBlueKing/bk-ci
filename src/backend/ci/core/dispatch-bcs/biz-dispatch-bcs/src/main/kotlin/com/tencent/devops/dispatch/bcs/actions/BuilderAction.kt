@@ -489,9 +489,9 @@ class BuilderAction @Autowired constructor(
                     if (detailResponse.data!!.readyToStart()) {
                         var containerChanged = false
                         // 查看构建性能配置是否变更
-                        if (threadLocalCpu.get() != builderInfo.cpu
-                            || threadLocalDisk.get() != builderInfo.disk
-                            || threadLocalMemory.get() != builderInfo.memory) {
+                        if (threadLocalCpu.get() != builderInfo.cpu ||
+                            threadLocalDisk.get() != builderInfo.disk ||
+                            threadLocalMemory.get() != builderInfo.memory) {
                             containerChanged = true
                             logger.info("buildId: $buildId, vmSeqId: $vmSeqId performanceConfig changed.")
                         }
@@ -629,8 +629,8 @@ class BuilderAction @Autowired constructor(
 
         // 兼容旧版本，数据库中存储的非pool结构值
         if (lastContainerPool != null) {
-            if (lastContainerPool.container != containerPool.container
-                || lastContainerPool.credential != containerPool.credential) {
+            if (lastContainerPool.container != containerPool.container ||
+                lastContainerPool.credential != containerPool.credential) {
                 logger.info("buildId: $buildId, vmSeqId: $vmSeqId image changed. old image: $lastContainerPool, " +
                         "new image: $containerPool")
                 return true
