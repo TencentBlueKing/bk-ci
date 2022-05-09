@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
+import java.net.URLDecoder
 import java.text.MessageFormat
 
 object MessageCodeUtil {
@@ -91,10 +92,18 @@ object MessageCodeUtil {
     /**
      * 获取code对应的中英文信息
      * @param messageCode code
+     * @param checkUrlDecoder 考虑利用URL编码以支持多行信息，以及带特殊字符的信息
      * @return Result响应结果对象
      */
-    fun getCodeLanMessage(messageCode: String, defaultMessage: String? = null, params: Array<String>? = null): String {
-        return getCodeMessage(messageCode, params = params) ?: defaultMessage ?: messageCode
+    fun getCodeLanMessage(
+        messageCode: String,
+        defaultMessage: String? = null,
+        params: Array<String>? = null,
+        checkUrlDecoder: Boolean = false
+    ): String {
+        return getCodeMessage(messageCode, params = params)
+            ?.let { if (checkUrlDecoder) URLDecoder.decode(it, "UTF-8") else it }
+            ?: defaultMessage ?: messageCode
     }
 
     /**
