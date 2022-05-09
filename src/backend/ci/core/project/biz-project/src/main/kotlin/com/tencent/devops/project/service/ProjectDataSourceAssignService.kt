@@ -32,6 +32,13 @@ import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 
 interface ProjectDataSourceAssignService {
 
+    /**
+     * 为项目分配数据源
+     * @param channelCode 渠道代码
+     * @param projectId 项目ID
+     * @param moduleCodes 模块代码列表
+     * @return 布尔值
+     */
     fun assignDataSource(
         channelCode: ProjectChannelCode,
         projectId: String,

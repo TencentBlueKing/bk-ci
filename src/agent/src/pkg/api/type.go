@@ -36,12 +36,12 @@ type ThirdPartyAgentStartInfo struct {
 }
 
 type ThirdPartyBuildInfo struct {
-	ProjectId  string `json:"projectId"`
-	BuildId    string `json:"buildId"`
-	VmSeqId    string `json:"vmSeqId"`
-	Workspace  string `json:"workspace"`
-	PipelineId string `json:"pipelineId"`
-	ToDelTmpFiles []string // #5806 增加异常时清理脚本文件列表
+	ProjectId     string   `json:"projectId"`
+	BuildId       string   `json:"buildId"`
+	VmSeqId       string   `json:"vmSeqId"`
+	Workspace     string   `json:"workspace"`
+	PipelineId    string   `json:"pipelineId"`
+	ToDelTmpFiles []string `json:"-"` // #5806 增加异常时清理脚本文件列表, 不序列化
 }
 
 type ThirdPartyBuildWithStatus struct {

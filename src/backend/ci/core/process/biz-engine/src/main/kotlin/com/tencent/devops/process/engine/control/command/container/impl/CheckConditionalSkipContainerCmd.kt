@@ -94,6 +94,7 @@ class CheckConditionalSkipContainerCmd constructor(
             } else {
                 val contextMap = pipelineContextService.buildContext(
                     projectId = container.projectId,
+                    pipelineId = container.pipelineId,
                     buildId = container.buildId,
                     stageId = container.stageId,
                     containerId = container.containerId,
@@ -112,7 +113,7 @@ class CheckConditionalSkipContainerCmd constructor(
 
             if (message.isNotBlank()) {
                 // #6366 增加日志明确展示跳过的原因
-                buildLogPrinter.addYellowLine(
+                buildLogPrinter.addDebugLine(
                     executeCount = containerContext.executeCount,
                     tag = VMUtils.genStartVMTaskId(container.containerId),
                     buildId = container.buildId,

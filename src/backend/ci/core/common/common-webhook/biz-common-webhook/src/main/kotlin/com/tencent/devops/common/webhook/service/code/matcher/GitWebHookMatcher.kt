@@ -33,6 +33,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.WebhookCommit
 import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
@@ -65,4 +66,20 @@ open class GitWebHookMatcher(
     }
 
     override fun getCodeType() = CodeType.GIT
+
+    override fun getWebhookCommitList(
+        projectId: String,
+        pipelineId: String,
+        repository: Repository,
+        page: Int,
+        size: Int
+    ): List<WebhookCommit> {
+        return eventHandler.getWebhookCommitList(
+            event = event,
+            projectId = projectId,
+            repository = repository,
+            page = page,
+            size = size
+        )
+    }
 }

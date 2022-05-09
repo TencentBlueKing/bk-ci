@@ -28,6 +28,9 @@ queueConcurrency:
 # 流水线模板配置  
 template:
   instanceListUrl: "__BK_CI_PUBLIC_URL__/console/store/pipeline/{0}/template/{0}/instance"
+  maxSyncInstanceNum: 10
+  maxSaveVersionNum: 300
+  maxSaveVersionRecordNum: 2
   
 
 build:
@@ -87,3 +90,6 @@ sharding:
   databaseShardingStrategy:
     algorithmClassName: "com.tencent.devops.process.sharding.BkProcessDatabaseShardingAlgorithm"
     shardingField: PROJECT_ID
+
+stream:
+  scmType: __BK_CI_STREAM_SCM_TYPE__

@@ -53,7 +53,8 @@ data class BuildInfo(
     val channelCode: ChannelCode,
     val buildParameters: List<BuildParameters>?,
     var errorInfoList: List<ErrorInfo>?,
-    val retryFlag: Boolean? = null
+    val retryFlag: Boolean? = null,
+    val concurrencyGroup: String? = null
 ) {
 
     fun isFinish() = when {

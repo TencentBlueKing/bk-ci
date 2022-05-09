@@ -39,23 +39,27 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TIME_TRIGGER_KIND
+import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ComplexMethod", "TooManyFunctions", "NestedBlockDepth", "LongParameterList")
+@Suppress("ComplexMethod", "TooManyFunctions", "NestedBlockDepth", "LongParameterList", "ReturnCount")
 @Service
 class PipelineContextService @Autowired constructor(
-    private val pipelineBuildDetailService: PipelineBuildDetailService
+    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val pipelineUrlBean: PipelineUrlBean
 ) {
     private val logger = LoggerFactory.getLogger(PipelineContextService::class.java)
 
     fun buildContext(
         projectId: String,
+        pipelineId: String,
         buildId: String,
         stageId: String?,
         containerId: String?,
@@ -71,7 +75,7 @@ class PipelineContextService @Autowired constructor(
                 if (stage.finally && stage.id?.let { it == stageId } == true) {
                     contextMap["ci.build_status"] = previousStageStatus.name
                     contextMap["ci.build_fail_tasknames"] = failTaskNameList.joinToString(",")
-                } else if (!stage.status.isNullOrBlank()) {
+                } else if (checkBuildStatus(stage.status)) {
                     previousStageStatus = BuildStatus.parse(stage.status)
                 }
                 stage.containers.forEach nextContainer@{ container ->
@@ -111,7 +115,7 @@ class PipelineContextService @Autowired constructor(
                     )
                 }
             }
-            buildCiContext(contextMap, variables)
+            buildCiContext(projectId, pipelineId, buildId, contextMap, variables)
         } catch (ignore: Throwable) {
             logger.warn("BKSystemErrorMonitor|buildContextFailed|", ignore)
         }
@@ -119,9 +123,11 @@ class PipelineContextService @Autowired constructor(
         return contextMap
     }
 
-    fun buildContextToNotice(
+    fun buildFinishContext(
         projectId: String,
-        buildId: String
+        pipelineId: String,
+        buildId: String,
+        variables: Map<String, String>
     ): Map<String, String> {
         val modelDetail = pipelineBuildDetailService.get(projectId, buildId) ?: return emptyMap()
         val contextMap = mutableMapOf<String, String>()
@@ -132,7 +138,7 @@ class PipelineContextService @Autowired constructor(
                 if (stage.finally) {
                     return@forEach
                 }
-                if (!stage.status.isNullOrBlank()) {
+                if (checkBuildStatus(stage.status)) {
                     previousStageStatus = BuildStatus.parse(stage.status)
                 }
                 stage.containers.forEach nextContainer@{ container ->
@@ -152,6 +158,7 @@ class PipelineContextService @Autowired constructor(
             }
             contextMap["ci.build_status"] = previousStageStatus.name
             contextMap["ci.build_fail_tasknames"] = failTaskNameList.joinToString(",")
+            buildCiContext(projectId, pipelineId, buildId, contextMap, variables)
         } catch (ignore: Throwable) {
             logger.warn("BKSystemErrorMonitor|buildContextToNoticeFailed|", ignore)
         }
@@ -173,13 +180,26 @@ class PipelineContextService @Autowired constructor(
         return PipelineVarUtil.fetchVarName(contextName)
     }
 
+    private fun checkBuildStatus(status: String?): Boolean =
+        status == BuildStatus.SUCCEED.name || status == BuildStatus.CANCELED.name || status == BuildStatus.FAILED.name
+
     private fun buildCiContext(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
         varMap: MutableMap<String, String>,
         buildVar: Map<String, String>
     ) {
+        // 生成当前流水线详情URL
+        varMap[PIPELINE_BUILD_URL] = pipelineUrlBean.genBuildDetailUrl(
+            projectCode = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            position = null,
+            stageId = null
+        )
         // 将流水线变量按预置映射关系做替换
         PipelineVarUtil.fillContextVarMap(varMap, buildVar)
-
         // 特殊处理触发类型以免定时触发无法记录
         if (buildVar[PIPELINE_START_TYPE] == StartType.TIME_TRIGGER.name) {
             varMap["ci.event"] = PIPELINE_GIT_TIME_TRIGGER_KIND

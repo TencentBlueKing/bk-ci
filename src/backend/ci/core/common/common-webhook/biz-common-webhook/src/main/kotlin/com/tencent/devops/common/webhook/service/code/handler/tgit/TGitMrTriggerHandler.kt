@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
@@ -103,8 +104,10 @@ import com.tencent.devops.common.webhook.util.WebhookUtils.getBranch
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
+import java.util.Date
 
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
@@ -174,7 +177,7 @@ class TGitMrTriggerHandler(
     override fun preMatch(event: GitMergeRequestEvent): ScmWebhookMatcher.MatchResult {
         if (event.object_attributes.action == "close" ||
             (event.object_attributes.action == "update" &&
-                event.object_attributes.extension_action != "push-update")
+                    event.object_attributes.extension_action != "push-update")
         ) {
             logger.info("Git web hook is ${event.object_attributes.action} merge request")
             return ScmWebhookMatcher.MatchResult(false)
@@ -304,6 +307,41 @@ class TGitMrTriggerHandler(
         startParams[PIPELINE_GIT_ACTION] = event.object_attributes.action ?: ""
         startParams[PIPELINE_GIT_EVENT_URL] = event.object_attributes.url ?: ""
         return startParams
+    }
+
+    override fun getWebhookCommitList(
+        event: GitMergeRequestEvent,
+        projectId: String?,
+        repository: Repository?,
+        page: Int,
+        size: Int
+    ): List<WebhookCommit> {
+        logger.info("merge request event is $event")
+        if (projectId == null || repository == null) {
+            return emptyList()
+        }
+        val mrId = if (repository is CodeGitlabRepository) {
+            event.object_attributes.iid
+        } else {
+            event.object_attributes.id
+        }
+        return gitScmService.getWebhookCommitList(
+            projectId = projectId,
+            repo = repository,
+            mrId = mrId,
+            page = page,
+            size = size
+        ).map {
+            val commitTime =
+                DateTimeUtil.convertDateToLocalDateTime(Date(DateTimeUtil.zoneDateToTimestamp(it.committed_date)))
+            WebhookCommit(
+                commitId = it.id,
+                authorName = it.author_name,
+                message = it.message,
+                repoType = ScmType.CODE_TGIT.name,
+                commitTime = commitTime
+            )
+        }
     }
 
     @SuppressWarnings("ComplexMethod")

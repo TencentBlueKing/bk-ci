@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
@@ -162,6 +163,7 @@ class StartActionTaskContainerCmd(
         val contextMap: Map<String, String> by lazy {
             pipelineContextService.buildContext(
                 projectId = containerContext.container.projectId,
+                pipelineId = containerContext.container.pipelineId,
                 buildId = containerContext.container.buildId,
                 stageId = containerContext.container.stageId,
                 containerId = containerContext.container.containerId,
@@ -332,7 +334,7 @@ class StartActionTaskContainerCmd(
         }
 
         if (message.isNotBlank()) {
-            // #6366 增加日志明确展示跳过的原因 
+            // #6366 增加日志明确展示跳过的原因
             // 打印构建日志--DEBUG级别日志，平时隐藏
             buildLogPrinter.addDebugLine(
                 executeCount = containerContext.executeCount, tag = taskId, buildId = buildId, jobId = containerHashId,
@@ -468,14 +470,17 @@ class StartActionTaskContainerCmd(
             else "Post action execution conditions (expectation: $postCondition), not executed"
             // 更新排队中的post任务的构建状态
             pipelineTaskService.updateTaskStatus(currentTask, currentTask.starter, taskStatus)
-            taskBuildDetailService.updateTaskStatus(
-                projectId = currentTask.projectId,
-                buildId = currentTask.buildId,
-                taskId = currentTask.taskId,
-                taskStatus = taskStatus,
-                buildStatus = BuildStatus.RUNNING,
-                operation = if (parentTaskSkipFlag) "taskSkip" else "taskUnExec"
-            )
+            // 系统控制类插件不涉及到Detail编排状态修改
+            if (EnvControlTaskType.parse(currentTask.taskType) == null) {
+                taskBuildDetailService.updateTaskStatus(
+                    projectId = currentTask.projectId,
+                    buildId = currentTask.buildId,
+                    taskId = currentTask.taskId,
+                    taskStatus = taskStatus,
+                    buildStatus = BuildStatus.RUNNING,
+                    operation = if (parentTaskSkipFlag) "taskSkip" else "taskUnExec"
+                )
+            }
             buildLogPrinter.addLine(
                 buildId = currentTask.buildId,
                 message = message,

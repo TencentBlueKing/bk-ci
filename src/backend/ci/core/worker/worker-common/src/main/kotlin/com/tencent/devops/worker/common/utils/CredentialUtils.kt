@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.worker.common.api.ApiFactory
@@ -77,10 +78,7 @@ object CredentialUtils {
             val pair = DHUtil.initKey()
             val result = requestCredential(credentialId, pair, acrossProjectId)
             val credential = result.data!!
-            val decodeCredentialList = getDecodedCredentialList(credential, pair)
-            // #4732 日志脱敏，被请求过的凭据统一过滤
-            SensitiveValueService.addSensitiveValues(decodeCredentialList)
-            return Pair(decodeCredentialList, credential.credentialType)
+            return Pair(getDecodedCredentialList(credential, pair), credential.credentialType)
         } catch (ignored: Exception) {
             logger.warn("Fail to get the credential($credentialId), $ignored")
             if (showErrorLog) {
@@ -89,6 +87,18 @@ object CredentialUtils {
             throw ignored
         }
     }
+
+    fun String.parseCredentialValue(
+        context: Map<String, String>? = null,
+        acrossProjectId: String? = null
+    ) = ReplacementUtils.replace(this, object : ReplacementUtils.KeyReplacement {
+        override fun getReplacement(key: String): String? {
+            // 支持嵌套的二次替换
+            context?.get(key)?.let { return it }
+            // 如果不是凭据上下文则直接返回原value值
+            return getCredentialContextValue(key, acrossProjectId)
+        }
+    }, context)
 
     private fun requestCredential(
         credentialId: String,
@@ -280,17 +290,30 @@ object CredentialUtils {
         credential: CredentialInfo,
         pair: DHKeyPair
     ): List<String> {
-        val list = ArrayList<String>()
+        val list = mutableListOf<String>()
+
         list.add(decode(credential.v1, credential.publicKey, pair.privateKey))
-        if (!credential.v2.isNullOrEmpty()) {
-            list.add(decode(credential.v2!!, credential.publicKey, pair.privateKey))
+        credential.v2?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+        credential.v3?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+        credential.v4?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+
+        // #4732 日志脱敏，被请求过的凭据除用户名外统一过滤
+        val sensitiveList = mutableListOf<String>()
+        when (credential.credentialType) {
+            CredentialType.USERNAME_PASSWORD -> {
+                // 只获取密码，不获取v1用户名
+                credential.v2?.let { sensitiveList.add(decode(it, credential.publicKey, pair.privateKey)) }
+            }
+            CredentialType.TOKEN_USERNAME_PASSWORD -> {
+                // 只获取密码和token，不获取v2用户名
+                sensitiveList.add(decode(credential.v1, credential.publicKey, pair.privateKey))
+                credential.v3?.let { sensitiveList.add(decode(it, credential.publicKey, pair.privateKey)) }
+            }
+            else -> {
+                sensitiveList.addAll(list)
+            }
         }
-        if (!credential.v3.isNullOrEmpty()) {
-            list.add(decode(credential.v3!!, credential.publicKey, pair.privateKey))
-        }
-        if (!credential.v4.isNullOrEmpty()) {
-            list.add(decode(credential.v4!!, credential.publicKey, pair.privateKey))
-        }
+        SensitiveValueService.addSensitiveValues(sensitiveList)
         return list
     }
 
