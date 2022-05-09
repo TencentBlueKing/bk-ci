@@ -13,3 +13,8 @@ repositories {
 kotlinDslPluginOptions {
     experimentalWarning.set(false)
 }
+
+// 依赖插件
+dependencies {
+    implementation("org.owasp:dependency-check-gradle:7.0.0")
+}

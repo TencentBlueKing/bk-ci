@@ -3,6 +3,7 @@ import com.tencent.devops.utils.findPropertyOrNull
 plugins {
     id("com.tencent.devops.boot")
     detektCheck
+    id("org.owasp.dependencycheck")
 }
 
 allprojects {
