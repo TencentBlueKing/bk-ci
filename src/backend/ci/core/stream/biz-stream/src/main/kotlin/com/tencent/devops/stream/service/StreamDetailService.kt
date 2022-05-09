@@ -94,7 +94,7 @@ class StreamDetailService @Autowired constructor(
             channelCode = channelCode
         ).data!!
         val pipeline = getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
-        return StreamModelDetail(pipeline, StreamGitRequestEventReq(realEvent), modelDetail)
+        return StreamModelDetail(pipeline, StreamGitRequestEventReq(realEvent, conf.homepage), modelDetail)
     }
 
     fun getBuildDetail(userId: String, gitProjectId: Long, buildId: String): StreamModelDetail? {
@@ -124,7 +124,7 @@ class StreamDetailService @Autowired constructor(
             .getBatchBuildStatus(conf.projectCode!!, setOf(buildId), channelCode).data?.first()?.remark
         return StreamModelDetail(
             gitProjectPipeline = pipeline,
-            gitRequestEvent = StreamGitRequestEventReq(realEvent),
+            gitRequestEvent = StreamGitRequestEventReq(realEvent, conf.homepage),
             modelDetail = modelDetail,
             buildHistoryRemark = remark
         )
