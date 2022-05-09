@@ -34,7 +34,6 @@ import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.CI_BUILD_URL
 import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
@@ -70,7 +69,6 @@ object EngineService {
         // #5277 将Job上下文传入本次agent任务
         val jobContext = buildApi.getJobContext().toMutableMap()
         jobContext[JOB_OS_CONTEXT] = AgentEnv.getOS().name
-        jobContext[CI_BUILD_URL] = buildApi.getBuildDetailUrl().data ?: ""
         return ret.copy(variables = ret.variables.plus(jobContext))
     }
 
