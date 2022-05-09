@@ -353,7 +353,7 @@
             isQualityCheckAtom () {
                 return Array.isArray(this.matchRules)
                     && this.matchRules.some(rule => rule.taskId === this.atom.atomCode
-                        && rule.ruleList.every(val => this.atom.name.indexOf(val.gatewayId) < 0 || !val.gatewayId)
+                        && (rule.ruleList.some(val => this.atom.name.indexOf(val.gatewayId) > -1) || rule.ruleList.every(val => !val.gatewayId))
                     )
             }
         },
