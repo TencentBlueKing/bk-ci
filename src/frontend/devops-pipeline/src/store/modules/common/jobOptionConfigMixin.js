@@ -205,7 +205,7 @@ const jobOptionConfigMixin = {
                     component: 'vuex-input',
                     required: true,
                     label: this.$t('storeMap.prepareTimeout'),
-                    desc: this.$t('storeMap.timeoutDesc'),
+                    desc: this.$t('storeMap.prepareTimeoutDesc'),
                     placeholder: this.$t('storeMap.timeoutPlaceholder'),
                     default: '10',
                     isHidden: (container) => {
