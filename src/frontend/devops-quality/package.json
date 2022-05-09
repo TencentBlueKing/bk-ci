@@ -3,6 +3,8 @@
   "version": "1.0.1",
   "description": "",
   "dependencies": {
+    "@vue/composition-api": "^1.6.1",
+    "echarts": "^5.3.2",
     "vue-echarts": "^6.0.2",
     "vuex-class": "^0.3.0"
   },
