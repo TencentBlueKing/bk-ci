@@ -37,8 +37,8 @@ import org.springframework.scheduling.annotation.EnableScheduling
     "com.tencent.devops.dispatch.bcs",
     "com.tencent.devops.common.dispatch.sdk"
 )
-class DispatchDockerApplication
+class DispatchBcsApplication
 
 fun main(args: Array<String>) {
-    MicroServiceApplication.run(DispatchDockerApplication::class, args)
+    MicroServiceApplication.run(DispatchBcsApplication::class, args)
 }
