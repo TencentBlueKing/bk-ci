@@ -66,6 +66,9 @@ interface ServiceVarResource {
         @ApiParam(value = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
+        @ApiParam(value = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
         @ApiParam(value = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,

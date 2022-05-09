@@ -41,6 +41,8 @@ const val WORKSPACE_CONTEXT = "ci.workspace"
 
 const val CI_TOKEN_CONTEXT = "ci.token"
 
+const val CI_BUILD_URL = "ci.build_url"
+
 const val JOB_OS_CONTEXT = "job.os"
 
 const val SLAVE_AGENT_START_FILE = "devops.slave.agent.start.file"
@@ -75,4 +77,6 @@ const val LOG_FILE_LENGTH_LIMIT = 1073741824 // 1 GB = 1073741824 Byte
 
 val PIPELINE_SCRIPT_ATOM_CODE = listOf("PipelineScriptDev", "PipelineScriptTest", "PipelineScript")
 
-const val TEMPLATE_ACROSS_INFO_ID = "devops_template_across_info_id"
+const val ATOM_CREATOR = "atom_creator"
+
+const val ATOM_THIRD_PARTY_ASSISTANT = "atom_third_party_assistant"

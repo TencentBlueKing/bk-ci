@@ -25,32 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.pojo
+package com.tencent.devops.auth.service.impl
 
-enum class ErrorType(val typeName: String, val num: Int) {
-    SYSTEM("平台错误", 0), // 0 系统运行报错
-    USER("用户错误", 1), // 1 用户配置报错
-    THIRD_PARTY("第三方错误", 2), // 2 第三方系统接入错误
-    PLUGIN("插件错误", 3); // 3 插件执行错误
+import com.tencent.devops.auth.service.LocalManagerService
+import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-    companion object {
-
-        fun getErrorType(name: String?): ErrorType? {
-            values().forEach { enumObj ->
-                if (enumObj.name == name) {
-                    return enumObj
-                }
-            }
-            return null
-        }
-
-        fun getErrorType(ordinal: Int?): ErrorType {
-            return when (ordinal) {
-                0 -> SYSTEM
-                1 -> USER
-                2 -> THIRD_PARTY
-                else -> PLUGIN
-            }
-        }
+@Service
+class TxManagerServiceImpl @Autowired constructor(
+    val managerService: ManagerService
+) : LocalManagerService {
+    override fun projectManagerCheck(
+        userId: String,
+        projectCode: String,
+        action: String,
+        resourceType: String
+    ): Boolean {
+        return managerService.isManagerPermission(
+            userId = userId,
+            projectId = projectCode,
+            resourceType = AuthResourceType.get(resourceType),
+            authPermission = AuthPermission.get(action)
+        )
     }
 }

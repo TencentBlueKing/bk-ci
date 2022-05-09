@@ -136,7 +136,7 @@ class YamlSchemaCheck @Autowired constructor() {
                 is YamlFormatException, is CustomException -> {
                     Triple(action.metaData.isStreamMr(), e.message, TriggerReason.CI_YAML_INVALID)
                 }
-                is IOException, is TypeCastException -> {
+                is IOException, is TypeCastException, is ClassCastException -> {
                     Triple(action.metaData.isStreamMr(), e.message, TriggerReason.CI_YAML_INVALID)
                 }
                 // 指定异常直接扔出在外面统一处理

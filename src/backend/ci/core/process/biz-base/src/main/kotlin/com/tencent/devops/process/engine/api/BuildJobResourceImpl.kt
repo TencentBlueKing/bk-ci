@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.engine.api.BuildJobResource
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
+import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
@@ -44,7 +45,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("UNUSED")
 @RestResource
 class BuildJobResourceImpl @Autowired constructor(
-    private val vMBuildService: EngineVMBuildService
+    private val vMBuildService: EngineVMBuildService,
+    private val pipelineUrlBean: PipelineUrlBean
 ) : BuildJobResource {
 
     override fun jobStarted(
@@ -171,6 +173,10 @@ class BuildJobResourceImpl @Autowired constructor(
             errorInfo = errorInfo
         )
         return Result(true)
+    }
+
+    override fun getBuildDetailUrl(projectId: String, pipelineId: String, buildId: String): Result<String> {
+        return Result(pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, null, null, true))
     }
 
     companion object {
