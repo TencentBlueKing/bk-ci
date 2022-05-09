@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
-import com.tencent.devops.repository.pojo.RepositoryInfo
+import com.tencent.devops.process.pojo.BuildFormRepositoryValue
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.store.pojo.app.BuildEnvParameters
 import io.swagger.annotations.Api
@@ -114,5 +114,5 @@ interface UserBuildParametersResource {
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<List<RepositoryInfo>>
+    ): Result<List<BuildFormRepositoryValue>>
 }
