@@ -101,11 +101,13 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                         dispatchType.dockerBuildVersion = dispatchType.value.removePrefix("paas/")
                     } else if (dispatchType is PublicDevCloudDispathcType) {
                         // 在商店发布的蓝盾源镜像，无需凭证
-                        val pool = Pool(dispatchType.value.removePrefix("/"), null, null, false, dispatchType.performanceConfigId)
+                        val pool = Pool(dispatchType.value.removePrefix("/"), null, null,
+                            false, dispatchType.performanceConfigId)
                         dispatchType.image = JsonUtil.toJson(pool)
                     } else if (dispatchType is PublicBcsDispatchType) {
                         // 在商店发布的蓝盾源镜像，无需凭证
-                        val pool = Pool(dispatchType.value.removePrefix("/"), null, null, false, dispatchType.performanceConfigId)
+                        val pool = Pool(dispatchType.value.removePrefix("/"), null, null,
+                            false, dispatchType.performanceConfigId)
                         dispatchType.image = JsonUtil.toJson(pool)
                     } else if (dispatchType is IDCDispatchType) {
                         dispatchType.image = dispatchType.value.removePrefix("paas/")
