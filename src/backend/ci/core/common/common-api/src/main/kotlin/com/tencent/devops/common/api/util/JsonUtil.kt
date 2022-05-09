@@ -128,15 +128,7 @@ object JsonUtil {
 
     private fun objectMapper(): ObjectMapper {
         return ObjectMapper().apply {
-            val javaTimeModule = JavaTimeModule()
-
-            javaTimeModule.addSerializer(LocalTime::class.java, LocalTimeSerializer(ISO_TIME))
-            javaTimeModule.addSerializer(LocalDate::class.java, LocalDateSerializer(ISO_DATE))
-            javaTimeModule.addSerializer(LocalDateTime::class.java, LocalDateTimeSerializer(ISO_DATE_TIME))
-            javaTimeModule.addDeserializer(LocalTime::class.java, LocalTimeDeserializer(ISO_TIME))
-            javaTimeModule.addDeserializer(LocalDate::class.java, LocalDateDeserializer(ISO_DATE))
-            javaTimeModule.addDeserializer(LocalDateTime::class.java, LocalDateTimeDeserializer(ISO_DATE_TIME))
-            registerModule(javaTimeModule)
+            registerModule(javaTimeModule())
             registerModule(KotlinModule())
             enable(SerializationFeature.INDENT_OUTPUT)
             enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
@@ -151,6 +143,7 @@ object JsonUtil {
     }
 
     private val skipEmptyObjectMapper = ObjectMapper().apply {
+        registerModule(javaTimeModule())
         registerModule(KotlinModule())
         enable(SerializationFeature.INDENT_OUTPUT)
         enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
@@ -161,6 +154,18 @@ object JsonUtil {
         jsonModules.forEach { jsonModule ->
             registerModule(jsonModule)
         }
+    }
+
+    private fun javaTimeModule(): JavaTimeModule {
+        val javaTimeModule = JavaTimeModule()
+
+        javaTimeModule.addSerializer(LocalTime::class.java, LocalTimeSerializer(ISO_TIME))
+        javaTimeModule.addSerializer(LocalDate::class.java, LocalDateSerializer(ISO_DATE))
+        javaTimeModule.addSerializer(LocalDateTime::class.java, LocalDateTimeSerializer(ISO_DATE_TIME))
+        javaTimeModule.addDeserializer(LocalTime::class.java, LocalTimeDeserializer(ISO_TIME))
+        javaTimeModule.addDeserializer(LocalDate::class.java, LocalDateDeserializer(ISO_DATE))
+        javaTimeModule.addDeserializer(LocalDateTime::class.java, LocalDateTimeDeserializer(ISO_DATE_TIME))
+        return javaTimeModule
     }
 
     private val unformattedObjectMapper = objectMapper().apply { disable(SerializationFeature.INDENT_OUTPUT) }
