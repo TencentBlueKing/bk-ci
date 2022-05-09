@@ -100,6 +100,7 @@
                                 <div style="min-width: 100%">
                                     <bk-select v-model="relateTemplateForm.projectCode"
                                         searchable
+                                        @change="handleChangeProject"
                                         @toggle="toggleProjectList"
                                         :placeholder="$t('store.请选择项目')"
                                         :enable-virtual-scroll="projectList && projectList.length > 3000"
@@ -458,6 +459,13 @@
                 }
             },
 
+            /**
+             * 切换所属项目，清空模板数据
+             */
+            handleChangeProject () {
+                this.relateTemplateForm.template = ''
+            },
+
             async selectedTplProject () {
                 this.templateErrors.projectError = false
                 try {
@@ -465,9 +473,6 @@
                         projectCode: this.relateTemplateForm.projectCode
                     })
                     this.templateList.splice(0, this.templateList.length, ...res.models || [])
-                    if (!res.models.length) {
-                        this.relateTemplateForm.template = ''
-                    }
                 } catch (err) {
                     this.$bkMessage({
                         message: err.message ? err.message : err,
