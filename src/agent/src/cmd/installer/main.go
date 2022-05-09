@@ -51,7 +51,7 @@ func main() {
 	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsInstaller.log")
 	err := logs.Init(logFilePath)
 	if err != nil {
-		fmt.Sprintf("init installer log error %v\n", err)
+		fmt.Printf("init installer log error %v\n", err)
 		systemutil.ExitProcess(1)
 	}
 
