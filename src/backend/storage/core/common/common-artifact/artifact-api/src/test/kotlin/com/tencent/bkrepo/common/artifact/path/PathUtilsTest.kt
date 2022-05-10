@@ -69,6 +69,7 @@ class PathUtilsTest {
         assertEquals("/a/. .", PathUtils.normalizeFullPath("../a/ . . "))
         assertEquals(ROOT, PathUtils.normalizeFullPath("../a/  .. /"))
         assertEquals("/1/3/6", PathUtils.normalizeFullPath("..//1/2/..//3/4/5/../../6"))
+        assertEquals("/a/b", PathUtils.normalizeFullPath("a/b"))
     }
 
     @Test

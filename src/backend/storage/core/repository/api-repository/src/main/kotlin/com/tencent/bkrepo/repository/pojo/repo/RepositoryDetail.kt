@@ -59,6 +59,8 @@ data class RepositoryDetail(
     val configuration: RepositoryConfiguration,
     @ApiModelProperty("存储身份信息")
     val storageCredentials: StorageCredentials?,
+    @ApiModelProperty("旧存储身份信息")
+    var oldCredentialsKey:String?,
     @ApiModelProperty("创建者")
     val createdBy: String,
     @ApiModelProperty("创建日期")
@@ -66,5 +68,9 @@ data class RepositoryDetail(
     @ApiModelProperty("上次修改者")
     val lastModifiedBy: String,
     @ApiModelProperty("上次修改日期")
-    val lastModifiedDate: String
+    val lastModifiedDate: String,
+    @ApiModelProperty("仓库配额")
+    val quota: Long?,
+    @ApiModelProperty("仓库已使用容量")
+    val used: Long?
 )

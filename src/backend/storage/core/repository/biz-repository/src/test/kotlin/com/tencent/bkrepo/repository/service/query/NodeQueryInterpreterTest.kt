@@ -75,7 +75,7 @@ class NodeQueryInterpreterTest : ServiceBaseTest() {
             .sort(Sort.Direction.ASC, "name")
             .select("projectId", "repoName", "fullPath", "metadata")
             .build()
-        val interpreter = NodeQueryInterpreter(repoNameRuleInterceptor, repoTypeRuleInterceptor)
+        val interpreter = NodeQueryInterpreter(permissionManager, repoNameRuleInterceptor, repoTypeRuleInterceptor)
         val query = interpreter.interpret(queryModel)
         println(query.queryModel)
     }
@@ -91,7 +91,7 @@ class NodeQueryInterpreterTest : ServiceBaseTest() {
             .sort(Sort.Direction.ASC, "name")
             .select("projectId", "repoName", "fullPath", "metadata")
             .build()
-        val interpreter = NodeQueryInterpreter(repoNameRuleInterceptor, repoTypeRuleInterceptor)
+        val interpreter = NodeQueryInterpreter(permissionManager, repoNameRuleInterceptor, repoTypeRuleInterceptor)
         val query = interpreter.interpret(queryModel)
         println(query.queryModel)
     }

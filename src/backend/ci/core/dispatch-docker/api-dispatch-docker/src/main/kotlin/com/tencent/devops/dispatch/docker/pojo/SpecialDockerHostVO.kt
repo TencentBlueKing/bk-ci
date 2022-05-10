@@ -37,5 +37,7 @@ data class SpecialDockerHostVO(
     @ApiModelProperty("主机ip")
     val hostIp: String,
     @ApiModelProperty("备注")
-    val remark: String?
+    val remark: String?,
+    @ApiModelProperty("是否开启共享挂载")
+    val nfsShare: Boolean? = false
 )

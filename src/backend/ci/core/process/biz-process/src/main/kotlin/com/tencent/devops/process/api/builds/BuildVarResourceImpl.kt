@@ -82,6 +82,7 @@ class BuildVarResourceImpl @Autowired constructor(
         val allContext = pipelineContextService.buildContext(
             projectId = projectId,
             buildId = buildId,
+            pipelineId = pipelineId,
             stageId = null,
             containerId = containerId,
             taskId = taskId,

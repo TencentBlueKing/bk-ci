@@ -59,6 +59,8 @@ data class RepoCreateRequest(
     val configuration: RepositoryConfiguration? = null,
     @ApiModelProperty("存储凭证key", required = false)
     val storageCredentialsKey: String? = null,
+    @ApiModelProperty("仓库配额", required = false)
+    val quota: Long? = null,
 
     @ApiModelProperty("操作用户", required = false)
     val operator: String = SYSTEM_USER

@@ -44,9 +44,10 @@ import java.lang.annotation.Inherited
 @MustBeDocumented
 annotation class Permission(
     val type: ResourceType,
-    val action: PermissionAction
+    val action: PermissionAction,
+    val anonymous: Boolean = false
 )
 
 fun Permission.string(): String {
-    return "type=$type, action=$action"
+    return "type=$type, action=$action, anonymous=$anonymous"
 }
