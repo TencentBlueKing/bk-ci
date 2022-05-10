@@ -5,6 +5,8 @@ plugins {
     detektCheck
 }
 
+apply(plugin = "org.owasp.dependencycheck")
+
 allprojects {
     apply(plugin = "com.tencent.devops.boot")
 
@@ -23,7 +25,8 @@ allprojects {
     group = "com.tencent.bk.devops.ci"
     // 版本
     version = (System.getProperty("ci_version") ?: "1.7.0") +
-        if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
+            if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
+
 
     // 版本管理
     dependencyManagement {
@@ -48,7 +51,6 @@ allprojects {
             dependency("net.sf.json-lib:json-lib:${Versions.JsonLib}")
             dependency("com.googlecode.plist:dd-plist:${Versions.DdPlist}")
             dependency("net.dongliu:apk-parser:${Versions.ApkParser}")
-            dependency("dom4j:dom4j:${Versions.Dom4j}")
             dependency("org.apache.ant:ant:${Versions.Ant}")
             dependency("cglib:cglib:${Versions.Cglib}")
             dependency("org.fusesource:sigar:${Versions.Sigar}")
@@ -61,6 +63,13 @@ allprojects {
             dependency("org.elasticsearch.client:elasticsearch-rest-high-level-client:${Versions.Elasticsearch}")
             dependency("com.github.oshi:oshi-core:${Versions.Oshi}")
             dependency("com.tencent.devops.leaf:leaf-boot-starter:${Versions.Leaf}")
+            dependency("org.dom4j:dom4j:${Versions.Dom4j}")
+            dependency("org.apache.commons:commons-compress:${Versions.Compress}")
+            dependency("org.bouncycastle:bcprov-ext-jdk15on:${Versions.BouncyCastle}")
+            dependency("org.mybatis:mybatis:${Versions.MyBatis}")
+            dependency("org.glassfish.jersey.core:jersey-common:${Versions.Jersey}")
+            dependency("commons-io:commons-io:${Versions.CommonIo}")
+
             dependencySet("io.github.openfeign:${Versions.Feign}") {
                 entry("feign-core")
                 entry("feign-jackson")
@@ -76,7 +85,7 @@ allprojects {
                 entry("docker-java")
                 entry("docker-java-transport-okhttp")
             }
-            dependencySet("org.apache.logging.log4j:${Versions.log4j}"){
+            dependencySet("org.apache.logging.log4j:${Versions.log4j}") {
                 entry("log4j-api")
                 entry("log4j-core")
             }
@@ -108,5 +117,7 @@ allprojects {
         it.exclude("org.slf4j", "slf4j-log4j12")
         it.exclude("org.slf4j", "slf4j-nop")
         it.exclude("javax.ws.rs", "jsr311-api")
+        it.exclude("dom4j", "dom4j")
+        it.exclude("com.flipkart.zjsonpatch", "zjsonpatch")
     }
 }
