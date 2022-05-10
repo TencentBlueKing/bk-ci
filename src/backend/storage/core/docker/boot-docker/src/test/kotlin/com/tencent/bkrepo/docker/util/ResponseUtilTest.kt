@@ -57,11 +57,11 @@ class ResponseUtilTest {
     fun getDockerURITest() {
         val httpHeader = HttpHeaders()
         val path = "/docker/nginx"
-        var result = ResponseUtil.getDockerURI(path, httpHeader)
+        var result = ResponseUtil.getDockerURI(path, httpHeader, false)
         Assertions.assertNotEquals(result.port, 0)
         Assertions.assertEquals(result.host, "localhost")
         httpHeader.set("Host", "127.0.0.1:80")
-        result = ResponseUtil.getDockerURI(path, httpHeader)
+        result = ResponseUtil.getDockerURI(path, httpHeader, false)
         Assertions.assertNotEquals(result.host, "localhost")
     }
 

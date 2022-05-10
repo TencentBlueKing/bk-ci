@@ -37,21 +37,25 @@ const val INDEX_YAML = "index.yaml"
 const val INDEX_CACHE_YAML = "index-cache.yaml"
 const val SIZE = "size"
 const val FORCE = "force"
+const val OVERWRITE = "isOverwrite"
 
 const val FULL_PATH = "_full_path"
+const val META_DETAIL = "meta_detail"
+const val FILE_TYPE = "file_type"
 
 const val V1 = "v1"
 const val CHART_YAML = "Chart.yaml"
 const val CHART = "chart"
 const val PROV = "prov"
 const val NAME = "name"
+const val PACKAGE_KEY = "packageKey"
 const val VERSION = "version"
-const val URLS = "urls"
-const val DIGEST = "digest"
-const val CREATED = "created"
 const val CHART_PACKAGE_FILE_EXTENSION = "tgz"
 const val PROVENANCE_FILE_EXTENSION = "tgz.prov"
+const val REDIS_LOCK_KEY_PREFIX = "helm:lock:indexFile:"
 
 // 定义返回代码片段
 val CHART_NOT_FOUND = mapOf("error" to "chart not found")
 val NO_CHART_NAME_FOUND = mapOf("error" to "no chart name found")
+
+const val SLEEP_MILLIS = 20L

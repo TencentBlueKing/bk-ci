@@ -44,6 +44,7 @@ dependencies {
     if (k8s) {
         api("org.springframework.cloud:spring-cloud-starter-kubernetes-all")
         api("org.springframework.cloud:spring-cloud-starter-kubernetes-ribbon")
+        api("commons-codec:commons-codec")
     } else {
         api("org.springframework.cloud:spring-cloud-starter-consul-discovery")
         api("org.springframework.cloud:spring-cloud-starter-consul-config")

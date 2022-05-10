@@ -80,9 +80,9 @@ object RpmMetadataUtils {
                     com.tencent.bkrepo.rpm.util.xStream.pojo.RpmFormat(
                         getLicense(header),
                         getVendor(header),
-                        getGroup(header)!!,
-                        getBuildHost(header)!!,
-                        getSourceRpm(header)!!,
+                        getGroup(header),
+                        getBuildHost(header),
+                        getSourceRpm(header),
                         RpmHeaderRange(rawFormat.headerStart, rawFormat.headerEnd),
                         resolveEntriesEntries(
                             header,

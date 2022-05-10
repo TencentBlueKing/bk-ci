@@ -31,7 +31,13 @@
 
 package com.tencent.bkrepo.common.storage.innercos.endpoint
 
+/**
+ * cos访问域名解析器
+ */
 interface EndpointResolver {
 
+    /**
+     * 解析cos访问域名[endpoint]实际ip地址
+     */
     fun resolveEndpoint(endpoint: String): String
 }
