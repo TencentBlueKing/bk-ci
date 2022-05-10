@@ -37,8 +37,8 @@ import com.tencent.bkrepo.docker.constant.DOCKER_HEADER_API_VERSION
 import com.tencent.bkrepo.docker.constant.DOCKER_MANIFEST
 import com.tencent.bkrepo.docker.constant.DOCKER_MANIFEST_LIST
 import com.tencent.bkrepo.docker.constant.HTTP_FORWARDED_PROTO
-import com.tencent.bkrepo.docker.constant.HTTP_PROTOCOL_HTTP
-import com.tencent.bkrepo.docker.constant.HTTP_PROTOCOL_HTTPS
+import com.tencent.bkrepo.docker.constant.HTTP_PROTOCOL
+import com.tencent.bkrepo.docker.constant.HTTPS_PROTOCOL
 import com.tencent.bkrepo.docker.errors.DockerV2Errors
 import com.tencent.bkrepo.docker.manifest.ManifestType
 import com.tencent.bkrepo.docker.model.DockerDigest
@@ -118,7 +118,7 @@ object ResponseUtil {
     }
 
     // get docker return url
-    fun getDockerURI(path: String, httpHeaders: HttpHeaders): URI {
+    fun getDockerURI(path: String, httpHeaders: HttpHeaders, enableHttp: Boolean): URI {
         val hostHeaders = httpHeaders["Host"]
         var host = LOCAL_HOST
         var port: Int? = null
@@ -129,8 +129,7 @@ object ResponseUtil {
                 port = Integer.valueOf(parts[1])
             }
         }
-
-        val builder = UriBuilder.fromPath("v2/$path").host(host).scheme(getProtocol(httpHeaders))
+        val builder = UriBuilder.fromPath("v2/$path").host(host).scheme(getProtocol(httpHeaders, enableHttp))
         port?.let {
             builder.port(port)
         }
@@ -150,16 +149,17 @@ object ResponseUtil {
      * determine to return http protocol
      * prefix or https prefix
      */
-    private fun getProtocol(httpHeaders: HttpHeaders): String {
+    private fun getProtocol(httpHeaders: HttpHeaders, enableHttp: Boolean): String {
+        if (enableHttp) return HTTP_PROTOCOL
         val protocolHeaders = httpHeaders[HTTP_FORWARDED_PROTO]
         if (protocolHeaders == null || protocolHeaders.isEmpty()) {
-            return HTTP_PROTOCOL_HTTP
+            return HTTP_PROTOCOL
         }
         return if (protocolHeaders.isNotEmpty()) {
             protocolHeaders.iterator().next() as String
         } else {
             logger.debug("X-Forwarded-Proto does not exist, return https.")
-            HTTP_PROTOCOL_HTTPS
+            HTTPS_PROTOCOL
         }
     }
 }

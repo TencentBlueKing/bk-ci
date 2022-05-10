@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,81 +10,100 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 package com.tencent.bkrepo.helm.service.impl
 
 import com.tencent.bkrepo.auth.pojo.enums.PermissionAction
 import com.tencent.bkrepo.auth.pojo.enums.ResourceType
-import com.tencent.bkrepo.common.api.constant.CharPool
 import com.tencent.bkrepo.common.api.util.readYamlString
-import com.tencent.bkrepo.common.artifact.path.PathUtils
+import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContextHolder
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactDownloadContext
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactQueryContext
-import com.tencent.bkrepo.common.artifact.resolve.response.ArtifactChannel
 import com.tencent.bkrepo.common.artifact.resolve.response.ArtifactResource
 import com.tencent.bkrepo.common.artifact.stream.ArtifactInputStream
+import com.tencent.bkrepo.common.artifact.util.http.UrlFormatter
 import com.tencent.bkrepo.common.security.permission.Permission
-import com.tencent.bkrepo.helm.artifact.HelmArtifactInfo
+import com.tencent.bkrepo.common.security.util.SecurityUtils
+import com.tencent.bkrepo.helm.config.HelmProperties
+import com.tencent.bkrepo.helm.constants.CHART
 import com.tencent.bkrepo.helm.constants.CHART_PACKAGE_FILE_EXTENSION
+import com.tencent.bkrepo.helm.constants.FILE_TYPE
 import com.tencent.bkrepo.helm.constants.FULL_PATH
-import com.tencent.bkrepo.helm.constants.INDEX_CACHE_YAML
 import com.tencent.bkrepo.helm.constants.NODE_CREATE_DATE
 import com.tencent.bkrepo.helm.constants.NODE_FULL_PATH
 import com.tencent.bkrepo.helm.constants.NODE_NAME
 import com.tencent.bkrepo.helm.constants.NODE_SHA256
+import com.tencent.bkrepo.helm.constants.PROV
+import com.tencent.bkrepo.helm.constants.SLEEP_MILLIS
+import com.tencent.bkrepo.helm.exception.HelmBadRequestException
 import com.tencent.bkrepo.helm.exception.HelmFileNotFoundException
-import com.tencent.bkrepo.helm.model.metadata.HelmChartMetadata
-import com.tencent.bkrepo.helm.model.metadata.HelmIndexYamlMetadata
+import com.tencent.bkrepo.helm.pojo.artifact.HelmArtifactInfo
+import com.tencent.bkrepo.helm.pojo.metadata.HelmChartMetadata
+import com.tencent.bkrepo.helm.pojo.metadata.HelmIndexYamlMetadata
 import com.tencent.bkrepo.helm.service.ChartRepositoryService
+import com.tencent.bkrepo.helm.utils.ChartParserUtil
 import com.tencent.bkrepo.helm.utils.DecompressUtil.getArchivesContent
 import com.tencent.bkrepo.helm.utils.HelmUtils
-import com.tencent.bkrepo.helm.utils.HelmZipResponseWriter
+import com.tencent.bkrepo.helm.utils.ObjectBuilderUtil
 import com.tencent.bkrepo.helm.utils.TimeFormatUtil
+import java.time.LocalDateTime
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @Service
-class ChartRepositoryServiceImpl : AbstractChartService(), ChartRepositoryService {
-
-    @Value("\${helm.registry.domain: ''}")
-    private lateinit var domain: String
+class ChartRepositoryServiceImpl(
+    private val helmProperties: HelmProperties,
+    private val helmOperationService: HelmOperationService
+) : AbstractChartService(), ChartRepositoryService {
 
     @Permission(ResourceType.REPO, PermissionAction.READ)
     override fun queryIndexYaml(artifactInfo: HelmArtifactInfo) {
-        // val lockKey = "${artifactInfo.projectId}_${artifactInfo.repoName}"
-        // try {
-        //     if (mongoLock.tryLock(lockKey, LOCK_VALUE)) {
-        //         freshIndexFile(artifactInfo)
-        //     }
-        // } finally {
-        //     mongoLock.releaseLock(lockKey, LOCK_VALUE)
-        // }
-        freshIndexFile(artifactInfo)
+        lockAction(artifactInfo.projectId, artifactInfo.repoName) { downloadIndex(artifactInfo) }
+    }
+
+    private fun downloadIndex(artifactInfo: HelmArtifactInfo) {
+        // 创建仓库后，index.yaml文件时没有生成的，需要生成默认的
+        if (!exist(artifactInfo.projectId, artifactInfo.repoName, HelmUtils.getIndexCacheYamlFullPath())) {
+            val (artifactFile, nodeCreateRequest) = ObjectBuilderUtil.buildFileAndNodeCreateRequest(
+                indexYamlMetadata = HelmUtils.initIndexYamlMetadata(),
+                projectId = artifactInfo.projectId,
+                repoName = artifactInfo.repoName,
+                operator = SecurityUtils.getUserId()
+            )
+            uploadIndexYamlMetadata(artifactFile, nodeCreateRequest)
+        }
         downloadIndexYaml()
+    }
+
+    /**
+     * 下载index.yaml （local类型仓库index.yaml存储时使用的name时index-cache.yaml，remote需要转换）
+     */
+    private fun downloadIndexYaml() {
+        val context = ArtifactDownloadContext(null, ObjectBuilderUtil.buildIndexYamlRequest())
+        context.putAttribute(FULL_PATH, HelmUtils.getIndexCacheYamlFullPath())
+        try {
+            ArtifactContextHolder.getRepository().download(context)
+        } catch (e: Exception) {
+            logger.warn("Error occurred while downloading index.yaml, error: ${e.message}")
+            throw HelmFileNotFoundException(e.message.toString())
+        }
     }
 
     @Synchronized
@@ -92,7 +111,7 @@ class ChartRepositoryServiceImpl : AbstractChartService(), ChartRepositoryServic
         // 先查询index.yaml文件，如果不存在则创建，
         // 存在则根据最后一次更新时间与node节点创建时间对比进行增量更新
         with(artifactInfo) {
-            if (!exist(projectId, repoName, INDEX_CACHE_YAML)) {
+            if (!exist(projectId, repoName, HelmUtils.getIndexYamlFullPath())) {
                 val nodeList = queryNodeList(artifactInfo, false)
                 logger.info(
                     "query node list success, size [${nodeList.size}] in repo [$projectId/$repoName]," +
@@ -151,17 +170,17 @@ class ChartRepositoryServiceImpl : AbstractChartService(), ChartRepositoryServic
                     chartName = chartMetadata.name
                     chartVersion = chartMetadata.version
                     chartMetadata.urls = listOf(
-                        domain.trimEnd(CharPool.SLASH) + PathUtils.normalizeFullPath(
-                            "$projectId/$repoName/charts/$chartName-$chartVersion.tgz"
+                        UrlFormatter.format(
+                            helmProperties.domain, "$projectId/$repoName/charts/$chartName-$chartVersion.tgz"
                         )
                     )
                     chartMetadata.created = convertDateTime(it[NODE_CREATE_DATE] as String)
                     chartMetadata.digest = it[NODE_SHA256] as String
-                    addIndexEntries(indexYamlMetadata, chartMetadata)
+                    ChartParserUtil.addIndexEntries(indexYamlMetadata, chartMetadata)
                 } catch (ex: HelmFileNotFoundException) {
                     logger.error(
                         "generate indexFile for chart [$chartName-$chartVersion.tgz] in " +
-                                "[${artifactInfo.getRepoIdentify()}] failed, ${ex.message}"
+                            "[${artifactInfo.getRepoIdentify()}] failed, ${ex.message}"
                     )
                 }
             }
@@ -179,66 +198,66 @@ class ChartRepositoryServiceImpl : AbstractChartService(), ChartRepositoryServic
         return content.byteInputStream().readYamlString()
     }
 
-    private fun addIndexEntries(indexYamlMetadata: HelmIndexYamlMetadata, chartMetadata: HelmChartMetadata) {
-        val chartName = chartMetadata.name
-        val chartVersion = chartMetadata.version
-        val isFirstChart = !indexYamlMetadata.entries.containsKey(chartMetadata.name)
-        indexYamlMetadata.entries.let {
-            if (isFirstChart) {
-                it[chartMetadata.name] = sortedSetOf(chartMetadata)
-            } else {
-                // force upload
-                run stop@{
-                    it[chartName]?.forEachIndexed { _, helmChartMetadata ->
-                        if (chartVersion == helmChartMetadata.version) {
-                            it[chartName]?.remove(helmChartMetadata)
-                            return@stop
-                        }
-                    }
-                }
-                it[chartName]?.add(chartMetadata)
-            }
-        }
-    }
-
-    fun downloadIndexYaml() {
-        val context = ArtifactDownloadContext()
-        context.putAttribute(FULL_PATH, HelmUtils.getIndexYamlFullPath())
-        ArtifactContextHolder.getRepository().download(context)
-    }
-
     @Permission(ResourceType.REPO, PermissionAction.READ)
     @Transactional(rollbackFor = [Throwable::class])
     override fun installTgz(artifactInfo: HelmArtifactInfo) {
         val context = ArtifactDownloadContext()
-        context.putAttribute(FULL_PATH, artifactInfo.getArtifactFullPath())
-        ArtifactContextHolder.getRepository().download(context)
+        context.putAttribute(FILE_TYPE, CHART)
+        try {
+            ArtifactContextHolder.getRepository().download(context)
+        } catch (e: Exception) {
+            logger.warn("Error occurred while installing chart, error: ${e.message}")
+            throw HelmFileNotFoundException(e.message.toString())
+        }
     }
 
     @Permission(ResourceType.REPO, PermissionAction.READ)
     @Transactional(rollbackFor = [Throwable::class])
     override fun installProv(artifactInfo: HelmArtifactInfo) {
         val context = ArtifactDownloadContext()
-        context.putAttribute(FULL_PATH, artifactInfo.getArtifactFullPath())
-        ArtifactContextHolder.getRepository().download(context)
+        context.putAttribute(FILE_TYPE, PROV)
+        try {
+            ArtifactContextHolder.getRepository().download(context)
+        } catch (e: Exception) {
+            logger.warn("Error occurred while installing prov, error: ${e.message}")
+            throw HelmFileNotFoundException(e.message.toString())
+        }
     }
 
     @Permission(ResourceType.REPO, PermissionAction.READ)
     @Transactional(rollbackFor = [Throwable::class])
     override fun regenerateIndexYaml(artifactInfo: HelmArtifactInfo) {
-        val nodeList = queryNodeList(artifactInfo, false)
-        logger.info(
-            "query node list for full refresh index.yaml success in repo [${artifactInfo.getRepoIdentify()}]" +
-                ", size [${nodeList.size}], starting full refresh index.yaml ... "
-        )
-        val indexYamlMetadata = buildIndexYamlMetadata(nodeList, artifactInfo)
-        uploadIndexYamlMetadata(indexYamlMetadata).also { logger.info("Full refresh index.yaml success！") }
+        when (getRepositoryInfo(artifactInfo).category) {
+            RepositoryCategory.REMOTE -> {
+                helmOperationService.initPackageInfo(
+                    projectId = artifactInfo.projectId,
+                    repoName = artifactInfo.repoName,
+                    userId = SecurityUtils.getUserId()
+                )
+            }
+            else -> {
+                val nodeList = queryNodeList(artifactInfo, false)
+                logger.info(
+                    "query node list for full refresh index.yaml success in repo [${artifactInfo.getRepoIdentify()}]" +
+                        ", size [${nodeList.size}], starting full refresh index.yaml ... "
+                )
+                val indexYamlMetadata = buildIndexYamlMetadata(nodeList, artifactInfo, true)
+                uploadIndexYamlMetadata(indexYamlMetadata).also { logger.info("Full refresh index.yaml success！") }
+            }
+        }
     }
 
     @Permission(ResourceType.REPO, PermissionAction.READ)
     @Transactional(rollbackFor = [Throwable::class])
     override fun batchInstallTgz(artifactInfo: HelmArtifactInfo, startTime: LocalDateTime) {
-        val artifactResourceList = mutableListOf<ArtifactResource>()
+        val context = ArtifactQueryContext()
+        when (context.repositoryDetail.category) {
+            RepositoryCategory.REMOTE -> throw HelmBadRequestException("illegal request")
+            else -> batchInstallLocalTgz(artifactInfo, startTime)
+        }
+    }
+
+    private fun batchInstallLocalTgz(artifactInfo: HelmArtifactInfo, startTime: LocalDateTime) {
         val nodeList = queryNodeList(artifactInfo, lastModifyTime = startTime)
         if (nodeList.isEmpty()) {
             throw HelmFileNotFoundException(
@@ -247,28 +266,16 @@ class ChartRepositoryServiceImpl : AbstractChartService(), ChartRepositoryServic
         }
         val context = ArtifactQueryContext()
         val repository = ArtifactContextHolder.getRepository(context.repositoryDetail.category)
+        val nodeMap = mutableMapOf<String, ArtifactInputStream>()
         nodeList.forEach {
             context.putAttribute(FULL_PATH, it[NODE_FULL_PATH] as String)
             val artifactInputStream = repository.query(context) as ArtifactInputStream
-            artifactResourceList.add(
-                ArtifactResource(
-                    artifactInputStream,
-                    it[NODE_NAME] as String,
-                    null,
-                    ArtifactChannel.LOCAL
-                )
-            )
+            nodeMap[it[NODE_NAME] as String] = artifactInputStream
         }
-        HelmZipResponseWriter.write(artifactResourceList)
+        artifactResourceWriter.write(ArtifactResource(nodeMap, useDisposition = true))
     }
 
     companion object {
-        const val SLEEP_MILLIS = 20L
         val logger: Logger = LoggerFactory.getLogger(ChartRepositoryServiceImpl::class.java)
-
-        fun convertDateTime(timeStr: String): String {
-            val localDateTime = LocalDateTime.parse(timeStr, DateTimeFormatter.ISO_DATE_TIME)
-            return TimeFormatUtil.convertToUtcTime(localDateTime)
-        }
     }
 }

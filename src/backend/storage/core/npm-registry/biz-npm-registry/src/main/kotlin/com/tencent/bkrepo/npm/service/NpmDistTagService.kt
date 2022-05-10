@@ -38,6 +38,7 @@ import com.tencent.bkrepo.common.api.util.Preconditions
 import com.tencent.bkrepo.common.artifact.manager.PackageManager
 import com.tencent.bkrepo.common.artifact.repository.core.ArtifactService
 import com.tencent.bkrepo.common.artifact.util.version.SemVersion
+import com.tencent.bkrepo.common.service.util.HttpContextHolder
 import com.tencent.bkrepo.npm.constant.LATEST
 import com.tencent.bkrepo.npm.constant.NpmMessageCode
 import com.tencent.bkrepo.npm.constant.TAG
@@ -68,7 +69,7 @@ class NpmDistTagService(
                 packageKey = packageName,
                 versionTag = distTags
             )
-            packageClient.updatePackage(request)
+            packageClient.updatePackage(request, HttpContextHolder.getClientAddress())
         }
     }
 
@@ -82,7 +83,7 @@ class NpmDistTagService(
                 packageKey = packageName,
                 versionTag = new
             )
-            packageClient.updatePackage(request)
+            packageClient.updatePackage(request, HttpContextHolder.getClientAddress())
         }
     }
 
@@ -102,7 +103,7 @@ class NpmDistTagService(
                 packageKey = packageName,
                 versionTag = new
             )
-            packageClient.updatePackage(request)
+            packageClient.updatePackage(request, HttpContextHolder.getClientAddress())
         }
     }
 
@@ -120,7 +121,7 @@ class NpmDistTagService(
                 packageKey = packageName,
                 versionTag = new
             )
-            packageClient.updatePackage(request)
+            packageClient.updatePackage(request, HttpContextHolder.getClientAddress())
         }
     }
 }

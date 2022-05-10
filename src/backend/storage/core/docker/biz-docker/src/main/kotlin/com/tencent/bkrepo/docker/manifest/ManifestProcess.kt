@@ -34,6 +34,7 @@ package com.tencent.bkrepo.docker.manifest
 import com.fasterxml.jackson.databind.JsonNode
 import com.tencent.bkrepo.common.api.constant.StringPool.EMPTY
 import com.tencent.bkrepo.common.api.util.JsonUtils
+import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.bkrepo.common.artifact.api.ArtifactFile
 import com.tencent.bkrepo.docker.artifact.DockerArtifact
 import com.tencent.bkrepo.docker.artifact.DockerArtifactRepo
@@ -44,6 +45,8 @@ import com.tencent.bkrepo.docker.constant.DOCKER_HEADER_API_VERSION
 import com.tencent.bkrepo.docker.constant.DOCKER_MANIFEST
 import com.tencent.bkrepo.docker.constant.DOCKER_MANIFEST_LIST
 import com.tencent.bkrepo.docker.constant.DOCKER_MANIFEST_TYPE
+import com.tencent.bkrepo.docker.constant.DOCKER_NODE_FULL_PATH
+import com.tencent.bkrepo.docker.constant.DOCKER_NODE_SIZE
 import com.tencent.bkrepo.docker.context.DownloadContext
 import com.tencent.bkrepo.docker.context.RequestContext
 import com.tencent.bkrepo.docker.errors.DockerV2Errors
@@ -159,7 +162,7 @@ class ManifestProcess constructor(val repo: DockerArtifactRepo) {
         val digest = manifest.get(CONFIG).get(DOCKER_DIGEST).asText()
         val fileName = DockerDigest(digest).fileName()
         val configFile = getManifestConfigBlob(repo, fileName, context, tag) ?: return ByteArray(0)
-        logger.info("get manifest config file [$configFile]")
+        logger.debug("get manifest config file [${configFile.toJsonString()}]")
         val downloadContext = DownloadContext(context).sha256(configFile.sha256!!).length(configFile.length)
         val stream = repo.download(downloadContext)
         stream.use {
@@ -262,8 +265,8 @@ class ManifestProcess constructor(val repo: DockerArtifactRepo) {
      * @return DockerResponse  http repsponse of manifest
      */
     fun getManifestByDigest(context: RequestContext, digest: DockerDigest, headers: HttpHeaders): DockerResponse {
-        logger.info("fetch docker manifest [$context] and digest [$digest] ")
-        var artifact = getManifestByName(context, DOCKER_MANIFEST)
+        logger.info("get  manifest by digest [$context] and digest [$digest] ")
+        var artifact = getManifestByNameAndDigest(context, digest.hex)
         artifact?.let {
             val acceptable = ResponseUtil.getAcceptableManifestTypes(headers)
             if (acceptable.contains(ManifestType.Schema2List)) {
@@ -273,7 +276,7 @@ class ManifestProcess constructor(val repo: DockerArtifactRepo) {
                 }
             }
         }
-        return buildManifestResponse(context, context.artifactName, digest, artifact!!.length, headers)
+        return buildManifestResponse(context, artifact!!.fullPath, digest, artifact!!.length, headers)
     }
 
     /**
@@ -405,7 +408,7 @@ class ManifestProcess constructor(val repo: DockerArtifactRepo) {
         }.apply {
             set(CONTENT_TYPE, contentType)
         }
-        logger.info("file [$digest] result length [$length] type [$contentType]")
+        logger.debug("file info [$digest, $length, $contentType]")
         return ResponseEntity.ok().headers(httpHeaders).contentLength(length).body(inputStreamResource)
     }
 
@@ -418,5 +421,28 @@ class ManifestProcess constructor(val repo: DockerArtifactRepo) {
     private fun getManifestByName(context: RequestContext, fileName: String): DockerArtifact? {
         val fullPath = "/${context.artifactName}/$fileName"
         return repo.getArtifact(context.projectId, context.repoName, fullPath)
+    }
+
+    /**
+     * build manifest artifact
+     * @param context the request context
+     * @param fileName file name
+     * @param DockerArtifact the docker artifact object
+     */
+    private fun getManifestByNameAndDigest(context: RequestContext, sha256: String): DockerArtifact? {
+        try {
+            with(context) {
+                val data = repo.getArtifactByNameAndDigest(context, DOCKER_MANIFEST, sha256) ?: run {
+                    logger.warn("get manifest node detail fail")
+                    return null
+                }
+                val size = data[DOCKER_NODE_SIZE] as Int
+                val fullPath = data[DOCKER_NODE_FULL_PATH] as String
+                return DockerArtifact(projectId, repoName, artifactName).length(size.toLong()).fullPath(fullPath)
+            }
+        } catch (ignored: Exception) {
+            logger.warn("get manifest exception [$ignored]")
+            return null
+        }
     }
 }
