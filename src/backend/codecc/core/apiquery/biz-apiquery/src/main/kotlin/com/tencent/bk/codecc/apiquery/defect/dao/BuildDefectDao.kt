@@ -1,15 +1,12 @@
 package com.tencent.bk.codecc.apiquery.defect.dao
 
-import com.mongodb.BasicDBObject
 import com.tencent.bk.codecc.apiquery.defect.model.BuildDefectIdsModel
 import com.tencent.bk.codecc.apiquery.defect.model.BuildDefectModel
-import com.tencent.bk.codecc.apiquery.task.model.CustomProjModel
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.aggregation.Aggregation
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions
-import org.springframework.data.mongodb.core.query.BasicQuery
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Repository

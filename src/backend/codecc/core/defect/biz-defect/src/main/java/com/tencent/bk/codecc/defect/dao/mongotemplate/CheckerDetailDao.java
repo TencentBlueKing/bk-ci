@@ -13,7 +13,6 @@
 package com.tencent.bk.codecc.defect.dao.mongotemplate;
 
 import com.google.common.collect.Lists;
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.defect.dao.AddFieldOperation;
 import com.tencent.bk.codecc.defect.model.CheckerDetailEntity;
 import com.tencent.bk.codecc.defect.vo.enums.CheckerCategory;
@@ -32,11 +31,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.LimitOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.SkipOperation;
 import org.springframework.data.mongodb.core.aggregation.SortOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -104,7 +103,8 @@ public class CheckerDetailDao {
             andCriteria.add(Criteria.where("checker_language").elemMatch(new Criteria().in(codeLang)));
         }
         if (CollectionUtils.isNotEmpty(checkerCategory)) {
-            andCriteria.add(Criteria.where("checker_category").in(checkerCategory.stream().map(Enum::name).collect(Collectors.toSet())));
+            andCriteria.add(Criteria.where("checker_category").in(checkerCategory.stream()
+                    .map(Enum::name).collect(Collectors.toSet())));
         }
         if (CollectionUtils.isNotEmpty(toolName)) {
             andCriteria.add(Criteria.where("tool_name").in(toolName));
@@ -128,7 +128,8 @@ public class CheckerDetailDao {
             andCriteria.add(Criteria.where("editable").in(editable));
         }
         if (CollectionUtils.isNotEmpty(checkerRecommend)) {
-            andCriteria.add(Criteria.where("checker_recommend").in(checkerRecommend.stream().map(Enum::name).collect(Collectors.toSet())));
+            andCriteria.add(Criteria.where("checker_recommend").in(checkerRecommend.stream()
+                    .map(Enum::name).collect(Collectors.toSet())));
         }
 
         if (CollectionUtils.isNotEmpty(checkerSetSelected) && CollectionUtils.isNotEmpty(selectedCheckerKey)) {

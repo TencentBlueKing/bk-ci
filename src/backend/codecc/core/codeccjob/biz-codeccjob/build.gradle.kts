@@ -25,3 +25,4 @@ dependencies {
         exclude(group = "com.tencent.bk.devops.ci.project", module = "common-auth")
     }
 }
+

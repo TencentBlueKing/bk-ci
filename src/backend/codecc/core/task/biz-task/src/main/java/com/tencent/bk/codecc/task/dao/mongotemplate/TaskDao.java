@@ -26,7 +26,6 @@
 
 package com.tencent.bk.codecc.task.dao.mongotemplate;
 
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.task.constant.TaskConstants;
 import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.vo.FilterPathInputVO;

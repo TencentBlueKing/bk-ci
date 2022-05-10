@@ -12,7 +12,6 @@
  
 package com.tencent.bk.codecc.task.dao.mongotemplate;
 
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.task.model.CustomProjEntity;
 import org.apache.commons.lang.StringUtils;
 import org.bson.Document;

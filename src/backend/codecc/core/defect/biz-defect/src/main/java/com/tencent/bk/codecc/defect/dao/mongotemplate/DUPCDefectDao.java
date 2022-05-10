@@ -26,7 +26,6 @@
 
 package com.tencent.bk.codecc.defect.dao.mongotemplate;
 
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.defect.model.DUPCDefectEntity;
 import com.tencent.bk.codecc.defect.model.DUPCStatisticEntity;
 import com.tencent.bk.codecc.defect.vo.CodeBlockVO;

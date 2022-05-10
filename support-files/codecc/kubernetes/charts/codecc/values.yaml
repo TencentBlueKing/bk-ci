@@ -197,12 +197,12 @@ common:
 
 config:
   bkCodeccConsulDiscoveryTag: codecc
-  bkCiPublicUrl: devops.paasv3-test.woa.com
+  bkCiPublicUrl: devops.example.woa.com
   bkCiPublicSchema: http
-  bkCiPrivateUrl: devops.paasv3-test.woa.com
-  bkCodeccPublicUrl: codecc.paasv3-test.woa.com
-  bkCodeccPrivateUrl: codecc.paasv3-test.woa.com
-  bkCiProjectInnerUrl: devops.paasv3-test.woa.com/project
+  bkCiPrivateUrl: devops.example.com
+  bkCodeccPublicUrl: codecc.example.com
+  bkCodeccPrivateUrl: codecc.example.com
+  bkCiProjectInnerUrl: devops.example.com/project
   ## 权限校验相关参数 sample 跳过权限
   bkCiAuthProvider: sample
   bkIamPrivateUrl: ""

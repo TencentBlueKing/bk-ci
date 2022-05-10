@@ -12,9 +12,7 @@
 
 package com.tencent.bk.codecc.apiquery.task.dao.mongotemplate;
 
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.apiquery.task.model.UserLogInfoModel;
-import com.tencent.devops.common.util.DateTimeUtils;
 import org.bson.Document;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;

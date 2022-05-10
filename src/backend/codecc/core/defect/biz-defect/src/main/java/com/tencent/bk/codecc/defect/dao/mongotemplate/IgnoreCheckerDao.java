@@ -26,7 +26,6 @@
 
 package com.tencent.bk.codecc.defect.dao.mongotemplate;
 
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.defect.model.IgnoreCheckerEntity;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;

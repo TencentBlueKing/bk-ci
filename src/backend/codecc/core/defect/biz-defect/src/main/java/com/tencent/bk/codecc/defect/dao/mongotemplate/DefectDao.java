@@ -12,7 +12,6 @@
 
 package com.tencent.bk.codecc.defect.dao.mongotemplate;
 
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.defect.model.CLOCDefectEntity;
 import com.tencent.bk.codecc.defect.model.DefectEntity;
 import lombok.extern.slf4j.Slf4j;

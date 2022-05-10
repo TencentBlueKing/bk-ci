@@ -59,8 +59,11 @@ class ActiveStatisticService @Autowired constructor(
         val voStepNum = uploadTaskLogStepVO.stepNum
         val voFlag = uploadTaskLogStepVO.flag
 
-        val isLastStepNum = if (COMMON_TOOLS.contains(
-                        voToolName)) ComConstants.Step4Cov.DEFECT_SYNS.value() else ComConstants.Step4MutliTool.COMMIT.value()
+        val isLastStepNum = if (COMMON_TOOLS.contains(voToolName)) {
+            ComConstants.Step4Cov.DEFECT_SYNS.value()
+        } else {
+            ComConstants.Step4MutliTool.COMMIT.value()
+        }
 
         val dateStr = DateTimeUtils.getDateByDiff(0)
 
@@ -122,7 +125,8 @@ class ActiveStatisticService @Autowired constructor(
 
             // 记录工具分析耗时
             val voBuildId = uploadTaskLogStepVO.pipelineBuildId
-            val lastTaskLogEntity = taskLogRepository.findFirstByTaskIdAndToolNameAndBuildId(voTaskId, voToolName, voBuildId)
+            val lastTaskLogEntity =
+                taskLogRepository.findFirstByTaskIdAndToolNameAndBuildId(voTaskId, voToolName, voBuildId)
             val elapseTime = uploadTaskLogStepVO.endTime - lastTaskLogEntity.startTime
 
             // 记录每天累计耗时

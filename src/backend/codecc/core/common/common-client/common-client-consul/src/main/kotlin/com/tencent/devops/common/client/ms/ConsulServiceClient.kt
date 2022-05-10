@@ -40,7 +40,8 @@ class ConsulServiceClient constructor(
             .decoder(jacksonDecoder)
             .contract(jaxRsContract)
             .options(Request.Options(10000, 30000))// 10秒连接 30秒收数据
-            .requestInterceptor(SpringContextUtil.getBean(RequestInterceptor::class.java, "normalRequestInterceptor")) // 获取为feign定义的拦截器
+            .requestInterceptor(SpringContextUtil.getBean(RequestInterceptor::class.java,
+                "normalRequestInterceptor")) // 获取为feign定义的拦截器
             .target(ConsulServiceTarget(serverPrefix, findServiceName(clz), clz.java, discoveryClient, tag))
     }
 
@@ -67,7 +68,8 @@ class ConsulServiceClient constructor(
             .encoder(jacksonEncoder)
             .decoder(jacksonDecoder)
             .contract(jaxRsContract)
-            .requestInterceptor(SpringContextUtil.getBean(RequestInterceptor::class.java, "normalRequestInterceptor")) // 获取为feign定义的拦截器
+            .requestInterceptor(SpringContextUtil.getBean(RequestInterceptor::class.java,
+                "normalRequestInterceptor")) // 获取为feign定义的拦截器
             .options(Request.Options(10 * 1000, 30 * 60 * 1000))
             .retryer(object : Retryer {
                 override fun clone(): Retryer {

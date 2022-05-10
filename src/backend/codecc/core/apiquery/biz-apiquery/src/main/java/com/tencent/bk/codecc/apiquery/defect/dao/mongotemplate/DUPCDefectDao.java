@@ -12,7 +12,6 @@
 
 package com.tencent.bk.codecc.apiquery.defect.dao.mongotemplate;
 
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.apiquery.defect.model.DUPCDefectModel;
 import com.tencent.bk.codecc.apiquery.defect.model.DUPCStatisticModel;
 import com.tencent.devops.common.constant.ComConstants;

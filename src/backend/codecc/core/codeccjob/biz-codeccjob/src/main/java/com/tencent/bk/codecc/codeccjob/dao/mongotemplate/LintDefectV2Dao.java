@@ -26,7 +26,6 @@
 
 package com.tencent.bk.codecc.codeccjob.dao.mongotemplate;
 
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.defect.model.CheckerStatisticEntity;
 import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;
 import com.tencent.bk.codecc.defect.vo.DefectAuthorGroupStatisticVO;

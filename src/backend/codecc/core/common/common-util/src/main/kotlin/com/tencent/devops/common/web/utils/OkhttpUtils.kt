@@ -176,6 +176,7 @@ object OkhttpUtils {
         downloadFile(url, destPath, mapOf())
     }
 
+    // NOCC:NestedBlockDepth(设计如此:)
     fun downloadFile(url: String, destPath: File, headers: Map<String, String> = mapOf()) {
         val requestBuilder = Request.Builder()
             .url(url)
@@ -193,7 +194,8 @@ object OkhttpUtils {
                 throw RuntimeException("文件不存在")
             }
             if (!response.isSuccessful) {
-                logger.warn("fail to download the file from $url because of ${response.message()} and code ${response.code()}")
+                logger.warn("fail to download the file from $url because of" +
+                        " ${response.message()} and code ${response.code()}")
                 throw RuntimeException("获取文件失败")
             }
             if (!destPath.parentFile.exists()) destPath.parentFile.mkdirs()

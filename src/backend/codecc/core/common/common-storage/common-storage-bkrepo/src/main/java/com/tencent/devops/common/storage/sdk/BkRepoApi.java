@@ -1,16 +1,11 @@
 package com.tencent.devops.common.storage.sdk;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.storage.vo.BkRepoResult;
 import com.tencent.devops.common.storage.vo.BkRepoStartChunkVo;
 import com.tencent.devops.common.util.JsonUtil;
 import com.tencent.devops.common.util.OkhttpUtils;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -18,7 +13,6 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**

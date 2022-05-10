@@ -12,7 +12,6 @@
 package com.tencent.bk.codecc.apiquery.defect.dao.mongotemplate;
 
 import com.google.common.collect.Lists;
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.apiquery.defect.model.TaskLogModel;
 import com.tencent.devops.common.constant.ComConstants;
 import org.apache.commons.collections.CollectionUtils;

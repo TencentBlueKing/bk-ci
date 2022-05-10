@@ -36,7 +36,8 @@ allprojects {
             AssemblyMode.CONSUL -> {
                 project.configurations.all {
                     exclude(group = "org.springframework.cloud", module = "spring-cloud-starter-kubernetes-client")
-                    exclude(group = "org.springframework.cloud", module = "spring-cloud-starter-kubernetes-client-config")
+                    exclude(group = "org.springframework.cloud",
+                        module = "spring-cloud-starter-kubernetes-client-config")
                 }
             }
             AssemblyMode.K8S, AssemblyMode.KUBERNETES -> {

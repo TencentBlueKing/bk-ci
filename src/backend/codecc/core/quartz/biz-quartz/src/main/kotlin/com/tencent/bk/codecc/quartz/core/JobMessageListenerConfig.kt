@@ -129,7 +129,9 @@ open class JobMessageListenerConfig {
     }
 
     @Bean
-    open fun deleteJobMsgQueue() = Queue("$QUEUE_GONGFENG_DELETE_ALL_JOB${IPUtils.getInnerIP().replace(".", "")}$localPort")
+    open fun deleteJobMsgQueue() =
+        Queue("$QUEUE_GONGFENG_DELETE_ALL_JOB${IPUtils.getInnerIP()
+            .replace(".", "")}$localPort")
 
     @Bean
     open fun deleteJobQueueBind(

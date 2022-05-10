@@ -10,7 +10,6 @@ import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories
-import java.io.IOException
 
 @Configuration
 @EnableMongoRepositories(
@@ -41,6 +40,7 @@ class TaskDBMongoConfig {
     }
 
     @Bean(MONGO_TEMPLATE)
-    fun mongoTemplate(taskMongoDbFactory: SimpleMongoClientDatabaseFactory, taskMappingMongoConverter: MappingMongoConverter) =
+    fun mongoTemplate(taskMongoDbFactory: SimpleMongoClientDatabaseFactory,
+                      taskMappingMongoConverter: MappingMongoConverter) =
         MongoTemplate(taskMongoDbFactory, taskMappingMongoConverter)
 }

@@ -332,7 +332,8 @@ class CodeScoringServiceImpl @Autowired constructor(
         val peckerCheckerSet = mutableSetOf<CheckerPropsEntity>()
         checkerSetProj.filter { it.checkerSetId.matches(Regex("^pecker_.*_no_coverity")) }
             .forEach {
-                val checkerSetEntity = checkerSetRepository.findFirstByCheckerSetIdAndVersion(it.checkerSetId, it.version)
+                val checkerSetEntity =
+                    checkerSetRepository.findFirstByCheckerSetIdAndVersion(it.checkerSetId, it.version)
                 peckerCheckerSet.addAll(checkerSetEntity.checkerProps)
             }
 

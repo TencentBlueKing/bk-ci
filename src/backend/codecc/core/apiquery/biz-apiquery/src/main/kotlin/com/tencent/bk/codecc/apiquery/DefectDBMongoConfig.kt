@@ -10,7 +10,6 @@ import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories
-import java.io.IOException
 
 @Configuration
 @EnableMongoRepositories(
@@ -44,6 +43,7 @@ class DefectDBMongoConfig {
     }
 
     @Bean(MONGO_TEMPLATE)
-    fun mongoTemplate(defectMongoDbFactory: SimpleMongoClientDatabaseFactory, defectMappingMongoConverter: MappingMongoConverter) =
+    fun mongoTemplate(defectMongoDbFactory: SimpleMongoClientDatabaseFactory,
+                      defectMappingMongoConverter: MappingMongoConverter) =
         MongoTemplate(defectMongoDbFactory, defectMappingMongoConverter)
 }

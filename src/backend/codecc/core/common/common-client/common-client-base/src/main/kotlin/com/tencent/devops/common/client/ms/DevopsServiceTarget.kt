@@ -29,7 +29,6 @@ package com.tencent.devops.common.client.ms
 import feign.Request
 import feign.RequestTemplate
 import feign.Target
-import org.springframework.cloud.client.ServiceInstance
 
 class DevopsServiceTarget<T> constructor(
         private val serviceName: String,

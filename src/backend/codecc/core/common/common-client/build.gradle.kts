@@ -16,4 +16,5 @@ fun getImportByProperty(property: String) : AssemblyMode{
     }
 }
 
-project.dependencies.add("api", project(":core:common:common-client:common-client-${getImportByProperty(property).name.toLowerCase()}"))
+project.dependencies.add("api",
+    project(":core:common:common-client:common-client-${getImportByProperty(property).name.toLowerCase()}"))

@@ -25,12 +25,8 @@ class DefectClusterComponent @Autowired constructor(
     fun executeCluster(aggregateDispatchFileName: AggregateDispatchFileName): Boolean {
 
         return try {
-            logger.info("start to execute cluster! input file: ${aggregateDispatchFileName.inputFileName}, output file ${aggregateDispatchFileName.outputFileName}")
-            /*val result = asyncExecuteUnixCommand(
-                "./pp-cluster --input ${aggregateDispatchFileName.inputFileName} --output ${aggregateDispatchFileName.outputFileName} --pretty",
-                File("/opt"), null
-            )
-            logger.info("execute cluster finish! result : $result")*/
+            logger.info("start to execute cluster! input file: ${aggregateDispatchFileName.inputFileName}, " +
+                    "output file ${aggregateDispatchFileName.outputFileName}")
             scmJsonComponent.getFileIndex(aggregateDispatchFileName.inputFileName,ScmJsonComponent.AGGREGATE)
             ClusterCompareProcess.clusterMethod(aggregateDispatchFileName)
             val outputFile = File(aggregateDispatchFileName.outputFilePath)
@@ -63,12 +59,14 @@ class DefectClusterComponent @Autowired constructor(
                 //判断文件是否存在
                 scmJsonComponent.getFileIndex(inputFileName, ScmJsonComponent.AGGREGATE)
                 val toolPattern = toolMetaCacheService.getToolPattern(commitDefectVO.toolName)
-                val processComponent = SpringContextUtil.getBean(AbstractDefectCommitComponent::class.java, "${toolPattern}DefectCommitComponent")
+                val processComponent = SpringContextUtil.getBean(AbstractDefectCommitComponent::class.java,
+                    "${toolPattern}DefectCommitComponent")
                 processComponent.processCluster(defectClusterDTO)
             }
             true
         } catch (t : Throwable){
-            logger.info("cluster and save defect fail! input file path: ${defectClusterDTO.inputFilePath}, error message: ${t.message}")
+            logger.info("cluster and save defect fail! input file path: ${defectClusterDTO.inputFilePath}, " +
+                    "error message: ${t.message}")
             false
         }
 

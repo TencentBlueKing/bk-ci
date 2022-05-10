@@ -12,12 +12,9 @@
  
 package com.tencent.bk.codecc.defect.dao;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
-import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
 
 /**

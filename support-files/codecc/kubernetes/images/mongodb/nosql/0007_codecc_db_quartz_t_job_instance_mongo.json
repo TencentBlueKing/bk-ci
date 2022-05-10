@@ -6,7 +6,7 @@
   "trigger_name" : "a332c57e7e8444eb81e3a9de44e474d6_602cdc929bd2b6c029edd40f63a124be",
   "cron_expression" : "0 0/5 * * * ?",
   "job_param" : {
-      "authUrl" : "http://authapi.open.oa.com"
+      "authUrl" : "http://authapi.example.com"
   },
   "create_date" : 1569985708109,
   "created_by" : "sysadmin",

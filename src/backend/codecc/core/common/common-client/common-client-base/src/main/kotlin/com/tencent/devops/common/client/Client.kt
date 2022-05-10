@@ -93,11 +93,13 @@ abstract class Client constructor(
             .decoder(jacksonDecoder)
             .contract(jaxRsContract)
             .options(Request.Options(10000, 30000))
-            .requestInterceptor(SpringContextUtil.getBean(RequestInterceptor::class.java, "devopsRequestInterceptor"))
+            .requestInterceptor(SpringContextUtil.getBean(RequestInterceptor::class.java,
+                "devopsRequestInterceptor"))
             .target(DevopsServiceTarget(findServiceName(clz.kotlin),  clz, allProperties.devopsDevUrl
                 ?: ""))
         val devopsProxy = DevopsProxy(feignProxy, clz)
-        return clz.cast(Proxy.newProxyInstance(feignProxy.javaClass.classLoader, feignProxy.javaClass.interfaces, devopsProxy))
+        return clz.cast(Proxy.newProxyInstance(feignProxy.javaClass.classLoader,
+            feignProxy.javaClass.interfaces, devopsProxy))
     }
 
     fun <T : Any> get(clz: Class<T>): T = get(clz.kotlin)

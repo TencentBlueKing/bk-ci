@@ -112,7 +112,8 @@ class RedisLock(
             val nativeConnection = connection.nativeConnection
             val result =
                     when (nativeConnection) {
-                        is JedisCluster -> nativeConnection.set(key, value, SetParams.setParams().nx().ex(seconds.toInt()))
+                        is JedisCluster -> nativeConnection.set(key, value,
+                            SetParams.setParams().nx().ex(seconds.toInt()))
                         is Jedis -> nativeConnection.set(key, value, SetParams.setParams().nx().ex(seconds.toInt()))
                         else -> {
                             logger.warn("Unknown redis connection($nativeConnection)")

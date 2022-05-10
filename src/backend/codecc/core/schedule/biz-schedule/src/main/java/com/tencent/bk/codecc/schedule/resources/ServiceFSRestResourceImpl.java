@@ -15,13 +15,10 @@ package com.tencent.bk.codecc.schedule.resources;
 import com.tencent.bk.codecc.schedule.api.ServiceFSRestResource;
 import com.tencent.bk.codecc.schedule.service.UploadDownloadService;
 import com.tencent.bk.codecc.schedule.vo.FileIndexVO;
-import com.tencent.bk.codecc.schedule.vo.UploadVO;
 import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.validation.constraints.NotNull;
-import java.io.InputStream;
 
 /**
  * 文件上传下载接口

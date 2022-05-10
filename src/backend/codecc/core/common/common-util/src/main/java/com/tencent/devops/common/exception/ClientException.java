@@ -1,10 +1,15 @@
 package com.tencent.devops.common.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 
 public class ClientException extends Exception {
+
+    private static Logger logger = LoggerFactory.getLogger(ClientException.class);
 
     private static final long serialVersionUID = -7697654244064441234L;
 
@@ -120,6 +125,7 @@ public class ClientException extends Exception {
                 try {
                     map.put(flds[i].get(null), flds[i].getName());
                 } catch (Throwable throwable) {
+                    logger.error("getErrorCodes casuse error.", throwable);
                 }
         }
         return map;

@@ -41,8 +41,10 @@ abstract class FeignTarget<T>(
     protected open val serviceName: String,
     protected open val type: Class<T>,
     private val commonUrlPrefix: String = "/api",
-    protected val errorInfo : Result<String> = MessageCodeUtil.generateResponseDataObject(CommonMessageCode.ERROR_SERVICE_NO_FOUND, arrayOf(serviceName)),
-    protected val usedInstance: ConcurrentHashMap<String, ServiceInstance> = ConcurrentHashMap<String, ServiceInstance>()
+    protected val errorInfo : Result<String> =
+        MessageCodeUtil.generateResponseDataObject(CommonMessageCode.ERROR_SERVICE_NO_FOUND, arrayOf(serviceName)),
+    protected val usedInstance: ConcurrentHashMap<String, ServiceInstance> =
+        ConcurrentHashMap<String, ServiceInstance>()
 ) : Target<T> {
 
 

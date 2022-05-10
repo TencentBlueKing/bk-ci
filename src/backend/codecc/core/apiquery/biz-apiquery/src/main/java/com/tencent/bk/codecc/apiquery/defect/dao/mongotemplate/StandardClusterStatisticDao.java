@@ -12,7 +12,6 @@
 
 package com.tencent.bk.codecc.apiquery.defect.dao.mongotemplate;
 
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.apiquery.defect.model.StandardClusterStatisticModel;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;

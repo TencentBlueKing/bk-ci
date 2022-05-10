@@ -36,7 +36,8 @@ object FuzzyCompare {
         val blockSize2: ULong = fuzzyHashInfoModel2.blockSize ?: return 0
 
         //如果分片长度不对，则直接返回0
-        if (blockSize1 != blockSize2 && (blockSize1 * 2L.toULong() != blockSize2 || blockSize1 > ULong.MAX_VALUE / 2L.toULong()) &&
+        if (blockSize1 != blockSize2 && (blockSize1 * 2L.toULong() != blockSize2
+                    || blockSize1 > ULong.MAX_VALUE / 2L.toULong()) &&
             (blockSize1 / 2L.toULong() != blockSize2 || blockSize1 or 1L.toULong() == 1L.toULong())
         ) {
             return 0
