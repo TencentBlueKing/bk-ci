@@ -23,11 +23,16 @@ allprojects {
 			dependency("com.github.ulisesbocchio:jasypt-spring-boot-starter:${Versions.jasyptVersion}")
 			dependency("org.bouncycastle:bcprov-jdk15on:${Versions.bouncyCastleVersion}")
 			dependency("com.google.guava:guava:${Versions.guavaVersion}")
+			dependency("commons-io:commons-io:${Versions.commonIo}")
 			dependencySet("io.swagger:${Versions.swaggerVersion}") {
                 entry("swagger-annotations")
                 entry("swagger-jersey2-jaxrs")
                 entry("swagger-models")
             }
+			dependencySet("org.springframework.cloud:${Versions.springFeign}") {
+				entry("spring-cloud-openfeign-core")
+                entry("spring-cloud-starter-openfeign")
+			}
 		}
 
 		configurations.forEach {

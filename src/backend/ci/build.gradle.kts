@@ -68,6 +68,7 @@ allprojects {
             dependency("org.bouncycastle:bcprov-ext-jdk15on:${Versions.BouncyCastle}")
             dependency("org.mybatis:mybatis:${Versions.MyBatis}")
             dependency("org.glassfish.jersey.core:jersey-common:${Versions.Jersey}")
+            dependency("commons-io:commons-io:${Versions.CommonIo}")
 
             dependencySet("io.github.openfeign:${Versions.Feign}") {
                 entry("feign-core")

@@ -5,4 +5,6 @@ object Versions {
     const val swaggerVersion = "1.6.2"
     const val guavaVersion = "29.0-jre"
     const val ciVersion = "1.5.0-RC.2-RELEASE"
+    const val springFeign = "3.1.2"
+    const val commonIo = "2.7"
 }
