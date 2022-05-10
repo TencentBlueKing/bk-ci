@@ -265,7 +265,8 @@
                     {
                         'is-final-stage': this.isFinallyStage,
                         'pipeline-drag': this.editable && !this.isTriggerStage,
-                        readonly: !this.editable || this.stageDisabled
+                        readonly: !this.editable || this.stageDisabled,
+                        editable: this.editable
                     }
                 ]
             },
@@ -596,7 +597,7 @@
             }
         }
 
-        &:not(.readonly) {
+        &:not(.editable) {
             .pipeline-stage-entry:hover {
                 color: black;
                 border-color: #1A6DF3;

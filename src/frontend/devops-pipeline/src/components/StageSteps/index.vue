@@ -25,9 +25,9 @@
             }
         },
         methods: {
-          getRunningCls (statusCls) {
-            return statusCls === 'RUNNING' ? ' spin-icon' : '';
-          }
+            getRunningCls (statusCls) {
+                return statusCls === 'RUNNING' ? ' spin-icon' : ''
+            }
         }
     }
 </script>
