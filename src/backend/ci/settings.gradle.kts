@@ -35,6 +35,13 @@ pluginManagement {
             maven(url = "https://mirrors.tencent.com/nexus/repository/maven-public")
             maven(url = "https://mirrors.tencent.com/nexus/repository/gradle-plugins/")
         } else { // GitHub Action 环境
+            maven {
+                name = "MavenSnapshot"
+                url = java.net.URI("https://oss.sonatype.org/content/repositories/snapshots/")
+                mavenContent {
+                    snapshotsOnly()
+                }
+            }
             mavenCentral()
             gradlePluginPortal()
         }
@@ -50,9 +57,7 @@ include(":core:common")
 include(":core:common:common-event")
 include(":core:common:common-api")
 include(":core:common:common-web")
-include(":core:common:common-db-base")
 include(":core:common:common-db")
-include(":core:common:common-db-sharding")
 include(":core:common:common-environment-thirdpartyagent")
 include(":core:common:common-client")
 include(":core:common:common-redis")
@@ -62,7 +67,6 @@ include(":core:common:common-archive")
 include(":core:common:common-quality")
 include(":core:common:common-service")
 include(":core:common:common-pipeline")
-include(":core:common:common-stream")
 include(":core:common:common-test")
 include(":core:common:common-auth")
 include(":core:common:common-auth:common-auth-api")
@@ -170,12 +174,6 @@ include(":core:store:biz-store-image-sample")
 include(":core:store:boot-store")
 include(":core:store:model-store")
 
-include(":core:stream")
-include(":core:stream:api-stream")
-include(":core:stream:biz-stream")
-include(":core:stream:boot-stream")
-include(":core:stream:model-stream")
-
 include(":core:process")
 include(":core:process:api-process")
 include(":core:process:biz-base")
@@ -188,7 +186,6 @@ include(":core:process:model-process")
 include(":core:process:plugin-load")
 include(":core:process:plugin-sdk")
 include(":core:process:plugin-trigger")
-include(":core:process:common-pipeline-yaml")
 
 include(":core:dispatch")
 include(":core:dispatch:api-dispatch")
