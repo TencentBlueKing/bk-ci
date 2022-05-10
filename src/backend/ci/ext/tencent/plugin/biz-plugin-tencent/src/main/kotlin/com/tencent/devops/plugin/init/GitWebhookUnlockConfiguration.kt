@@ -28,6 +28,7 @@
 package com.tencent.devops.plugin.init
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.plugin.listener.git.GitWebhookUnlockListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -72,15 +73,18 @@ class GitWebhookUnlockConfiguration {
         @Autowired listener: GitWebhookUnlockListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(gitWebhookUnlockQueue.name)
-        container.setConcurrentConsumers(1)
-        container.setMaxConcurrentConsumers(5)
-        container.setAmqpAdmin(rabbitAdmin)
-
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = gitWebhookUnlockQueue,
+            rabbitAdmin = rabbitAdmin,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 1,
+            maxConcurrency = 5,
+            adapter = adapter,
+            prefetchCount = 1
+        )
     }
 }
