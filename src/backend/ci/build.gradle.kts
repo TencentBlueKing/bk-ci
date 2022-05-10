@@ -5,6 +5,8 @@ plugins {
     detektCheck
 }
 
+apply(plugin = "org.owasp.dependencycheck")
+
 allprojects {
     apply(plugin = "com.tencent.devops.boot")
 
@@ -82,7 +84,7 @@ allprojects {
                 entry("docker-java")
                 entry("docker-java-transport-okhttp")
             }
-            dependencySet("org.apache.logging.log4j:${Versions.log4j}"){
+            dependencySet("org.apache.logging.log4j:${Versions.log4j}") {
                 entry("log4j-api")
                 entry("log4j-core")
             }
@@ -114,7 +116,7 @@ allprojects {
         it.exclude("org.slf4j", "slf4j-log4j12")
         it.exclude("org.slf4j", "slf4j-nop")
         it.exclude("javax.ws.rs", "jsr311-api")
-        it.exclude("dom4j","dom4j")
-        it.exclude("com.flipkart.zjsonpatch","zjsonpatch")
+        it.exclude("dom4j", "dom4j")
+        it.exclude("com.flipkart.zjsonpatch", "zjsonpatch")
     }
 }
