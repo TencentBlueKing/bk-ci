@@ -39,8 +39,7 @@ import com.tencent.devops.common.api.pojo.Result;
  * @version V1.0
  * @date 2019/5/5
  */
-public interface GetTaskLogService
-{
+public interface GetTaskLogService {
 
     /**
      * 查询分析记录
@@ -60,7 +59,8 @@ public interface GetTaskLogService
      * @param tag
      * @return
      */
-    QueryLogRepVO queryAnalysisLog(String userId, String projectId, String pipelineId, String buildId, String queryKeywords, String tag);
+    QueryLogRepVO queryAnalysisLog(String userId, String projectId, String pipelineId, String buildId,
+                                   String queryKeywords, String tag);
 
 
     /**
@@ -72,7 +72,9 @@ public interface GetTaskLogService
      * @param tag
      * @return
      */
-    QueryLogRepVO getMoreLogs(String userId, String projectId, String pipelineId, String buildId, Integer num, Boolean fromStart, Long start, Long end, String tag, Integer executeCount);
+    // NOCC:ParameterNumber(设计如此:)
+    QueryLogRepVO getMoreLogs(String userId, String projectId, String pipelineId, String buildId, Integer num,
+                              Boolean fromStart, Long start, Long end, String tag, Integer executeCount);
 
 
     /**
@@ -85,7 +87,8 @@ public interface GetTaskLogService
      * @param executeCount
      * @return
      */
-    void downloadLogs(String userId, String projectId, String pipelineId, String buildId, String tag, Integer executeCount);
+    void downloadLogs(String userId, String projectId, String pipelineId, String buildId,
+                      String tag, Integer executeCount);
 
 
     /**
@@ -98,7 +101,9 @@ public interface GetTaskLogService
      * @param executeCount
      * @return
      */
-    QueryLogRepVO getAfterLogs(String userId, String projectId, String pipelineId, String buildId, Long start, String queryKeywords, String tag, Integer executeCount);
+    // NOCC:ParameterNumber(设计如此:)
+    QueryLogRepVO getAfterLogs(String userId, String projectId, String pipelineId, String buildId,
+                               Long start, String queryKeywords, String tag, Integer executeCount);
 
     /**
      * 获取活跃任务列表(是否活跃看时间区间内 任务的任意工具有成功分析的记录都为活跃)

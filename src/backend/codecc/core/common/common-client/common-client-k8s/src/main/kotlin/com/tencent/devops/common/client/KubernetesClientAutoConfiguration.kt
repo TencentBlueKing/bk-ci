@@ -26,7 +26,6 @@
 
 package com.tencent.devops.common.client
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID

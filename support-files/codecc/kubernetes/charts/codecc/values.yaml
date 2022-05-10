@@ -197,7 +197,7 @@ common:
 
 config:
   bkCodeccConsulDiscoveryTag: codecc
-  bkCiPublicUrl: devops.example.woa.com
+  bkCiPublicUrl: devops.example.com
   bkCiPublicSchema: http
   bkCiPrivateUrl: devops.example.com
   bkCodeccPublicUrl: codecc.example.com

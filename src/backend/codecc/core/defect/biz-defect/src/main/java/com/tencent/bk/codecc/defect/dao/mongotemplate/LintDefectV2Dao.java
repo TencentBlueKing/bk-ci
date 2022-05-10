@@ -119,6 +119,7 @@ public class LintDefectV2Dao {
      * @param filedMap           设置需要返回或者过滤的字段
      * @return
      */
+    // NOCC:ParameterNumber(设计如此:)
     public Page<LintDefectV2Entity> findDefectPageByCondition(long taskId, DefectQueryReqVO defectQueryReqVO,
                                                               Set<String> defectIdSet, Set<String> pkgChecker,
                                                               long newDefectJudgeTime, Map<String, Boolean> filedMap,
@@ -152,14 +153,16 @@ public class LintDefectV2Dao {
 
         // 把前端传入的小驼峰排序字段转换为小写下划线的数据库字段名
         String sortFieldInDb = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, sortField);
-        List<Sort.Order> sortList = new ArrayList<>(Collections.singletonList(new Sort.Order(sortType, sortFieldInDb)));
+        List<Sort.Order> sortList =
+                new ArrayList<>(Collections.singletonList(new Sort.Order(sortType, sortFieldInDb)));
 
         // 如果按文件名排序，那么还要再按行号排序
         if ("fileName".equals(sortField)) {
             sortList.add(new Sort.Order(sortType, "line_num"));
         }
 
-        Page<LintDefectV2Entity> pageResult = mongoPageHelper.pageQuery(query, LintDefectV2Entity.class, pageSize, pageNum, sortList);
+        Page<LintDefectV2Entity> pageResult = mongoPageHelper.pageQuery(query,
+                LintDefectV2Entity.class, pageSize, pageNum, sortList);
         return pageResult;
     }
 
@@ -177,7 +180,8 @@ public class LintDefectV2Dao {
             filedMap.forEach((filed, isNeedReturn) -> fieldsObj.put(filed, isNeedReturn));
             query = new BasicQuery(new Document(), fieldsObj);
         }
-        Criteria criteria = getQueryCriteria(taskId, defectQueryReqVO, defectIdSet, pkgChecker, newDefectJudgeTime, toolNameSet);
+        Criteria criteria = getQueryCriteria(taskId, defectQueryReqVO, defectIdSet, pkgChecker,
+                newDefectJudgeTime, toolNameSet);
         query.addCriteria(criteria);
         return query;
     }
@@ -208,13 +212,14 @@ public class LintDefectV2Dao {
 
         // 1.buildId对应的告警ID集合过滤
         if (CollectionUtils.isNotEmpty(defectIdSet)) {
-            Set<ObjectId> entityIdSet = defectIdSet.stream().map(id -> new ObjectId(id)).collect(Collectors.toSet());
+            Set<ObjectId> entityIdSet = defectIdSet.stream().map(ObjectId::new).collect(Collectors.toSet());
             andCriteria.and("_id").in(entityIdSet);
         }
 
         // 2.状态过滤
         if (CollectionUtils.isNotEmpty(condStatusList)) {
-            Set<Integer> condStatusSet = condStatusList.stream().map(it -> Integer.valueOf(it) | DefectStatus.NEW.value())
+            Set<Integer> condStatusSet = condStatusList.stream()
+                    .map(it -> Integer.parseInt(it) | DefectStatus.NEW.value())
                     .collect(Collectors.toSet());
             andCriteria.and("status").in(condStatusSet);
         }
@@ -232,7 +237,8 @@ public class LintDefectV2Dao {
 
             if (!conditionSeverity.containsAll(Sets.newHashSet(String.valueOf(ComConstants.SERIOUS),
                     String.valueOf(ComConstants.NORMAL), String.valueOf(ComConstants.PROMPT_IN_DB)))) {
-                Set<Integer> severitySet = conditionSeverity.stream().map(it -> Integer.valueOf(it)).collect(Collectors.toSet());
+                Set<Integer> severitySet =
+                        conditionSeverity.stream().map(Integer::valueOf).collect(Collectors.toSet());
                 andCriteria.and("severity").in(severitySet);
             }
         }
@@ -270,7 +276,8 @@ public class LintDefectV2Dao {
         if (StringUtils.isNotEmpty(startTimeStr)) {
             long startTime = DateTimeUtils.getTimeStamp(startTimeStr + " 00:00:00");
 
-            long endTime = StringUtils.isEmpty(endTimeStr) ? System.currentTimeMillis() : DateTimeUtils.getTimeStamp(endTimeStr + " 23:59:59");
+            long endTime = StringUtils.isEmpty(endTimeStr) ? System.currentTimeMillis() :
+                    DateTimeUtils.getTimeStamp(endTimeStr + " 23:59:59");
 
             minTime = minTime < startTime ? startTime : minTime;
             maxTime = (maxTime == 0 || maxTime > endTime) ? endTime : maxTime;
@@ -293,10 +300,10 @@ public class LintDefectV2Dao {
     public void batchUpdateDefectAuthor(long taskId, List<LintDefectV2Entity> defectList, String newAuthor) {
         if (CollectionUtils.isNotEmpty(defectList)) {
             BulkOperations ops = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, LintDefectV2Entity.class);
-            defectList.forEach(defectEntity ->
-            {
+            defectList.forEach(defectEntity -> {
                 Query query = new Query();
-                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
+                query.addCriteria(Criteria.where("_id")
+                        .is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
                 Update update = new Update();
                 update.set("author", newAuthor);
                 ops.updateOne(query, update);
@@ -313,14 +320,15 @@ public class LintDefectV2Dao {
      * @param ignoreReason
      * @param ignoreAuthor
      */
-    public void batchUpdateDefectStatusIgnoreBit(long taskId, List<LintDefectV2Entity> defectList, int ignoreReasonType, String ignoreReason, String ignoreAuthor) {
+    public void batchUpdateDefectStatusIgnoreBit(long taskId, List<LintDefectV2Entity> defectList,
+                                                 int ignoreReasonType, String ignoreReason, String ignoreAuthor) {
         if (CollectionUtils.isNotEmpty(defectList)) {
             BulkOperations ops = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, LintDefectV2Entity.class);
             long currTime = System.currentTimeMillis();
-            defectList.forEach(defectEntity ->
-            {
+            defectList.forEach(defectEntity -> {
                 Query query = new Query();
-                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
+                query.addCriteria(Criteria.where("_id")
+                        .is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
                 Update update = new Update();
                 update.set("status", defectEntity.getStatus());
                 update.set("ignore_time", currTime);
@@ -337,10 +345,10 @@ public class LintDefectV2Dao {
         if (CollectionUtils.isNotEmpty(defectList)) {
             BulkOperations ops = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, LintDefectV2Entity.class);
             long currTime = System.currentTimeMillis();
-            defectList.forEach(defectEntity ->
-            {
+            defectList.forEach(defectEntity -> {
                 Query query = new Query();
-                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
+                query.addCriteria(Criteria.where("_id")
+                        .is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
                 Update update = new Update();
                 update.set("mark", markFlag);
                 update.set("mark_time", currTime);
@@ -361,14 +369,17 @@ public class LintDefectV2Dao {
                                                           Sort.Direction sortType,
                                                           List<String> toolNameSet) {
         // 根据查询条件过滤
-        Criteria criteria = getQueryCriteria(taskId, queryWarningReq, defectIdSet, pkgChecker, newDefectJudgeTime, toolNameSet);
+        Criteria criteria = getQueryCriteria(taskId, queryWarningReq, defectIdSet, pkgChecker,
+                newDefectJudgeTime, toolNameSet);
         MatchOperation match = Aggregation.match(criteria);
 
         // 以filePath进行分组，计算文件总数
         GroupOperation group = Aggregation.group("task_id", "tool_name", "file_path");
         CountOperation count = Aggregation.count().as("fileCount");
-        Aggregation agg1 = Aggregation.newAggregation(match, group, count).withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build());
-        AggregationResults<LintStatisticVO> result = mongoTemplate.aggregate(agg1, "t_lint_defect_v2", LintStatisticVO.class);
+        Aggregation agg1 = Aggregation.newAggregation(match, group, count)
+                .withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build());
+        AggregationResults<LintStatisticVO> result =
+                mongoTemplate.aggregate(agg1, "t_lint_defect_v2", LintStatisticVO.class);
         List<LintStatisticVO> totalResult = result.getMappedResults();
 
         if (CollectionUtils.isEmpty(totalResult)) {
@@ -395,14 +406,16 @@ public class LintDefectV2Dao {
             sortType = Sort.Direction.ASC;
         }
         SortOperation sort = Aggregation.sort(sortType, sortField);
-        SkipOperation skip = Aggregation.skip(Long.valueOf(pageSize * ((pageNum <= 0 ? MongoPageHelper.FIRST_PAGE_NUM : pageNum) - 1)));
+        SkipOperation skip = Aggregation
+                .skip(Long.valueOf(pageSize * ((pageNum <= 0 ? MongoPageHelper.FIRST_PAGE_NUM : pageNum) - 1)));
         LimitOperation limit = Aggregation.limit(pageSize);
 
-        Aggregation agg2 = Aggregation.newAggregation(match, group1, sort, skip, limit).withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build());
-        AggregationResults<LintFileVO> queryResult = mongoTemplate.aggregate(agg2, "t_lint_defect_v2", LintFileVO.class);
+        Aggregation agg2 = Aggregation.newAggregation(match, group1, sort, skip, limit)
+                .withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build());
+        AggregationResults<LintFileVO> queryResult =
+                mongoTemplate.aggregate(agg2, "t_lint_defect_v2", LintFileVO.class);
         List<LintFileVO> filelist = queryResult.getMappedResults();
-        filelist.forEach(lintFileVO ->
-        {
+        filelist.forEach(lintFileVO -> {
             Set<Integer> severityList = lintFileVO.getSeverityList();
             if (CollectionUtils.isNotEmpty(severityList) && severityList.remove(ComConstants.PROMPT_IN_DB)) {
                 severityList.add(ComConstants.PROMPT);
@@ -421,7 +434,8 @@ public class LintDefectV2Dao {
      * @param statusSet
      * @return
      */
-    public List<LintFileVO> getCheckerAuthorPathForPageInit(long taskId, List<String> toolNameSet, Set<String> statusSet) {
+    public List<LintFileVO> getCheckerAuthorPathForPageInit(long taskId, List<String> toolNameSet,
+                                                            Set<String> statusSet) {
         Criteria criteria = new Criteria();
         criteria.and("task_id").is(taskId).and("tool_name").in(toolNameSet);
 
@@ -441,8 +455,10 @@ public class LintDefectV2Dao {
                 .addToSet("checker").as("checkerList")
                 .addToSet("author").as("authorList");
 
-        Aggregation agg = Aggregation.newAggregation(match, group).withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build());
-        AggregationResults<LintFileVO> queryResult = mongoTemplate.aggregate(agg, "t_lint_defect_v2", LintFileVO.class);
+        Aggregation agg = Aggregation.newAggregation(match, group)
+                .withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build());
+        AggregationResults<LintFileVO> queryResult =
+                mongoTemplate.aggregate(agg, "t_lint_defect_v2", LintFileVO.class);
 
         return queryResult.getMappedResults();
     }
@@ -457,7 +473,9 @@ public class LintDefectV2Dao {
      * @param toolNameSet
      * @return
      */
-    public List<LintDefectGroupStatisticVO> statisticByStatus(long taskId, DefectQueryReqVO queryWarningReq, Set<String> defectIdSet, Set<String> pkgChecker, List<String> toolNameSet) {
+    public List<LintDefectGroupStatisticVO> statisticByStatus(long taskId, DefectQueryReqVO queryWarningReq,
+                                                              Set<String> defectIdSet, Set<String> pkgChecker,
+                                                              List<String> toolNameSet) {
         // 只需要查状态为待修复，已修复，已忽略的告警
         Set<String> needQueryStatusSet = Sets.newHashSet(
                 String.valueOf(DefectStatus.NEW.value()),
@@ -467,7 +485,8 @@ public class LintDefectV2Dao {
         queryWarningReq.setStatus(needQueryStatusSet);
 
         // 根据查询条件过滤
-        Criteria criteria = getQueryCriteria(taskId, queryWarningReq, defectIdSet, pkgChecker, 0, toolNameSet);
+        Criteria criteria = getQueryCriteria(taskId, queryWarningReq, defectIdSet, pkgChecker,
+                0, toolNameSet);
         MatchOperation match = Aggregation.match(criteria);
 
         // 以status进行分组
@@ -475,8 +494,10 @@ public class LintDefectV2Dao {
                 .last("status").as("status")
                 .count().as("defectCount");
 
-        Aggregation agg = Aggregation.newAggregation(match, group).withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build());
-        AggregationResults<LintDefectGroupStatisticVO> queryResult = mongoTemplate.aggregate(agg, "t_lint_defect_v2", LintDefectGroupStatisticVO.class);
+        Aggregation agg = Aggregation.newAggregation(match, group)
+                .withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build());
+        AggregationResults<LintDefectGroupStatisticVO> queryResult = mongoTemplate.aggregate(agg,
+                "t_lint_defect_v2", LintDefectGroupStatisticVO.class);
 
         return queryResult.getMappedResults();
     }
@@ -492,9 +513,12 @@ public class LintDefectV2Dao {
      * @param toolNameSet
      * @return
      */
-    public List<LintDefectGroupStatisticVO> statisticBySeverity(long taskId, DefectQueryReqVO queryWarningReq, Set<String> defectIdSet, Set<String> pkgChecker, List<String> toolNameSet) {
+    public List<LintDefectGroupStatisticVO> statisticBySeverity(long taskId, DefectQueryReqVO queryWarningReq,
+                                                                Set<String> defectIdSet, Set<String> pkgChecker,
+                                                                List<String> toolNameSet) {
         // 根据查询条件过滤
-        Criteria criteria = getQueryCriteria(taskId, queryWarningReq, defectIdSet, pkgChecker, 0, toolNameSet);
+        Criteria criteria = getQueryCriteria(taskId, queryWarningReq, defectIdSet, pkgChecker,
+                0, toolNameSet);
         MatchOperation match = Aggregation.match(criteria);
 
         // 以status进行分组
@@ -502,8 +526,10 @@ public class LintDefectV2Dao {
                 .last("severity").as("severity")
                 .count().as("defectCount");
 
-        Aggregation agg = Aggregation.newAggregation(match, group).withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build());
-        AggregationResults<LintDefectGroupStatisticVO> queryResult = mongoTemplate.aggregate(agg, "t_lint_defect_v2", LintDefectGroupStatisticVO.class);
+        Aggregation agg = Aggregation.newAggregation(match, group)
+                .withOptions(Aggregation.newAggregationOptions().allowDiskUse(true).build());
+        AggregationResults<LintDefectGroupStatisticVO> queryResult =
+                mongoTemplate.aggregate(agg, "t_lint_defect_v2", LintDefectGroupStatisticVO.class);
 
         return queryResult.getMappedResults();
     }
@@ -518,11 +544,15 @@ public class LintDefectV2Dao {
      * @param toolNameSet
      * @return
      */
-    public List<LintDefectGroupStatisticVO> statisticByDefectType(long taskId, DefectQueryReqVO queryWarningReq, Set<String> defectIdSet, Set<String> pkgChecker, List<String> toolNameSet, long newDefectJudgeTime, int defectType) {
+    public List<LintDefectGroupStatisticVO> statisticByDefectType(long taskId, DefectQueryReqVO queryWarningReq,
+                                                                  Set<String> defectIdSet, Set<String> pkgChecker,
+                                                                  List<String> toolNameSet, long newDefectJudgeTime,
+                                                                  int defectType) {
         // 根据查询条件过滤
         Set<String> oldDefectType = queryWarningReq.getDefectType();
         queryWarningReq.setDefectType(Sets.newHashSet(String.valueOf(defectType)));
-        Criteria criteria = getQueryCriteria(taskId, queryWarningReq, defectIdSet, pkgChecker, newDefectJudgeTime, toolNameSet);
+        Criteria criteria = getQueryCriteria(taskId, queryWarningReq, defectIdSet, pkgChecker,
+                newDefectJudgeTime, toolNameSet);
         queryWarningReq.setDefectType(oldDefectType);
 
         MatchOperation match = Aggregation.match(criteria);

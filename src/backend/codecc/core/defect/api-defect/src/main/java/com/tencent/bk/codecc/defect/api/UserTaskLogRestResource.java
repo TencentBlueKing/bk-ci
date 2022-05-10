@@ -112,6 +112,7 @@ public interface UserTaskLogRestResource
     @ApiOperation("获取更多日志")
     @GET
     @Path("/analysis/logs/{projectId}/{pipelineId}/{buildId}/more")
+    // NOCC:ParameterNumber(设计如此:)
     Result<QueryLogRepVO> getMoreLogs(
             @ApiParam(value = "用户ID")
             @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
@@ -175,6 +176,7 @@ public interface UserTaskLogRestResource
     @ApiOperation("获取某行后的日志")
     @GET
     @Path("/analysis/logs/{projectId}/{pipelineId}/{buildId}/after")
+    // NOCC:ParameterNumber(设计如此:)
     Result<QueryLogRepVO> getAfterLogs(
             @ApiParam(value = "用户ID")
             @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)

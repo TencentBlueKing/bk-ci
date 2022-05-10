@@ -18,7 +18,6 @@ import javax.ws.rs.core.Response
 import javax.ws.rs.ext.Provider
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.util.io.pem.PemReader
-import java.security.spec.PKCS8EncodedKeySpec
 
 @Provider
 @PreMatching
