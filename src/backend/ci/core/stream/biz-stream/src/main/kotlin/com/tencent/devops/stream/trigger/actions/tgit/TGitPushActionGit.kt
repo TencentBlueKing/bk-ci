@@ -432,6 +432,8 @@ class TGitPushActionGit(
     }
 
     private fun getSpecialChangeSet(gitEvent: GitPushEvent): Set<String> {
+        // 为 false 时表示为纯创建分支
+        if (gitEvent.create_and_update == false) return emptySet()
         val changeSet = mutableSetOf<String>()
         gitEvent.commits?.forEach {
             changeSet.addAll(it.removed.orEmpty())
