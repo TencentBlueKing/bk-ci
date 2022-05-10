@@ -142,7 +142,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         userId: String,
         atomCode: String
     ): Result<Map<String, String>?> {
-        logger.info("handleAtomPackage marketAtomCreateRequest is:$marketAtomCreateRequest,atomCode is:$atomCode,userId is:$userId")
+        logger.info("handleAtomPackage params:[$marketAtomCreateRequest|$atomCode|$userId]")
         marketAtomCreateRequest.authType ?: return MessageCodeUtil.generateResponseDataObject(
             CommonMessageCode.PARAMETER_IS_NULL,
             arrayOf("authType"),
@@ -262,39 +262,41 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     ): Result<Boolean> {
         logger.info("validateUpdateMarketAtomReq userId is:$userId,marketAtomUpdateRequest is:$marketAtomUpdateRequest")
         val frontendType = marketAtomUpdateRequest.frontendType
-        if (frontendType == FrontendTypeEnum.SPECIAL) {
-            val repositoryTreeInfoResult = client.get(ServiceGitRepositoryResource::class).getGitRepositoryTreeInfo(
-                userId = userId,
-                repoId = atomRecord.repositoryHashId,
-                refName = null,
-                path = null,
-                tokenType = TokenTypeEnum.PRIVATE_KEY
-            )
-            logger.info("the repositoryTreeInfoResult is :$repositoryTreeInfoResult")
-            if (repositoryTreeInfoResult.isNotOk()) {
-                return Result(repositoryTreeInfoResult.status, repositoryTreeInfoResult.message, false)
-            }
-            val repositoryTreeInfoList = repositoryTreeInfoResult.data
-            var flag = false
-            run outside@{
-                repositoryTreeInfoList?.forEach {
-                    if (it.name == BK_FRONTEND_DIR_NAME && it.type == "tree") {
-                        flag = true
-                        return@outside
-                    }
+        if (frontendType != FrontendTypeEnum.SPECIAL) {
+            return Result(true)
+        }
+        val repositoryTreeInfoResult = client.get(ServiceGitRepositoryResource::class).getGitRepositoryTreeInfo(
+            userId = userId,
+            repoId = atomRecord.repositoryHashId,
+            refName = null,
+            path = null,
+            tokenType = TokenTypeEnum.PRIVATE_KEY
+        )
+        logger.info("the repositoryTreeInfoResult is :$repositoryTreeInfoResult")
+        if (repositoryTreeInfoResult.isNotOk()) {
+            return Result(repositoryTreeInfoResult.status, repositoryTreeInfoResult.message, false)
+        }
+        val repositoryTreeInfoList = repositoryTreeInfoResult.data
+        var flag = false
+        run outside@{
+            repositoryTreeInfoList?.forEach {
+                if (it.name == BK_FRONTEND_DIR_NAME && it.type == "tree") {
+                    flag = true
+                    return@outside
                 }
             }
-            if (!flag) {
-                return MessageCodeUtil.generateResponseDataObject(
-                    StoreMessageCode.USER_REPOSITORY_BK_FRONTEND_DIR_IS_NULL,
-                    arrayOf(BK_FRONTEND_DIR_NAME),
-                    false
-                )
-            }
+        }
+        if (!flag) {
+            return MessageCodeUtil.generateResponseDataObject(
+                StoreMessageCode.USER_REPOSITORY_BK_FRONTEND_DIR_IS_NULL,
+                arrayOf(BK_FRONTEND_DIR_NAME),
+                false
+            )
         }
         return Result(true)
     }
 
+    @SuppressWarnings("ComplexMethod")
     override fun handleProcessInfo(
         userId: String,
         atomId: String,
@@ -380,7 +382,11 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return if (codeccFlag != null && codeccFlag) {
             // 判断插件构建时启动扫描任务是否成功，buildId为空则说明启动扫描任务失败
             val buildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$atomCode:$atomId")
-            if (buildId == null) AtomStatusEnum.CODECC_FAIL.status.toByte() else AtomStatusEnum.CODECCING.status.toByte()
+            if (buildId == null) {
+                AtomStatusEnum.CODECC_FAIL.status.toByte()
+            } else {
+                AtomStatusEnum.CODECCING.status.toByte()
+            }
         } else {
             // codecc开关关闭，无需进行codecc扫描
             val isNormalUpgrade = marketAtomCommonService.getNormalUpgradeFlag(atomCode, atomStatus.toInt())
@@ -538,13 +544,26 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             storeType = StoreTypeEnum.ATOM.type.toByte()
         )!! // 查找新增插件时关联的项目
         val repositoryHashId = atomRecord.repositoryHashId
-        val commitId = handleCodeccTask(
+        // 获取插件代码库最新提交记录
+        val getRepoRecentCommitInfoResult = client.get(ServiceGitRepositoryResource::class).getRepoRecentCommitInfo(
             userId = userId,
-            repositoryHashId = repositoryHashId,
-            atomCode = atomCode,
-            atomId = atomId,
-            branch = branch ?: MASTER
+            repoId = repositoryHashId,
+            sha = branch ?: MASTER,
+            tokenType = TokenTypeEnum.PRIVATE_KEY
         )
+        logger.info("runPipeline  atomId:$atomId,getRepoRecentCommitInfoResult:$getRepoRecentCommitInfoResult")
+        if (getRepoRecentCommitInfoResult.isNotOk()) {
+            throw ErrorCodeException(
+                errorCode = getRepoRecentCommitInfoResult.status.toString(),
+                defaultMessage = getRepoRecentCommitInfoResult.message
+            )
+        }
+        val gitCommit = getRepoRecentCommitInfoResult.data!!
+        val commitId = gitCommit.id
+        val codeccFlag = txStoreCodeccService.getCodeccFlag(StoreTypeEnum.ATOM.name)
+        if (codeccFlag == true) {
+            handleCodeccTask(atomCode, atomId, commitId)
+        }
         val buildInfo = marketAtomBuildInfoDao.getAtomBuildInfo(context, atomId)
         logger.info("the buildInfo is:$buildInfo")
         val script = buildInfo.value1()
@@ -560,7 +579,12 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 language = language,
                 commitId = commitId
             )
-            val pipelineModelConfig = businessConfigDao.get(context, StoreTypeEnum.ATOM.name, "initBuildPipeline", "PIPELINE_MODEL")
+            val pipelineModelConfig = businessConfigDao.get(
+                dslContext = context,
+                business = StoreTypeEnum.ATOM.name,
+                feature = "initBuildPipeline",
+                businessValue = "PIPELINE_MODEL"
+            )
             var pipelineModel = pipelineModelConfig!!.configValue
             var pipelineName = "am-$initProjectCode-$atomCode-${System.currentTimeMillis()}"
             if (pipelineName.toCharArray().size > 128) {
@@ -666,28 +690,10 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     }
 
     private fun handleCodeccTask(
-        userId: String,
-        repositoryHashId: String,
         atomCode: String,
         atomId: String,
-        branch: String?
-    ): String {
-        // 获取插件代码库最新提交记录
-        val getRepoRecentCommitInfoResult = client.get(ServiceGitRepositoryResource::class).getRepoRecentCommitInfo(
-            userId = userId,
-            repoId = repositoryHashId,
-            sha = branch ?: MASTER,
-            tokenType = TokenTypeEnum.PRIVATE_KEY
-        )
-        logger.info("handleCodeccTask  atomId:$atomId,getRepoRecentCommitInfoResult: $getRepoRecentCommitInfoResult")
-        if (getRepoRecentCommitInfoResult.isNotOk()) {
-            throw ErrorCodeException(
-                errorCode = getRepoRecentCommitInfoResult.status.toString(),
-                defaultMessage = getRepoRecentCommitInfoResult.message
-            )
-        }
-        val gitCommit = getRepoRecentCommitInfoResult.data!!
-        val commitId = gitCommit.id
+        commitId: String
+    ) {
         // 把代码提交ID存入redis
         redisOperation.set(
             key = "$STORE_REPO_COMMIT_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomCode:$atomId",
@@ -716,19 +722,19 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 expired = false
             )
         }
-        return commitId
     }
 
     /**
      * 检查版本发布过程中的操作权限
      */
+    @SuppressWarnings("ComplexMethod")
     override fun checkAtomVersionOptRight(
         userId: String,
         atomId: String,
         status: Byte,
         isNormalUpgrade: Boolean?
     ): Pair<Boolean, String> {
-        logger.info("checkAtomVersionOptRight, userId=$userId, atomId=$atomId, status=$status, isNormalUpgrade=$isNormalUpgrade")
+        logger.info("checkAtomVersionOptRight params[$userId|$atomId|$status|$isNormalUpgrade]")
         val record =
             marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Pair(
                 false,
