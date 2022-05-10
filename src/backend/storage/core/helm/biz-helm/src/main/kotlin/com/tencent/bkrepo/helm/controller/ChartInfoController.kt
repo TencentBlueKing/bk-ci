@@ -32,8 +32,8 @@
 package com.tencent.bkrepo.helm.controller
 
 import com.tencent.bkrepo.common.artifact.api.ArtifactPathVariable
-import com.tencent.bkrepo.helm.artifact.HelmArtifactInfo
-import com.tencent.bkrepo.helm.artifact.HelmArtifactInfo.Companion.CHARTS_LIST
+import com.tencent.bkrepo.helm.pojo.artifact.HelmArtifactInfo
+import com.tencent.bkrepo.helm.pojo.artifact.HelmArtifactInfo.Companion.CHARTS_LIST
 import com.tencent.bkrepo.helm.service.ChartInfoService
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -44,6 +44,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDateTime
 
+@Suppress("MVCPathVariableInspection")
 @RestController
 class ChartInfoController(
     private val chartInfoService: ChartInfoService

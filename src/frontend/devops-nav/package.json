@@ -34,7 +34,7 @@
     "@typescript-eslint/eslint-plugin": "^1.9.0",
     "@typescript-eslint/parser": "^1.9.0",
     "@vue/babel-preset-jsx": "^1.2.4",
-    "add-asset-html-webpack-plugin": "^3.2.0",
+    "add-asset-html-webpack-plugin": "^5.0.2",
     "babel-helper-vue-jsx-merge-props": "^2.0.3",
     "babel-loader": "^8.2.2",
     "babel-plugin-transform-vue-jsx": "^4.0.1",
@@ -65,7 +65,7 @@
   "dependencies": {
     "@icon-cool/bk-icon-devops": "^0.1.13",
     "@types/webpack-env": "^1.15.2",
-    "axios": "^0.21.1",
+    "axios": "^0.27.2",
     "bk-magic-vue": "2.3.0",
     "bluebird": "^3.5.1",
     "js-cookie": "^3.0.1",

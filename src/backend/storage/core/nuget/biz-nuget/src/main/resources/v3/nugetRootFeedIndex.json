@@ -25,7 +25,7 @@
       "@type": "LegacyGallery/2.0.0"
     },
     {
-      "@id": "@NugetV2Url",
+      "@id": "@NugetV2Url/v2/package",
       "@type": "PackagePublish/2.0.0"
     },
     {

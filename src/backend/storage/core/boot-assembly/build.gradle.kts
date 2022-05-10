@@ -36,6 +36,7 @@ dependencies {
     implementation(project(":composer:biz-composer"))
     implementation(project(":docker:biz-docker"))
     implementation(project(":helm:biz-helm"))
+    implementation(project(":rds:biz-rds"))
     implementation(project(":maven:biz-maven"))
     implementation(project(":npm:biz-npm"))
     implementation(project(":nuget:biz-nuget"))

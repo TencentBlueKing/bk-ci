@@ -60,9 +60,10 @@ allprojects {
                 entry("docker-java")
                 entry("docker-java-transport-okhttp")
             }
-            dependencySet("com.tencent.bkrepo:${Versions.TencentBkRepo}") {
+            dependencySet("com.tencent.bk.repo:${Versions.TencentBkRepo}") {
                 entry("api-generic")
                 entry("api-repository")
+                entry("api-webhook")
             }
             dependencySet("org.apache.poi:${Versions.Poi}") {
                 entry("poi")
@@ -72,6 +73,7 @@ allprojects {
                 entry("pinyin-plus")
             }
             dependency("com.perforce:p4java:${Versions.p4}")
+            dependency("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Versions.JacksonDatatypeJsr}")
         }
     }
 
