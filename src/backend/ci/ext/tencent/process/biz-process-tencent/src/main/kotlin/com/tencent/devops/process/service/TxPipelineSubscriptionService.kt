@@ -27,10 +27,7 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
-import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -39,16 +36,10 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.measure.MeasureService
-import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
-import com.tencent.devops.process.util.NotifyTemplateUtils
-import com.tencent.devops.process.util.ServiceHomeUrlUtils.server
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
@@ -63,16 +54,10 @@ import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
 import com.tencent.devops.process.utils.PIPELINE_TIME_END
 import com.tencent.devops.process.utils.PIPELINE_VERSION
-import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.lang.IllegalArgumentException
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Date
 
 @Suppress("ALL")
 @Service
@@ -97,32 +82,6 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
         buildStatus: BuildStatus,
         errorInfoList: String?
     ) {
-        val endTime = System.currentTimeMillis()
-        buildVariableService.setVariable(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            varName = PIPELINE_TIME_END,
-            varValue = endTime
-        )
-
-        val duration = ((endTime - startTime) / 1000).toString()
-
-        // 设置总耗时
-        buildVariableService.setVariable(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            varName = PIPELINE_TIME_DURATION,
-            varValue = duration
-        )
-
-        val shutdownType = when {
-            buildStatus.isCancel() -> TYPE_SHUTDOWN_CANCEL
-            buildStatus.isFailure() -> TYPE_SHUTDOWN_FAILURE
-            else -> TYPE_SHUTDOWN_SUCCESS
-        }
-
         val vars = buildVariableService.getAllVariable(projectId, buildId).toMutableMap()
         if (!vars[PIPELINE_TIME_DURATION].isNullOrBlank()) {
             val timeDuration = vars[PIPELINE_TIME_DURATION]!!.toLongOrNull() ?: 0L
@@ -156,94 +115,6 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
             model = model,
             errorInfoList = errorInfoList
         )
-
-        val replaceWithEmpty = true
-        // 流水线设置订阅的用户
-        val settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
-        if (settingInfo != null) {
-
-            val successReceiver = EnvUtils.parseEnv(settingInfo.successSubscription.users, vars, replaceWithEmpty)
-            val failReceiver = EnvUtils.parseEnv(settingInfo.failSubscription.users, vars, replaceWithEmpty)
-            // 内容为null的时候处理为空字符串
-            var successContent = settingInfo.successSubscription.content
-            var failContent = settingInfo.failSubscription.content
-
-            // 内容
-            var emailSuccessContent = successContent
-            var emailFailContent = failContent
-            if (successContent.isBlank()) {
-                successContent = NotifyTemplateUtils.COMMON_SHUTDOWN_SUCCESS_CONTENT
-            }
-            if (failContent.isBlank()) {
-                failContent = NotifyTemplateUtils.COMMON_SHUTDOWN_FAILURE_CONTENT
-            }
-
-            emailSuccessContent = EnvUtils.parseEnv(emailSuccessContent, vars, replaceWithEmpty)
-            emailFailContent = EnvUtils.parseEnv(emailFailContent, vars, replaceWithEmpty)
-            successContent = EnvUtils.parseEnv(successContent, vars, replaceWithEmpty)
-            failContent = EnvUtils.parseEnv(failContent, vars, replaceWithEmpty)
-
-            val projectGroup = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, projectId)
-            val detailUrl = detailUrl(projectId, pipelineId, buildId)
-            val detailOuterUrl = detailOuterUrl(projectId, pipelineId, buildId)
-            val detailShortOuterUrl = client.get(ServiceShortUrlResource::class).createShortUrl(
-                CreateShortUrlRequest(url = detailOuterUrl, ttl = SHORT_URL_TTL)).data!!
-
-            val projectName = vars[PROJECT_NAME_CHINESE] ?: projectCacheService.getProjectName(projectId) ?: ""
-
-            val mapData = mapOf(
-                "pipelineName" to pipelineName,
-                "buildNum" to buildNum.toString(),
-                "projectName" to projectName,
-                "detailUrl" to detailUrl,
-                "detailOuterUrl" to detailOuterUrl,
-                "detailShortOuterUrl" to detailShortOuterUrl,
-                "startTime" to getFormatTime(startTime),
-                "duration" to DateTimeUtil.formatMillSecond(duration.toLong() * 1000).removeSuffix("秒"),
-                "trigger" to trigger,
-                "username" to user,
-                "detailUrl" to detailUrl,
-                "successContent" to successContent,
-                "failContent" to failContent,
-                "emailSuccessContent" to emailSuccessContent,
-                "emailFailContent" to emailFailContent
-            )
-
-            if (shutdownType == TYPE_SHUTDOWN_SUCCESS) {
-                val settingDetailFlag = settingInfo.successSubscription.detailFlag
-                val successUsers = mutableSetOf<String>()
-                val successGroup = settingInfo.successSubscription.groups
-                projectGroup.filter { it.roleName in successGroup }
-                    .forEach { successUsers.addAll(it.userIdList) }
-                successUsers.addAll(successReceiver.split(","))
-                val notifyTypeList = settingInfo.successSubscription.types.map { it.name }.toMutableSet()
-//                sendTemplateNotify(
-//                    users = successUsers,
-//                    notifyTypes = notifyTypeList,
-//                    pipelineId = pipelineId,
-//                    type = shutdownType,
-//                    mapData = mapData,
-//                    detailFlag = settingDetailFlag
-//                )
-            } else if (shutdownType == TYPE_SHUTDOWN_FAILURE) {
-
-                val settingDetailFlag = settingInfo.failSubscription.detailFlag
-                val failUsers = mutableSetOf<String>()
-                val failGroup = settingInfo.failSubscription.groups
-                projectGroup.filter { it.roleName in failGroup }
-                    .forEach { failUsers.addAll(it.userIdList) }
-                failUsers.addAll(failReceiver.split(","))
-                val notifyTypeList = settingInfo.failSubscription.types.map { it.name }.toMutableSet()
-//                sendTemplateNotify(
-//                    users = failUsers,
-//                    notifyTypes = notifyTypeList,
-//                    pipelineId = pipelineId,
-//                    type = shutdownType,
-//                    mapData = mapData,
-//                    detailFlag = settingDetailFlag
-//                )
-            }
-        }
     }
 
     fun getExecutionVariables(pipelineId: String, vars: Map<String, String>): ExecutionVariables {
@@ -317,75 +188,8 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
         )
     }
 
-    private fun sendTemplateNotify(
-        users: MutableSet<String>,
-        notifyTypes: MutableSet<String>,
-        pipelineId: String,
-        type: Int,
-        mapData: Map<String, String>,
-        detailFlag: Boolean
-    ) {
-        val request = SendNotifyMessageTemplateRequest(
-            templateCode = getNotifyTemplateCode(type, detailFlag),
-            receivers = users,
-            notifyType = notifyTypes,
-            titleParams = mapData,
-            bodyParams = mapData
-        )
-        val response = client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
-        logger.info("[$pipelineId]|sendTemplateNotify|${request.receivers}" +
-            "|${request.notifyType}|${request.templateCode}|result=$response")
-    }
-
-    private fun detailUrl(projectId: String, pipelineId: String, processInstanceId: String) =
-        "${server()}/console/pipeline/$projectId/$pipelineId/detail/$processInstanceId"
-
-    private fun detailOuterUrl(projectId: String, pipelineId: String, processInstanceId: String) =
-        "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html" +
-            "?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$processInstanceId"
-
-    private fun getNotifyTemplateCode(type: Int, detailFlag: Boolean) =
-        if (detailFlag) {
-            when (type) {
-                TYPE_STARTUP ->
-                    PipelineNotifyTemplateEnum.PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL.templateCode
-                TYPE_SHUTDOWN_SUCCESS ->
-                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL.templateCode
-                TYPE_SHUTDOWN_FAILURE ->
-                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL.templateCode
-                TYPE_SHUTDOWN_CANCEL ->
-                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL.templateCode
-                else ->
-                    throw IllegalArgumentException("Unknown type($type) of Notify")
-            }
-        } else {
-            when (type) {
-                TYPE_STARTUP -> PipelineNotifyTemplateEnum.PIPELINE_STARTUP_NOTIFY_TEMPLATE.templateCode
-                TYPE_SHUTDOWN_SUCCESS ->
-                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE.templateCode
-                TYPE_SHUTDOWN_FAILURE ->
-                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE.templateCode
-                TYPE_SHUTDOWN_CANCEL ->
-                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE.templateCode
-                else ->
-                    throw IllegalArgumentException("Unknown type($type) of Notify")
-            }
-        }
-
-    private fun getFormatTime(time: Long): String {
-        val current = LocalDateTime.ofInstant(Date(time).toInstant(), ZoneId.systemDefault())
-
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-        return current.format(formatter)
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineSubscriptionService::class.java)
-        const val TYPE_STARTUP = 1
-        const val TYPE_SHUTDOWN_SUCCESS = 2
-        const val TYPE_SHUTDOWN_FAILURE = 3
-        const val TYPE_SHUTDOWN_CANCEL = 4
-        private const val SHORT_URL_TTL = 24 * 3600 * 180
     }
 
     data class ExecutionVariables(
