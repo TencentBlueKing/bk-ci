@@ -170,10 +170,10 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
      * @return 日志信息
      */
     @Override
-    public QueryLogRepVO queryAnalysisLog(String projectId, String pipelineId, String buildId, String queryKeywords, String tag)
+    public QueryLogRepVO queryAnalysisLog(String userId, String projectId, String pipelineId, String buildId, String queryKeywords, String tag)
     {
         validatePermission(pipelineId);
-        return logService.getAnalysisLog(projectId, pipelineId, buildId, queryKeywords, tag);
+        return logService.getAnalysisLog(userId, projectId, pipelineId, buildId, queryKeywords, tag);
     }
 
 
@@ -192,10 +192,10 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
      * @return 日志信息
      */
     @Override
-    public QueryLogRepVO getMoreLogs(String projectId, String pipelineId, String buildId, Integer num, Boolean fromStart, Long start, Long end, String tag, Integer executeCount)
+    public QueryLogRepVO getMoreLogs(String userId, String projectId, String pipelineId, String buildId, Integer num, Boolean fromStart, Long start, Long end, String tag, Integer executeCount)
     {
         validatePermission(pipelineId);
-        return logService.getMoreLogs(projectId, pipelineId, buildId, num, fromStart, start, end, tag, executeCount);
+        return logService.getMoreLogs(userId, projectId, pipelineId, buildId, num, fromStart, start, end, tag, executeCount);
     }
 
 
@@ -210,10 +210,10 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
      * @return 日志信息
      */
     @Override
-    public void downloadLogs(String projectId, String pipelineId, String buildId, String tag, Integer executeCount)
+    public void downloadLogs(String userId, String projectId, String pipelineId, String buildId, String tag, Integer executeCount)
     {
         validatePermission(pipelineId);
-        logService.downloadLogs(projectId, pipelineId, buildId, tag, executeCount);
+        logService.downloadLogs(userId, projectId, pipelineId, buildId, tag, executeCount);
     }
 
 
@@ -228,10 +228,10 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
      * @return 日志信息
      */
     @Override
-    public QueryLogRepVO getAfterLogs(String projectId, String pipelineId, String buildId, Long start, String queryKeywords, String tag, Integer executeCount)
+    public QueryLogRepVO getAfterLogs(String userId, String projectId, String pipelineId, String buildId, Long start, String queryKeywords, String tag, Integer executeCount)
     {
         validatePermission(pipelineId);
-        return logService.getAfterLogs(projectId, pipelineId, buildId, start, queryKeywords, tag, executeCount);
+        return logService.getAfterLogs(userId, projectId, pipelineId, buildId, start, queryKeywords, tag, executeCount);
     }
 
     /**

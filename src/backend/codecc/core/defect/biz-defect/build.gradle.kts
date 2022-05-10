@@ -14,7 +14,7 @@ dependencies {
     api(project(":core:common:common-auth-api"))
     api(project(":core:schedule:api-schedule"))
     api(project(":core:coverity:api-coverity"))
-    api("org.apache.httpcomponents:httpclient:4.5.2")
+    api("org.apache.httpcomponents:httpclient")
     api("org.redisson:redisson")
     api(group = "com.tencent.bk.devops.ci.process", name = "api-process", version = Versions.devopsVersion){
         isChanging = true

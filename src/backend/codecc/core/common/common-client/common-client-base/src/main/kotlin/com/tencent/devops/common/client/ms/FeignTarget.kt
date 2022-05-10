@@ -57,10 +57,6 @@ abstract class FeignTarget<T>(
         return input.request()
     }
 
-    override fun url(): String {
-        return choose("$servicePrefix-$serviceName").url()
-    }
-
     override fun type() = type
 
     override fun name() = serviceName

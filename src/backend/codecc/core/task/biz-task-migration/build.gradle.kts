@@ -33,7 +33,7 @@ dependencies {
     api(group = "com.tencent.bk.devops.ci.project", name = "api-project", version = Versions.devopsVersion){
         isChanging=true
     }
-    api(group = "com.tencent.bk.devops.ci.common", name = "common-pipeline",version = "1.8.0-alpha.1-RELEASE")
+    api(group = "com.tencent.bk.devops.ci.common", name = "common-pipeline", version = Versions.devopsVersion)
     api(group = "com.vdurmont", name = "emoji-java",version = "5.1.1")
     api(group = "org.apache.commons", name = "commons-csv",version = "1.9.0")
 }

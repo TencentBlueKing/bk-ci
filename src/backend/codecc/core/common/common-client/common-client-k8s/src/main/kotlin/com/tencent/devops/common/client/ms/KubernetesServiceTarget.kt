@@ -83,4 +83,8 @@ class KubernetesServiceTarget<T> constructor(
         return matchTagInstances[0]
     }
 
+    override fun url(): String {
+        return choose("$servicePrefix-$serviceName").url()
+    }
+
 }

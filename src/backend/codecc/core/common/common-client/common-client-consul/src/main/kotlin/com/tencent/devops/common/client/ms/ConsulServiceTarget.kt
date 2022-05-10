@@ -30,6 +30,7 @@ import com.tencent.devops.common.exception.ClientException
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.client.discovery.DiscoveryClient
+import org.springframework.cloud.consul.discovery.ConsulServiceInstance
 
 open class ConsulServiceTarget<T> constructor(
         override val servicePrefix: String,
@@ -61,15 +62,10 @@ open class ConsulServiceTarget<T> constructor(
         val matchTagInstances = ArrayList<ServiceInstance>()
 
         instances.forEach { serviceInstance ->
-            logger.info("metadata value: ${serviceInstance.metadata.values}")
-            if (serviceInstance.metadata.isEmpty())
-                return@forEach
-            if (null != serviceInstance.metadata.values.find { tag!!.indexOf(it) > -1 }) {
-                // 已经用过的不选择
-                if (!usedInstance.contains(serviceInstance.url())) {
-                    logger.info("service instance url: ${serviceInstance.url()}")
-                    matchTagInstances.add(serviceInstance)
-                }
+            if (serviceInstance is ConsulServiceInstance && serviceInstance.tags.contains(tag) &&
+                !usedInstance.contains(serviceInstance.url())) {
+                logger.info("service instance url: ${serviceInstance.url()}")
+                matchTagInstances.add(serviceInstance)
             }
         }
 
@@ -90,5 +86,8 @@ open class ConsulServiceTarget<T> constructor(
         return matchTagInstances[0]
     }
 
+    override fun url(): String {
+        return choose(serviceName).url()
+    }
 
 }

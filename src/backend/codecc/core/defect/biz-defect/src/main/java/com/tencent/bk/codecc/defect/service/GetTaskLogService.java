@@ -60,7 +60,7 @@ public interface GetTaskLogService
      * @param tag
      * @return
      */
-    QueryLogRepVO queryAnalysisLog(String projectId, String pipelineId, String buildId, String queryKeywords, String tag);
+    QueryLogRepVO queryAnalysisLog(String userId, String projectId, String pipelineId, String buildId, String queryKeywords, String tag);
 
 
     /**
@@ -72,7 +72,7 @@ public interface GetTaskLogService
      * @param tag
      * @return
      */
-    QueryLogRepVO getMoreLogs(String projectId, String pipelineId, String buildId, Integer num, Boolean fromStart, Long start, Long end, String tag, Integer executeCount);
+    QueryLogRepVO getMoreLogs(String userId, String projectId, String pipelineId, String buildId, Integer num, Boolean fromStart, Long start, Long end, String tag, Integer executeCount);
 
 
     /**
@@ -85,7 +85,7 @@ public interface GetTaskLogService
      * @param executeCount
      * @return
      */
-    void downloadLogs(String projectId, String pipelineId, String buildId, String tag, Integer executeCount);
+    void downloadLogs(String userId, String projectId, String pipelineId, String buildId, String tag, Integer executeCount);
 
 
     /**
@@ -98,7 +98,7 @@ public interface GetTaskLogService
      * @param executeCount
      * @return
      */
-    QueryLogRepVO getAfterLogs(String projectId, String pipelineId, String buildId, Long start, String queryKeywords, String tag, Integer executeCount);
+    QueryLogRepVO getAfterLogs(String userId, String projectId, String pipelineId, String buildId, Long start, String queryKeywords, String tag, Integer executeCount);
 
     /**
      * 获取活跃任务列表(是否活跃看时间区间内 任务的任意工具有成功分析的记录都为活跃)

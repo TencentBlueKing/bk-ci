@@ -79,27 +79,27 @@ public class UserTaskLogRestResourceImpl implements UserTaskLogRestResource
 
 
     @Override
-    public Result<QueryLogRepVO> getAnalysisLogs(String projectId, String pipelineId, String buildId, String queryKeywords, String tag)
+    public Result<QueryLogRepVO> getAnalysisLogs(String userId, String projectId, String pipelineId, String buildId, String queryKeywords, String tag)
     {
-        return new Result<>(getTaskLogService.queryAnalysisLog(projectId, pipelineId, buildId, queryKeywords, tag));
+        return new Result<>(getTaskLogService.queryAnalysisLog(userId, projectId, pipelineId, buildId, queryKeywords, tag));
     }
 
     @Override
-    public Result<QueryLogRepVO> getMoreLogs(String projectId, String pipelineId, String buildId, Integer num, Boolean fromStart, Long start, Long end, String tag, Integer executeCount)
+    public Result<QueryLogRepVO> getMoreLogs(String userId, String projectId, String pipelineId, String buildId, Integer num, Boolean fromStart, Long start, Long end, String tag, Integer executeCount)
     {
-        return new Result<>(getTaskLogService.getMoreLogs(projectId, pipelineId, buildId, num, fromStart, start, end, tag, executeCount));
+        return new Result<>(getTaskLogService.getMoreLogs(userId, projectId, pipelineId, buildId, num, fromStart, start, end, tag, executeCount));
     }
 
     @Override
-    public void downloadLogs(String projectId, String pipelineId, String buildId, String tag, Integer executeCount)
+    public void downloadLogs(String userId, String projectId, String pipelineId, String buildId, String tag, Integer executeCount)
     {
-        getTaskLogService.downloadLogs(projectId, pipelineId, buildId, tag, executeCount);
+        getTaskLogService.downloadLogs(userId, projectId, pipelineId, buildId, tag, executeCount);
     }
 
     @Override
-    public Result<QueryLogRepVO> getAfterLogs(String projectId, String pipelineId, String buildId, Long start, String queryKeywords, String tag, Integer executeCount)
+    public Result<QueryLogRepVO> getAfterLogs(String userId, String projectId, String pipelineId, String buildId, Long start, String queryKeywords, String tag, Integer executeCount)
     {
-        return new Result<>(getTaskLogService.getAfterLogs(projectId, pipelineId, buildId, start, queryKeywords, tag, executeCount));
+        return new Result<>(getTaskLogService.getAfterLogs(userId, projectId, pipelineId, buildId, start, queryKeywords, tag, executeCount));
     }
 
 

@@ -9,5 +9,4 @@ dependencies {
     api("org.springframework.boot:spring-boot-starter-amqp")
     api("org.springframework.boot:spring-boot-starter-aop")
     api(group = "net.sf.json-lib", name = "json-lib", classifier = "jdk15")
-    api("org.apache.xmlrpc:xmlrpc-client")
 }

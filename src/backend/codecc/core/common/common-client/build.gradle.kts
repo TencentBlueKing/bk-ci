@@ -1,4 +1,4 @@
-import com.tencent.devops.conventions.AssemblyMode
+import com.tencent.devops.enums.AssemblyMode
 import com.tencent.devops.utils.findPropertyOrEmpty
 
 plugins {

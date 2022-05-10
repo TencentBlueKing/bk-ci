@@ -1,8 +1,15 @@
 import com.tencent.devops.utils.findPropertyOrEmpty
-import com.tencent.devops.conventions.AssemblyMode
+import com.tencent.devops.enums.AssemblyMode
 
 plugins {
-    id("com.tencent.devops.boot") version "0.0.4"
+    id("com.tencent.devops.boot")
+}
+
+buildscript {
+    dependencies {
+        classpath("org.owasp:dependency-check-gradle:7.1.0.1")
+    }
+
 }
 
 allprojects {
@@ -10,23 +17,18 @@ allprojects {
     version = "0.0.2"
 
     apply(plugin = "com.tencent.devops.boot")
+    apply(plugin = "org.owasp.dependencycheck")
 
-    var mavenRepoUrl = System.getProperty("mavenRepoUrl")
-    if (mavenRepoUrl == null) {
-        mavenRepoUrl = System.getenv("mavenRepoUrl")
-    }
-    if (mavenRepoUrl == null) {
-        val MAVEN_REPO_URL : String by project
-        mavenRepoUrl = MAVEN_REPO_URL
-    }
 
-    repositories {
-        mavenLocal ()
-        maven( url = mavenRepoUrl)
-        mavenCentral()
-        jcenter()
-    }
-
+//    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java).all {
+//        kotlinOptions {
+//            val list = mutableListOf<String>(
+//                "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes",
+//                "-XXLanguage:+InlineClasses")
+//            list.addAll(freeCompilerArgs)
+//            freeCompilerArgs = list
+//        }
+//    }
 
     val property = project.findPropertyOrEmpty("devops.assemblyMode").trim()
     if (project.name.startsWith("boot-")) {
@@ -81,7 +83,7 @@ allprojects {
             dependency("org.apache.commons:commons-exec:${Versions.commonExecVersion}")
             dependency("org.apache.commons:commons-pool2:${Versions.commonPool2Version}")
             dependency("com.vmware:vijava:${Versions.vmwareVersion}")
-            dependency("org.bouncycastle:bcprov-jdk16:${Versions.bouncyCastleVersion}")
+            dependency("org.bouncycastle:bcprov-ext-jdk15on:${Versions.bouncyCastleVersion}")
             dependency("dom4j:dom4j:${Versions.dom4jVersion}")
             dependency("org.apache.commons:commons-compress:${Versions.compressVersion}")
             dependency("org.reflections:reflections:${Versions.reflectionsVersion}")
@@ -95,18 +97,16 @@ allprojects {
 //			dependency("org.springframework.data:spring-data-redis:${Versions.springRedisVersion}")
             dependency("org.glassfish.jersey.ext:jersey-bean-validation:${Versions.jerseyValidationVersion}")
             dependency("commons-io:commons-io:${Versions.commonsIOVersion}")
-            dependency("org.apache.xmlrpc:xmlrpc-client:${Versions.xmlrpcVersion}")
             dependency("commons-httpclient:commons-httpclient:${Versions.commonsHttpclientVersion}")
             dependency("com.alibaba:easyexcel:${Versions.easyexcel}")
             dependency("org.redisson:redisson:${Versions.redisson}")
             dependency("org.apache.lucene:lucene-core:${Versions.lucene}")
-            dependencySet("org.jetbrains.kotlin:${Versions.Kotlin}") {
-                entry("kotlin-stdlib-jdk8")
-                entry("kotlin-reflect")
-            }
             dependencySet("io.swagger:${Versions.swaggerVersion}") {
                 entry("swagger-annotations")
                 entry("swagger-jersey2-jaxrs")
+                entry("swagger-models")
+                entry("swagger-core")
+                entry("swagger-jaxrs")
             }
             dependencySet("com.fasterxml.jackson.module:${Versions.jacksonVersion}") {
                 entry("jackson-module-kotlin")
@@ -153,15 +153,17 @@ allprojects {
                 entry("poi")
                 entry("poi-ooxml")
             }
-            dependencySet("org.apache.poi:${Versions.poiVersion}") {
-                entry("poi")
-                entry("poi-ooxml")
-            }
             dependencySet("org.apache.logging.log4j:${Versions.log4j}"){
                 entry("log4j-api")
                 entry("log4j-core")
                 entry("log4j-slf4j-impl")
             }
+            dependency("com.google.guava:guava:${Versions.guava}")
+            dependency("commons-beanutils:commons-beanutils:${Versions.beanUtils}")
+            dependencySet("org.glassfish.jersey.core:${Versions.jerseyCommon}"){
+                entry("jersey-common")
+            }
+
         }
     }
 

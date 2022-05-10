@@ -30,7 +30,7 @@ import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
+//import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
 import net.sf.json.JSONArray
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -418,15 +418,15 @@ class PipelineUtils {
             {
                 getDevCloudDispatchType(imageName, imageName, imageVersion)!!
             }
-            "KUBERNETES" -> {
-                KubernetesDispatchType(
-                    kubernetesBuildVersion = "$imageName:$imageVersion",
-                    imageType = PIPELINE_IMAGE_TYPE,
-                    imageCode = imageName,
-                    imageVersion = imageVersion,
-                    imageName = imageName
-                )
-            }
+//            "KUBERNETES" -> {
+//                KubernetesDispatchType(
+//                    kubernetesBuildVersion = "$imageName:$imageVersion",
+//                    imageType = PIPELINE_IMAGE_TYPE,
+//                    imageCode = imageName,
+//                    imageVersion = imageVersion,
+//                    imageName = imageName
+//                )
+//            }
             else ->
             {
                 DockerDispatchType(

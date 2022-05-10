@@ -7,10 +7,6 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RequestFilter
 import io.jsonwebtoken.Jwts
 import net.sf.json.JSONObject
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.jce.provider.JCERSAPublicKey
-import org.bouncycastle.openssl.PEMReader
-import org.bouncycastle.openssl.PasswordFinder
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
@@ -20,6 +16,9 @@ import javax.ws.rs.container.ContainerRequestFilter
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.Provider
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.bouncycastle.util.io.pem.PemReader
+import java.security.spec.PKCS8EncodedKeySpec
 
 @Provider
 @PreMatching
@@ -113,7 +112,7 @@ class ApiFilter : ContainerRequestFilter {
     }
 
     private fun parseJwt(bkApiJwt: String, apigwtType: String?): JSONObject {
-        var reader: PEMReader? = null
+        var reader: PemReader? = null
         try {
             val key = if (!apigwtType.isNullOrEmpty() && apigwtType == "outer") {
                 SpringContextUtil.getBean(ApiGatewayPubFile::class.java).getPubOuter().toByteArray()
@@ -122,9 +121,8 @@ class ApiFilter : ContainerRequestFilter {
             }
             Security.addProvider(BouncyCastleProvider())
             val bais = ByteArrayInputStream(key)
-            reader = PEMReader(InputStreamReader(bais), PasswordFinder { "".toCharArray() })
-            val keyPair = reader.readObject() as JCERSAPublicKey
-            val jwtParser = Jwts.parser().setSigningKey(keyPair)
+            reader = PemReader(InputStreamReader(bais))
+            val jwtParser = Jwts.parser().setSigningKey(reader.readPemObject().content)
             val parse = jwtParser.parse(bkApiJwt)
             logger.info("Get the parse body(${parse.body}) and header(${parse.header})")
             return JSONObject.fromObject(parse.body)

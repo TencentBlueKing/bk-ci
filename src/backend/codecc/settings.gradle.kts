@@ -1,5 +1,30 @@
 rootProject.name = "codecc"
 
+pluginManagement {
+//    val devopsBootVersion: String by settings
+    plugins {
+        id("com.tencent.devops.boot") version "0.0.6-SNAPSHOT"
+    }
+    repositories {
+        mavenLocal()
+        if (System.getenv("GITHUB_WORKFLOW") == null) { // 普通环境
+            maven(url = "https://mirrors.tencent.com/nexus/repository/maven-public")
+            maven(url = "https://mirrors.tencent.com/nexus/repository/gradle-plugins/")
+        } else { // GitHub Action 环境
+            maven {
+                name = "MavenSnapshot"
+                url = java.net.URI("https://oss.sonatype.org/content/repositories/snapshots/")
+                mavenContent {
+                    snapshotsOnly()
+                }
+            }
+            mavenCentral()
+            gradlePluginPortal()
+        }
+    }
+}
+
+
 // CodeCC Core Micro Service
 include (":core")
 include (":core:common")

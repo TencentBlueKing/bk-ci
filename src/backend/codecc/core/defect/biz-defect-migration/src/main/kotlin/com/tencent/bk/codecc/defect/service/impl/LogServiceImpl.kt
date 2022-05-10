@@ -38,7 +38,7 @@ import com.tencent.devops.log.api.ServiceLogResource
 import okhttp3.Request
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
-import com.tencent.devops.common.util.BeanUtils
+import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
@@ -60,6 +60,7 @@ class LogServiceImpl @Autowired constructor(
      * 2. 加上tag可以查到具体的原子日志，但目前CodeCC中的TaskLogEntity中没有存流水线返回的tag.
      */
     override fun getAnalysisLog(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -67,7 +68,8 @@ class LogServiceImpl @Autowired constructor(
         tag: String?
     ): QueryLogRepVO? {
         val result = client.getDevopsService(ServiceLogResource::class.java)
-                .getInitLogs(projectId, pipelineId, buildId, false,  tag, null, 1)
+            .getInitLogs(userId, projectId, pipelineId, buildId, false, null,
+                tag, null, 1)
         if (result.isNotOk() || null == result.data) {
             logger.error(
                 "get log info fail! bs project id: {}, bs pipeline id: {}, build id: {}",
@@ -78,9 +80,7 @@ class LogServiceImpl @Autowired constructor(
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
         }
         val queryLogs = QueryLogRepVO()
-        if(result.data != null){
-            BeanUtils.copyProperties(result.data!!, queryLogs)
-        }
+        BeanUtils.copyProperties(result.data!!, queryLogs)
         return queryLogs
     }
 
@@ -88,6 +88,7 @@ class LogServiceImpl @Autowired constructor(
      * 获取分析记录的更多日志
      */
     override fun getMoreLogs(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -99,8 +100,8 @@ class LogServiceImpl @Autowired constructor(
         executeCount: Int?
     ): QueryLogRepVO {
         val result = client.getDevopsService(ServiceLogResource::class.java)
-            .getMoreLogs(
-                projectId, pipelineId, buildId, false, num ?: 100, fromStart
+            .getMoreLogs(userId,
+                projectId, pipelineId, buildId, false,null,num ?: 100, fromStart
                     ?: true, start, end, tag, null, executeCount ?: 1
             )
         if (result.isNotOk() || null == result.data) {
@@ -113,9 +114,7 @@ class LogServiceImpl @Autowired constructor(
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
         }
         val queryLogs = QueryLogRepVO()
-        if(result.data != null){
-            BeanUtils.copyProperties(result.data!!, queryLogs)
-        }
+        BeanUtils.copyProperties(result.data!!, queryLogs)
         queryLogs.status = QueryLogRepVO.LogStatus.SUCCEED.value
         return queryLogs
     }
@@ -124,6 +123,7 @@ class LogServiceImpl @Autowired constructor(
      * 下载分析记录日志
      */
     override fun downloadLogs(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -158,6 +158,7 @@ class LogServiceImpl @Autowired constructor(
      * 获取某行后的日志
      */
     override fun getAfterLogs(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -167,7 +168,8 @@ class LogServiceImpl @Autowired constructor(
         executeCount: Int?
     ): QueryLogRepVO {
         val result = client.getDevopsService(ServiceLogResource::class.java)
-            .getAfterLogs(projectId, pipelineId, buildId, start, false, tag, null, executeCount ?: 1)
+            .getAfterLogs(userId, projectId, pipelineId, buildId, start, false,null,
+                tag, null, executeCount ?: 1)
         if (result.isNotOk() || null == result.data) {
             logger.error(
                 "get more log info fail! bs project id: {}, bs pipeline id: {}, build id: {}",
@@ -178,9 +180,7 @@ class LogServiceImpl @Autowired constructor(
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
         }
         val queryLogs = QueryLogRepVO()
-        if(result.data != null){
-            BeanUtils.copyProperties(result.data!!, queryLogs)
-        }
+        BeanUtils.copyProperties(result.data!!, queryLogs)
         queryLogs.status = QueryLogRepVO.LogStatus.SUCCEED.value
         return queryLogs
     }
@@ -219,3 +219,4 @@ class LogServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(LogServiceImpl::class.java)
     }
 }
+
