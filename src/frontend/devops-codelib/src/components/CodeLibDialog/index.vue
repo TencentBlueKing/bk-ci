@@ -341,7 +341,7 @@
                 return this.placeholders.cred[this.codelibConfig.label]
             },
             portPlaceholder () {
-                return this.placeholders['port'][this.codelibConfig.label]
+                return this.placeholders.port[this.codelibConfig.label]
             }
         },
 

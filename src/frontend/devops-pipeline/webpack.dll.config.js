@@ -27,7 +27,6 @@ module.exports = (env = {}, argv) => {
             'axios',
             'vee-validate',
             'bk-magic-vue',
-            'bkui-pipeline',
             'vue-i18n',
             'moment'
         ],
