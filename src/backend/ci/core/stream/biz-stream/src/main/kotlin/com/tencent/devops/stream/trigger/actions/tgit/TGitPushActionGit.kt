@@ -31,7 +31,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
-import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
@@ -270,7 +269,7 @@ class TGitPushActionGit(
             eventBranch = data.eventCommon.branch,
             changeSet = changeSet,
             userId = data.getUserId(),
-            isCreateBranch = event().isCreateBranch()
+            checkCreateAndUpdate = event().create_and_update
         )
         val params = TGitActionCommon.getStartParams(
             action = this,
@@ -432,7 +431,20 @@ class TGitPushActionGit(
         return true
     }
 
+    private fun getSpecialChangeSet(gitEvent: GitPushEvent): Set<String> {
+        val changeSet = mutableSetOf<String>()
+        gitEvent.commits?.forEach {
+            changeSet.addAll(it.removed.orEmpty())
+            changeSet.addAll(it.modified.orEmpty())
+            changeSet.addAll(it.added.orEmpty())
+        }
+        return changeSet
+    }
+
     private fun getCommitChangeSet(gitEvent: GitPushEvent): Set<String> {
+        if (gitEvent.create_and_update != null) {
+            return getSpecialChangeSet(gitEvent)
+        }
         val changeSet = mutableSetOf<String>()
 
         // git push -f 使用反向进行三点比较可以比较出rebase的真实提交
