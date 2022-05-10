@@ -108,18 +108,6 @@ class UserDockerDebugResourceImpl @Autowired constructor(
             vmSeqId = vmSeqId,
             containerName = containerName ?: ""
         ))
-        val pipelineDockerDebug = pipelineDockerDebugDao.getDebug(dslContext, pipelineId, vmSeqId)
-        if (pipelineDockerDebug != null) {
-            return dockerHostDebugService.deleteDebug(pipelineId, vmSeqId)
-        } else {
-            return Result(extDebugService.stopDebug(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                vmSeqId = vmSeqId,
-                containerName ?: ""
-            ))
-        }
     }
 
     companion object {
