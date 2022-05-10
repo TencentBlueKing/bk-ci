@@ -8,7 +8,7 @@ metadata:
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: init-iam
   annotations:
-    "helm.sh/hook": post-install
+    "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "-4"
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
@@ -50,24 +50,23 @@ spec:
               # 修改auth链接
               sed -i 's/ci-auth.service.consul:21936/{{- .Values.config.bkCiHost -}}\/auth/g' *.json
               # 导入模型
-              python3 bkiam_do_migrate.py -t {{ .Values.config.bkIamPrivateUrl }} -a "{{ .Values.config.bkCiAppCode }}" -s "{{ .Values.config.bkCiAppToken }}" -f  0003_bk_ci_20200623-2120_iam.json
-              python3 bkiam_do_migrate.py -t {{ .Values.config.bkIamPrivateUrl }} -a "{{ .Values.config.bkCiAppCode }}" -s "{{ .Values.config.bkCiAppToken }}" -f  0004_bk_ci_20200623-2120_iam.json
-              python3 bkiam_do_migrate.py -t {{ .Values.config.bkIamPrivateUrl }} -a "{{ .Values.config.bkCiAppCode }}" -s "{{ .Values.config.bkCiAppToken }}" -f  0005_bk_ci_20200623-2120_iam.json
-              python3 bkiam_do_migrate.py -t {{ .Values.config.bkIamPrivateUrl }} -a "{{ .Values.config.bkCiAppCode }}" -s "{{ .Values.config.bkCiAppToken }}" -f  0006_bk_ci_20200623-2120_iam.json
-              python3 bkiam_do_migrate.py -t {{ .Values.config.bkIamPrivateUrl }} -a "{{ .Values.config.bkCiAppCode }}" -s "{{ .Values.config.bkCiAppToken }}" -f  0007_bk_ci_20200804-1047_iam.json
+              for i in $(find . -name '*.json'|sort)
+              do
+               python3 bkiam_do_migrate.py -t {{ .Values.config.bkIamPrivateUrl }} -a "{{ .Values.config.bkCiAppCode }}" -s "{{ .Values.config.bkCiAppToken }}" -f  $i
+              done
               # 导入数据库
               cat << EOF > iam.sql
-              INSERT INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,SYSTEM) VALUES ("{{- .Values.config.bkCiPublicUrl -}}", "/ms/process/api/open/pipeline/callback/", "pipeline", "ci");
-              INSERT INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,SYSTEM) VALUES ("{{- .Values.config.bkCiPublicUrl -}}", "/ms/repository/api/open/repository/callback/", "repertory", "ci");
-              INSERT INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,SYSTEM) VALUES ("{{- .Values.config.bkCiPublicUrl -}}", "/ms/ticket/api/open/ticket/callback/credential/", "credential", "ci");
-              INSERT INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,SYSTEM) VALUES ("{{- .Values.config.bkCiPublicUrl -}}", "/ms/ticket/api/open/ticket/callback/cert/", "cert", "ci");
-              INSERT INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,SYSTEM) VALUES ("{{- .Values.config.bkCiPublicUrl -}}", "/ms/environment/api/open/environment/callback/env/", "environment", "ci");
-              INSERT INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,SYSTEM) VALUES ("{{- .Values.config.bkCiPublicUrl -}}", "/ms/environment/api/open/environment/callback/node/", "env_node", "ci");
-              INSERT INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,SYSTEM) VALUES ("{{- .Values.config.bkCiPublicUrl -}}", "/ms/quality/api/open/quality/callback/rule", "rule", "ci");
-              INSERT INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,SYSTEM) VALUES ("{{- .Values.config.bkCiPublicUrl -}}", "/ms/quality/api/open/quality/callback/group", "quality_group", "ci");
-              INSERT INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,SYSTEM) VALUES ("{{- .Values.config.bkCiPublicUrl -}}", "/ms/experience/api/open/experience/callback/task", "experience_task", "ci");
-              INSERT INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,SYSTEM) VALUES ("{{- .Values.config.bkCiPublicUrl -}}", "/ms/experience/api/open/experience/callback/group", "experience_group", "ci");
-              INSERT INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,SYSTEM) VALUES ("{{- .Values.config.bkCiPublicUrl -}}", "/ms/project/api/open/project/callback/", "project", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (1,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/process/api/open/pipeline/callback/", "pipeline", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (2,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/repository/api/open/repository/callback/", "repertory", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (3,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/ticket/api/open/ticket/callback/credential/", "credential", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (4,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/ticket/api/open/ticket/callback/cert/", "cert", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (5,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/environment/api/open/environment/callback/env/", "environment", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (6,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/environment/api/open/environment/callback/node/", "env_node", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (7,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/quality/api/open/quality/callback/rule", "rule", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (8,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/quality/api/open/quality/callback/group", "quality_group", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (9,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/experience/api/open/experience/callback/task", "experience_task", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (10,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/experience/api/open/experience/callback/group", "experience_group", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (11,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/project/api/open/project/callback/", "project", "ci");
               EOF
               mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} devops_ci_auth < iam.sql;
       restartPolicy: OnFailure
