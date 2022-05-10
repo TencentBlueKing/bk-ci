@@ -40,7 +40,7 @@ default_value_dict = {
     'bkCiNotifyWeworkSendChannel': 'weworkAgent',
     'bkCiInfluxdbDb': 'agentMetrix',
     'bkCiEnvironmentAgentCollectorOn': 'true',
-    'bkCiDocsUrl': 'https://docs.bkci.net/',
+    'bkCiDocsUrl': 'https://bk.tencent.com/docs/markdown/持续集成平台/产品白皮书',
     'bkCiArtifactoryRealm': 'local',
     'bkRepoHost': 'repo.demo.com',
     'bkRepoGatewayIp': '127.0.0.1'

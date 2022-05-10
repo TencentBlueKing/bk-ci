@@ -7,8 +7,8 @@ metadata:
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: init-bkrepo
   annotations:
-    "helm.sh/hook": post-install
-    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-3"
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
   template:
@@ -46,7 +46,7 @@ spec:
                                   echo "$ret. Repo project $i $j generic exist , ${ret}st check success"
                               else
                                   echo "$ret. Repo project $i $j generic not exist , 1st create it now ......"
-                                  curl -X POST "$REPO_CREATE_GENERIC_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "Content-Type: application/json" -d '{"projectId": "'$i'", "name": "'$j'", "type":"GENERIC", "category":"LOCAL", "public":false, "configuration": {"type":"local"}, "description":"storage for devops ci '$j'"}'
+                                  curl -X POST "$REPO_CREATE_GENERIC_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "Content-Type: application/json" -d '{"projectId": "'$i'", "name": "'$j'", "type":"GENERIC", "category":"LOCAL", "public":true, "configuration": {"type":"local"}, "description":"storage for devops ci '$j'"}'
                                   if [[ ! -z $(curl -s -XGET "$REPO_QUERY_GENERIC_PATH"/$i/$j/generic -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }}|grep projectId) ]] ; then
                                       echo "$ret. Repo project $i $j generic ${ret}st create success"
                                   else
@@ -66,7 +66,7 @@ spec:
                               for j in plugin static
                               do  
                                   ((ret++))
-                                  curl -X POST "$REPO_CREATE_GENERIC_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "Content-Type: application/json" -d '{"projectId": "'$i'", "name": "'$j'", "type":"GENERIC", "category":"LOCAL", "public":false, "configuration": {"type":"local"}, "description":"storage for devops ci '$j'"}'
+                                  curl -X POST "$REPO_CREATE_GENERIC_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "Content-Type: application/json" -d '{"projectId": "'$i'", "name": "'$j'", "type":"GENERIC", "category":"LOCAL", "public":true, "configuration": {"type":"local"}, "description":"storage for devops ci '$j'"}'
                                   if [[ ! -z $(curl -s -XGET "$REPO_QUERY_GENERIC_PATH"/$i/$j/generic -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }}|grep projectId) ]] ; then
                                       echo "$ret. Repo project $i $j generic ${ret}nd create success"
                                   else
@@ -88,5 +88,5 @@ spec:
                   curl -s -X PUT $REPO_INIT_GENERIC_METADATA_PATH/bk-store/static/file/$k -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H \"X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}\" -H \"X-BKREPO-OVERWRITE: true\" --upload-file ${k}
                   echo -e ""
               done
-      restartPolicy: OnFailure
+      restartPolicy: Never
 {{- end -}}
