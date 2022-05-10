@@ -7,7 +7,6 @@ import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitTagPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
-import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.stream.pojo.GitRequestEvent
 
@@ -45,7 +44,7 @@ object StreamTriggerMessageUtils {
                     } catch (e: Exception) {
                         null
                     }
-                    if (eventMap?.isCreateBranch() == true) {
+                    if (eventMap?.create_and_update != null) {
                         "Branch [${event.branch}] added by ${event.userId}"
                     } else {
                         "Commit [${event.commitId.subSequence(0, 8)}] pushed by ${event.userId}"
