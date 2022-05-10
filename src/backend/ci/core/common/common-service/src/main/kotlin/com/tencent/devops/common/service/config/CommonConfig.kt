@@ -119,4 +119,10 @@ class CommonConfig {
      */
     @Value("\${sharding.routing.cacheSize:50000}")
     val shardingRoutingCacheSize: Long = 50000
+
+    /**
+     * 后台语言系统
+     */
+    @Value("\${bkLocale:#{null}}")
+    val bkLocale: String? = "EN"
 }

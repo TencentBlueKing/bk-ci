@@ -60,6 +60,7 @@ class PipelineBuildExtTencentService @Autowired constructor(
 
         extMap.putAll(pipelineContextService.buildContext(
             projectId = task.projectId,
+            pipelineId = task.pipelineId,
             buildId = task.buildId,
             stageId = task.stageId,
             containerId = task.containerId,

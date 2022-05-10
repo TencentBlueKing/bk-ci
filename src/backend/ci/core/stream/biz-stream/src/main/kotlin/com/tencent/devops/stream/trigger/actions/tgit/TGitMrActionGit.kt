@@ -431,6 +431,17 @@ class TGitMrActionGit(
     }
 
     override fun needSaveOrUpdateBranch() = !event().isMrForkEvent()
+
+    override fun sendUnlockWebhook() {
+        if (event().manual_unlock == true) {
+            gitCheckService.sendUnlockWebhook(
+                gitProjectId = data.getGitProjectId(),
+                mrId = event().object_attributes.id,
+                // 解锁延迟5s，确保在commit check发送后再发送webhook锁解锁
+                delayMills = 5000
+            )
+        }
+    }
 }
 
 private fun GitMergeRequestEvent.getActionValue(): String? {
