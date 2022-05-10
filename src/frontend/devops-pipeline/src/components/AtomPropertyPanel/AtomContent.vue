@@ -346,8 +346,8 @@
                             return [
                                 ...this.atomVersionList,
                                 {
-                                    versionValue: this.elmemnt.version,
-                                    versionName: this.elmemnt.version.replace('.*', '.latest')
+                                    versionValue: this.element.version,
+                                    versionName: this.element.version.replace('.*', '.latest')
                                 }
                             ]
                         }
