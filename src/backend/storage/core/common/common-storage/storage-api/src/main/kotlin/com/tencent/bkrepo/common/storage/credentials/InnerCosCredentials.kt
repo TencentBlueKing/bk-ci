@@ -45,6 +45,7 @@ data class InnerCosCredentials(
     var modId: Int? = null,
     var cmdId: Int? = null,
     var timeout: Float = 0.5F,
+    var public: Boolean = false,
     override var key: String? = null,
     override var cache: CacheProperties = CacheProperties(),
     override var upload: UploadProperties = UploadProperties()

@@ -32,9 +32,11 @@
 package com.tencent.bkrepo.common.storage.util
 
 import java.io.File
+import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 
 fun String.toPath(): Path = Paths.get(this)
 
@@ -50,4 +52,35 @@ fun Path.createFile(): File {
         }
     }
     return this.toFile()
+}
+
+fun Path.createNewOutputStream(): OutputStream {
+    if (!Files.isDirectory(this.parent)) {
+        Files.createDirectories(this.parent)
+    }
+    return Files.newOutputStream(
+        this,
+        StandardOpenOption.CREATE_NEW
+    )
+}
+
+/**
+ * 删除路径，如果路径为文件或者空目录则删除
+ * @return true表示已经执行了删除，false表示未执行删除
+ * */
+fun Path.delete(): Boolean {
+    // 文件
+    if (this.toFile().isFile) {
+        Files.deleteIfExists(this)
+        return true
+    }
+    // 删除空目录
+    Files.newDirectoryStream(this).use {
+        if (!it.iterator().hasNext()) {
+            Files.deleteIfExists(this)
+            return true
+        }
+    }
+    // 目录还存在内容
+    return false
 }
