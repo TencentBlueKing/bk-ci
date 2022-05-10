@@ -2,6 +2,7 @@ object Versions {
     const val HashIds = "1.0.3"
     const val Jaxrs = "2.0"
     const val CommonExec = "1.3"
+    const val CommonIo = "2.7"
     const val CommonText = "1.9"
     const val Vmware = "5.1"
     const val BouncyCastle = "1.70"
@@ -32,7 +33,7 @@ object Versions {
     const val AsyncHttpClient = "2.1.0"
     const val KtlintHtmlReport = "0.1.2"
     const val Ktlint = "0.29.0"
-    const val Elasticsearch = "7.4.0"
+    const val Elasticsearch = "7.17.3"
     const val Lucene = "8.2.0"
     const val Feign = "11.6" // TODO 修复这个BUG:https://github.com/OpenFeign/feign/pull/1347 , 后续SpringCloud升级后可以去掉
     const val PinyinPlus = "1.0"
