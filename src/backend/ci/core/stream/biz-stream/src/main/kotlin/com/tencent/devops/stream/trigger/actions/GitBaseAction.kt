@@ -42,4 +42,6 @@ interface GitBaseAction : BaseAction {
      * 通过common webhook 获取启动参数
      */
     fun getWebHookStartParam(triggerOn: TriggerOn): Map<String, String>
+
+    override fun needAddWebhookParams() = true
 }

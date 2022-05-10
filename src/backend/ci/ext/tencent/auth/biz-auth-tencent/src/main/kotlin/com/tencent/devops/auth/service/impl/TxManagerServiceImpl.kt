@@ -25,14 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api("com.google.code.gson:gson")
-    api(project(":core:worker:worker-common"))
-    api(project(":core:artifactory:api-artifactory-store"))
-    api("com.tencent.bk.repo:api-generic")
-    api("com.tencent.bk.repo:api-repository")
-}
+package com.tencent.devops.auth.service.impl
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.auth.service.LocalManagerService
+import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class TxManagerServiceImpl @Autowired constructor(
+    val managerService: ManagerService
+) : LocalManagerService {
+    override fun projectManagerCheck(
+        userId: String,
+        projectCode: String,
+        action: String,
+        resourceType: String
+    ): Boolean {
+        return managerService.isManagerPermission(
+            userId = userId,
+            projectId = projectCode,
+            resourceType = AuthResourceType.get(resourceType),
+            authPermission = AuthPermission.get(action)
+        )
+    }
 }
