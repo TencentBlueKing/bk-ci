@@ -38,6 +38,7 @@
             </span>
             <span v-if="!stage.isError" class="stage-entry-btns">
                 <Logo
+                    class="copy-stage"
                     v-if="showCopyStage"
                     name="clipboard"
                     size="14"
@@ -581,6 +582,11 @@
                 justify-content: flex-end;
                 color: white;
                 fill: white;
+                z-index: 2;
+
+                .copy-stage:hover {
+                  color: $primaryColor;
+                }
                 
                 .close {
                     @include add-plus-icon(#2E2E3A, #2E2E3A, white, 16px, true);
@@ -597,11 +603,15 @@
             }
         }
 
-        &:not(.editable) {
+        &.editable {
+            &:not(.readonly) {
+              .pipeline-stage-entry:hover {
+                  color: black;
+                  border-color: #1A6DF3;
+                  background-color: #D1E2FD;
+              }
+            }
             .pipeline-stage-entry:hover {
-                color: black;
-                border-color: #1A6DF3;
-                background-color: #D1E2FD;
                 .stage-entry-btns {
                     display: flex;
                 }
