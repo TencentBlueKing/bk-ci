@@ -34,6 +34,7 @@ package com.tencent.bkrepo.common.artifact.metrics
 import com.tencent.bkrepo.common.artifact.util.okhttp.HttpClientBuilderFactory
 import com.tencent.bkrepo.common.service.actuator.CommonTagProvider
 import org.influxdb.InfluxDB
+import org.influxdb.InfluxDBException
 import org.influxdb.dto.BatchPoints
 import org.influxdb.dto.Point
 import org.influxdb.dto.Query
@@ -58,7 +59,11 @@ class InfluxMetricsExporter(
             influxDB = InfluxDBImpl(uri, userName.orEmpty(), password.orEmpty(), builder)
             influxDB.setDatabase(db)
             influxDB.setRetentionPolicy(retentionPolicy)
-            createDatabaseIfNecessary()
+            try {
+                createDatabaseIfNecessary()
+            } catch (e: InfluxDBException) {
+                logger.error("create influx databases error: $e")
+            }
         }
         commonTags = commonTagProvider.ifAvailable?.provide().orEmpty()
     }

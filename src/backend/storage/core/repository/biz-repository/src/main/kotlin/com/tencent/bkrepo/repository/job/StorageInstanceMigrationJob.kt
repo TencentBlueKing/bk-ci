@@ -32,11 +32,13 @@
 package com.tencent.bkrepo.repository.job
 
 import com.tencent.bkrepo.common.api.exception.ErrorCodeException
+import com.tencent.bkrepo.common.api.kotlin.adapter.util.CompletableFutureKotlin
 import com.tencent.bkrepo.common.api.message.CommonMessageCode
 import com.tencent.bkrepo.common.artifact.message.ArtifactMessageCode
 import com.tencent.bkrepo.common.service.log.LoggerHolder
 import com.tencent.bkrepo.common.storage.core.StorageProperties
 import com.tencent.bkrepo.common.storage.credentials.InnerCosCredentials
+import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
 import com.tencent.bkrepo.common.storage.innercos.client.CosClient
 import com.tencent.bkrepo.common.storage.innercos.request.CheckObjectExistRequest
 import com.tencent.bkrepo.common.storage.innercos.request.CopyObjectRequest
@@ -56,6 +58,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.stereotype.Component
 import java.time.Duration
 import java.time.LocalDateTime
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * 存储实例迁移任务
@@ -68,21 +72,29 @@ class StorageInstanceMigrationJob(
     private val repositoryService: RepositoryService,
     private val fileReferenceService: FileReferenceService,
     private val storageCredentialService: StorageCredentialService,
-    private val storageProperties: StorageProperties,
-    private val taskAsyncExecutor: ThreadPoolTaskExecutor
+    private val taskAsyncExecutor: ThreadPoolTaskExecutor,
+    private val storageProperties: StorageProperties
 ) {
 
-    fun migrate(projectId: String, repoName: String, dstStorageKey: String) {
+    fun migrate(
+        projectId: String,
+        repoName: String,
+        dstStorageKey: String,
+        failedPointId: String? = null,
+        skipPage: Int? = null,
+        preStartTime: LocalDateTime? = null
+    ) {
         logger.info("Start to migrate storage, projectId: $projectId, repoName: $repoName, dst key: $dstStorageKey.")
-        val context = checkAndBuildContext(projectId, repoName, dstStorageKey)
+        val context = checkAndBuildContext(projectId, repoName, dstStorageKey, failedPointId, skipPage, preStartTime)
         taskAsyncExecutor.submit {
             try {
                 // 修改repository配置，保证之后上传的文件直接保存到新存储实例中，文件下载时，当前实例找不到的情况下会去默认存储找
-                repositoryService.updateStorageCredentialsKey(projectId, repoName, dstStorageKey)
+                failedPointId ?: repositoryService.updateStorageCredentialsKey(projectId, repoName, dstStorageKey)
                 // 迁移老文件
-                migrateOldFile(context)
-                // 校验新文件
-                correctNewFile(context)
+                if (migrateOldFile(context)) {
+                    // 校验新文件
+                    correctNewFile(context)
+                }
             } catch (exception: Exception) {
                 logger.error("Migrate storage instance failed.", exception)
             }
@@ -94,25 +106,36 @@ class StorageInstanceMigrationJob(
             // 查询新上传文件
             val correctStartTime = LocalDateTime.now()
             val query = buildNewNodeQuery(context)
-            val newFileNodeList = nodeDao.find(query)
-            logger.info("[${newFileNodeList.size}] new created file nodes to be checked.")
-            newFileNodeList.forEach { node ->
-                val sha256 = node.sha256.orEmpty()
-                try {
-                    correctNode(context, node)
-                } catch (exception: Exception) {
-                    logger.error("Failed to check file[$sha256].", exception)
-                    correctFailedCount += 1
-                } finally {
-                    correctTotalCount += 1
-                }
+            val total = nodeDao.count(query)
+            logger.info("[$total] new created file nodes to be checked.")
+            var page = 0
+            var newFileNodeList = nodeDao.find(query.with(PageRequest.of(page, PAGE_SIZE)))
+            while (newFileNodeList.isNotEmpty()) {
+                logger.info(
+                    "Retrieved ${newFileNodeList.size} records to migrate, " +
+                            "progress: $correctTotalCount/$total."
+                )
+                val futures = newFileNodeList.map { node ->
+                    CompletableFuture.runAsync {
+                        val sha256 = node.sha256.orEmpty()
+                        try {
+                            correctNode(context, node)
+                        } catch (exception: Exception) {
+                            logger.error("Failed to check file[$sha256].", exception)
+                            correctFailedCount.incrementAndGet()
+                        } finally {
+                            correctTotalCount.incrementAndGet()
+                        }
+                    }
+                }.toTypedArray()
+                CompletableFutureKotlin.allOf(futures).join()
+                newFileNodeList = nodeDao.find(query.with(PageRequest.of(++page, PAGE_SIZE)))
             }
-
             val durationSeconds = Duration.between(correctStartTime, LocalDateTime.now()).seconds
             logger.info(
                 "Complete check new created files, projectId: $projectId, repoName: $repoName, key: $dstStorageKey, " +
-                    "total: $correctTotalCount, correct: $correctSuccessCount, migrate: $correctMigrateCount, " +
-                    "missing data: $dataMissingCount, failed: $correctFailedCount, duration $durationSeconds s."
+                        "total: $correctTotalCount, correct: $correctSuccessCount, migrate: $correctMigrateCount, " +
+                        "missing data: $dataMissingCount, failed: $correctFailedCount, duration $durationSeconds s."
             )
         }
     }
@@ -129,7 +152,7 @@ class StorageInstanceMigrationJob(
             } else {
                 // dst data和reference都不存在，migrate
                 migrate(this, sha256)
-                correctMigrateCount += 1
+                correctMigrateCount.incrementAndGet()
                 logger.info("Success to migrate file[$sha256].")
             }
         }
@@ -143,11 +166,11 @@ class StorageInstanceMigrationJob(
                 retry(RETRY_COUNT) {
                     dstCosClient.copyObject(CopyObjectRequest(srcBucket, sha256, sha256))
                 }
-                correctSuccessCount += 1
+                correctSuccessCount.incrementAndGet()
                 logger.info("Success to correct file[$sha256].")
             } else {
                 // dst和src都不存在，可能还在CFS上或者数据丢失，error
-                dataMissingCount += 1
+                dataMissingCount.incrementAndGet()
                 throw IllegalStateException("File data [$sha256] not found in src and dst")
             }
         }
@@ -156,27 +179,63 @@ class StorageInstanceMigrationJob(
     /**
      * 迁移老文件
      */
-    private fun migrateOldFile(context: MigrationContext) {
+    private fun migrateOldFile(context: MigrationContext): Boolean {
         with(context) {
             // 分页查询文件节点，只查询当前时间以前创建的文件节点，之后创建的是在新实例上
             val query = buildOldNodeQuery(this)
             val total = nodeDao.count(query)
             logger.info("$total records to be migrated totally.")
-            var page = 0
+            var page = skipPage ?: 0
             var nodeList = nodeDao.find(query.with(PageRequest.of(page, PAGE_SIZE)))
+            failedPointId?.let {
+                val (nodes, node) = findContinueSubNodeList(failedPointId, nodeList)
+                node ?: let {
+                    logger.info("not found continue point,stop migrate repository")
+                    return false
+                }
+                nodeList = if (nodes.isEmpty())
+                    nodeDao.find(query.with(PageRequest.of(page++, PAGE_SIZE))) else nodes
+
+                val initTotal = ((skipPage ?: 0) * PAGE_SIZE).toLong().plus(PAGE_SIZE - nodes.size)
+                totalCount = AtomicLong(initTotal)
+                logger.info(
+                    "start continue migrate repository [$repoName]," +
+                            "previous node id $failedPointId,sha256 ${node.sha256}"
+                )
+            }
             while (nodeList.isNotEmpty()) {
                 logger.info("Retrieved ${nodeList.size} records to migrate, progress: $totalCount/$total.")
-                nodeList.forEach { node -> migrateNode(this, node) }
+                val futures = nodeList.map { node ->
+                    CompletableFuture.runAsync {
+                        migrateNode(this, node)
+                    }
+                }.toTypedArray()
+                CompletableFutureKotlin.allOf(futures).join()
                 page += 1
                 nodeList = nodeDao.find(query.with(PageRequest.of(page, PAGE_SIZE)))
             }
-            assert(total == totalCount) { "$totalCount has been migrated, while $total needs to be migrate." }
             val durationSeconds = Duration.between(startTime, LocalDateTime.now()).seconds
             logger.info(
                 "Complete migrate old files, project: $projectId, repo: $repoName, key: $dstStorageKey, " +
-                    "total: $totalCount, success: $successCount, failed: $failedCount, duration $durationSeconds s."
+                        "total: $totalCount, success: $successCount, failed: $failedCount, duration $durationSeconds s."
             )
+            return true
         }
+    }
+
+    private fun findContinueSubNodeList(failedPoint: String?, nodes: List<TNode>): Pair<List<TNode>, TNode?> {
+        var node: TNode? = null
+        nodes.forEachIndexed { index, tNode ->
+            if (tNode.id == failedPoint) {
+                node = tNode
+                if (index == nodes.lastIndex) {
+                    return Pair(emptyList(), node)
+                }
+                return Pair(nodes.subList(index + 1, nodes.size), node)
+            }
+
+        }
+        return Pair(emptyList(), node)
     }
 
     /**
@@ -188,12 +247,12 @@ class StorageInstanceMigrationJob(
             try {
                 migrate(this, sha256)
                 logger.info("Success to migrate file[$sha256].")
-                successCount += 1
+                successCount.incrementAndGet()
             } catch (exception: Exception) {
                 logger.error("Failed to migrate file[$sha256].", exception)
-                failedCount += 1
+                failedCount.incrementAndGet()
             } finally {
-                totalCount += 1
+                totalCount.incrementAndGet()
             }
         }
     }
@@ -227,7 +286,7 @@ class StorageInstanceMigrationJob(
                     .and(TNode::repoName).isEqualTo(repoName)
                     .and(TNode::folder).isEqualTo(false)
                     .and(TNode::createdDate).lte(startTime)
-            ).with(Sort.by(Sort.Direction.DESC, TNode::createdDate.name))
+            ).with(Sort.by(Sort.Direction.DESC, TNode::id.name))
         }
     }
 
@@ -238,21 +297,45 @@ class StorageInstanceMigrationJob(
                     .and(TNode::repoName).isEqualTo(repoName)
                     .and(TNode::folder).isEqualTo(false)
                     .and(TNode::createdDate).gt(startTime)
-            ).with(Sort.by(Sort.Direction.DESC, TNode::createdDate.name))
+            ).with(Sort.by(Sort.Direction.DESC, TNode::id.name))
         }
     }
 
-    private fun checkAndBuildContext(projectId: String, repoName: String, dstStorageKey: String): MigrationContext {
+    private fun checkAndBuildContext(
+        projectId: String, repoName: String, dstStorageKey: String, failedPointId: String? = null,
+        skipPage: Int? = null, preStartTime: LocalDateTime? = null
+    ): MigrationContext {
         val repository = repositoryService.getRepoDetail(projectId, repoName)
             ?: throw ErrorCodeException(ArtifactMessageCode.REPOSITORY_NOT_FOUND, repoName)
-        // 限制只能由默认storage迁移
-        val srcStorageKey = repository.storageCredentials?.key
-        if (srcStorageKey != null) {
-            throw ErrorCodeException(CommonMessageCode.METHOD_NOT_ALLOWED, "Only support migrate from default storage")
+
+        val srcStorageKey: String?
+        val srcStorageCredentials: StorageCredentials
+        val dstStorageCredentials: StorageCredentials
+        if (failedPointId != null) {
+            srcStorageKey = repository.oldCredentialsKey
+            srcStorageCredentials = if (srcStorageKey == null) storageProperties.defaultStorageCredentials()
+                else storageCredentialService.findByKey(srcStorageKey) ?: throw ErrorCodeException(
+                    CommonMessageCode.RESOURCE_NOT_FOUND,
+                    srcStorageKey
+                )
+
+            dstStorageCredentials = repository.storageCredentials ?: throw ErrorCodeException(
+                CommonMessageCode.RESOURCE_NOT_FOUND,
+                dstStorageKey
+            )
+            logger.info("continue migrate src key $srcStorageKey ,dst key $dstStorageKey")
+        } else {
+            srcStorageKey = repository.storageCredentials?.key
+            srcStorageCredentials = repository.storageCredentials ?: storageProperties.defaultStorageCredentials()
+            dstStorageCredentials = storageCredentialService.findByKey(dstStorageKey)
+                ?: throw ErrorCodeException(CommonMessageCode.RESOURCE_NOT_FOUND, dstStorageKey)
         }
-        val srcStorageCredentials = storageProperties.defaultStorageCredentials()
-        val dstStorageCredentials = storageCredentialService.findByKey(dstStorageKey)
-            ?: throw ErrorCodeException(CommonMessageCode.RESOURCE_NOT_FOUND, dstStorageKey)
+        if (srcStorageCredentials == dstStorageCredentials) {
+            throw ErrorCodeException(
+                CommonMessageCode.METHOD_NOT_ALLOWED,
+                "Src and Dst storageCredentials are same"
+            )
+        }
         // 限制存储实例类型必须相同且为InnerCos
         if (srcStorageCredentials !is InnerCosCredentials || dstStorageCredentials !is InnerCosCredentials) {
             throw ErrorCodeException(CommonMessageCode.METHOD_NOT_ALLOWED, "Only support inner cos storage")
@@ -261,7 +344,7 @@ class StorageInstanceMigrationJob(
         val srcBucket = srcStorageCredentials.bucket
         val srcCosClient = CosClient(srcStorageCredentials)
         val dstCosClient = CosClient(dstStorageCredentials)
-        val startTime = LocalDateTime.now()
+        val startTime = preStartTime ?: LocalDateTime.now()
         return MigrationContext(
             projectId = projectId,
             repoName = repoName,
@@ -270,7 +353,9 @@ class StorageInstanceMigrationJob(
             srcBucket = srcBucket,
             srcCosClient = srcCosClient,
             dstCosClient = dstCosClient,
-            startTime = startTime
+            startTime = startTime,
+            skipPage = skipPage,
+            failedPointId = failedPointId
         )
     }
 
@@ -289,13 +374,15 @@ class StorageInstanceMigrationJob(
         val srcCosClient: CosClient,
         val dstCosClient: CosClient,
         val startTime: LocalDateTime,
-        var successCount: Long = 0L,
-        var failedCount: Long = 0L,
-        var totalCount: Long = 0L,
-        var correctSuccessCount: Long = 0L,
-        var correctMigrateCount: Long = 0L,
-        var dataMissingCount: Long = 0L,
-        var correctFailedCount: Long = 0L,
-        var correctTotalCount: Long = 0L
+        var successCount: AtomicLong = AtomicLong(),
+        var failedCount: AtomicLong = AtomicLong(),
+        var totalCount: AtomicLong = AtomicLong(),
+        var correctSuccessCount: AtomicLong = AtomicLong(),
+        var correctMigrateCount: AtomicLong = AtomicLong(),
+        var dataMissingCount: AtomicLong = AtomicLong(),
+        var correctFailedCount: AtomicLong = AtomicLong(),
+        var correctTotalCount: AtomicLong = AtomicLong(),
+        val failedPointId: String? = null,
+        val skipPage: Int? = null
     )
 }

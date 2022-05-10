@@ -66,8 +66,15 @@ data class DockerDigest(val digest: String?) {
     }
 
     companion object {
+
         fun fromSha256(sha256: String): DockerDigest {
             return DockerDigest("sha256:$sha256")
+        }
+
+        fun isValid(reference: String): Boolean {
+            val sepIndex = StringUtils.indexOf(reference, ":")
+            if (sepIndex >= 0) return true
+            return false
         }
     }
 }

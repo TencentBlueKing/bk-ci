@@ -1,0 +1,15 @@
+service.name: scanner-executor
+server.port: 25812
+
+spring:
+  task:
+    execution:
+      pool:
+        core-size: 16
+        max-size: 32
+        queue-capacity: 0
+        allow-core-thread-timeout: true
+      shutdown:
+        await-termination: true
+        await-termination-period: 300s
+      thread-name-prefix: scanner-executor-task-

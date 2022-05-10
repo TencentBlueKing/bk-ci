@@ -70,7 +70,7 @@ object NpmUtils {
      * 查看[tarball]里面是否使用 - 分隔符来进行分隔
      */
     fun isDashSeparateInTarball(name: String, version: String, tarball: String): Boolean {
-        val tgzPath = String.format("/%s-%s.tgz", name, version)
+        val tgzPath = "/%s-%s.tgz".format(name, version)
         val separate = tarball.substringBeforeLast(tgzPath).substringAfterLast('/')
         return separate == StringPool.DASH
     }
@@ -80,7 +80,7 @@ object NpmUtils {
      * http://xxx/helloworld/download/hellworld-1.0.0.tgz  -> http://xxx/helloworld/-/hellworld-1.0.0.tgz
      */
     fun formatTarballWithDash(name: String, version: String, tarball: String): String {
-        val tgzPath = String.format("/%s-%s.tgz", name, version)
+        val tgzPath = "/%s-%s.tgz".format(name, version)
         val separate = tarball.substringBeforeLast(tgzPath).substringAfterLast('/')
         return tarball.replace("$name/$separate/$name", "$name/-/$name")
     }
@@ -109,6 +109,7 @@ object NpmUtils {
      */
     fun buildPackageTgzTarball(
         oldTarball: String,
+        domain: String,
         tarballPrefix: String,
         name: String,
         artifactInfo: ArtifactInfo
@@ -122,8 +123,11 @@ object NpmUtils {
                 // .append(SLASH).append(artifactInfo.getRepoIdentify())
                 .append(SLASH).append(tgzSuffix.trimStart(SLASH))
         } ?: if (tarballPrefix.isEmpty()) {
-            // 这里有问题，远程仓库返回的是代理地址，应该返回本地的远程仓库地址
-            newTarball.append(oldTarball)
+            // 远程仓库返回的是代理地址
+            newTarball.append(UrlFormatter.formatUrl(domain).trimEnd(SLASH))
+                .append(artifactInfo.getRepoIdentify())
+                .append(SLASH)
+                .append(tgzSuffix)
         } else {
             val formatUrl = UrlFormatter.formatUrl(tarballPrefix)
             newTarball.append(formatUrl.trimEnd(SLASH))

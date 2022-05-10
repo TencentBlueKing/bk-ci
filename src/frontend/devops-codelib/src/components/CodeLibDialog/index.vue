@@ -336,8 +336,8 @@
             },
             urlPlaceholder () {
                 return (
-                    this.placeholders['url'][this.codelibConfig.label]
-                    || this.placeholders['url'][this.codelib.authType]
+                    this.placeholders.url[this.codelibConfig.label]
+                    || this.placeholders.url[this.codelib.authType]
                 )
             },
             credentialPlaceholder () {

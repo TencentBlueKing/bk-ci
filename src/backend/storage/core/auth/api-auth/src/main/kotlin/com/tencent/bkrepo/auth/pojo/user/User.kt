@@ -34,6 +34,7 @@ package com.tencent.bkrepo.auth.pojo.user
 import com.tencent.bkrepo.auth.pojo.token.Token
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
 @ApiModel("用户信息")
 data class User(
@@ -54,5 +55,11 @@ data class User(
     @ApiModelProperty("关联用户")
     val asstUsers: List<String> = emptyList(),
     @ApiModelProperty("群组账号")
-    val group: Boolean = false
+    val group: Boolean = false,
+    @ApiModelProperty("邮箱")
+    val email: String? = null,
+    @ApiModelProperty("创建时间")
+    val createdDate: LocalDateTime? = null,
+    @ApiModelProperty("最近跟新时间")
+    val lastModifiedDate: LocalDateTime? = null
 )
