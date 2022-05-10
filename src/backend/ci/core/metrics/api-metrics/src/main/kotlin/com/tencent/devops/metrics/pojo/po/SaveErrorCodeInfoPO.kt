@@ -25,16 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.pojo.measure
+package com.tencent.devops.metrics.pojo.po
 
-import com.tencent.devops.common.api.pojo.BuildEndPipelineMetricsData
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-@Event(exchange = MQ.EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT)
-data class BuildEndMetricsBroadCastEvent(
-    override val projectId: String,
-    override val pipelineId: String,
-    override val buildId: String,
-    val buildEndPipelineMetricsData: BuildEndPipelineMetricsData
-) : IMeasureEvent(projectId, pipelineId, buildId)
+@ApiModel("保存错误码信息")
+data class SaveErrorCodeInfoPO(
+    @ApiModelProperty("主键ID")
+    val id: Long,
+    @ApiModelProperty("错误类型")
+    val errorType: Int,
+    @ApiModelProperty("错误次数")
+    val errorCode: Int,
+    @ApiModelProperty("错误描述")
+    val errorMsg: String? = null,
+    @ApiModelProperty("创建人")
+    val creator: String,
+    @ApiModelProperty("修改人")
+    val modifier: String,
+    @ApiModelProperty("创建时间")
+    val createTime: LocalDateTime,
+    @ApiModelProperty("更新时间")
+    val updateTime: LocalDateTime
+)

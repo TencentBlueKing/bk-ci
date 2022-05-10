@@ -25,45 +25,49 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.pojo
+package com.tencent.devops.metrics.pojo.po
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.math.BigDecimal
+import java.time.LocalDateTime
 
-@ApiModel("构建结束后流水线指标数据")
-data class BuildEndPipelineMetricsData(
-    @ApiModelProperty("统计日期", required = true)
-    val statisticsDate: String,
-    @ApiModelProperty("项目ID", required = true)
+@ApiModel("保存插件概览数据")
+data class SaveAtomOverviewDataPO(
+    @ApiModelProperty("主键ID")
+    val id: Long,
+    @ApiModelProperty("项目ID")
     val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
+    @ApiModelProperty("流水线ID")
     val pipelineId: String,
-    @ApiModelProperty("流水线名称", required = true)
+    @ApiModelProperty("流水线名称")
     val pipelineName: String,
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("构建序号", required = true)
-    val buildNum: Int,
-    @ApiModelProperty("代码库地址", required = false)
-    val repoUrl: String? = null,
-    @ApiModelProperty("代码库分支", required = false)
-    val branch: String? = null,
-    @ApiModelProperty("启动用户", required = true)
-    val startUser: String,
-    @ApiModelProperty("执行开始时间", required = true)
-    val startTime: String? = null,
-    @ApiModelProperty("执行结束时间", required = true)
-    val endTime: String? = null,
-    @ApiModelProperty("流水线构建耗时", required = true)
-    val costTime: Long,
-    @ApiModelProperty("流水线构建状态", required = true)
-    val status: String,
-    @ApiModelProperty("错误类型", required = false)
-    val errorType: Int? = null,
-    @ApiModelProperty("错误码", required = false)
-    val errorCode: Int? = null,
-    @ApiModelProperty("错误描述", required = false)
-    val errorMsg: String? = null,
-    @ApiModelProperty("stage指标数据列表", required = true)
-    val stages: List<BuildEndStageMetricsData>
+    @ApiModelProperty("插件代码")
+    val atomCode: String,
+    @ApiModelProperty("插件名称")
+    val atomName: String,
+    @ApiModelProperty("插件分类代码")
+    val classifyCode: String,
+    @ApiModelProperty("插件分类名称")
+    val classifyName: String,
+    @ApiModelProperty("成功率")
+    val successRate: BigDecimal,
+    @ApiModelProperty("平均耗时，单位：毫秒")
+    val avgCostTime: Long,
+    @ApiModelProperty("总执行次数")
+    val totalExecuteCount: Long,
+    @ApiModelProperty("成功执行次数")
+    val successExecuteCount: Long,
+    @ApiModelProperty("失败执行次数")
+    val failExecuteCount: Long,
+    @ApiModelProperty("统计时间")
+    val statisticsTime: LocalDateTime,
+    @ApiModelProperty("创建人")
+    val creator: String,
+    @ApiModelProperty("修改人")
+    val modifier: String,
+    @ApiModelProperty("创建时间")
+    val createTime: LocalDateTime,
+    @ApiModelProperty("更新时间")
+    val updateTime: LocalDateTime
 )

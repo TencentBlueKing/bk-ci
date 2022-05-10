@@ -29,15 +29,16 @@ package com.tencent.devops.common.event.pojo.measure
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 
 @Event(MQ.EXCHANGE_MEASURE_REQUEST_EVENT, MQ.ROUTE_MEASURE_REQUEST_EVENT)
 data class MeasureRequest(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val buildId: String,
     val type: MeasureType,
     val request: String
-) {
+) : IMeasureEvent(projectId, pipelineId, buildId) {
 
     enum class MeasureType {
         PIPELINE,

@@ -34,11 +34,18 @@ import com.tencent.devops.common.api.constant.KEY_CHANNEL
 import com.tencent.devops.common.api.constant.KEY_END_TIME
 import com.tencent.devops.common.api.constant.KEY_START_TIME
 import com.tencent.devops.common.api.pojo.AtomMonitorData
+import com.tencent.devops.common.api.pojo.BuildEndContainerMetricsData
+import com.tencent.devops.common.api.pojo.BuildEndPipelineMetricsData
+import com.tencent.devops.common.api.pojo.BuildEndStageMetricsData
+import com.tencent.devops.common.api.pojo.BuildEndTaskMetricsData
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.OrganizationDetailInfo
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.AtomMonitorReportBroadCastEvent
+import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEvent
 import com.tencent.devops.common.event.pojo.measure.MeasureRequest
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
@@ -47,11 +54,12 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.measure.pojo.ElementMeasureData
 import com.tencent.devops.measure.pojo.PipelineBuildData
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
-import com.tencent.devops.process.service.measure.AtomMonitorEventDispatcher
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
@@ -60,6 +68,7 @@ import com.tencent.devops.store.pojo.common.KEY_VERSION
 import org.apache.lucene.util.RamUsageEstimator
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
+import java.util.Date
 
 @Suppress("ALL", "UNUSED")
 class MeasureServiceImpl constructor(
@@ -67,12 +76,12 @@ class MeasureServiceImpl constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val buildVariableService: BuildVariableService,
     private val templateService: TemplateService,
+    private val pipelineInfoService: PipelineInfoService,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val atomMonitorSwitch: String,
     private val maxMonitorDataSize: String = "1677216",
-    private val measureEventDispatcher: MeasureEventDispatcher,
-    private val atomMonitorEventDispatcher: AtomMonitorEventDispatcher
+    private val measureEventDispatcher: MeasureEventDispatcher
 ) : MeasureService {
 
     override fun postPipelineData(
@@ -277,10 +286,96 @@ class MeasureServiceImpl constructor(
                 ),
                 extData = extData
             )
-            atomMonitorEventDispatcher.dispatch(AtomMonitorReportBroadCastEvent(atomMonitorData))
+            measureEventDispatcher.dispatch(
+                AtomMonitorReportBroadCastEvent(
+                    pipelineId = pipelineId,
+                    projectId = projectId,
+                    buildId = buildId,
+                    monitorData = atomMonitorData,
+                )
+            )
         } catch (ignored: Throwable) { // MK = Monitor Key
             logger.warn("MK_postTaskData|${task.buildId}|message: ${ignored.message}")
         }
+    }
+
+    override fun postMetricsData(buildInfo: BuildInfo, model: Model) {
+        val projectId = buildInfo.projectId
+        val pipelineId = buildInfo.pipelineId
+        val buildId = buildInfo.buildId
+        val pipelineName = pipelineInfoService.getPipelineName(projectId, pipelineId)
+        val webhookInfo = buildInfo.webhookInfo
+        val stageMetricsDatas = mutableListOf<BuildEndStageMetricsData>()
+        model.stages.forEach { stage ->
+            val containerMetricsDatas = mutableListOf<BuildEndContainerMetricsData>()
+            stage.containers.forEach { container ->
+                val taskMetricsDatas = mutableListOf<BuildEndTaskMetricsData>()
+                container.elements.forEach { element ->
+                    taskMetricsDatas.add(
+                        BuildEndTaskMetricsData(
+                            taskId = element.id ?: "",
+                            taskName = element.name,
+                            atomCode = element.getAtomCode(),
+                            startTime = element.startEpoch?.let {
+                                DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS)
+                            },
+                            endTime = element.startEpoch?.let {
+                                DateTimeUtil.formatMilliTime(it + (element.elapsed ?: 0L), DateTimeUtil.YYYY_MM_DD_HH_MM_SS)
+                            },
+                            costTime = element.elapsed ?: 0L,
+                            status = element.status ?: "",
+                            errorType = element.errorType?.let { ErrorType.getErrorType(it)?.num },
+                            errorCode = element.errorCode,
+                            errorMsg = element.errorMsg
+                        )
+                    )
+                }
+                containerMetricsDatas.add(
+                    BuildEndContainerMetricsData(
+                        containerId = container.containerId ?: "",
+                        status = container.status ?: "",
+                        costTime = (container.systemElapsed ?: 0L) + (container.elementElapsed ?: 0L),
+                        tasks = taskMetricsDatas
+                    )
+                )
+            }
+            stageMetricsDatas.add(
+                BuildEndStageMetricsData(
+                    stageId = stage.id ?: "",
+                    stageTagNames = stage.tag,
+                    status = stage.status ?: "",
+                    costTime = stage.elapsed ?: 0L,
+                    containers = containerMetricsDatas
+                )
+            )
+        }
+        val buildEndPipelineMetricsData = BuildEndPipelineMetricsData(
+            statisticsDate = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD),
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineName = pipelineName ?: "",
+            buildId = buildId,
+            buildNum = buildInfo.buildNum,
+            repoUrl = webhookInfo?.webhookRepoUrl,
+            branch = webhookInfo?.webhookBranch,
+            startUser = buildInfo.startUser,
+            startTime = buildInfo.startTime?.let { DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS) },
+            endTime = buildInfo.endTime?.let { DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS) },
+            costTime = (buildInfo.endTime ?: 0L) - (buildInfo.startTime ?: 0L),
+            status = buildInfo.status.name,
+            errorType = buildInfo.errorType,
+            errorCode = buildInfo.errorCode,
+            errorMsg = buildInfo.errorMsg,
+            stages = stageMetricsDatas
+        )
+        measureEventDispatcher.dispatch(
+            BuildEndMetricsBroadCastEvent(
+                pipelineId = pipelineId,
+                projectId = projectId,
+                buildId = buildId,
+                buildEndPipelineMetricsData = buildEndPipelineMetricsData,
+            )
+        )
     }
 
     private fun getSpecReportAtoms(): List<String> = try {

@@ -29,15 +29,15 @@ package com.tencent.devops.process.service.measure
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
-import com.tencent.devops.common.event.pojo.measure.MeasureRequest
+import com.tencent.devops.common.event.pojo.measure.IMeasureEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 class MeasureEventDispatcher constructor(
     private val rabbitTemplate: RabbitTemplate
-) : EventDispatcher<MeasureRequest> {
+) : EventDispatcher<IMeasureEvent> {
 
-    override fun dispatch(vararg events: MeasureRequest) {
+    override fun dispatch(vararg events: IMeasureEvent) {
         events.forEach { event ->
             try {
                 val eventType = event::class.java.annotations.find { s -> s is Event } as Event

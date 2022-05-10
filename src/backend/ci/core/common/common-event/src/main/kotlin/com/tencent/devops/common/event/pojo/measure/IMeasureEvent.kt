@@ -27,14 +27,8 @@
 
 package com.tencent.devops.common.event.pojo.measure
 
-import com.tencent.devops.common.api.pojo.BuildEndPipelineMetricsData
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-
-@Event(exchange = MQ.EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT)
-data class BuildEndMetricsBroadCastEvent(
-    override val projectId: String,
-    override val pipelineId: String,
-    override val buildId: String,
-    val buildEndPipelineMetricsData: BuildEndPipelineMetricsData
-) : IMeasureEvent(projectId, pipelineId, buildId)
+open class IMeasureEvent(
+    open val projectId: String,
+    open val pipelineId: String,
+    open val buildId: String,
+)

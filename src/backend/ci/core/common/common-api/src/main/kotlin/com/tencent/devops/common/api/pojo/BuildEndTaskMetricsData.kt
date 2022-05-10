@@ -38,18 +38,18 @@ data class BuildEndTaskMetricsData(
     val taskName: String,
     @ApiModelProperty("插件标识", required = true)
     val atomCode: String,
-    @ApiModelProperty("启动用户", required = true)
-    val startUser: String,
-    @ApiModelProperty("执行开始时间", required = true)
-    val startTime: String,
-    @ApiModelProperty("执行结束时间", required = true)
-    val endTime: String,
+    @ApiModelProperty("执行开始时间", required = false)
+    val startTime: String?,
+    @ApiModelProperty("执行结束时间", required = false)
+    val endTime: String?,
+    @ApiModelProperty("task构建耗时", required = true)
+    val costTime: Long,
     @ApiModelProperty("流水线构建状态", required = true)
     val status: String,
     @ApiModelProperty("错误类型", required = false)
-    val errorType: String? = null,
+    val errorType: Int? = null,
     @ApiModelProperty("错误码", required = false)
-    val errorCode: String? = null,
+    val errorCode: Int? = null,
     @ApiModelProperty("错误描述", required = false)
     val errorMsg: String? = null
 )

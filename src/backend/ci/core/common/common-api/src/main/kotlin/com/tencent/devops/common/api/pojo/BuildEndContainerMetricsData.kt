@@ -36,7 +36,7 @@ data class BuildEndContainerMetricsData(
     val containerId: String,
     @ApiModelProperty("container构建状态", required = true)
     val status: String,
-    @ApiModelProperty("container耗时", required = true)
+    @ApiModelProperty("container构建耗时", required = true)
     val costTime: Long,
     @ApiModelProperty("task指标数据列表", required = true)
     val tasks: List<BuildEndTaskMetricsData>

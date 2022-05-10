@@ -62,6 +62,7 @@ import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.slf4j.LoggerFactory
@@ -81,7 +82,9 @@ class BuildEndControl @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineRedisService: PipelineRedisService
+    private val pipelineRedisService: PipelineRedisService,
+    @Autowired(required = false)
+    private val measureService: MeasureService?
 ) {
 
     companion object {
@@ -158,7 +161,7 @@ class BuildEndControl @Autowired constructor(
         }
 
         // 设置状态
-        val allStageStatus = pipelineBuildDetailService.buildEnd(
+        val (model, allStageStatus) = pipelineBuildDetailService.buildEnd(
             projectId = projectId,
             buildId = buildId,
             buildStatus = buildStatus
@@ -194,6 +197,8 @@ class BuildEndControl @Autowired constructor(
             )
         )
 
+        // 发送metrics统计数据消息
+        measureService?.postMetricsData(buildInfo, model)
         // 记录日志
         buildLogPrinter.stopLog(buildId = buildId, tag = "", jobId = null)
     }

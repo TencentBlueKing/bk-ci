@@ -25,16 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.pojo.measure
+package com.tencent.devops.metrics.listener
 
-import com.tencent.devops.common.api.pojo.BuildEndPipelineMetricsData
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEvent
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-@Event(exchange = MQ.EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT)
-data class BuildEndMetricsBroadCastEvent(
-    override val projectId: String,
-    override val pipelineId: String,
-    override val buildId: String,
-    val buildEndPipelineMetricsData: BuildEndPipelineMetricsData
-) : IMeasureEvent(projectId, pipelineId, buildId)
+@Component
+class BuildEndMetricsDataReportListener @Autowired constructor(
+) : Listener<BuildEndMetricsBroadCastEvent> {
+
+    override fun execute(event: BuildEndMetricsBroadCastEvent) {
+        try {
+            val buildEndPipelineMetricsData = event.buildEndPipelineMetricsData
+            logger.info("Receive buildEndPipelineMetricsData - $buildEndPipelineMetricsData")
+
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to insert the metrics data", ignored)
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.SYSTEM_ERROR,
+                defaultMessage = "Fail to insert the metrics data"
+            )
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildEndMetricsDataReportListener::class.java)
+    }
+}

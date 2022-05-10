@@ -25,16 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.pojo.measure
+package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.common.api.pojo.BuildEndPipelineMetricsData
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@Event(exchange = MQ.EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT)
-data class BuildEndMetricsBroadCastEvent(
-    override val projectId: String,
-    override val pipelineId: String,
-    override val buildId: String,
-    val buildEndPipelineMetricsData: BuildEndPipelineMetricsData
-) : IMeasureEvent(projectId, pipelineId, buildId)
+@Service
+class PipelineInfoService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val pipelineInfoDao: PipelineInfoDao
+) {
+
+    fun getPipelineName(projectId: String, pipelineId: String): String? {
+        return pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)?.pipelineName
+    }
+}

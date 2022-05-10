@@ -34,11 +34,11 @@ import io.swagger.annotations.ApiModelProperty
 data class BuildEndStageMetricsData(
     @ApiModelProperty("stageId", required = true)
     val stageId: String,
-    @ApiModelProperty("stage标签名称列表", required = true)
-    val stageTagNames: List<String>,
+    @ApiModelProperty("stage标签名称列表", required = false)
+    val stageTagNames: List<String>?,
     @ApiModelProperty("stage构建状态", required = true)
     val status: String,
-    @ApiModelProperty("stage耗时", required = true)
+    @ApiModelProperty("stage构建耗时", required = true)
     val costTime: Long,
     @ApiModelProperty("container指标数据列表", required = true)
     val containers: List<BuildEndContainerMetricsData>
