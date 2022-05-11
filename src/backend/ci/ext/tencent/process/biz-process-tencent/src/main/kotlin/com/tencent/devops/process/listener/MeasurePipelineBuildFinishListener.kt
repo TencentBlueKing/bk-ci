@@ -67,13 +67,13 @@ class MeasurePipelineBuildFinishListener @Autowired constructor(
         }
         logger.info("[$buildId]|[${event.source}]|status=(${event.status}|errorInfoList=${event.errorInfoList}")
 
-        pipelineSubscriptionService.onPipelineShutdown(
-            pipelineId = pipelineId,
-            buildId = buildId,
-            projectId = event.projectId,
-            startTime = buildInfo.startTime!!,
-            buildStatus = BuildStatus.valueOf(event.status),
-            errorInfoList = event.errorInfoList
-        )
+//        pipelineSubscriptionService.onPipelineShutdown(
+//            pipelineId = pipelineId,
+//            buildId = buildId,
+//            projectId = event.projectId,
+//            startTime = buildInfo.startTime!!,
+//            buildStatus = BuildStatus.valueOf(event.status),
+//            errorInfoList = event.errorInfoList
+//        )
     }
 }
