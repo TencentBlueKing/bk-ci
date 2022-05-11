@@ -42,9 +42,9 @@ const val DOCKER_API_PREFIX = "/v2"
 const val DOCKER_API_SUFFIX = "/auth"
 
 // path pattern prefix
-const val DOCKER_BLOB_SUFFIX = "{projectId}/{repoName}/**/blobs/uploads"
-const val DOCKER_BLOB_UUID_SUFFIX = "{projectId}/{repoName}/**/blobs/uploads/{uuid}"
-const val DOCKER_BLOB_DIGEST_SUFFIX = "{projectId}/{repoName}/**/blobs/{digest}"
+const val DOCKER_BLOB_SUFFIX = "/{projectId}/{repoName}/**/blobs/uploads/"
+const val DOCKER_BLOB_UUID_SUFFIX = "/{projectId}/{repoName}/**/blobs/uploads/{uuid}"
+const val DOCKER_BLOB_DIGEST_SUFFIX = "/{projectId}/{repoName}/**/blobs/{digest}"
 const val DOCKER_MANIFEST_TAG_SUFFIX = "/{projectId}/{repoName}/**/manifests/{tag}"
 const val DOCKER_MANIFEST_REFERENCE_SUFFIX = "/{projectId}/{repoName}/**/manifests/{reference}"
 const val DOCKER_USER_MANIFEST_SUFFIX = "/manifest/{projectId}/{repoName}/**/{tag}"
@@ -61,8 +61,8 @@ const val DOCKER_CATALOG_SUFFIX = "_catalog"
 const val DOCKER_TMP_UPLOAD_PATH = "_uploads"
 
 const val HTTP_FORWARDED_PROTO = "X-Forwarded-Proto"
-const val HTTP_PROTOCOL_HTTP = "http"
-const val HTTP_PROTOCOL_HTTPS = "https"
+const val HTTP_PROTOCOL = "http"
+const val HTTPS_PROTOCOL = "https"
 const val REGISTRY_SERVICE = "bkrepo"
 
 const val ERROR_MESSAGE = "{\"errors\":[{\"code\":\"%s\",\"message\":\"%s\",\"detail\":\"%s\"}]}"

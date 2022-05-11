@@ -43,6 +43,13 @@ interface PackageDependentsService {
     fun addDependents(request: PackageDependentsRelation)
 
     /**
+     * 删除依赖关系
+     *
+     * @param request 依赖关系
+     */
+    fun reduceDependents(request: PackageDependentsRelation)
+
+    /**
      * 查询包依赖关系
      *
      * @param projectId 项目id

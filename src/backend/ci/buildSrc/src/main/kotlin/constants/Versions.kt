@@ -38,4 +38,5 @@ object Versions {
     const val p4 = "2021.1.2163843"
     const val YamlSchema = "1.0.49"
     const val Pulsar = "2.7.2"
+    const val JacksonDatatypeJsr = "2.11.4"
 }

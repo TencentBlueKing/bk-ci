@@ -153,8 +153,8 @@ class CosClient(val credentials: InnerCosCredentials) {
         }
         // 等待所有完成
         try {
-            val partEtagList = futureList.map { it.get() }
-            return completeMultipartUpload(key, uploadId, partEtagList)
+            val partETagList = futureList.map { it.get() }
+            return completeMultipartUpload(key, uploadId, partETagList)
         } catch (exception: IOException) {
             cancelFutureList(futureList)
             abortMultipartUpload(key, uploadId)
@@ -181,10 +181,10 @@ class CosClient(val credentials: InnerCosCredentials) {
     private fun completeMultipartUpload(
         key: String,
         uploadId: String,
-        partEtagList: List<PartETag>
+        partETagList: List<PartETag>
     ): PutObjectResponse {
         retry(RETRY_COUNT) {
-            val cosRequest = CompleteMultipartUploadRequest(key, uploadId, partEtagList)
+            val cosRequest = CompleteMultipartUploadRequest(key, uploadId, partETagList)
             val httpRequest = buildHttpRequest(cosRequest)
             return CosHttpClient.execute(httpRequest, CompleteMultipartUploadResponseHandler())
         }

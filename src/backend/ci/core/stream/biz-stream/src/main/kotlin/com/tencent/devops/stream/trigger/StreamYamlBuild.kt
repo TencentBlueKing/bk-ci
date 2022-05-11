@@ -54,7 +54,6 @@ import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
-import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
@@ -89,7 +88,6 @@ class StreamYamlBuild @Autowired constructor(
     private val deleteEventService: DeleteEventService,
     private val streamTriggerCache: StreamTriggerCache,
     private val repoTriggerEventService: RepoTriggerEventService,
-    private val streamGitConfig: StreamGitConfig,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val modelCreate: ModelCreate
 ) {
@@ -134,7 +132,7 @@ class StreamYamlBuild @Autowired constructor(
                 if (realPipeline.pipelineId.isBlank()) {
                     streamYamlBaseBuild.savePipeline(
                         pipeline = realPipeline,
-                        userId = action.data.eventCommon.userId,
+                        userId = action.data.getUserId(),
                         gitProjectId = action.data.eventCommon.gitProjectId.toLong(),
                         projectCode = action.getProjectCode(),
                         modelAndSetting = createTriggerModel(action.getProjectCode()),
@@ -223,7 +221,7 @@ class StreamYamlBuild @Autowired constructor(
                 StreamTimer(
                     projectId = action.getProjectCode(),
                     pipelineId = pipeline.pipelineId,
-                    userId = action.data.eventCommon.userId,
+                    userId = action.data.getUserId(),
                     crontabExpressions = listOf(yaml.triggerOn?.schedules?.cron.toString()),
                     gitProjectId = action.data.getGitProjectId().toLong(),
                     // 未填写则在每次触发拉默认分支
@@ -243,7 +241,7 @@ class StreamYamlBuild @Autowired constructor(
                 StreamDeleteEvent(
                     gitProjectId = action.data.getGitProjectId().toLong(),
                     pipelineId = pipeline.pipelineId,
-                    userId = action.data.eventCommon.userId,
+                    userId = action.data.getUserId(),
                     eventId = action.data.context.requestEventId!!,
                     originYaml = action.data.context.originYaml!!
                 )
@@ -359,7 +357,7 @@ class StreamYamlBuild @Autowired constructor(
 
         streamYamlBaseBuild.savePipeline(
             pipeline = pipeline,
-            userId = action.data.eventCommon.userId,
+            userId = action.data.getUserId(),
             gitProjectId = action.data.getGitProjectId().toLong(),
             projectCode = action.getProjectCode(),
             modelAndSetting = modelAndSetting,
@@ -384,12 +382,11 @@ class StreamYamlBuild @Autowired constructor(
             yaml = yaml,
             streamGitProjectInfo = streamGitProjectInfo,
             webhookParams = webhookParams,
-            yamlTransferData = yamlTransferData,
-            streamUrl = streamGitConfig.streamUrl
+            yamlTransferData = yamlTransferData
         )
 
         val modelCreateEvent = ModelCreateEvent(
-            userId = action.data.eventCommon.userId,
+            userId = action.data.getUserId(),
             projectCode = action.data.setting.projectCode!!,
             pipelineInfo = PipelineInfo(action.data.context.pipeline!!.pipelineId),
             gitData = GitData(

@@ -31,18 +31,28 @@
 
 package com.tencent.bkrepo.docker.controller
 
+import com.tencent.bkrepo.common.api.constant.HttpHeaders.CONTENT_TYPE
 import com.tencent.bkrepo.common.artifact.api.ArtifactFile
+import com.tencent.bkrepo.docker.constant.DOCKER_API_PREFIX
 import com.tencent.bkrepo.docker.constant.DOCKER_MANIFEST_REFERENCE_SUFFIX
 import com.tencent.bkrepo.docker.constant.DOCKER_MANIFEST_TAG_SUFFIX
+import com.tencent.bkrepo.docker.constant.DOCKER_PROJECT_ID
+import com.tencent.bkrepo.docker.constant.DOCKER_REFERENCE
+import com.tencent.bkrepo.docker.constant.DOCKER_REPO_NAME
+import com.tencent.bkrepo.docker.constant.DOCKER_TAG
 import com.tencent.bkrepo.docker.constant.MANIFEST_PATTERN
 import com.tencent.bkrepo.docker.context.RequestContext
 import com.tencent.bkrepo.docker.service.DockerV2LocalRepoService
 import com.tencent.bkrepo.docker.util.PathUtil
 import com.tencent.bkrepo.docker.util.UserUtil
+import io.swagger.annotations.ApiParam
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestAttribute
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RestController
@@ -52,15 +62,25 @@ import javax.servlet.http.HttpServletRequest
  *  ManifestImpl validates and impl the manifest interface
  */
 @RestController
+@RequestMapping(DOCKER_API_PREFIX)
 class ManifestController @Autowired constructor(val dockerRepo: DockerV2LocalRepoService) {
 
     @PutMapping(DOCKER_MANIFEST_TAG_SUFFIX)
     fun putManifest(
         request: HttpServletRequest,
+        @RequestAttribute
         userId: String?,
+        @PathVariable
+        @ApiParam(value = DOCKER_PROJECT_ID, required = true)
         projectId: String,
+        @PathVariable
+        @ApiParam(value = DOCKER_REPO_NAME, required = true)
         repoName: String,
+        @PathVariable
+        @ApiParam(value = DOCKER_TAG, required = true)
         tag: String,
+        @ApiParam
+        @RequestHeader(value = CONTENT_TYPE, required = true)
         contentType: String,
         artifactFile: ArtifactFile
     ): ResponseEntity<Any> {
@@ -73,9 +93,16 @@ class ManifestController @Autowired constructor(val dockerRepo: DockerV2LocalRep
     @GetMapping(DOCKER_MANIFEST_REFERENCE_SUFFIX)
     fun getManifest(
         request: HttpServletRequest,
+        @RequestAttribute
         userId: String?,
+        @PathVariable
+        @ApiParam(value = DOCKER_PROJECT_ID, required = true)
         projectId: String,
+        @PathVariable
+        @ApiParam(value = DOCKER_REPO_NAME, required = true)
         repoName: String,
+        @PathVariable
+        @ApiParam(value = DOCKER_REFERENCE, required = true)
         reference: String
     ): ResponseEntity<Any> {
         val name = PathUtil.artifactName(request, MANIFEST_PATTERN, projectId, repoName)
@@ -87,9 +114,16 @@ class ManifestController @Autowired constructor(val dockerRepo: DockerV2LocalRep
     @RequestMapping(method = [RequestMethod.HEAD], value = [DOCKER_MANIFEST_REFERENCE_SUFFIX])
     fun existManifest(
         request: HttpServletRequest,
+        @RequestAttribute
         userId: String?,
+        @PathVariable
+        @ApiParam(value = DOCKER_PROJECT_ID, required = true)
         projectId: String,
+        @PathVariable
+        @ApiParam(value = DOCKER_REPO_NAME, required = true)
         repoName: String,
+        @PathVariable
+        @ApiParam(value = DOCKER_REFERENCE, required = true)
         reference: String
     ): ResponseEntity<Any> {
         val name = PathUtil.artifactName(request, MANIFEST_PATTERN, projectId, repoName)

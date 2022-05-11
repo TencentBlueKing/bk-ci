@@ -222,6 +222,7 @@ class OpAtomServiceImpl @Autowired constructor(
             },
             recommendFlag = atomFeature?.recommendFlag,
             yamlFlag = atomFeature?.yamlFlag,
+            certificationFlag = atomFeature?.certificationFlag,
             publisher = atomRecord.publisher,
             visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(atomRecord.visibilityLevel as Int),
             privateReason = atomRecord.privateReason

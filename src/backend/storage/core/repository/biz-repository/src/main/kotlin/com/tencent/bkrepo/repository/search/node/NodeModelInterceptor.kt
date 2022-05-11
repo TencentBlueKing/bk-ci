@@ -36,16 +36,32 @@ import com.tencent.bkrepo.common.query.enums.OperationType
 import com.tencent.bkrepo.common.query.interceptor.QueryContext
 import com.tencent.bkrepo.common.query.model.QueryModel
 import com.tencent.bkrepo.common.query.model.Rule
+import com.tencent.bkrepo.common.security.manager.PermissionManager
+import com.tencent.bkrepo.common.security.permission.PrincipalType
+import com.tencent.bkrepo.common.security.util.SecurityUtils
 import com.tencent.bkrepo.repository.model.TNode
 import com.tencent.bkrepo.repository.search.common.ModelValidateInterceptor
+import org.slf4j.LoggerFactory
 
 /**
  * 节点自定义查询规则拦截器
  */
-class NodeModelInterceptor : ModelValidateInterceptor() {
+class NodeModelInterceptor(private val permissionManager: PermissionManager) : ModelValidateInterceptor() {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     override fun intercept(queryModel: QueryModel, context: QueryContext): QueryModel {
         super.intercept(queryModel, context)
+        val includeDeleted = queryModel.select?.firstOrNull { it == TNode::deleted.name } != null
+        if (includeDeleted) {
+            val userId = SecurityUtils.getUserId()
+            try {
+                permissionManager.checkPrincipal(userId, PrincipalType.ADMIN)
+                return queryModel
+            } catch (ignore: Exception) {
+                logger.info("Query deleted node failed, User[$userId]")
+            }
+        }
         // 添加deleted属性为null的查询条件
         setDeletedNull(queryModel)
         return queryModel

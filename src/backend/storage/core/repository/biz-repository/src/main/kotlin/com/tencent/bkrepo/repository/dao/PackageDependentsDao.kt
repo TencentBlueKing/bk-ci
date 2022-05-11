@@ -58,4 +58,13 @@ class PackageDependentsDao : SimpleMongoDao<TPackageDependents>() {
         val update = Update().addToSet(TPackageDependents::dependents.name, dependent)
         return this.upsert(query, update).modifiedCount
     }
+
+    fun reduceDependent(projectId: String, repoName: String, key: String, dependent: String): Long {
+        if (key.isBlank() || dependent.isBlank()) {
+            return 0
+        }
+        val query = PackageQueryHelper.packageQuery(projectId, repoName, key)
+        val update = Update().pull(TPackageDependents::dependents.name, dependent)
+        return this.upsert(query, update).modifiedCount
+    }
 }

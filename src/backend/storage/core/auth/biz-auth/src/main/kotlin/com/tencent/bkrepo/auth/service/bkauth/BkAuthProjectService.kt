@@ -31,69 +31,33 @@
 
 package com.tencent.bkrepo.auth.service.bkauth
 
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.common.cache.CacheBuilder
-import com.tencent.bkrepo.auth.config.BkAuthConfig
-import com.tencent.bkrepo.auth.pojo.BkAuthResponse
-import com.tencent.bkrepo.auth.pojo.enums.BkAuthServiceCode
-import com.tencent.bkrepo.auth.util.HttpUtils
-import com.tencent.bkrepo.common.api.util.JsonUtils.objectMapper
-import okhttp3.MediaType
-import okhttp3.Request
-import okhttp3.RequestBody
-import org.slf4j.LoggerFactory
+import com.tencent.bkrepo.auth.pojo.enums.BkAuthPermission
+import com.tencent.bkrepo.auth.pojo.enums.BkAuthResourceType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class BkAuthProjectService @Autowired constructor(
-    private val bkAuthConfig: BkAuthConfig,
-    private val bkAuthTokenService: BkAuthTokenService
+    private val bkciAuthService: BkciAuthService
 ) {
-    private val okHttpClient = okhttp3.OkHttpClient.Builder()
-        .connectTimeout(3L, TimeUnit.SECONDS)
-        .readTimeout(5L, TimeUnit.SECONDS)
-        .writeTimeout(5L, TimeUnit.SECONDS)
-        .build()
-
-    private val projectPermissionCache = CacheBuilder.newBuilder()
-        .maximumSize(20000)
-        .expireAfterWrite(40, TimeUnit.SECONDS)
-        .build<String, Boolean>()
-
-    fun isProjectMember(user: String, projectCode: String, retryIfTokenInvalid: Boolean = false): Boolean {
-        val cacheKey = "$user::$projectCode"
-        val cacheResult = projectPermissionCache.getIfPresent(cacheKey)
-        if (cacheResult != null) {
-            logger.debug("match in cache: $cacheKey|$cacheResult")
-            return cacheResult
-        }
-
-        val accessToken = bkAuthTokenService.getAccessToken(BkAuthServiceCode.ARTIFACTORY)
-        val url = "${bkAuthConfig.getBkAuthServer()}/projects/$projectCode/users/$user/verfiy?access_token=$accessToken"
-        val body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), "")
-        val request = Request.Builder().url(url).post(body).build()
-        val apiResponse = HttpUtils.doRequest(okHttpClient, request, 2)
-        val responseObject = objectMapper.readValue<BkAuthResponse<Any>>(apiResponse.content)
-        if (responseObject.code != 0) {
-            if (responseObject.code == 403 && retryIfTokenInvalid) {
-                bkAuthTokenService.getAccessToken(BkAuthServiceCode.ARTIFACTORY, accessToken)
-                return isProjectMember(user, projectCode, false)
-            }
-            if (responseObject.code == 400) {
-                logger.info("user[$user] not member of project $projectCode")
-                projectPermissionCache.put(cacheKey, false)
-                return false
-            }
-            logger.error("verify project member failed. ${apiResponse.content}")
-            throw RuntimeException("verify project member failed")
-        }
-        projectPermissionCache.put(cacheKey, true)
-        return true
+    fun isProjectMember(
+        user: String,
+        projectCode: String,
+        permissionAction: String
+    ): Boolean {
+        return bkciAuthService.isProjectSuperAdmin(
+            user = user,
+            projectCode = projectCode,
+            action = BkAuthPermission.DOWNLOAD,
+            resourceType = BkAuthResourceType.PIPELINE_DEFAULT,
+            permissionAction = permissionAction
+        ) || bkciAuthService.isProjectMember(user, projectCode)
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+    fun isProjectManager(
+        user: String,
+        projectCode: String
+    ): Boolean {
+        return bkciAuthService.isProjectManager(user, projectCode)
     }
 }

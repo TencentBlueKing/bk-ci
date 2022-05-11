@@ -238,10 +238,8 @@ class TGitPushActionGit(
 
         val isDefaultBranch = branch == data.context.defaultBranch
         // 校验是否注册跨项目触发
-        val repoTriggerUserId = if (isDefaultBranch) {
+        if (isDefaultBranch) {
             triggerCheckRepoTriggerCredentials(triggerOn)
-        } else {
-            null
         }
 
         // 判断是否注册定时任务
@@ -249,7 +247,7 @@ class TGitPushActionGit(
             isSchedulesMatch(
                 triggerOn = triggerOn,
                 eventBranch = data.eventCommon.branch,
-                userId = data.eventCommon.userId,
+                userId = data.getUserId(),
                 pipelineId = data.context.pipeline!!.pipelineId
             )
         } else {
@@ -271,13 +269,12 @@ class TGitPushActionGit(
             triggerOn = triggerOn,
             eventBranch = data.eventCommon.branch,
             changeSet = changeSet,
-            userId = data.eventCommon.userId,
+            userId = data.getUserId(),
             isCreateBranch = event().isCreateBranch()
         )
         val params = TGitActionCommon.getStartParams(
             action = this,
-            triggerOn = triggerOn,
-            userId = repoTriggerUserId
+            triggerOn = triggerOn
         )
         return TriggerResult(
             trigger = isMatch,
@@ -310,6 +307,8 @@ class TGitPushActionGit(
                 )
             )
         }
+        // 增加远程仓库时所使用权限的userId
+        this.data.context.repoTrigger = this.data.context.repoTrigger?.copy(buildUserID = repoTriggerUserId)
         return repoTriggerUserId
     }
 
@@ -349,7 +348,7 @@ class TGitPushActionGit(
         val userInfo = try {
             this.api.getUserInfoByToken(
                 TGitCred(
-                    userId = this.data.eventCommon.userId,
+                    userId = null,
                     accessToken = token,
                     useAccessToken = false
                 )
@@ -367,7 +366,7 @@ class TGitPushActionGit(
         }
         val check = this.api.getProjectUserInfo(
             cred = TGitCred(
-                userId = this.data.eventCommon.userId,
+                userId = null,
                 accessToken = token,
                 useAccessToken = false
             ),
