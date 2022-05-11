@@ -66,6 +66,7 @@ import javax.net.ssl.X509TrustManager
 import javax.ws.rs.core.Response
 import okhttp3.OkHttpClient
 
+@Suppress("All")
 @Service
 class GitCiService {
 
