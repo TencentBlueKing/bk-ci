@@ -56,7 +56,7 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(credentialPermissionService.validatePermission(userId, projectId, AuthPermission.CREATE))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "create"])
     override fun create(userId: String, projectId: String, credential: CredentialCreate): Result<Boolean> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -93,7 +93,7 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "get"])
     override fun list(
         userId: String,
         projectId: String,
@@ -125,7 +125,7 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "get"])
     override fun hasPermissionList(
         userId: String,
         projectId: String,
@@ -204,7 +204,7 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(result.records)
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "get"])
     override fun show(userId: String, projectId: String, credentialId: String): Result<CredentialWithPermission> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -218,7 +218,7 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(credentialService.userShow(userId, projectId, credentialId))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "get"])
     override fun get(userId: String, projectId: String, credentialId: String): Result<CredentialWithPermission> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")

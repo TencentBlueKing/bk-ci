@@ -50,7 +50,7 @@ class ServiceCredentialResourceImpl @Autowired constructor(
     private val credentialService: CredentialService
 ) : ServiceCredentialResource {
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "create"])
     override fun create(userId: String, projectId: String, credential: CredentialCreate): Result<Boolean> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -68,7 +68,7 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "get"])
     override fun get(projectId: String, credentialId: String, publicKey: String): Result<CredentialInfo?> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
@@ -79,7 +79,7 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         return Result(credentialService.serviceGet(projectId, credentialId, publicKey))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "get"])
     override fun list(projectId: String, page: Int?, pageSize: Int?): Result<Page<Credential>> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
@@ -125,7 +125,7 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         credentialService.serviceCheck(projectId, credentialId)
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "get"])
     override fun hasPermissionList(
         userId: String,
         projectId: String,

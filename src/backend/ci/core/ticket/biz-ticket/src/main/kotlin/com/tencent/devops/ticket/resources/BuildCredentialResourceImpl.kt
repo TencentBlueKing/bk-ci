@@ -42,7 +42,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
     private val credentialService: CredentialService
 ) : BuildCredentialResource {
     @SensitiveApiPermission("get_credential")
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "get"])
     override fun get(
         projectId: String,
         buildId: String,
@@ -80,7 +80,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
     }
 
     @SensitiveApiPermission("get_credential")
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "get"])
     override fun getAcrossProject(
         projectId: String,
         buildId: String,
@@ -111,7 +111,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
     }
 
     @SensitiveApiPermission("get_credential")
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "get"])
     override fun getDetail(
         projectId: String,
         buildId: String,

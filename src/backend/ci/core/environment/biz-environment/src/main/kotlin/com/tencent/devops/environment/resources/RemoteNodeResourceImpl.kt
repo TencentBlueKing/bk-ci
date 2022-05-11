@@ -29,7 +29,6 @@ package com.tencent.devops.environment.resources
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.RemoteNodeResource
 import com.tencent.devops.environment.pojo.NodeBaseInfo
@@ -41,17 +40,14 @@ class RemoteNodeResourceImpl @Autowired constructor(
     private val nodeService: NodeService
 ) : RemoteNodeResource {
 
-    @BkTimed
     override fun listNodeForAuth(projectId: String, offset: Int?, limit: Int?): Result<Page<NodeBaseInfo>> {
         return Result(nodeService.listByPage(projectId, offset, limit))
     }
 
-    @BkTimed
     override fun getNodeInfos(nodeHashIds: List<String>): Result<List<NodeBaseInfo>> {
         return Result(nodeService.listRawServerNodeByIds(nodeHashIds))
     }
 
-    @BkTimed
     override fun searchByName(
         projectId: String,
         offset: Int?,

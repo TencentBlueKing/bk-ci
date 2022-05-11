@@ -50,7 +50,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
     private val client: Client
 ) : ApigwEnvironmentResourceV3 {
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listUsableServerNodes(
         appCode: String?,
         apigwType: String?,
@@ -61,7 +61,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceNodeResource::class).listUsableServerNodes(userId, projectId)
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "createEnvironment"])
     override fun createEnv(
         appCode: String?,
         apigwType: String?,
@@ -84,7 +84,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceEnvironmentResource::class).delete(userId, projectId, envHashId)
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "createNode"])
     override fun envAddNodes(
         appCode: String?,
         apigwType: String?,
@@ -123,7 +123,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceNodeResource::class).deleteNodes(userId, projectId, nodeHashIds)
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun listUsableServerEnvs(
         appCode: String?,
         apigwType: String?,
@@ -134,7 +134,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceEnvironmentResource::class).listUsableServerEnvs(userId, projectId)
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun listEnvRawByEnvNames(
         appCode: String?,
         apigwType: String?,
@@ -146,7 +146,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceEnvironmentResource::class).listRawByEnvNames(userId, projectId, envNames)
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun listEnvRawByEnvHashIds(
         appCode: String?,
         apigwType: String?,
@@ -158,7 +158,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceEnvironmentResource::class).listRawByEnvHashIds(userId, projectId, envHashIds)
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listNodeRawByNodeHashIds(
         appCode: String?,
         apigwType: String?,
@@ -170,7 +170,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceNodeResource::class).listRawByHashIds(userId, projectId, nodeHashIds)
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listNodeRawByEnvHashIds(
         appCode: String?,
         apigwType: String?,

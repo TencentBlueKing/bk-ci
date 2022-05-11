@@ -43,7 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: Client) :
     ApigwCredentialResourceV3 {
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "get"])
     override fun list(
         appCode: String?,
         apigwType: String?,
@@ -80,7 +80,7 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
 //        )
 //    }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "create"])
     override fun create(
         appCode: String?,
         apigwType: String?,
@@ -96,7 +96,7 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         )
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "get"])
     override fun get(
         appCode: String?,
         apigwType: String?,

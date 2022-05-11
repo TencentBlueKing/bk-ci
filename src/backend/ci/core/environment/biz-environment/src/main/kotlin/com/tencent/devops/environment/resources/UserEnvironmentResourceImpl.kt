@@ -56,7 +56,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
     private val environmentPermissionService: EnvironmentPermissionService
 ) : UserEnvironmentResource {
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun listUsableServerEnvs(userId: String, projectId: String): Result<List<EnvWithPermission>> {
         return Result(envService.listUsableServerEnvs(userId, projectId))
     }
@@ -65,7 +65,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(environmentPermissionService.checkEnvPermission(userId, projectId, AuthPermission.CREATE))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "createEnvironment"])
     override fun create(userId: String, projectId: String, environment: EnvCreateInfo): Result<EnvironmentId> {
         if (environment.name.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_NULL)
@@ -95,22 +95,22 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun list(userId: String, projectId: String): Result<List<EnvWithPermission>> {
         return Result(envService.listEnvironment(userId, projectId))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun listByType(userId: String, projectId: String, envType: EnvType): Result<List<EnvWithNodeCount>> {
         return Result(envService.listEnvironmentByType(userId, projectId, envType))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun listBuildEnvs(userId: String, projectId: String, os: OS): Result<List<EnvWithNodeCount>> {
         return Result(envService.listBuildEnvs(userId, projectId, os))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun get(userId: String, projectId: String, envHashId: String): Result<EnvWithPermission> {
         if (envHashId.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
@@ -128,7 +128,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun listNodes(userId: String, projectId: String, envHashId: String): Result<List<NodeBaseInfo>> {
         if (envHashId.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
@@ -137,7 +137,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.listAllEnvNodes(userId, projectId, listOf(envHashId)))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "createNode"])
     override fun addNodes(
         userId: String,
         projectId: String,

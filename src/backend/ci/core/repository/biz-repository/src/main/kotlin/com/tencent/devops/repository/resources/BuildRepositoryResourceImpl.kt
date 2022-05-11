@@ -44,7 +44,7 @@ class BuildRepositoryResourceImpl @Autowired constructor(
     private val repositoryService: RepositoryService
 ) : BuildRepositoryResource {
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "get"])
     override fun getByType(
         projectId: String,
         buildId: String,

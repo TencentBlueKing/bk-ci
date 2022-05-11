@@ -49,12 +49,12 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
     private val envService: EnvService
 ) : ServiceEnvironmentResource {
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun listUsableServerEnvs(userId: String, projectId: String): Result<List<EnvWithPermission>> {
         return Result(envService.listUsableServerEnvs(userId, projectId))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun listRawByEnvHashIds(
         userId: String,
         projectId: String,
@@ -63,12 +63,12 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.listRawEnvByHashIds(userId, projectId, envHashIds))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun list(userId: String, projectId: String): Result<List<EnvWithPermission>> {
         return Result(envService.listEnvironment(userId, projectId))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "createEnvironment"])
     override fun create(userId: String, projectId: String, environment: EnvCreateInfo): Result<EnvironmentId> {
         if (environment.name.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_NULL)
@@ -85,7 +85,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "createNode"])
     override fun addNodes(
         userId: String,
         projectId: String,
@@ -122,7 +122,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listNodesByEnvIds(
         userId: String,
         projectId: String,
@@ -134,7 +134,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.listAllEnvNodes(userId, projectId, envHashIds))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun listRawByEnvNames(
         userId: String,
         projectId: String,
@@ -146,7 +146,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.listRawEnvByEnvNames(userId, projectId, envNames))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun listBuildEnvs(userId: String, projectId: String, os: OS): Result<List<EnvWithNodeCount>> {
         return Result(envService.listBuildEnvs(userId, projectId, os))
     }

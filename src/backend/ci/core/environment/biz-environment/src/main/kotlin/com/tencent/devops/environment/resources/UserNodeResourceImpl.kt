@@ -40,7 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeService) : UserNodeResource {
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listUsableServerNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
         return Result(NodeUtils.sortByUser(nodeService.listUsableServerNodes(userId, projectId), userId))
     }
@@ -54,7 +54,7 @@ class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeS
         return Result(true)
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun list(userId: String, projectId: String): Result<List<NodeWithPermission>> {
         return Result(NodeUtils.sortByUser(nodeService.list(userId, projectId), userId))
     }

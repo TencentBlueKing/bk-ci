@@ -47,12 +47,12 @@ class ServiceNodeResourceImpl @Autowired constructor(
     private val envService: EnvService
 ) : ServiceNodeResource {
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listNodeByNodeType(projectId: String, nodeType: NodeType): Result<List<NodeBaseInfo>> {
         return Result(nodeService.listByNodeType("", projectId, nodeType))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listRawByHashIds(
         userId: String,
         projectId: String,
@@ -66,7 +66,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
         return Result(nodeService.listRawServerNodeByIds(userId, projectId, nodeHashIds))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listRawByEnvHashIds(
         userId: String,
         projectId: String,
@@ -80,12 +80,12 @@ class ServiceNodeResourceImpl @Autowired constructor(
         return Result(envService.listRawServerNodeByEnvHashIds(userId, projectId, envHashIds))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listUsableServerNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
         return Result(nodeService.listUsableServerNodes(userId, projectId))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listByHashIds(
         userId: String,
         projectId: String,
@@ -94,12 +94,12 @@ class ServiceNodeResourceImpl @Autowired constructor(
         return Result(nodeService.listByHashIds(userId, projectId, nodeHashIds))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listNodeByType(userId: String, projectId: String, type: String): Result<List<NodeBaseInfo>> {
         return Result(nodeService.listByType(userId, projectId, type))
     }
 
-    @BkTimed
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun extListNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
         return Result(NodeUtils.sortByDisplayName(nodeService.extListNodes(userId, projectId)))
     }
