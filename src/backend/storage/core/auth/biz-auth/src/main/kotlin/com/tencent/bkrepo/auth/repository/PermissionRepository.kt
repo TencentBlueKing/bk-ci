@@ -38,9 +38,11 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface PermissionRepository : MongoRepository<TPermission, String> {
+
     fun findFirstById(id: String): TPermission?
-    fun findByResourceType(resourceType: ResourceType): List<TPermission>
+
     fun findByResourceTypeAndProjectId(resourceType: ResourceType, projectId: String): List<TPermission>
+
     fun findByResourceTypeAndProjectIdAndRepos(
         resourceType: ResourceType,
         projectId: String,
@@ -59,4 +61,12 @@ interface PermissionRepository : MongoRepository<TPermission, String> {
         permName: String,
         resourceType: ResourceType
     ): TPermission?
+
+    fun findByUsers(userId: String): List<TPermission>
+
+    fun findByProjectIdAndUsers(projectId: String, userId: String): List<TPermission>
+
+    fun findByRolesIn(roleId: List<String>): List<TPermission>
+
+    fun findByProjectIdAndRolesIn(projectId: String, roleId: List<String>): List<TPermission>
 }

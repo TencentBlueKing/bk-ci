@@ -30,6 +30,7 @@
  */
 
 dependencies {
-    implementation(project(":common:common-api"))
+    api(project(":common:common-api"))
+    api(project(":common:common-plugin:plugin-api"))
     compileOnly("com.google.guava:guava")
 }
