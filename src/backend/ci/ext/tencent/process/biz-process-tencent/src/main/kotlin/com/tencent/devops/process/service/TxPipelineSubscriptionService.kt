@@ -169,23 +169,23 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
             logger.warn("The parent build($parentBuildId) task($parentTaskId) not exist ")
             return
         }
-
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildAtomTaskEvent(
-                source = "sub_pipeline_build_$buildId", // 来源
-                projectId = parentBuildTask.projectId,
-                pipelineId = parentBuildTask.pipelineId,
-                userId = parentBuildTask.starter,
-                buildId = parentBuildTask.buildId,
-                stageId = parentBuildTask.stageId,
-                containerId = parentBuildTask.containerId,
-                containerHashId = parentBuildTask.containerHashId,
-                containerType = parentBuildTask.containerType,
-                taskId = parentBuildTask.taskId,
-                taskParam = parentBuildTask.taskParams,
-                actionType = ActionType.REFRESH
-            )
-        )
+//
+//        pipelineEventDispatcher.dispatch(
+//            PipelineBuildAtomTaskEvent(
+//                source = "sub_pipeline_build_$buildId", // 来源
+//                projectId = parentBuildTask.projectId,
+//                pipelineId = parentBuildTask.pipelineId,
+//                userId = parentBuildTask.starter,
+//                buildId = parentBuildTask.buildId,
+//                stageId = parentBuildTask.stageId,
+//                containerId = parentBuildTask.containerId,
+//                containerHashId = parentBuildTask.containerHashId,
+//                containerType = parentBuildTask.containerType,
+//                taskId = parentBuildTask.taskId,
+//                taskParam = parentBuildTask.taskParams,
+//                actionType = ActionType.REFRESH
+//            )
+//        )
     }
 
     companion object {
