@@ -36,8 +36,7 @@ dependencies {
     api(project(":core:artifactory:model-artifactory"))
     api(project(":core:project:api-project"))
     api(project(":core:process:api-process"))
-    api("com.tencent.bkrepo:api-generic")
-    api("com.tencent.bkrepo:api-repository")
+    api("com.tencent.bk.repo:api-generic")
     api("com.amazonaws:aws-java-sdk-s3")
     api("net.coobird:thumbnailator")
 }

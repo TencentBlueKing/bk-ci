@@ -10,23 +10,19 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 package com.tencent.bkrepo.npm.service
@@ -43,9 +39,9 @@ import com.tencent.bkrepo.common.artifact.repository.context.ArtifactUploadConte
 import com.tencent.bkrepo.common.artifact.repository.core.ArtifactService
 import com.tencent.bkrepo.common.artifact.resolve.file.ArtifactFileFactory
 import com.tencent.bkrepo.common.artifact.resolve.response.ArtifactResource
+import com.tencent.bkrepo.common.artifact.resolve.response.ArtifactResourceWriter
 import com.tencent.bkrepo.common.artifact.stream.Range
 import com.tencent.bkrepo.common.artifact.stream.artifactStream
-import com.tencent.bkrepo.common.artifact.util.http.ArtifactResourceWriter
 import com.tencent.bkrepo.common.artifact.util.http.UrlFormatter
 import com.tencent.bkrepo.common.artifact.util.version.SemVersion
 import com.tencent.bkrepo.common.security.exception.PermissionException
@@ -79,7 +75,8 @@ import java.time.LocalDateTime
 class NpmPackageService(
     private val npmProperties: NpmProperties,
     private val packageClient: PackageClient,
-    private val packageManager: PackageManager
+    private val packageManager: PackageManager,
+    private val artifactResourceWriter: ArtifactResourceWriter
 ) : ArtifactService() {
 
     fun info(artifactInfo: DefaultArtifactInfo): NpmRegistrySummary {
@@ -91,6 +88,7 @@ class NpmPackageService(
 
     fun listAll(artifactInfo: NpmArtifactInfo): List<Map<String, Any>> {
         with(artifactInfo) {
+            // TODO
             return packageClient.listPackagePage(projectId, repoName).data?.records.orEmpty().map {
                 mapOf(
                     "name" to it.name,
@@ -143,7 +141,7 @@ class NpmPackageService(
                     tags = tags,
                     extension = extension
                 )
-                packageClient.updateVersion(updateRequest)
+                packageClient.updateVersion(updateRequest, HttpContextHolder.getClientAddress())
                 NpmResponse.success()
             }
         }
@@ -180,7 +178,7 @@ class NpmPackageService(
                 packageKey = packageName,
                 extension = newExtension
             )
-            packageClient.updatePackage(updateRequest)
+            packageClient.updatePackage(updateRequest, HttpContextHolder.getClientAddress())
         }
     }
 
@@ -227,7 +225,7 @@ class NpmPackageService(
                 packageKey = packageName,
                 versionTag = versionTag
             )
-            packageClient.updatePackage(updateRequest)
+            packageClient.updatePackage(updateRequest, HttpContextHolder.getClientAddress())
         }
     }
 
@@ -307,10 +305,9 @@ class NpmPackageService(
             val content = npmPackage.toJsonString().toByteArray()
             val artifactResource = ArtifactResource(
                 inputStream = content.inputStream().artifactStream(Range.full(content.size.toLong())),
-                artifact = PACKAGE_JSON,
-                useDisposition = false
+                artifactName = PACKAGE_JSON
             )
-            ArtifactResourceWriter.write(artifactResource)
+            artifactResourceWriter.write(artifactResource)
         }
     }
 
@@ -336,10 +333,9 @@ class NpmPackageService(
             val content = versionMetadata.toJsonString().toByteArray()
             val artifactResource = ArtifactResource(
                 inputStream = content.inputStream().artifactStream(Range.full(content.size.toLong())),
-                artifact = PACKAGE_JSON,
-                useDisposition = false
+                artifactName = PACKAGE_JSON
             )
-            ArtifactResourceWriter.write(artifactResource)
+            artifactResourceWriter.write(artifactResource)
         }
     }
 

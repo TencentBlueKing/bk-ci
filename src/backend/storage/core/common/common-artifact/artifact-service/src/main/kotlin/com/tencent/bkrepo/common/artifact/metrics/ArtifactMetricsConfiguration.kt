@@ -41,8 +41,7 @@ import org.springframework.context.annotation.Import
 
 @Configuration
 @Import(
-    ArtifactMetrics::class,
-    StorageHealthIndicator::class
+    ArtifactMetrics::class
 )
 class ArtifactMetricsConfiguration {
 

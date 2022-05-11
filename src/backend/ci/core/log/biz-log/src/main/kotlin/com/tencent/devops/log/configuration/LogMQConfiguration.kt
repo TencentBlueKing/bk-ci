@@ -67,7 +67,7 @@ class LogMQConfiguration @Autowired constructor() {
     }
 
     @Bean(StreamBinding.BINDING_LOG_STORAGE_EVENT_IN)
-    fun logStorageEventOut(
+    fun logStorageEventIn(
         listenerService: BuildLogListenerService
     ): Consumer<Message<LogStorageEvent>> {
         return Consumer { event: Message<LogStorageEvent> ->
@@ -76,7 +76,7 @@ class LogMQConfiguration @Autowired constructor() {
     }
 
     @Bean(StreamBinding.BINDING_LOG_STATUS_EVENT_IN)
-    fun logStatusEventOut(
+    fun logStatusEventIn(
         listenerService: BuildLogListenerService
     ): Consumer<Message<LogStatusEvent>> {
         return Consumer { event: Message<LogStatusEvent> ->

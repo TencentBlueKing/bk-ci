@@ -50,6 +50,8 @@ data class RepoUpdateRequest(
     val description: String? = null,
     @ApiModelProperty("扩展信息", required = false)
     val configuration: RepositoryConfiguration? = null,
+    @ApiModelProperty("仓库配额", required = false)
+    val quota: Long? = null,
 
     @ApiModelProperty("操作用户", required = true)
     val operator: String

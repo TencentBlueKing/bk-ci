@@ -51,14 +51,10 @@ import org.springframework.http.ResponseEntity
 object DockerV2Errors {
 
     fun internalError(msg: String?): DockerResponse {
-        msg?.let {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).header(DOCKER_HEADER_API_VERSION, DOCKER_API_VERSION)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(String.format(ERROR_MESSAGE, "INTERNAL_ERROR", "service internal error", "internal error"))
-        }
+        var message = msg ?: "internal error"
         return ResponseEntity.status(HttpStatus.NOT_FOUND).header(DOCKER_HEADER_API_VERSION, DOCKER_API_VERSION)
             .contentType(MediaType.APPLICATION_JSON)
-            .body(String.format(ERROR_MESSAGE, "INTERNAL_ERROR", "service internal error", msg))
+            .body(String.format(ERROR_MESSAGE, "INTERNAL_ERROR", "service internal error", message))
     }
 
     fun repoInvalid(repoName: String): DockerResponse {

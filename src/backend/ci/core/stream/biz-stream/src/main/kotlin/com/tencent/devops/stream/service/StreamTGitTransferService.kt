@@ -267,7 +267,8 @@ class StreamTGitTransferService @Autowired constructor(
             userId = userId,
             repository = gitProjectId,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            search = search
         ).data?.map { it.name }
     }
 
