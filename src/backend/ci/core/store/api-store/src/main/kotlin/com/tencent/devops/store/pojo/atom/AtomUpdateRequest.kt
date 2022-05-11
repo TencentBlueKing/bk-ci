@@ -76,6 +76,8 @@ data class AtomUpdateRequest(
     val yamlFlag: Boolean? = null,
     @ApiModelProperty("红线可用标识 true：是，false：否")
     val qualityFlag: Boolean? = null,
+    @ApiModelProperty("是否认证标识 true：是，false：否")
+    val certificationFlag: Boolean? = null,
     @ApiModelProperty("发布者", required = false)
     val publisher: String? = null,
     @ApiModelProperty(value = "项目可视范围", required = false)

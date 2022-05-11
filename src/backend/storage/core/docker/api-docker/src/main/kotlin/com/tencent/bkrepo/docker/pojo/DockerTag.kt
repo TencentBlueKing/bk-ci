@@ -47,5 +47,7 @@ data class DockerTag(
     @ApiModelProperty("最后修改时间")
     val lastModifiedDate: String,
     @ApiModelProperty("下载次数")
-    val downloadCount: Long
+    val downloadCount: Long,
+    @ApiModelProperty("镜像地址")
+    val registryUrl: String
 )

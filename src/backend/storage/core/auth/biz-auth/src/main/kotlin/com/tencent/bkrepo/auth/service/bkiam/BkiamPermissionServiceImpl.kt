@@ -41,6 +41,7 @@ import com.tencent.bkrepo.auth.repository.RoleRepository
 import com.tencent.bkrepo.auth.repository.UserRepository
 import com.tencent.bkrepo.auth.service.local.PermissionServiceImpl
 import com.tencent.bkrepo.common.api.constant.StringPool
+import com.tencent.bkrepo.repository.api.ProjectClient
 import com.tencent.bkrepo.repository.api.RepositoryClient
 import org.slf4j.LoggerFactory
 import org.springframework.data.mongodb.core.MongoTemplate
@@ -54,12 +55,19 @@ class BkiamPermissionServiceImpl constructor(
     permissionRepository: PermissionRepository,
     mongoTemplate: MongoTemplate,
     repositoryClient: RepositoryClient,
+    projectClient: ProjectClient,
     private val bkiamService: BkiamService
-) : PermissionServiceImpl(userRepository, roleRepository, permissionRepository, mongoTemplate, repositoryClient) {
-
+) : PermissionServiceImpl(
+    userRepository,
+    roleRepository,
+    permissionRepository,
+    mongoTemplate,
+    repositoryClient,
+    projectClient
+) {
     override fun checkPermission(request: CheckPermissionRequest): Boolean {
         logger.info("checkPermission, request: $request")
-        if (request.resourceType != ResourceType.SYSTEM && checkBkiamPermission(request)) {
+        if (request.resourceType != ResourceType.SYSTEM.toString() && checkBkiamPermission(request)) {
             logger.debug("checkBkiamPermission passed")
             return true
         }
@@ -92,10 +100,11 @@ class BkiamPermissionServiceImpl constructor(
 
     private fun getResourceId(request: ResourceBaseRequest): String {
         return when (request.resourceType) {
-            ResourceType.SYSTEM -> StringPool.EMPTY
-            ResourceType.PROJECT -> request.projectId!!
-            ResourceType.REPO -> request.repoName!!
-            ResourceType.NODE -> throw IllegalArgumentException("invalid resource type")
+            ResourceType.SYSTEM.toString() -> StringPool.EMPTY
+            ResourceType.PROJECT.toString() -> request.projectId!!
+            ResourceType.REPO.toString() -> request.repoName!!
+            ResourceType.NODE.toString() -> throw IllegalArgumentException("invalid resource type")
+            else -> throw IllegalArgumentException("invalid resource type")
         }
     }
 

@@ -59,8 +59,8 @@ class ArtifactBeanProxy<T>(
         }
         try {
             return method.invoke(target, *(args.orEmpty()))
-        } catch (exception: InvocationTargetException) {
-            throw exception.targetException
+        } catch (ignored: InvocationTargetException) {
+            throw ignored.targetException
         }
     }
 }

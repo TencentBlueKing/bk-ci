@@ -33,7 +33,6 @@ package com.tencent.bkrepo.auth.service.bkauth
 
 import com.tencent.bkrepo.auth.pojo.enums.BkAuthPermission
 import com.tencent.bkrepo.auth.pojo.enums.BkAuthResourceType
-import com.tencent.bkrepo.auth.pojo.enums.BkAuthServiceCode
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -42,30 +41,39 @@ import org.springframework.stereotype.Service
  */
 @Service
 class BkAuthPipelineService(
-    private val bkAuthService: BkAuthService
+    private val bkciAuthService: BkciAuthService
 ) {
-    fun listPermissionedPipelines(uid: String, projectId: String): List<String> {
-        return bkAuthService.getUserResourceByPermission(
+    fun listPermissionPipelines(uid: String, projectId: String): List<String> {
+        return bkciAuthService.getUserResourceByPermission(
             user = uid,
-            serviceCode = BkAuthServiceCode.PIPELINE,
-            resourceType = BkAuthResourceType.PIPELINE_DEFAULT,
             projectCode = projectId,
-            permission = BkAuthPermission.LIST,
-            supplier = null,
-            retryIfTokenInvalid = true
+            action = BkAuthPermission.DOWNLOAD,
+            resourceType = BkAuthResourceType.PIPELINE_DEFAULT
         )
     }
 
-    fun hasPermission(uid: String, projectId: String, pipelineId: String): Boolean {
-        logger.info("hasPermission: uid: $uid, projectId: $projectId, pipelineId: $pipelineId")
-        return bkAuthService.validateUserResourcePermission(
+    fun hasPermission(
+        uid: String,
+        projectId: String,
+        pipelineId: String,
+        permissionAction: String?
+    ): Boolean {
+        logger.debug(
+            "hasPermission: uid: $uid, projectId: $projectId, " +
+                "pipelineId: $pipelineId, permissionAction: $permissionAction"
+        )
+        return bkciAuthService.isProjectSuperAdmin(
             user = uid,
-            serviceCode = BkAuthServiceCode.PIPELINE,
-            resourceType = BkAuthResourceType.PIPELINE_DEFAULT,
             projectCode = projectId,
+            action = BkAuthPermission.DOWNLOAD,
+            resourceType = BkAuthResourceType.PIPELINE_DEFAULT,
+            permissionAction = permissionAction
+        ) || bkciAuthService.validateUserResourcePermission(
+            user = uid,
+            projectCode = projectId,
+            action = BkAuthPermission.DOWNLOAD,
             resourceCode = pipelineId,
-            permission = BkAuthPermission.DOWNLOAD,
-            retryIfTokenInvalid = true
+            resourceType = BkAuthResourceType.PIPELINE_DEFAULT
         )
     }
 

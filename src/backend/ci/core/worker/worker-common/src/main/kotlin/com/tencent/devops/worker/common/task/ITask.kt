@@ -43,6 +43,8 @@ abstract class ITask {
 
     private val monitorData = HashMap<String, Any>()
 
+    private val taskErrorMessage = HashMap<String, String>()
+
     private var platformCode: String? = null
 
     private var platformErrorCode: Int? = null
@@ -102,6 +104,14 @@ abstract class ITask {
 
     protected fun addMonitorData(monitorDataMap: Map<String, Any>) {
         monitorData.putAll(monitorDataMap)
+    }
+
+    protected fun addTaskErrorMessage(key: String, value: String) {
+        taskErrorMessage[key] = value
+    }
+
+    fun getTaskErrorMessage(): Map<String, String> {
+        return taskErrorMessage
     }
 
     fun getMonitorData(): Map<String, Any> {

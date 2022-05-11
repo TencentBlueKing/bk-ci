@@ -32,14 +32,13 @@
 package com.tencent.bkrepo.common.security.http.basic
 
 import com.tencent.bkrepo.common.api.constant.HttpHeaders
-import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.bkrepo.common.security.constant.BASIC_AUTH_PREFIX
 import com.tencent.bkrepo.common.security.exception.AuthenticationException
 import com.tencent.bkrepo.common.security.http.core.HttpAuthHandler
 import com.tencent.bkrepo.common.security.http.credentials.AnonymousCredentials
 import com.tencent.bkrepo.common.security.http.credentials.HttpAuthCredentials
 import com.tencent.bkrepo.common.security.manager.AuthenticationManager
-import java.util.Base64
+import com.tencent.bkrepo.common.security.util.BasicAuthUtils
 import javax.servlet.http.HttpServletRequest
 
 /**
@@ -51,12 +50,9 @@ open class BasicAuthHandler(val authenticationManager: AuthenticationManager) : 
         val authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION).orEmpty()
         return if (authorizationHeader.startsWith(BASIC_AUTH_PREFIX)) {
             try {
-                val encodedCredentials = authorizationHeader.removePrefix(BASIC_AUTH_PREFIX)
-                val decodedHeader = String(Base64.getDecoder().decode(encodedCredentials))
-                val parts = decodedHeader.split(StringPool.COLON)
-                require(parts.size >= 2)
-                BasicAuthCredentials(parts[0], parts[1])
-            } catch (exception: IllegalArgumentException) {
+                val pair = BasicAuthUtils.decode(authorizationHeader)
+                BasicAuthCredentials(pair.first, pair.second)
+            } catch (ignored: IllegalArgumentException) {
                 throw AuthenticationException("Invalid authorization value.")
             }
         } else AnonymousCredentials()

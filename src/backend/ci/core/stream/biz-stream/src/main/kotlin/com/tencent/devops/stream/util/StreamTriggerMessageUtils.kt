@@ -1,7 +1,6 @@
 package com.tencent.devops.stream.util
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitTagPushOperationKind
@@ -11,8 +10,6 @@ import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.stream.pojo.GitRequestEvent
 
 object StreamTriggerMessageUtils {
-    private val objectMapper = ObjectMapper()
-
     @SuppressWarnings("ComplexMethod")
     fun getEventMessageTitle(event: GitRequestEvent, checkRepoHookTrigger: Boolean = false): String {
         val messageTitle = when (event.objectKind) {
@@ -40,7 +37,7 @@ object StreamTriggerMessageUtils {
                     "Branch [${event.branch}] deleted by ${event.userId}"
                 } else {
                     val eventMap = try {
-                        objectMapper.readValue<GitPushEvent>(event.event)
+                        JsonUtil.to(event.event, object : TypeReference<GitPushEvent>() {})
                     } catch (e: Exception) {
                         null
                     }
