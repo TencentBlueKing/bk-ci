@@ -89,10 +89,10 @@ class YamlSchemaCheck @Autowired constructor() {
     }
 
     private fun checkYamlSchema(originYaml: String, templateType: TemplateType? = null, isCiFile: Boolean) {
-        val loadYaml: Any = try {
-            yaml.load(originYaml)
+        val loadYaml = try {
+            YamlUtil.toYaml(yaml.load(originYaml))
         } catch (ignored: Throwable) {
-            throw YamlFormatException(ignored.message ?: "There may be a problem with your yaml syntax")
+            throw YamlFormatException("There may be a problem with your yaml syntax ${ignored.message}")
         }
         // 解析锚点
         val yamlJson = YamlUtil.getObjectMapper().readTree(YamlUtil.toYaml(loadYaml)).replaceOn()
