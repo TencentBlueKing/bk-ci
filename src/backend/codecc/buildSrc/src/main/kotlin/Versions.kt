@@ -41,7 +41,7 @@ object Versions {
     const val commonsIOVersion = "2.8.0"
     const val commonsHttpclientVersion = "3.1"
     const val ktlintVersion = "0.29.0"
-    const val devopsVersion = "1.7.36-RELEASE"
+    const val devopsVersion = "1.7.37-RELEASE"
     const val easyexcel = "2.2.7"
     const val redisson = "3.15.4"
     const val lucene = "8.11.0"

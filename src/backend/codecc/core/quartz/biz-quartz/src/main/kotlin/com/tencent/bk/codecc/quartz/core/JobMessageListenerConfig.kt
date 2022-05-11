@@ -88,7 +88,8 @@ open class JobMessageListenerConfig {
     }
 
     @Bean
-    open fun internalJobMsgQueue() = Queue("$QUEUE_INTERNAL_JOB${IPUtils.getInnerIP().replace(".", "")}$localPort")
+    open fun internalJobMsgQueue() = Queue("$QUEUE_INTERNAL_JOB${IPUtils.getInnerIP()
+        .replace(".", "")}$localPort")
 
     @Bean
     open fun internalJobQueueBind(
@@ -172,7 +173,8 @@ open class JobMessageListenerConfig {
     }
 
     @Bean
-    open fun initJobMsgQueue() = Queue("$QUEUE_GONGFENG_INIT_ALL_JOB${IPUtils.getInnerIP().replace(".", "")}$localPort")
+    open fun initJobMsgQueue() = Queue("$QUEUE_GONGFENG_INIT_ALL_JOB${IPUtils.getInnerIP()
+        .replace(".", "")}$localPort")
 
     @Bean
     open fun initJobQueueBind(
