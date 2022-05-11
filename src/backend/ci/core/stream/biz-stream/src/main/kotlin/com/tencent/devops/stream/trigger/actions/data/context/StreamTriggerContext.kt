@@ -45,7 +45,7 @@ data class StreamTriggerContext(
     var requestEventId: Long? = null,
     var pipeline: StreamTriggerPipeline? = null,
     var repoTrigger: RepoTrigger? = null,
-    var changeSet: List<String>? = null,
+    var changeSet: Set<String>? = null,
     var defaultBranch: String? = null,
     var originYaml: String? = null,
     var parsedYaml: String? = null,
