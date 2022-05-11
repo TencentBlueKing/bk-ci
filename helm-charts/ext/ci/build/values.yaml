@@ -68,6 +68,8 @@ init:
   sql: false
   iam: false
   turbo: false
+  bkrepo: false
+  defaultImage: false
 
 # 内部数据源配置
 mysql:
