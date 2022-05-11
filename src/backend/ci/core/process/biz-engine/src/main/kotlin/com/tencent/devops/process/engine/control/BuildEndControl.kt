@@ -172,7 +172,7 @@ class BuildEndControl @Autowired constructor(
         // 上报SLA数据
         if (buildStatus.isSuccess() || buildStatus == BuildStatus.STAGE_SUCCESS) {
             successPipelineCount(this)
-        } else if (buildStatus.isFailure()){
+        } else if (buildStatus.isFailure()) {
             failPipelineCount(this)
         }
 
@@ -342,7 +342,6 @@ class BuildEndControl @Autowired constructor(
             .increment()
         finishPipelineCount(event)
     }
-
 
     private fun finishPipelineCount(event: PipelineBuildFinishEvent) {
         Counter
