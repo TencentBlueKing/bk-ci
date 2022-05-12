@@ -190,6 +190,9 @@
             ...mapState([
                 'fetchError'
             ]),
+            userName () {
+              return this.$userInfo && this.$userInfo.username ? this.$userInfo.username : ''
+            },
             panels () {
                 return [{
                     name: 'executeDetail',
@@ -199,7 +202,7 @@
                     bindData: {
                         editable: false,
                         isExecDetail: true,
-                        userName: this.$userInfo.username,
+                        userName: this.userName,
                         cancelUserId: this.execDetail && this.execDetail.cancelUserId,
                         pipeline: this.execDetail && this.execDetail.model,
                         matchRules: this.curMatchRules
