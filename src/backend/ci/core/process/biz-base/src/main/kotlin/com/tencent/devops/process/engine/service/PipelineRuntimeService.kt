@@ -45,7 +45,6 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
-import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.option.StageControlOption
@@ -1205,97 +1204,53 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     /**
-     * 手动完成任务
+     * 手动审批
      */
-    fun manualDealBuildTask(
-        projectId: String,
-        buildId: String,
-        taskId: String,
-        userId: String,
-        manualAction: ManualReviewAction
-    ) {
-        dslContext.transaction { configuration ->
-            val transContext = DSL.using(configuration)
-            val taskRecord = pipelineTaskService.getTaskRecord(transContext, projectId, buildId, taskId)
-            if (taskRecord != null) {
-                with(taskRecord) {
-                    if (BuildStatus.values()[status].isRunning()) {
-                        val taskParam = JsonUtil.toMutableMap(taskParams)
-                        taskParam[BS_MANUAL_ACTION] = manualAction
-                        taskParam[BS_MANUAL_ACTION_USERID] = userId
-                        val result = pipelineTaskService.updateTaskParam(
-                            transactionContext = transContext,
-                            projectId = projectId,
-                            buildId = buildId,
-                            taskId = taskId,
-                            taskParam = JsonUtil.toJson(taskParam, formatted = false)
-                        )
-                        if (result != 1) {
-                            logger.info("[{}]|taskId={}| update task param failed", buildId, taskId)
-                        }
-                        pipelineEventDispatcher.dispatch(
-                            PipelineBuildAtomTaskEvent(
-                                source = javaClass.simpleName,
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                userId = starter,
-                                buildId = buildId,
-                                stageId = stageId,
-                                containerId = containerId,
-                                containerHashId = containerHashId,
-                                containerType = containerType,
-                                taskId = taskId,
-                                taskParam = taskParam,
-                                actionType = ActionType.REFRESH
-                            )
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    fun manualDealBuildTask(projectId: String, buildId: String, taskId: String, userId: String, params: ReviewParam) {
-        dslContext.transaction { configuration ->
-            val transContext = DSL.using(configuration)
-            val taskRecord = pipelineTaskService.getTaskRecord(transContext, projectId, buildId, taskId)
-            if (taskRecord != null) {
-                with(taskRecord) {
-                    if (BuildStatus.values()[status].isRunning()) {
-                        val taskParam = JsonUtil.toMutableMap(taskParams)
-                        taskParam[BS_MANUAL_ACTION] = params.status.toString()
-                        taskParam[BS_MANUAL_ACTION_USERID] = userId
-                        taskParam[BS_MANUAL_ACTION_DESC] = params.desc ?: ""
+    fun manualDealReview(taskId: String, userId: String, params: ReviewParam) {
+        // # 5108 消除了人工审核非必要的事务，防止在发送MQ挂住时，导致的长时间锁定
+        pipelineTaskService.getTaskRecord(projectId = params.projectId, buildId = params.buildId, taskId = taskId)
+            ?.run {
+                if (BuildStatus.values()[status].isRunning()) {
+                    val taskParam = JsonUtil.toMutableMap(taskParams)
+                    taskParam[BS_MANUAL_ACTION] = params.status.toString()
+                    taskParam[BS_MANUAL_ACTION_USERID] = userId
+                    params.desc?.let { self -> taskParam[BS_MANUAL_ACTION_DESC] = self }
+                    params.suggest?.let { self -> taskParam[BS_MANUAL_ACTION_SUGGEST] = self }
+                    if (params.params.isNotEmpty()) {
                         taskParam[BS_MANUAL_ACTION_PARAMS] = JsonUtil.toJson(params.params, formatted = false)
-                        taskParam[BS_MANUAL_ACTION_SUGGEST] = params.suggest ?: ""
-                        val result = pipelineTaskService.updateTaskParam(
-                            transactionContext = transContext,
-                            projectId = projectId,
-                            buildId = buildId,
-                            taskId = taskId,
-                            taskParam = JsonUtil.toJson(taskParam, formatted = false)
-                        )
-                        if (result != 1) {
-                            logger.info("[{}]|taskId={}| update task param failed|result:{}", buildId, taskId, result)
-                        }
                         buildVariableService.batchUpdateVariable(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
                             variables = params.params.associate { it.key to it.value.toString() }
                         )
-                        pipelineEventDispatcher.dispatch(
-                            PipelineBuildAtomTaskEvent(
-                                source = "manualDealBuildTask", projectId = projectId, pipelineId = pipelineId,
-                                userId = starter, buildId = buildId, stageId = stageId, containerId = containerId,
-                                containerHashId = containerHashId, containerType = containerType, taskId = taskId,
-                                taskParam = taskParam, actionType = ActionType.REFRESH
-                            )
-                        )
                     }
+
+                    pipelineTaskService.updateTaskParam(
+                        projectId = projectId,
+                        buildId = buildId,
+                        taskId = taskId,
+                        taskParam = JsonUtil.toJson(taskParam, formatted = false)
+                    )
+
+                    pipelineEventDispatcher.dispatch(
+                        PipelineBuildAtomTaskEvent(
+                            source = "manualDealBuildTask",
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            userId = starter,
+                            buildId = buildId,
+                            stageId = stageId,
+                            containerId = containerId,
+                            containerHashId = containerHashId,
+                            containerType = containerType,
+                            taskId = taskId,
+                            taskParam = taskParam,
+                            actionType = ActionType.REFRESH
+                        )
+                    )
                 }
             }
-        }
     }
 
     /**
