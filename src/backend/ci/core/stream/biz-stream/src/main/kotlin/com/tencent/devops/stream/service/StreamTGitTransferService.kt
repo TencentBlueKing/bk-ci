@@ -94,7 +94,7 @@ class StreamTGitTransferService @Autowired constructor(
                 TokenTypeEnum.PRIVATE_KEY
             },
             gitProjectId = gitProjectId
-        ).data!!.let {
+        ).data?.let {
             StreamGitProjectBaseInfoCache(
                 gitProjectId = it.id.toString(),
                 gitHttpUrl = it.repositoryUrl,
@@ -102,7 +102,9 @@ class StreamTGitTransferService @Autowired constructor(
                 pathWithNamespace = it.pathWithNamespace,
                 defaultBranch = it.defaultBranch
             )
-        }
+        } ?: throw OauthForbiddenException(
+            message = "get git project($gitProjectId) info error|useAccessToken=$useAccessToken"
+        )
     }
 
     override fun getGitProjectInfo(
