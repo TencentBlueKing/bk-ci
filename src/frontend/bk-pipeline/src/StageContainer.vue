@@ -125,6 +125,7 @@
                             container: this.container
                         }),
                     updateCruveConnectHeight: this.updateCruveConnectHeight,
+                    disabled: this.containerDisabled,
                     ...this.$props
                 }
             }

@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildTask
@@ -133,8 +132,8 @@ object Runner {
 
         // 启动日志服务
         LoggerService.start()
-        val variables = buildVariables.variablesWithType
-        val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
+        val variables = buildVariables.variables
+        val retryCount = variables[PIPELINE_RETRY_COUNT] ?: "0"
         val executeCount = retryCount.toInt() + 1
         LoggerService.executeCount = executeCount
         LoggerService.jobId = buildVariables.containerHashId
@@ -149,7 +148,7 @@ object Runner {
         Heartbeat.start(buildVariables.timeoutMills, executeCount) // #2043 添加Job超时监控
 
         val workspaceAndLogPath = workspaceInterface.getWorkspaceAndLogDir(
-            variables = buildVariables.variablesWithType.associate { it.key to it.value.toString() },
+            variables = variables,
             pipelineId = buildVariables.pipelineId
         )
         LoggerService.pipelineLogDir = workspaceAndLogPath.second

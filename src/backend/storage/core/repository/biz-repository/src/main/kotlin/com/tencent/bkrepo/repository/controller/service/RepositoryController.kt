@@ -38,6 +38,7 @@ import com.tencent.bkrepo.repository.api.RepositoryClient
 import com.tencent.bkrepo.repository.pojo.project.RepoRangeQueryRequest
 import com.tencent.bkrepo.repository.pojo.repo.RepoCreateRequest
 import com.tencent.bkrepo.repository.pojo.repo.RepoDeleteRequest
+import com.tencent.bkrepo.repository.pojo.repo.RepoListOption
 import com.tencent.bkrepo.repository.pojo.repo.RepoUpdateRequest
 import com.tencent.bkrepo.repository.pojo.repo.RepositoryDetail
 import com.tencent.bkrepo.repository.pojo.repo.RepositoryInfo
@@ -86,31 +87,11 @@ class RepositoryController(
         return ResponseBuilder.success(repositoryService.listRepoPageByType(repoType, page, size))
     }
 
-    override fun query(projectId: String, repoName: String, type: String): Response<RepositoryDetail?> {
-        return getRepoDetail(projectId, repoName, type)
-    }
-
-    override fun query(projectId: String, repoName: String): Response<RepositoryDetail?> {
-        return getRepoDetail(projectId, repoName, null)
-    }
-
-    override fun getRepoDetailWithType(
+    override fun listPermissionRepo(
+        userId: String,
         projectId: String,
-        repoName: String,
-        type: String?
-    ): Response<RepositoryDetail?> {
-        return getRepoDetail(projectId, repoName, type)
-    }
-
-    override fun create(request: RepoCreateRequest): Response<RepositoryDetail> {
-        return createRepo(request)
-    }
-
-    override fun update(request: RepoUpdateRequest): Response<Void> {
-        return updateRepo(request)
-    }
-
-    override fun delete(request: RepoDeleteRequest): Response<Void> {
-        return deleteRepo(request)
+        option: RepoListOption
+    ): Response<List<RepositoryInfo>> {
+        return ResponseBuilder.success(repositoryService.listPermissionRepo(userId, projectId, option))
     }
 }

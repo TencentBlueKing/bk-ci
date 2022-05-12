@@ -32,6 +32,7 @@
 package com.tencent.bkrepo.auth.pojo.token
 
 import com.tencent.bkrepo.auth.pojo.enums.CredentialStatus
+import com.tencent.bkrepo.auth.pojo.oauth.AuthorizationGrantType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
@@ -41,9 +42,11 @@ data class CredentialSet(
     @ApiModelProperty("accessKey")
     val accessKey: String,
     @ApiModelProperty("secretKey")
-    val secretKey: String,
+    var secretKey: String,
     @ApiModelProperty("创建时间")
     val createdAt: LocalDateTime,
     @ApiModelProperty("状态")
-    val status: CredentialStatus
+    val status: CredentialStatus,
+    @ApiModelProperty("认证授权方式")
+    val authorizationGrantType: AuthorizationGrantType? = AuthorizationGrantType.PLATFORM
 )

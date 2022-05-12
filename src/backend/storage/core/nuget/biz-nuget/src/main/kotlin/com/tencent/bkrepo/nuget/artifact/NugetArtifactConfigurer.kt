@@ -39,15 +39,19 @@ import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import com.tencent.bkrepo.common.security.http.core.HttpAuthSecurity
 import com.tencent.bkrepo.common.security.http.core.HttpAuthSecurityCustomizer
 import com.tencent.bkrepo.common.service.util.SpringContextUtils
+import com.tencent.bkrepo.nuget.artifact.auth.NugetApiKeyAuthHandler
 import com.tencent.bkrepo.nuget.artifact.repository.NugetLocalRepository
 import com.tencent.bkrepo.nuget.artifact.repository.NugetRemoteRepository
 import com.tencent.bkrepo.nuget.artifact.repository.NugetVirtualRepository
+import com.tencent.bkrepo.nuget.constant.NugetProperties
 import com.tencent.bkrepo.nuget.model.NugetErrorResponse
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.annotation.Configuration
 import org.springframework.http.server.ServerHttpRequest
 import org.springframework.http.server.ServerHttpResponse
-import org.springframework.stereotype.Component
 
-@Component
+@Configuration
+@EnableConfigurationProperties(NugetProperties::class)
 class NugetArtifactConfigurer : ArtifactConfigurerSupport() {
 
     override fun getRepositoryType() = RepositoryType.NUGET
@@ -56,7 +60,9 @@ class NugetArtifactConfigurer : ArtifactConfigurerSupport() {
     override fun getVirtualRepository() = SpringContextUtils.getBean<NugetVirtualRepository>()
     override fun getAuthSecurityCustomizer() = object : HttpAuthSecurityCustomizer {
         override fun customize(httpAuthSecurity: HttpAuthSecurity) {
-            httpAuthSecurity.withPrefix("/nuget")
+            val authenticationManager = httpAuthSecurity.authenticationManager!!
+            val nugetApiKeyAuthHandler = NugetApiKeyAuthHandler(authenticationManager)
+            httpAuthSecurity.withPrefix("/nuget").addHttpAuthHandler(nugetApiKeyAuthHandler)
         }
     }
 

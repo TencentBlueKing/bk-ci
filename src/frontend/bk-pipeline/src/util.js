@@ -60,10 +60,10 @@ export const hashID = (len = 32) => {
 }
 
 export const randomString = (len) => {
-    const chars = 'ABCDEFGHJKLMNPQRSTWXYZabcdefhijklmnprstwxyz012345678'
-    const tempLen = chars.length
+    const chars = 'ABCDEFGHJKLMNPQRSTWXYZabcdefhijklmnprstwxyz_0123456789'
     let tempStr = ''
     for (let i = 0; i < len; ++i) {
+        const tempLen = i === 0 ? chars.length - 10 : chars.length
         tempStr += chars.charAt(Math.floor(Math.random() * tempLen))
     }
     return tempStr
