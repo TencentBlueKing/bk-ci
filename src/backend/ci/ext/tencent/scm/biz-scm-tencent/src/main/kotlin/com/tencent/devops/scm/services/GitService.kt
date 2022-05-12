@@ -1311,7 +1311,12 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             val data = it.body()!!.string()
-            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            if (!it.isSuccessful) {
+                logger.error(
+                    "getGitProjectInfo not successful |code=${it.code()}|message=${it.message()}|body=$data"
+                )
+                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            }
             return Result(JsonUtil.to(data, GitProjectInfo::class.java))
         }
     }
