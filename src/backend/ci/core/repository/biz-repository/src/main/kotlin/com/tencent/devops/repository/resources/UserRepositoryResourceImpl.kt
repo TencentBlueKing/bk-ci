@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.UserRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
@@ -83,6 +84,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         return Result(repositoryService.hasAliasName(projectId, repositoryHashId, aliasName))
     }
 
+    @BkTimed(extraTags = ["operate", "create"])
     override fun create(userId: String, projectId: String, repository: Repository): Result<RepositoryId> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -99,6 +101,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         return Result(RepositoryId(repositoryService.userCreate(userId, projectId, repository)))
     }
 
+    @BkTimed(extraTags = ["operate", "get"])
     override fun get(
         userId: String,
         projectId: String,
@@ -127,6 +130,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @BkTimed(extraTags = ["operate", "get"])
     override fun list(
         userId: String,
         projectId: String,
@@ -162,6 +166,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         )
     }
 
+    @BkTimed(extraTags = ["operate", "get"])
     override fun hasPermissionList(
         userId: String,
         projectId: String,
@@ -216,6 +221,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         return Result(commitService.getCommit(buildId))
     }
 
+    @BkTimed(extraTags = ["operate", "get"])
     override fun fuzzySearchByAliasName(
         userId: String,
         projectId: String,
