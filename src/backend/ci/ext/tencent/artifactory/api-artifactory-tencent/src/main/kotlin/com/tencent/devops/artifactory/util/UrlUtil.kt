@@ -41,7 +41,10 @@ object UrlUtil {
         return if (innerPhotoAddr.contains("bkrepo") && innerPhotoAddr.contains("generic")) { // 仓库存储
             "${HomeHostUtil.outerServerHost()}/bkrepo/api/external/generic" + innerPhotoAddr.split("generic")[1]
         } else if (innerPhotoAddr.contains("radosgw.open")) { // s3存储
-            innerPhotoAddr.replace(Regex("http(s|)://radosgw.open.(w|)oa.com"), "${HomeHostUtil.outerServerHost()}/images")
+            innerPhotoAddr.replace(
+                Regex("http(s|)://radosgw.open.(w|)oa.com"),
+                "${HomeHostUtil.outerServerHost()}/images"
+            )
         } else if (innerPhotoAddr.contains("staticfile.woa.com")) {
             innerPhotoAddr.replace(
                 Regex("https://(dev|test|)staticfile.woa.com"),
