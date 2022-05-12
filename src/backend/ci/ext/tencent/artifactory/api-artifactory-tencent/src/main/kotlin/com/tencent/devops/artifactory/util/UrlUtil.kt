@@ -28,9 +28,6 @@
 package com.tencent.devops.artifactory.util
 
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import org.springframework.core.env.Environment
-import java.util.regex.Pattern
 
 object UrlUtil {
     fun toOuterPhotoAddr(innerPhotoAddr: String?): String {
@@ -41,15 +38,10 @@ object UrlUtil {
             return innerPhotoAddr
         }
 
-        val endpointUrl = lazy {
-            SpringContextUtil.getBean(Environment::class.java)
-                .getProperty("s3.endpointUrl", "http://radosgw.open.oa.com")
-        }
-
         return if (innerPhotoAddr.contains("bkrepo") && innerPhotoAddr.contains("generic")) { // 仓库存储
             "${HomeHostUtil.outerServerHost()}/bkrepo/api/external/generic" + innerPhotoAddr.split("generic")[1]
-        } else if (innerPhotoAddr.contains(endpointUrl.value)) { // s3存储
-            innerPhotoAddr.replace(endpointUrl.value, "${HomeHostUtil.outerServerHost()}/images")
+        } else if (innerPhotoAddr.contains("radosgw.open")) { // s3存储
+            innerPhotoAddr.replace(Regex("http(s|)://radosgw.open.(w|)oa.com"), "${HomeHostUtil.outerServerHost()}/images")
         } else if (innerPhotoAddr.contains("staticfile.woa.com")) {
             innerPhotoAddr.replace(
                 Regex("https://(dev|test|)staticfile.woa.com"),
