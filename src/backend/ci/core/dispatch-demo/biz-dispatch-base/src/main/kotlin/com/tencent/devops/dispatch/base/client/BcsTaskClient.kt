@@ -31,7 +31,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.dispatch.bcs.client.BcsBuilderClient
 import com.tencent.devops.dispatch.base.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.base.pojo.bcs.BcsResult
 import com.tencent.devops.dispatch.base.pojo.bcs.BcsTaskStatusEnum

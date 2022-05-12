@@ -25,26 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.bcs.client
+package com.tencent.devops.dispatch.base.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.base.common.ConstantsMessage
 import com.tencent.devops.dispatch.base.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsBuilderStatus
-import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsBuilderStatusEnum
-import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsDeleteBuilderParams
-import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsOperateBuilderParams
-import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsResult
-import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsStartBuilderParams
-import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsStopBuilderParams
-import com.tencent.devops.dispatch.bcs.pojo.bcs.getCodeMessage
-import com.tencent.devops.dispatch.bcs.pojo.bcs.isRunning
-import com.tencent.devops.dispatch.bcs.pojo.bcs.resp.BcsTaskResp
-import com.tencent.devops.dispatch.base.client.BcsClientCommon
+import com.tencent.devops.dispatch.base.pojo.bcs.BcsBuilderStatus
+import com.tencent.devops.dispatch.base.pojo.bcs.BcsResult
+import com.tencent.devops.dispatch.base.pojo.bcs.BcsBuilderStatusEnum
+import com.tencent.devops.dispatch.base.pojo.bcs.BcsDeleteBuilderParams
+import com.tencent.devops.dispatch.base.pojo.bcs.BcsOperateBuilderParams
+import com.tencent.devops.dispatch.base.pojo.bcs.BcsStartBuilderParams
+import com.tencent.devops.dispatch.base.pojo.bcs.BcsStopBuilderParams
+import com.tencent.devops.dispatch.base.pojo.bcs.getCodeMessage
+import com.tencent.devops.dispatch.base.pojo.bcs.isRunning
+import com.tencent.devops.dispatch.base.pojo.bcs.resp.BcsTaskResp
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
