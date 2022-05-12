@@ -36,6 +36,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.TaskAtomService
@@ -77,6 +78,7 @@ class TaskControl @Autowired constructor(
     /**
      * 处理[event]插件任务执行逻辑入口
      */
+    @BkTimed
     fun handle(event: PipelineBuildAtomTaskEvent) {
         val watcher = Watcher(
             id = "ENGINE|TaskControl|${event.traceId}|${event.buildId}|Job#${event.containerId}|Task#${event.taskId}"
