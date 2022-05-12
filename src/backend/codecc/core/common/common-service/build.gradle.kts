@@ -14,4 +14,5 @@ dependencies {
     api("io.github.openfeign:feign-okhttp")
     api("org.jolokia:jolokia-core")
     api("org.projectlombok:lombok")
+
 }

@@ -19,7 +19,7 @@ import com.tencent.bk.codecc.defect.pojo.FileMD5SingleModel;
 import com.tencent.bk.codecc.defect.pojo.FileMD5TotalModel;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.util.JsonUtil;
+import com.tencent.devops.common.api.codecc.util.JsonUtil;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.utils.SpringContextUtil;

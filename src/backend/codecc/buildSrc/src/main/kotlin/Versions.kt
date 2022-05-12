@@ -5,9 +5,9 @@ object Release {
 
 object Versions {
     const val kotlinVersion = "1.4.10"
-    const val swaggerVersion = "1.5.17"
+    const val swaggerVersion = "1.6.2"
     const val jaxrsVersion = "2.0"
-    const val jacksonVersion = "2.13.0-rc1"
+    const val jacksonVersion = "2.11.4"
     const val hashidsVersion = "1.0.3"
     const val feignVersion = "10.10.1"
     const val svnkitVersion = "1.9.3"
@@ -37,7 +37,6 @@ object Versions {
     const val lettuceVersion = "4.5.0.Final"
     const val springRedisVersion = "2.4.5.RELEASE"
     const val springWebSocketVersion = "2.3.4.RELEASE"
-    const val jerseyValidationVersion = "2.32"
     const val commonsIOVersion = "2.8.0"
     const val commonsHttpclientVersion = "3.1"
     const val ktlintVersion = "0.29.0"
@@ -47,6 +46,6 @@ object Versions {
     const val lucene = "8.11.0"
     const val log4j = "2.17.1"
     const val beanUtils = "1.9.4"
-    const val jerseyCommon = "2.34"
+    const val jersey = "2.34"
     const val guava = "30.0-jre"
 }

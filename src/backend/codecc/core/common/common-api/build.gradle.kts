@@ -1,7 +1,6 @@
 plugins {
     id("com.tencent.devops.boot")
 }
-
 dependencies {
     api(project(":core:common:common-util"))
     api("javax.ws.rs:javax.ws.rs-api")

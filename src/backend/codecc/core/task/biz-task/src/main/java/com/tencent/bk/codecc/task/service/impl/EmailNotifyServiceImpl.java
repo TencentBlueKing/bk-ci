@@ -1111,8 +1111,8 @@ public class EmailNotifyServiceImpl implements EmailNotifyService {
      */
     private void setEmailReportRootUrl(DailyDataReportReqModel dailyDataReportReqModel, TaskInfoEntity taskInfoEntity) {
         String urlRoot = ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value().equals(taskInfoEntity.getCreateFrom())
-                ? String.format("http://%s/codecc/%s/", codeccHost, taskInfoEntity.getProjectId())
-                : String.format("http://%s/console/codecc/%s/", devopsHost, taskInfoEntity.getProjectId());
+                ? String.format("%s/codecc/%s/", codeccHost, taskInfoEntity.getProjectId())
+                : String.format("%s/console/codecc/%s/", devopsHost, taskInfoEntity.getProjectId());
 
         dailyDataReportReqModel.setUrlRoot(urlRoot);
     }

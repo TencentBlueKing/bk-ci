@@ -56,8 +56,6 @@ public class DUPCCheckReportBizServiceImpl implements ICheckReportBizService
 
     @Value("${bkci.public.url:#{null}}")
     private String devopsHost;
-    @Value("${bkci.public.schema:http}")
-    protected String devopsSchema;
 
     @Override
     public ToolSnapShotEntity getReport(long taskId, String projectId, String toolName, String buildId)
@@ -89,9 +87,11 @@ public class DUPCCheckReportBizServiceImpl implements ICheckReportBizService
         dupcSnapShotEntity.setToolNameEn(toolName);
         if (StringUtils.isNotEmpty(projectId))
         {
-            String defectDetailUrl = String.format("%s://%s/console/codecc/%s/task/%d/defect/dupc/list", devopsSchema, devopsHost, projectId, taskId);
+            String defectDetailUrl = String.format("%s/console/codecc/%s/task/%d/defect/dupc/list",
+                    devopsHost, projectId, taskId);
             dupcSnapShotEntity.setDefectDetailUrl(defectDetailUrl);
-            String defectReportUrl = String.format("%s://%s/console/codecc/%s/task/%d/defect/dupc/charts", devopsSchema, devopsHost, projectId, taskId);
+            String defectReportUrl = String.format("%s/console/codecc/%s/task/%d/defect/dupc/charts",
+                    devopsHost, projectId, taskId);
             dupcSnapShotEntity.setDefectReportUrl(defectReportUrl);
         }
     }

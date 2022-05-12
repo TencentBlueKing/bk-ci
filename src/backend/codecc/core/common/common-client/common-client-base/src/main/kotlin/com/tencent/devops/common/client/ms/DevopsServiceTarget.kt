@@ -46,7 +46,7 @@ class DevopsServiceTarget<T> constructor(
     }
 
     override fun url(): String {
-        return "http://$rootPath/ms/$serviceName/api"
+        return "$rootPath/ms/$serviceName/api"
     }
 
     override fun type() = type

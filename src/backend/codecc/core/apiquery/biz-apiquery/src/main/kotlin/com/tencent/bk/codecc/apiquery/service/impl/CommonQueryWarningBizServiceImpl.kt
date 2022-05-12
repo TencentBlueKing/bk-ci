@@ -321,7 +321,7 @@ class CommonQueryWarningBizServiceImpl @Autowired constructor(
                 }
                 defectVO.filePathName = it.filePathname
                 val url = String.format(
-                    "http://%s/codecc/%s/task/%d/defect/compile/%s/list?entityId=%s", codeccHost,
+                    "%s/codecc/%s/task/%d/defect/compile/%s/list?entityId=%s", codeccHost,
                     projectId, taskId, toolName, it.entityId
                 )
                 defectVO.defectDetailUrl = url

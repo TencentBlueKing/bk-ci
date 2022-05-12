@@ -54,6 +54,12 @@ abstract class Client constructor(
         protected val objectMapper: ObjectMapper
 ) {
 
+    @Value("\${server.prefix:codecc:#{null}}")
+    private val serverPrefix: String? = null
+
+    @Value("\${service.suffix.codecc:#{null}}")
+    private val serviceSuffix: String? = null
+
     private val interfaces = ConcurrentHashMap<KClass<*>, String>()
 
     private val okHttpClient = okhttp3.OkHttpClient.Builder()
@@ -96,7 +102,7 @@ abstract class Client constructor(
             .options(Request.Options(10000, 30000))
             .requestInterceptor(SpringContextUtil.getBean(RequestInterceptor::class.java,
                 "devopsRequestInterceptor"))
-            .target(DevopsServiceTarget(findServiceName(clz.kotlin),  clz, allProperties.devopsDevUrl
+            .target(DevopsServiceTarget(findServiceName(clz.kotlin,"",""),  clz, allProperties.devopsDevUrl
                 ?: ""))
         val devopsProxy = DevopsProxy(feignProxy, clz)
         return clz.cast(Proxy.newProxyInstance(feignProxy.javaClass.classLoader,
@@ -112,7 +118,11 @@ abstract class Client constructor(
     abstract fun <T : Any> getWithoutRetry(clz: KClass<T>): T
 
     protected fun findServiceName(clz: KClass<*>): String {
-        return interfaces.getOrPut(clz) {
+        return findServiceName(clz, serverPrefix, serviceSuffix)
+    }
+
+    protected fun findServiceName(clz: KClass<*>, prefix: String?, suffix: String?): String {
+        val serviceName = interfaces.getOrPut(clz) {
             val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
             if (serviceInterface != null) {
                 serviceInterface.value
@@ -124,6 +134,13 @@ abstract class Client constructor(
                 ?: throw ClientException("无法根据接口[$packageName]分析所属的服务")
                 matches.groupValues[1]
             }
+        }
+        return if (prefix.isNullOrBlank() && suffix.isNullOrBlank()) {
+            serviceName
+        } else if (suffix.isNullOrBlank()) {
+            "$prefix$serviceName"
+        } else {
+            "$serviceName$suffix"
         }
     }
 

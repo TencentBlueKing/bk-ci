@@ -67,8 +67,6 @@ public class LINTCheckReportBizServiceImpl implements ICheckReportBizService
 
     @Value("${bkci.public.url:#{null}}")
     private String devopsHost;
-    @Value("${bkci.public.schema:http}")
-    protected String devopsSchema;
 
     @Autowired
     private NewDefectJudgeService newDefectJudgeService;
@@ -179,12 +177,12 @@ public class LINTCheckReportBizServiceImpl implements ICheckReportBizService
         lintSnapShotEntity.setToolNameEn(toolName);
         if (StringUtils.isNotEmpty(projectId))
         {
-            String defectDetailUrl = String.format("%s://%s/console/codecc/%s/task/%d/defect/lint/%s/list?buildId=%s", devopsSchema
-                    , devopsHost, projectId, taskId,
+            String defectDetailUrl = String.format("%s/console/codecc/%s/task/%d/defect/lint/%s/list?buildId=%s",
+                    devopsHost, projectId, taskId,
                     toolName.toUpperCase(), buildId);
             lintSnapShotEntity.setDefectDetailUrl(defectDetailUrl);
-            String defectReportUrl = String.format("%s://%s/console/codecc/%s/task/%d/defect/lint/%s/charts", devopsSchema
-                    , devopsHost, projectId, taskId,
+            String defectReportUrl = String.format("%s/console/codecc/%s/task/%d/defect/lint/%s/charts",
+                     devopsHost, projectId, taskId,
                     toolName.toUpperCase());
             lintSnapShotEntity.setDefectReportUrl(defectReportUrl);
         }

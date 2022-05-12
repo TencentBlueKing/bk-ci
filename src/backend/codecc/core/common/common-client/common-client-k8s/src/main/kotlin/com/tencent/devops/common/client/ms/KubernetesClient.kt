@@ -24,9 +24,6 @@ class KubernetesClient constructor(
     JsonUtil.getObjectMapper()
 ) {
 
-    @Value("\${server.prefix:codecc}")
-    private val serverPrefix: String = ""
-
     /**
      * 正常情况下创建feign对象
      */
@@ -40,7 +37,7 @@ class KubernetesClient constructor(
             .options(Request.Options(10000, 30000))// 10秒连接 30秒收数据
             .requestInterceptor(SpringContextUtil.getBean(RequestInterceptor::class.java,
                 "normalRequestInterceptor")) // 获取为feign定义的拦截器
-            .target(KubernetesServiceTarget(serverPrefix, findServiceName(clz), clz.java, discoveryClient))
+            .target(KubernetesServiceTarget(findServiceName(clz), clz.java, discoveryClient))
     }
 
 
@@ -55,7 +52,7 @@ class KubernetesClient constructor(
             .decoder(jacksonDecoder)
             .contract(jaxRsContract)
             .options(Request.Options(10000, 30000))// 10秒连接 30秒收数据
-            .target(KubernetesServiceTarget(serverPrefix, findServiceName(clz.kotlin), clz, discoveryClient))
+            .target(KubernetesServiceTarget(findServiceName(clz.kotlin), clz, discoveryClient))
     }
 
 
@@ -78,6 +75,6 @@ class KubernetesClient constructor(
                     throw e
                 }
             })
-            .target(KubernetesServiceTarget(serverPrefix, findServiceName(clz), clz.java, discoveryClient))
+            .target(KubernetesServiceTarget(findServiceName(clz), clz.java, discoveryClient))
     }
 }

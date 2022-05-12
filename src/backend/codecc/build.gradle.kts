@@ -5,30 +5,11 @@ plugins {
     id("com.tencent.devops.boot")
 }
 
-buildscript {
-    dependencies {
-        classpath("org.owasp:dependency-check-gradle:7.1.0.1")
-    }
-
-}
-
 allprojects {
     group = "com.tencent.bk.codecc"
-    version = "0.0.2"
+    version = "1.7.37-RELEASE"
 
     apply(plugin = "com.tencent.devops.boot")
-    apply(plugin = "org.owasp.dependencycheck")
-
-
-//    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java).all {
-//        kotlinOptions {
-//            val list = mutableListOf<String>(
-//                "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes",
-//                "-XXLanguage:+InlineClasses")
-//            list.addAll(freeCompilerArgs)
-//            freeCompilerArgs = list
-//        }
-//    }
 
     val property = project.findPropertyOrEmpty("devops.assemblyMode").trim()
     if (project.name.startsWith("boot-")) {
@@ -70,6 +51,8 @@ allprojects {
         }
     }
 
+
+
     dependencyManagement {
 
         applyMavenExclusions(false)
@@ -95,8 +78,6 @@ allprojects {
             dependency("org.apache.tomcat.embed:tomcat-embed-core:${Versions.tomcatEmbedCoreVersion}")
             dependency("commons-collections:commons-collections:${Versions.commonCollection}")
             dependency("biz.paluch.redis:lettuce:${Versions.lettuceVersion}")
-//			dependency("org.springframework.data:spring-data-redis:${Versions.springRedisVersion}")
-            dependency("org.glassfish.jersey.ext:jersey-bean-validation:${Versions.jerseyValidationVersion}")
             dependency("commons-io:commons-io:${Versions.commonsIOVersion}")
             dependency("commons-httpclient:commons-httpclient:${Versions.commonsHttpclientVersion}")
             dependency("com.alibaba:easyexcel:${Versions.easyexcel}")
@@ -108,18 +89,6 @@ allprojects {
                 entry("swagger-models")
                 entry("swagger-core")
                 entry("swagger-jaxrs")
-            }
-            dependencySet("com.fasterxml.jackson.module:${Versions.jacksonVersion}") {
-                entry("jackson-module-kotlin")
-            }
-            dependencySet("com.fasterxml.jackson.core:${Versions.jacksonVersion}") {
-                entry("jackson-core")
-                entry("jackson-databind")
-                entry("jackson-annotations")
-            }
-            dependencySet("com.fasterxml.jackson.jaxrs:${Versions.jacksonVersion}") {
-                entry("jackson-jaxrs-json-provider")
-                entry("jackson-jaxrs-base")
             }
             dependencySet("io.github.openfeign:${Versions.feignVersion}") {
                 entry("feign-jaxrs")
@@ -161,8 +130,26 @@ allprojects {
             }
             dependency("com.google.guava:guava:${Versions.guava}")
             dependency("commons-beanutils:commons-beanutils:${Versions.beanUtils}")
-            dependencySet("org.glassfish.jersey.core:${Versions.jerseyCommon}"){
+
+            //Jersey 版本控制
+            dependencySet("org.glassfish.jersey.containers:${Versions.jersey}"){
+                entry("jersey-container-servlet")
+                entry("jersey-container-servlet-core")
+            }
+            dependencySet("org.glassfish.jersey.core:${Versions.jersey}"){
+                entry("jersey-client")
                 entry("jersey-common")
+                entry("jersey-server")
+            }
+            dependencySet("org.glassfish.jersey.ext:${Versions.jersey}"){
+                entry("jersey-bean-validation")
+                entry("jersey-entity-filtering")
+                entry("jersey-spring")
+            }
+            dependency("org.glassfish.jersey.inject:jersey-hk2:${Versions.jersey}")
+            dependencySet("org.glassfish.jersey.media:${Versions.jersey}"){
+                entry("jersey-media-json-jackson")
+                entry("jersey-media-multipart")
             }
 
         }
