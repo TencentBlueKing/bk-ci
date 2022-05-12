@@ -5,7 +5,7 @@ import com.tencent.bk.codecc.defect.pojo.AggregateDefectInputModel
 import com.tencent.bk.codecc.defect.pojo.AggregateDefectOutputModel
 import com.tencent.bk.codecc.defect.pojo.AggregateDispatchFileName
 import com.tencent.bk.codecc.defect.pojo.FuzzyHashInfoModel
-import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.codecc.util.JsonUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList

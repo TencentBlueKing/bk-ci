@@ -33,7 +33,7 @@ import com.tencent.bk.codecc.task.model.ToolCountScriptEntity;
 import com.tencent.bk.codecc.task.model.ToolStatisticEntity;
 import com.tencent.bk.codecc.task.service.TaskService;
 import com.tencent.devops.common.api.QueryTaskListReqVO;
-import com.tencent.devops.common.api.util.JsonUtil;
+import com.tencent.devops.common.api.codecc.util.JsonUtil;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.ComConstants.DefectStatType;

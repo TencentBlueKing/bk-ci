@@ -109,18 +109,18 @@ allprojects {
                 entry("swagger-core")
                 entry("swagger-jaxrs")
             }
-            dependencySet("com.fasterxml.jackson.module:${Versions.jacksonVersion}") {
-                entry("jackson-module-kotlin")
-            }
-            dependencySet("com.fasterxml.jackson.core:${Versions.jacksonVersion}") {
-                entry("jackson-core")
-                entry("jackson-databind")
-                entry("jackson-annotations")
-            }
-            dependencySet("com.fasterxml.jackson.jaxrs:${Versions.jacksonVersion}") {
-                entry("jackson-jaxrs-json-provider")
-                entry("jackson-jaxrs-base")
-            }
+//            dependencySet("com.fasterxml.jackson.module:${Versions.jacksonVersion}") {
+//                entry("jackson-module-kotlin")
+//            }
+//            dependencySet("com.fasterxml.jackson.core:${Versions.jacksonVersion}") {
+//                entry("jackson-core")
+//                entry("jackson-databind")
+//                entry("jackson-annotations")
+//            }
+//            dependencySet("com.fasterxml.jackson.jaxrs:${Versions.jacksonVersion}") {
+//                entry("jackson-jaxrs-json-provider")
+//                entry("jackson-jaxrs-base")
+//            }
             dependencySet("io.github.openfeign:${Versions.feignVersion}") {
                 entry("feign-jaxrs")
                 entry("feign-okhttp")
