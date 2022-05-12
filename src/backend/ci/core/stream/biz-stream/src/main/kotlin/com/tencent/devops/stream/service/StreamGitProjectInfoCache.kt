@@ -70,7 +70,7 @@ class StreamGitProjectInfoCache @Autowired constructor(
                 accessToken = accessToken
             )
         } catch (ignored: Throwable) {
-            logger.error("update cache error| ${ignored.message}")
+            logger.error("update cache error| ${ignored.message}", ignored)
             return null
         }
 
