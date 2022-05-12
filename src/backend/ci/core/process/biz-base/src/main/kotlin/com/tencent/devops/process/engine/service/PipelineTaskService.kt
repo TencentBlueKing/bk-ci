@@ -354,7 +354,7 @@ class PipelineTaskService @Autowired constructor(
         val projectId = updateTaskInfo.projectId
         val buildId = updateTaskInfo.buildId
         val taskId = updateTaskInfo.taskId
-        val taskStatus = updateTaskInfo.taskStatus!!
+        val taskStatus = updateTaskInfo.taskStatus
         val taskRecord = pipelineBuildTaskDao.get(
             dslContext = transactionContext ?: dslContext,
             projectId = projectId,
