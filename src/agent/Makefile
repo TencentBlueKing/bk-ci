@@ -5,8 +5,6 @@ all: build_linux build_linux_arm64 build_linux_mips64 build_macos build_macos_ar
 
 linux: build_linux build_linux_arm64 build_linux_mips64
 
-macos: build_macos build_macos_arm64
-
 windows: build_windows
 
 build_linux:
