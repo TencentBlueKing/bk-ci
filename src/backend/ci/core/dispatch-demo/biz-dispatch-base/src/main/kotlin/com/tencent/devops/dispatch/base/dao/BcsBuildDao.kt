@@ -27,8 +27,8 @@
 
 package com.tencent.devops.dispatch.base.dao
 
-import com.tencent.devops.model.dispatch_bcs.tables.TBcsBuild
-import com.tencent.devops.model.dispatch_bcs.tables.records.TBcsBuildRecord
+import com.tencent.devops.model.dispatch.tables.TBcsBuild
+import com.tencent.devops.model.dispatch.tables.records.TBcsBuildRecord
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field

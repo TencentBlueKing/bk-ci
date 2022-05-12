@@ -27,8 +27,8 @@
 
 package com.tencent.devops.dispatch.base.dao
 
-import com.tencent.devops.model.dispatch_bcs.tables.TBcsPerformanceConfig
-import com.tencent.devops.model.dispatch_bcs.tables.TBcsPerformanceOptions
+import com.tencent.devops.model.dispatch.tables.TBcsPerformanceConfig
+import com.tencent.devops.model.dispatch.tables.TBcsPerformanceOptions
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record5

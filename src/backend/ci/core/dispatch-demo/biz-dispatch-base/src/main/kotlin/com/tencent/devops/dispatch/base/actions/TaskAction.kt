@@ -28,6 +28,8 @@
 package com.tencent.devops.dispatch.base.actions
 
 import com.tencent.devops.dispatch.base.client.BcsTaskClient
+import com.tencent.devops.dispatch.base.pojo.DispatchBuildStatusEnum
+import com.tencent.devops.dispatch.base.pojo.DispatchBuildStatusResp
 import com.tencent.devops.dispatch.base.pojo.bcs.BcsTaskStatusEnum
 import com.tencent.devops.dispatch.base.pojo.bcs.getCodeMessage
 import com.tencent.devops.dispatch.base.pojo.bcs.isFailed
@@ -52,18 +54,18 @@ class TaskAction @Autowired constructor(
             // 创建失败
             val msg = "${taskResponse.message ?: taskResponse.getCodeMessage()}"
             logger.error("Execute task: $taskId failed, actionCode is ${taskResponse.code}, msg: $msg")
-            return com.tencent.devops.dispatch.base.pojo.DispatchBuildStatusResp(com.tencent.devops.dispatch.base.pojo.DispatchBuildStatusEnum.failed.name, msg)
+            return DispatchBuildStatusResp(DispatchBuildStatusEnum.failed.name, msg)
         }
         // 请求成功但是任务失败
         if (status != null && status.isFailed()) {
-            return com.tencent.devops.dispatch.base.pojo.DispatchBuildStatusResp(com.tencent.devops.dispatch.base.pojo.DispatchBuildStatusEnum.failed.name, taskResponse.data!!.message)
+            return DispatchBuildStatusResp(DispatchBuildStatusEnum.failed.name, taskResponse.data!!.message)
         }
         return when {
-            status!!.isRunning() -> com.tencent.devops.dispatch.base.pojo.DispatchBuildStatusResp(com.tencent.devops.dispatch.base.pojo.DispatchBuildStatusEnum.running.name)
+            status!!.isRunning() -> DispatchBuildStatusResp(DispatchBuildStatusEnum.running.name)
             status.isSuccess() -> {
-                com.tencent.devops.dispatch.base.pojo.DispatchBuildStatusResp(com.tencent.devops.dispatch.base.pojo.DispatchBuildStatusEnum.succeeded.name)
+                DispatchBuildStatusResp(DispatchBuildStatusEnum.succeeded.name)
             }
-            else -> com.tencent.devops.dispatch.base.pojo.DispatchBuildStatusResp(com.tencent.devops.dispatch.base.pojo.DispatchBuildStatusEnum.failed.name, status.message)
+            else -> DispatchBuildStatusResp(DispatchBuildStatusEnum.failed.name, status.message)
         }
     }
 }

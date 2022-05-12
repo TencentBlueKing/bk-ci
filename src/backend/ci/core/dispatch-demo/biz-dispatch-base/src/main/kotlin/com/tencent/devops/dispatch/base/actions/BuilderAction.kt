@@ -29,12 +29,9 @@ package com.tencent.devops.dispatch.base.actions
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.base.client.BcsBuilderClient
 import com.tencent.devops.dispatch.base.client.BcsTaskClient
 import com.tencent.devops.dispatch.base.common.BCS_BUILDER_NAME
 import com.tencent.devops.dispatch.base.common.ConstantsMessage
@@ -58,7 +55,7 @@ import com.tencent.devops.dispatch.base.pojo.bcs.hasException
 import com.tencent.devops.dispatch.base.pojo.bcs.readyToStart
 import com.tencent.devops.dispatch.base.utils.BcsJobRedisUtils
 import com.tencent.devops.dispatch.base.utils.CommonUtils
-import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
+import com.tencent.devops.dispatch.base.client.BcsBuilderClient
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

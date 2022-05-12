@@ -27,7 +27,7 @@
 
 package com.tencent.devops.dispatch.base.dao
 
-import com.tencent.devops.model.dispatch_bcs.tables.TBuildBuilderPoolNo
+import com.tencent.devops.model.dispatch.tables.TBuildBuilderPoolNo
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime

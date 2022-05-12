@@ -27,8 +27,8 @@
 
 package com.tencent.devops.dispatch.base.dao
 
-import com.tencent.devops.model.dispatch_bcs.tables.TBcsBuildHis
-import com.tencent.devops.model.dispatch_bcs.tables.records.TBcsBuildHisRecord
+import com.tencent.devops.model.dispatch.tables.TBcsBuildHis
+import com.tencent.devops.model.dispatch.tables.records.TBcsBuildHisRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository

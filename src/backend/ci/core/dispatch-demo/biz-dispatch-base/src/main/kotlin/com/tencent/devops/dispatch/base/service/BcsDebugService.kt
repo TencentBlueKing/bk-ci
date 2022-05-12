@@ -33,7 +33,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.dispatch.bcs.client.BcsBuilderClient
+import com.tencent.devops.dispatch.base.client.BcsBuilderClient
 import com.tencent.devops.dispatch.base.client.BcsTaskClient
 import com.tencent.devops.dispatch.base.common.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.base.common.SLAVE_ENVIRONMENT
