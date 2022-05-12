@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.dispatch.bcs.actions.JobAction
 import com.tencent.devops.dispatch.bcs.common.ConstantsMessage
 import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsJob
@@ -64,7 +65,7 @@ class BcsJobClient @Autowired constructor(
     ): BcsResult<BcsTaskResp> {
         val url = "$bcsApiUrl/api/v1/devops/job/${job.name}"
         val body = JsonUtil.toJson(job)
-        logger.info("createJob request url: $url, body: $body")
+        logger.info("create bcs jobContainer request url: $url, body: $body")
         val request = clientCommon.baseRequest(userId, url).post(
             RequestBody.create(
                 MediaType.parse("application/json; charset=utf-8"),
@@ -72,6 +73,7 @@ class BcsJobClient @Autowired constructor(
             )
         ).build()
         val responseBody = OkhttpUtils.doHttp(request).body()!!.string()
+        logger.info("create bcs jobContainer response: $responseBody")
         return JsonUtil.getObjectMapper().readValue(responseBody)
     }
 
