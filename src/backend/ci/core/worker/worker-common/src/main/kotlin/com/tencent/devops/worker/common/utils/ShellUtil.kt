@@ -86,7 +86,6 @@ object ShellUtil {
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
-        systemEnvVariables: Map<String, String>? = null,
         prefix: String = "",
         errorMessage: String? = null,
         workspace: File = dir,
@@ -102,8 +101,7 @@ object ShellUtil {
                 workspace = workspace,
                 buildEnvs = buildEnvs,
                 runtimeVariables = runtimeVariables,
-                continueNoneZero = continueNoneZero,
-                systemEnvVariables = systemEnvVariables
+                continueNoneZero = continueNoneZero
             ).canonicalPath,
             sourceDir = dir,
             prefix = prefix,
@@ -123,7 +121,6 @@ object ShellUtil {
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
-        systemEnvVariables: Map<String, String>? = null,
         workspace: File = dir
     ): File {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
@@ -137,11 +134,6 @@ object ShellUtil {
 
         command.append("export $WORKSPACE_ENV=${workspace.absolutePath}\n")
             .append("export DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\n")
-
-        // 设置系统环境变量
-        systemEnvVariables?.forEach { (name, value) ->
-            command.append("export $name=$value\n")
-        }
 
         val commonEnv = runtimeVariables.plus(CommonEnv.getCommonEnv())
             .filterNot { specialEnv(it.key) }
