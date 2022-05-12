@@ -139,7 +139,7 @@ open class MarketAtomTask : ITask() {
         addTaskErrorMessage(ATOM_CREATOR, atomData.creator)
         // val atomWorkspace = File("${workspace.absolutePath}/${atomCode}_${buildTask.taskId}_data")
         val atomTmpSpace = Files.createTempDirectory("${atomCode}_${buildTask.taskId}_data").toFile()
-
+        buildTask.elementVersion = atomData.version
         if (!atomTmpSpace.exists() && !atomTmpSpace.mkdirs()) {
             atomEnvResult.data ?: throw TaskExecuteException(
                 errorMsg = "create directory fail! please check ${atomTmpSpace.absolutePath}",
