@@ -3,13 +3,13 @@
   "private": true,
   "devDependencies": {
     "@commitlint/cli": "^9.1.1",
-    "@commitlint/config-conventional": "^9.1.1",
+    "@commitlint/config-conventional": "^16.2.4",
     "chalk": "^4.0.0",
     "gulp": "^4.0.2",
     "gulp-rename": "^1.4.0",
-    "gulp-svg-sprite": "^1.5.0",
+    "gulp-svg-sprite": "^1.3.7",
     "husky": "^7.0.2",
-    "lerna": "^3.17.0",
+    "lerna": "^4.0.0",
     "lint-staged": "^10.2.11",
     "node-fetch": "^2.6.0",
     "ora": "^3.4.0",
@@ -17,6 +17,9 @@
     "webpack-bundle-analyzer": "^4.4.2",
     "webpack-cli": "^4.9.0",
     "webpack-dev-server": "^4.3.1"
+  },
+  "resolutions": {
+    "glob-parent": "5.1.2"
   },
   "scripts": {
     "start": "lerna bootstrap",
@@ -46,6 +49,7 @@
   ],
   "dependencies": {
     "cross-env": "^7.0.3",
+    "glob-parent": "5.1.2",
     "uuid": "^8.3.2"
   }
 }

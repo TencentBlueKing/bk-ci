@@ -34,15 +34,17 @@ package com.tencent.bkrepo.common.storage.core
 import com.tencent.bkrepo.common.artifact.api.ArtifactFile
 import com.tencent.bkrepo.common.artifact.stream.ArtifactInputStream
 import com.tencent.bkrepo.common.artifact.stream.Range
+import com.tencent.bkrepo.common.storage.core.operation.CleanupOperation
+import com.tencent.bkrepo.common.storage.core.operation.FileBlockOperation
+import com.tencent.bkrepo.common.storage.core.operation.HealthCheckOperation
 import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
 import com.tencent.bkrepo.common.storage.filesystem.check.SynchronizeResult
-import com.tencent.bkrepo.common.storage.filesystem.cleanup.CleanupResult
-import com.tencent.bkrepo.common.storage.pojo.FileInfo
+import java.nio.file.Path
 
 /**
  * 存储服务接口
  */
-interface StorageService {
+interface StorageService : FileBlockOperation, HealthCheckOperation, CleanupOperation {
     /**
      * 在存储实例[storageCredentials]上存储摘要为[digest]的构件[artifactFile]
      * 返回文件影响数，如果文件已经存在则返回0，否则返回1
@@ -74,83 +76,12 @@ interface StorageService {
     fun copy(digest: String, fromCredentials: StorageCredentials?, toCredentials: StorageCredentials?)
 
     /**
-     * 创建可追加的文件, 返回文件追加Id
-     * 追加文件组织格式: 在temp目录下创建一个具有唯一id的文件，文件名称即追加Id
-     * 数据每次追加都写入到该文件中
-     */
-    fun createAppendId(storageCredentials: StorageCredentials?): String
-
-    /**
-     * 追加文件，返回当前文件长度
-     * appendId: 文件追加Id
-     */
-    fun append(appendId: String, artifactFile: ArtifactFile, storageCredentials: StorageCredentials?): Long
-
-    /**
-     * 结束追加，存储并返回完整文件
-     * appendId: 文件追加Id
-     */
-    fun finishAppend(appendId: String, storageCredentials: StorageCredentials?): FileInfo
-
-    /**
-     * 创建分块存储目录，返回分块存储Id
-     * 组织格式: 在temp目录下创建一个名称唯一的目录，所有分块存储在该目录下，目录名称即blockId
-     * 其中，每个分块对应两个文件，命名分别为$sequence.block和$sequence.sha256
-     * $sequence.block文件保存其数据，
-     * $sequence.sha256保存文件sha256，用于后续分块合并时校验
-     */
-    fun createBlockId(storageCredentials: StorageCredentials?): String
-
-    /**
-     * 删除分块文件
-     * blockId: 分块存储id
-     */
-    fun deleteBlockId(blockId: String, storageCredentials: StorageCredentials?)
-
-    /**
-     * 检查blockId是否存在
-     * blockId: 分块存储id
-     */
-    fun checkBlockId(blockId: String, storageCredentials: StorageCredentials?): Boolean
-
-    /**
-     * 列出分块文件
-     * blockId: 分块存储id
-     */
-    fun listBlock(blockId: String, storageCredentials: StorageCredentials?): List<Pair<Long, String>>
-
-    /**
-     * 存储分块文件
-     * blockId: 分块存储id
-     * sequence: 序列id，从1开始
-     */
-    fun storeBlock(
-        blockId: String,
-        sequence: Int,
-        digest: String,
-        artifactFile: ArtifactFile,
-        overwrite: Boolean,
-        storageCredentials: StorageCredentials?
-    )
-
-    /**
-     * 合并分块文件
-     * blockId: 分块存储id
-     */
-    fun mergeBlock(blockId: String, storageCredentials: StorageCredentials?): FileInfo
-
-    /**
-     * 清理temp目录文件，包括分块上传产生和追加上传产生的脏数据
-     */
-    fun cleanUp(storageCredentials: StorageCredentials? = null): CleanupResult
-
-    /**
      * 检验缓存文件一致性
      */
     fun synchronizeFile(storageCredentials: StorageCredentials? = null): SynchronizeResult
 
     /**
-     * 健康检查
+     * 获取临时目录
      */
-    fun checkHealth(storageCredentials: StorageCredentials? = null)
+    fun getTempPath(storageCredentials: StorageCredentials? = null): Path
 }

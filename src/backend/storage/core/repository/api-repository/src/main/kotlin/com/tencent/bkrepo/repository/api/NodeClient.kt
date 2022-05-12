@@ -53,7 +53,6 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -149,20 +148,6 @@ interface NodeClient {
     @PostMapping("/search")
     fun search(@RequestBody queryModel: QueryModel): Response<Page<Map<String, Any?>>>
 
-    @Deprecated("replace with getNodeDetail")
-    @ApiOperation("根据路径查看节点详情")
-    @GetMapping("/query/{projectId}/{repoName}/{repoType}")
-    fun getNodeDetail(
-        @ApiParam(value = "所属项目", required = true)
-        @PathVariable projectId: String,
-        @ApiParam(value = "仓库名称", required = true)
-        @PathVariable repoName: String,
-        @ApiParam(value = "仓库类型", required = true)
-        @PathVariable repoType: String,
-        @ApiParam(value = "节点完整路径", required = true)
-        @RequestParam fullPath: String
-    ): Response<NodeDetail?>
-
     @Deprecated("replace with listNodePage")
     @ApiOperation("列表查询指定目录下所有节点")
     @GetMapping("/list/{projectId}/{repoName}")
@@ -178,56 +163,4 @@ interface NodeClient {
         @ApiParam(value = "是否深度查询文件", required = false, defaultValue = "false")
         @RequestParam deep: Boolean = false
     ): Response<List<NodeInfo>>
-
-    @Deprecated("replace with listNodePage")
-    @ApiOperation("分页查询指定目录下所有节点")
-    @GetMapping("/page/{projectId}/{repoName}/{pageNumber}/{pageSize}")
-    fun page(
-        @ApiParam(value = "所属项目", required = true)
-        @PathVariable projectId: String,
-        @ApiParam(value = "仓库名称", required = true)
-        @PathVariable repoName: String,
-        @ApiParam(value = "当前页", required = true, example = "1")
-        @PathVariable pageNumber: Int,
-        @ApiParam(value = "分页大小", required = true, example = "20")
-        @PathVariable pageSize: Int,
-        @ApiParam(value = "所属目录", required = true)
-        @RequestParam path: String,
-        @ApiParam(value = "是否包含目录", required = false, defaultValue = "true")
-        @RequestParam includeFolder: Boolean = true,
-        @ApiParam("是否包含元数据", required = false, defaultValue = "false")
-        @RequestParam includeMetadata: Boolean = false,
-        @ApiParam(value = "是否深度查询文件", required = false, defaultValue = "false")
-        @RequestParam deep: Boolean = false
-    ): Response<Page<NodeInfo>>
-
-    @Deprecated("replace with createNode")
-    @ApiOperation("创建节点")
-    @PostMapping
-    fun create(@RequestBody nodeCreateRequest: NodeCreateRequest): Response<NodeDetail>
-
-    @Deprecated("replace with renameNode")
-    @ApiOperation("重命名节点")
-    @PutMapping("/rename")
-    fun rename(@RequestBody nodeRenameRequest: NodeRenameRequest): Response<Void>
-
-    @Deprecated("replace with updateNode")
-    @ApiOperation("更新节点")
-    @PutMapping("/update")
-    fun update(@RequestBody nodeUpdateRequest: NodeUpdateRequest): Response<Void>
-
-    @Deprecated("replace with moveNode")
-    @ApiOperation("移动节点")
-    @PutMapping("/move")
-    fun move(@RequestBody nodeMoveRequest: NodeMoveCopyRequest): Response<Void>
-
-    @Deprecated("replace with copyNode")
-    @ApiOperation("复制节点")
-    @PutMapping("/copy")
-    fun copy(@RequestBody nodeCopyRequest: NodeMoveCopyRequest): Response<Void>
-
-    @Deprecated("replace with search")
-    @ApiOperation("自定义查询节点")
-    @PostMapping("/query")
-    fun query(@RequestBody queryModel: QueryModel): Response<Page<Map<String, Any?>>>
 }

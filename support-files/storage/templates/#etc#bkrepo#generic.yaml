@@ -1,0 +1,4 @@
+server:
+  port: __BK_REPO_GENERIC_PORT__
+generic:
+  host: http://__BK_REPO_HOST__/generic/

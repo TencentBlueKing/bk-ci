@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -56,8 +57,16 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import java.security.cert.CertificateException
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSocketFactory
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 import javax.ws.rs.core.Response
+import okhttp3.OkHttpClient
 
+@Suppress("All")
 @Service
 class GitCiService {
 
@@ -76,6 +85,39 @@ class GitCiService {
 
     @Value("\${gitCI.oauthUrl}")
     private lateinit var gitCIOauthUrl: String
+
+    private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
+        @Throws(CertificateException::class)
+        override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
+        }
+
+        @Throws(CertificateException::class)
+        override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
+        }
+
+        override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
+            return arrayOf()
+        }
+    })
+
+    // 针对工蜂的一些接口提供更长的等待事件
+    private val gitCodeOkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(5L, TimeUnit.SECONDS)
+        .readTimeout(60L, TimeUnit.SECONDS)
+        .writeTimeout(30L, TimeUnit.SECONDS)
+        .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+        .hostnameVerifier { _, _ -> true }
+        .build()
+
+    private fun sslSocketFactory(): SSLSocketFactory {
+        try {
+            val sslContext = SSLContext.getInstance("SSL")
+            sslContext.init(null, trustAllCerts, java.security.SecureRandom())
+            return sslContext.socketFactory
+        } catch (ingored: Exception) {
+            throw RemoteServiceException(ingored.message!!)
+        }
+    }
 
     fun getGitCIMembers(
         token: String,
@@ -408,7 +450,7 @@ class GitCiService {
             .url(url)
             .get()
             .build()
-        OkhttpUtils.doHttp(request).use { response ->
+        gitCodeOkHttpClient.newCall(request).execute().use { response ->
             logger.info("[url=$url]|getChangeFileList with response=$response")
             if (!response.isSuccessful) {
                 throw CustomException(
