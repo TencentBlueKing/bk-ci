@@ -30,7 +30,6 @@ package com.tencent.devops.process.listener
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.service.TxPipelineSubscriptionService
 import org.springframework.beans.factory.annotation.Autowired
