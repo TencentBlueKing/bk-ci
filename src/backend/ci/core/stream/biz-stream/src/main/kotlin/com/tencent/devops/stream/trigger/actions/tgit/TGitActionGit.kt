@@ -41,6 +41,8 @@ abstract class TGitActionGit(
         return TGitCred(data.setting.enableUser)
     }
 
+    override fun getChangeSet(): Set<String>? = null
+
     override fun getUserVariables(yamlVariables: Map<String, Variable>?): Map<String, Variable>? = null
 
     override fun needSaveOrUpdateBranch() = false
