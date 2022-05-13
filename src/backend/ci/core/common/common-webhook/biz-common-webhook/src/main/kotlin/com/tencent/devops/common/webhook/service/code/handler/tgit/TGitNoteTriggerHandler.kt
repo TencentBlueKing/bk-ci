@@ -40,23 +40,34 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_OWNER
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STATE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_TITLE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_URL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_AUTHOR_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_COMMENT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_CREATED_AT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_NOTEABLE_TYPE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_PROJECT_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_UPDATED_AT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_URL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_IID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_SOURCE_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_SOURCE_COMMIT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_SOURCE_PROJECT_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_STATE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_COMMIT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_PROJECT_ID
 import com.tencent.devops.common.webhook.pojo.code.CI_BRANCH
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_DESCRIPTION
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_ID
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_IID
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_OWNER
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_STATE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_TITLE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_URL
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_AUTHOR_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_COMMENT
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_CREATED_AT
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_ID
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_NOTEABLE_TYPE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_PROJECT_ID
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_UPDATED_AT
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_URL
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.service.code.GitScmService
@@ -112,12 +123,14 @@ class TGitNoteTriggerHandler(
         with(event.objectAttributes) {
             startParams[PIPELINE_WEBHOOK_NOTE_COMMENT] = note
             startParams[PIPELINE_WEBHOOK_NOTE_ID] = id
-            startParams[PIPELINE_WEBHOOK_NOTE_PROJECT_ID] = projectId.toString()
-            startParams[PIPELINE_WEBHOOK_NOTE_NOTEABLE_TYPE] = noteableType
-            startParams[PIPELINE_WEBHOOK_NOTE_AUTHOR_ID] = authorId
-            startParams[PIPELINE_WEBHOOK_NOTE_CREATED_AT] = createdAt
-            startParams[PIPELINE_WEBHOOK_NOTE_UPDATED_AT] = updatedAt
-            startParams[PIPELINE_WEBHOOK_NOTE_URL] = url
+            startParams[BK_REPO_GIT_WEBHOOK_NOTE_COMMENT] = note
+            startParams[BK_REPO_GIT_WEBHOOK_NOTE_ID] = id
+            startParams[BK_REPO_GIT_WEBHOOK_NOTE_PROJECT_ID] = projectId.toString()
+            startParams[BK_REPO_GIT_WEBHOOK_NOTE_NOTEABLE_TYPE] = noteableType
+            startParams[BK_REPO_GIT_WEBHOOK_NOTE_AUTHOR_ID] = authorId
+            startParams[BK_REPO_GIT_WEBHOOK_NOTE_CREATED_AT] = createdAt
+            startParams[BK_REPO_GIT_WEBHOOK_NOTE_UPDATED_AT] = updatedAt
+            startParams[BK_REPO_GIT_WEBHOOK_NOTE_URL] = url
         }
         if (projectId != null && repository != null) {
             val (defaultBranch, commitInfo) =
@@ -160,14 +173,25 @@ class TGitNoteTriggerHandler(
             startParams[PIPELINE_GIT_MR_ACTION] = action ?: ""
         }
         event.issue?.apply {
-            startParams[PIPELINE_WEBHOOK_ISSUE_TITLE] = title
-            startParams[PIPELINE_WEBHOOK_ISSUE_ID] = id
-            startParams[PIPELINE_WEBHOOK_ISSUE_IID] = iid
-            startParams[PIPELINE_WEBHOOK_ISSUE_DESCRIPTION] = description ?: ""
-            startParams[PIPELINE_WEBHOOK_ISSUE_STATE] = state
-            startParams[PIPELINE_WEBHOOK_ISSUE_OWNER] = event.user.username
-            startParams[PIPELINE_WEBHOOK_ISSUE_URL] = url ?: ""
-            startParams[PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID] = milestoneId ?: 0L
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_TITLE] = title
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ID] = id
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_IID] = iid
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION] = description ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_STATE] = state
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_OWNER] = event.user.username
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_URL] = url ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID] = milestoneId ?: 0L
+        }
+        event.review?.apply {
+            startParams[BK_REPO_GIT_WEBHOOK_REVIEW_STATE] = state
+            startParams[BK_REPO_GIT_WEBHOOK_REVIEW_ID] = id
+            startParams[BK_REPO_GIT_WEBHOOK_REVIEW_IID] = iid
+            startParams[BK_REPO_GIT_WEBHOOK_REVIEW_SOURCE_BRANCH] = sourceBranch
+            startParams[BK_REPO_GIT_WEBHOOK_REVIEW_SOURCE_PROJECT_ID] = sourceProjectId
+            startParams[BK_REPO_GIT_WEBHOOK_REVIEW_SOURCE_COMMIT] = sourceCommit
+            startParams[BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_COMMIT] = targetCommit
+            startParams[BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_BRANCH] = targetBranch
+            startParams[BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_PROJECT_ID] = targetProjectId
         }
         return startParams
     }
