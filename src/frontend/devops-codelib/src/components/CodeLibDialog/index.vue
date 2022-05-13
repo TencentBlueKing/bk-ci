@@ -26,8 +26,8 @@
                                 :placeholder="$t('codelib.codelibUrlPlaceholder')"
                                 :remote-method="handleSearchCodeLib"
                             >
-                                <bk-option v-for="(option, index) in oAuth.project"
-                                    :key="index"
+                                <bk-option v-for="option in oAuth.project"
+                                    :key="option.httpUrl"
                                     :id="option.httpUrl"
                                     :name="option.httpUrl">
                                 </bk-option>
