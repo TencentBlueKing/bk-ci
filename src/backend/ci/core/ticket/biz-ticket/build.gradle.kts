@@ -34,5 +34,5 @@ dependencies {
     api(project(":core:process:api-process"))
     api(project(":core:ticket:api-ticket"))
     api(project(":core:ticket:model-ticket"))
-    api("dom4j:dom4j")
+    api("org.dom4j:dom4j")
 }
