@@ -32,8 +32,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("构建结束后流水线指标数据")
 data class BuildEndPipelineMetricsData(
-    @ApiModelProperty("统计日期", required = true)
-    val statisticsDate: String,
+    @ApiModelProperty("统计时间", required = true)
+    val statisticsTime: String,
     @ApiModelProperty("项目ID", required = true)
     val projectId: String,
     @ApiModelProperty("流水线ID", required = true)
@@ -56,8 +56,8 @@ data class BuildEndPipelineMetricsData(
     val endTime: String? = null,
     @ApiModelProperty("流水线构建耗时", required = true)
     val costTime: Long,
-    @ApiModelProperty("流水线构建状态", required = true)
-    val status: String,
+    @ApiModelProperty("是否执行成功", required = true)
+    val successFlag: Boolean,
     @ApiModelProperty("错误类型", required = false)
     val errorType: Int? = null,
     @ApiModelProperty("错误码", required = false)

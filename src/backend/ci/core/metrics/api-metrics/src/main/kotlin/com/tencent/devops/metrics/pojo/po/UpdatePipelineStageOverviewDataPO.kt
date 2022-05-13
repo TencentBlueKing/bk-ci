@@ -39,6 +39,8 @@ data class UpdatePipelineStageOverviewDataPO(
     val projectId: String,
     @ApiModelProperty("平均耗时，单位：毫秒")
     val avgCostTime: Long,
+    @ApiModelProperty("执行次数")
+    val executeCount: Long,
     @ApiModelProperty("修改人")
     val modifier: String,
     @ApiModelProperty("更新时间")

@@ -40,9 +40,9 @@ data class UpdatePipelineOverviewDataPO(
     @ApiModelProperty("总平均耗时，单位：毫秒")
     val totalAvgCostTime: Long,
     @ApiModelProperty("成功平均耗时，单位：毫秒")
-    val successAvgCostTime: Long,
+    val successAvgCostTime: Long? = null,
     @ApiModelProperty("失败平均耗时，单位：毫秒")
-    val failAvgCostTime: Long,
+    val failAvgCostTime: Long? = null,
     @ApiModelProperty("总执行次数")
     val totalExecuteCount: Long,
     @ApiModelProperty("成功执行次数")

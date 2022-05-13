@@ -306,11 +306,28 @@ class MeasureServiceImpl constructor(
         val pipelineName = pipelineInfoService.getPipelineName(projectId, pipelineId)
         val webhookInfo = buildInfo.webhookInfo
         val stageMetricsDatas = mutableListOf<BuildEndStageMetricsData>()
-        model.stages.forEach { stage ->
+        model.stages.forEach nextStage@{ stage ->
+            // 判断stage是否执行过,未执行过的stage无需上报数据
+            val stageStatus = stage.status
+            if (checkMetricsReportCondition(stageStatus)) {
+                return@nextStage
+            }
             val containerMetricsDatas = mutableListOf<BuildEndContainerMetricsData>()
-            stage.containers.forEach { container ->
+            stage.containers.forEach nextContainer@{ container ->
+                // 判断container是否执行过,未执行过的container无需上报数据
+                val containerStatus = container.status
+                if (checkMetricsReportCondition(containerStatus)) {
+                    return@nextContainer
+                }
                 val taskMetricsDatas = mutableListOf<BuildEndTaskMetricsData>()
-                container.elements.forEach { element ->
+                val containerAtomCodes = mutableListOf<String>()
+                container.elements.forEach nextElement@{ element ->
+                    // 判断插件是否执行过,未执行过的插件无需上报数据
+                    val elementStatus = element.status
+                    if (checkMetricsReportCondition(elementStatus)) {
+                        return@nextElement
+                    }
+                    containerAtomCodes.add(element.getAtomCode())
                     taskMetricsDatas.add(
                         BuildEndTaskMetricsData(
                             taskId = element.id ?: "",
@@ -323,18 +340,20 @@ class MeasureServiceImpl constructor(
                                 DateTimeUtil.formatMilliTime(it + (element.elapsed ?: 0L), DateTimeUtil.YYYY_MM_DD_HH_MM_SS)
                             },
                             costTime = element.elapsed ?: 0L,
-                            status = element.status ?: "",
+                            successFlag = BuildStatus.valueOf(elementStatus!!).isSuccess(),
                             errorType = element.errorType?.let { ErrorType.getErrorType(it)?.num },
                             errorCode = element.errorCode,
-                            errorMsg = element.errorMsg
+                            errorMsg = element.errorMsg,
+
                         )
                     )
                 }
                 containerMetricsDatas.add(
                     BuildEndContainerMetricsData(
                         containerId = container.containerId ?: "",
-                        status = container.status ?: "",
+                        successFlag = BuildStatus.valueOf(containerStatus!!).isSuccess(),
                         costTime = (container.systemElapsed ?: 0L) + (container.elementElapsed ?: 0L),
+                        atomCodes = containerAtomCodes,
                         tasks = taskMetricsDatas
                     )
                 )
@@ -343,14 +362,14 @@ class MeasureServiceImpl constructor(
                 BuildEndStageMetricsData(
                     stageId = stage.id ?: "",
                     stageTagNames = stage.tag,
-                    status = stage.status ?: "",
+                    successFlag = BuildStatus.valueOf(stageStatus!!).isSuccess(),
                     costTime = stage.elapsed ?: 0L,
                     containers = containerMetricsDatas
                 )
             )
         }
         val buildEndPipelineMetricsData = BuildEndPipelineMetricsData(
-            statisticsDate = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD),
+            statisticsTime = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD),
             projectId = projectId,
             pipelineId = pipelineId,
             pipelineName = pipelineName ?: "",
@@ -362,7 +381,7 @@ class MeasureServiceImpl constructor(
             startTime = buildInfo.startTime?.let { DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS) },
             endTime = buildInfo.endTime?.let { DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS) },
             costTime = (buildInfo.endTime ?: 0L) - (buildInfo.startTime ?: 0L),
-            status = buildInfo.status.name,
+            successFlag = buildInfo.status.isSuccess(),
             errorType = buildInfo.errorType,
             errorCode = buildInfo.errorCode,
             errorMsg = buildInfo.errorMsg,
@@ -376,6 +395,20 @@ class MeasureServiceImpl constructor(
                 buildEndPipelineMetricsData = buildEndPipelineMetricsData,
             )
         )
+    }
+
+    /**
+     * 根据构建状态判断是否需要上报metrics数据
+     * @param status 构建状态
+     * @return 布尔值
+     */
+    private fun checkMetricsReportCondition(status: String?): Boolean {
+        if (status.isNullOrBlank()) {
+            return false
+        }
+        val buildStatus = BuildStatus.valueOf(status)
+        val invalidFinishStatusList = listOf(BuildStatus.UNEXEC, BuildStatus.SKIP, BuildStatus.QUOTA_FAILED)
+        return buildStatus.isFinish() && !invalidFinishStatusList.contains(buildStatus)
     }
 
     private fun getSpecReportAtoms(): List<String> = try {

@@ -25,36 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.pojo.po
+package com.tencent.devops.metrics.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
+import com.tencent.devops.common.api.pojo.BuildEndPipelineMetricsData
 
-@ApiModel("保存流水线stage概览数据")
-data class SavePipelineStageOverviewDataPO(
-    @ApiModelProperty("主键ID")
-    val id: Long,
-    @ApiModelProperty("项目ID")
-    val projectId: String,
-    @ApiModelProperty("流水线ID")
-    val pipelineId: String,
-    @ApiModelProperty("流水线名称")
-    val pipelineName: String,
-    @ApiModelProperty("stage标签名称")
-    val stageTagName: String,
-    @ApiModelProperty("平均耗时，单位：毫秒")
-    val avgCostTime: Long,
-    @ApiModelProperty("执行次数")
-    val executeCount: Long,
-    @ApiModelProperty("统计时间")
-    val statisticsTime: LocalDateTime,
-    @ApiModelProperty("创建人")
-    val creator: String,
-    @ApiModelProperty("修改人")
-    val modifier: String,
-    @ApiModelProperty("创建时间")
-    val createTime: LocalDateTime,
-    @ApiModelProperty("更新时间")
-    val updateTime: LocalDateTime
-)
+interface MetricsDataReportService {
+
+    /**
+     * 上报流水线构建指标数据
+     * @param buildEndPipelineMetricsData 构建结束后流水线指标数据
+     * @return 布尔值
+     */
+    fun metricsDataReport(
+        buildEndPipelineMetricsData: BuildEndPipelineMetricsData
+    ): Boolean
+}

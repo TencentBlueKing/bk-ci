@@ -103,20 +103,22 @@ class MetricsDataQueryDao {
         }
     }
 
-    fun getAtomOverviewData(
+    fun getAtomOverviewDatas(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        statisticsTime: LocalDateTime
-    ): TAtomOverviewDataRecord? {
+        statisticsTime: LocalDateTime,
+        atomCodes: List<String>
+    ): Result<TAtomOverviewDataRecord>? {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(PIPELINE_ID.eq(pipelineId))
             conditions.add(STATISTICS_TIME.eq(statisticsTime))
+            conditions.add(ATOM_CODE.`in`(atomCodes))
             return dslContext.selectFrom(this)
                 .where(conditions)
-                .fetchOne()
+                .fetch()
         }
     }
 

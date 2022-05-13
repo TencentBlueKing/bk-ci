@@ -210,131 +210,141 @@ class MetricsDataReportDao {
         }
     }
 
-    fun saveAtomOverviewData(
+    fun batchSaveAtomOverviewData(
         dslContext: DSLContext,
-        saveAtomOverviewDataPO: SaveAtomOverviewDataPO
+        saveAtomOverviewDataPOs: List<SaveAtomOverviewDataPO>
     ) {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
-            dslContext.insertInto(this)
-                .set(ID, saveAtomOverviewDataPO.id)
-                .set(PROJECT_ID, saveAtomOverviewDataPO.projectId)
-                .set(PIPELINE_ID, saveAtomOverviewDataPO.pipelineId)
-                .set(PIPELINE_NAME, saveAtomOverviewDataPO.pipelineName)
-                .set(ATOM_CODE, saveAtomOverviewDataPO.atomCode)
-                .set(ATOM_NAME, saveAtomOverviewDataPO.atomName)
-                .set(CLASSIFY_CODE, saveAtomOverviewDataPO.classifyCode)
-                .set(CLASSIFY_NAME, saveAtomOverviewDataPO.classifyName)
-                .set(SUCCESS_RATE, saveAtomOverviewDataPO.successRate)
-                .set(AVG_COST_TIME, saveAtomOverviewDataPO.avgCostTime)
-                .set(TOTAL_EXECUTE_COUNT, saveAtomOverviewDataPO.totalExecuteCount)
-                .set(SUCCESS_EXECUTE_COUNT, saveAtomOverviewDataPO.successExecuteCount)
-                .set(FAIL_EXECUTE_COUNT, saveAtomOverviewDataPO.failExecuteCount)
-                .set(STATISTICS_TIME, saveAtomOverviewDataPO.statisticsTime)
-                .set(CREATOR, saveAtomOverviewDataPO.creator)
-                .set(MODIFIER, saveAtomOverviewDataPO.modifier)
-                .set(UPDATE_TIME, saveAtomOverviewDataPO.updateTime)
-                .set(CREATE_TIME, saveAtomOverviewDataPO.createTime)
-                .execute()
+            saveAtomOverviewDataPOs.forEach { saveAtomOverviewDataPO ->
+                dslContext.insertInto(this)
+                    .set(ID, saveAtomOverviewDataPO.id)
+                    .set(PROJECT_ID, saveAtomOverviewDataPO.projectId)
+                    .set(PIPELINE_ID, saveAtomOverviewDataPO.pipelineId)
+                    .set(PIPELINE_NAME, saveAtomOverviewDataPO.pipelineName)
+                    .set(ATOM_CODE, saveAtomOverviewDataPO.atomCode)
+                    .set(ATOM_NAME, saveAtomOverviewDataPO.atomName)
+                    .set(CLASSIFY_CODE, saveAtomOverviewDataPO.classifyCode)
+                    .set(CLASSIFY_NAME, saveAtomOverviewDataPO.classifyName)
+                    .set(SUCCESS_RATE, saveAtomOverviewDataPO.successRate)
+                    .set(AVG_COST_TIME, saveAtomOverviewDataPO.avgCostTime)
+                    .set(TOTAL_EXECUTE_COUNT, saveAtomOverviewDataPO.totalExecuteCount)
+                    .set(SUCCESS_EXECUTE_COUNT, saveAtomOverviewDataPO.successExecuteCount)
+                    .set(FAIL_EXECUTE_COUNT, saveAtomOverviewDataPO.failExecuteCount)
+                    .set(STATISTICS_TIME, saveAtomOverviewDataPO.statisticsTime)
+                    .set(CREATOR, saveAtomOverviewDataPO.creator)
+                    .set(MODIFIER, saveAtomOverviewDataPO.modifier)
+                    .set(UPDATE_TIME, saveAtomOverviewDataPO.updateTime)
+                    .set(CREATE_TIME, saveAtomOverviewDataPO.createTime)
+                    .execute()
+            }
         }
     }
 
-    fun updateAtomOverviewData(
+    fun batchUpdateAtomOverviewData(
         dslContext: DSLContext,
-        updateAtomOverviewDataPO: UpdateAtomOverviewDataPO
+        updateAtomOverviewDataPOs: List<UpdateAtomOverviewDataPO>
     ) {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
-            dslContext.update(this)
-                .set(SUCCESS_RATE, updateAtomOverviewDataPO.successRate)
-                .set(AVG_COST_TIME, updateAtomOverviewDataPO.avgCostTime)
-                .set(TOTAL_EXECUTE_COUNT, updateAtomOverviewDataPO.totalExecuteCount)
-                .set(SUCCESS_EXECUTE_COUNT, updateAtomOverviewDataPO.successExecuteCount)
-                .set(FAIL_EXECUTE_COUNT, updateAtomOverviewDataPO.failExecuteCount)
-                .set(MODIFIER, updateAtomOverviewDataPO.modifier)
-                .set(UPDATE_TIME, updateAtomOverviewDataPO.updateTime)
-                .where(
-                    PROJECT_ID.eq(updateAtomOverviewDataPO.projectId)
-                        .and(ID.eq(updateAtomOverviewDataPO.id))
-                )
-                .execute()
+            updateAtomOverviewDataPOs.forEach { updateAtomOverviewDataPO ->
+                dslContext.update(this)
+                    .set(SUCCESS_RATE, updateAtomOverviewDataPO.successRate)
+                    .set(AVG_COST_TIME, updateAtomOverviewDataPO.avgCostTime)
+                    .set(TOTAL_EXECUTE_COUNT, updateAtomOverviewDataPO.totalExecuteCount)
+                    .set(SUCCESS_EXECUTE_COUNT, updateAtomOverviewDataPO.successExecuteCount)
+                    .set(FAIL_EXECUTE_COUNT, updateAtomOverviewDataPO.failExecuteCount)
+                    .set(MODIFIER, updateAtomOverviewDataPO.modifier)
+                    .set(UPDATE_TIME, updateAtomOverviewDataPO.updateTime)
+                    .where(
+                        PROJECT_ID.eq(updateAtomOverviewDataPO.projectId)
+                            .and(ID.eq(updateAtomOverviewDataPO.id))
+                    )
+                    .execute()
+            }
         }
     }
 
-    fun saveAtomFailSummaryData(
+    fun batchSaveAtomFailSummaryData(
         dslContext: DSLContext,
-        saveAtomFailSummaryDataPO: SaveAtomFailSummaryDataPO
+        saveAtomFailSummaryDataPOs: List<SaveAtomFailSummaryDataPO>
     ) {
         with(TAtomFailSummaryData.T_ATOM_FAIL_SUMMARY_DATA) {
-            dslContext.insertInto(this)
-                .set(ID, saveAtomFailSummaryDataPO.id)
-                .set(PROJECT_ID, saveAtomFailSummaryDataPO.projectId)
-                .set(PIPELINE_ID, saveAtomFailSummaryDataPO.pipelineId)
-                .set(PIPELINE_NAME, saveAtomFailSummaryDataPO.pipelineName)
-                .set(ATOM_CODE, saveAtomFailSummaryDataPO.atomCode)
-                .set(ATOM_NAME, saveAtomFailSummaryDataPO.atomName)
-                .set(CLASSIFY_CODE, saveAtomFailSummaryDataPO.classifyCode)
-                .set(CLASSIFY_NAME, saveAtomFailSummaryDataPO.classifyName)
-                .set(ERROR_TYPE, saveAtomFailSummaryDataPO.errorType)
-                .set(ERROR_COUNT, saveAtomFailSummaryDataPO.errorCount)
-                .set(STATISTICS_TIME, saveAtomFailSummaryDataPO.statisticsTime)
-                .set(CREATOR, saveAtomFailSummaryDataPO.creator)
-                .set(MODIFIER, saveAtomFailSummaryDataPO.modifier)
-                .set(UPDATE_TIME, saveAtomFailSummaryDataPO.updateTime)
-                .set(CREATE_TIME, saveAtomFailSummaryDataPO.createTime)
-                .execute()
+            saveAtomFailSummaryDataPOs.forEach { saveAtomFailSummaryDataPO ->
+                dslContext.insertInto(this)
+                    .set(ID, saveAtomFailSummaryDataPO.id)
+                    .set(PROJECT_ID, saveAtomFailSummaryDataPO.projectId)
+                    .set(PIPELINE_ID, saveAtomFailSummaryDataPO.pipelineId)
+                    .set(PIPELINE_NAME, saveAtomFailSummaryDataPO.pipelineName)
+                    .set(ATOM_CODE, saveAtomFailSummaryDataPO.atomCode)
+                    .set(ATOM_NAME, saveAtomFailSummaryDataPO.atomName)
+                    .set(CLASSIFY_CODE, saveAtomFailSummaryDataPO.classifyCode)
+                    .set(CLASSIFY_NAME, saveAtomFailSummaryDataPO.classifyName)
+                    .set(ERROR_TYPE, saveAtomFailSummaryDataPO.errorType)
+                    .set(ERROR_COUNT, saveAtomFailSummaryDataPO.errorCount)
+                    .set(STATISTICS_TIME, saveAtomFailSummaryDataPO.statisticsTime)
+                    .set(CREATOR, saveAtomFailSummaryDataPO.creator)
+                    .set(MODIFIER, saveAtomFailSummaryDataPO.modifier)
+                    .set(UPDATE_TIME, saveAtomFailSummaryDataPO.updateTime)
+                    .set(CREATE_TIME, saveAtomFailSummaryDataPO.createTime)
+                    .execute()
+            }
         }
     }
 
-    fun updateAtomFailSummaryData(
+    fun batchUpdateAtomFailSummaryData(
         dslContext: DSLContext,
-        updateAtomFailSummaryDataPO: UpdateAtomFailSummaryDataPO
+        updateAtomFailSummaryDataPOs: List<UpdateAtomFailSummaryDataPO>
     ) {
         with(TAtomFailSummaryData.T_ATOM_FAIL_SUMMARY_DATA) {
-            dslContext.update(this)
-                .set(ERROR_COUNT, updateAtomFailSummaryDataPO.errorCount)
-                .set(MODIFIER, updateAtomFailSummaryDataPO.modifier)
-                .set(UPDATE_TIME, updateAtomFailSummaryDataPO.updateTime)
-                .where(
-                    PROJECT_ID.eq(updateAtomFailSummaryDataPO.projectId)
-                        .and(ID.eq(updateAtomFailSummaryDataPO.id))
-                )
-                .execute()
+            updateAtomFailSummaryDataPOs.forEach { updateAtomFailSummaryDataPO ->
+                dslContext.update(this)
+                    .set(ERROR_COUNT, updateAtomFailSummaryDataPO.errorCount)
+                    .set(MODIFIER, updateAtomFailSummaryDataPO.modifier)
+                    .set(UPDATE_TIME, updateAtomFailSummaryDataPO.updateTime)
+                    .where(
+                        PROJECT_ID.eq(updateAtomFailSummaryDataPO.projectId)
+                            .and(ID.eq(updateAtomFailSummaryDataPO.id))
+                    )
+                    .execute()
+            }
         }
     }
 
-    fun saveAtomFailDetailData(
+    fun batchSaveAtomFailDetailData(
         dslContext: DSLContext,
-        saveAtomFailDetailDataPO: SaveAtomFailDetailDataPO
+        saveAtomFailDetailDataPOs: List<SaveAtomFailDetailDataPO>
     ) {
         with(TAtomFailDetailData.T_ATOM_FAIL_DETAIL_DATA) {
-            dslContext.insertInto(this)
-                .set(ID, saveAtomFailDetailDataPO.id)
-                .set(PROJECT_ID, saveAtomFailDetailDataPO.projectId)
-                .set(PIPELINE_ID, saveAtomFailDetailDataPO.pipelineId)
-                .set(PIPELINE_NAME, saveAtomFailDetailDataPO.pipelineName)
-                .set(BUILD_ID, saveAtomFailDetailDataPO.buildId)
-                .set(BUILD_NUM, saveAtomFailDetailDataPO.buildNum)
-                .set(ATOM_CODE, saveAtomFailDetailDataPO.atomCode)
-                .set(ATOM_NAME, saveAtomFailDetailDataPO.atomName)
-                .set(CLASSIFY_CODE, saveAtomFailDetailDataPO.classifyCode)
-                .set(CLASSIFY_NAME, saveAtomFailDetailDataPO.classifyName)
-                .set(START_USER, saveAtomFailDetailDataPO.startUser)
-                .set(START_TIME, saveAtomFailDetailDataPO.startTime)
-                .set(END_TIME, saveAtomFailDetailDataPO.endTime)
-                .set(ERROR_TYPE, saveAtomFailDetailDataPO.errorType)
-                .set(ERROR_CODE, saveAtomFailDetailDataPO.errorCode)
-                .set(ERROR_MSG, saveAtomFailDetailDataPO.errorMsg)
-                .set(STATISTICS_TIME, saveAtomFailDetailDataPO.statisticsTime)
-                .set(CREATOR, saveAtomFailDetailDataPO.creator)
-                .set(MODIFIER, saveAtomFailDetailDataPO.modifier)
-                .set(UPDATE_TIME, saveAtomFailDetailDataPO.updateTime)
-                .set(CREATE_TIME, saveAtomFailDetailDataPO.createTime)
-                .execute()
+            saveAtomFailDetailDataPOs.forEach { saveAtomFailDetailDataPO ->
+                dslContext.insertInto(this)
+                    .set(ID, saveAtomFailDetailDataPO.id)
+                    .set(PROJECT_ID, saveAtomFailDetailDataPO.projectId)
+                    .set(PIPELINE_ID, saveAtomFailDetailDataPO.pipelineId)
+                    .set(PIPELINE_NAME, saveAtomFailDetailDataPO.pipelineName)
+                    .set(BUILD_ID, saveAtomFailDetailDataPO.buildId)
+                    .set(BUILD_NUM, saveAtomFailDetailDataPO.buildNum)
+                    .set(ATOM_CODE, saveAtomFailDetailDataPO.atomCode)
+                    .set(ATOM_NAME, saveAtomFailDetailDataPO.atomName)
+                    .set(CLASSIFY_CODE, saveAtomFailDetailDataPO.classifyCode)
+                    .set(CLASSIFY_NAME, saveAtomFailDetailDataPO.classifyName)
+                    .set(START_USER, saveAtomFailDetailDataPO.startUser)
+                    .set(START_TIME, saveAtomFailDetailDataPO.startTime)
+                    .set(END_TIME, saveAtomFailDetailDataPO.endTime)
+                    .set(ERROR_TYPE, saveAtomFailDetailDataPO.errorType)
+                    .set(ERROR_CODE, saveAtomFailDetailDataPO.errorCode)
+                    .set(ERROR_MSG, saveAtomFailDetailDataPO.errorMsg)
+                    .set(STATISTICS_TIME, saveAtomFailDetailDataPO.statisticsTime)
+                    .set(CREATOR, saveAtomFailDetailDataPO.creator)
+                    .set(MODIFIER, saveAtomFailDetailDataPO.modifier)
+                    .set(UPDATE_TIME, saveAtomFailDetailDataPO.updateTime)
+                    .set(CREATE_TIME, saveAtomFailDetailDataPO.createTime)
+                    .execute()
+            }
         }
     }
 
     fun batchSaveErrorCodeInfo(
         dslContext: DSLContext,
-        saveErrorCodeInfoPOs: List<SaveErrorCodeInfoPO>
+        saveErrorCodeInfoPOs: Set<SaveErrorCodeInfoPO>
     ) {
         with(TErrorCodeInfo.T_ERROR_CODE_INFO) {
             saveErrorCodeInfoPOs.forEach { saveErrorCodeInfoPO ->
