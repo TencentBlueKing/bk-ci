@@ -65,6 +65,8 @@ import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -83,6 +85,7 @@ class BuildEndControl @Autowired constructor(
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineRedisService: PipelineRedisService,
+    private val meterRegistry: MeterRegistry,
     @Autowired(required = false)
     private val measureService: MeasureService?
 ) {
@@ -168,6 +171,13 @@ class BuildEndControl @Autowired constructor(
         )
 
         pipelineRuntimeService.updateBuildHistoryStageState(projectId, buildId, allStageStatus)
+
+        // 上报SLA数据
+        if (buildStatus.isSuccess() || buildStatus == BuildStatus.STAGE_SUCCESS) {
+            successPipelineCount(this)
+        } else if (buildStatus.isFailure()) {
+            failPipelineCount(this)
+        }
 
         // 广播结束事件
         pipelineEventDispatcher.dispatch(
@@ -315,5 +325,35 @@ class BuildEndControl @Autowired constructor(
                 buildNoType = triggerContainer.buildNo?.buildNoType
             )
         )
+    }
+
+    private fun successPipelineCount(event: PipelineBuildFinishEvent) {
+        Counter
+            .builder("success_pipeline_count")
+            .tag("projectId", event.projectId)
+            .tag("pipelineId", event.pipelineId)
+            .register(meterRegistry)
+            .increment()
+
+        finishPipelineCount(event)
+    }
+
+    private fun failPipelineCount(event: PipelineBuildFinishEvent) {
+        Counter
+            .builder("fail_pipeline_count")
+            .tag("projectId", event.projectId)
+            .tag("pipelineId", event.pipelineId)
+            .register(meterRegistry)
+            .increment()
+        finishPipelineCount(event)
+    }
+
+    private fun finishPipelineCount(event: PipelineBuildFinishEvent) {
+        Counter
+            .builder("finish_pipeline_count")
+            .tag("projectId", event.projectId)
+            .tag("pipelineId", event.pipelineId)
+            .register(meterRegistry)
+            .increment()
     }
 }

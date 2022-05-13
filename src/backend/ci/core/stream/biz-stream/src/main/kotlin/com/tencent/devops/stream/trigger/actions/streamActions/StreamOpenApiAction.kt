@@ -33,11 +33,13 @@ import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBuilder
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 
@@ -72,13 +74,19 @@ class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
     override fun getYamlPathList(): List<YamlPathListEntry> = action.getYamlPathList()
 
     override fun getYamlContent(fileName: String) = action.getYamlContent(fileName)
+    override fun getChangeSet(): Set<String>? {
+        return action.getChangeSet()
+    }
 
     override fun isMatch(triggerOn: TriggerOn) = action.isMatch(triggerOn)
 
-    fun getStartParams(triggerOn: TriggerOn?, scmType: ScmType): Map<String, String> {
+    fun getStartParams(scmType: ScmType): Map<String, String> {
         return when (scmType) {
             ScmType.CODE_GIT -> {
-                TGitActionCommon.getStartParams(action, triggerOn)
+                TGitActionCommon.getStartParams(
+                    action = action,
+                    triggerOn = TriggerBuilder.buildManualTriggerOn(action.metaData.streamObjectKind)
+                )
             }
             else -> TODO("对接其他Git平台时需要补充")
         }
@@ -105,4 +113,6 @@ class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
     override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) {
         action.registerCheckRepoTriggerCredentials(repoHook)
     }
+
+    override fun needAddWebhookParams() = action is GitBaseAction
 }

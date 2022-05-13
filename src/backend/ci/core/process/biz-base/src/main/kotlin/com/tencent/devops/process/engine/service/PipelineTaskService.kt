@@ -354,7 +354,7 @@ class PipelineTaskService @Autowired constructor(
         val projectId = updateTaskInfo.projectId
         val buildId = updateTaskInfo.buildId
         val taskId = updateTaskInfo.taskId
-        val taskStatus = updateTaskInfo.taskStatus!!
+        val taskStatus = updateTaskInfo.taskStatus
         val taskRecord = pipelineBuildTaskDao.get(
             dslContext = transactionContext ?: dslContext,
             projectId = projectId,
@@ -626,7 +626,7 @@ class PipelineTaskService @Autowired constructor(
         redisOperation.set(
             key = PauseRedisUtils.getPauseRedisKey(buildId = task.buildId, taskId = task.taskId),
             value = "true",
-            expiredInSecond = Timeout.transMinuteTimeoutToSec(task.additionalOptions?.timeout?.toInt())
+            expiredInSecond = Timeout.CONTAINER_MAX_MILLS / 1000
         )
     }
 

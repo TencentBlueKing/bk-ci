@@ -84,11 +84,10 @@ open class ScriptTask : ITask() {
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
         val buildId = buildVariables.buildId
-        val runtimeVariables = buildVariables.variables
-            .plus(buildTask.buildVariable ?: mapOf())
-            .plus(buildVariables.variablesWithType.associate {
-                it.key to it.value.toString().parseCredentialValue(buildTask.buildVariable)
-            })
+        val runtimeVariables = buildVariables.variables.map {
+            it.key to it.value.parseCredentialValue(buildTask.buildVariable)
+        }.toMap()
+            .plus(buildTask.buildVariable ?: emptyMap())
         val projectId = buildVariables.projectId
 
         ScriptEnvUtils.cleanEnv(buildId, workspace)
@@ -134,14 +133,8 @@ open class ScriptTask : ITask() {
                     LoggerService.addErrorLine("脚本执行失败之后没有匹配到任何待归档文件")
                 }
             }
-            val errorMsg = "脚本执行失败" +
-                "\n======问题排查指引======\n" +
-                "当脚本退出码非0时，执行失败。可以从以下路径进行分析：\n" +
-                "1. 根据错误日志排查\n" +
-                "2. 在本地手动执行脚本。如果本地执行也失败，很可能是脚本逻辑问题；" +
-                "如果本地OK，排查构建环境（比如环境依赖、或者代码变更等）"
             throw TaskExecuteException(
-                errorMsg = errorMsg,
+                errorMsg = "",
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_SCRIPT_TASK_FAIL
             )

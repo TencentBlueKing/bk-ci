@@ -69,6 +69,8 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_TIME_START
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -92,7 +94,8 @@ class BuildStartControl @Autowired constructor(
     private val buildDetailService: PipelineBuildDetailService,
     private val buildVariableService: BuildVariableService,
     private val scmProxyService: ScmProxyService,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val meterRegistry: MeterRegistry
 ) {
 
     companion object {
@@ -143,6 +146,7 @@ class BuildStartControl @Autowired constructor(
         )
 
         buildLogPrinter.stopLog(buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount)
+        startPipelineCount(this)
     }
 
     private fun PipelineBuildStartEvent.pickUpReadyBuild(executeCount: Int): BuildInfo? {
@@ -532,5 +536,14 @@ class BuildStartControl @Autowired constructor(
             }
         }
         return firstValidStage
+    }
+
+    private fun startPipelineCount(event: PipelineBuildStartEvent) {
+        Counter
+            .builder("start_pipeline_count")
+            .tag("projectId", event.projectId)
+            .tag("pipelineId", event.pipelineId)
+            .register(meterRegistry)
+            .increment()
     }
 }
