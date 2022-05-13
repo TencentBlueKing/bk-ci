@@ -54,7 +54,7 @@ import {
     UPDATE_ATOM_OUTPUT,
     UPDATE_ATOM_OUTPUT_NAMESPACE,
     FETCHING_ATOM_LIST,
-    SET_STORE_DATA,
+    SET_REQUEST_ATOM_DATA,
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     FETCHING_ATOM_VERSION,
@@ -64,7 +64,11 @@ import {
     SET_DEFAULT_STAGE_TAG,
     TOGGLE_STAGE_REVIEW_PANEL,
     SET_IMPORTED_JSON,
-    SET_EDIT_FROM
+    SET_ATOMS_CLASSIFY,
+    SET_EDIT_FROM,
+    FETCHING_ATOM_MORE_LOADING,
+    SET_COMMEND_ATOM_COUNT,
+    SET_ATOM_PAGE_OVER
 } from './constants'
 import {
     getAtomModalKey,
@@ -150,15 +154,6 @@ export default {
         Object.assign(state, {
             containerTypeList,
             containerModalMap
-        })
-        return state
-    },
-    [SET_ATOMS]: (state, { atomCodeList, atomClassifyCodeList, atomMap, atomClassifyMap }) => {
-        Object.assign(state, {
-            atomCodeList,
-            atomClassifyCodeList,
-            atomMap,
-            atomClassifyMap
         })
         return state
     },
@@ -379,9 +374,6 @@ export default {
         Vue.set(state, 'showAtomSelectorPopup', show)
         return state
     },
-    [SET_STORE_DATA]: (state, data) => {
-        Vue.set(state, 'storeAtomData', data)
-    },
     [SET_STORE_LOADING]: (state, data) => {
         state.storeAtomData.loading = data
     },
@@ -390,5 +382,38 @@ export default {
     },
     [SET_IMPORTED_JSON]: (state, importedPipelineJson) => {
         state.importedPipelineJson = importedPipelineJson
+    },
+    [SET_ATOMS_CLASSIFY]: (state, { atomClassifyMap, atomClassifyCodeList }) => {
+        Object.assign(state, {
+            atomClassifyCodeList,
+            atomClassifyMap
+        })
+        return state
+    },
+    [FETCHING_ATOM_MORE_LOADING]: (state, fetching) => {
+        Vue.set(state, 'fetchingAtomMoreLoading', fetching)
+        return state
+    },
+    [SET_ATOMS]: (state, { atomCodeList, atomMap, atomList }) => {
+        Object.assign(state, {
+            atomCodeList,
+            atomMap,
+            atomList
+        })
+        return state
+    },
+    [SET_REQUEST_ATOM_DATA]: (state, requestAtomData) => {
+        Object.assign(state, {
+            requestAtomData
+        })
+        return state
+    },
+    [SET_COMMEND_ATOM_COUNT]: (state, commendAtomCount) => {
+        Vue.set(state, 'commendAtomCount', commendAtomCount)
+        return state
+    },
+    [SET_ATOM_PAGE_OVER]: (state, isAtomPageOver) => {
+        Vue.set(state, 'isAtomPageOver', isAtomPageOver)
+        return isAtomPageOver
     }
 }

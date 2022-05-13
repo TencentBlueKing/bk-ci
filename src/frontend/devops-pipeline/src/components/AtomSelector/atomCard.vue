@@ -34,16 +34,17 @@
                 size="small"
                 @click="handleUpdateAtomType(atom.atomCode)"
                 :disabled="atom.disabled || atom.atomCode === atomCode"
-                v-if="!atom.notShowSelect"
+                v-if="atom.installed || atom.defaultFlag"
             >{{atom.atomCode === atomCode ? $t('editPage.selected') : $t('editPage.select')}}
             </bk-button>
-            <bk-button class="select-atom-btn"
+            <bk-button
+                v-else
+                class="select-atom-btn"
                 size="small"
                 @click="handleInstallStoreAtom(atom.atomCode)"
-                :disabled="!atom.flag"
-                :title="atom.tips"
+                :disabled="!atom.installFlag"
+                :title="atom.installFlag ? '' : $t('editPage.noPermToInstall')"
                 :loading="isInstalling"
-                v-else-if="!atom.hasInstalled"
             >{{ $t('editPage.install') }}
             </bk-button>
             <a v-if="atom.docsLink" target="_blank" class="atom-link" :href="atom.docsLink">{{ $t('newlist.knowMore') }}</a>
@@ -181,8 +182,7 @@
                 }
                 this.installAtom(param).then(() => {
                     this.$bkMessage({ message: this.$t('editPage.installSuc'), theme: 'success', extCls: 'install-tips' })
-                    this.atom.notShowSelect = !this.atom.isInOs
-                    this.atom.hasInstalled = true
+                    this.atom.installed = !this.atom.installed
                 }).catch((err) => {
                     this.$bkMessage({ message: err.message || err, theme: 'error' })
                 }).finally(() => {
