@@ -38,7 +38,7 @@
                     </bk-tab-panel>
                 </bk-tab>
                 <section v-else class="search-result">
-                    <h3 v-if="!searchResultEmpty" class="search-title">{{ $t('newlist.installed') }}（{{installArr.length}}）</h3>
+                    <h3 v-if="installArr.length" class="search-title">{{ $t('newlist.installed') }}（{{installArr.length}}）</h3>
                     <atom-card v-for="atom in installArr"
                         :key="atom.atomCode"
                         :disabled="atom.disabled"
@@ -54,7 +54,7 @@
                         }"
                     ></atom-card>
 
-                    <h3 v-if="!searchResultEmpty" class="search-title gap-border">{{ $t('editPage.notInstall') }}（{{uninstallArr.length}}）</h3>
+                    <h3 v-if="uninstallArr.length" class="search-title gap-border">{{ $t('editPage.notInstall') }}（{{uninstallArr.length}}）</h3>
                     <atom-card v-for="atom in uninstallArr"
                         :key="atom.atomCode"
                         :disabled="atom.disabled"
@@ -69,7 +69,7 @@
                             selected: atom.atomCode === atomCode
                         }"
                     ></atom-card>
-                    <div class="empty-atom-list" v-if="searchResultEmpty">
+                    <div class="empty-atom-list" v-if="curTabList.length <= 0">
                         <empty-tips type="no-result"></empty-tips>
                     </div>
                 </section>
@@ -108,26 +108,23 @@
                 classifyCode: 'all',
                 activeAtomCode: '',
                 curTabList: [],
+                installArr: [],
+                uninstallArr: [],
                 isThrottled: false
             }
         },
 
         computed: {
             ...mapGetters('atom', [
-                'getAtomCodeListByCategory',
                 'classifyCodeListByCategory',
                 'isTriggerContainer'
             ]),
             ...mapState('atom', [
                 'fetchingAtomList',
                 'showAtomSelectorPopup',
-                'isPropertyPanelVisible',
                 'atomClassifyMap',
-                'atomCodeList',
-                'storeAtomData',
                 'atomClassifyCodeList',
                 'atomMap',
-                'atomModalMap',
                 'atomList',
                 'fetchingAtomMoreLoading',
                 'isAtomPageOver'
@@ -172,23 +169,6 @@
 
             firstClassify () {
                 return Array.isArray(this.classifyCodeList) ? this.classifyCodeList[0] : 'all'
-            },
-
-            installArr () {
-                return this.curTabList.filter((item) => (item.defaultFlag || (item.installed && !item.recommendFlag)))
-            },
-
-            uninstallArr () {
-                return this.curTabList.filter((item) => (!item.installed && item.recommendFlag !== false))
-            },
-
-            searchResultEmpty () {
-                const all = this.installArr || []
-                const rdStore = this.uninstallArr || []
-                return all.length <= 0 && rdStore.length <= 0
-            },
-            curList () {
-                return Object.values(this.atomMap)
             }
         },
 
@@ -221,22 +201,19 @@
             atomList: {
                 handler (val) {
                     this.curTabList = val
+                    if (this.searchKey) {
+                        this.uninstallArr = val.filter(item => (!item.defaultFlag && !item.installed && item.recommendFlag !== false))
+                        this.installArr = val.filter(item => (item.defaultFlag || (item.installed && item.recommendFlag === false)))
+                    }
                 },
                 immediate: true
             }
         },
 
-        created () {
-            const pageIndex = this.storeAtomData.page || 1
-            if (pageIndex <= 1) this.addStoreAtom()
-        },
-
         methods: {
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
-                'addStoreAtom',
                 'setRequestAtomData',
-                'setStoreSearch',
                 'fetchAtoms',
                 'fetchClassify',
                 'setAtomPageOver'
@@ -319,8 +296,8 @@
 
             freshAtomList (searchKey) {
                 if (this.fetchingAtomList) return
-                const index = this.classifyCodeList.findIndex(item => item === this.classifyCode)
-                !this.searchKey && this.$refs.atomListDom[index].$el.scrollTo(0, 0)
+                const curDom = this.$refs.atomListDom.find(item => item.name === this.classifyCode)
+                !this.searchKey && curDom.$el.scrollTo(0, 0)
                 this.freshRequestAtomData()
                 this.fetchAtomList()
             },
