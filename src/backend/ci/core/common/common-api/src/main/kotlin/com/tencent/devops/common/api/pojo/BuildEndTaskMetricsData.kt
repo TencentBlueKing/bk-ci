@@ -34,8 +34,8 @@ import io.swagger.annotations.ApiModelProperty
 data class BuildEndTaskMetricsData(
     @ApiModelProperty("taskId", required = true)
     val taskId: String,
-    @ApiModelProperty("任务名称", required = true)
-    val taskName: String,
+    @ApiModelProperty("插件名称", required = true)
+    val atomName: String,
     @ApiModelProperty("插件标识", required = true)
     val atomCode: String,
     @ApiModelProperty("插件分类代码", required = true)

@@ -47,6 +47,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
+import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
 import org.jooq.DSLContext
@@ -229,15 +230,14 @@ class TaskBuildDetailService(
     }
 
     fun taskEnd(
-        projectId: String,
-        buildId: String,
-        taskId: String,
-        buildStatus: BuildStatus,
-        taskVersion: String? = null,
-        errorType: ErrorType? = null,
-        errorCode: Int? = null,
-        errorMsg: String? = null
+        taskBuildEndParam: TaskBuildEndParam
     ): List<PipelineTaskStatusInfo> {
+        val projectId = taskBuildEndParam.projectId
+        val buildId = taskBuildEndParam.buildId
+        val taskId = taskBuildEndParam.taskId
+        val buildStatus = taskBuildEndParam.buildStatus
+        val atomVersion = taskBuildEndParam.atomVersion
+        val errorType = taskBuildEndParam.errorType
         val updateTaskStatusInfos = mutableListOf<PipelineTaskStatusInfo>()
         update(projectId, buildId, object : ModelInterface {
 
@@ -254,22 +254,25 @@ class TaskBuildDetailService(
                     }
                     if (errorType != null) {
                         e.errorType = errorType.name
-                        e.errorCode = errorCode
-                        e.errorMsg = errorMsg
+                        e.errorCode = taskBuildEndParam.errorCode
+                        e.errorMsg = taskBuildEndParam.errorMsg
                     }
-                    if (taskVersion != null) {
+                    if (atomVersion != null) {
                         when (e) {
                             is MarketBuildAtomElement -> {
-                                e.version = taskVersion
+                                e.version = atomVersion
                             }
                             is MarketBuildLessAtomElement -> {
-                                e.version = taskVersion
+                                e.version = atomVersion
                             }
                             else -> {
                                 e.version = INIT_VERSION
                             }
                         }
                     }
+                    e.atomName = taskBuildEndParam.atomName
+                    e.classifyCode = taskBuildEndParam.classifyCode
+                    e.classifyName = taskBuildEndParam.classifyName
                     var elementElapsed = 0L
                     run lit@{
                         val elements = c.elements

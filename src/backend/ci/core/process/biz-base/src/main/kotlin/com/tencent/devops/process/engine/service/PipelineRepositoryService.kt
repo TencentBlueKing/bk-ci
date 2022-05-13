@@ -276,7 +276,7 @@ class PipelineRepositoryService constructor(
             if (e.id.isNullOrBlank()) {
                 e.id = modelTaskIdGenerator.getNextId()
             }
-
+            e.originVersion = e.version
             ElementBizRegistrar.getPlugin(e)?.afterCreate(
                 element = e,
                 projectId = projectId,
@@ -386,7 +386,7 @@ class PipelineRepositoryService constructor(
                 if (e.id.isNullOrBlank()) {
                     e.id = modelTaskIdGenerator.getNextId()
                 }
-
+                e.originVersion = e.version
                 when (e) {
                     is SubPipelineCallElement -> { // 子流水线循环依赖检查
                         val existPipelines = HashSet<String>()

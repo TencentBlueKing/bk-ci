@@ -45,6 +45,12 @@ abstract class ITask {
 
     private val taskErrorMessage = HashMap<String, String>()
 
+    private var atomName: String = ""
+
+    private var classifyCode: String? = null
+
+    private var classifyName: String? = null
+
     private var platformCode: String? = null
 
     private var platformErrorCode: Int? = null
@@ -116,6 +122,30 @@ abstract class ITask {
 
     fun getMonitorData(): Map<String, Any> {
         return monitorData
+    }
+
+    protected fun addAtomName(name: String) {
+        atomName = name
+    }
+
+    fun getAtomName(): String {
+        return atomName
+    }
+
+    protected fun addClassifyCode(atomClassifyCode: String?) {
+        classifyCode = atomClassifyCode
+    }
+
+    fun getClassifyCode(): String? {
+        return classifyCode
+    }
+
+    protected fun addClassifyName(atomClassifyName: String?) {
+        classifyName = atomClassifyName
+    }
+
+    fun getClassifyName(): String? {
+        return classifyName
     }
 
     protected fun addPlatformCode(taskPlatformCode: String) {

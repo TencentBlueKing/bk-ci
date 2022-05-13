@@ -25,45 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.process.pojo.task
 
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线模型-构建任务结果")
-data class BuildTaskResult(
-    @ApiModelProperty("任务ID", required = true)
+data class TaskBuildEndParam(
+    @ApiModelProperty("项目id", required = false)
+    val projectId: String,
+    @ApiModelProperty("构建id", required = false)
+    val buildId: String,
+    @ApiModelProperty("任务id", required = false)
     val taskId: String,
-    @ApiModelProperty("插件ID", required = true)
-    val elementId: String,
-    @ApiModelProperty("插件版本号", required = false)
-    val elementVersion: String? = null,
-    @ApiModelProperty("插件名称", required = true)
-    val atomName: String,
-    @ApiModelProperty("容器Hash ID", required = true)
-    val containerId: String?,
-    @ApiModelProperty("是否执行成功", required = true)
-    val success: Boolean,
-    @ApiModelProperty("构建结果", required = true)
-    val buildResult: Map<String, String>,
-    @ApiModelProperty("错误原因", required = false)
-    val message: String? = null,
-    @ApiModelProperty("任务类型", required = false)
-    val type: String? = null,
+    @ApiModelProperty("状态", required = false)
+    var buildStatus: BuildStatus,
+    @ApiModelProperty("插件版本", required = false)
+    val atomVersion: String? = null,
     @ApiModelProperty("错误类型", required = false)
-    val errorType: String? = null,
-    @ApiModelProperty("错误码标识", required = false)
-    val errorCode: Int? = null,
-    @ApiModelProperty("对接平台代码", required = false)
-    val platformCode: String? = null,
-    @ApiModelProperty("对接平台错误码", required = false)
-    val platformErrorCode: Int? = null,
-    @ApiModelProperty("插件监控数据", required = false)
-    val monitorData: Map<String, Any>? = null,
-    @ApiModelProperty("构建任务失败时用于通知的信息", required = false)
-    val buildTaskErrorMessage: BuildTaskErrorMessage? = null,
+    var errorType: ErrorType? = null,
+    @ApiModelProperty("错误代码", required = false)
+    var errorCode: Int? = null,
+    @ApiModelProperty("错误信息", required = false)
+    var errorMsg: String? = null,
+    @ApiModelProperty("插件名称", required = false)
+    var atomName: String? = null,
     @ApiModelProperty("所属插件分类代码", required = false)
-    val classifyCode: String? = null,
+    var classifyCode: String? = null,
     @ApiModelProperty("所属插件分类名称", required = false)
-    val classifyName: String? = null
+    var classifyName: String? = null
 )

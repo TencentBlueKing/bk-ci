@@ -77,6 +77,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskErrorMessage
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelineTaskPauseService
@@ -599,9 +600,19 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val errorType = ErrorType.getErrorType(result.errorType)
         val buildStatus = getCompleteTaskBuildStatus(result, buildId, buildInfo)
         val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
-            projectId = projectId, buildId = buildId, taskId = result.elementId,
-            buildStatus = buildStatus, errorType = errorType, errorCode = result.errorCode,
-            errorMsg = result.message, taskVersion = result.elementVersion
+            TaskBuildEndParam(
+                projectId = buildInfo.projectId,
+                buildId = buildId,
+                taskId = result.elementId,
+                buildStatus = buildStatus,
+                errorType = errorType,
+                errorCode = result.errorCode,
+                errorMsg = result.message,
+                atomVersion = result.elementVersion,
+                atomName = result.atomName,
+                classifyCode = result.classifyCode,
+                classifyName = result.classifyName
+            )
         )
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
             val updateTaskInfo = UpdateTaskInfo(

@@ -331,20 +331,24 @@ class MeasureServiceImpl constructor(
                     taskMetricsDatas.add(
                         BuildEndTaskMetricsData(
                             taskId = element.id ?: "",
-                            taskName = element.name,
+                            atomName = element.atomName ?: element.name,
                             atomCode = element.getAtomCode(),
+                            classifyCode = element.classifyCode ?: "",
+                            classifyName = element.classifyName ?: "",
                             startTime = element.startEpoch?.let {
                                 DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS)
                             },
                             endTime = element.startEpoch?.let {
-                                DateTimeUtil.formatMilliTime(it + (element.elapsed ?: 0L), DateTimeUtil.YYYY_MM_DD_HH_MM_SS)
+                                DateTimeUtil.formatMilliTime(
+                                    time = it + (element.elapsed ?: 0L),
+                                    format = DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+                                )
                             },
                             costTime = element.elapsed ?: 0L,
                             successFlag = BuildStatus.valueOf(elementStatus!!).isSuccess(),
                             errorType = element.errorType?.let { ErrorType.getErrorType(it)?.num },
                             errorCode = element.errorCode,
-                            errorMsg = element.errorMsg,
-
+                            errorMsg = element.errorMsg
                         )
                     )
                 }
