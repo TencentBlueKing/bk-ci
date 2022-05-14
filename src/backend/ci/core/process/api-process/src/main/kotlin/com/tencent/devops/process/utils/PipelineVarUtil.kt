@@ -158,7 +158,9 @@ object PipelineVarUtil {
         "pipeline.job.id" to PIPELINE_VMSEQ_ID,
         "pipeline.task.id" to PIPELINE_ELEMENT_ID,
         "turbo.task.id" to PIPELINE_TURBO_TASK_ID,
-        "report.dynamic.root.url" to REPORT_DYNAMIC_ROOT_URL
+        "report.dynamic.root.url" to REPORT_DYNAMIC_ROOT_URL,
+        "BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM" to "BK_CI_REPO_GIT_WEBHOOK_TAG_CREATE_FROM",
+        "BK_REPO_SVN_WEBHOOK_FINAL_INCLUDE_PATH" to "BK_CI_REPO_SVN_WEBHOOK_FINAL_INCLUDE_PATH"
     )
 
     /**
