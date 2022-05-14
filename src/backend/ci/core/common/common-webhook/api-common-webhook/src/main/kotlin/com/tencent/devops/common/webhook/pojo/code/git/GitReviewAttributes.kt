@@ -27,8 +27,10 @@
 
 package com.tencent.devops.common.webhook.pojo.code.git
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class GitReviewAttributes(
     val id: Long,
     @JsonProperty("source_commit")
@@ -46,7 +48,7 @@ data class GitReviewAttributes(
     @JsonProperty("author_id")
     val authorId: String,
     @JsonProperty("assignee_id")
-    val assigneeId: String,
+    val assigneeId: String?,
     val title: String,
     @JsonProperty("commit_check_state")
     val commitCheckState: String,
