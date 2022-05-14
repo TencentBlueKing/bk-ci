@@ -54,6 +54,7 @@ data class GitNoteEvent(
     }
 }
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class GitNoteAttributes(
     val id: Long,
     val note: String,
