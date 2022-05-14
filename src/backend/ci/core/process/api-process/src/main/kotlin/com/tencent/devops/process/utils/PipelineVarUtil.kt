@@ -100,7 +100,6 @@ object PipelineVarUtil {
         "pipeline.material.new.commit.times" to PIPELINE_MATERIAL_NEW_COMMIT_TIMES,
         "pipeline.material.new.commit.comment" to PIPELINE_MATERIAL_NEW_COMMIT_COMMENT,
         "BK_REPO_GIT_WEBHOOK_REVIEW" to "BK_CI_REPO_GIT_WEBHOOK_REVIEW",
-        "BK_REPO_GIT_WEBHOOK_MR" to "BK_CI_REPO_GIT_WEBHOOK_MR",
         "BK_REPO_P4" to "BK_CI_REPO_P4"
     )
 
