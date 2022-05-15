@@ -173,7 +173,10 @@ open class MarketAtomTask : ITask() {
         val inputTemplate = props["input"]?.let { it as Map<String, Map<String, Any>> } ?: mutableMapOf()
         val outputTemplate = props["output"]?.let { props["output"] as Map<String, Map<String, Any>> } ?: mutableMapOf()
 
-        val inputParams = parseInputParams(map, variables, acrossInfo)
+        // 解析并打印插件执行传入的所有参数
+        val inputParams = map["input"]?.let {
+            parseInputParams( it as Map<String, Any>, variables, acrossInfo)
+        } ?: emptyMap()
         printInput(atomData, inputParams, inputTemplate)
 
         if (atomData.target?.isBlank() == true) {
@@ -345,14 +348,13 @@ open class MarketAtomTask : ITask() {
     }
 
     private fun parseInputParams(
-        map: MutableMap<String, Any>,
+        inputMap: Map<String, Any>,
         variables: Map<String, String>,
         acrossInfo: BuildTemplateAcrossInfo?
     ): Map<String, String> {
         val atomParams = mutableMapOf<String, String>()
         try {
-            val inputMap = map["input"] as Map<String, Any>?
-            inputMap?.forEach { (name, value) ->
+            inputMap.forEach { (name, value) ->
                 // 修复插件input环境变量替换问题 #5682
                 atomParams[name] = EnvUtils.parseEnv(
                     command = JsonUtil.toJson(value),
