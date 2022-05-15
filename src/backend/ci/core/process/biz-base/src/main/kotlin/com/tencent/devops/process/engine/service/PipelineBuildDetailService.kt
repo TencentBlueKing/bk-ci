@@ -182,8 +182,8 @@ class PipelineBuildDetailService @Autowired constructor(
         pipelineDetailChangeEvent(projectId, buildId)
     }
 
-    fun buildCancel(projectId: String, buildId: String, buildStatus: BuildStatus) {
-        logger.info("Cancel the build $buildId")
+    fun buildCancel(projectId: String, buildId: String, buildStatus: BuildStatus, cancelUser: String) {
+        logger.info("Cancel the build $buildId by $cancelUser")
         update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
 
             var update = false
@@ -261,16 +261,11 @@ class PipelineBuildDetailService @Autowired constructor(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, buildStatus = BuildStatus.RUNNING, operation = "buildCancel")
+        }, buildStatus = BuildStatus.RUNNING, cancelUser = cancelUser, operation = "buildCancel")
     }
 
-    fun buildEnd(
-        projectId: String,
-        buildId: String,
-        buildStatus: BuildStatus,
-        cancelUser: String? = null
-    ): List<BuildStageStatus> {
-        logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|cancelUser=$cancelUser")
+    fun buildEnd(projectId: String, buildId: String, buildStatus: BuildStatus): List<BuildStageStatus> {
+        logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
         var allStageStatus: List<BuildStageStatus> = emptyList()
         update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
             var update = false

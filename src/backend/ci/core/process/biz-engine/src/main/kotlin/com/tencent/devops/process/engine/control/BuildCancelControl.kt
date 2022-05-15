@@ -123,7 +123,8 @@ class BuildCancelControl @Autowired constructor(
             pipelineBuildDetailService.buildCancel(
                 projectId = event.projectId,
                 buildId = event.buildId,
-                buildStatus = event.status
+                buildStatus = event.status,
+                cancelUser = event.userId
             )
 
             val pendingStage = pipelineStageService.getPendingStage(event.projectId, buildId)
