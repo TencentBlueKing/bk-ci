@@ -190,7 +190,7 @@ open class MarketAtomTask : ITask() {
             // 无构建环境下运行的插件的workspace取临时文件的路径
             atomTmpSpace.absolutePath
         } else {
-            workspace.absolutePath
+            workspacePath
         }
         variables = variables.plus(
             mapOf(
@@ -348,7 +348,7 @@ open class MarketAtomTask : ITask() {
         map: MutableMap<String, Any>,
         variables: Map<String, String>,
         acrossInfo: BuildTemplateAcrossInfo?
-    ): MutableMap<String, String> {
+    ): Map<String, String> {
         val atomParams = mutableMapOf<String, String>()
         try {
             val inputMap = map["input"] as Map<String, Any>?
@@ -433,7 +433,7 @@ open class MarketAtomTask : ITask() {
 
     private fun printInput(
         atomData: AtomEnv,
-        atomParams: MutableMap<String, String>,
+        atomParams: Map<String, String>,
         inputTemplate: Map<String, Map<String, Any>>
     ) {
         LoggerService.addFoldStartLine("[Plugin info]")
@@ -943,12 +943,11 @@ open class MarketAtomTask : ITask() {
         buildVariables: BuildVariables,
         workspacePath: String
     ): Map<String, String> {
-        val stepId = buildTask.stepId ?: return mapOf()
-        val context = mutableMapOf(
-            "steps.$stepId.name" to (buildTask.elementName ?: ""),
-            "steps.$stepId.id" to stepId,
+        val context = mutableMapOf<String, String>()
+        // 只将本插件的状态改为RUNNING，其他插件上下文保持引擎传入
+        buildTask.stepId?.let { stepId ->
             "steps.$stepId.status" to BuildStatus.RUNNING.name
-        )
+        }
         if (buildTask.containerType == VMBuildContainer.classType) {
             // 只有构建环境下运行的插件才有workspace变量
             context.putAll(
