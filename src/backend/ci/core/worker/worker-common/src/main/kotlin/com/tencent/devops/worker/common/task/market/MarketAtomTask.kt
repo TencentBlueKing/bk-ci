@@ -952,7 +952,8 @@ open class MarketAtomTask : ITask() {
         val context = mutableMapOf<String, String>()
         // 只将本插件的状态改为RUNNING，其他插件上下文保持引擎传入
         buildTask.stepId?.let { stepId ->
-            "steps.$stepId.status" to BuildStatus.RUNNING.name
+            context["step.status"] = BuildStatus.RUNNING.name
+            context["steps.$stepId.status"] = BuildStatus.RUNNING.name
         }
         if (buildTask.containerType == VMBuildContainer.classType) {
             // 只有构建环境下运行的插件才有workspace变量
