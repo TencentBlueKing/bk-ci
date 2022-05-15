@@ -174,8 +174,12 @@ open class MarketAtomTask : ITask() {
         val outputTemplate = props["output"]?.let { props["output"] as Map<String, Map<String, Any>> } ?: mutableMapOf()
 
         // 解析并打印插件执行传入的所有参数
-        val inputParams = map["input"]?.let {
-            parseInputParams( it as Map<String, Any>, variables, acrossInfo)
+        val inputParams = map["input"]?.let { input ->
+            parseInputParams(
+                inputMap = input as Map<String, Any>,
+                variables = variables,
+                acrossInfo = acrossInfo
+            )
         } ?: emptyMap()
         printInput(atomData, inputParams, inputTemplate)
 
