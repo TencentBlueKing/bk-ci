@@ -344,7 +344,11 @@ open class MarketAtomTask : ITask() {
         }
     }
 
-    private fun parseInputParams(map: MutableMap<String, Any>, variables: Map<String, String>, acrossInfo: BuildTemplateAcrossInfo?): MutableMap<String, String> {
+    private fun parseInputParams(
+        map: MutableMap<String, Any>,
+        variables: Map<String, String>,
+        acrossInfo: BuildTemplateAcrossInfo?
+    ): MutableMap<String, String> {
         val atomParams = mutableMapOf<String, String>()
         try {
             val inputMap = map["input"] as Map<String, Any>?
