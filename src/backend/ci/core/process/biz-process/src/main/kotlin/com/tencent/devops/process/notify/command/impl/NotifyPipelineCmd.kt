@@ -12,7 +12,6 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
-import com.tencent.devops.process.utils.PIPELINE_TIME_END
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDateTime
