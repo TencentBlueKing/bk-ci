@@ -6,14 +6,12 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCas
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.engine.service.PipelineNotifyService
-import com.tencent.devops.process.engine.service.PipelineSubscriptionService
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.stereotype.Component
 
 @Component
 class PipelineNotifyQueueListener(
-    private val pipelineSubscriptionService: PipelineSubscriptionService,
     private val pipelineNotifyService: PipelineNotifyService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
