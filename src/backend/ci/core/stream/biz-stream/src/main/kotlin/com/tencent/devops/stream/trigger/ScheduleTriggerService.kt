@@ -101,7 +101,7 @@ class ScheduleTriggerService @Autowired constructor(
                 homepage = it.homePage
             )
         }
-        if (streamTriggerSetting == null) {
+        if (streamTriggerSetting == null || streamTriggerSetting?.enableCi == false) {
             logger.warn("project ${streamTimerEvent.projectId} not enable ci no trigger schedule")
             return null
         }
@@ -216,7 +216,7 @@ class ScheduleTriggerService @Autowired constructor(
             action.data.getGitProjectId(),
             ApiRequestRetryInfo(true)
         )!!.toStreamGitProjectInfoWithProject()
-        streamBasicSettingService.updateProjectInfo(action.data.eventCommon.userId, gitProjectInfo)
+        streamBasicSettingService.updateProjectInfo(action.data.getUserId(), gitProjectInfo)
 
         return streamYamlBuild.gitStartBuild(
             action = action,

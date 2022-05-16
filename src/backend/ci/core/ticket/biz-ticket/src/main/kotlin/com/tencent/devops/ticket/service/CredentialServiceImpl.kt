@@ -27,6 +27,7 @@
 
 package com.tencent.devops.ticket.service
 
+import com.tencent.devops.common.api.constant.TEMPLATE_ACROSS_INFO_ID
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -713,6 +714,5 @@ class CredentialServiceImpl @Autowired constructor(
         private const val CREDENTIAL_NAME_MAX_SIZE = 64
         private val CREDENTIAL_ID_REGEX = Regex("^[0-9a-zA-Z_]+$")
         private val CREDENTIAL_NAME_REGEX = Regex("^[a-zA-Z0-9_\u4e00-\u9fa5-.]+$")
-        private const val TEMPLATE_ACROSS_INFO_ID = "devops_template_across_info_id"
     }
 }

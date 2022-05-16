@@ -65,6 +65,10 @@ class StreamRepoTriggerAction(
         )
     }
 
+    override fun getChangeSet(): Set<String>? {
+        return baseAction.getChangeSet()
+    }
+
     override fun isMatch(triggerOn: TriggerOn) = baseAction.isMatch(triggerOn)
 
     override fun getUserVariables(yamlVariables: Map<String, Variable>?): Map<String, Variable>? = null

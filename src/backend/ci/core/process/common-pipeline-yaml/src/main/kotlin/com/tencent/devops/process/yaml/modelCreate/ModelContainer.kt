@@ -48,7 +48,7 @@ import com.tencent.devops.process.yaml.utils.StreamDispatchUtils
 import com.tencent.devops.process.yaml.v2.models.IfType
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Job
-import com.tencent.devops.process.yaml.v2.models.job.ResourceExclusiveDeclaration
+import com.tencent.devops.process.yaml.v2.models.job.Mutex
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -85,7 +85,7 @@ class ModelContainer @Autowired(required = false) constructor(
             jobId = job.id,
             name = job.name ?: "Job-${jobIndex + 1}",
             elements = elementList,
-            mutexGroup = getMutexGroup(job.resourceExclusiveDeclaration),
+            mutexGroup = getMutexGroup(job.mutex),
             baseOS = StreamDispatchUtils.getBaseOs(job),
             vmNames = setOf(),
             maxQueueMinutes = 60,
@@ -180,7 +180,7 @@ class ModelContainer @Autowired(required = false) constructor(
                 jobControlOption = getJobControlOption(
                     job = job, jobEnable = jobEnable, finalStage = finalStage
                 ),
-                mutexGroup = getMutexGroup(job.resourceExclusiveDeclaration),
+                mutexGroup = getMutexGroup(job.mutex),
                 matrixGroupFlag = job.strategy != null,
                 matrixControlOption = getMatrixControlOption(job, null)
             )
@@ -231,7 +231,7 @@ class ModelContainer @Autowired(required = false) constructor(
         }
     }
 
-    protected fun getMutexGroup(resource: ResourceExclusiveDeclaration?): MutexGroup? {
+    protected fun getMutexGroup(resource: Mutex?): MutexGroup? {
         if (resource == null) {
             return null
         }

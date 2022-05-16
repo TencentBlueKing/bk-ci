@@ -32,8 +32,7 @@
 package com.tencent.bkrepo.helm.service
 
 import com.tencent.bkrepo.common.api.util.readJsonString
-import com.tencent.bkrepo.helm.artifact.HelmArtifactInfo
-import com.tencent.bkrepo.helm.model.metadata.HelmIndexYamlMetadata
+import com.tencent.bkrepo.helm.pojo.metadata.HelmIndexYamlMetadata
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -46,14 +45,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.web.context.WebApplicationContext
-import java.time.LocalDateTime
 
 @DisplayName("chart info 信息列表测试")
 @SpringBootTest
 class ChartInfoServiceTest {
-    @Autowired
-    private lateinit var chartInfoService: ChartInfoService
-
     @Autowired
     private lateinit var wac: WebApplicationContext
 
@@ -64,15 +59,18 @@ class ChartInfoServiceTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(wac).build()
     }
 
-    private val projectId = "test"
-    private var repoName = "helm-local"
-
     @Test
     @DisplayName("chart列表展示")
     fun allChartsListTest() {
-        val helmArtifactInfo = HelmArtifactInfo(projectId, repoName, "/")
-        val allChartsList = chartInfoService.allChartsList(helmArtifactInfo, LocalDateTime.now())
-        // Assertions.assertEquals(allChartsList.size, 0)
+        val perform =
+            mockMvc.perform(
+                MockMvcRequestBuilders.get("/test/test/api/charts")
+                    .header("Authorization", "Basic XXXXX=")
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+        perform.andExpect { MockMvcResultMatchers.status().is4xxClientError }
+        perform.andExpect { MockMvcResultMatchers.status().isOk }
+        println(perform.andReturn().response.contentAsString)
     }
 
     @Test
@@ -113,10 +111,11 @@ class ChartInfoServiceTest {
     fun chartExistsTest() {
         val perform =
             mockMvc.perform(
-                MockMvcRequestBuilders.head("/test/helm-local/api/charts/bk-redis/0.1.1")
-                    .header("Authorization", "Basic eHdoeToxMjM0NTY=")
+                MockMvcRequestBuilders.head("/test/test/api/charts/mongodb/7.8.10")
+                    .header("Authorization", "Basic XXXXX=")
                     .contentType(MediaType.APPLICATION_JSON)
             )
+        println(perform.andReturn().response.contentAsString)
         perform.andExpect { MockMvcResultMatchers.status().isOk }
         val status = perform.andReturn().response.status
         Assertions.assertEquals(status, 200)

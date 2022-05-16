@@ -47,7 +47,10 @@ abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
     private val shardingRoutingRuleService: ShardingRoutingRuleService
 ) : ProjectDataSourceAssignService {
 
-    private val logger = LoggerFactory.getLogger(AbsProjectDataSourceAssignServiceImpl::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(AbsProjectDataSourceAssignServiceImpl::class.java)
+        private const val DEFAULT_DATA_SOURCE_NAME = "ds_0"
+    }
 
     @Value("\${tag.prod:prod}")
     private val prodTag: String = "prod"
@@ -57,6 +60,9 @@ abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
 
     @Value("\${tag.stream:stream}")
     private val streamTag: String = "stream"
+
+    @Value("\${sharding.database.assign.fusibleSwitch:true}")
+    private val assignDbFusibleSwitch: Boolean = true
 
     /**
      * 为项目分配数据源
@@ -82,20 +88,26 @@ abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
             prodTag
         }
         moduleCodes.forEach { moduleCode ->
-            // 根据模块查找还有还有空余容量的数据源
+            var dataSourceName = DEFAULT_DATA_SOURCE_NAME
+            // 根据模块查找还有空余容量的数据源
             val dataSourceNames = dataSourceDao.listByModule(
                 dslContext = dslContext,
                 clusterName = clusterName,
                 moduleCode = moduleCode.name,
                 fullFlag = false
             )?.map { it.dataSourceName }
+
             if (dataSourceNames.isNullOrEmpty()) {
-                // 没有可用的数据源则报错
                 logger.warn("[$clusterName]$moduleCode has no dataSource available")
-                throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_ASSIGN_DATASOURCE_FAIL)
+                if (assignDbFusibleSwitch) {
+                    // 当分配db的熔断开关打开时，如果没有可用的数据源则报错
+                    throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_ASSIGN_DATASOURCE_FAIL)
+                }
+            } else {
+                // 获取可用数据源名称
+                dataSourceName = getValidDataSourceName(clusterName, dataSourceNames)
             }
-            // 获取可用数据源名称
-            val dataSourceName = getValidDataSourceName(clusterName, dataSourceNames)
+            // 保存分片规则
             val shardingRoutingRule = ShardingRoutingRule(projectId, dataSourceName)
             shardingRoutingRuleService.addShardingRoutingRule(SYSTEM, shardingRoutingRule)
         }

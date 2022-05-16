@@ -33,7 +33,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.springframework.beans.factory.annotation.Value
 
 class GitCIPipelineUrlBeanImpl constructor(
@@ -43,6 +42,7 @@ class GitCIPipelineUrlBeanImpl constructor(
 
     @Value("\${gitci.v2GitUrl:#{null}}")
     private val v2GitUrl: String? = null
+
     override fun genBuildDetailUrl(
         projectCode: String,
         pipelineId: String,
@@ -52,28 +52,30 @@ class GitCIPipelineUrlBeanImpl constructor(
         needShortUrl: Boolean
     ): String {
         logger.info("[$buildId]|genGitCIBuildDetailUrl| host=$v2GitUrl")
-        val project = client.getScm(ServiceGitCiResource::class)
-            .getGitCodeProjectInfo(projectCode.removePrefix("git_"))
-            .data ?: return ""
-        val urlParam = StringBuffer("")
-        if (!position.isNullOrBlank() && !stageId.isNullOrBlank()) {
-            when (position) {
-                ControlPointPosition.BEFORE_POSITION -> {
-                    urlParam.append("?checkIn=$stageId")
-                }
-                ControlPointPosition.AFTER_POSITION -> {
-                    urlParam.append("?checkOut=$stageId")
+        try {
+            val urlParam = StringBuffer("")
+            if (!position.isNullOrBlank() && !stageId.isNullOrBlank()) {
+                when (position) {
+                    ControlPointPosition.BEFORE_POSITION -> {
+                        urlParam.append("?checkIn=$stageId")
+                    }
+                    ControlPointPosition.AFTER_POSITION -> {
+                        urlParam.append("?checkOut=$stageId")
+                    }
                 }
             }
-        }
-        val url = "$v2GitUrl/pipeline/$pipelineId/detail/$buildId$urlParam#${project.pathWithNamespace}"
+            val url = "$v2GitUrl/pipeline/$pipelineId/detail/$buildId$urlParam#${projectCode.removePrefix("git_")}"
 
-        logger.info("[$buildId]|genGitCIBuildDetailUrl| url=$url")
+            logger.info("[$buildId]|genGitCIBuildDetailUrl| url=$url")
 
-        return if (needShortUrl) {
-            client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
-        } else {
-            url
+            return if (needShortUrl) {
+                client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+            } else {
+                url
+            }
+        } catch (ignore: Throwable) {
+            logger.info("[$buildId]|genGitCIBuildDetailUrl| failed with:", ignore)
+            return ""
         }
     }
 

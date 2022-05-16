@@ -10,13 +10,13 @@ import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.service.StreamGitTokenService
 import com.tencent.devops.stream.service.StreamScmService
-import com.tencent.devops.stream.trigger.ManualTriggerService
+import com.tencent.devops.stream.trigger.OpenApiTriggerService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceStreamTriggerResourceImpl @Autowired constructor(
-    private val manualTriggerService: ManualTriggerService,
+    private val openApiTriggerService: OpenApiTriggerService,
     private val permissionService: StreamPermissionService,
     private val streamScmService: StreamScmService,
     private val streamGitTokenService: StreamGitTokenService
@@ -47,7 +47,7 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
                 eventType = eventType
             )
         }
-        return Result(manualTriggerService.triggerBuild(userId, pipelineId, new))
+        return Result(openApiTriggerService.triggerBuild(userId, pipelineId, new))
     }
 
     private fun checkParam(userId: String) {

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.engine.service.detail
 
-import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -49,10 +49,8 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
-import com.tencent.devops.store.api.atom.ServiceAtomResource
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions", "ComplexCondition")
 @Service
@@ -186,12 +184,6 @@ class TaskBuildDetailService(
                         e.errorType = null
                         e.errorCode = null
                         e.errorMsg = null
-                        e.version = findTaskVersion(
-                            projectId = projectId,
-                            atomCode = e.getAtomCode(),
-                            atomVersion = e.version,
-                            atomClass = e.getClassType()
-                        )
                         update = true
                         return Traverse.BREAK
                     }
@@ -241,6 +233,7 @@ class TaskBuildDetailService(
         buildId: String,
         taskId: String,
         buildStatus: BuildStatus,
+        taskVersion: String? = null,
         errorType: ErrorType? = null,
         errorCode: Int? = null,
         errorMsg: String? = null
@@ -264,7 +257,19 @@ class TaskBuildDetailService(
                         e.errorCode = errorCode
                         e.errorMsg = errorMsg
                     }
-
+                    if (taskVersion != null) {
+                        when (e) {
+                            is MarketBuildAtomElement -> {
+                                e.version = taskVersion
+                            }
+                            is MarketBuildLessAtomElement -> {
+                                e.version = taskVersion
+                            }
+                            else -> {
+                                e.version = INIT_VERSION
+                            }
+                        }
+                    }
                     var elementElapsed = 0L
                     run lit@{
                         val elements = c.elements
@@ -521,31 +526,5 @@ class TaskBuildDetailService(
             buildStatus = BuildStatus.RUNNING,
             operation = "updateElementWhenPauseContinue#$taskId"
         )
-    }
-
-    private val atomCache = Caffeine.newBuilder()
-        .maximumSize(20000)
-        .expireAfterAccess(6, TimeUnit.HOURS)
-        .build<String/*projectCode VS atomCode VS atomVersion*/, String/*true version*/> { mix ->
-            val keys = mix.split(" VS ")
-            client.get(ServiceAtomResource::class)
-                .getAtomRealVersion(projectCode = keys[0], atomCode = keys[1], version = keys[2]).data
-        }
-
-    fun findTaskVersion(
-        projectId: String,
-        atomCode: String,
-        atomVersion: String,
-        atomClass: String
-    ): String {
-        // 只有是研发商店插件,获取插件的版本信息
-        if (atomClass != MarketBuildAtomElement.classType && atomClass != MarketBuildLessAtomElement.classType) {
-            return atomVersion
-        }
-        return if (atomVersion.contains("*")) {
-            atomCache.get("$projectId VS $atomCode VS $atomVersion") ?: atomVersion
-        } else {
-            atomVersion
-        }
     }
 }

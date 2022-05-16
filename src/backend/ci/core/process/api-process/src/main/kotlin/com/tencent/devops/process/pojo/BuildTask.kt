@@ -48,6 +48,8 @@ data class BuildTask(
     val stepId: String? = null,
     @ApiModelProperty("插件名字", required = true)
     val elementName: String? = null,
+    @ApiModelProperty("插件版本号", required = false)
+    var elementVersion: String? = null,
     @ApiModelProperty("任务类型", required = false)
     val type: String? = null,
     @ApiModelProperty("任务参数", required = false)

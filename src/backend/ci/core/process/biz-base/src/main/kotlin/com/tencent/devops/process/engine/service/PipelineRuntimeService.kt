@@ -83,6 +83,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
+import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
@@ -139,6 +140,7 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM_ALIAS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
+import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
@@ -186,6 +188,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineSettingService: PipelineSettingService,
     private val pipelineRuleService: PipelineRuleService,
     private val projectCacheService: ProjectCacheService,
+    private val pipelineUrlBean: PipelineUrlBean,
     private val redisOperation: RedisOperation
 ) {
     companion object {
@@ -722,6 +725,9 @@ class PipelineRuntimeService @Autowired constructor(
         val projectId = pipelineInfo.projectId
         val pipelineId = pipelineInfo.pipelineId
         val buildId = startParamMap[PIPELINE_RETRY_BUILD_ID]?.toString() ?: buildIdGenerator.getNextId()
+        val detailUrl = pipelineUrlBean.genBuildDetailUrl(
+            projectId, pipelineId, buildId, null, null, false
+        )
         val projectName = projectCacheService.getProjectName(projectId) ?: ""
         val context = StartBuildContext.init(startParamMap)
 
@@ -948,6 +954,7 @@ class PipelineRuntimeService @Autowired constructor(
                 val buildVariables = startParamsWithType
                     .filter { it.valueType != BuildFormPropertyType.TEMPORARY }.toMutableList()
                 buildVariables.add(BuildParameters(PIPELINE_BUILD_ID, buildId, BuildFormPropertyType.STRING))
+                buildVariables.add(BuildParameters(PIPELINE_BUILD_URL, detailUrl, BuildFormPropertyType.STRING))
                 buildVariables.add(BuildParameters(PROJECT_NAME, pipelineInfo.projectId, BuildFormPropertyType.STRING))
                 buildVariables.add(BuildParameters(PROJECT_NAME_CHINESE, projectName, BuildFormPropertyType.STRING))
                 val bizId = MDC.get(TraceTag.BIZID)
@@ -1325,7 +1332,9 @@ class PipelineRuntimeService @Autowired constructor(
                 buildStatus = completeTask.buildStatus,
                 errorType = completeTask.errorType,
                 errorCode = completeTask.errorCode,
-                errorMsg = completeTask.errorMsg
+                errorMsg = completeTask.errorMsg,
+                platformCode = completeTask.platformCode,
+                platformErrorCode = completeTask.platformErrorCode
             )
             // 刷新容器，下发后面的任务
             pipelineEventDispatcher.dispatch(

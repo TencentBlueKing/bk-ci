@@ -142,6 +142,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
     }
 
+    @Timed
     override fun create(
         userId: String,
         projectId: String,

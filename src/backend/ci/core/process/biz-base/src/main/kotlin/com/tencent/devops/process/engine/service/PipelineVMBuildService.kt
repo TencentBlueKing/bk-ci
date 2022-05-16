@@ -547,7 +547,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
         taskBuildDetailService.taskEnd(
             projectId = buildInfo.projectId, buildId = buildId, taskId = result.elementId, buildStatus = buildStatus,
-            errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
+            errorType = errorType, errorCode = result.errorCode, errorMsg = result.message,
+            taskVersion = result.elementVersion
         )
         // 重置前置暂停插件暂停状态位
         pipelineTaskPauseService.pauseTaskFinishExecute(buildId, result.taskId)
@@ -555,7 +556,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             completeTask = CompleteTask(
                 projectId = buildInfo.projectId, buildId = buildId, taskId = result.taskId,
                 userId = buildInfo.startUser, buildStatus = buildStatus,
-                errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
+                errorType = errorType, errorCode = result.errorCode, errorMsg = result.message,
+                platformCode = result.platformCode, platformErrorCode = result.platformErrorCode
             )
         )
 

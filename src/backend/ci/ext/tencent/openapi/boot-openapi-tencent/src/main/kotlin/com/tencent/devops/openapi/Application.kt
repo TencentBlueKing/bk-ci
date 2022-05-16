@@ -34,8 +34,5 @@ import com.tencent.devops.common.service.MicroServiceApplication
 class Application
 
 fun main(args: Array<String>) {
-    MicroServiceApplication.run(
-        Application::class,
-        args.plus("-Dmanagement.metrics.web.server.request.autotime.enabled=true") // 开启所有请求的prometheus
-    )
+    MicroServiceApplication.run(Application::class, args)
 }

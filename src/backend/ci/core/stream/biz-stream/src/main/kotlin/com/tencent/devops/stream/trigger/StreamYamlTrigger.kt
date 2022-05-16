@@ -131,7 +131,7 @@ class StreamYamlTrigger @Autowired constructor(
         }
 
         streamBasicSettingService.updateProjectInfo(
-            action.data.eventCommon.userId,
+            action.data.getUserId(),
             gitProjectInfo.toStreamGitProjectInfoWithProject()
         )
 
@@ -276,8 +276,8 @@ class StreamYamlTrigger @Autowired constructor(
     ): Boolean {
         return action.data.context.pipeline!!.pipelineId.isBlank() ||
             (
-                !action.data.context.changeSet.isNullOrEmpty() &&
-                    action.data.context.changeSet!!.toSet()
+                !action.getChangeSet().isNullOrEmpty() &&
+                    action.getChangeSet()!!.toSet()
                         .contains(action.data.context.pipeline!!.filePath) &&
                     action.data.context.repoTrigger == null
                 )

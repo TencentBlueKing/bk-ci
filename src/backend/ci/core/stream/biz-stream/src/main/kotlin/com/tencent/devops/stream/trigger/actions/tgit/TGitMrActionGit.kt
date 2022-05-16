@@ -67,7 +67,6 @@ import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.GitCheckService
 import com.tencent.devops.stream.trigger.service.StreamTriggerTokenService
-import com.tencent.devops.stream.util.QualityUtils
 import com.tencent.devops.stream.util.StreamCommonUtils
 import org.slf4j.LoggerFactory
 import java.util.Base64
@@ -97,7 +96,7 @@ class TGitMrActionGit(
             cred = getGitCred(),
             gitProjectId = data.eventCommon.gitProjectId,
             mrId = event().object_attributes.id,
-            mrBody = QualityUtils.getQualityReport(body.reportData.first, body.reportData.second)
+            mrBody = body
         )
     }
 
@@ -202,26 +201,6 @@ class TGitMrActionGit(
             ref = TGitActionCommon.getTriggerBranch(event.object_attributes.target_branch)
         ).toSet()
 
-        // 获取mr请求的变更文件列表，用来给后面判断
-        val changeSet = mutableSetOf<String>()
-        apiService.getMrChangeInfo(
-            cred = getGitCred(),
-            gitProjectId = data.getGitProjectId(),
-            mrId = event.object_attributes.id.toString(),
-            retry = ApiRequestRetryInfo(true)
-        )?.files?.forEach {
-            if (it.deletedFile) {
-                changeSet.add(it.oldPath)
-            } else if (it.renameFile) {
-                changeSet.add(it.oldPath)
-                changeSet.add(it.newPath)
-            } else {
-                changeSet.add(it.newPath)
-            }
-        }
-
-        data.context.changeSet = changeSet.toList()
-
         // 已经merged的直接返回目标分支的文件列表即可
         if (event.isMrMergeEvent()) {
             return targetBranchYamlPathList.map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
@@ -239,7 +218,7 @@ class TGitMrActionGit(
             }
         ).toSet()
 
-        return checkMrYamlPathList(sourceBranchYamlPathList, targetBranchYamlPathList, changeSet)
+        return checkMrYamlPathList(sourceBranchYamlPathList, targetBranchYamlPathList, getChangeSet()!!)
             .map { YamlPathListEntry(it.key, it.value) }
     }
 
@@ -273,7 +252,7 @@ class TGitMrActionGit(
             retry = ApiRequestRetryInfo(true)
         )
 
-        if (!data.context.changeSet!!.contains(fileName)) {
+        if (!getChangeSet()!!.contains(fileName)) {
             return if (targetFile?.content.isNullOrBlank()) {
                 ""
             } else {
@@ -331,6 +310,35 @@ class TGitMrActionGit(
                 state = StreamCommitCheckState.FAILURE
             )
         )
+    }
+
+    override fun getChangeSet(): Set<String>? {
+        // 使用null和empty的区别来判断是否调用过获取函数
+        if (this.data.context.changeSet != null) {
+            return this.data.context.changeSet
+        }
+
+        // 获取mr请求的变更文件列表，用来给后面判断
+        val changeSet = mutableSetOf<String>()
+        apiService.getMrChangeInfo(
+            cred = getGitCred(),
+            gitProjectId = data.getGitProjectId(),
+            mrId = event().object_attributes.id.toString(),
+            retry = ApiRequestRetryInfo(true)
+        )?.files?.forEach {
+            if (it.deletedFile) {
+                changeSet.add(it.oldPath)
+            } else if (it.renameFile) {
+                changeSet.add(it.oldPath)
+                changeSet.add(it.newPath)
+            } else {
+                changeSet.add(it.newPath)
+            }
+        }
+
+        this.data.context.changeSet = changeSet
+
+        return this.data.context.changeSet
     }
 
     private fun getFileInfo(
@@ -408,8 +416,8 @@ class TGitMrActionGit(
             triggerOn = triggerOn,
             sourceBranch = TGitActionCommon.getTriggerBranch(event.object_attributes.source_branch),
             targetBranch = TGitActionCommon.getTriggerBranch(event.object_attributes.target_branch),
-            changeSet = data.context.changeSet?.toSet(),
-            userId = data.eventCommon.userId,
+            changeSet = getChangeSet(),
+            userId = data.getUserId(),
             mrAction = mrAction
         )
         val params = TGitActionCommon.getStartParams(
@@ -432,6 +440,17 @@ class TGitMrActionGit(
     }
 
     override fun needSaveOrUpdateBranch() = !event().isMrForkEvent()
+
+    override fun sendUnlockWebhook() {
+        if (event().manual_unlock == true) {
+            gitCheckService.sendUnlockWebhook(
+                gitProjectId = data.getGitProjectId(),
+                mrId = event().object_attributes.id,
+                // 解锁延迟5s，确保在commit check发送后再发送webhook锁解锁
+                delayMills = 5000
+            )
+        }
+    }
 }
 
 private fun GitMergeRequestEvent.getActionValue(): String? {

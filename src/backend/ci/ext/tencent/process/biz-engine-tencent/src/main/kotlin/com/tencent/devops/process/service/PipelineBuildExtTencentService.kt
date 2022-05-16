@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
@@ -47,8 +46,7 @@ import java.util.Random
 @Service
 class PipelineBuildExtTencentService @Autowired constructor(
     private val consulClient: ConsulDiscoveryClient?,
-    private val pipelineContextService: PipelineContextService,
-    private val pipelineUrlBean: PipelineUrlBean
+    private val pipelineContextService: PipelineContextService
 ) : PipelineBuildExtService {
 
     override fun buildExt(task: PipelineBuildTask, variables: Map<String, String>): Map<String, String> {
@@ -63,20 +61,13 @@ class PipelineBuildExtTencentService @Autowired constructor(
 
         extMap.putAll(pipelineContextService.buildContext(
             projectId = task.projectId,
+            pipelineId = task.pipelineId,
             buildId = task.buildId,
             stageId = task.stageId,
             containerId = task.containerId,
             taskId = null,
             variables = variables
         ))
-        extMap["ci.build_url"] = pipelineUrlBean.genBuildDetailUrl(
-            projectCode = task.projectId,
-            pipelineId = task.pipelineId,
-            buildId = task.buildId,
-            position = null,
-            stageId = null,
-            needShortUrl = false
-        )
         return extMap
     }
 
@@ -126,6 +117,6 @@ class PipelineBuildExtTencentService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this :: class.java)
+        private val logger = LoggerFactory.getLogger(PipelineBuildExtTencentService::class.java)
     }
 }

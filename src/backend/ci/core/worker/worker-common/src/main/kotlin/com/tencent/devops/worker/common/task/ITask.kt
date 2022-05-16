@@ -43,6 +43,12 @@ abstract class ITask {
 
     private val monitorData = HashMap<String, Any>()
 
+    private val taskErrorMessage = HashMap<String, String>()
+
+    private var platformCode: String? = null
+
+    private var platformErrorCode: Int? = null
+
     fun run(
         buildTask: BuildTask,
         buildVariables: BuildVariables,
@@ -100,8 +106,32 @@ abstract class ITask {
         monitorData.putAll(monitorDataMap)
     }
 
+    protected fun addTaskErrorMessage(key: String, value: String) {
+        taskErrorMessage[key] = value
+    }
+
+    fun getTaskErrorMessage(): Map<String, String> {
+        return taskErrorMessage
+    }
+
     fun getMonitorData(): Map<String, Any> {
         return monitorData
+    }
+
+    protected fun addPlatformCode(taskPlatformCode: String) {
+        platformCode = taskPlatformCode
+    }
+
+    fun getPlatformCode(): String? {
+        return platformCode
+    }
+
+    protected fun addPlatformErrorCode(taskPlatformErrorCode: Int) {
+        platformErrorCode = taskPlatformErrorCode
+    }
+
+    fun getPlatformErrorCode(): Int? {
+        return platformErrorCode
     }
 
     protected fun isThirdAgent() = BuildEnv.getBuildType() == BuildType.AGENT
