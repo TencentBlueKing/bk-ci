@@ -72,7 +72,8 @@ import {
     SET_REQUEST_ATOM_DATA,
     FETCHING_ATOM_MORE_LOADING,
     SET_ATOMS_CLASSIFY,
-    SET_ATOM_PAGE_OVER
+    SET_ATOM_PAGE_OVER,
+    CLEAR_ATOM_DATA
 } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import { hashID, randomString } from '@/utils/util'
@@ -288,7 +289,7 @@ export default {
                     recommendFlag,
                     queryProjectAtomFlag,
                     queryFitAgentBuildLessAtomFlag,
-                    fitOsFlag: recommendFlag === undefined ? false : undefined
+                    fitOsFlag: recommendFlag !== undefined
                 }
             }).then(res => {
                 const curAtomList = getters.getAtomDisabled(res.data.records, os, category)
@@ -347,6 +348,10 @@ export default {
 
     setAtomPageOver: ({ commit }) => {
         commit(SET_ATOM_PAGE_OVER, false)
+    },
+
+    clearAtomData: ({ commit }) => {
+        commit(CLEAR_ATOM_DATA)
     },
 
     fetchAtomModal: async ({ commit, dispatch }, { projectCode, atomCode, version, atomIndex, container }) => {

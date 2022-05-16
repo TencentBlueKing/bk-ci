@@ -32,12 +32,12 @@
                                 [getAtomClass(atom.atomCode)]: true
                             }"
                         ></atom-card>
-                        <div class="empty-atom-list" v-if="curTabList.length <= 0">
+                        <div class="empty-atom-list" v-if="curTabList.length <= 0 && !fetchingAtomList">
                             <empty-tips type="no-result"></empty-tips>
                         </div>
                     </bk-tab-panel>
                 </bk-tab>
-                <section v-else class="search-result">
+                <section v-else class="search-result" ref="searchResult" v-bkloading="{ isLoading: fetchingAtomList }">
                     <h3 v-if="installArr.length" class="search-title">{{ $t('newlist.installed') }}（{{installArr.length}}）</h3>
                     <atom-card v-for="atom in installArr"
                         :key="atom.atomCode"
@@ -69,7 +69,7 @@
                             selected: atom.atomCode === atomCode
                         }"
                     ></atom-card>
-                    <div class="empty-atom-list" v-if="curTabList.length <= 0">
+                    <div class="empty-atom-list" v-if="curTabList.length <= 0 && !fetchingAtomList">
                         <empty-tips type="no-result"></empty-tips>
                     </div>
                 </section>
@@ -216,7 +216,8 @@
                 'setRequestAtomData',
                 'fetchAtoms',
                 'fetchClassify',
-                'setAtomPageOver'
+                'setAtomPageOver',
+                'clearAtomData'
             ]),
 
             /**
@@ -280,6 +281,7 @@
                     recommendFlag: true,
                     keyword: this.searchKey
                 })
+                this.clearAtomData()
             },
             clearSearch () {
                 const input = this.$refs.searchStr || {}
@@ -296,8 +298,12 @@
 
             freshAtomList (searchKey) {
                 if (this.fetchingAtomList) return
-                const curDom = this.$refs.atomListDom.find(item => item.name === this.classifyCode)
-                !this.searchKey && curDom.$el.scrollTo(0, 0)
+                if (this.searchKey) {
+                    this.$refs.searchResult.scrollTo(0, 0)
+                } else {
+                    const curDom = this.$refs.atomListDom.find(item => item.name === this.classifyCode)
+                    !this.searchKey && curDom.$el.scrollTo(0, 0)
+                }
                 this.freshRequestAtomData()
                 this.fetchAtomList()
             },

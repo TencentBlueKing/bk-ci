@@ -68,7 +68,8 @@ import {
     SET_EDIT_FROM,
     FETCHING_ATOM_MORE_LOADING,
     SET_COMMEND_ATOM_COUNT,
-    SET_ATOM_PAGE_OVER
+    SET_ATOM_PAGE_OVER,
+    CLEAR_ATOM_DATA
 } from './constants'
 import {
     getAtomModalKey,
@@ -415,5 +416,12 @@ export default {
     [SET_ATOM_PAGE_OVER]: (state, isAtomPageOver) => {
         Vue.set(state, 'isAtomPageOver', isAtomPageOver)
         return isAtomPageOver
+    },
+    [CLEAR_ATOM_DATA]: (state) => {
+        state.atomList = []
+        state.atomMap = {}
+        state.atomCodeList = {}
+        state.fetchingAtomList = true
+        return state
     }
 }

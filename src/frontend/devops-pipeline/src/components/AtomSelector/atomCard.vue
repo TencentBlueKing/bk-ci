@@ -119,7 +119,7 @@
                 const { atom } = this
                 const os = atom.os || []
                 let contxt
-                if (os.length) {
+                if (os.length && !os.includes('NONE')) {
                     const osListStr = os.map(val => jobConst[val]).join('、')
                     contxt = `${osListStr}${this.$t('editPage.envUseTips')}`
                 } else {
