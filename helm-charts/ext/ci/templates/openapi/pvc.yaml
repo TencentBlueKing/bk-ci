@@ -1,35 +1,35 @@
-{{ if .Values.openapi.enabled -}}
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: nfs-pv-openapi
-  labels:
-    pv: nfs-pv-openapi
-spec:
-  capacity:
-    storage: 10Gi
-  accessModes:
-    - ReadOnlyMany
-  persistentVolumeReclaimPolicy: Retain
-  nfs:
-    path: /4c1q3vbj/{{ .Values.cfsPath }}/openapi
-    server: 9.136.137.6
+# {{ if .Values.openapi.enabled -}}
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: nfs-pv-openapi
+#   labels:
+#     pv: nfs-pv-openapi
+# spec:
+#   capacity:
+#     storage: 10Gi
+#   accessModes:
+#     - ReadOnlyMany
+#   persistentVolumeReclaimPolicy: Retain
+#   nfs:
+#     path: /4c1q3vbj/{{ .Values.cfsPath }}/openapi
+#     server: 9.136.137.6
 
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: nfs-pvc-openapi
-spec:
-  accessModes:
-    - ReadOnlyMany
-  # storageClassName置为空，如果不填此项，则会选择默认的StorageClass而报错（默认StorageClass为CBS）
-  storageClassName: ""
-  resources:
-    requests:
-      storage: 10Gi
-  # 通过此selector关联PV的labels
-  selector:
-    matchLabels:
-      pv: nfs-pv-openapi
-{{- end -}}
+# ---
+# kind: PersistentVolumeClaim
+# apiVersion: v1
+# metadata:
+#   name: nfs-pvc-openapi
+# spec:
+#   accessModes:
+#     - ReadOnlyMany
+#   # storageClassName置为空，如果不填此项，则会选择默认的StorageClass而报错（默认StorageClass为CBS）
+#   storageClassName: ""
+#   resources:
+#     requests:
+#       storage: 10Gi
+#   # 通过此selector关联PV的labels
+#   selector:
+#     matchLabels:
+#       pv: nfs-pv-openapi
+# {{- end -}}

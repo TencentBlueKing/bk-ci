@@ -95,7 +95,10 @@ spec:
               mountPath: /data1/
       volumes:
       - name: mypvc
-        persistentVolumeClaim:
-          claimName: nfs-pvc-openapi
-          readOnly: true
+        nfs:
+          path: /4c1q3vbj/{{ .Values.cfsPath }}/openapi
+          server: 9.136.137.6
+        # persistentVolumeClaim:
+        #   claimName: nfs-pvc-openapi
+        #   readOnly: true
 {{- end -}}
