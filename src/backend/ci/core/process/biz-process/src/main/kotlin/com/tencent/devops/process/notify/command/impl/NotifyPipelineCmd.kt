@@ -41,25 +41,7 @@ abstract class NotifyPipelineCmd @Autowired constructor(
             pipelineId = pipelineId,
             vars = commandContextBuild.variables as MutableMap<String, String>)
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId) ?: return
-        val endTime = System.currentTimeMillis()
-        val timeDuration = (endTime - buildInfo.startTime!!)
-        commandContextBuild.variables[PIPELINE_TIME_DURATION] = DateTimeUtil.formatMillSecond(timeDuration)
-
-        buildVariableService.setVariable(
-            projectId = commandContextBuild.projectId,
-            pipelineId = commandContextBuild.pipelineId,
-            buildId = commandContextBuild.buildId,
-            varName = PIPELINE_TIME_END,
-            varValue = endTime
-        )
-        // 设置总耗时
-        buildVariableService.setVariable(
-            projectId = commandContextBuild.projectId,
-            pipelineId = commandContextBuild.pipelineId,
-            buildId = commandContextBuild.buildId,
-            varName = PIPELINE_TIME_DURATION,
-            varValue = timeDuration.toString()
-        )
+        val timeDuration = commandContextBuild.variables[PIPELINE_TIME_DURATION]?.toLong() ?: 0L
 
         val trigger = executionVar.trigger
         val buildNum = buildInfo.buildNum
