@@ -46,6 +46,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
+import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.BadRequestException
 
@@ -83,6 +84,7 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         return Result(FileInfoPage(0L, pageNotNull, pageSizeNotNull, result.second, result.first))
     }
 
+    @Timed
     override fun search(
         userId: String,
         projectId: String,
