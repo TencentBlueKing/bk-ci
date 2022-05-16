@@ -1341,22 +1341,13 @@ class TemplateFacadeService @Autowired constructor(
                 params = arrayOf("version or versionName")
             )
         }
-        val template =
-            if (versionName.isNullOrBlank()) {
-                templateDao.getTemplate(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    version = version!!
-                )
-            } else {
-                templateDao.getTemplate(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    templateId = templateId,
-                    versionName = versionName,
-                    version = version
-                )
-            }
+        val template = templateDao.getTemplate(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            versionName = versionName,
+            version = version
+        )
             instances.forEach {
                     try {
                         updateTemplateInstanceInfo(

@@ -313,10 +313,12 @@ class TemplateDao {
     ): TTemplateRecord {
         with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()
-                conditions.add(VERSION_NAME.eq(versionName))
                 conditions.add(ID.eq(templateId))
             if (version != null) {
                 conditions.add(VERSION.eq(version))
+            }
+            if (!versionName.isNullOrBlank()) {
+                conditions.add(VERSION_NAME.eq(versionName))
             }
             if (!projectId.isNullOrBlank()) {
                 conditions.add(PROJECT_ID.eq(projectId))
