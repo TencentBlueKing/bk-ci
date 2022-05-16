@@ -65,7 +65,7 @@ object TriggerBuilder {
             excludePaths = null,
             excludeUsers = null,
             block = false,
-            includeNoteComment = triggerOn.note?.comment,
+            includeNoteComment = triggerOn.note?.comment?.joinToString(JOIN_SEPARATOR),
             includeNoteTypes = triggerOn.note?.types?.map {
                 when (it) {
                     "commit" -> "Commit"

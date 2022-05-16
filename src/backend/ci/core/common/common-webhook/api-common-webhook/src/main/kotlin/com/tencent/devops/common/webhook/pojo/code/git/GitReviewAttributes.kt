@@ -29,54 +29,40 @@ package com.tencent.devops.common.webhook.pojo.code.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiParam
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class GitNoteEvent(
-    val user: GitUser,
-    val repository: GitRepository,
-    @JsonProperty("object_attributes")
-    val objectAttributes: GitNoteAttributes,
-    @JsonProperty("project_id")
-    val projectId: Long,
-    @ApiParam("对提交进行评论时存在")
-    val commit: GitCommit?,
-    @JsonProperty("merge_request")
-    @ApiParam("对合并请求评论时存在")
-    val mergeRequest: GitMRAttributes?,
-    @ApiParam("对缺陷进行评论时存在")
-    val issue: GitIssueAttributes?,
-    @ApiParam("对评审进行评论时存在")
-    val review: GitReviewAttributes?
-) : GitEvent() {
-    companion object {
-        const val classType = "note"
-    }
-}
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitNoteAttributes(
+data class GitReviewAttributes(
     val id: Long,
-    val note: String,
-    @JsonProperty("noteable_type")
-    val noteableType: String,
+    @JsonProperty("source_commit")
+    val sourceCommit: String,
+    @JsonProperty("source_branch")
+    val sourceBranch: String,
+    @JsonProperty("source_project_id")
+    val sourceProjectId: String,
+    @JsonProperty("target_commit")
+    val targetCommit: String,
+    @JsonProperty("target_branch")
+    val targetBranch: String,
+    @JsonProperty("target_project_id")
+    val targetProjectId: String,
     @JsonProperty("author_id")
-    val authorId: Long,
+    val authorId: String,
+    @JsonProperty("assignee_id")
+    val assigneeId: String?,
+    val title: String,
+    @JsonProperty("commit_check_state")
+    val commitCheckState: String,
+    @JsonProperty("updated_by_id")
+    val updatedById: String?,
     @JsonProperty("created_at")
     val createdAt: String,
     @JsonProperty("updated_at")
     val updatedAt: String,
-    @JsonProperty("project_id")
-    val projectId: Long,
-    val attachment: String? = null,
-    @JsonProperty("line_code")
-    val lineCode: String? = null,
-    @JsonProperty("commit_id")
-    val commitId: String?,
-    @JsonProperty("noteable_id")
-    val noteableId: Long? = null,
-    val system: Boolean,
-    @JsonProperty("st_diff")
-    val stDiff: GitChangeFileInfo? = null,
-    val url: String
+    val state: String,
+    val iid: Long,
+    val description: String,
+    val source: GitProject,
+    val target: GitProject,
+    @JsonProperty("last_commit")
+    val lastCommit: GitCommit
 )
