@@ -604,15 +604,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             errorMsg = result.message, taskVersion = result.elementVersion
         )
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
-            val updateTaskInfo = UpdateTaskInfo(
-                projectId = projectId,
-                buildId = buildId,
-                taskId = updateTaskStatusInfo.taskId,
-                taskStatus = updateTaskStatusInfo.buildStatus
-            )
             pipelineTaskService.updateTaskStatusInfo(
-                transactionContext = null,
-                updateTaskInfo = updateTaskInfo
+                updateTaskInfo = UpdateTaskInfo(
+                    projectId = projectId,
+                    buildId = buildId,
+                    taskId = updateTaskStatusInfo.taskId,
+                    taskStatus = updateTaskStatusInfo.buildStatus
+                )
             )
             if (!updateTaskStatusInfo.message.isNullOrBlank()) {
                 buildLogPrinter.addLine(

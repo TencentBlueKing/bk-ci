@@ -143,6 +143,7 @@ class UpdateStateForStageCmdFinally(
 
                 return finishBuild(commandContext = commandContext)
             }
+            event.actionType = ActionType.START // final 需要执行
         } else {
             nextStage = pipelineStageService.getNextStage(
                 projectId = event.projectId,
@@ -322,17 +323,8 @@ class UpdateStateForStageCmdFinally(
      * 发送指定[stageId]的Stage启动事件
      */
     private fun PipelineBuildStageEvent.sendNextStage(source: String, stageId: String) {
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildStageEvent(
-                source = source,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                buildId = buildId,
-                stageId = stageId,
-                actionType = ActionType.START
-            )
-        )
+        // #5108 修正因为END被改写成START，导致取消变成继续往下执行。
+        pipelineEventDispatcher.dispatch(this.copy(source = source, stageId = stageId))
     }
 
     /**

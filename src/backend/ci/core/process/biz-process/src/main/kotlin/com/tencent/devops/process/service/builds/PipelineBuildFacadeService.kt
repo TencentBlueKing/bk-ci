@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -439,14 +438,10 @@ class PipelineBuildFacadeService(
                 try {
                     val startupParam = pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId)
                     if (startupParam.isNotEmpty()) {
-                        startParamsWithType.addAll(
-                            JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID }.map {
-                                BuildParameters(key = it.key, value = it.value)
-                            }
-                        )
+                        startParamsWithType.addAll(startupParam)
                     }
                     // #2821 完整构建重试,传递触发插件ID，否则当有多个事件触发插件时,rebuild后触发器的标记不对
-                    startParamsWithType.plus(
+                    startParamsWithType.add(
                         BuildParameters(key = PIPELINE_START_TASK_ID, value = originVars[PIPELINE_START_TASK_ID] ?: "")
                     )
                 } catch (ignored: Exception) {
@@ -819,12 +814,15 @@ class PipelineBuildFacadeService(
             }
         }
         logger.info("[$buildId]|buildManualReview|taskId=$elementId|userId=$userId|params=$params")
-        pipelineRuntimeService.manualDealBuildTask(
-            projectId = projectId,
-            buildId = buildId,
+
+        pipelineRuntimeService.manualDealReview(
             taskId = elementId,
             userId = userId,
-            params = params
+            params = params.apply {
+                this.projectId = projectId
+                this.pipelineId = pipelineId
+                this.buildId = buildId
+            }
         )
         if (params.status == ManualReviewAction.ABORT) {
             buildDetailService.updateBuildCancelUser(projectId, buildId, userId)
@@ -1059,8 +1057,16 @@ class PipelineBuildFacadeService(
                                 params = arrayOf(userId)
                             )
                         }
-                        val reviewParam =
-                            ReviewParam(projectId, pipelineId, buildId, reviewUser, null, el.desc, "", el.params)
+                        val reviewParam = ReviewParam(
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                buildId = buildId,
+                                reviewUsers = reviewUser,
+                                status = null,
+                                desc = el.desc,
+                                suggest = "",
+                                params = el.params
+                            )
                         logger.info("reviewParam : $reviewParam")
                         return reviewParam
                     }
@@ -1105,11 +1111,6 @@ class PipelineBuildFacadeService(
                     buildId = buildId,
                     userId = buildInfo.startUser,
                     buildStatus = BuildStatus.FAILED
-                )
-                buildDetailService.updateBuildCancelUser(
-                    projectId = projectId,
-                    buildId = buildId,
-                    cancelUserId = buildInfo.startUser
                 )
                 logger.info("$pipelineId|CANCEL_PIPELINE_BUILD|buildId=$buildId|user=${buildInfo.startUser}")
             } catch (t: Throwable) {
@@ -1797,7 +1798,7 @@ class PipelineBuildFacadeService(
                 logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: $status")
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "Run cancelled by $userId",
+                    message = "Cancelled by $userId",
                     tag = taskId,
                     jobId = containerId,
                     executeCount = executeCount
@@ -1805,11 +1806,12 @@ class PipelineBuildFacadeService(
             }
 
             if (tasks.isEmpty()) {
+                val jobId = "0"
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "Run cancelled by $userId",
-                    tag = "",
-                    jobId = "",
+                    message = "Cancelled by $userId",
+                    tag = VMUtils.genStartVMTaskId(jobId),
+                    jobId = jobId,
                     executeCount = 1
                 )
             }
@@ -1822,11 +1824,6 @@ class PipelineBuildFacadeService(
                     userId = userId,
                     buildStatus = BuildStatus.CANCELED,
                     terminateFlag = terminateFlag
-                )
-                buildDetailService.updateBuildCancelUser(
-                    projectId = projectId,
-                    buildId = buildId,
-                    cancelUserId = userId
                 )
                 logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
             } catch (t: Throwable) {
