@@ -173,7 +173,14 @@ open class MarketAtomTask : ITask() {
         val inputTemplate = props["input"]?.let { it as Map<String, Map<String, Any>> } ?: mutableMapOf()
         val outputTemplate = props["output"]?.let { props["output"] as Map<String, Map<String, Any>> } ?: mutableMapOf()
 
-        val inputParams = parseInputParams(map, variables, acrossInfo)
+        // 解析并打印插件执行传入的所有参数
+        val inputParams = map["input"]?.let { input ->
+            parseInputParams(
+                inputMap = input as Map<String, Any>,
+                variables = variables,
+                acrossInfo = acrossInfo
+            )
+        } ?: emptyMap()
         printInput(atomData, inputParams, inputTemplate)
 
         if (atomData.target?.isBlank() == true) {
@@ -190,7 +197,7 @@ open class MarketAtomTask : ITask() {
             // 无构建环境下运行的插件的workspace取临时文件的路径
             atomTmpSpace.absolutePath
         } else {
-            workspace.absolutePath
+            workspacePath
         }
         variables = variables.plus(
             mapOf(
@@ -344,11 +351,14 @@ open class MarketAtomTask : ITask() {
         }
     }
 
-    private fun parseInputParams(map: MutableMap<String, Any>, variables: Map<String, String>, acrossInfo: BuildTemplateAcrossInfo?): MutableMap<String, String> {
+    private fun parseInputParams(
+        inputMap: Map<String, Any>,
+        variables: Map<String, String>,
+        acrossInfo: BuildTemplateAcrossInfo?
+    ): Map<String, String> {
         val atomParams = mutableMapOf<String, String>()
         try {
-            val inputMap = map["input"] as Map<String, Any>?
-            inputMap?.forEach { (name, value) ->
+            inputMap.forEach { (name, value) ->
                 // 修复插件input环境变量替换问题 #5682
                 atomParams[name] = EnvUtils.parseEnv(
                     command = JsonUtil.toJson(value),
@@ -429,7 +439,7 @@ open class MarketAtomTask : ITask() {
 
     private fun printInput(
         atomData: AtomEnv,
-        atomParams: MutableMap<String, String>,
+        atomParams: Map<String, String>,
         inputTemplate: Map<String, Map<String, Any>>
     ) {
         LoggerService.addFoldStartLine("[Plugin info]")
@@ -939,12 +949,12 @@ open class MarketAtomTask : ITask() {
         buildVariables: BuildVariables,
         workspacePath: String
     ): Map<String, String> {
-        val stepId = buildTask.stepId ?: return mapOf()
-        val context = mutableMapOf(
-            "steps.$stepId.name" to (buildTask.elementName ?: ""),
-            "steps.$stepId.id" to stepId,
-            "steps.$stepId.status" to BuildStatus.RUNNING.name
-        )
+        val context = mutableMapOf<String, String>()
+        // 只将本插件的状态改为RUNNING，其他插件上下文保持引擎传入
+        buildTask.stepId?.let { stepId ->
+            context["step.status"] = BuildStatus.RUNNING.name
+            context["steps.$stepId.status"] = BuildStatus.RUNNING.name
+        }
         if (buildTask.containerType == VMBuildContainer.classType) {
             // 只有构建环境下运行的插件才有workspace变量
             context.putAll(
