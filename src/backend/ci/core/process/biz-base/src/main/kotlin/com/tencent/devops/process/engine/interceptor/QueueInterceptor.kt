@@ -37,7 +37,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_SETTING_N
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.pojo.Response
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -55,7 +54,6 @@ import org.springframework.stereotype.Component
 @Suppress("ALL")
 class QueueInterceptor @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val buildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
@@ -219,11 +217,6 @@ class QueueInterceptor @Autowired constructor(
                     buildId = buildId,
                     userId = userId,
                     buildStatus = BuildStatus.CANCELED
-                )
-                buildDetailService.updateBuildCancelUser(
-                    projectId = projectId,
-                    buildId = buildId,
-                    cancelUserId = userId
                 )
                 logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
             } catch (t: Throwable) {
