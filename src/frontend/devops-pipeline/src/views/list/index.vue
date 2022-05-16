@@ -2,7 +2,8 @@
     <article class="pipeline-content"
         v-bkloading="{
             isLoading: pageLoading
-        }">
+        }"
+    >
         <pipeline-header :title="header.title">
             <span class="default-subheader-icon"
                 slot="logo">
