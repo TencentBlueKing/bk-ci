@@ -123,7 +123,6 @@ class TaskDaemon(
         return BuildTaskResult(
             taskId = buildTask.taskId!!,
             elementId = buildTask.taskId!!,
-            atomName = task.getAtomName(),
             containerId = buildVariables.containerHashId,
             elementVersion = buildTask.elementVersion,
             success = isSuccess,
@@ -140,9 +139,7 @@ class TaskDaemon(
                     atomCreator = it[ATOM_CREATOR],
                     thirdPartyAssistant = it[ATOM_THIRD_PARTY_ASSISTANT]
                 )
-            },
-            classifyCode = task.getClassifyCode(),
-            classifyName = task.getClassifyName()
+            }
         )
     }
 

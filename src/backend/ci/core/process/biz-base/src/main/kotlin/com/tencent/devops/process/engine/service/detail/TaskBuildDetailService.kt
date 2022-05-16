@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.engine.service.detail
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.INIT_VERSION
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
@@ -50,8 +50,12 @@ import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
+import com.tencent.devops.store.api.atom.ServiceAtomResource
+import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
+import com.tencent.devops.store.pojo.common.Classify
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions", "ComplexCondition")
 @Service
@@ -270,9 +274,10 @@ class TaskBuildDetailService(
                             }
                         }
                     }
-                    e.atomName = taskBuildEndParam.atomName
-                    e.classifyCode = taskBuildEndParam.classifyCode
-                    e.classifyName = taskBuildEndParam.classifyName
+                    val atomClassify = getAtomClassify(e.getAtomCode())
+                    e.atomName = atomClassify?.atomName
+                    e.classifyCode = atomClassify?.classifyCode
+                    e.classifyName = atomClassify?.classifyName
                     var elementElapsed = 0L
                     run lit@{
                         val elements = c.elements
@@ -310,6 +315,20 @@ class TaskBuildDetailService(
             operation = "taskEnd#$taskId"
         )
         return updateTaskStatusInfos
+    }
+
+    private val atomClassifyCache = Caffeine.newBuilder()
+        .maximumSize(5000)
+        .expireAfterAccess(6, TimeUnit.HOURS)
+        .build<String, AtomClassifyInfo>()
+
+    fun getAtomClassify(atomCode: String): AtomClassifyInfo? {
+        var atomClassify = atomClassifyCache.getIfPresent(atomCode)
+        if (atomClassify == null) {
+            atomClassify = client.get(ServiceAtomResource::class).getAtomClassifyInfo(atomCode).data
+        }
+        atomClassify?.let { atomClassifyCache.put(atomCode, it) }
+        return atomClassify
     }
 
     private fun handleUpdateTaskStatusInfos(

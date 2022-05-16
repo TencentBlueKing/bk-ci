@@ -25,23 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import java.time.LocalDateTime
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-/**
- * 最后一次运行中的构建信息
- */
-data class LatestRunningBuild(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val buildNum: Int,
-    val userId: String, // 最后一次运行中的构建信息
-    val status: BuildStatus = BuildStatus.RUNNING,
-    val taskCount: Int = 0,
-    val endTime: LocalDateTime? = null,
-    val currentTaskId: String? = null,
-    val currentTaskName: String? = null
+@ApiModel("插件分类信息")
+data class AtomClassifyInfo(
+    @ApiModelProperty("插件代码", required = true)
+    val atomCode: String,
+    @ApiModelProperty("插件名称", required = true)
+    val atomName: String,
+    @ApiModelProperty("插件分类编码", required = true)
+    val classifyCode: String,
+    @ApiModelProperty("插件分类名称", required = true)
+    val classifyName: String
 )

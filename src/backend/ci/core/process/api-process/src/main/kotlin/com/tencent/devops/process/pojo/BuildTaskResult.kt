@@ -38,8 +38,6 @@ data class BuildTaskResult(
     val elementId: String,
     @ApiModelProperty("插件版本号", required = false)
     val elementVersion: String? = null,
-    @ApiModelProperty("插件名称", required = true)
-    val atomName: String,
     @ApiModelProperty("容器Hash ID", required = true)
     val containerId: String?,
     @ApiModelProperty("是否执行成功", required = true)
@@ -61,9 +59,5 @@ data class BuildTaskResult(
     @ApiModelProperty("插件监控数据", required = false)
     val monitorData: Map<String, Any>? = null,
     @ApiModelProperty("构建任务失败时用于通知的信息", required = false)
-    val buildTaskErrorMessage: BuildTaskErrorMessage? = null,
-    @ApiModelProperty("所属插件分类代码", required = false)
-    val classifyCode: String? = null,
-    @ApiModelProperty("所属插件分类名称", required = false)
-    val classifyName: String? = null
+    val buildTaskErrorMessage: BuildTaskErrorMessage? = null
 )

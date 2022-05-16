@@ -30,11 +30,13 @@ package com.tencent.devops.process.service.measure
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
 import com.tencent.devops.common.event.pojo.measure.IMeasureEvent
+import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
+import javax.annotation.Resource
 
 class MeasureEventDispatcher constructor(
-    private val rabbitTemplate: RabbitTemplate
+    @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME) private val rabbitTemplate: RabbitTemplate
 ) : EventDispatcher<IMeasureEvent> {
 
     override fun dispatch(vararg events: IMeasureEvent) {

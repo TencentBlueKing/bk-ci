@@ -47,11 +47,5 @@ data class TaskBuildEndParam(
     @ApiModelProperty("错误代码", required = false)
     var errorCode: Int? = null,
     @ApiModelProperty("错误信息", required = false)
-    var errorMsg: String? = null,
-    @ApiModelProperty("插件名称", required = false)
-    var atomName: String? = null,
-    @ApiModelProperty("所属插件分类代码", required = false)
-    var classifyCode: String? = null,
-    @ApiModelProperty("所属插件分类名称", required = false)
-    var classifyName: String? = null
+    var errorMsg: String? = null
 )

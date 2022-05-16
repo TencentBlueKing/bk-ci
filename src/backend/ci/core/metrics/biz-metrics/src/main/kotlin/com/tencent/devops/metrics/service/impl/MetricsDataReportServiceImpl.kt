@@ -54,6 +54,7 @@ import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -72,7 +73,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(MetricsDataReportService::class.java)
-        private fun metricsDataReportKey(buildId: String) = "metricsDataReport:$buildId"
+        private fun metricsDataReportKey(pipelineId: String) = "metricsDataReport:$pipelineId"
     }
 
     override fun metricsDataReport(buildEndPipelineMetricsData: BuildEndPipelineMetricsData): Boolean {
@@ -80,23 +81,14 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val projectId = buildEndPipelineMetricsData.projectId
         val pipelineId = buildEndPipelineMetricsData.pipelineId
         val buildId = buildEndPipelineMetricsData.buildId
+        logger.info("[$projectId|$pipelineId|$buildId]|start metricsDataReport")
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         val currentTime = LocalDateTime.now()
         val saveErrorCodeInfoPOs = mutableSetOf<SaveErrorCodeInfoPO>()
-        val lock = RedisLock(redisOperation, metricsDataReportKey(buildId), 10)
+        val lock = RedisLock(redisOperation, metricsDataReportKey(pipelineId), 20)
         try {
+            // 上锁保证数据计算安全
             lock.lock()
-            // 1、上报流水线构建数据
-            pipelineOverviewDataReport(
-                buildEndPipelineMetricsData = buildEndPipelineMetricsData,
-                currentTime = currentTime
-            )
-            pipelineFailDataReport(
-                buildEndPipelineMetricsData = buildEndPipelineMetricsData,
-                currentTime = currentTime,
-                saveErrorCodeInfoPOs = saveErrorCodeInfoPOs
-            )
-            // 2、上报流水线stage和task构建数据
             val savePipelineStageOverviewDataPOs = mutableListOf<SavePipelineStageOverviewDataPO>()
             val updatePipelineStageOverviewDataPOs = mutableListOf<UpdatePipelineStageOverviewDataPO>()
             val saveAtomOverviewDataPOs = mutableListOf<SaveAtomOverviewDataPO>()
@@ -144,30 +136,47 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     }
                 }
             }
-            if (savePipelineStageOverviewDataPOs.isNotEmpty()) {
-                metricsDataReportDao.batchSavePipelineStageOverviewData(dslContext, savePipelineStageOverviewDataPOs)
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                // 1、上报流水线构建数据
+                pipelineOverviewDataReport(
+                    dslContext = context,
+                    buildEndPipelineMetricsData = buildEndPipelineMetricsData,
+                    currentTime = currentTime
+                )
+                pipelineFailDataReport(
+                    dslContext = context,
+                    buildEndPipelineMetricsData = buildEndPipelineMetricsData,
+                    currentTime = currentTime,
+                    saveErrorCodeInfoPOs = saveErrorCodeInfoPOs
+                )
+                // 2、上报流水线stage和task构建数据
+                if (savePipelineStageOverviewDataPOs.isNotEmpty()) {
+                    metricsDataReportDao.batchSavePipelineStageOverviewData(context, savePipelineStageOverviewDataPOs)
+                }
+                if (updatePipelineStageOverviewDataPOs.isNotEmpty()) {
+                    metricsDataReportDao.batchUpdatePipelineStageOverviewData(context, updatePipelineStageOverviewDataPOs)
+                }
+                if (saveAtomOverviewDataPOs.isNotEmpty()) {
+                    metricsDataReportDao.batchSaveAtomOverviewData(context, saveAtomOverviewDataPOs)
+                }
+                if (updateAtomOverviewDataPOs.isNotEmpty()) {
+                    metricsDataReportDao.batchUpdateAtomOverviewData(context, updateAtomOverviewDataPOs)
+                }
+                if (saveAtomFailSummaryDataPOs.isNotEmpty()) {
+                    metricsDataReportDao.batchSaveAtomFailSummaryData(context, saveAtomFailSummaryDataPOs)
+                }
+                if (updateAtomFailSummaryDataPOs.isNotEmpty()) {
+                    metricsDataReportDao.batchUpdateAtomFailSummaryData(context, updateAtomFailSummaryDataPOs)
+                }
+                if (saveAtomFailDetailDataPOs.isNotEmpty()) {
+                    metricsDataReportDao.batchSaveAtomFailDetailData(dslContext, saveAtomFailDetailDataPOs)
+                }
+                if (saveErrorCodeInfoPOs.isNotEmpty()) {
+                    metricsDataReportDao.batchSaveErrorCodeInfo(context, saveErrorCodeInfoPOs)
+                }
             }
-            if (updatePipelineStageOverviewDataPOs.isNotEmpty()) {
-                metricsDataReportDao.batchUpdatePipelineStageOverviewData(dslContext, updatePipelineStageOverviewDataPOs)
-            }
-            if (saveAtomOverviewDataPOs.isNotEmpty()) {
-                metricsDataReportDao.batchSaveAtomOverviewData(dslContext, saveAtomOverviewDataPOs)
-            }
-            if (updateAtomOverviewDataPOs.isNotEmpty()) {
-                metricsDataReportDao.batchUpdateAtomOverviewData(dslContext, updateAtomOverviewDataPOs)
-            }
-            if (saveAtomFailSummaryDataPOs.isNotEmpty()) {
-                metricsDataReportDao.batchSaveAtomFailSummaryData(dslContext, saveAtomFailSummaryDataPOs)
-            }
-            if (updateAtomFailSummaryDataPOs.isNotEmpty()) {
-                metricsDataReportDao.batchUpdateAtomFailSummaryData(dslContext, updateAtomFailSummaryDataPOs)
-            }
-            if (saveAtomFailDetailDataPOs.isNotEmpty()) {
-                metricsDataReportDao.batchSaveAtomFailDetailData(dslContext, saveAtomFailDetailDataPOs)
-            }
-            if (saveErrorCodeInfoPOs.isNotEmpty()) {
-                metricsDataReportDao.batchSaveErrorCodeInfo(dslContext, saveErrorCodeInfoPOs)
-            }
+            logger.info("[$projectId|$pipelineId|$buildId]|end metricsDataReport")
         } finally {
             lock.unlock()
         }
@@ -184,10 +193,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         saveErrorCodeInfoPOs: MutableSet<SaveErrorCodeInfoPO>
     ) {
         val projectId = buildEndPipelineMetricsData.projectId
-        val pipelineName = buildEndPipelineMetricsData.pipelineName
         val pipelineId = buildEndPipelineMetricsData.pipelineId
-        val buildId = buildEndPipelineMetricsData.buildId
-        val buildNum = buildEndPipelineMetricsData.buildNum // 构建序号
+        val pipelineName = buildEndPipelineMetricsData.pipelineName
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         val startUser = buildEndPipelineMetricsData.startUser // 启动用户
         val taskErrorType = taskMetricsData.errorType ?: return
@@ -239,8 +246,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 pipelineName = pipelineName,
-                buildId = buildId,
-                buildNum = buildNum,
+                buildId = buildEndPipelineMetricsData.buildId,
+                buildNum = buildEndPipelineMetricsData.buildNum,
                 atomCode = taskMetricsData.atomCode,
                 atomName = taskMetricsData.atomName,
                 classifyCode = taskMetricsData.classifyCode,
@@ -421,6 +428,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     }
 
     private fun pipelineFailDataReport(
+        dslContext: DSLContext,
         buildEndPipelineMetricsData: BuildEndPipelineMetricsData,
         currentTime: LocalDateTime,
         saveErrorCodeInfoPOs: MutableSet<SaveErrorCodeInfoPO>
@@ -509,12 +517,11 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     }
 
     private fun pipelineOverviewDataReport(
+        dslContext: DSLContext,
         buildEndPipelineMetricsData: BuildEndPipelineMetricsData,
         currentTime: LocalDateTime
     ) {
         val projectId = buildEndPipelineMetricsData.projectId
-        val pipelineId = buildEndPipelineMetricsData.pipelineId
-        val pipelineName = buildEndPipelineMetricsData.pipelineName
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         val buildSuccessFlag = buildEndPipelineMetricsData.successFlag // 流水线构建是否成功标识
         val pipelineBuildCostTime = buildEndPipelineMetricsData.costTime // 流水线构建所耗时间
@@ -522,7 +529,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val pipelineOverviewDataRecord = metricsDataQueryDao.getPipelineOverviewData(
             dslContext = dslContext,
             projectId = projectId,
-            pipelineId = pipelineId,
+            pipelineId = buildEndPipelineMetricsData.pipelineId,
             statisticsTime = statisticsTime
         )
         if (pipelineOverviewDataRecord == null) {
@@ -531,8 +538,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 id = client.get(ServiceAllocIdResource::class)
                     .generateSegmentId("PIPELINE_OVERVIEW_DATA").data ?: 0,
                 projectId = projectId,
-                pipelineId = pipelineId,
-                pipelineName = pipelineName,
+                pipelineId = buildEndPipelineMetricsData.pipelineId,
+                pipelineName = buildEndPipelineMetricsData.pipelineName,
                 totalAvgCostTime = pipelineBuildCostTime,
                 successAvgCostTime = if (buildSuccessFlag) pipelineBuildCostTime else null,
                 failAvgCostTime = if (buildSuccessFlag) null else pipelineBuildCostTime,

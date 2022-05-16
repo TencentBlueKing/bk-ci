@@ -555,10 +555,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 errorType = errorType,
                 errorCode = result.errorCode,
                 errorMsg = result.message,
-                atomVersion = result.elementVersion,
-                atomName = result.atomName,
-                classifyCode = result.classifyCode,
-                classifyName = result.classifyName
+                atomVersion = result.elementVersion
             )
         )
         // 重置前置暂停插件暂停状态位

@@ -519,7 +519,7 @@ class PipelineBuildSummaryDao {
                 val update =
                     dslContext.update(this)
                         .set(LATEST_STATUS, status.ordinal) // 不一定是FINISH，也有可能其它失败的status
-                        .set(LATEST_END_TIME, LocalDateTime.now()) // 结束时间
+                        .set(LATEST_END_TIME, endTime) // 结束时间
                         .set(LATEST_TASK_ID, "") // 结束时清空
                         .set(LATEST_TASK_NAME, "") // 结束时清空
                         .set(FINISH_COUNT, FINISH_COUNT + 1)

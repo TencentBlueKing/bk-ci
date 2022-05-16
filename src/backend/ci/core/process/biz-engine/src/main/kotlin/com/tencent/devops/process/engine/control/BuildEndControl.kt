@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
@@ -63,6 +64,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.measure.MeasureService
+import com.tencent.devops.process.engine.service.measure.MetricsService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import io.micrometer.core.instrument.Counter
@@ -70,6 +72,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 构建控制器
@@ -86,8 +89,7 @@ class BuildEndControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineRedisService: PipelineRedisService,
     private val meterRegistry: MeterRegistry,
-    @Autowired(required = false)
-    private val measureService: MeasureService?
+    private val metricsService: MetricsService
 ) {
 
     companion object {
@@ -148,11 +150,12 @@ class BuildEndControl @Autowired constructor(
         fixTask(buildInfo)
 
         // 记录本流水线最后一次构建的状态
+        val endTime = LocalDateTime.now()
         pipelineRuntimeService.finishLatestRunningBuild(
             latestRunningBuild = LatestRunningBuild(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 userId = buildInfo.startUser, status = buildStatus, taskCount = buildInfo.taskCount,
-                buildNum = buildInfo.buildNum
+                endTime = endTime, buildNum = buildInfo.buildNum
             ),
             currentBuildStatus = buildInfo.status,
             errorInfoList = buildInfo.errorInfoList
@@ -178,6 +181,8 @@ class BuildEndControl @Autowired constructor(
         } else if (buildStatus.isFailure()) {
             failPipelineCount(this)
         }
+        buildInfo.endTime = endTime.timestampmilli()
+        buildInfo.status = buildStatus
 
         // 广播结束事件
         pipelineEventDispatcher.dispatch(
@@ -208,7 +213,7 @@ class BuildEndControl @Autowired constructor(
         )
 
         // 发送metrics统计数据消息
-        measureService?.postMetricsData(buildInfo, model)
+        metricsService.postMetricsData(buildInfo, model)
         // 记录日志
         buildLogPrinter.stopLog(buildId = buildId, tag = "", jobId = null)
     }

@@ -40,13 +40,13 @@ data class BuildInfo(
     val version: Int,
     val buildNum: Int,
     val trigger: String,
-    val status: BuildStatus,
+    var status: BuildStatus,
     val queueTime: Long,
     val executeTime: Long,
     val startUser: String, // 真正用来执行构建的人的身份（一般像Git触发，有可能]与触发人不一样，因为Git平台帐号不一定是人）
     val triggerUser: String, // 真正的触发人（不一定是人，也可能是机器帐号，比如git平台帐号）
     val startTime: Long?,
-    val endTime: Long?,
+    var endTime: Long?,
     val taskCount: Int,
     val firstTaskId: String,
     val parentBuildId: String?,
@@ -65,9 +65,9 @@ data class BuildInfo(
     fun isFinish() = when {
         status.name == BuildStatus.STAGE_SUCCESS.name &&
             endTime != null &&
-            endTime > 0 &&
+            endTime!! > 0 &&
             startTime != null &&
-            endTime > startTime
+            endTime!! > startTime
         -> true
         else -> status.isFinish()
     }
@@ -75,9 +75,9 @@ data class BuildInfo(
     fun isSuccess() = when {
         status.name == BuildStatus.STAGE_SUCCESS.name &&
             endTime != null &&
-            endTime > 0 &&
+            endTime!! > 0 &&
             startTime != null &&
-            endTime > startTime
+            endTime!! > startTime
         -> true
         else -> status.isSuccess()
     }

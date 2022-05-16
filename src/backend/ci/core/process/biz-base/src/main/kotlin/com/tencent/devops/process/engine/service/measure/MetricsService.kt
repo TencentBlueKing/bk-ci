@@ -25,23 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.process.engine.service.measure
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import java.time.LocalDateTime
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.process.engine.pojo.BuildInfo
 
-/**
- * 最后一次运行中的构建信息
- */
-data class LatestRunningBuild(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val buildNum: Int,
-    val userId: String, // 最后一次运行中的构建信息
-    val status: BuildStatus = BuildStatus.RUNNING,
-    val taskCount: Int = 0,
-    val endTime: LocalDateTime? = null,
-    val currentTaskId: String? = null,
-    val currentTaskName: String? = null
-)
+interface MetricsService {
+
+    fun postMetricsData(
+        buildInfo: BuildInfo,
+        model: Model
+    )
+}

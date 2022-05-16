@@ -608,10 +608,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 errorType = errorType,
                 errorCode = result.errorCode,
                 errorMsg = result.message,
-                atomVersion = result.elementVersion,
-                atomName = result.atomName,
-                classifyCode = result.classifyCode,
-                classifyName = result.classifyName
+                atomVersion = result.elementVersion
             )
         )
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
