@@ -63,7 +63,7 @@ import javax.servlet.http.HttpServletResponse
 
 @Suppress("ALL")
 interface IGitService {
-    fun getProject(accessToken: String, userId: String, search: String? = null): List<Project>
+    fun getProject(accessToken: String, userId: String): List<Project>
     fun getBranch(
         accessToken: String,
         userId: String,

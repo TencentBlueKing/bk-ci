@@ -92,9 +92,11 @@ class GitOauthService @Autowired constructor(
         val authResult = AuthorizeResult(200, "")
         return try {
             authResult.project.addAll(
-                gitService.getProject(
+                gitService.getProjectList(
                     accessToken = accessToken.accessToken,
                     userId = userId,
+                    page = 1,
+                    pageSize = 100,
                     search = search
                 )
             )
