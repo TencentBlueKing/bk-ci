@@ -95,7 +95,7 @@ spec:
               mountPath: /data/bkee/ci/
       volumes:
       - name: mypvc
-        persistentVolumeClaim:
-          claimName: nfs-pvc-environment
-          readOnly: true
+        nfs:
+          path: /4c1q3vbj/{{ .Values.cfsPath }}/environment
+          server: 9.136.137.6
 {{- end -}}

@@ -98,7 +98,4 @@ spec:
         nfs:
           path: /4c1q3vbj/{{ .Values.cfsPath }}/openapi
           server: 9.136.137.6
-        # persistentVolumeClaim:
-        #   claimName: nfs-pvc-openapi
-        #   readOnly: true
 {{- end -}}
