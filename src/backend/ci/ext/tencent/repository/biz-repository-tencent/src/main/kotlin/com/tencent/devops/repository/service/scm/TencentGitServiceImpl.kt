@@ -70,8 +70,8 @@ import javax.servlet.http.HttpServletResponse
 @Service
 class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitService {
 
-    override fun getProject(accessToken: String, userId: String, search: String?): List<Project> {
-        return client.getScm(ServiceGitResource::class).getProject(accessToken, userId, search).data ?: emptyList()
+    override fun getProject(accessToken: String, userId: String): List<Project> {
+        return client.getScm(ServiceGitResource::class).getProject(accessToken, userId).data ?: emptyList()
     }
 
     override fun getProjectList(

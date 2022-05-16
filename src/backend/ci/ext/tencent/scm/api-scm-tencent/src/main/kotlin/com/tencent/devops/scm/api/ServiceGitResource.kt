@@ -97,10 +97,7 @@ interface ServiceGitResource {
         accessToken: String,
         @ApiParam("用户id", required = true)
         @QueryParam("userId")
-        userId: String,
-        @ApiParam("search", required = true)
-        @QueryParam("search")
-        search: String? = null
+        userId: String
     ): Result<List<Project>>
 
     @ApiOperation("获取指定项目详细信息")
