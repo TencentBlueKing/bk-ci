@@ -3,7 +3,6 @@ package com.tencent.bk.codecc.defect.service.impl
 import com.tencent.bk.codecc.defect.constant.DefectConstants
 import com.tencent.bk.codecc.defect.dao.ToolMetaCacheServiceImpl
 import com.tencent.bk.codecc.defect.dao.mongorepository.*
-import com.tencent.bk.codecc.defect.model.CLOCStatisticEntity
 import com.tencent.bk.codecc.defect.model.MetricsEntity
 import com.tencent.bk.codecc.defect.model.TaskLogEntity
 import com.tencent.bk.codecc.defect.pojo.StandardScoringConfig
@@ -198,7 +197,7 @@ class CustomCodeScoringServiceImpl @Autowired constructor(
     fun scoringCcn(taskDetailVO: TaskDetailVO, metricsEntity: MetricsEntity, toolNameList: List<String>, lines: MutableMap<String, Long>) {
         val taskId = metricsEntity.taskId
         val buildId = metricsEntity.buildId
-        val ccnStatistic = ccnStatisticRepository.findByTaskIdAndBuildId(taskId, buildId)
+        val ccnStatistic = ccnStatisticRepository.findFirstByTaskIdAndBuildId(taskId, buildId)
         val totalLine = lines.map { it.value }.sum()
         val totalCcnExceedNum = ccnStatistic.ccnBeyondThresholdSum.toDouble()
         // 计算圈复杂度千行平均超标数

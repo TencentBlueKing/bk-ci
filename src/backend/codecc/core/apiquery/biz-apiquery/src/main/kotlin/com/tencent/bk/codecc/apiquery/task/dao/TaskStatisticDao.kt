@@ -33,7 +33,7 @@ class TaskStatisticDao @Autowired constructor(private val taskMongoTemplate: Mon
     fun findTaskCountByCreateFromAndTime(dates: MutableList<String>, createFrom: MutableSet<String>): MutableList<TaskStatisticModel>? {
         val criteria = getTaskSearchCriteria(dates, createFrom)
         // 排序(按时间升序)
-        val sort = Aggregation.sort(Sort(Sort.Direction.ASC, "date"))
+        val sort = Aggregation.sort(Sort.by(Sort.Direction.ASC, "date"))
 
         var group: GroupOperation? = null
         if (createFrom.size != 1) {
@@ -58,7 +58,7 @@ class TaskStatisticDao @Autowired constructor(private val taskMongoTemplate: Mon
     fun findTaskAnalyzeCountByCreateFromAndTime(dates: MutableList<String>, createFrom: MutableSet<String>): MutableList<TaskStatisticModel> {
         val criteria = getTaskSearchCriteria(dates, createFrom)
         // 排序(按时间升序)
-        val sort = Aggregation.sort(Sort(Sort.Direction.ASC, "date"))
+        val sort = Aggregation.sort(Sort.by(Sort.Direction.ASC, "date"))
 
         var group: GroupOperation? = null
         if (createFrom.size != 1) {

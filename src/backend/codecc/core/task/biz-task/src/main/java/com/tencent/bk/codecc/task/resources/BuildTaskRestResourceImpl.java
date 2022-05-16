@@ -47,6 +47,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.util.StringUtils;
 
 /**
  * 构建机任务接口实现
@@ -91,7 +92,9 @@ public class BuildTaskRestResourceImpl implements BuildTaskRestResource
     @Override
     public Result<TaskIdVO> registerPipelineTask(TaskDetailVO taskDetailVO, String projectId, String userName)
     {
-        taskDetailVO.setProjectId(projectId);
+        if (StringUtils.hasLength(projectId)) {
+            taskDetailVO.setProjectId(projectId);
+        }
         log.info("registerPipelineTask request body: {}", JsonUtil.INSTANCE.toJson(taskDetailVO));
         return new Result<>(taskRegisterService.registerTask(taskDetailVO, userName));
     }

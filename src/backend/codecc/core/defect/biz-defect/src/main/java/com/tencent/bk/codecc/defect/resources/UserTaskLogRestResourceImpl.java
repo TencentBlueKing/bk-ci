@@ -34,7 +34,9 @@ import com.tencent.bk.codecc.defect.vo.TaskLogOverviewVO;
 import com.tencent.bk.codecc.task.vo.QueryLogRepVO;
 import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
+
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -51,8 +53,7 @@ import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_TAS
  * @date 2019/5/5
  */
 @RestResource
-public class UserTaskLogRestResourceImpl implements UserTaskLogRestResource
-{
+public class UserTaskLogRestResourceImpl implements UserTaskLogRestResource {
     @Autowired
     private GetTaskLogService getTaskLogService;
 
@@ -60,8 +61,7 @@ public class UserTaskLogRestResourceImpl implements UserTaskLogRestResource
     private TaskLogOverviewService taskLogOverviewService;
 
     @Override
-    public Result<QueryTaskLogVO> getTaskLogs(String toolName, int page, int pageSize)
-    {
+    public Result<QueryTaskLogVO> getTaskLogs(String toolName, int page, int pageSize) {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         String taskId = request.getHeader(AUTH_HEADER_DEVOPS_TASK_ID);
         QueryTaskLogVO queryTaskLogVO = new QueryTaskLogVO();
@@ -79,27 +79,33 @@ public class UserTaskLogRestResourceImpl implements UserTaskLogRestResource
 
 
     @Override
-    public Result<QueryLogRepVO> getAnalysisLogs(String projectId, String pipelineId, String buildId, String queryKeywords, String tag)
-    {
-        return new Result<>(getTaskLogService.queryAnalysisLog(projectId, pipelineId, buildId, queryKeywords, tag));
+    public Result<QueryLogRepVO> getAnalysisLogs(String userId, String projectId, String pipelineId,
+                                                 String buildId, String queryKeywords, String tag) {
+        return new Result<>(getTaskLogService.queryAnalysisLog(userId, projectId, pipelineId, buildId, queryKeywords, tag));
     }
 
     @Override
-    public Result<QueryLogRepVO> getMoreLogs(String projectId, String pipelineId, String buildId, Integer num, Boolean fromStart, Long start, Long end, String tag, Integer executeCount)
-    {
-        return new Result<>(getTaskLogService.getMoreLogs(projectId, pipelineId, buildId, num, fromStart, start, end, tag, executeCount));
+    // NOCC:ParameterNumber(设计如此:)
+    public Result<QueryLogRepVO> getMoreLogs(String userId, String projectId, String pipelineId,
+                                             String buildId, Integer num, Boolean fromStart, Long start,
+                                             Long end, String tag, Integer executeCount) {
+        return new Result<>(getTaskLogService.getMoreLogs(userId, projectId, pipelineId, buildId, num,
+                fromStart, start, end, tag, executeCount));
     }
 
     @Override
-    public void downloadLogs(String projectId, String pipelineId, String buildId, String tag, Integer executeCount)
-    {
-        getTaskLogService.downloadLogs(projectId, pipelineId, buildId, tag, executeCount);
+    public void downloadLogs(String userId, String projectId, String pipelineId, String buildId,
+                             String tag, Integer executeCount) {
+        getTaskLogService.downloadLogs(userId, projectId, pipelineId, buildId, tag, executeCount);
     }
 
     @Override
-    public Result<QueryLogRepVO> getAfterLogs(String projectId, String pipelineId, String buildId, Long start, String queryKeywords, String tag, Integer executeCount)
-    {
-        return new Result<>(getTaskLogService.getAfterLogs(projectId, pipelineId, buildId, start, queryKeywords, tag, executeCount));
+    // NOCC:ParameterNumber(设计如此:)
+    public Result<QueryLogRepVO> getAfterLogs(String userId, String projectId, String pipelineId,
+                                              String buildId, Long start, String queryKeywords,
+                                              String tag, Integer executeCount) {
+        return new Result<>(getTaskLogService.getAfterLogs(userId, projectId, pipelineId, buildId,
+                start, queryKeywords, tag, executeCount));
     }
 
 

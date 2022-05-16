@@ -2,17 +2,22 @@
 spring:
   application:
     version: 4.0.0
+  jmx:
+    enabled: true
   # consul config do not need to change
   redis:
     host: __BK_CODECC_REDIS_HOST__
     password: __BK_CODECC_REDIS_PASSWORD__
     port: __BK_CODECC_REDIS_PORT__
     database: __BK_CODECC_REDIS_DB__
-    pool:
-      maxActive: 16
-      maxWait: -1
-      maxIdle: 16
-      minIdle: 0
+    jedis:
+      pool:
+        max-active: 16
+        max-wait: -1
+        max-idle: 16
+        min-idle: 0
+    connect-timeout: 5000
+    client-type: jedis
   rabbitmq:
     virtual-host: __BK_CODECC_RABBITMQ_VHOST__
     username: __BK_CODECC_RABBITMQ_USER__
@@ -106,3 +111,6 @@ esb:
 bk:
   paas:
     host: __BK_PAAS_PRIVATE_URL__
+
+storage:
+  type: nfs

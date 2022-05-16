@@ -23,6 +23,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOptions
 import org.springframework.data.mongodb.core.aggregation.MatchOperation
 import org.springframework.data.mongodb.core.query.BasicQuery
 import org.springframework.data.mongodb.core.query.Criteria
+import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -81,7 +82,7 @@ class DefectDao @Autowired constructor(
         //允许磁盘操作
         val options = AggregationOptions.Builder().allowDiskUse(true).build()
         val agg = if(defectIds.isNullOrEmpty()){
-            val sort = Aggregation.sort(Sort(Sort.Direction.fromString(sortType?:"DESC"), sortField?:"task_id"))
+            val sort = Aggregation.sort(Sort.by(Sort.Direction.fromString(sortType?:"DESC"), sortField?:"task_id"))
             if(null != project) {
                 Aggregation.newAggregation(match, sort, project, skip, limit).withOptions(options)
             } else {
@@ -192,7 +193,7 @@ class DefectDao @Autowired constructor(
         //允许磁盘操作
         val options = AggregationOptions.Builder().allowDiskUse(true).build()
         return if(defectIds.isNullOrEmpty()){
-            val sort = Aggregation.sort(Sort(Sort.Direction.fromString(sortType?:"DESC"), sortField?:"task_id"))
+            val sort = Aggregation.sort(Sort.by(Sort.Direction.fromString(sortType?:"DESC"), sortField?:"task_id"))
             if(null != project) {
                 Aggregation.newAggregation(match, sort, project, skip, limit).withOptions(options)
             } else {
@@ -219,7 +220,7 @@ class DefectDao @Autowired constructor(
     ): List<DUPCDefectModel> {
         val fieldsObj = BasicDBObject()
         PageUtils.getFilterFields(filterFields, fieldsObj)
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         query.addCriteria(Criteria.where("task_id").`in`(taskIds))
         if (!status.isNullOrEmpty()) {
             query.addCriteria(Criteria.where("status").`in`(status))
@@ -244,7 +245,7 @@ class DefectDao @Autowired constructor(
     ): List<CLOCDefectModel> {
         val fieldsObj = BasicDBObject()
         PageUtils.getFilterFields(filterFields, fieldsObj)
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         val toolList = if(toolName == ComConstants.Tool.CLOC.name) {
             listOf(toolName, null)
         } else {
@@ -294,7 +295,7 @@ class DefectDao @Autowired constructor(
             Criteria.where("time_stamp").gte("$startTime"),
             Criteria.where("time_stamp").lt("$endTime")
         )
-        val fields = BasicDBObject()
+        val fields = Document()
         fields["_id"] = 0
         fields["_class"] = 0
         val query = BasicQuery(criteria.criteriaObject, fields)
@@ -309,7 +310,7 @@ class DefectDao @Autowired constructor(
         status: List<Int>?,
         pageable: Pageable?
     ): List<DefectModel> {
-        val query = BasicQuery(BasicDBObject())
+        val query = Query()
         query.addCriteria(
             Criteria.where("task_id").`is`(taskId)
                 .and("tool_name").`is`(toolName)
@@ -327,7 +328,7 @@ class DefectDao @Autowired constructor(
     }
 
     fun findLintByIds(idList: List<ObjectId>, status: List<Int>?, pageable: Pageable?): List<LintDefectV2Model> {
-        val query = BasicQuery(BasicDBObject())
+        val query = Query()
         query.addCriteria(Criteria.where("_id").`in`(idList))
 
         if (!status.isNullOrEmpty()) {
@@ -341,7 +342,7 @@ class DefectDao @Autowired constructor(
     }
 
     fun findCCNByIds(idList: List<ObjectId>, status: List<Int>?, pageable: Pageable?): List<CCNDefectModel> {
-        val query = BasicQuery(BasicDBObject())
+        val query = Query()
         query.addCriteria(Criteria.where("_id").`in`(idList))
 
         if (!status.isNullOrEmpty()) {
@@ -364,7 +365,7 @@ class DefectDao @Autowired constructor(
             "ignore_time", "id"
         )
         PageUtils.getFilterFields(filterFields, fieldsObj)
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         query.addCriteria(Criteria.where("task_id").`in`(taskIds).and("tool_name").`is`(toolName))
 
         // 告警状态筛选

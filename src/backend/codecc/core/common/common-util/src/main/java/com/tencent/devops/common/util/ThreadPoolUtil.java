@@ -26,7 +26,7 @@
 
 package com.tencent.devops.common.util;
 
-import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

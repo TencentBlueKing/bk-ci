@@ -46,7 +46,7 @@ public interface CheckerSetTaskRelationshipRepository extends MongoRepository<Ch
      * @param taskId
      * @return
      */
-    CheckerSetTaskRelationshipEntity findByCheckerSetIdAndTaskId(String checkerSetId, Long taskId);
+    CheckerSetTaskRelationshipEntity findFirstByCheckerSetIdAndTaskId(String checkerSetId, Long taskId);
 
     /**
      * 通过项目id查询

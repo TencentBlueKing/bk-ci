@@ -26,8 +26,6 @@
 
 package com.tencent.bk.codecc.defect.service.impl;
 
-import static com.tencent.devops.common.constant.ComConstants.MASK_STATUS;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -78,7 +76,6 @@ import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.api.pojo.Result;
-import com.tencent.devops.common.auth.api.external.AuthExPermissionApi;
 import com.tencent.devops.common.auth.api.external.AuthTaskService;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.ComConstants.DefectStatus;
@@ -104,7 +101,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
@@ -196,7 +193,7 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
 
         if (defectQueryReqVO.getCheckerSet() != null) {
             DefectQueryReqVO.CheckerSet queryCheckerSet = defectQueryReqVO.getCheckerSet();
-            CheckerSetEntity checkerSetItem = checkerSetRepository.findByCheckerSetIdAndVersion(
+            CheckerSetEntity checkerSetItem = checkerSetRepository.findFirstByCheckerSetIdAndVersion(
                 queryCheckerSet.getCheckerSetId(), queryCheckerSet.getVersion());
             Set<String> allChecker = checkerSetItem.getCheckerProps().stream()
                 .filter((it) -> toolNameSet.contains(it.getToolName()))
@@ -291,7 +288,7 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
         DefectDetailQueryRspVO defectDetailQueryRspVO = new DefectDetailQueryRspVO();
 
         //查询告警信息
-        DefectEntity defectEntity = defectRepository.findByEntityId(queryWarningDetailReq.getEntityId());
+        DefectEntity defectEntity = defectRepository.findFirstByEntityId(queryWarningDetailReq.getEntityId());
         if (defectEntity == null)
         {
             log.error("can't find defect entity by entityId: {}", queryWarningDetailReq.getEntityId());

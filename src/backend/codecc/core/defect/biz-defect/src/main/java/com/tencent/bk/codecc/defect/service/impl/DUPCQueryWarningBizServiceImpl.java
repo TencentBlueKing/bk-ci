@@ -28,7 +28,6 @@ package com.tencent.bk.codecc.defect.service.impl;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.defect.dao.mongorepository.BuildDefectRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.DUPCDefectRepository;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.DUPCDefectDao;
@@ -60,10 +59,11 @@ import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.util.PathUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.bson.Document;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -275,7 +275,7 @@ public class DUPCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     private CommonDefectDetailQueryRspVO getSourceCodeBlockDetail(long taskId, String userId, CommonDefectDetailQueryReqVO defectQueryReqVO, DUPCDefectDetailQueryRspVO dupcDefectQueryRspVO)
     {
         //查询告警信息
-        DUPCDefectEntity dupcDefectEntity = dupcDefectRepository.findByEntityId(defectQueryReqVO.getEntityId());
+        DUPCDefectEntity dupcDefectEntity = dupcDefectRepository.findFirstByEntityId(defectQueryReqVO.getEntityId());
 
         if (dupcDefectEntity == null)
         {
@@ -655,9 +655,9 @@ public class DUPCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
      */
     private Query getPremiumQuery(long taskId, String author)
     {
-        BasicDBObject fieldsObj = new BasicDBObject();
+        Document fieldsObj = new Document();
         fieldsObj.put("blockList", false);
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        Query query = new BasicQuery(new Document(), fieldsObj);
         query.addCriteria(Criteria.where("task_id").is(taskId).and("status").is(ComConstants.DefectStatus.NEW.value()));
 
         //作者过滤
