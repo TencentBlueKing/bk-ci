@@ -253,6 +253,9 @@ object MQ {
     // 蓝盾监控数据上报事件广播
     const val EXCHANGE_ATOM_MONITOR_DATA_REPORT_FANOUT = "e.engine.atom.monitor.data.report.fanout"
 
+    // 蓝盾构建结束后metrics数据上报事件广播
+    const val EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT = "e.engine.build.end.metrics.data.report.fanout"
+
     // webhook锁
     const val EXCHANGE_GIT_WEBHOOK_UNLOCK_EVENT = "e.webhook.unlock.event"
     const val ROUTE_GIT_WEBHOOK_UNLOCK_EVENT = "r.webhook.unlock.event"

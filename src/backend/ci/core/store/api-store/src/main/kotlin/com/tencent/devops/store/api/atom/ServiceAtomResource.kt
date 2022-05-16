@@ -28,9 +28,11 @@
 package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.pojo.common.Classify
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -101,4 +103,13 @@ interface ServiceAtomResource {
         @ApiParam("插件标识列表", required = true)
         atomCodes: Set<String>
     ): Result<Map<String, AtomProp>?>
+
+    @ApiOperation("获取插件分类信息")
+    @GET
+    @Path("/codes/{atomCode}/classify/info")
+    fun getAtomClassifyInfo(
+        @ApiParam("插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String
+    ): Result<AtomClassifyInfo?>
 }

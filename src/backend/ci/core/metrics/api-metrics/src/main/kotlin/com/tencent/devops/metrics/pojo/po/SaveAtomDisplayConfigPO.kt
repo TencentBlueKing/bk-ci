@@ -31,7 +31,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
-@ApiModel("保存项目下展示插件配置持久化对象")
+@ApiModel("保存项目下展示插件配置")
 data class SaveAtomDisplayConfigPO(
     @ApiModelProperty("主键ID")
     val id: Long,

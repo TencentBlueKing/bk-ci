@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.api.util
 
+import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.Duration
@@ -67,6 +68,8 @@ object DateTimeUtil {
     }
 
     const val YYYY_MM_DD = "yyyy-MM-dd"
+
+    const val YYYY_MM_DD_HH_MM_SS = "yyyy-MM-dd HH:mm:ss"
 
     const val YYYYMMDD = "yyyyMMdd"
 
@@ -115,12 +118,12 @@ object DateTimeUtil {
      * @param format 格式化字符串
      * @return 字符串
      */
-    fun formatDate(date: Date, format: String = "yyyy-MM-dd HH:mm:ss"): String {
+    fun formatDate(date: Date, format: String = YYYY_MM_DD_HH_MM_SS): String {
         val simpleDateFormat = SimpleDateFormat(format)
         return simpleDateFormat.format(date)
     }
 
-    fun convertDateToFormatLocalDateTime(date: Date, format: String = "yyyy-MM-dd HH:mm:ss"): LocalDateTime {
+    fun convertDateToFormatLocalDateTime(date: Date, format: String = YYYY_MM_DD_HH_MM_SS): LocalDateTime {
         val simpleDateFormat = SimpleDateFormat(format)
         return convertDateToLocalDateTime(simpleDateFormat.parse(simpleDateFormat.format(date)))
     }
@@ -137,7 +140,7 @@ object DateTimeUtil {
         return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
     }
 
-    fun toDateTime(dateTime: LocalDateTime?, format: String = "yyyy-MM-dd HH:mm:ss"): String {
+    fun toDateTime(dateTime: LocalDateTime?, format: String = YYYY_MM_DD_HH_MM_SS): String {
         if (dateTime == null) {
             return ""
         }
@@ -186,6 +189,11 @@ object DateTimeUtil {
         return formatMilliTime(time.toString())
     }
 
+    fun formatMilliTime(time: Long, format: String = YYYY_MM_DD_HH_MM_SS): String {
+        val simpleDateFormat = SimpleDateFormat(format)
+        return simpleDateFormat.format(time)
+    }
+
     fun formatMilliTime(timeStr: String): String {
         val time = timeStr.toLong()
         val hour = time / (60 * 60 * 1000)
@@ -222,7 +230,7 @@ object DateTimeUtil {
     /**
      * 将格式化的日期时间字符串转换为LocalDateTime对象
      */
-    fun stringToLocalDateTime(dateTimeStr: String, formatStr: String = "yyyy-MM-dd HH:mm:ss"): LocalDateTime {
+    fun stringToLocalDateTime(dateTimeStr: String, formatStr: String = YYYY_MM_DD_HH_MM_SS): LocalDateTime {
         val format = SimpleDateFormat(formatStr)
         val date = format.parse(dateTimeStr)
         return convertDateToLocalDateTime(date)

@@ -33,9 +33,12 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomClassifyDao
+import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.MarketAtomClassify
+import com.tencent.devops.store.pojo.common.Classify
 import com.tencent.devops.store.service.atom.MarketAtomClassifyService
 import com.tencent.devops.store.service.common.AbstractClassifyService
+import com.tencent.devops.store.service.common.ClassifyService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,6 +64,9 @@ class MarketAtomClassifyServiceImpl @Autowired constructor() : MarketAtomClassif
 
     @Autowired
     lateinit var marketAtomClassifyDao: MarketAtomClassifyDao
+
+    @Autowired
+    lateinit var classifyService: ClassifyService
 
     /**
      * 获取所有插件分类信息
@@ -90,8 +96,24 @@ class MarketAtomClassifyServiceImpl @Autowired constructor() : MarketAtomClassif
                 )
             )
         }
-        logger.info("the marketAtomClassifyList is:$marketAtomClassifyList")
         return Result(marketAtomClassifyList)
+    }
+
+    override fun getAtomClassifyInfo(atomCode: String): Result<AtomClassifyInfo?> {
+        val atomRecord = atomDao.getLatestAtomByCode(dslContext, atomCode)
+        return if (atomRecord != null) {
+            val classifyRecord = classifyService.getClassify(atomRecord.classifyId).data
+            Result(classifyRecord?.let {
+                AtomClassifyInfo(
+                    atomCode = atomRecord.atomCode,
+                    atomName = atomRecord.name,
+                    classifyCode = it.classifyCode,
+                    classifyName = it.classifyName
+                )
+            })
+        } else {
+            Result(null)
+        }
     }
 
     override fun getDeleteClassifyFlag(classifyId: String): Boolean {

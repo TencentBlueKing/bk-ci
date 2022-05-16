@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.atom
 
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.timestampmilli
@@ -47,6 +48,7 @@ import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
+import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.slf4j.LoggerFactory
@@ -174,13 +176,16 @@ class TaskAtomService @Autowired(required = false) constructor(
             // 系统控制类插件不涉及到Detail编排状态修改
             if (EnvControlTaskType.parse(task.taskType) == null) {
                 val updateTaskStatusInfos = pipelineBuildDetailService.taskEnd(
-                    projectId = task.projectId,
-                    buildId = task.buildId,
-                    taskId = task.taskId,
-                    buildStatus = atomResponse.buildStatus,
-                    errorType = atomResponse.errorType,
-                    errorCode = atomResponse.errorCode,
-                    errorMsg = atomResponse.errorMsg
+                    TaskBuildEndParam(
+                        projectId = task.projectId,
+                        buildId = task.buildId,
+                        taskId = task.taskId,
+                        buildStatus = atomResponse.buildStatus,
+                        errorType = atomResponse.errorType,
+                        errorCode = atomResponse.errorCode,
+                        errorMsg = atomResponse.errorMsg,
+                        atomVersion = INIT_VERSION
+                    )
                 )
                 updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
                     val updateTaskInfo = UpdateTaskInfo(

@@ -281,10 +281,10 @@ class PipelineBuildDetailService @Autowired constructor(
         buildId: String,
         buildStatus: BuildStatus,
         cancelUser: String? = null
-    ): List<BuildStageStatus> {
+    ): Pair<Model, List<BuildStageStatus>> {
         logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|cancelUser=$cancelUser")
         var allStageStatus: List<BuildStageStatus> = emptyList()
-        update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
+        val model = update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
             var update = false
 
             override fun onFindContainer(container: Container, stage: Stage): Traverse {
@@ -346,7 +346,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 return update
             }
         }, buildStatus = buildStatus, operation = "buildEnd")
-        return allStageStatus
+        return model to allStageStatus
     }
 
     fun updateBuildCancelUser(projectId: String, buildId: String, cancelUserId: String) {

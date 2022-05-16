@@ -43,6 +43,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryReco
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.pojo.code.WebhookInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -517,7 +518,11 @@ class PipelineBuildDao {
                 },
                 retryFlag = t.isRetry,
                 executeTime = t.executeTime ?: 0,
-                concurrencyGroup = t.concurrencyGroup
+                concurrencyGroup = t.concurrencyGroup,
+                webhookInfo = t.webhookInfo?.let { JsonUtil.to(t.webhookInfo, WebhookInfo::class.java) },
+                errorType = t.errorType,
+                errorCode = t.errorCode,
+                errorMsg = t.errorMsg
             )
         }
     }

@@ -29,10 +29,12 @@ package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -46,6 +48,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OP_SHARDING_ROUTING_RULE"], description = "OP-DB分片规则")
@@ -101,7 +104,13 @@ interface OPShardingRoutingRuleResource {
         @ApiParam("规则名称", required = true)
         @PathParam("routingName")
         @BkField(minLength = 1, maxLength = 128)
-        routingName: String
+        routingName: String,
+        @ApiParam("模块标识", required = true)
+        @QueryParam("moduleCode")
+        moduleCode: SystemModuleEnum,
+        @ApiParam("规则类型", required = true)
+        @QueryParam("ruleType")
+        ruleType: ShardingRuleTypeEnum
     ): Result<ShardingRoutingRule?>
 
     @ApiOperation("根据ID删除分片规则信息")

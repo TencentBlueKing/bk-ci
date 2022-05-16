@@ -33,6 +33,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.PROFILE_AUTO
+import com.tencent.devops.common.service.PROFILE_DEFAULT
+import com.tencent.devops.common.service.PROFILE_DEVELOPMENT
+import com.tencent.devops.common.service.PROFILE_PRODUCTION
+import com.tencent.devops.common.service.PROFILE_STREAM
+import com.tencent.devops.common.service.PROFILE_TEST
+import com.tencent.devops.common.service.Profile
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.i18n.LocaleContextHolder
@@ -197,5 +204,39 @@ object CommonUtils {
         return if (string != null && string.length > length) {
             string.substring(0, length - 1)
         } else string
+    }
+
+    /**
+     * 获取db集群名称
+     */
+    fun getDbClusterName(): String {
+        val profile = SpringContextUtil.getBean(Profile::class.java)
+        return when {
+            profile.isDev() -> {
+                PROFILE_DEVELOPMENT
+            }
+            profile.isTest() -> {
+                PROFILE_TEST
+            }
+            profile.isProd() -> {
+                when {
+                    profile.isAuto() -> {
+                        PROFILE_AUTO
+                    }
+                    profile.isStream() -> {
+                        PROFILE_STREAM
+                    }
+                    else -> {
+                        PROFILE_PRODUCTION
+                    }
+                }
+            }
+            profile.isLocal() -> {
+                PROFILE_DEFAULT
+            }
+            else -> {
+                PROFILE_PRODUCTION
+            }
+        }
     }
 }

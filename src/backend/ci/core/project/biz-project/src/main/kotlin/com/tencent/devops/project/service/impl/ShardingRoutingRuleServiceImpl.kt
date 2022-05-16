@@ -28,9 +28,13 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
+import com.tencent.devops.common.api.util.ShardingUtil
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.project.dao.ShardingRoutingRuleDao
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.jooq.DSLContext
@@ -44,13 +48,15 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation
 ) : ShardingRoutingRuleService {
 
-    companion object {
-        private const val SHARDING_ROUTING_RULE_KEY_PREFIX = "SHARDING_ROUTING_RULE"
-    }
-
     override fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Boolean {
         val routingName = shardingRoutingRule.routingName
-        val nameCount = shardingRoutingRuleDao.countByName(dslContext, routingName)
+        val nameCount = shardingRoutingRuleDao.countByName(
+            dslContext = dslContext,
+            clusterName = shardingRoutingRule.clusterName,
+            moduleCode = shardingRoutingRule.moduleCode,
+            type = shardingRoutingRule.type,
+            routingName = routingName
+        )
         if (nameCount > 0) {
             // 抛出错误提示
             throw ErrorCodeException(
@@ -61,8 +67,14 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
         // 规则入库
         shardingRoutingRuleDao.add(dslContext, userId, shardingRoutingRule)
         // 规则写入redis缓存
+        val key = ShardingUtil.getShardingRoutingRuleKey(
+            clusterName = CommonUtils.getDbClusterName(),
+            moduleCode = shardingRoutingRule.moduleCode.name,
+            ruleType = shardingRoutingRule.type.name,
+            routingName = routingName
+        )
         redisOperation.set(
-            key = getShardingRoutingRuleKey(routingName),
+            key = key,
             value = shardingRoutingRule.routingRule,
             expired = false
         )
@@ -76,7 +88,13 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
             shardingRoutingRuleDao.delete(dslContext, id)
             val routingName = shardingRoutingRuleRecord.routingName
             // 删除redis中规则信息
-            redisOperation.delete(getShardingRoutingRuleKey(routingName))
+            val key = ShardingUtil.getShardingRoutingRuleKey(
+                clusterName = CommonUtils.getDbClusterName(),
+                moduleCode = shardingRoutingRuleRecord.moduleCode,
+                ruleType = shardingRoutingRuleRecord.type,
+                routingName = routingName
+            )
+            redisOperation.delete(key)
         }
         return true
     }
@@ -87,7 +105,13 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
         shardingRoutingRule: ShardingRoutingRule
     ): Boolean {
         val routingName = shardingRoutingRule.routingName
-        val nameCount = shardingRoutingRuleDao.countByName(dslContext, routingName)
+        val nameCount = shardingRoutingRuleDao.countByName(
+            dslContext = dslContext,
+            clusterName = shardingRoutingRule.clusterName,
+            moduleCode = shardingRoutingRule.moduleCode,
+            type = shardingRoutingRule.type,
+            routingName = routingName
+        )
         if (nameCount > 0) {
             // 判断更新的名称是否属于自已
             val rule = shardingRoutingRuleDao.getById(dslContext, id)
@@ -102,8 +126,14 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
         // 更新db中规则信息
         shardingRoutingRuleDao.update(dslContext, id, shardingRoutingRule)
         // 更新redis缓存规则信息
+        val key = ShardingUtil.getShardingRoutingRuleKey(
+            clusterName = CommonUtils.getDbClusterName(),
+            moduleCode = shardingRoutingRule.moduleCode.name,
+            ruleType = shardingRoutingRule.type.name,
+            routingName = routingName
+        )
         redisOperation.set(
-            key = getShardingRoutingRuleKey(routingName),
+            key = key,
             value = shardingRoutingRule.routingRule,
             expired = false
         )
@@ -113,35 +143,61 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
     override fun getShardingRoutingRuleById(id: String): ShardingRoutingRule? {
         val record = shardingRoutingRuleDao.getById(dslContext, id)
         return if (record != null) {
-            ShardingRoutingRule(record.routingName, record.routingRule)
+            ShardingRoutingRule(
+                clusterName = record.clusterName,
+                moduleCode = SystemModuleEnum.valueOf(record.moduleCode),
+                type = ShardingRuleTypeEnum.valueOf(record.type),
+                routingName = record.routingName,
+                routingRule = record.routingRule
+            )
         } else {
             null
         }
     }
 
-    override fun getShardingRoutingRuleByName(routingName: String): ShardingRoutingRule? {
+    override fun getShardingRoutingRuleByName(
+        moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum,
+        routingName: String
+    ): ShardingRoutingRule? {
         // 从redis缓存中获取规则信息
-        val routingRule = redisOperation.get(getShardingRoutingRuleKey(routingName))
+        val key = ShardingUtil.getShardingRoutingRuleKey(
+            clusterName = CommonUtils.getDbClusterName(),
+            moduleCode = moduleCode.name,
+            ruleType = ruleType.name,
+            routingName = routingName
+        )
+        val routingRule = redisOperation.get(key)
+        // 获取集群名称
+        val clusterName = CommonUtils.getDbClusterName()
         return if (routingRule.isNullOrBlank()) {
             // redis缓存中未取到规则信息则从db查
             val record = shardingRoutingRuleDao.getByName(dslContext, routingName)
             if (record != null) {
                 // 更新redis缓存规则信息
                 redisOperation.set(
-                    key = getShardingRoutingRuleKey(routingName),
+                    key = key,
                     value = record.routingRule,
                     expired = false
                 )
-                ShardingRoutingRule(record.routingName, record.routingRule)
+                ShardingRoutingRule(
+                    clusterName = record.clusterName,
+                    moduleCode = moduleCode,
+                    type = ruleType,
+                    routingName = routingName,
+                    routingRule = record.routingRule
+                )
             } else {
                 null
             }
         } else {
-            ShardingRoutingRule(routingName, routingRule)
+            ShardingRoutingRule(
+                clusterName = clusterName,
+                moduleCode = moduleCode,
+                type = ruleType,
+                routingName = routingName,
+                routingRule = routingRule
+            )
         }
-    }
-
-    private fun getShardingRoutingRuleKey(routingName: String): String {
-        return "$SHARDING_ROUTING_RULE_KEY_PREFIX:$routingName"
     }
 }
