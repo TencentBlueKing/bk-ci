@@ -34,7 +34,6 @@ package com.tencent.bkrepo.monitor.config
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.module.SimpleModule
-import com.tencent.bkrepo.monitor.export.InfluxExportProperties
 import de.codecentric.boot.admin.server.config.EnableAdminServer
 import de.codecentric.boot.admin.server.domain.values.InstanceId
 import de.codecentric.boot.admin.server.services.InstanceIdGenerator
@@ -46,7 +45,7 @@ import javax.annotation.PostConstruct
 
 @Configuration
 @EnableAdminServer
-@EnableConfigurationProperties(MonitorProperties::class, InfluxExportProperties::class)
+@EnableConfigurationProperties(MonitorProperties::class)
 class MonitorConfiguration(
     private val objectMapper: ObjectMapper,
     private val adminJacksonModule: SimpleModule

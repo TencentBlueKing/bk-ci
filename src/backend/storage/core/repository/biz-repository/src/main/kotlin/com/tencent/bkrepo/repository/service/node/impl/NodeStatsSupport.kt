@@ -40,7 +40,10 @@ import com.tencent.bkrepo.repository.pojo.node.NodeListOption
 import com.tencent.bkrepo.repository.pojo.node.NodeSizeInfo
 import com.tencent.bkrepo.repository.service.node.NodeStatsOperation
 import com.tencent.bkrepo.repository.util.NodeQueryHelper
-import org.springframework.data.mongodb.core.aggregation.Aggregation
+import org.springframework.data.mongodb.core.aggregation.Aggregation.group
+import org.springframework.data.mongodb.core.aggregation.Aggregation.match
+import org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation
+import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 
 /**
@@ -65,12 +68,7 @@ open class NodeStatsSupport(
         val listOption = NodeListOption(includeFolder = true, deep = true)
         val criteria = NodeQueryHelper.nodeListCriteria(projectId, repoName, node.fullPath, listOption)
         val count = nodeDao.count(Query(criteria))
-        val aggregation = Aggregation.newAggregation(
-            Aggregation.match(criteria),
-            Aggregation.group().sum(TNode::size.name).`as`(NodeSizeInfo::size.name)
-        )
-        val aggregateResult = nodeDao.aggregate(aggregation, HashMap::class.java)
-        val size = aggregateResult.mappedResults.firstOrNull()?.get(NodeSizeInfo::size.name) as? Long ?: 0
+        val size = aggregateComputeSize(criteria)
         return NodeSizeInfo(subNodeCount = count, size = size)
     }
 
@@ -85,5 +83,14 @@ open class NodeStatsSupport(
             val query = NodeQueryHelper.nodeListQuery(projectId, repoName, getArtifactFullPath(), listOption)
             return nodeDao.count(query)
         }
+    }
+
+    override fun aggregateComputeSize(criteria: Criteria): Long {
+        val aggregation = newAggregation(
+            match(criteria),
+            group().sum(TNode::size.name).`as`(NodeSizeInfo::size.name)
+        )
+        val aggregateResult = nodeDao.aggregate(aggregation, HashMap::class.java)
+        return aggregateResult.mappedResults.firstOrNull()?.get(NodeSizeInfo::size.name) as? Long ?: 0
     }
 }

@@ -53,14 +53,13 @@ class ServiceVarResourceImpl @Autowired constructor(
         buildId: String,
         contextName: String?
     ): Result<Map<String, String>> {
-        val buildVars = buildVariableService.getAllVariable(projectId, buildId)
+        val variables = buildVariableService.getAllVariable(projectId, buildId)
         return if (contextName.isNullOrBlank()) {
-            val contextVar = pipelineContextService.getAllBuildContext(buildVars).toMutableMap()
-            Result(
-                contextVar.plus(pipelineContextService.buildFinishContext(projectId, pipelineId, buildId))
-            )
+            Result(variables.plus(
+                pipelineContextService.buildFinishContext(projectId, pipelineId, buildId, variables)
+            ))
         } else {
-            val context = pipelineContextService.getBuildContext(buildVars, contextName)
+            val context = pipelineContextService.getBuildContext(variables, contextName)
             if (context.isNullOrEmpty()) {
                 Result(emptyMap())
             } else {

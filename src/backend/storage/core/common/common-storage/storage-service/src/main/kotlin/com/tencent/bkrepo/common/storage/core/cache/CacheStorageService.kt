@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,23 +10,19 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 package com.tencent.bkrepo.common.storage.core.cache
@@ -36,16 +32,16 @@ import com.tencent.bkrepo.common.artifact.api.ArtifactFile
 import com.tencent.bkrepo.common.artifact.stream.ArtifactInputStream
 import com.tencent.bkrepo.common.artifact.stream.Range
 import com.tencent.bkrepo.common.artifact.stream.artifactStream
-import com.tencent.bkrepo.common.artifact.stream.bound
 import com.tencent.bkrepo.common.storage.core.AbstractStorageService
 import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
 import com.tencent.bkrepo.common.storage.filesystem.FileSystemClient
 import com.tencent.bkrepo.common.storage.filesystem.check.FileSynchronizeVisitor
 import com.tencent.bkrepo.common.storage.filesystem.check.SynchronizeResult
+import com.tencent.bkrepo.common.storage.filesystem.cleanup.CleanupFileVisitor
 import com.tencent.bkrepo.common.storage.filesystem.cleanup.CleanupResult
+import com.tencent.bkrepo.common.storage.monitor.StorageHealthMonitor
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
-import java.io.IOException
 import java.nio.file.Paths
 
 /**
@@ -60,7 +56,7 @@ class CacheStorageService(
             artifactFile.isInMemory() -> {
                 fileStorage.store(path, filename, artifactFile.getInputStream(), artifactFile.getSize(), credentials)
             }
-            artifactFile.isFallback() -> {
+            artifactFile.isFallback() || artifactFile.isInLocalDisk() -> {
                 fileStorage.store(path, filename, artifactFile.flushToFile(), credentials)
             }
             else -> {
@@ -68,9 +64,9 @@ class CacheStorageService(
                 threadPoolTaskExecutor.execute {
                     try {
                         fileStorage.store(path, filename, cachedFile, credentials)
-                    } catch (exception: IOException) {
+                    } catch (ignored: Exception) {
                         // 此处为异步上传，失败后异常不会被外层捕获，所以单独捕获打印error日志
-                        logger.error("Failed to async store file [$filename] on [${credentials.key}]", exception)
+                        logger.error("Failed to async store file [$filename] on [${credentials.key}]", ignored)
                     }
                 }
             }
@@ -86,7 +82,7 @@ class CacheStorageService(
         val cacheClient = getCacheClient(credentials)
         val loadCacheFirst = isLoadCacheFirst(range, credentials)
         if (loadCacheFirst) {
-            cacheClient.load(path, filename)?.bound(range)?.artifactStream(range)?.let { return it }
+            cacheClient.load(path, filename)?.artifactStream(range)?.let { return it }
         }
         val artifactInputStream = fileStorage.load(path, filename, range, credentials)?.artifactStream(range)
         if (artifactInputStream != null && loadCacheFirst && range.isFullContent()) {
@@ -96,7 +92,7 @@ class CacheStorageService(
             artifactInputStream.addListener(readListener)
         }
         return if (artifactInputStream == null && !loadCacheFirst) {
-            cacheClient.load(path, filename)?.bound(range)?.artifactStream(range)
+            cacheClient.load(path, filename)?.artifactStream(range)
         } else {
             artifactInputStream
         }
@@ -111,16 +107,16 @@ class CacheStorageService(
         return fileStorage.exist(path, filename, credentials)
     }
 
-    override fun getTempPath(credentials: StorageCredentials): String {
-        return Paths.get(credentials.cache.path, TEMP).toString()
-    }
-
     /**
      * 覆盖父类cleanUp逻辑，还包括清理缓存的文件内容
      */
     override fun cleanUp(storageCredentials: StorageCredentials?): CleanupResult {
         val credentials = getCredentialsOrDefault(storageCredentials)
-        return getCacheClient(credentials).cleanUp(credentials.cache.expireDays)
+        val rootPath = Paths.get(credentials.cache.path)
+        val tempPath = getTempPath(credentials)
+        val visitor = CleanupFileVisitor(rootPath, tempPath, fileStorage, fileLocator, credentials)
+        getCacheClient(credentials).walk(visitor)
+        return visitor.result
     }
 
     override fun synchronizeFile(storageCredentials: StorageCredentials?): SynchronizeResult {
@@ -128,12 +124,13 @@ class CacheStorageService(
         val tempPath = Paths.get(credentials.cache.path, TEMP)
         val visitor = FileSynchronizeVisitor(tempPath, fileLocator, fileStorage, credentials)
         getCacheClient(credentials).walk(visitor)
-        return visitor.checkResult
+        return visitor.result
     }
 
     override fun doCheckHealth(credentials: StorageCredentials) {
-        if (!monitor.health.get()) {
-            throw IllegalStateException("Cache storage is unhealthy: ${monitor.reason}")
+        val monitor = getMonitor(credentials)
+        if (!monitor.healthy.get()) {
+            throw IllegalStateException("Cache storage is unhealthy: ${monitor.fallBackReason}")
         }
         super.doCheckHealth(credentials)
     }
@@ -144,14 +141,14 @@ class CacheStorageService(
      * 当cacheFirst开启，并且cache磁盘健康，并且当前文件未超过内存阈值大小
      */
     private fun isLoadCacheFirst(range: Range, credentials: StorageCredentials): Boolean {
-        val isExceedThreshold = range.total > storageProperties.fileSizeThreshold.toBytes()
-        val isHealth = if (credentials == storageProperties.defaultStorageCredentials()) {
-            monitor.health.get()
-        } else {
-            true
-        }
+        val isExceedThreshold = range.total > storageProperties.receive.fileSizeThreshold.toBytes()
+        val isHealth = getMonitor(credentials).healthy.get()
         val cacheFirst = credentials.cache.loadCacheFirst
         return cacheFirst && isHealth && isExceedThreshold
+    }
+
+    private fun getMonitor(credentials: StorageCredentials): StorageHealthMonitor {
+        return monitorHelper.getMonitor(storageProperties, credentials)
     }
 
     private fun getCacheClient(credentials: StorageCredentials): FileSystemClient {
