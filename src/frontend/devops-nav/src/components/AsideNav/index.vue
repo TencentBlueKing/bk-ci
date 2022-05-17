@@ -63,6 +63,7 @@
                 itemActiveBgColor: '#ebf4ff',
                 itemHoverBgColor: '#ebf4ff',
                 itemHoverColor: '#3c96ff',
+                itemHoverIconColor: '#3c96ff',
                 itemActiveColor: '#3c96ff',
                 itemActiveIconColor: '#3c96ff',
                 itemDefaultColor: '#7b7d8a'
