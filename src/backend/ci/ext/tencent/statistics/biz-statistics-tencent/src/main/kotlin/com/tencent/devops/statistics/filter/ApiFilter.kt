@@ -39,7 +39,7 @@ import com.tencent.devops.statistics.util.openapi.ApiGatewayUtil
 import io.jsonwebtoken.Jwts
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.jce.provider.JCERSAPublicKey
-import org.bouncycastle.openssl.PEMReader
+import org.bouncycastle.openssl.PEMParser
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
@@ -195,7 +195,7 @@ class ApiFilter(
     }
 
     private fun parseJwt(bkApiJwt: String, apigwtType: String?): Map<String, Any> {
-        var reader: PEMReader? = null
+        var reader: PEMParser? = null
         try {
             val key = if (!apigwtType.isNullOrEmpty() && apigwtType == "outer") {
                 SpringContextUtil.getBean(ApiGatewayPubFile::class.java).getPubOuter().toByteArray()
@@ -204,7 +204,7 @@ class ApiFilter(
             }
             Security.addProvider(BouncyCastleProvider())
             val bais = ByteArrayInputStream(key)
-            reader = PEMReader(InputStreamReader(bais)) { "".toCharArray() }
+            reader = PEMParser(InputStreamReader(bais))
             val keyPair = reader.readObject() as JCERSAPublicKey
             val jwtParser = Jwts.parser().setSigningKey(keyPair)
             val parse = jwtParser.parse(bkApiJwt)
