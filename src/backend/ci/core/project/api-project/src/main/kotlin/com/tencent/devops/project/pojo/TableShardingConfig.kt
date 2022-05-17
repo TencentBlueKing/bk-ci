@@ -24,24 +24,22 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.project.service
-
+package com.tencent.devops.project.pojo
 import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.common.web.annotation.BkField
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface ProjectDataSourceAssignService {
-
-    /**
-     * 为项目分配分片路由规则
-     * @param channelCode 渠道代码
-     * @param projectId 项目ID
-     * @param moduleCodes 模块代码列表
-     * @return 布尔值
-     */
-    fun assignShardingRoutingRule(
-        channelCode: ProjectChannelCode,
-        projectId: String,
-        moduleCodes: List<SystemModuleEnum>
-    ): Boolean
-}
+@ApiModel("数据库表分片配置")
+data class TableShardingConfig(
+    @ApiModelProperty("集群名称")
+    @field:BkField(minLength = 1, maxLength = 64)
+    val clusterName: String,
+    @ApiModelProperty("模块标识")
+    val moduleCode: SystemModuleEnum,
+    @ApiModelProperty("数据库表名称")
+    @field:BkField(minLength = 1, maxLength = 128)
+    val tableName: String,
+    @ApiModelProperty("分表数量")
+    val shardingNum: Int
+)

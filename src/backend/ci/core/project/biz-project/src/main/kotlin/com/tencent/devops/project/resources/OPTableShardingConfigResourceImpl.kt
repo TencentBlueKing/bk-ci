@@ -24,24 +24,37 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.project.resources
 
-package com.tencent.devops.project.service
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.op.OPTableShardingConfigResource
+import com.tencent.devops.project.pojo.TableShardingConfig
+import com.tencent.devops.project.service.TableShardingConfigService
+import org.springframework.beans.factory.annotation.Autowired
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+@RestResource
+class OPTableShardingConfigResourceImpl @Autowired constructor(
+    private val tableShardingConfigService: TableShardingConfigService
+) : OPTableShardingConfigResource {
 
-interface ProjectDataSourceAssignService {
+    override fun addTableShardingConfig(userId: String, tableShardingConfig: TableShardingConfig): Result<Boolean> {
+        return Result(tableShardingConfigService.addTableShardingConfig(userId, tableShardingConfig))
+    }
 
-    /**
-     * 为项目分配分片路由规则
-     * @param channelCode 渠道代码
-     * @param projectId 项目ID
-     * @param moduleCodes 模块代码列表
-     * @return 布尔值
-     */
-    fun assignShardingRoutingRule(
-        channelCode: ProjectChannelCode,
-        projectId: String,
-        moduleCodes: List<SystemModuleEnum>
-    ): Boolean
+    override fun updateTableShardingConfig(
+        userId: String,
+        id: String,
+        tableShardingConfig: TableShardingConfig
+    ): Result<Boolean> {
+        return Result(tableShardingConfigService.updateTableShardingConfig(userId, id, tableShardingConfig))
+    }
+
+    override fun getTableShardingConfigById(id: String): Result<TableShardingConfig?> {
+        return Result(tableShardingConfigService.getTableShardingConfigById(id))
+    }
+
+    override fun deleteTableShardingConfigById(userId: String, id: String): Result<Boolean> {
+        return Result(tableShardingConfigService.deleteTableShardingConfig(userId, id))
+    }
 }

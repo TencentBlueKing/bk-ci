@@ -28,20 +28,22 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.TableShardingConfig
+import org.jooq.DSLContext
 
-interface ProjectDataSourceAssignService {
+interface TableShardingConfigService {
 
-    /**
-     * 为项目分配分片路由规则
-     * @param channelCode 渠道代码
-     * @param projectId 项目ID
-     * @param moduleCodes 模块代码列表
-     * @return 布尔值
-     */
-    fun assignShardingRoutingRule(
-        channelCode: ProjectChannelCode,
-        projectId: String,
-        moduleCodes: List<SystemModuleEnum>
-    ): Boolean
+    fun addTableShardingConfig(userId: String, tableShardingConfig: TableShardingConfig): Boolean
+
+    fun deleteTableShardingConfig(userId: String, id: String): Boolean
+
+    fun updateTableShardingConfig(userId: String, id: String, tableShardingConfig: TableShardingConfig): Boolean
+
+    fun getTableShardingConfigById(id: String): TableShardingConfig?
+
+    fun listByModule(
+        dslContext: DSLContext,
+        clusterName: String,
+        moduleCode: SystemModuleEnum
+    ): List<TableShardingConfig>?
 }

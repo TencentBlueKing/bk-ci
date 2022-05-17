@@ -35,9 +35,11 @@ import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.DataSourceDao
+import com.tencent.devops.project.pojo.TableShardingConfig
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.service.ProjectDataSourceAssignService
 import com.tencent.devops.project.service.ShardingRoutingRuleService
+import com.tencent.devops.project.service.TableShardingConfigService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,7 +48,8 @@ import org.springframework.beans.factory.annotation.Value
 abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val dataSourceDao: DataSourceDao,
-    private val shardingRoutingRuleService: ShardingRoutingRuleService
+    private val shardingRoutingRuleService: ShardingRoutingRuleService,
+    private val tableShardingConfigService: TableShardingConfigService
 ) : ProjectDataSourceAssignService {
 
     companion object {
@@ -58,13 +61,13 @@ abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
     private val assignDbFusibleSwitch: Boolean = true
 
     /**
-     * 为项目分配数据源
+     * 为项目分配分片路由规则
      * @param channelCode 渠道代码
      * @param projectId 项目ID
      * @param moduleCodes 模块代码列表
      * @return 布尔值
      */
-    override fun assignDataSource(
+    override fun assignShardingRoutingRule(
         channelCode: ProjectChannelCode,
         projectId: String,
         moduleCodes: List<SystemModuleEnum>
@@ -72,7 +75,8 @@ abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
         // 获取集群名称
         val clusterName = CommonUtils.getDbClusterName()
         moduleCodes.forEach { moduleCode ->
-            var dataSourceName = DEFAULT_DATA_SOURCE_NAME
+            // 1、为微服务模块分配db分片规则
+            var validDataSourceName = DEFAULT_DATA_SOURCE_NAME
             // 根据模块查找还有空余容量的数据源
             val dataSourceNames = dataSourceDao.listByModule(
                 dslContext = dslContext,
@@ -89,17 +93,37 @@ abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
                 }
             } else {
                 // 获取可用数据源名称
-                dataSourceName = getValidDataSourceName(clusterName, dataSourceNames)
+                validDataSourceName = getValidDataSourceName(clusterName, moduleCode, dataSourceNames)
             }
-            val shardingRoutingRule = ShardingRoutingRule(
+            val dbShardingRoutingRule = ShardingRoutingRule(
                 clusterName = clusterName,
                 moduleCode = moduleCode,
                 type = ShardingRuleTypeEnum.DB,
                 routingName = projectId,
-                routingRule = dataSourceName
+                routingRule = validDataSourceName
             )
-            // 保存分片规则
-            shardingRoutingRuleService.addShardingRoutingRule(SYSTEM, shardingRoutingRule)
+            // 保存db分片规则
+            shardingRoutingRuleService.addShardingRoutingRule(SYSTEM, dbShardingRoutingRule)
+
+            // 2、为微服务模块分配数据库表分片规则
+            val tableShardingConfigs = tableShardingConfigService.listByModule(
+                dslContext = dslContext,
+                clusterName = clusterName,
+                moduleCode = moduleCode
+            )
+            tableShardingConfigs?.forEach { tableShardingConfig ->
+                // 获取可用数据库表名称
+                val validTableName = getValidTableName(clusterName, moduleCode, tableShardingConfig)
+                val tableShardingRoutingRule = ShardingRoutingRule(
+                    clusterName = clusterName,
+                    moduleCode = moduleCode,
+                    type = ShardingRuleTypeEnum.TABLE,
+                    routingName = projectId,
+                    routingRule = validTableName
+                )
+                // 保存数据库表分片规则
+                shardingRoutingRuleService.addShardingRoutingRule(SYSTEM, tableShardingRoutingRule)
+            }
         }
         return true
     }
@@ -107,8 +131,26 @@ abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
     /**
      * 获取可用数据源名称
      * @param clusterName db集群名称
+     * @param moduleCode 模块代码
      * @param dataSourceNames 数据源名称集合
      * @return 可用数据源名称
      */
-    abstract fun getValidDataSourceName(clusterName: String, dataSourceNames: List<String>): String
+    abstract fun getValidDataSourceName(
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        dataSourceNames: List<String>
+    ): String
+
+    /**
+     * 获取可用数据库表名称
+     * @param clusterName db集群名称
+     * @param moduleCode 模块代码
+     * @param tableShardingConfig 分表配置
+     * @return 可用数据库表名称
+     */
+    abstract fun getValidTableName(
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        tableShardingConfig: TableShardingConfig
+    ): String
 }

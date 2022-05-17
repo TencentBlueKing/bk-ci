@@ -27,7 +27,9 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.project.dao.DataSourceDao
+import com.tencent.devops.project.pojo.TableShardingConfig
 import com.tencent.devops.project.service.impl.AbsProjectDataSourceAssignServiceImpl
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
@@ -36,19 +38,50 @@ import org.springframework.stereotype.Service
 class SampleProjectDataSourceAssignServiceImpl(
     dslContext: DSLContext,
     dataSourceDao: DataSourceDao,
-    shardingRoutingRuleService: ShardingRoutingRuleService
-) : AbsProjectDataSourceAssignServiceImpl(dslContext, dataSourceDao, shardingRoutingRuleService) {
+    shardingRoutingRuleService: ShardingRoutingRuleService,
+    tableShardingConfigService: TableShardingConfigService
+) : AbsProjectDataSourceAssignServiceImpl(
+    dslContext,
+    dataSourceDao,
+    shardingRoutingRuleService,
+    tableShardingConfigService
+) {
 
     /**
      * 获取可用数据源名称
      * @param clusterName db集群名称
+     * @param moduleCode 模块代码
      * @param dataSourceNames 数据源名称集合
      * @return 可用数据源名称
      */
-    override fun getValidDataSourceName(clusterName: String, dataSourceNames: List<String>): String {
+    override fun getValidDataSourceName(
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        dataSourceNames: List<String>
+    ): String {
         // 从可用的数据源中随机选择一个分配给该项目
         val maxSizeIndex = dataSourceNames.size - 1
         val randomIndex = (0..maxSizeIndex).random()
         return dataSourceNames[randomIndex]
+    }
+
+    /**
+     * 获取可用数据库表名称
+     * @param clusterName db集群名称
+     * @param moduleCode 模块代码
+     * @param tableShardingConfig 分表配置
+     * @return 可用数据库表名称
+     */
+    override fun getValidTableName(
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        tableShardingConfig: TableShardingConfig
+    ): String {
+        // 从可用的数据库表中随机选择一个分配给该项目
+        val tableName = tableShardingConfig.tableName
+        val shardingNum = tableShardingConfig.shardingNum
+        val maxSizeIndex = shardingNum - 1
+        val randomIndex = (0..maxSizeIndex).random()
+        return "${tableName}_$randomIndex"
     }
 }
