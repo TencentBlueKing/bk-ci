@@ -45,7 +45,8 @@ data class GitPushEvent(
     val total_commits_count: Int,
     val operation_kind: String?,
     val action_kind: String?,
-    val push_options: Map<String, String>?
+    val push_options: Map<String, String>?,
+    val create_and_update: Boolean?
 ) : GitEvent() {
     companion object {
         const val classType = "push"
@@ -61,21 +62,6 @@ fun GitPushEvent.isDeleteBranch(): Boolean {
     if (action_kind == TGitPushActionKind.CLIENT_PUSH.value &&
         operation_kind == TGitPushOperationKind.DELETE.value &&
         after.filter { it != '0' }.isBlank()
-    ) {
-        return true
-    }
-    return false
-}
-
-fun GitPushEvent.isCreateBranch(): Boolean {
-    // 工蜂web端创建分支
-    if (action_kind == TGitPushActionKind.CREATE_BRANCH.value) {
-        return true
-    }
-    // 发送到工蜂的客户端创建
-    if (action_kind == TGitPushActionKind.CLIENT_PUSH.value &&
-        operation_kind == TGitPushOperationKind.CREAT.value &&
-        before.filter { it != '0' }.isBlank()
     ) {
         return true
     }
