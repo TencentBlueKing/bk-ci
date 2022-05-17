@@ -37,10 +37,12 @@ data class UpdateAtomFailSummaryDataPO(
     val id: Long,
     @ApiModelProperty("项目ID")
     val projectId: String,
+    @ApiModelProperty("插件标识")
+    val atomCode: String,
     @ApiModelProperty("错误次数")
-    val errorCount: Int,
+    var errorCount: Int,
     @ApiModelProperty("修改人")
-    val modifier: String,
+    var modifier: String,
     @ApiModelProperty("更新时间")
-    val updateTime: LocalDateTime
+    var updateTime: LocalDateTime
 )

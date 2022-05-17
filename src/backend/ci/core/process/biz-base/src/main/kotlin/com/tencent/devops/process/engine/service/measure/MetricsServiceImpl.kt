@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
@@ -49,6 +50,10 @@ class MetricsServiceImpl constructor(
 ) : MetricsService {
 
     override fun postMetricsData(buildInfo: BuildInfo, model: Model) {
+        if (!ChannelCode.webChannel(buildInfo.channelCode)) {
+            // 页面不可见的构建无需上报数据
+            return
+        }
         val projectId = buildInfo.projectId
         val pipelineId = buildInfo.pipelineId
         val buildId = buildInfo.buildId

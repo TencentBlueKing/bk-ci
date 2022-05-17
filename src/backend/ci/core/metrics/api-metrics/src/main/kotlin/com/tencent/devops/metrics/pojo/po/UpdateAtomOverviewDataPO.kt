@@ -38,18 +38,20 @@ data class UpdateAtomOverviewDataPO(
     val id: Long,
     @ApiModelProperty("项目ID")
     val projectId: String,
+    @ApiModelProperty("插件标识")
+    val atomCode: String,
     @ApiModelProperty("成功率")
-    val successRate: BigDecimal,
+    var successRate: BigDecimal,
     @ApiModelProperty("平均耗时，单位：毫秒")
-    val avgCostTime: Long,
+    var avgCostTime: Long,
     @ApiModelProperty("总执行次数")
-    val totalExecuteCount: Long,
+    var totalExecuteCount: Long,
     @ApiModelProperty("成功执行次数")
-    val successExecuteCount: Long,
+    var successExecuteCount: Long,
     @ApiModelProperty("失败执行次数")
-    val failExecuteCount: Long,
+    var failExecuteCount: Long,
     @ApiModelProperty("修改人")
-    val modifier: String,
+    var modifier: String,
     @ApiModelProperty("更新时间")
-    val updateTime: LocalDateTime
+    var updateTime: LocalDateTime
 )
