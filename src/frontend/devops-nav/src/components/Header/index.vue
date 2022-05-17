@@ -247,7 +247,7 @@
         }
 
         goToDocs (): void {
-            this.to(`${DOCS_URL_PREFIX}`)
+            this.to(`${DOCS_URL_PREFIX}/产品简介/README.md`)
         }
 
         goToPm (): void {

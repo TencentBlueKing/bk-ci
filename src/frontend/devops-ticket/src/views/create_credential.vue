@@ -38,7 +38,7 @@
                             <bk-popover placement="right">
                                 <i class="devops-icon icon-info-circle"></i>
                                 <div slot="content" style="white-space: normal;">
-                                    <div> {{ getTypeDesc(localConfig.credentialType) }}<a style="color:#3c96ff" target="_blank" :href="`${DOCS_URL_PREFIX}/services/ticket`">{{ $t('ticket.learnMore') }}。</a> </div>
+                                    <div> {{ getTypeDesc(localConfig.credentialType) }}<a style="color:#3c96ff" target="_blank" :href="ticketDocsUrl">{{ $t('ticket.learnMore') }}。</a> </div>
                                 </div>
                             </bk-popover>
                         </div>
@@ -145,7 +145,7 @@
         },
         data () {
             return {
-                DOCS_URL_PREFIX: DOCS_URL_PREFIX,
+                ticketDocsUrl: `${DOCS_URL_PREFIX}/Services/Ticket/ticket-add.md`,
                 showContent: false,
                 hasPermission: true,
                 newModel: {},

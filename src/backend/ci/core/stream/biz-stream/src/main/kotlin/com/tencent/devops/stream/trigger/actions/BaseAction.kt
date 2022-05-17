@@ -94,6 +94,11 @@ interface BaseAction {
     fun getYamlContent(fileName: String): String
 
     /**
+     * 获取本次触发变更的文件列表
+     */
+    fun getChangeSet(): Set<String>?
+
+    /**
      * 判断当前action是否可以触发，或者创建触发任务，类似定时/删除之类的
      * @param triggerOn 触发器
      */

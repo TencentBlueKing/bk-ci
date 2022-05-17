@@ -171,7 +171,7 @@
         @State related
         @Action fetchLinks
         isAllServiceListShow: boolean = false
-        DOCS_URL_PREFIX: string = DOCS_URL_PREFIX
+        DOCS_URL_PREFIX: string = `${DOCS_URL_PREFIX}/产品简介/README.md`
         isAbsoluteUrl = isAbsoluteUrl
         BK_CI_VERSION: string = window.BK_CI_VERSION
 

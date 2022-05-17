@@ -68,6 +68,10 @@ class StreamDeleteAction(
         )
     }
 
+    override fun getChangeSet(): Set<String>? {
+        return gitAction.getChangeSet()
+    }
+
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         val deleteObjectKinds = triggerOn.delete?.getTypesObjectKind()?.map { it.value }?.toSet()
             ?: return TriggerResult(
