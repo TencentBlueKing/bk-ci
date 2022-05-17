@@ -84,7 +84,7 @@ class TXStreamYamlService @Autowired constructor(
             }
         } catch (e: Throwable) {
             logger.error("Check yaml failed, error: ${e.message}, yaml: $yaml", e)
-            Result(1, "Invalid yaml", e.message)
+            Result(1, "Invalid yaml: ${e.message}", e.message)
         }
     }
 }
