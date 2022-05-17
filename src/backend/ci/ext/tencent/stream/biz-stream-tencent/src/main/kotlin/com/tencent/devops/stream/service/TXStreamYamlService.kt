@@ -60,12 +60,12 @@ class TXStreamYamlService @Autowired constructor(
     override fun checkYaml(userId: String, yaml: StreamGitYamlString): Result<String> {
         // 检查yml版本，根据yml版本选择不同的实现
         val ymlVersion = ScriptYmlUtils.parseVersion(yaml.yaml)
-        return when {
-            ymlVersion == null -> {
-                Result(1, "Invalid yaml")
-            }
-            ymlVersion.version != "v2.0" -> {
-                try {
+        return try {
+            when {
+                ymlVersion == null -> {
+                    Result(1, "Invalid yaml")
+                }
+                ymlVersion.version != "v2.0" -> {
                     val yamlStr = CiYamlUtils.formatYaml(yaml.yaml)
                     logger.debug("yaml str : $yamlStr")
 
@@ -75,17 +75,16 @@ class TXStreamYamlService @Autowired constructor(
                         Result(1, "Invalid yaml: $message", message)
                     }
                     v1streamYamlService.createCIBuildYaml(yaml.yaml)
-
                     Result("OK")
-                } catch (e: Throwable) {
-                    logger.error("Check yaml failed, error: ${e.message}, yaml: $yaml")
-                    Result(1, "Invalid yaml", e.message)
+                }
+                else -> {
+                    yamlSchemaCheck.check(yaml.yaml, null, true)
+                    Result("OK")
                 }
             }
-            else -> {
-                yamlSchemaCheck.check(yaml.yaml, null, true)
-                Result("OK")
-            }
+        } catch (e: Throwable) {
+            logger.error("Check yaml failed, error: ${e.message}, yaml: $yaml", e)
+            Result(1, "Invalid yaml: ${e.message}", e.message)
         }
     }
 }
