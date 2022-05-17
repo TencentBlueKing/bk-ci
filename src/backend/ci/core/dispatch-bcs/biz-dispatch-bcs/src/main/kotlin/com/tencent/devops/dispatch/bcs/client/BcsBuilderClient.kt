@@ -30,10 +30,12 @@ package com.tencent.devops.dispatch.bcs.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.bcs.common.ConstantsMessage
 import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsBuildImageReq
 import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsBuilder
 import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsBuilderStatus
 import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsBuilderStatusEnum
@@ -314,6 +316,56 @@ class BcsBuilderClient @Autowired constructor(
                 errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                 formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
                 errorMessage = "获取构建机详情接口超时, url: $url"
+            )
+        }
+    }
+
+    fun buildAndPushImage(
+        userId: String,
+        builderName: String,
+        bcsBuildImageReq: BcsBuildImageReq
+    ): String {
+        val url = bcsApiUrl + "/api/v1/devops/builder/" + builderName + "/images"
+        logger.info("Build and push image, request url: $url, staffName: $userId")
+
+        val request = clientCommon.baseRequest(userId, url)
+            .post(RequestBody.create(
+                MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(bcsBuildImageReq)))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body()!!.string()
+                logger.info("$userId build and push image response: $responseContent")
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
+                        "构建并推送接口异常（Fail to build image, http response code: ${response.code()}"
+                    )
+                }
+                val responseData: BcsResult<BcsTaskResp> = objectMapper.readValue(responseContent)
+
+                if (responseData.isOk()) {
+                    return responseData.data!!.taskId
+                } else {
+                    val msg = "${responseData.message ?: responseData.getCodeMessage()}"
+                    throw BuildFailureException(
+                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
+                        "${ConstantsMessage.TROUBLE_SHOOTING} 构建并镜像接口返回失败: $msg"
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("$userId builderName: $builderName build and push image failed.", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
+                errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
+                formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                errorMessage = "构建并推送接口超时, url: $url"
             )
         }
     }

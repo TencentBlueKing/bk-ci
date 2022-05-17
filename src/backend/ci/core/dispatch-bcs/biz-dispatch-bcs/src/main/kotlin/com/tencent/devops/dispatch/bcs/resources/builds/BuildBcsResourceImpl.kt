@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.bcs.resources.builds
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.bcs.actions.BuilderAction
 import com.tencent.devops.dispatch.bcs.actions.JobAction
 import com.tencent.devops.dispatch.bcs.actions.TaskAction
 import com.tencent.devops.dispatch.bcs.api.builds.BuildBcsResource
@@ -36,12 +37,14 @@ import com.tencent.devops.dispatch.bcs.pojo.DispatchBuildStatusResp
 import com.tencent.devops.dispatch.bcs.pojo.DispatchJobLogResp
 import com.tencent.devops.dispatch.bcs.pojo.DispatchJobReq
 import com.tencent.devops.dispatch.bcs.pojo.DispatchTaskResp
+import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsBuildImageReq
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildBcsResourceImpl @Autowired constructor(
     private val jobAction: JobAction,
-    private val taskAction: TaskAction
+    private val taskAction: TaskAction,
+    private val builderAction: BuilderAction
 ) : BuildBcsResource {
     override fun createJob(
         userId: String,
@@ -62,5 +65,15 @@ class BuildBcsResourceImpl @Autowired constructor(
 
     override fun getTaskStatus(userId: String, taskId: String): Result<DispatchBuildStatusResp> {
         return Result(taskAction.getTaskStatus(userId, taskId))
+    }
+
+    override fun buildAndPushImage(
+        userId: String,
+        projectId: String,
+        buildId: String,
+        builderName: String,
+        bcsBuildImageReq: BcsBuildImageReq
+    ): Result<DispatchTaskResp> {
+        return Result(builderAction.buildAndPushImage(userId, projectId, buildId, builderName, bcsBuildImageReq))
     }
 }
