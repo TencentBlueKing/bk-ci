@@ -1,0 +1,11 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: dispatch-base{service-suffix}
+    desc: DevOps Dispatch BASE Service
+    version: 4.0.0
+    packageName: com.tencent.devops.dispatch.base
+
+server:
+  port: 21948

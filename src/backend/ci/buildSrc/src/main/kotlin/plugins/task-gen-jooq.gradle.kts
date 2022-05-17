@@ -39,7 +39,14 @@ dependencies {
     api("org.jooq:jooq")
 }
 
-val moduleNames = when (val moduleName = name.split("-")[1]) {
+val moduleNameList = name.split("-")
+val moduleName = if (moduleNameList.size >= 3 && moduleNameList[1] == "dispatch" && moduleNameList[2] == "base") {
+    "dispatch_base"
+} else {
+    moduleNameList[1]
+}
+
+val moduleNames = when (moduleName) {
     "misc" -> {
         listOf("process", "project", "repository", "dispatch", "plugin", "quality", "artifactory", "environment")
     }
