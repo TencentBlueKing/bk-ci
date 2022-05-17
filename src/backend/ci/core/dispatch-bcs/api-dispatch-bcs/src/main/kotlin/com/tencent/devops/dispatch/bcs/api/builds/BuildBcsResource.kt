@@ -36,6 +36,7 @@ import com.tencent.devops.dispatch.bcs.pojo.DispatchBuildStatusResp
 import com.tencent.devops.dispatch.bcs.pojo.DispatchJobLogResp
 import com.tencent.devops.dispatch.bcs.pojo.DispatchJobReq
 import com.tencent.devops.dispatch.bcs.pojo.DispatchTaskResp
+import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsBuildImageReq
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -110,4 +111,24 @@ interface BuildBcsResource {
         @QueryParam("taskId")
         taskId: String
     ): Result<DispatchBuildStatusResp>
+
+    @ApiOperation("构建并推送镜像接口")
+    @POST
+    @Path("/{builderName}/images")
+    fun buildAndPushImage(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @ApiParam("构建id", required = true)
+        @HeaderParam(AUTH_HEADER_BUILD_ID)
+        buildId: String,
+        @ApiParam("容器名称", required = true)
+        @PathParam("builderName")
+        builderName: String,
+        @ApiParam("构建结构", required = true)
+        bcsBuildImageReq: BcsBuildImageReq
+    ): Result<DispatchTaskResp>
 }

@@ -29,6 +29,8 @@ package com.tencent.devops.dispatch.bcs.actions
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -52,14 +54,19 @@ import com.tencent.devops.dispatch.bcs.dao.BuildBuilderPoolNoDao
 import com.tencent.devops.dispatch.bcs.dao.DcPerformanceOptionsDao
 import com.tencent.devops.dispatch.bcs.pojo.Credential
 import com.tencent.devops.dispatch.bcs.pojo.DispatchBuilderStatus
+import com.tencent.devops.dispatch.bcs.pojo.DispatchJobReq
+import com.tencent.devops.dispatch.bcs.pojo.DispatchTaskResp
 import com.tencent.devops.dispatch.bcs.pojo.DockerRegistry
 import com.tencent.devops.dispatch.bcs.pojo.PipelineBuilderLock
 import com.tencent.devops.dispatch.bcs.pojo.Pool
+import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsBuildImageReq
 import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsBuilder
 import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsDeleteBuilderParams
+import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsJob
 import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsStartBuilderParams
 import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsStopBuilderParams
 import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsTaskStatusEnum
+import com.tencent.devops.dispatch.bcs.pojo.bcs.NfsConfig
 import com.tencent.devops.dispatch.bcs.pojo.bcs.hasException
 import com.tencent.devops.dispatch.bcs.pojo.bcs.readyToStart
 import com.tencent.devops.dispatch.bcs.utils.BcsJobRedisUtils
@@ -281,6 +288,21 @@ class BuilderAction @Autowired constructor(
                 bcsJobRedisUtils.deleteJobCount(buildId, builderName!!)
             }
         }
+    }
+
+    fun buildAndPushImage(
+        userId: String,
+        projectId: String,
+        buildId: String,
+        builderName: String,
+        bcsBuildImageReq: BcsBuildImageReq
+    ): DispatchTaskResp {
+        logger.info("projectId: $projectId, buildId: $buildId build and push image. " +
+                        JsonUtil.toJson(bcsBuildImageReq)
+        )
+
+        return DispatchTaskResp(bcsBuilderClient.buildAndPushImage(
+            userId, builderName, bcsBuildImageReq))
     }
 
     private fun DispatchMessage.createNewBuilder(

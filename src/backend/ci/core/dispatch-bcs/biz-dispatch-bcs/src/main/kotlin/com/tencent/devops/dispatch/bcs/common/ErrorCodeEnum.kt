@@ -49,7 +49,6 @@ enum class ErrorCodeEnum(
     CREATE_IMAGE_VERSION_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2123013, "第三方服务-BCS 异常，异常信息 - 创建镜像新版本接口返回失败"),
     TASK_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2123014, "第三方服务-BCS 异常，异常信息 - 获取TASK状态接口异常"),
     WEBSOCKET_URL_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2123015, "第三方服务-BCS 异常，异常信息 - 获取websocket接口异常"),
-    WEBSOCKET_URL_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2123016, "第三方服务-BCS 异常，异常信息 - 获取websocket接口返回失败"),
     RETRY_STATUS_FAIL(ErrorType.USER, 2123017, "重试频率过快，请稍后重试"),
     BCS_INTERFACE_TIMEOUT(ErrorType.THIRD_PARTY, 2123018, "第三方服务-BCS 异常，异常信息 - 接口请求超时"),
     CREATE_VM_USER_ERROR(ErrorType.USER, 2123003, "第三方服务-BCS 异常，异常信息 - 用户操作异常"),
