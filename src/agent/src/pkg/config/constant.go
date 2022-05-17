@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,7 +28,7 @@
 package config
 
 import (
-    "github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 const ActionUpgrade = "upgrade"
@@ -36,156 +37,132 @@ const ActionUninstall = "uninstall"
 const CertFilePath = ".cert"
 
 const (
-    ScriptFileInstallWindows   = "install.bat"
-    ScriptFileInstallLinux     = "install.sh"
-    ScriptFileUninstallWindows = "uninstall.bat"
-    ScriptFileUnistallLinux    = "uninstall.sh"
-    ScriptFileStartWindows     = "start.bat"
-    ScriptFileStartLinux       = "start.sh"
-    ScriptFileStopWindows      = "stop.bat"
-    ScriptFileStopLinux        = "stop.sh"
+	ScriptFileInstallWindows   = "install.bat"
+	ScriptFileInstallLinux     = "install.sh"
+	ScriptFileUninstallWindows = "uninstall.bat"
+	ScriptFileUninstallLinux   = "uninstall.sh"
+	ScriptFileStopWindows      = "stop.bat"
+	ScriptFileStopLinux        = "stop.sh"
 )
 
 const (
-    AgentFileClientWindows = "devopsAgent.exe"
-    AgentFileClientLinux   = "devopsAgent"
-    AgentFileServerWindows = "devopsAgent.exe"
-    AgentFileServerLinux   = "devopsAgent_linux"
-    AgentFileServerMacos   = "devopsAgent_macos"
+	AgentFileClientWindows = "devopsAgent.exe"
+	AgentFileClientLinux   = "devopsAgent"
+	AgentFileServerWindows = "devopsAgent.exe"
+	AgentFileServerLinux   = "devopsAgent_linux"
+	AgentFileServerMacos   = "devopsAgent_macos"
 
-    DaemonFileServerWindows = "devopsDaemon.exe"
-    DaemonFileServerLinux   = "devopsDaemon_linux"
+	DaemonFileServerWindows = "devopsDaemon.exe"
+	DaemonFileServerLinux   = "devopsDaemon_linux"
 	DaemonFileServerMacos   = "devopsDaemon_macos"
 
-    DaemonFileClientWindows = "devopsDaemon.exe"
-    DaemonFileClientLinux   = "devopsDaemon"
+	DaemonFileClientWindows = "devopsDaemon.exe"
+	DaemonFileClientLinux   = "devopsDaemon"
 
-    UpgraderFileClientWindows = "upgrader.exe"
-    UpgraderFileClientLinux   = "upgrader"
-    UpgraderFileServerWindows = "upgrader.exe"
-    UpgraderFileServerLinux   = "upgrader_linux"
-    UpgraderFileServerMacOs   = "upgrader_macos"
+	UpgraderFileClientWindows = "upgrader.exe"
+	UpgraderFileClientLinux   = "upgrader"
+	UpgraderFileServerWindows = "upgrader.exe"
+	UpgraderFileServerLinux   = "upgrader_linux"
+	UpgraderFileServerMacOs   = "upgrader_macos"
 
-    WorkAgentFile = "worker-agent.jar"
+	WorkAgentFile = "worker-agent.jar"
 )
 
 // Auth Header
-const AuthHeaderSodaProjectId = "X-SODA-PID" //项目ID
 
 const AuthHeaderBuildType = "X-DEVOPS-BUILD-TYPE"       // 构建类型
 const AuthHeaderProjectId = "X-DEVOPS-PROJECT-ID"       // 项目ID
 const AuthHeaderAgentId = "X-DEVOPS-AGENT-ID"           // Agent ID
 const AuthHeaderSecretKey = "X-DEVOPS-AGENT-SECRET-KEY" // Agent密钥
-const AuthHeaderPipelineId = "X-DEVOPS-PIPELINE-ID"     //流水线ID
-const AuthHeaderBuildId = "X-DEVOPS-BUILD-ID"           //构建ID
-const AuthHeaderVmSeqId = "X-DEVOPS-VM-SID"             //VM Seq Id
-const AuthHeaderUserId = "X-DEVOPS-UID"                 //用户ID
 
-// 环境变量
-const EnvWorkspace = "WORKSPACE"
-
-// 环境类型
-const EnvTypeProd = "PROD"
-const EnvTypeTest = "TEST"
-const EnvTypeDev = "DEV"
-
-// BuildType
-const BuildTypeWorkder = "WORKER"
 const BuildTypeAgent = "AGENT"
-const BuildTypePluginAgent = "PLUGIN_AGENT"
-const BuildTypeDocker = "DOCKER"
-const BuildTypeDockerHost = "DOCKER_HOST"
-const BuildTypeTstack = "TSTACK_AGENT"
 
-// AgentStatus
-const AgentStatusUnimport = "UN_IMPORT"
-const AgentStatusUnimportOk = "UN_IMPORT_OK"
-const AgentStatusImportOk = "IMPORT_OK"
-const AgentStatusImportException = "IMPORT_EXCEPTION"
-const AgentStatusDelete = "DELETE"
+const AgentStatusImportOk = "IMPORT_OK" // 用户已经在界面导入并且agent工作正常（构建机只有在这个状态才能正常工作）
+const AgentStatusDelete = "DELETE"      // Agent被卸载
 
+// GetServerAgentFile 根据平台生成对应要下载的devopsAgent文件名
 func GetServerAgentFile() string {
-    if systemutil.IsWindows() {
-        return AgentFileServerWindows
-    } else if systemutil.IsMacos() {
-        return AgentFileServerMacos
-    } else {
-        return AgentFileServerLinux
-    }
+	if systemutil.IsWindows() {
+		return AgentFileServerWindows
+	} else if systemutil.IsMacos() {
+		return AgentFileServerMacos
+	} else {
+		return AgentFileServerLinux
+	}
 }
 
+// GetServerUpgraderFile 根据平台生成对应upgrader文件名
 func GetServerUpgraderFile() string {
-    if systemutil.IsWindows() {
-        return UpgraderFileServerWindows
-    } else if systemutil.IsMacos() {
-        return UpgraderFileServerMacOs
-    } else {
-        return UpgraderFileServerLinux
-    }
+	if systemutil.IsWindows() {
+		return UpgraderFileServerWindows
+	} else if systemutil.IsMacos() {
+		return UpgraderFileServerMacOs
+	} else {
+		return UpgraderFileServerLinux
+	}
 }
 
+// GetClienAgentFile 根据平台生成对应要保存的devopsAgent文件名
 func GetClienAgentFile() string {
-    if systemutil.IsWindows() {
-        return AgentFileClientWindows
-    } else {
-        return AgentFileClientLinux
-    }
+	if systemutil.IsWindows() {
+		return AgentFileClientWindows
+	} else {
+		return AgentFileClientLinux
+	}
 }
 
+// GetClientUpgraderFile 根据平台生成对应要保存的upgrader文件名
 func GetClientUpgraderFile() string {
-    if systemutil.IsWindows() {
-        return UpgraderFileClientWindows
-    } else {
-        return UpgraderFileClientLinux
-    }
+	if systemutil.IsWindows() {
+		return UpgraderFileClientWindows
+	} else {
+		return UpgraderFileClientLinux
+	}
 }
 
+// GetServerDaemonFile 根据平台生成对应要下载的devopsDaemon文件名
 func GetServerDaemonFile() string {
-    if systemutil.IsWindows() {
-        return DaemonFileServerWindows
-    } else if systemutil.IsMacos() {
-        return DaemonFileServerMacos
-    } else {
-        return DaemonFileServerLinux
-    }
+	if systemutil.IsWindows() {
+		return DaemonFileServerWindows
+	} else if systemutil.IsMacos() {
+		return DaemonFileServerMacos
+	} else {
+		return DaemonFileServerLinux
+	}
 }
 
+// GetClientDaemonFile 根据平台生成对应要保存的devopsDaemon文件名
 func GetClientDaemonFile() string {
-    if systemutil.IsWindows() {
-        return DaemonFileClientWindows
-    } else {
-        return DaemonFileClientLinux
-    }
+	if systemutil.IsWindows() {
+		return DaemonFileClientWindows
+	} else {
+		return DaemonFileClientLinux
+	}
 }
 
+// GetInstallScript 根据平台生成对应install脚本
 func GetInstallScript() string {
-    if systemutil.IsWindows() {
-        return ScriptFileInstallWindows
-    } else {
-        return ScriptFileInstallLinux
-    }
+	if systemutil.IsWindows() {
+		return ScriptFileInstallWindows
+	} else {
+		return ScriptFileInstallLinux
+	}
 }
 
+// GetUninstallScript 根据平台生成对应uninstall脚本
 func GetUninstallScript() string {
-    if systemutil.IsWindows() {
-        return ScriptFileUninstallWindows
-    } else {
-        return ScriptFileUnistallLinux
-    }
+	if systemutil.IsWindows() {
+		return ScriptFileUninstallWindows
+	} else {
+		return ScriptFileUninstallLinux
+	}
 }
 
-func GetStartScript() string {
-    if systemutil.IsWindows() {
-        return ScriptFileStartWindows
-    } else {
-        return ScriptFileStartLinux
-    }
-}
-
+// GetStopScript 根据平台生成对应stop脚本
 func GetStopScript() string {
-    if systemutil.IsWindows() {
-        return ScriptFileStopWindows
-    } else {
-        return ScriptFileStopLinux
-    }
+	if systemutil.IsWindows() {
+		return ScriptFileStopWindows
+	} else {
+		return ScriptFileStopLinux
+	}
 }
