@@ -38,6 +38,10 @@ enum class ImageAgentTypeEnum(val type: Int) {
     companion object {
 
         fun getImageAgentType(name: String): ImageAgentTypeEnum? {
+            if (name.equals(KUBERNETES.name, ignoreCase = true)) {
+                return DOCKER
+            }
+
             values().forEach { enumObj ->
                 if (enumObj.name.equals(name, ignoreCase = true)) {
                     return enumObj
