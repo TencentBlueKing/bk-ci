@@ -151,6 +151,7 @@
     import {
         eventBus,
         hashID,
+        randomString,
         isTriggerContainer,
         convertMStoString
     } from './util'
@@ -381,7 +382,7 @@
                     elementIndex: this.atomIndex,
                     element: JSON.parse(JSON.stringify({
                         ...restAttr,
-                        stepId: hashID(3),
+                        stepId: randomString(3),
                         id: `e-${hashID()}`
                     }))
                 })

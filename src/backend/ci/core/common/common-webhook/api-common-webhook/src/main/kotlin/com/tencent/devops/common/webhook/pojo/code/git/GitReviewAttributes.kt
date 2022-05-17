@@ -25,19 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.util
+package com.tencent.devops.common.webhook.pojo.code.git
 
-import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 
-object ServiceHomeUrlUtils {
-
-    fun server(): String {
-        val profile = SpringContextUtil.getBean(Profile::class.java)
-        return when {
-            profile.isDev() -> "http://dev.devops.oa.com"
-            profile.isTest() -> "http://test.devops.oa.com"
-            else -> "http://devops.oa.com"
-        }
-    }
-}
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitReviewAttributes(
+    val id: Long,
+    @JsonProperty("source_commit")
+    val sourceCommit: String,
+    @JsonProperty("source_branch")
+    val sourceBranch: String,
+    @JsonProperty("source_project_id")
+    val sourceProjectId: String,
+    @JsonProperty("target_commit")
+    val targetCommit: String,
+    @JsonProperty("target_branch")
+    val targetBranch: String,
+    @JsonProperty("target_project_id")
+    val targetProjectId: String,
+    @JsonProperty("author_id")
+    val authorId: String,
+    @JsonProperty("assignee_id")
+    val assigneeId: String?,
+    val title: String,
+    @JsonProperty("commit_check_state")
+    val commitCheckState: String,
+    @JsonProperty("updated_by_id")
+    val updatedById: String?,
+    @JsonProperty("created_at")
+    val createdAt: String,
+    @JsonProperty("updated_at")
+    val updatedAt: String,
+    val state: String,
+    val iid: Long,
+    val description: String,
+    val source: GitProject,
+    val target: GitProject,
+    @JsonProperty("last_commit")
+    val lastCommit: GitCommit
+)

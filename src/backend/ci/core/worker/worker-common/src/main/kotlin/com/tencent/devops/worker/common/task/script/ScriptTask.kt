@@ -84,11 +84,10 @@ open class ScriptTask : ITask() {
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
         val buildId = buildVariables.buildId
-        val runtimeVariables = buildVariables.variables
-            .plus(buildTask.buildVariable ?: mapOf())
-            .plus(buildVariables.variablesWithType.associate {
-                it.key to it.value.toString().parseCredentialValue(buildTask.buildVariable)
-            })
+        val runtimeVariables = buildVariables.variables.map {
+            it.key to it.value.parseCredentialValue(buildTask.buildVariable)
+        }.toMap()
+            .plus(buildTask.buildVariable ?: emptyMap())
         val projectId = buildVariables.projectId
 
         ScriptEnvUtils.cleanEnv(buildId, workspace)

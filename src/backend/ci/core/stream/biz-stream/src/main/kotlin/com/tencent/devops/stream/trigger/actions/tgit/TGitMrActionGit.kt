@@ -201,26 +201,6 @@ class TGitMrActionGit(
             ref = TGitActionCommon.getTriggerBranch(event.object_attributes.target_branch)
         ).toSet()
 
-        // 获取mr请求的变更文件列表，用来给后面判断
-        val changeSet = mutableSetOf<String>()
-        apiService.getMrChangeInfo(
-            cred = getGitCred(),
-            gitProjectId = data.getGitProjectId(),
-            mrId = event.object_attributes.id.toString(),
-            retry = ApiRequestRetryInfo(true)
-        )?.files?.forEach {
-            if (it.deletedFile) {
-                changeSet.add(it.oldPath)
-            } else if (it.renameFile) {
-                changeSet.add(it.oldPath)
-                changeSet.add(it.newPath)
-            } else {
-                changeSet.add(it.newPath)
-            }
-        }
-
-        data.context.changeSet = changeSet.toList()
-
         // 已经merged的直接返回目标分支的文件列表即可
         if (event.isMrMergeEvent()) {
             return targetBranchYamlPathList.map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
@@ -238,7 +218,7 @@ class TGitMrActionGit(
             }
         ).toSet()
 
-        return checkMrYamlPathList(sourceBranchYamlPathList, targetBranchYamlPathList, changeSet)
+        return checkMrYamlPathList(sourceBranchYamlPathList, targetBranchYamlPathList, getChangeSet()!!)
             .map { YamlPathListEntry(it.key, it.value) }
     }
 
@@ -272,7 +252,7 @@ class TGitMrActionGit(
             retry = ApiRequestRetryInfo(true)
         )
 
-        if (!data.context.changeSet!!.contains(fileName)) {
+        if (!getChangeSet()!!.contains(fileName)) {
             return if (targetFile?.content.isNullOrBlank()) {
                 ""
             } else {
@@ -330,6 +310,35 @@ class TGitMrActionGit(
                 state = StreamCommitCheckState.FAILURE
             )
         )
+    }
+
+    override fun getChangeSet(): Set<String>? {
+        // 使用null和empty的区别来判断是否调用过获取函数
+        if (this.data.context.changeSet != null) {
+            return this.data.context.changeSet
+        }
+
+        // 获取mr请求的变更文件列表，用来给后面判断
+        val changeSet = mutableSetOf<String>()
+        apiService.getMrChangeInfo(
+            cred = getGitCred(),
+            gitProjectId = data.getGitProjectId(),
+            mrId = event().object_attributes.id.toString(),
+            retry = ApiRequestRetryInfo(true)
+        )?.files?.forEach {
+            if (it.deletedFile) {
+                changeSet.add(it.oldPath)
+            } else if (it.renameFile) {
+                changeSet.add(it.oldPath)
+                changeSet.add(it.newPath)
+            } else {
+                changeSet.add(it.newPath)
+            }
+        }
+
+        this.data.context.changeSet = changeSet
+
+        return this.data.context.changeSet
     }
 
     private fun getFileInfo(
@@ -407,7 +416,7 @@ class TGitMrActionGit(
             triggerOn = triggerOn,
             sourceBranch = TGitActionCommon.getTriggerBranch(event.object_attributes.source_branch),
             targetBranch = TGitActionCommon.getTriggerBranch(event.object_attributes.target_branch),
-            changeSet = data.context.changeSet?.toSet(),
+            changeSet = getChangeSet(),
             userId = data.getUserId(),
             mrAction = mrAction
         )

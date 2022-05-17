@@ -25,20 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.statistics.util.process
+package com.tencent.devops.auth.service.impl
 
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_NAME
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
-import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
-import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
+import com.tencent.devops.auth.service.LocalManagerService
+import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-object NotifyTemplateUtils {
-
-    const val COMMON_SHUTDOWN_SUCCESS_CONTENT =
-        "【\${$PROJECT_NAME_CHINESE}】- 【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} 执行成功，" +
-            "耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。"
-    const val COMMON_SHUTDOWN_FAILURE_CONTENT =
-        "【\${$PROJECT_NAME_CHINESE}】- 【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} 执行失败，" +
-            "耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。 "
+@Service
+class TxManagerServiceImpl @Autowired constructor(
+    val managerService: ManagerService
+) : LocalManagerService {
+    override fun projectManagerCheck(
+        userId: String,
+        projectCode: String,
+        action: String,
+        resourceType: String
+    ): Boolean {
+        return managerService.isManagerPermission(
+            userId = userId,
+            projectId = projectCode,
+            resourceType = AuthResourceType.get(resourceType),
+            authPermission = AuthPermission.get(action)
+        )
+    }
 }
