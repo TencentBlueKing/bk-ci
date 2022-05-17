@@ -14,6 +14,9 @@ tasks.register<JavaExec>("detektCheck") {
 }
 
 dependencies {
+    // detekt classpath中引用, 不会被打包到jar包中
+    detekt("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.6.21")
+    detekt("io.gitlab.arturbosch.detekt:detekt-formatting:1.20.0")
     detekt("io.gitlab.arturbosch.detekt:detekt-cli:1.20.0")
 }
 

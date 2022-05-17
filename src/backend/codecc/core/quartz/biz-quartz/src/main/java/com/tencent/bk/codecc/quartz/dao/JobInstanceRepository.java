@@ -34,7 +34,7 @@ public interface JobInstanceRepository extends MongoRepository<JobInstanceEntity
      * @param jobName
      * @return
      */
-    JobInstanceEntity findByJobName(String jobName);
+    JobInstanceEntity findFirstByJobName(String jobName);
 
     /**
      * 通过job名字范围进行查询

@@ -59,11 +59,11 @@ class CommonMessageQueueConfig {
         container.setMaxConcurrentConsumers(5)
         container.setStartConsumerMinInterval(1)
         container.setConsecutiveActiveTrigger(1)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         //确保只有一个消费者消费，保证负载不超时
         val adapter = MessageListenerAdapter(expiredTaskHandleComponent, expiredTaskHandleComponent::updateExpiredTaskStatus.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 

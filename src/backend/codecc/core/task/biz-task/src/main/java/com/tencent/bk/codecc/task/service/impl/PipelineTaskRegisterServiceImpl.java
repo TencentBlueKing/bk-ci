@@ -37,7 +37,6 @@ import com.tencent.bk.codecc.task.constant.TaskConstants;
 import com.tencent.bk.codecc.task.dao.mongorepository.BaseDataRepository;
 import com.tencent.bk.codecc.task.model.BaseDataEntity;
 import com.tencent.bk.codecc.task.model.CustomProjEntity;
-import com.tencent.bk.codecc.task.model.OpenSourceCheckerSet;
 import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.service.AbstractTaskRegisterService;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
@@ -68,7 +67,7 @@ import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -101,18 +100,18 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
         TaskInfoEntity taskInfoEntity;
         if (taskDetailVO.getTaskId() > 0L)
         {
-            taskInfoEntity = taskRepository.findByTaskId(taskDetailVO.getTaskId());
+            taskInfoEntity = taskRepository.findFirstByTaskId(taskDetailVO.getTaskId());
         }
         else if (StringUtils.isNotEmpty(taskDetailVO.getPipelineId()))
         {
-            taskInfoEntity = taskRepository.findByPipelineId(taskDetailVO.getPipelineId());
+            taskInfoEntity = taskRepository.findFirstByPipelineId(taskDetailVO.getPipelineId());
         }
         else
         {
             // 工蜂创建任务时，是没有传pipelineId的，而且工蜂的任务的流名称是根据projectId和pipelineName生成的
             String nameEn = getTaskStreamName(taskDetailVO.getProjectId(), taskDetailVO.getNameCn(), taskDetailVO.getCreateFrom());
             taskDetailVO.setNameEn(nameEn);
-            taskInfoEntity = taskRepository.findByNameEn(nameEn);
+            taskInfoEntity = taskRepository.findFirstByNameEn(nameEn);
         }
 
         //已注册且是工蜂来源
@@ -199,7 +198,7 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
     public Boolean updateTask(TaskDetailVO taskDetailVO, String userName)
     {
         long taskId = taskDetailVO.getTaskId();
-        TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByTaskId(taskId);
         if (StringUtils.isEmpty(taskInfoEntity.getProjectId()) ||
                 !ComConstants.BsTaskCreateFrom.BS_PIPELINE.value().equalsIgnoreCase(taskInfoEntity.getCreateFrom()))
         {
