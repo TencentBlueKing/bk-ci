@@ -30,11 +30,14 @@ package com.tencent.devops.scm.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
+import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
+import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
+import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
+import com.tencent.devops.repository.pojo.git.GitCreateFile
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -44,6 +47,9 @@ import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.enums.GitProjectsOrderBy
+import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
@@ -52,8 +58,10 @@ import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
@@ -119,7 +127,22 @@ interface ServiceGitResource {
         page: Int?,
         @ApiParam("每页数据条数", required = true)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("搜索条件，模糊匹配path,name")
+        @QueryParam("search")
+        search: String? = null,
+        @ApiParam("排序字段")
+        @QueryParam("orderBy")
+        orderBy: GitProjectsOrderBy? = null,
+        @ApiParam("排序方式")
+        @QueryParam("sort")
+        sort: GitSortAscOrDesc? = null,
+        @ApiParam("若为true，返回的是当前用户个人namespace下的project，以及owner为当前用户的group下的所有project")
+        @QueryParam("owned")
+        owned: Boolean? = null,
+        @ApiParam("指定最小访问级别，返回的project列表中，当前用户的project访问级别大于或者等于指定值")
+        @QueryParam("minAccessLevel")
+        minAccessLevel: GitAccessLevelEnum? = null
     ): Result<List<Project>>
 
     @ApiOperation("获取用户所有git分支")
@@ -140,7 +163,10 @@ interface ServiceGitResource {
         page: Int?,
         @ApiParam("每页数据条数", required = true)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("搜索条件", required = true)
+        @QueryParam("search")
+        search: String?
     ): Result<List<GitBranch>>
 
     @ApiOperation("获取用户所有git TAG")
@@ -196,7 +222,7 @@ interface ServiceGitResource {
         code: String
     ): Result<GitToken>
 
-    @ApiOperation("获取用户的token")
+    @ApiOperation("获取用户的基本信息")
     @GET
     @Path("/getUserInfoByToken")
     fun getUserInfoByToken(
@@ -210,16 +236,25 @@ interface ServiceGitResource {
 
     @ApiOperation("获取项目的token")
     @GET
-    @Path("/gitci/getToken")
+    @Path("/stream/getToken")
     fun getToken(
         @ApiParam("gitProjectId", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: Long
     ): Result<GitToken>
 
+//    @ApiOperation("销毁项目的token")
+//    @DELETE
+//    @Path("/stream/clearToken")
+//    fun clearToken(
+//        @ApiParam("token", required = true)
+//        @QueryParam("token")
+//        token: String
+//    ): Result<Boolean>
+
     @ApiOperation("获取git文件内容")
     @GET
-    @Path("/gitci/getGitCIFileContent")
+    @Path("/stream/getGitCIFileContent")
     fun getGitCIFileContent(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
@@ -237,7 +272,7 @@ interface ServiceGitResource {
 
     @ApiOperation("获取git文件目录列表")
     @GET
-    @Path("/gitci/getGitCIFileTree")
+    @Path("/stream/getGitCIFileTree")
     fun getGitCIFileTree(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
@@ -253,12 +288,15 @@ interface ServiceGitResource {
         ref: String?,
         @ApiParam(value = "是否支持递归目录结构")
         @QueryParam("recursive")
-        recursive: Boolean? = false
+        recursive: Boolean? = false,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH
     ): Result<List<GitFileInfo>>
 
     @ApiOperation("获取mr请求的代码变更")
     @GET
-    @Path("/gitci/getGitCIMrChanges")
+    @Path("/stream/getGitCIMrChanges")
     fun getGitCIMrChanges(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
@@ -273,7 +311,7 @@ interface ServiceGitResource {
 
     @ApiOperation("获取mr请求的信息")
     @GET
-    @Path("/gitci/getGitCIMrInfo")
+    @Path("/stream/getGitCIMrInfo")
     fun getGitCIMrInfo(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
@@ -288,7 +326,7 @@ interface ServiceGitResource {
 
     @ApiOperation("获取当前文件的commit记录(用于差异比较)")
     @GET
-    @Path("/gitci/getFileCommits")
+    @Path("/stream/getFileCommits")
     fun getFileCommits(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
@@ -306,7 +344,7 @@ interface ServiceGitResource {
 
     @ApiOperation("获取仓库的所有提交记录")
     @GET
-    @Path("/gitci/commits")
+    @Path("/stream/commits")
     fun getCommits(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
@@ -331,12 +369,15 @@ interface ServiceGitResource {
         page: Int,
         @ApiParam(value = "每页数量,最大100", defaultValue = "20")
         @QueryParam("perPage")
-        perPage: Int
+        perPage: Int,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH
     ): Result<List<Commit>>
 
     @ApiOperation("工蜂创建文件")
     @POST
-    @Path("/gitci/create/file")
+    @Path("/stream/create/file")
     fun gitCICreateFile(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
@@ -345,12 +386,12 @@ interface ServiceGitResource {
         @QueryParam("token")
         token: String,
         @ApiParam(value = "创建文件内容")
-        gitCICreateFile: GitCICreateFile
+        gitCreateFile: GitCICreateFile
     ): Result<Boolean>
 
     @ApiOperation("获取当前commit记录所属")
     @GET
-    @Path("/gitci/commitRefs")
+    @Path("/stream/commitRefs")
     fun getCommitRefs(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
@@ -661,6 +702,24 @@ interface ServiceGitResource {
         token: String
     ): Result<List<GitMember>>
 
+    @ApiOperation("获取项目某成员信息")
+    @GET
+    @Path("/getRepoMemberInfo")
+    fun getRepoMemberInfo(
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam("userId", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<GitMember>
+
     @ApiOperation("获取所有项目成员信息")
     @GET
     @Path("/getRepoMembers/all")
@@ -799,4 +858,182 @@ interface ServiceGitResource {
         @QueryParam("gitProjectId")
         gitProjectId: String
     ): Result<GitProjectInfo?>
+
+    @ApiOperation("获取用户所有项目组列表，分页获取")
+    @GET
+    @Path("/getProjectGroupsList")
+    fun getProjectGroupsList(
+        @ApiParam("oauth accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @ApiParam("第几页", required = true)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数据条数,最大值100", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam("若为true则只返回owner为当前用户的group")
+        @QueryParam("owned")
+        owned: Boolean?,
+        @ApiParam("指定最小访问级别，返回的group列表中，当前用户的group访问级别大于或者等于指定值")
+        @QueryParam("minAccessLevel")
+        minAccessLevel: GitAccessLevelEnum?,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<List<GitCodeGroup>>
+
+    @ApiOperation("获取GitCode项目成员信息")
+    @GET
+    @Path("/getMembers")
+    fun getMembers(
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "项目ID或者全路径", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam(value = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20,
+        @ApiParam(value = "搜索用户关键字", required = false)
+        @QueryParam("search")
+        search: String?,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<List<GitMember>>
+
+    @ApiOperation("校验用户git项目权限")
+    @GET
+    @Path("/getUserId")
+    fun getGitUserId(
+        @ApiParam("userId", required = true)
+        @QueryParam("userId")
+        rtxUserId: String,
+        @ApiParam("gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<String?>
+
+    @ApiOperation("获取项目下具有权限的成员信息")
+    @GET
+    @Path("/projects/members/all")
+    fun getProjectMembersAll(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam(value = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20,
+        @ApiParam(value = "搜索用户关键字", required = true)
+        @QueryParam("search")
+        search: String?,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<List<GitMember>>
+
+    @ApiOperation("文件内容和一些文件信息")
+    @GET
+    @Path("/getGitFileInfo")
+    fun getGitFileInfo(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String?,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "提交id 或者 分支")
+        @QueryParam("ref")
+        ref: String?,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<GitCodeFileInfo>
+
+    @ApiOperation("添加mr评论")
+    @POST
+    @Path("/addMrComment")
+    fun addMrComment(
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "mrId")
+        @QueryParam("mrId")
+        mrId: Long,
+        @ApiParam(value = "mr评论请求体")
+        mrBody: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    )
+
+    @ApiOperation("获取用户所有git项目，分页方式获取")
+    @GET
+    @Path("/getGitCodeProjectList")
+    fun getGitCodeProjectList(
+        @ApiParam("accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @ApiParam("第几页", required = true)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数据条数", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam("搜索条件，模糊匹配path,name")
+        @QueryParam("search")
+        search: String?,
+        @ApiParam("排序字段")
+        @QueryParam("orderBy")
+        orderBy: GitCodeProjectsOrder?,
+        @ApiParam("排序方式")
+        @QueryParam("sort")
+        sort: GitCodeBranchesSort?,
+        @ApiParam("若为true，返回的是当前用户个人namespace下的project，以及owner为当前用户的group下的所有project")
+        @QueryParam("owned")
+        owned: Boolean?,
+        @ApiParam("指定最小访问级别，返回的project列表中，当前用户的project访问级别大于或者等于指定值")
+        @QueryParam("minAccessLevel")
+        minAccessLevel: GitAccessLevelEnum?
+    ): Result<List<GitCodeProjectInfo>>
+
+    @ApiOperation("工蜂创建文件")
+    @POST
+    @Path("/gitcode/create/file")
+    fun gitCreateFile(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "创建文件内容")
+        gitCreateFile: GitCreateFile,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
 }

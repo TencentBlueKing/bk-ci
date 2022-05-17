@@ -55,5 +55,5 @@ interface EngineBuildSDKApi : WorkerRestApiSDK {
 
     fun getJobContext(): Map<String, String>
 
-    fun getBuildDetailUrl(): String
+    fun getBuildDetailUrl(): Result<String>
 }

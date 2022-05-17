@@ -4,22 +4,22 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
-import com.tencent.devops.stream.permission.GitCIV2PermissionService
-import com.tencent.devops.stream.pojo.StreamTriggerBuildReq
+import com.tencent.devops.stream.permission.StreamPermissionService
+import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
-import com.tencent.devops.stream.trigger.ManualTriggerService
-import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.StreamGitTokenService
-import com.tencent.devops.stream.v2.service.StreamScmService
+import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
+import com.tencent.devops.stream.service.StreamGitTokenService
+import com.tencent.devops.stream.service.StreamScmService
+import com.tencent.devops.stream.trigger.OpenApiTriggerService
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceStreamTriggerResourceImpl @Autowired constructor(
-    private val manualTriggerService: ManualTriggerService,
-    private val permissionService: GitCIV2PermissionService,
+    private val openApiTriggerService: OpenApiTriggerService,
+    private val permissionService: StreamPermissionService,
     private val streamScmService: StreamScmService,
     private val streamGitTokenService: StreamGitTokenService
-
 ) : ServiceStreamTriggerResource {
 
     override fun triggerStartup(
@@ -30,15 +30,10 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
     ): Result<TriggerBuildResult> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
+        permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId)
         val new = with(streamTriggerBuildReq) {
-            com.tencent.devops.stream.pojo.TriggerBuildReq(
-                gitProjectId = gitProjectId,
-                name = null,
-                url = null,
-                homepage = null,
-                gitHttpUrl = null,
-                gitSshUrl = null,
+            TriggerBuildReq(
+                projectId = projectId,
                 branch = branch ?: "",
                 customCommitMsg = customCommitMsg,
                 yaml = yaml ?: getYamlContentWithPath(
@@ -49,12 +44,10 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
                 description = description,
                 commitId = commitId,
                 payload = payload,
-                scmType = scmType,
-                eventType = eventType,
-                objectKind = objectKind
+                eventType = eventType
             )
         }
-        return Result(manualTriggerService.triggerBuild(userId, pipelineId, new))
+        return Result(openApiTriggerService.triggerBuild(userId, pipelineId, new))
     }
 
     private fun checkParam(userId: String) {

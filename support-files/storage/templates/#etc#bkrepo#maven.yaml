@@ -1,0 +1,2 @@
+server:
+  port: __BK_REPO_MAVEN_PORT__

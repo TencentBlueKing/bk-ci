@@ -30,11 +30,14 @@ package com.tencent.devops.repository.service.scm
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
+import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
+import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
+import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
+import com.tencent.devops.repository.pojo.git.GitCreateFile
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -45,8 +48,15 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.enums.GitProjectsOrderBy
+import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.pojo.ChangeFileInfo
+import com.tencent.devops.scm.pojo.Commit
+import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
@@ -64,16 +74,63 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         return client.getScm(ServiceGitResource::class).getProject(accessToken, userId).data ?: emptyList()
     }
 
-    override fun getProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?): List<Project> {
-        return client.getScm(ServiceGitResource::class).getProjectList(accessToken = accessToken, userId = userId, page = page, pageSize = pageSize).data ?: emptyList()
+    override fun getProjectList(
+        accessToken: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?,
+        orderBy: GitProjectsOrderBy?,
+        sort: GitSortAscOrDesc?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): List<Project> {
+        return client.getScm(ServiceGitResource::class).getProjectList(
+            accessToken = accessToken,
+            userId = userId,
+            page = page,
+            pageSize = pageSize,
+            search = search,
+            orderBy = orderBy,
+            sort = sort,
+            owned = owned,
+            minAccessLevel = minAccessLevel
+        ).data
+            ?: emptyList()
     }
 
-    override fun getBranch(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): List<GitBranch> {
-        return client.getScm(ServiceGitResource::class).getBranch(accessToken = accessToken, userId = userId, repository = repository, page = page, pageSize = pageSize).data ?: emptyList()
+    override fun getBranch(
+        accessToken: String,
+        userId: String,
+        repository: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?
+    ): List<GitBranch> {
+        return client.getScm(ServiceGitResource::class).getBranch(
+            accessToken = accessToken,
+            userId = userId,
+            repository = repository,
+            page = page,
+            pageSize = pageSize,
+            search = search
+        ).data ?: emptyList()
     }
 
-    override fun getTag(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): List<GitTag> {
-        return client.getScm(ServiceGitResource::class).getTag(accessToken = accessToken, userId = userId, repository = repository, page = page, pageSize = pageSize).data ?: emptyList()
+    override fun getTag(
+        accessToken: String,
+        userId: String,
+        repository: String,
+        page: Int?,
+        pageSize: Int?
+    ): List<GitTag> {
+        return client.getScm(ServiceGitResource::class).getTag(
+            accessToken = accessToken,
+            userId = userId,
+            repository = repository,
+            page = page,
+            pageSize = pageSize
+        ).data ?: emptyList()
     }
 
     override fun refreshToken(userId: String, accessToken: GitToken): GitToken {
@@ -88,8 +145,9 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         return client.getScm(ServiceGitResource::class).getToken(userId = userId, code = code).data!!
     }
 
-    override fun getUserInfoByToken(token: String): GitUserInfo {
-        return client.getScm(ServiceGitResource::class).getUserInfoByToken(token = token).data!!
+    override fun getUserInfoByToken(token: String, tokenType: TokenTypeEnum): GitUserInfo {
+        return client.getScm(ServiceGitResource::class)
+            .getUserInfoByToken(token = token, useAccessToken = tokenType == TokenTypeEnum.OAUTH).data!!
     }
 
     override fun getRedirectUrl(authParamJsonStr: String): String {
@@ -322,6 +380,20 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         )
     }
 
+    override fun getRepoMemberInfo(
+        accessToken: String,
+        userId: String,
+        repoName: String,
+        tokenType: TokenTypeEnum
+    ): GitMember {
+        return client.getScm(ServiceGitResource::class).getRepoMemberInfo(
+            token = accessToken,
+            userId = userId,
+            gitProjectId = repoName,
+            tokenType = tokenType
+        ).data!!
+    }
+
     override fun getRepoAllMembers(accessToken: String, userId: String, repoName: String): List<GitMember> {
         return client.getScm(ServiceGitResource::class).getRepoAllMembers(
             repoName = repoName,
@@ -399,6 +471,183 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             token = token,
             tokenType = tokenType,
             gitProjectId = id
+        )
+    }
+
+    override fun getProjectGroupList(
+        accessToken: String,
+        page: Int?,
+        pageSize: Int?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?,
+        tokenType: TokenTypeEnum
+    ): List<GitCodeGroup> {
+//        TODO("Not yet implemented")
+        return client.getScm(ServiceGitResource::class).getProjectGroupsList(
+            accessToken,
+            page,
+            pageSize,
+            owned,
+            minAccessLevel,
+            tokenType
+        ).data!!
+    }
+
+    override fun getMembers(
+        token: String,
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitMember>> {
+        //        TODO("Not yet implemented")
+        return client.getScm(ServiceGitResource::class).getMembers(
+            token = token,
+            gitProjectId = gitProjectId,
+            page = page,
+            pageSize = pageSize,
+            search = search,
+            tokenType = tokenType
+        )
+    }
+
+    override fun getGitUserId(
+        rtxUserId: String,
+        gitProjectId: String,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<String?> {
+        return client.getScm(ServiceGitResource::class).getGitUserId(
+            rtxUserId = rtxUserId,
+            gitProjectId = gitProjectId,
+            tokenType = tokenType,
+            token = token
+        )
+    }
+
+    override fun getProjectMembersAll(
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<List<GitMember>> {
+        return client.getScm(ServiceGitResource::class).getProjectMembersAll(
+            gitProjectId = gitProjectId,
+            page = page,
+            pageSize = pageSize,
+            search = search,
+            tokenType = tokenType,
+            token = token
+        )
+    }
+
+    override fun getGitFileInfo(
+        gitProjectId: String,
+        filePath: String?,
+        token: String,
+        ref: String?,
+        tokenType: TokenTypeEnum
+    ): Result<GitCodeFileInfo> {
+        return client.getScm(ServiceGitResource::class).getGitFileInfo(
+            gitProjectId = gitProjectId,
+            filePath = filePath,
+            token = token,
+            ref = ref,
+            tokenType = tokenType
+        )
+    }
+
+    override fun addMrComment(
+        token: String,
+        gitProjectId: String,
+        mrId: Long,
+        mrBody: String,
+        tokenType: TokenTypeEnum
+    ) {
+        return client.getScm(ServiceGitResource::class).addMrComment(
+            token = token,
+            gitProjectId = gitProjectId,
+            mrId = mrId,
+            mrBody = mrBody,
+            tokenType = tokenType
+        )
+    }
+
+    override fun getGitFileTree(
+        gitProjectId: Long,
+        path: String,
+        token: String,
+        ref: String?,
+        recursive: Boolean?,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitFileInfo>> {
+        return client.getScm(ServiceGitResource::class).getGitCIFileTree(
+            gitProjectId = gitProjectId,
+            path = path,
+            token = token,
+            ref = ref,
+            recursive = recursive,
+            tokenType = tokenType
+        )
+    }
+
+    override fun getCommits(
+        gitProjectId: Long,
+        filePath: String?,
+        branch: String?,
+        token: String,
+        since: String?,
+        until: String?,
+        page: Int,
+        perPage: Int,
+        tokenType: TokenTypeEnum
+    ): Result<List<Commit>> {
+        return client.getScm(ServiceGitResource::class).getCommits(
+            gitProjectId,
+            filePath,
+            branch,
+            token,
+            since,
+            until,
+            page,
+            perPage,
+            tokenType
+        )
+    }
+
+    override fun gitCreateFile(
+        gitProjectId: String,
+        token: String,
+        gitCreateFile: GitCreateFile,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return client.getScm(ServiceGitResource::class).gitCreateFile(
+            gitProjectId, token, gitCreateFile, tokenType
+        )
+    }
+
+    override fun getGitCodeProjectList(
+        accessToken: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): Result<List<GitCodeProjectInfo>> {
+        return client.getScm(ServiceGitResource::class).getGitCodeProjectList(
+            accessToken = accessToken,
+            page = page,
+            pageSize = pageSize,
+            search = search,
+            orderBy = orderBy,
+            sort = sort,
+            owned = owned,
+            minAccessLevel = minAccessLevel
         )
     }
 }

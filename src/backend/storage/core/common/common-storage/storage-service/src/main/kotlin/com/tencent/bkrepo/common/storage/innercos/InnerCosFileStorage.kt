@@ -83,7 +83,7 @@ open class InnerCosFileStorage : AbstractFileStorage<InnerCosCredentials, CosCli
             require(fromClient.credentials.region == toClient.credentials.region)
             require(fromClient.credentials.secretId == toClient.credentials.secretId)
             require(fromClient.credentials.secretKey == toClient.credentials.secretKey)
-        } catch (exception: IllegalArgumentException) {
+        } catch (ignored: IllegalArgumentException) {
             throw IllegalArgumentException("Unsupported to copy object between different cos app id")
         }
         toClient.copyObject(CopyObjectRequest(fromClient.credentials.bucket, name, name))
