@@ -25,32 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.common.webhook.pojo.code.git
 
-import com.tencent.devops.common.pipeline.enums.ManualReviewAction
-import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 
-@ApiModel("人工审核插件-审核信息")
-data class ReviewParam(
-//    userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String
-//    @ApiModelProperty("主键ID", required = false)
-//    var id: Long,
-    @ApiModelProperty("项目Id", required = true)
-    var projectId: String = "",
-    @ApiModelProperty("流水线Id", required = true)
-    var pipelineId: String = "",
-    @ApiModelProperty("构建Id", required = true)
-    var buildId: String = "",
-    @ApiModelProperty("审核人", required = true)
-    var reviewUsers: MutableList<String> = mutableListOf(),
-    @ApiModelProperty("审核结果", required = false)
-    var status: ManualReviewAction? = null,
-    @ApiModelProperty("描述", required = false)
-    var desc: String? = "",
-    @ApiModelProperty("审核意见", required = false)
-    var suggest: String? = "",
-    @ApiModelProperty("参数列表", required = false)
-    var params: MutableList<ManualReviewParam> = mutableListOf()
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitReviewAttributes(
+    val id: Long,
+    @JsonProperty("source_commit")
+    val sourceCommit: String,
+    @JsonProperty("source_branch")
+    val sourceBranch: String,
+    @JsonProperty("source_project_id")
+    val sourceProjectId: String,
+    @JsonProperty("target_commit")
+    val targetCommit: String,
+    @JsonProperty("target_branch")
+    val targetBranch: String,
+    @JsonProperty("target_project_id")
+    val targetProjectId: String,
+    @JsonProperty("author_id")
+    val authorId: String,
+    @JsonProperty("assignee_id")
+    val assigneeId: String?,
+    val title: String,
+    @JsonProperty("commit_check_state")
+    val commitCheckState: String,
+    @JsonProperty("updated_by_id")
+    val updatedById: String?,
+    @JsonProperty("created_at")
+    val createdAt: String,
+    @JsonProperty("updated_at")
+    val updatedAt: String,
+    val state: String,
+    val iid: Long,
+    val description: String,
+    val source: GitProject,
+    val target: GitProject,
+    @JsonProperty("last_commit")
+    val lastCommit: GitCommit
 )

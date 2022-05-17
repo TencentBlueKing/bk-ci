@@ -41,6 +41,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
@@ -62,8 +63,17 @@ import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
+import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
+import com.tencent.devops.process.utils.PIPELINE_TIME_END
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -81,7 +91,9 @@ class BuildEndControl @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineRedisService: PipelineRedisService
+    private val pipelineRedisService: PipelineRedisService,
+    private val meterRegistry: MeterRegistry,
+    private val buildVariableService: BuildVariableService
 ) {
 
     companion object {
@@ -165,6 +177,16 @@ class BuildEndControl @Autowired constructor(
         )
 
         pipelineRuntimeService.updateBuildHistoryStageState(projectId, buildId, allStageStatus)
+
+        // 上报SLA数据
+        if (buildStatus.isSuccess() || buildStatus == BuildStatus.STAGE_SUCCESS) {
+            successPipelineCount(this)
+        } else if (buildStatus.isFailure()) {
+            failPipelineCount(this)
+        }
+
+        buildDurationTime(buildInfo.startTime!!)
+        callBackParentPipeline(projectId, buildId)
 
         // 广播结束事件
         pipelineEventDispatcher.dispatch(
@@ -310,5 +332,92 @@ class BuildEndControl @Autowired constructor(
                 buildNoType = triggerContainer.buildNo?.buildNoType
             )
         )
+    }
+
+    // 设置流水线执行耗时
+    private fun PipelineBuildFinishEvent.buildDurationTime(startTime: Long) {
+        val endTime = System.currentTimeMillis()
+        buildVariableService.setVariable(
+            projectId = this.projectId,
+            pipelineId = this.pipelineId,
+            buildId = this.buildId,
+            varName = PIPELINE_TIME_END,
+            varValue = endTime
+        )
+        val duration = ((endTime - startTime) / 1000).toString()
+        buildVariableService.setVariable(
+            projectId = this.projectId,
+            pipelineId = this.pipelineId,
+            buildId = this.buildId,
+            varName = PIPELINE_TIME_DURATION,
+            varValue = duration
+        )
+    }
+
+    // 子流水线回调父流水线
+    private fun callBackParentPipeline(
+        projectId: String,
+        buildId: String
+    ) {
+        val vars = buildVariableService.getAllVariable(projectId, buildId)
+        val startType = vars[PIPELINE_START_TYPE]
+        if (startType != StartType.PIPELINE.name) {
+            return
+        }
+        val parentTaskId = vars[PIPELINE_START_PARENT_BUILD_TASK_ID] ?: return
+        val parentBuildId = vars[PIPELINE_START_PARENT_BUILD_ID] ?: return
+        val parentProjectId = vars[PIPELINE_START_PARENT_PROJECT_ID] ?: return
+        val parentBuildTask = pipelineTaskService.getBuildTask(parentProjectId, parentBuildId, parentTaskId)
+        LOG.info("$buildId callback parent build $parentBuildId")
+        if (parentBuildTask == null) {
+            LOG.warn("The parent build($parentBuildId) task($parentTaskId) not exist ")
+            return
+        }
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildAtomTaskEvent(
+                source = "sub_pipeline_build_$buildId", // 来源
+                projectId = parentBuildTask.projectId,
+                pipelineId = parentBuildTask.pipelineId,
+                userId = parentBuildTask.starter,
+                buildId = parentBuildTask.buildId,
+                stageId = parentBuildTask.stageId,
+                containerId = parentBuildTask.containerId,
+                containerHashId = parentBuildTask.containerHashId,
+                containerType = parentBuildTask.containerType,
+                taskId = parentBuildTask.taskId,
+                taskParam = parentBuildTask.taskParams,
+                actionType = ActionType.REFRESH
+            )
+        )
+    }
+
+    private fun successPipelineCount(event: PipelineBuildFinishEvent) {
+        Counter
+            .builder("success_pipeline_count")
+            .tag("projectId", event.projectId)
+            .tag("pipelineId", event.pipelineId)
+            .register(meterRegistry)
+            .increment()
+
+        finishPipelineCount(event)
+    }
+
+    private fun failPipelineCount(event: PipelineBuildFinishEvent) {
+        Counter
+            .builder("fail_pipeline_count")
+            .tag("projectId", event.projectId)
+            .tag("pipelineId", event.pipelineId)
+            .register(meterRegistry)
+            .increment()
+        finishPipelineCount(event)
+    }
+
+    private fun finishPipelineCount(event: PipelineBuildFinishEvent) {
+        Counter
+            .builder("finish_pipeline_count")
+            .tag("projectId", event.projectId)
+            .tag("pipelineId", event.pipelineId)
+            .register(meterRegistry)
+            .increment()
     }
 }

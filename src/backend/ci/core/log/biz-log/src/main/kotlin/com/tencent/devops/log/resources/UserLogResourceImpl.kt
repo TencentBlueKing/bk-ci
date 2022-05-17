@@ -34,6 +34,7 @@ import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.log.service.BuildLogQueryService
+import io.micrometer.core.annotation.Timed
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,6 +54,7 @@ class UserLogResourceImpl @Autowired constructor(
     @Value("\${spring.application.name:#{null}}")
     private val applicationName: String? = null
 
+    @Timed
     override fun getInitLogs(
         userId: String,
         projectId: String,
@@ -115,6 +117,7 @@ class UserLogResourceImpl @Autowired constructor(
         )
     }
 
+    @Timed
     override fun getAfterLogs(
         userId: String,
         projectId: String,
