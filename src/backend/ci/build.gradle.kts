@@ -137,4 +137,12 @@ allprojects {
         it.exclude("dom4j", "dom4j")
         it.exclude("com.flipkart.zjsonpatch", "zjsonpatch")
     }
+    // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656
+    dependencies {
+        components {
+            withModule("org.dom4j:dom4j") {
+                allVariants { withDependencies { clear() } }
+            }
+        }
+    }
 }
