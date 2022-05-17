@@ -603,14 +603,6 @@ class BuilderAction @Autowired constructor(
     }
 
     private fun DispatchMessage.getContainerPool(): Pool {
-        // TODO: 为了测试流程跑通的兼容
-        if (dispatchMessage.startsWith("bkci/") || dispatchMessage.startsWith("http")) {
-            return Pool(
-                container = dispatchMessage,
-                credential = null
-            )
-        }
-
         val containerPool = objectMapper.readValue<Pool>(dispatchMessage)
 
         if (containerPool.third != null && !containerPool.third!!) {
