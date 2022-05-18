@@ -33,75 +33,28 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 /**
+ * github获取tag列表接口: /repos/{owner}/{repo}/tags
  * {
-"name": "master",
-"commit": {
-"sha": "bdd43327c549105f5e1296d65121afbeb0f3f1ef",
-"node_id": "MDM6UmVmNjEyOTgzNDU6dGVzdF92MQ==",
-"commit": {
-"author": {
-"name": "The xxx",
-"date": "2015-04-06T15:06:50-08:00",
-"email": "xx@cc.com"
-},
-"url": "https://api.github.com/repos/xx/Hello-World/git/commits/bdd43327c549105f5e1296d65121afbeb0f3f1ef",
-"message": "Merge pull request #6 from Spaceghost/patch-1\n\nNew line at end of file.",
-"tree": {
-"sha": "b4eecafa9be2f2006ce1b709d6857b07069b4608",
-"url": "https://api.github.com/repos/xx/Hello-World/git/trees/bdd43327c549105f5e1296d65121afbeb0f3f1ef"
-},
-"committer": {
-"name": "The cc",
-"date": "2015-04-06T15:06:50-08:00",
-"email": "xx@cc.com"
-},
-"verification": {
-"verified": false,
-"reason": "unsigned",
-"signature": null,
-"payload": null
-}
-}
-}
- * }
+        "name": "v1.7.22-RC.2",
+        "zipball_url": "https://api.github.com/repos/Tencent/bk-ci/zipball/refs/tags/v1.7.22-RC.2",
+        "tarball_url": "https://api.github.com/repos/Tencent/bk-ci/tarball/refs/tags/v1.7.22-RC.2",
+        "commit": {
+        "sha": "c4a9464c710eae94c1538ede27e538c61643fe65",
+        "url": "https://api.github.com/repos/Tencent/bk-ci/commits/c4a9464c710eae94c1538ede27e538c61643fe65"
+        },
+        "node_id": "MDM6UmVmMTg5MTUzNDkxOnJlZnMvdGFncy92MS43LjIyLVJDLjI="
+    }
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("分支模型")
-data class GithubBranch(
+@ApiModel("仓库tag信息")
+data class GithubRepoTag(
     @ApiModelProperty("名称")
     val name: String,
-    @ApiModelProperty("提交")
-    val commit: GithubCommit?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("提交模型")
-data class GithubCommit(
-    @ApiModelProperty("sha值")
-    val sha: String,
-    @ApiModelProperty("节点id", name = "node_id")
+    @JsonProperty("zipball_url")
+    val zipballUrl: String,
+    @JsonProperty("tarball_url")
+    val tarballUrl: String,
+    val commit: GithubRepoCommit,
     @JsonProperty("node_id")
-    val nodeId: String?,
-    @ApiModelProperty("提交内容")
-    val commit: GithubCommitData?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("提交内容模型")
-data class GithubCommitData(
-    @ApiModelProperty("提交信息")
-    val message: String,
-    @ApiModelProperty("提交者信息")
-    val author: GithubCommitAuthor
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("提交者模型")
-data class GithubCommitAuthor(
-    @ApiModelProperty("提交者名称")
-    val name: String,
-    @ApiModelProperty("提交时间")
-    val date: String,
-    @ApiModelProperty("提交者email")
-    val email: String
+    val nodeId: String
 )

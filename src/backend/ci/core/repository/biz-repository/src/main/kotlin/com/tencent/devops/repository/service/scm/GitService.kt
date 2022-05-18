@@ -161,7 +161,7 @@ class GitService @Autowired constructor(
                                 name = obj["name"].asString,
                                 nameWithNameSpace = obj["name_with_namespace"].asString,
                                 sshUrl = obj["ssh_url_to_repo"].asString,
-                                httpUrl = obj["http_url_to_repo"].asString,
+                                httpUrl = obj["https_url_to_repo"].asString,
                                 lastActivity = DateTimeUtil.convertLocalDateTimeToTimestamp(
                                     LocalDateTime.parse(
                                         lastActivityTime
@@ -224,7 +224,7 @@ class GitService @Autowired constructor(
                             name = project["name"].asString,
                             nameWithNameSpace = project["name_with_namespace"].asString,
                             sshUrl = project["ssh_url_to_repo"].asString,
-                            httpUrl = project["http_url_to_repo"].asString,
+                            httpUrl = project["https_url_to_repo"].asString,
                             lastActivity = DateTimeUtil.convertLocalDateTimeToTimestamp(
                                 LocalDateTime.parse(lastActivityTime)) * 1000L
                         ))
