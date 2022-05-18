@@ -47,7 +47,6 @@ import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
-import org.jooq.Record1
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record2
