@@ -37,9 +37,12 @@ import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
 import com.tencent.devops.auth.service.AuthGroupService
+import com.tencent.devops.auth.service.BkLocalManagerServiceImp
 import com.tencent.devops.auth.service.BkPermissionProjectService
 import com.tencent.devops.auth.service.BkPermissionService
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.LocalManagerService
+import com.tencent.devops.auth.service.SimpleLocalManagerServiceImpl
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
@@ -59,6 +62,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
 @Suppress("ALL")
@@ -165,4 +169,13 @@ class AuthConfiguration {
     fun gitlabStreamProjectPermissionService(
         streamPermissionService: StreamPermissionServiceImpl
     ) = StreamPermissionProjectServiceImpl(streamPermissionService)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    @Primary
+    fun bkManagerService() = BkLocalManagerServiceImp()
+
+    @Bean
+    @ConditionalOnMissingBean(LocalManagerService::class)
+    fun simpleManagerService() = SimpleLocalManagerServiceImpl()
 }
