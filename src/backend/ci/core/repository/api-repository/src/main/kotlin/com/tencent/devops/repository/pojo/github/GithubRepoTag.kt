@@ -25,22 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.repository.pojo.github
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线文件路径模型")
-data class StreamGitPipelineDir(
-    @ApiModelProperty("当前流水线文件子路径", required = false)
-    val currentPath: String?,
-    @ApiModelProperty("所有子路径", required = false)
-    var allPath: List<AllPathPair>?
-)
-
-data class AllPathPair(
-    @ApiModelProperty("子路径", required = true)
-    val path: String,
-    @ApiModelProperty("文件夹名字", required = true)
-    val name: String
+/**
+ * github获取tag列表接口: /repos/{owner}/{repo}/tags
+ * {
+        "name": "v1.7.22-RC.2",
+        "zipball_url": "https://api.github.com/repos/Tencent/bk-ci/zipball/refs/tags/v1.7.22-RC.2",
+        "tarball_url": "https://api.github.com/repos/Tencent/bk-ci/tarball/refs/tags/v1.7.22-RC.2",
+        "commit": {
+        "sha": "c4a9464c710eae94c1538ede27e538c61643fe65",
+        "url": "https://api.github.com/repos/Tencent/bk-ci/commits/c4a9464c710eae94c1538ede27e538c61643fe65"
+        },
+        "node_id": "MDM6UmVmMTg5MTUzNDkxOnJlZnMvdGFncy92MS43LjIyLVJDLjI="
+    }
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+@ApiModel("仓库tag信息")
+data class GithubRepoTag(
+    @ApiModelProperty("名称")
+    val name: String,
+    @JsonProperty("zipball_url")
+    val zipballUrl: String,
+    @JsonProperty("tarball_url")
+    val tarballUrl: String,
+    val commit: GithubRepoCommit,
+    @JsonProperty("node_id")
+    val nodeId: String
 )

@@ -25,22 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.repository.pojo.github
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-@ApiModel("流水线文件路径模型")
-data class StreamGitPipelineDir(
-    @ApiModelProperty("当前流水线文件子路径", required = false)
-    val currentPath: String?,
-    @ApiModelProperty("所有子路径", required = false)
-    var allPath: List<AllPathPair>?
-)
-
-data class AllPathPair(
-    @ApiModelProperty("子路径", required = true)
-    val path: String,
-    @ApiModelProperty("文件夹名字", required = true)
-    val name: String
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GithubRepoCommit(
+    val sha: String,
+    val url: String
 )
