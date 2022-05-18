@@ -168,6 +168,9 @@ class TemplateFacadeService @Autowired constructor(
     @Value("\${template.maxSaveVersionNum:300}")
     private val maxSaveVersionNum: Int = 300
 
+    @Value("\${template.maxUpdateInstanceNum:100}")
+    private val maxUpdateInstanceNum: Int = 100
+
     @Value("\${template.maxSaveVersionRecordNum:2}")
     private val maxSaveVersionRecordNum: Int = 2
 
@@ -1326,10 +1329,10 @@ class TemplateFacadeService @Autowired constructor(
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
         logger.info("UPDATE_TEMPLATE_INST[$projectId|$userId|$templateId|$version|$instances|$useTemplateSettings]")
-        if (instances.size>100) {
+        if (instances.size > maxUpdateInstanceNum) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.FAIL_TEMPLATE_UPDATE_NUM_TOO_BIG,
-                params = arrayOf("${instances.size}")
+                params = arrayOf("${instances.size}", "$maxUpdateInstanceNum")
             )
         }
         val successPipelines = ArrayList<String>()
