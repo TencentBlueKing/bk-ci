@@ -143,7 +143,7 @@ class StoreEnvVarDao {
                     .and(STORE_TYPE.eq(storeType))
                     .and(SCOPE.eq(scope))
                     .and(VAR_NAME.eq(varName)))
-                .fetchOne(0, String::class.java)
+                .fetchOne(0, Int::class.java)
         }
     }
 
