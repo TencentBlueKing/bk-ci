@@ -35,7 +35,7 @@ class BkLocalManagerServiceImp @Autowired constructor() : LocalManagerService {
         userId: String,
         projectCode: String,
         action: String,
-        resourceType: String,
+        resourceType: String
     ): Boolean {
         if (isAdmin(userId)) {
             return true
