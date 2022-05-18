@@ -45,7 +45,8 @@ data class GitTagPushEvent(
     val commits: List<GitCommit>?,
     val total_commits_count: Int,
     val operation_kind: String?,
-    val create_from: String? = null
+    val create_from: String? = null,
+    val message: String?
 ) : GitEvent() {
     companion object {
         const val classType = "tag_push"

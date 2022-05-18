@@ -31,6 +31,27 @@ export function isInArray (ele, array) {
     return false
 }
 
+export function throttle (func, interval = 1000) {
+    let lastFunc
+    let lastRan
+    return function () {
+        const context = this
+        const args = arguments
+        if (!lastRan) {
+            func.apply(context, args)
+            lastRan = Date.now()
+        } else {
+            clearTimeout(lastFunc)
+            lastFunc = setTimeout(function () {
+                if ((Date.now() - lastRan) >= interval) {
+                    func.apply(context, args)
+                    lastRan = Date.now()
+                }
+            }, interval - (Date.now() - lastRan))
+        }
+    }
+}
+
 export function isInlineElment (node) {
     const inlineElements = ['a', 'abbr', 'acronym', 'b', 'bdo', 'big', 'br', 'cite', 'code', 'dfn', 'em', 'font', 'i', 'img', 'input', 'kbd', 'label', 'q', 's', 'samp', 'select', 'small', 'span', 'strike', 'strong', 'sub', 'sup', 'textarea', 'tt', 'u', 'var']
     const tag = (node.tagName).toLowerCase()

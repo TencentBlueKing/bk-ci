@@ -86,7 +86,7 @@
             right: 0px;
             top: 10px;
             font-size: 12px;
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
             cursor: pointer;
         }
         .message-title {
@@ -101,7 +101,7 @@
             list-style: outside;
         }
         .error-message {
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
         }
         .form-footer {
             padding: 10px;

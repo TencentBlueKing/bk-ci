@@ -58,6 +58,7 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.common.quality.pojo.RuleCheckResult
+import com.tencent.devops.process.pojo.ReviewParam
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -184,12 +185,13 @@ class PipelineBuildQualityService(
         }
 
         logger.info("[$buildId]|buildManualReview|taskId=$elementId|userId=$userId|action=$action")
-        pipelineRuntimeService.manualDealBuildTask(
-            projectId = projectId,
-            buildId = buildId,
+        pipelineRuntimeService.manualDealReview(
             taskId = elementId,
             userId = userId,
-            manualAction = action
+            params = ReviewParam(
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                status = action, suggest = null, desc = null
+            )
         )
     }
 
@@ -359,7 +361,6 @@ class PipelineBuildQualityService(
                 // 产生MQ消息，等待5秒时间
                 logger.info("[$buildId]|QUALITY_$position|taskId=$elementId|quality check success wait end")
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 5000
-                task.taskParams[QUALITY_RESULT] = checkResult.success
             } else {
                 buildLogPrinter.addLine(
                     buildId = buildId,
@@ -424,8 +425,9 @@ class PipelineBuildQualityService(
                     executeCount = task.executeCount ?: 1
                 )
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = checkResult.auditTimeoutSeconds * 1000 // 15 min
-                task.taskParams[QUALITY_RESULT] = checkResult.success
             }
+
+            task.taskParams[QUALITY_RESULT] = checkResult.success
 
             pipelineEventDispatcher.dispatch(
                 PipelineBuildWebSocketPushEvent(
@@ -437,8 +439,8 @@ class PipelineBuildQualityService(
                     refreshTypes = RefreshType.DETAIL.binary
                 )
             )
+            return AtomResponse(BuildStatus.RUNNING)
         }
-        return AtomResponse(BuildStatus.RUNNING)
     }
 
     fun getCheckResult(

@@ -42,6 +42,7 @@ const val PIPELINE_BUILD_NUM = "BK_CI_BUILD_NUM" // "pipeline.build.num"
 const val PIPELINE_BUILD_LAST_UPDATE = "BK_CI_BUILD_LAST_UPDATE" // "pipeline.build.last.update"
 const val PIPELINE_BUILD_SVN_REVISION = "BK_CI_BUILD_SVN_REVISION" // "pipeline.build.svn.revision"
 const val PIPELINE_BUILD_NUM_ALIAS = "BK_CI_BUILD_NUM_ALIAS"
+const val PIPELINE_BUILD_URL = "BK_CI_BUILD_URL"
 
 const val GIT_MR_NUMBER = "BK_CI_GIT_MR_NUMBER" // git_mr_number
 const val GITHUB_PR_NUMBER = "BK_CI_GITHUB_PR_NUMBER" // github_pr_number
@@ -158,7 +159,10 @@ const val PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX = 4000
  * 流水线设置-流水线错误信息入库长度最大值 单位:分钟
  */
 const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 30000
-
+/**
+ * 流水线设置-流水线最大任务并发数量-最大值
+ */
+const val PIPELINE_CON_RUNNING_CONTAINER_SIZE_MAX = 30
 /**
  * 流水线设置-矩阵内最大并发数量-默认值
  */
@@ -166,7 +170,11 @@ const val PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT = 5
 /**
  * 流水线设置-矩阵内最大并发数量-最大值
  */
-const val PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX = 20
+const val PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX = 20
+/**
+ * 流水线设置-Stage内最大分裂后Job数量-最大值
+ */
+const val PIPELINE_STAGE_CONTAINERS_COUNT_MAX = 256
 
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 

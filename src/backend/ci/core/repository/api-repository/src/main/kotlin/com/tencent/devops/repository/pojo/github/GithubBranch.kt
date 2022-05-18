@@ -81,7 +81,7 @@ data class GithubCommit(
     val sha: String,
     @ApiModelProperty("节点id", name = "node_id")
     @JsonProperty("node_id")
-    val nodeId: String,
+    val nodeId: String?,
     @ApiModelProperty("提交内容")
     val commit: GithubCommitData?
 )

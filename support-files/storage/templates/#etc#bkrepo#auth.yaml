@@ -1,0 +1,27 @@
+server:
+  port: __BK_REPO_AUTH_PORT__
+
+auth:
+  realm: __BK_REPO_AUTH_REALM__
+  iam:
+    callbackUser: __BK_REPO_IAM_CALLBACK_USER__
+    systemId: __BK_REPO_APP_CODE__
+    baseUrl: __BK_IAM_PRIVATE_URL__
+    appCode: __BK_REPO_APP_CODE__
+    appSecret: __BK_REPO_APP_TOKEN__
+  devops:
+    envName: __BK_CI_AUTH_ENV__
+    appId: bkdevops
+    appIdSet: bkdevops,bkrepo,codecc
+    authEnabled: true
+    allowAnonymous: true
+    ciAuthServer: __BK_CI_PUBLIC_URL__
+    ciAuthToken: __BK_CI_AUTH_TOKEN__
+    enableSuperAdmin: false  
+
+esb:
+  code: __BK_REPO_APP_CODE__
+  secret: __BK_REPO_APP_TOKEN__
+  iam:
+    url: __BK_PAAS_PRIVATE_URL__
+

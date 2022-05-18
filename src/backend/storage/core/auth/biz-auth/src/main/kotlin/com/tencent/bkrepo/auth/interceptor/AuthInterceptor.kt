@@ -31,18 +31,22 @@
 
 package com.tencent.bkrepo.auth.interceptor
 
+import com.tencent.bkrepo.auth.constant.AUTH_REPO_SUFFIX
 import com.tencent.bkrepo.auth.constant.AUTHORIZATION
 import com.tencent.bkrepo.auth.constant.AUTH_FAILED_RESPONSE
-import com.tencent.bkrepo.auth.constant.AUTH_PROJECT_SUFFIX
-import com.tencent.bkrepo.auth.constant.AUTH_REPO_SUFFIX
 import com.tencent.bkrepo.auth.constant.BASIC_AUTH_HEADER_PREFIX
 import com.tencent.bkrepo.auth.constant.PLATFORM_AUTH_HEADER_PREFIX
+import com.tencent.bkrepo.auth.constant.AUTH_PROJECT_SUFFIX
+import com.tencent.bkrepo.auth.constant.AUTH_API_ACCOUNT_PREFIX
+import com.tencent.bkrepo.auth.constant.AUTH_API_KEY_PREFIX
+import com.tencent.bkrepo.auth.constant.AUTH_API_OAUTH_PREFIX
 import com.tencent.bkrepo.auth.service.AccountService
 import com.tencent.bkrepo.auth.service.UserService
 import com.tencent.bkrepo.common.api.constant.HttpStatus
 import com.tencent.bkrepo.common.api.constant.PLATFORM_KEY
 import com.tencent.bkrepo.common.api.constant.StringPool.COLON
 import com.tencent.bkrepo.common.api.constant.USER_KEY
+import com.tencent.bkrepo.common.security.constant.AUTH_HEADER_UID
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.servlet.HandlerInterceptor
@@ -62,43 +66,60 @@ class AuthInterceptor : HandlerInterceptor {
         val basicAuthHeader = request.getHeader(AUTHORIZATION).orEmpty()
         val authFailStr = String.format(AUTH_FAILED_RESPONSE, basicAuthHeader)
         try {
-            // 项目内操作，优先使用项目管理员权限
-            if (basicAuthHeader.startsWith(BASIC_AUTH_HEADER_PREFIX) &&
-                (request.requestURI.contains(AUTH_REPO_SUFFIX) || request.requestURI.contains(AUTH_PROJECT_SUFFIX))
-            ) {
+            val urlMatch = basicAuthApiList.filter { request.requestURI.contains(it) }.size
+
+            // basic认证
+            if (basicAuthHeader.startsWith(BASIC_AUTH_HEADER_PREFIX)) {
                 val encodedCredentials = basicAuthHeader.removePrefix(BASIC_AUTH_HEADER_PREFIX)
                 val decodedHeader = String(Base64.getDecoder().decode(encodedCredentials))
                 val parts = decodedHeader.split(COLON)
                 require(parts.size == 2)
-                userService.findUserByUserToken(parts[0], parts[1]) ?: run {
+                val user = userService.findUserByUserToken(parts[0], parts[1]) ?: run {
                     logger.warn("find no user [${parts[0]}]")
                     throw IllegalArgumentException("check credential fail")
                 }
+
                 request.setAttribute(USER_KEY, parts[0])
+
+                // 非项目内认证账号
+                if (urlMatch == 0 && !user.admin) {
+                    logger.warn("user [${parts[0]}] is not admin")
+                    throw IllegalArgumentException("check credential fail")
+                }
                 return true
             }
-            if (!basicAuthHeader.startsWith(PLATFORM_AUTH_HEADER_PREFIX)) {
-                throw IllegalArgumentException("platform not found")
-            }
+
+            // platform认证
             val encodedCredentials = basicAuthHeader.removePrefix(PLATFORM_AUTH_HEADER_PREFIX)
             val decodedHeader = String(Base64.getDecoder().decode(encodedCredentials))
             val parts = decodedHeader.split(COLON)
             require(parts.size == 2)
             val appId = accountService.checkCredential(parts[0], parts[1]) ?: run {
                 logger.warn("find no account [$parts[0]]")
-                throw IllegalArgumentException("check credential fail")
+                throw IllegalArgumentException("check auth credential fail")
             }
+            val userId = request.getHeader(AUTH_HEADER_UID).orEmpty().trim()
+            logger.debug("auth userId [$userId], platId [$appId]")
+            request.setAttribute(USER_KEY, userId)
             request.setAttribute(PLATFORM_KEY, appId)
             return true
         } catch (e: IllegalArgumentException) {
             response.status = HttpStatus.UNAUTHORIZED.value
             response.writer.print(authFailStr)
-            logger.warn("check account exception [$e]")
+            logger.warn("check exception [$e]")
             return false
         }
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(AuthInterceptor::class.java)
+
+        private val basicAuthApiList = listOf(
+            AUTH_REPO_SUFFIX,
+            AUTH_PROJECT_SUFFIX,
+            AUTH_API_ACCOUNT_PREFIX,
+            AUTH_API_KEY_PREFIX,
+            AUTH_API_OAUTH_PREFIX
+        )
     }
 }

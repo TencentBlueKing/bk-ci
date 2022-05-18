@@ -7,4 +7,5 @@ npm:
     data-url:
   tarball:
     prefix:
+  domain: ${cluster.self.url}/npm
 

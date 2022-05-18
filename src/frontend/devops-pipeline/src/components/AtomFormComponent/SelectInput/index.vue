@@ -194,11 +194,13 @@
             },
 
             setSelectPointer (index) {
+                this.$refs.inputArea.focus()
                 this.selectedPointer = index
                 this.adjustViewPort()
             },
 
             setSelectGroupPointer (index, childIndex) {
+                this.$refs.inputArea.focus()
                 this.selectedGroupPointer = index
                 this.selectedPointer = childIndex
                 this.adjustViewPort()
@@ -277,7 +279,7 @@
             position: absolute;
             right: 20px;
             top: 10px;
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
             &.icon-close-circle-shape {
                 cursor: pointer;
             }
@@ -315,7 +317,7 @@
                 //     }
 
                 //     &[disabled] {
-                //         color: $fontLigtherColor;
+                //         color: $fontLighterColor;
                 //     }
                 // }
                 .option-group-name {
@@ -333,15 +335,19 @@
                     white-space: nowrap;
                     cursor: pointer;
                     font-size: 12px;
+                    border: 1px solid transparent;
                     &.selected,
                     &.active,
                     &:hover {
                         background-color: $primaryLightColor;
                         color: $primaryColor;
                     }
+                    &.selected {
+                       border-color : $primaryColor;
+                    }
 
                     &[disabled] {
-                        color: $fontLigtherColor;
+                        color: $fontLighterColor;
                     }
                 }
                 .bk-select-extension a {

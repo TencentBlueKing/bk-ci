@@ -36,6 +36,8 @@ data class BuildTaskResult(
     val taskId: String,
     @ApiModelProperty("插件ID", required = true)
     val elementId: String,
+    @ApiModelProperty("插件版本号", required = false)
+    val elementVersion: String? = null,
     @ApiModelProperty("容器Hash ID", required = true)
     val containerId: String?,
     @ApiModelProperty("是否执行成功", required = true)
@@ -50,6 +52,12 @@ data class BuildTaskResult(
     val errorType: String? = null,
     @ApiModelProperty("错误码标识", required = false)
     val errorCode: Int? = null,
+    @ApiModelProperty("对接平台代码", required = false)
+    val platformCode: String? = null,
+    @ApiModelProperty("对接平台错误码", required = false)
+    val platformErrorCode: Int? = null,
     @ApiModelProperty("插件监控数据", required = false)
-    val monitorData: Map<String, Any>? = null
+    val monitorData: Map<String, Any>? = null,
+    @ApiModelProperty("构建任务失败时用于通知的信息", required = false)
+    val buildTaskErrorMessage: BuildTaskErrorMessage? = null
 )

@@ -37,10 +37,13 @@ import com.tencent.devops.common.api.constant.HTTP_422
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
+import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -74,16 +77,20 @@ open class GitApi {
         private const val OPERATION_MR_INFO = "查询项目合并请求"
         private const val OPERATION_MR_REVIEW = "查询项目合并请求"
         private const val OPERATION_GET_CHANGE_FILE_LIST = "查询变更文件列表"
+        private const val OPERATION_GET_MR_COMMIT_LIST = "获取合并请求中的提交"
+        private const val OPERATION_PROJECT_USER_INFO = "获取项目中成员信息"
     }
 
     fun listBranches(
         host: String,
         token: String,
         projectName: String,
-        search: String? = null
+        search: String? = null,
+        page: Int = 1,
+        pageSize: Int = 20
     ): List<String> {
         logger.info("Start to list branches of host $host by project $projectName")
-        var searchReq = "page=1&per_page=100"
+        var searchReq = "page=$page&per_page=$pageSize"
         if (!search.isNullOrBlank()) {
             searchReq = "$searchReq&search=$search"
         }
@@ -348,11 +355,11 @@ open class GitApi {
     }
 
     private fun <T> callMethod(operation: String, request: Request, classOfT: Class<T>): T {
-        OkhttpUtils.doHttp(request).use { response ->
+        return OkhttpUtils.doRedirectHttp(request) { response ->
             if (!response.isSuccessful) {
                 handleApiException(operation, response.code(), response.body()?.string() ?: "")
             }
-            return JsonUtil.getObjectMapper().readValue(response.body()!!.string(), classOfT)
+            JsonUtil.getObjectMapper().readValue(response.body()!!.string(), classOfT)
         }
     }
 
@@ -390,7 +397,7 @@ open class GitApi {
     ): List<GitCommit> {
         val request = get(
             host, token, "projects/${urlEncode(projectName)}/repository/commits?page=$page&per_page=$size"
-            .plus(if (branch.isNullOrBlank()) "" else "&ref_name=$branch").plus(if (all) "&all=true" else ""), ""
+                .plus(if (branch.isNullOrBlank()) "" else "&ref_name=$branch").plus(if (all) "&all=true" else ""), ""
         )
         val result: List<GitCommit> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_COMMIT, request))
         logger.info(
@@ -408,13 +415,18 @@ open class GitApi {
         return result
     }
 
-    fun unlockHookLock(host: String, token: String, projectName: String, mrId: Long) {
+    fun unlockHookLock(host: String, token: String, projectName: String, mrId: Long, retryTimes: Int = 5) {
 
         val url = "projects/${urlEncode(projectName)}/merge_request/$mrId/unlock_hook_lock"
         logger.info("unlock hook lock for project($projectName): url($url)")
         val request = put(host, token, url, "")
         try {
-            callMethod(OPERATION_UNLOCK_HOOK_LOCK, request, String::class.java)
+            val result = callMethod(OPERATION_UNLOCK_HOOK_LOCK, request, String::class.java)
+            // 工蜂解锁可能会失败,增加重试
+            if (result == "false" && retryTimes > 0) {
+                Thread.sleep(500)
+                unlockHookLock(host, token, projectName, mrId, retryTimes - 1)
+            }
         } catch (t: GitApiException) {
             if (t.code == 403) {
                 throw GitApiException(t.code, "unlock webhooklock失败,请确认token是否已经配置")
@@ -433,6 +445,15 @@ open class GitApi {
         logger.info("get mr info url: $url")
         val request = get(host, token, url, "")
         return callMethod(OPERATION_MR_INFO, request, GitMrInfo::class.java)
+    }
+
+    fun getMrCommitList(host: String, token: String, url: String, page: Int, size: Int): List<GitCommit> {
+        logger.info("get mr commit list url: $url")
+        val searchReq = "page=$page&per_page=$size"
+        val request = get(host, token, url, searchReq)
+        val result: List<GitCommit> =
+            JsonUtil.getObjectMapper().readValue(getBody(OPERATION_GET_MR_COMMIT_LIST, request))
+        return result
     }
 
     fun getMrReviewInfo(host: String, token: String, url: String): GitMrReviewInfo {
@@ -456,6 +477,17 @@ open class GitApi {
         val request = get(host, token, url, queryParam)
         return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_GET_CHANGE_FILE_LIST, request))
     }
+
+    fun getRepoMemberInfo(
+        host: String,
+        token: String,
+        userId: String,
+        gitProjectId: String
+    ): GitMember {
+        val url = "projects/${urlEncode(gitProjectId)}/members/all/$userId"
+        val request = get(host, token, url, "")
+        return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_PROJECT_USER_INFO, request))
+    }
 //    private val OPERATION_BRANCH = "拉分支"
 //    private val OPERATION_TAG = "拉标签"
 //    private val OPERATION_ADD_WEBHOOK = "添加WEBHOOK"
@@ -464,4 +496,34 @@ open class GitApi {
 //    private val OPERATION_ADD_MR_COMMENT = "添加MR COMMENT"
 
     private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
+
+    fun getProjectGroupsList(
+        host: String,
+        token: String,
+        page: Int,
+        pageSize: Int,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): List<GitCodeGroup> {
+        val url = "api/v3/groups"
+        val queryParam = "page=$page&per_page=$pageSize"
+            .addParams(
+                mapOf(
+                    "owned" to owned,
+                    "min_access_level" to minAccessLevel?.level
+                )
+            )
+        val request = get(host, token, url, queryParam)
+        return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_PROJECT_USER_INFO, request))
+    }
+
+    private fun String.addParams(args: Map<String, Any?>): String {
+        val sb = StringBuilder(this)
+        args.forEach { (name, value) ->
+            if (value != null) {
+                sb.append("&$name=$value")
+            }
+        }
+        return sb.toString()
+    }
 }

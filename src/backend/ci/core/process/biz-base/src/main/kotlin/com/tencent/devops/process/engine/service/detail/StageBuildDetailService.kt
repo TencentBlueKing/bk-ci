@@ -87,7 +87,7 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.RUNNING)
+        }, BuildStatus.RUNNING, operation = "updateStageStatus#$stageId")
         return allStageStatus ?: emptyList()
     }
 
@@ -113,7 +113,7 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.RUNNING)
+        }, BuildStatus.RUNNING, operation = "stageSkip#$stageId")
         return allStageStatus ?: emptyList()
     }
 
@@ -147,7 +147,7 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.STAGE_SUCCESS)
+        }, BuildStatus.STAGE_SUCCESS, operation = "stagePause#$stageId")
         return allStageStatus ?: emptyList()
     }
 
@@ -178,7 +178,7 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.STAGE_SUCCESS)
+        }, BuildStatus.STAGE_SUCCESS, operation = "stageCancel#$stageId")
     }
 
     fun stageCheckQuality(
@@ -190,6 +190,12 @@ class StageBuildDetailService(
         checkOut: StagePauseCheck?
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_check_quality|stageId=$stageId|checkIn=$checkIn|checkOut=$checkOut")
+        val (oldBuildStatus, newBuildStatus) = if (checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name ||
+            checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
+            Pair(BuildStatus.RUNNING, BuildStatus.REVIEWING)
+        } else {
+            Pair(BuildStatus.REVIEWING, BuildStatus.RUNNING)
+        }
         var allStageStatus: List<BuildStageStatus>? = null
         update(projectId, buildId, object : ModelInterface {
             var update = false
@@ -209,7 +215,8 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.RUNNING)
+        }, newBuildStatus, operation = "stageCheckQuality#$stageId")
+        pipelineBuildDao.updateStatus(dslContext, projectId, buildId, oldBuildStatus, newBuildStatus)
         return allStageStatus ?: emptyList()
     }
 
@@ -239,7 +246,7 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.STAGE_SUCCESS)
+        }, BuildStatus.STAGE_SUCCESS, operation = "stageReview#$stageId")
     }
 
     fun stageStart(
@@ -271,13 +278,13 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.RUNNING)
+        }, BuildStatus.RUNNING, operation = "stageStart#$stageId")
         return allStageStatus ?: emptyList()
     }
 
     private fun fetchHistoryStageStatus(model: Model): List<BuildStageStatus> {
         val stageTagMap: Map<String, String>
-            by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } ?: emptyMap() }
+            by lazy { stageTagService.getAllStageTag().data?.associate { it.id to it.stageTagName } ?: emptyMap() }
         // 更新Stage状态至BuildHistory
         return model.stages.map {
             BuildStageStatus(

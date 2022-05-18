@@ -29,15 +29,14 @@ package com.tencent.devops.log.service.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
-import com.tencent.devops.common.log.pojo.LogBatchEvent
-import com.tencent.devops.common.log.pojo.LogEvent
-import com.tencent.devops.common.log.pojo.LogStatusEvent
+import com.tencent.devops.log.event.LogStorageEvent
+import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.log.jmx.LogStorageBean
@@ -74,21 +73,14 @@ class LogServiceLuceneImpl constructor(
         .expireAfterAccess(30, TimeUnit.MINUTES)
         .build<String/*BuildId*/, Boolean/*Has create the index*/>()
 
-    override fun pipelineFinish(event: PipelineBuildFinishBroadCastEvent) {
-        with(event) {
-            logger.info("[$projectId|$pipelineId|$buildId] build finish")
-            indexService.flushLineNum2DB(buildId)
-        }
-    }
-
-    override fun addLogEvent(event: LogEvent) {
+    override fun addLogEvent(event: LogOriginEvent) {
         val logMessage = addLineNo(event.buildId, event.logs)
         if (logMessage.isNotEmpty()) {
-            buildLogPrintService.dispatchEvent(LogBatchEvent(event.buildId, logMessage))
+            buildLogPrintService.dispatchEvent(LogStorageEvent(event.buildId, logMessage))
         }
     }
 
-    override fun addBatchLogEvent(event: LogBatchEvent) {
+    override fun addBatchLogEvent(event: LogStorageEvent) {
         val currentEpoch = System.currentTimeMillis()
         var success = false
         try {
@@ -298,7 +290,7 @@ class LogServiceLuceneImpl constructor(
         val resultName = fileName ?: "$pipelineId-$buildId-log"
         return Response
             .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-            .header("content-disposition", "attachment; filename = $resultName.log")
+            .header("content-disposition", "attachment; filename = \"$resultName.log\"")
             .header("Cache-Control", "no-cache")
             .build()
     }

@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
@@ -45,7 +44,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
-import com.tencent.devops.process.engine.common.Timeout.CONTAINER_MAX_MILLS
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
@@ -65,16 +64,15 @@ import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
 import com.tencent.devops.store.pojo.common.KEY_VERSION
-import java.time.Duration
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import org.jooq.impl.DSL
 
 @Suppress(
     "TooManyFunctions",
@@ -230,7 +228,7 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun getTaskRecord(
-        transactionContext: DSLContext?,
+        transactionContext: DSLContext? = null,
         projectId: String,
         buildId: String,
         taskId: String
@@ -254,7 +252,7 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun updateTaskParam(
-        transactionContext: DSLContext?,
+        transactionContext: DSLContext? = null,
         projectId: String,
         buildId: String,
         taskId: String,
@@ -342,21 +340,18 @@ class PipelineTaskService @Autowired constructor(
         )
     }
 
-    fun updateTaskStatusInfo(
-        transactionContext: DSLContext?,
-        userId: String? = null,
-        projectId: String,
-        buildId: String,
-        taskId: String,
-        taskStatus: BuildStatus
-    ) {
+    fun updateTaskStatusInfo(userId: String? = null, updateTaskInfo: UpdateTaskInfo) {
         var starter: String? = null
         var approver: String? = null
         var startTime: LocalDateTime? = null
         var endTime: LocalDateTime? = null
         var totalTime: Long? = null
+        val projectId = updateTaskInfo.projectId
+        val buildId = updateTaskInfo.buildId
+        val taskId = updateTaskInfo.taskId
+        val taskStatus = updateTaskInfo.taskStatus
         val taskRecord = pipelineBuildTaskDao.get(
-            dslContext = transactionContext ?: dslContext,
+            dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
             taskId = taskId
@@ -379,7 +374,8 @@ class PipelineTaskService @Autowired constructor(
                 buildId = buildId,
                 taskId = taskId,
                 additionalOptions = additionalOptions,
-                executeCount = executeCount)
+                executeCount = executeCount
+            )
         ) {
             // 如果是自动重试则不重置task的时间
             startTime = LocalDateTime.now()
@@ -387,21 +383,12 @@ class PipelineTaskService @Autowired constructor(
                 starter = userId
             }
         }
-        val updateTaskInfo = UpdateTaskInfo(
-            taskStatus = taskStatus,
-            starter = starter,
-            approver = approver,
-            startTime = startTime,
-            endTime = endTime,
-            totalTime = totalTime
-        )
-        pipelineBuildTaskDao.updateTaskInfo(
-            dslContext = transactionContext ?: dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId,
-            updateTaskInfo = updateTaskInfo
-        )
+        updateTaskInfo.starter = starter
+        updateTaskInfo.approver = approver
+        updateTaskInfo.startTime = startTime
+        updateTaskInfo.endTime = endTime
+        updateTaskInfo.totalTime = totalTime
+        pipelineBuildTaskDao.updateTaskInfo(dslContext = dslContext, updateTaskInfo = updateTaskInfo)
     }
 
     /**
@@ -631,7 +618,7 @@ class PipelineTaskService @Autowired constructor(
         redisOperation.set(
             key = PauseRedisUtils.getPauseRedisKey(buildId = task.buildId, taskId = task.taskId),
             value = "true",
-            expiredInSecond = CONTAINER_MAX_MILLS
+            expiredInSecond = Timeout.CONTAINER_MAX_MILLS / 1000
         )
     }
 
@@ -641,7 +628,9 @@ class PipelineTaskService @Autowired constructor(
         buildStatus: BuildStatus,
         errorType: ErrorType? = null,
         errorCode: Int? = null,
-        errorMsg: String? = null
+        errorMsg: String? = null,
+        platformCode: String? = null,
+        platformErrorCode: Int? = null
     ) {
         val taskStatus = BuildStatusSwitcher.taskStatusMaker.switchByErrorCode(buildStatus, errorCode)
         val projectId = task.projectId
@@ -649,28 +638,25 @@ class PipelineTaskService @Autowired constructor(
         val buildId = task.buildId
         val taskId = task.taskId
         val taskName = task.taskName
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            logger.info("${task.buildId}|UPDATE_TASK_STATUS|$taskName|$taskStatus|$userId|$errorCode")
-            updateTaskStatusInfo(
-                transactionContext = transactionContext,
-                taskStatus = taskStatus,
-                userId = userId,
-                projectId = projectId,
-                buildId = buildId,
-                taskId = taskId
-            )
-            if (errorType != null) setTaskErrorInfo(
-                transactionContext = transactionContext,
+        logger.info("${task.buildId}|UPDATE_TASK_STATUS|$taskName|$taskStatus|$userId|$errorCode")
+        updateTaskStatusInfo(
+            userId = userId,
+            updateTaskInfo = UpdateTaskInfo(
                 projectId = projectId,
                 buildId = buildId,
                 taskId = taskId,
+                taskStatus = taskStatus,
                 errorType = errorType,
-                errorCode = errorCode ?: ErrorCode.PLUGIN_DEFAULT_ERROR,
-                errorMsg = errorMsg ?: ""
+                errorCode = errorCode,
+                errorMsg = errorMsg,
+                platformCode = platformCode,
+                platformErrorCode = platformErrorCode
             )
+        )
+        // #5109 非事务强相关，减少影响。仅做摘要展示，无需要时时更新
+        if (buildStatus.isRunning()) {
             pipelineBuildSummaryDao.updateCurrentBuildTask(
-                dslContext = transactionContext,
+                dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,

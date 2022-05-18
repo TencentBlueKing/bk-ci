@@ -40,9 +40,11 @@ import com.tencent.devops.artifactory.util.BkRepoUtils
 import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_DEVOPS_PROJECT_ID
 import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_CUSTOM
 import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_REPORT
 import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.util.BkRepoUtils.toFileDetail
+import com.tencent.devops.artifactory.util.BkRepoUtils.toFileInfo
 import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -400,6 +402,29 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         with(artifactInfo) {
             defaultBkRepoClient.delete(BKREPO_DEFAULT_USER, projectId, repoName, artifactUri)
         }
+    }
+
+    override fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        filePath: String,
+        includeFolder: Boolean?,
+        deep: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Page<FileInfo> {
+        val data = defaultBkRepoClient.listFilePage(
+            userId = userId,
+            projectId = projectId,
+            repoName = REPO_NAME_CUSTOM,
+            path = filePath,
+            includeFolders = includeFolder ?: true,
+            deep = deep ?: false,
+            page = page ?: 1,
+            pageSize = pageSize ?: 20
+        )
+        val fileInfoList = data.records.map { it.toFileInfo() }
+        return Page(data.pageNumber, data.pageSize, data.totalRecords, fileInfoList)
     }
 
     companion object {

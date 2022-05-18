@@ -62,7 +62,6 @@ import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
-import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -73,6 +72,7 @@ import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
@@ -511,10 +511,11 @@ class RepositoryService @Autowired constructor(
                         url = repository.getFormatURL(),
                         type = ScmType.CODE_SVN
                     )
+                    // 如果repository为null，则默认为TC
                     repositoryCodeSvnDao.create(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        region = repository.region,
+                        region = repository.region ?: CodeSvnRegion.TC,
                         projectName = repository.projectName,
                         userName = repository.userName,
                         privateToken = repository.credentialId,
@@ -574,7 +575,8 @@ class RepositoryService @Autowired constructor(
                         repositoryId = repositoryId,
                         projectName = GitUtils.getProjectName(repository.url),
                         userName = repository.userName,
-                        privateToken = repository.credentialId
+                        privateToken = repository.credentialId,
+                        authType = repository.authType
                     )
                     repositoryId
                 }
@@ -971,14 +973,14 @@ class RepositoryService @Autowired constructor(
             repositoryDao.countByProject(
                 dslContext = dslContext,
                 projectIds = setOf(projectId),
-                repositoryType = repositoryType,
+                repositoryTypes = repositoryType?.let { listOf(it) },
                 aliasName = aliasName,
                 repositoryIds = hasListPermissionRepoList.toSet()
             )
         val repositoryRecordList = repositoryDao.listByProject(
             dslContext = dslContext,
             projectId = projectId,
-            repositoryType = repositoryType,
+            repositoryTypes = repositoryType?.let { listOf(it) },
             aliasName = aliasName,
             repositoryIds = hasListPermissionRepoList.toSet(),
             offset = offset,
@@ -1020,7 +1022,9 @@ class RepositoryService @Autowired constructor(
                     (svnRepo?.svnType?.toUpperCase() ?: RepoAuthType.SSH.name) to svnRepo?.credentialId
                 }
                 ScmType.CODE_GITLAB.name -> {
-                    RepoAuthType.HTTP.name to gitlabAuthMap?.get(it.repositoryId)?.credentialId
+                    val gitlabRepo = gitlabAuthMap?.get(it.repositoryId)
+                    val gitlabAuthType = gitlabRepo?.authType ?: RepoAuthType.HTTP.name
+                    gitlabAuthType to gitlabRepo?.credentialId
                 }
                 ScmType.CODE_P4.name -> {
                     RepoAuthType.HTTP.name to p4RepoAuthMap?.get(it.repositoryId)?.credentialId
@@ -1056,26 +1060,28 @@ class RepositoryService @Autowired constructor(
     fun hasPermissionList(
         userId: String,
         projectId: String,
-        repositoryType: ScmType?,
+        repositoryType: String?,
         authPermission: AuthPermission,
         offset: Int,
-        limit: Int
+        limit: Int,
+        aliasName: String? = null
     ): SQLPage<RepositoryInfo> {
         val hasPermissionList = repositoryPermissionService.filterRepository(userId, projectId, authPermission)
+        val repositoryTypes = repositoryType?.split(",")?.map { ScmType.valueOf(it) }
 
         val count = repositoryDao.countByProject(
             dslContext = dslContext,
             projectIds = setOf(projectId),
-            repositoryType = repositoryType,
-            aliasName = null,
+            repositoryTypes = repositoryTypes,
+            aliasName = aliasName,
             repositoryIds = hasPermissionList.toSet()
         )
         val repositoryRecordList =
             repositoryDao.listByProject(
                 dslContext = dslContext,
                 projectId = projectId,
-                repositoryType = repositoryType,
-                aliasName = null,
+                repositoryTypes = repositoryTypes,
+                aliasName = aliasName,
                 repositoryIds = hasPermissionList.toSet(),
                 offset = offset,
                 limit = limit
@@ -1103,7 +1109,7 @@ class RepositoryService @Autowired constructor(
         val count = repositoryDao.countByProject(
             dslContext = dslContext,
             projectIds = projectIds,
-            repositoryType = repositoryType,
+            repositoryTypes = repositoryType?.let { listOf(it) },
             aliasName = null,
             repositoryIds = null
         )
@@ -1139,7 +1145,7 @@ class RepositoryService @Autowired constructor(
         val count = repositoryDao.countByProject(
             dslContext = dslContext,
             projectIds = arrayListOf(projectId),
-            repositoryType = null,
+            repositoryTypes = null,
             aliasName = aliasName,
             repositoryIds = null
         )
@@ -1148,7 +1154,7 @@ class RepositoryService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 aliasName = aliasName,
-                repositoryType = null,
+                repositoryTypes = null,
                 repositoryIds = null,
                 offset = offset,
                 limit = limit
@@ -1301,6 +1307,21 @@ class RepositoryService @Autowired constructor(
         return result
     }
 
+    fun getRepositoryByHashIds(hashIds: List<String>): List<Repository> {
+        val repositoryIds = hashIds.map { HashUtil.decodeOtherIdToLong(it) }
+        val repositoryInfos = repositoryDao.getRepoByIds(
+            dslContext = dslContext,
+            repositoryIds = repositoryIds,
+            checkDelete = true
+        )
+        val result = mutableListOf<Repository>()
+        repositoryInfos?.map {
+            val repository = compose(it)
+            result.add(repository)
+        }
+        return result
+    }
+
     fun getInfoByIds(ids: List<Long>): List<RepositoryInfo> {
         val repositoryInfos = repositoryDao.getRepoByIds(
             dslContext = dslContext,
@@ -1375,7 +1396,6 @@ class RepositoryService @Autowired constructor(
                 }
             }
         }
-
         val checkResult = when (repo) {
             is CodeSvnRepository -> {
                 val svnCredential = CredentialUtils.getCredential(repo, list, result.data!!.credentialType)
@@ -1572,16 +1592,52 @@ class RepositoryService @Autowired constructor(
                 }
             }
             is CodeGitlabRepository -> {
-                scmService.checkPrivateKeyAndToken(
-                    projectName = repo.projectName,
-                    url = repo.getFormatURL(),
-                    type = ScmType.CODE_GITLAB,
-                    privateKey = null,
-                    passPhrase = null,
-                    token = list[0],
-                    region = null,
-                    userName = repo.userName
-                )
+                when (repo.authType) {
+                    RepoAuthType.SSH -> {
+                        val token = list[0]
+                        if (list.size < 2) {
+                            throw OperationException(
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                            )
+                        }
+                        val privateKey = list[1]
+                        if (privateKey.isEmpty()) {
+                            throw OperationException(
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                            )
+                        }
+                        val passPhrase = if (list.size > 2) {
+                            val p = list[2]
+                            p.ifEmpty {
+                                null
+                            }
+                        } else {
+                            null
+                        }
+                        scmService.checkPrivateKeyAndToken(
+                            projectName = repo.projectName,
+                            url = repo.getFormatURL(),
+                            type = ScmType.CODE_GITLAB,
+                            privateKey = privateKey,
+                            passPhrase = passPhrase,
+                            token = token,
+                            region = null,
+                            userName = repo.userName
+                        )
+                    }
+                    else -> {
+                        scmService.checkPrivateKeyAndToken(
+                            projectName = repo.projectName,
+                            url = repo.getFormatURL(),
+                            type = ScmType.CODE_GITLAB,
+                            privateKey = null,
+                            passPhrase = null,
+                            token = list[0],
+                            region = null,
+                            userName = repo.userName
+                        )
+                    }
+                }
             }
             is CodeP4Repository -> {
                 val username = list[0]

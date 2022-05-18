@@ -132,6 +132,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_START_WITH_ERROR = "2101075" // 流水线启动准备失败
     const val ERROR_TEMPLATE_NOT_UPDATE = "2101076" // 该模板无法更新
     const val ERROR_PIPELINE_MODEL_MATRIX_YAML_CHECK_ERROR = "2101077" // matrix yaml 格式错误
+    const val ERROR_TEMPLATE_VERSION_COUNT_EXCEEDS_LIMIT = "2101078" // 模板的版本数量不能超过{0}个
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败
@@ -143,6 +144,7 @@ object ProcessMessageCode {
     const val ERROR_TIMEOUT_IN_BUILD_QUEUE = "2101904" //  排队超时，取消运行! [{0}]
     const val ERROR_PARUS_PIEPLINE_IS_RUNNINT = "2101905" // 暂停的流水线已开始运行
     const val ERROR_ELEMENT_TOO_LONG = "2101906" // {0} element大小越界
+    const val ERROR_JOB_RUNNING = "2101907" // job非完成态，不能进行重试
 
     const val ERROR_NO_BUILD_EXISTS_BY_ID = "2101100" // 流水线构建[{0}]不存在
     const val ERROR_NO_PIPELINE_EXISTS_BY_ID = "2101101" // 流水线[{0}]不存在
@@ -232,6 +234,11 @@ object ProcessMessageCode {
     const val BUILD_MSG_PIPELINE = "2101316" // 流水线触发
     const val BUILD_MSG_DESC = "2101317" // 构建信息描述
 
+    // 其他构建进程挂掉的参考信息，自由添加方便打印卫通日志里
+    const val BUILD_WORKER_DEAD_ERROR = "2101318"
+    // 构建机Agent详情链接
+    const val BUILD_AGENT_DETAIL_LINK_ERROR = "2101319"
+
     // 人工审核插件编辑时输入参数错误
     const val ERROR_PARAM_MANUALREVIEW = "2101105"
 
@@ -239,4 +246,11 @@ object ProcessMessageCode {
     const val ERROR_GROUP_COUNT_EXCEEDS_LIMIT = "2101401" // 一个项目标签组不能超过10个
     const val ERROR_LABEL_COUNT_EXCEEDS_LIMIT = "2101402" // 同一分组下最多可添加12个标签
     const val ERROR_LABEL_NAME_TOO_LONG = "2101403" // 一个标签最多输入20个字符
+
+    // 插件级别执行失败log错误组 21015开头
+    const val ERROR_TASK_LOG_USER_FAILED = "2101501" // 【ERROR】请检查脚本代码逻辑是否正确
+    const val ERROR_TASK_LOG_SYSTEM_FAILED = "2101502" // 【ERROR】请联系蓝盾助手DevOps-helper协助定位
+    const val ERROR_TASK_LOG_THIRD_PARTY_FAILED = "2101503" // 【ERROR】请联系该插件所属第三方服务的助手协助定位
+    const val ERROR_TASK_LOG_PLUGIN_FAILED = "2101504" // 【ERROR】请联系插件开发者{0}协助定位
+    const val ERROR_TASK_LOG_OVERVIEW = "2101505" // 错误类型：{0} \n错误代码：{1}
 }

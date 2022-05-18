@@ -86,11 +86,11 @@ object ShellUtil {
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
-        systemEnvVariables: Map<String, String>? = null,
         prefix: String = "",
         errorMessage: String? = null,
         workspace: File = dir,
         print2Logger: Boolean = true,
+        jobId: String? = null,
         stepId: String? = null
     ): String {
         return executeUnixCommand(
@@ -101,14 +101,14 @@ object ShellUtil {
                 workspace = workspace,
                 buildEnvs = buildEnvs,
                 runtimeVariables = runtimeVariables,
-                continueNoneZero = continueNoneZero,
-                systemEnvVariables = systemEnvVariables
+                continueNoneZero = continueNoneZero
             ).canonicalPath,
             sourceDir = dir,
             prefix = prefix,
             errorMessage = errorMessage,
             print2Logger = print2Logger,
             executeErrorMessage = "",
+            jobId = jobId,
             buildId = buildId,
             stepId = stepId
         )
@@ -121,7 +121,6 @@ object ShellUtil {
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
-        systemEnvVariables: Map<String, String>? = null,
         workspace: File = dir
     ): File {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
@@ -135,11 +134,6 @@ object ShellUtil {
 
         command.append("export $WORKSPACE_ENV=${workspace.absolutePath}\n")
             .append("export DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\n")
-
-        // 设置系统环境变量
-        systemEnvVariables?.forEach { (name, value) ->
-            command.append("export $name=$value\n")
-        }
 
         val commonEnv = runtimeVariables.plus(CommonEnv.getCommonEnv())
             .filterNot { specialEnv(it.key) }
@@ -208,6 +202,7 @@ object ShellUtil {
         print2Logger: Boolean = true,
         executeErrorMessage: String? = null,
         buildId: String? = null,
+        jobId: String? = null,
         stepId: String? = null
     ): String {
         try {
@@ -218,6 +213,7 @@ object ShellUtil {
                 prefix = prefix,
                 executeErrorMessage = executeErrorMessage,
                 buildId = buildId,
+                jobId = jobId,
                 stepId = stepId
             )
         } catch (ignored: Throwable) {

@@ -71,6 +71,10 @@ class ContainerCustomizedRunHandler(
                     .withPortBindings(portBindings)
                     .withMounts(DockerMountLoader.loadMounts(this))
 
+                if (qpcUniquePath != null && qpcUniquePath.isNotBlank()) {
+                    hostConfig.withInit(true)
+                }
+
                 if (dockerResource != null) {
                     logger.info("[$buildId]|[$vmSeqId] dockerRun dockerResource: ${JsonUtil.toJson(dockerResource)}")
                     hostConfig

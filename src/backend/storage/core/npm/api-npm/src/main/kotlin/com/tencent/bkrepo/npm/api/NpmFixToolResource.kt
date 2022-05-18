@@ -31,6 +31,7 @@
 
 package com.tencent.bkrepo.npm.api
 
+import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.common.artifact.api.ArtifactPathVariable
 import com.tencent.bkrepo.npm.artifact.NpmArtifactInfo
 import com.tencent.bkrepo.npm.pojo.fixtool.DateTimeFormatResponse
@@ -39,6 +40,8 @@ import com.tencent.bkrepo.npm.pojo.fixtool.PackageManagerResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 
 @Api("npm修复工具")
 interface NpmFixToolResource {
@@ -59,4 +62,11 @@ interface NpmFixToolResource {
     fun fixPackageSizeField(
         @ArtifactPathVariable artifactInfo: NpmArtifactInfo
     ): PackageMetadataFixResponse
+
+    @ApiOperation("修复package.json文件内容与包版本列表不一致的问题")
+    @PostMapping("/{projectId}/{repoName}/{name}/correction")
+    fun inconsistentCorrectionData(
+        artifactInfo: NpmArtifactInfo,
+        @PathVariable name: String
+    ): Response<Any>
 }
