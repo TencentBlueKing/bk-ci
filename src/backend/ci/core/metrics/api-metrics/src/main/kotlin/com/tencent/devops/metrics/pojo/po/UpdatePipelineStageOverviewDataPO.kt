@@ -37,12 +37,14 @@ data class UpdatePipelineStageOverviewDataPO(
     val id: Long,
     @ApiModelProperty("项目ID")
     val projectId: String,
+    @ApiModelProperty("stage标签名称")
+    val stageTagName: String,
     @ApiModelProperty("平均耗时，单位：毫秒")
-    val avgCostTime: Long,
+    var avgCostTime: Long,
     @ApiModelProperty("执行次数")
-    val executeCount: Long,
+    var executeCount: Long,
     @ApiModelProperty("修改人")
-    val modifier: String,
+    var modifier: String,
     @ApiModelProperty("更新时间")
-    val updateTime: LocalDateTime
+    var updateTime: LocalDateTime
 )
