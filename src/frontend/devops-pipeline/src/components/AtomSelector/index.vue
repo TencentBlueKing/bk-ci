@@ -63,6 +63,7 @@
                         :element-index="elementIndex"
                         :atom-code="atomCode"
                         :active-atom-code="activeAtomCode"
+                        @installAtomSuccess="installAtomSuccess"
                         @close="close"
                         @click="activeAtom(atom.atomCode)"
                         :class="{
@@ -262,7 +263,6 @@
             },
             handleSearch (value) {
                 this.searchKey = value.trim()
-                this.setAtomPageOver()
                 this.freshRequestAtomData()
                 this.fetchAtomList()
             },
@@ -312,6 +312,12 @@
                 const target = event.target
                 const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
                 if (bottomDis <= 600) this.fetchAtomList()
+            },
+
+            installAtomSuccess (atom) {
+                const curAtom = this.curTabList.find(item => item.atomCode === atom.atomCode)
+                this.installArr.push(curAtom)
+                this.uninstallArr = this.uninstallArr.filter(item => item.atomCode !== atom.atomCode)
             }
         }
     }

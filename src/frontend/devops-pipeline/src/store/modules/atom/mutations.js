@@ -420,7 +420,7 @@ export default {
     [CLEAR_ATOM_DATA]: (state) => {
         state.atomList = []
         state.atomMap = {}
-        state.atomCodeList = {}
+        state.atomCodeList = []
         state.fetchingAtomList = true
         return state
     }

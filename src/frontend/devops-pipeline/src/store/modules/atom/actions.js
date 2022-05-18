@@ -245,19 +245,14 @@ export default {
         })
     },
 
-    fetchAtoms: async ({ commit, state, getters }, { projectCode, category, jobType, classifyId, os, searchKey, queryProjectAtomFlag }) => {
+    fetchAtoms: async ({ commit, state, getters }, { projectCode, category, jobType, classifyId, os, searchKey, queryProjectAtomFlag, fitOsFlag = undefined }) => {
         try {
             const requestAtomData = state.requestAtomData
-            const keyword = searchKey || requestAtomData.keyword || undefined
+            const keyword = searchKey || requestAtomData.keyword || ''
             let recommendFlag = requestAtomData.recommendFlag
             let page = requestAtomData.page || 1
             const pageSize = requestAtomData.pageSize || 50
-            
-            if (keyword) {
-                // 关键字查询 => 搜索研发商店插件数据
-                requestAtomData.pageSize = 100
-                queryProjectAtomFlag = false
-            }
+            const curOs = os
 
             // 查询无编译环境下的不适用当前job => queryFitAgentBuildLessAtomFlag 传 false （如果不传这里会包含那些能在有编译环境下使用的无编译环境插件）
             let queryFitAgentBuildLessAtomFlag
@@ -265,11 +260,23 @@ export default {
                 queryFitAgentBuildLessAtomFlag = false
             }
             
-            // 查询不适用插件 category 不传
-            if (recommendFlag === false) {
-                category = undefined
+            if (keyword) {
+                // 关键字查询 => 搜索研发商店插件数据 (全局搜索)
+                requestAtomData.pageSize = 100
+                queryProjectAtomFlag = false
+                fitOsFlag = false
+                os = undefined
+                recommendFlag = undefined
+                jobType = undefined
+                classifyId = undefined
             }
-
+            
+            // 查询不适用插件 category 不传
+            if (recommendFlag === undefined) {
+                category = undefined
+                fitOsFlag = false
+            }
+            
             if (page === 1) {
                 commit(FETCHING_ATOM_LIST, true)
             } else {
@@ -289,10 +296,10 @@ export default {
                     recommendFlag,
                     queryProjectAtomFlag,
                     queryFitAgentBuildLessAtomFlag,
-                    fitOsFlag: recommendFlag !== undefined
+                    fitOsFlag
                 }
             }).then(res => {
-                const curAtomList = getters.getAtomDisabled(res.data.records, os, category)
+                const curAtomList = getters.getAtomDisabled(res.data.records, curOs, category)
                 const [cruAtomCodeList, curAtomMap] = getMapByKey(curAtomList, 'atomCode')
 
                 let atomCodeList, atomMap, atomList
