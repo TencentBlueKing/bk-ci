@@ -1151,8 +1151,12 @@ turbo:
   replicaCount: 1
   hostAliases: []
   resources:
-    limits: {}
-    requests: {}
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 3000Mi
   containerSecurityContext:
     enabled: false
     runAsUser: 1001

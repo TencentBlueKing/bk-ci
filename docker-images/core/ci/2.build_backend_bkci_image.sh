@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-# 排除掉前端和agent两个大文件夹,缩小体积
+# 排除掉前端文件夹,缩小体积
 cat << EOF > ./.dockerignore
 ./ci/frontend
 EOF
