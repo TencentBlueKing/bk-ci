@@ -138,12 +138,12 @@ class StoreEnvVarDao {
         varName: String
     ): Int {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
-            return dslContext.select(ID.`as`(KEY_ID)).from(this)
+            return dslContext.selectCount().from(this)
                 .where(STORE_CODE.eq(storeCode)
                     .and(STORE_TYPE.eq(storeType))
                     .and(SCOPE.eq(scope))
                     .and(VAR_NAME.eq(varName)))
-                .execute()
+                .fetchOne(0, String::class.java)
         }
     }
 

@@ -92,7 +92,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                 storeCode = storeCode,
                 scope = storeEnvVarRequest.scope,
                 varName = storeEnvVarRequest.varName
-        ) != 0) {
+        ) > 0) {
             return MessageCodeUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
                 params = arrayOf(storeEnvVarRequest.varName),
