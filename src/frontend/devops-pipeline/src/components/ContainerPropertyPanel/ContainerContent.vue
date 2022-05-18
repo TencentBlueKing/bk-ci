@@ -104,7 +104,7 @@
                 </form-field>
             </template>
 
-            <form-field :label="$t('editPage.imageTicket')" v-if="(buildResourceType === 'DOCKER') && buildImageType === 'THIRD'">
+            <form-field :label="$t('editPage.imageTicket')" v-if="showImagePublicTypeList.includes(buildResourceType) && buildImageType === 'THIRD'">
                 <select-input v-bind="imageCredentialOption" :disabled="!editable" name="credentialId" :value="buildImageCreId" :handle-change="changeBuildResource"></select-input>
             </form-field>
 
