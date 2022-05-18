@@ -41,10 +41,8 @@ import com.tencent.devops.auth.service.BkPermissionProjectService
 import com.tencent.devops.auth.service.BkPermissionService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.IamCacheService
-import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
-import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.auth.service.stream.GithubStreamPermissionServiceImpl
 import com.tencent.devops.auth.service.stream.GitlabStreamPermissionServiceImpl
 import com.tencent.devops.auth.service.stream.StreamPermissionProjectServiceImpl
@@ -87,11 +85,11 @@ class AuthConfiguration {
     fun iamEsbService() = IamEsbService()
 
     @Bean
-    @ConditionalOnMissingBean(PermissionService::class)
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "simple")
     fun permissionService() = SimpleAuthPermissionService()
 
     @Bean
-    @ConditionalOnMissingBean(PermissionProjectService::class)
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "simple")
     fun permissionProjectService() = SimpleAuthPermissionProjectService()
 
     @Bean
