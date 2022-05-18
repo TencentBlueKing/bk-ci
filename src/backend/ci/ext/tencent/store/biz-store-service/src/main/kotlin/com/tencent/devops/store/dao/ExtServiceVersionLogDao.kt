@@ -145,10 +145,10 @@ class ExtServiceVersionLogDao {
         }
     }
 
-    fun deleteByServiceCode(dslContext: DSLContext, extServiceId: String) {
+    fun deleteByServiceId(dslContext: DSLContext, extServiceIds: List<String>) {
         with(TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG) {
             dslContext.deleteFrom(this)
-                .where(SERVICE_ID.eq(extServiceId))
+                .where(SERVICE_ID.`in`(extServiceIds))
                 .execute()
         }
     }

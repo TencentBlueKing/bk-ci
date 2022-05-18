@@ -66,10 +66,10 @@ class ExtItemServiceDao {
         }
     }
 
-    fun deleteByServiceCode(dslContext: DSLContext, extServiceId: String) {
+    fun deleteByServiceId(dslContext: DSLContext, extServiceIds: List<String>) {
         with(TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL) {
             dslContext.deleteFrom(this)
-                .where(SERVICE_ID.eq(extServiceId))
+                .where(SERVICE_ID.`in`(extServiceIds))
                 .execute()
         }
     }

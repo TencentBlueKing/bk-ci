@@ -649,10 +649,15 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
     fun deleteExtensionService(userId: String, serviceCode: String): Result<Boolean> {
         logger.info("deleteService userId: $userId , serviceId: $serviceCode")
-        val extServiceResource = extServiceDao.getExtServiceIds(dslContext, serviceCode)?.get(0)
-        val extServiceId =
-            if (extServiceResource != null && extServiceResource.size() > 0) extServiceResource[0] as String else ""
-        if (StringUtils.isEmpty(extServiceId)) {
+        val result = extServiceDao.getExtServiceIds(dslContext, serviceCode)
+        var extServiceId: String? = null
+        val extServiceIdList = result.map {
+            if (it["latestFlag"] as Boolean) {
+                extServiceId = it["id"] as String
+            }
+            it["id"] as String
+        }
+        if (extServiceId.isNullOrBlank()) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_SERVICE_NOT_EXIST,
                 arrayOf(serviceCode)
@@ -686,15 +691,17 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 StoreTypeEnum.SERVICE.type.toByte()
             )
         //  删除仓库镜像
-        val serviceEnvRecord = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, extServiceId)
-        if (serviceEnvRecord != null && serviceEnvRecord.imagePath.isNotEmpty()) {
-            val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveStoreFileResource::class)
-            val serviceUrl = "$serviceUrlPrefix/service/artifactories/store/file/repos/" +
-                    "${bkRepoConfig.bkrepoDockerRepoName}/$serviceCode/delete?type=${StoreTypeEnum.SERVICE.name}"
-            deleteNode(userId, serviceUrl)
+        try {
+            val serviceEnvRecord = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, extServiceId!!)
+            if (serviceEnvRecord != null && serviceEnvRecord.imagePath.isNotEmpty()) {
+                deleteNode(userId, serviceCode)
+            }
+        } catch (e: Exception) {
+            logger.error("delete repository image error: $e")
         }
+
         // 删除代码库
-        val extServiceRecord = extFeatureDao.getLatestServiceByserviceCode(dslContext, serviceCode)
+        val extServiceRecord = extFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
         deleteExtServiceRepository(
             userId = userId,
             projectCode = initProjectCode,
@@ -704,10 +711,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         dslContext.transaction { t ->
             val context = DSL.using(t)
             storeCommonService.deleteStoreInfo(context, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
-            extServiceEnvDao.deleteEnvInfo(context, extServiceId)
+            extServiceEnvDao.deleteEnvInfo(context, extServiceIdList)
             extServiceFeatureDao.deleteExtFeatureServiceData(context, serviceCode)
-            extServiceVersionLogDao.deleteByServiceCode(context, extServiceId)
-            extItemServiceDao.deleteByServiceCode(context, extServiceId)
+            extServiceVersionLogDao.deleteByServiceId(context, extServiceIdList)
+            extItemServiceDao.deleteByServiceId(context, extServiceIdList)
             extServiceDao.deleteExtServiceData(context, serviceCode)
         }
         return Result(true)
@@ -718,7 +725,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         projectCode: String?,
         repositoryHashId: String,
         tokenType: TokenTypeEnum
-    ): Result<Boolean> {
+    ) {
         // 删除代码库信息
         if (!projectCode.isNullOrEmpty() && repositoryHashId.isNotBlank()) {
             try {
@@ -731,17 +738,18 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                             tokenType = tokenType
                         )
                 logger.info("the delGitRepositoryResult is :$delGitRepositoryResult")
-                return delGitRepositoryResult
             } catch (e: Exception) {
-                return Result(false)
+                logger.error("delGitRepositoryError: $e")
             }
         }
-        return Result(true)
     }
 
-    fun deleteNode(userId: String, url: String) {
+    fun deleteNode(userId: String, serviceCode: String) {
+        val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveStoreFileResource::class)
+        val serviceUrl = "$serviceUrlPrefix/service/artifactories/store/file/repos/" +
+                "${bkRepoConfig.bkrepoDockerRepoName}/$serviceCode/delete?type=${StoreTypeEnum.SERVICE.name}"
         val request = Request.Builder()
-            .url(url)
+            .url(serviceUrl)
             .delete()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
