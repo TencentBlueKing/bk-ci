@@ -27,8 +27,8 @@
 
 package com.tencent.devops.auth
 
-import com.tencent.devops.auth.service.SimpleAuthPermissionProjectService
-import com.tencent.devops.auth.service.SimpleAuthPermissionService
+import com.tencent.devops.auth.service.SampleAuthPermissionProjectService
+import com.tencent.devops.auth.service.SampleAuthPermissionService
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
@@ -89,12 +89,12 @@ class AuthConfiguration {
     fun iamEsbService() = IamEsbService()
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "simple")
-    fun permissionService() = SimpleAuthPermissionService()
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
+    fun permissionService() = SampleAuthPermissionService()
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "simple")
-    fun permissionProjectService() = SimpleAuthPermissionProjectService()
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
+    fun permissionProjectService() = SampleAuthPermissionProjectService()
 
     @Bean
     @ConditionalOnMissingBean
