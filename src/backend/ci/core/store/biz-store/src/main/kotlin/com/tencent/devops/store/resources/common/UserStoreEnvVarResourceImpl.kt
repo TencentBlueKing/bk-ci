@@ -44,11 +44,22 @@ class UserStoreEnvVarResourceImpl @Autowired constructor(
         return storeEnvVarService.create(userId, storeEnvVarRequest)
     }
 
-    override fun delete(userId: String, storeType: String, storeCode: String, varNames: String): Result<Boolean> {
+    override fun update(userId: String, variableId: String, storeEnvVarRequest: StoreEnvVarRequest): Result<Boolean> {
+        return storeEnvVarService.update(userId, variableId, storeEnvVarRequest)
+    }
+
+    override fun delete(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        scope: String,
+        varNames: String
+    ): Result<Boolean> {
         return storeEnvVarService.delete(
             userId = userId,
             storeType = storeType,
             storeCode = storeCode,
+            scope = scope,
             varNames = varNames
         )
     }
@@ -74,12 +85,14 @@ class UserStoreEnvVarResourceImpl @Autowired constructor(
         userId: String,
         storeType: String,
         storeCode: String,
+        scope: String,
         varName: String
     ): Result<List<StoreEnvChangeLogInfo>?> {
         return storeEnvVarService.getEnvVarChangeLogList(
             userId = userId,
             storeType = storeType,
             storeCode = storeCode,
+            scope = scope,
             varName = varName
         )
     }

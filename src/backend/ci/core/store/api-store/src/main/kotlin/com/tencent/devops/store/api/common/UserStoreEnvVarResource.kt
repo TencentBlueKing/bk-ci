@@ -38,15 +38,15 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.validation.Valid
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
+import javax.ws.rs.PathParam
 import javax.ws.rs.GET
+import javax.ws.rs.DELETE
+import javax.ws.rs.QueryParam
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_STORE_ENV_VAR"], description = "环境变量")
@@ -67,6 +67,22 @@ interface UserStoreEnvVarResource {
         storeEnvVarRequest: StoreEnvVarRequest
     ): Result<Boolean>
 
+    @ApiOperation("更新环境变量")
+    @POST
+    @Path("/update")
+    fun update(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("变量ID", required = true)
+        @BkField(patternStyle = BkStyleEnum.ID_STYLE)
+        @QueryParam("variableId")
+        variableId: String,
+        @ApiParam("环境变量请求报文体", required = true)
+        @Valid
+        storeEnvVarRequest: StoreEnvVarRequest
+    ): Result<Boolean>
+
     @ApiOperation("删除环境变量")
     @DELETE
     @Path("/types/{storeType}/codes/{storeCode}")
@@ -82,6 +98,10 @@ interface UserStoreEnvVarResource {
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
+        @ApiParam("生效范围 TEST：测试 PRD：正式 ALL：所有", required = true)
+        @QueryParam("scope")
+        @BkField(patternStyle = BkStyleEnum.SCOPE_STYLE, required = true)
+        scope: String,
         @ApiParam("环境变量名称集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
         @QueryParam("varNames")
         @BkField(patternStyle = BkStyleEnum.COMMON_STYLE)
@@ -128,6 +148,10 @@ interface UserStoreEnvVarResource {
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
+        @ApiParam("生效范围 TEST：测试 PRD：正式 ALL：所有，用\",\"分隔进行拼接", required = true)
+        @QueryParam("scopes")
+        @BkField(patternStyle = BkStyleEnum.SCOPE_STYLE, required = true)
+        scope: String,
         @ApiParam("变量名", required = true)
         @PathParam("varName")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
