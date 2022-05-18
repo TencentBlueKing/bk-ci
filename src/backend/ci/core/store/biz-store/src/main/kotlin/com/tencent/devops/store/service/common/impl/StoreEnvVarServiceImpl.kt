@@ -254,15 +254,14 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         userId: String,
         storeType: String,
         storeCode: String,
-        scopes: String?,
+        scope: String?,
         varName: String?,
         isDecrypt: Boolean,
         checkPermissionFlag: Boolean
     ): Result<List<StoreEnvVarInfo>?> {
         logger.info("storeEnvVar getLatestEnvVarList userId:$userId,storeType:$storeType,storeCode:$storeCode")
         val storeTypeObj = StoreTypeEnum.valueOf(storeType)
-        val scopeList = if (scopes.isNullOrEmpty()) listOf("ALL", "PRD", "TEST")
-        else scopes.split(",")
+        val scopeList = if (scope.isNullOrEmpty()) listOf("ALL", "PRD", "TEST") else listOf(scope)
         if (checkPermissionFlag && !storeMemberDao.isStoreMember(
                 dslContext = dslContext,
                 userId = userId,
