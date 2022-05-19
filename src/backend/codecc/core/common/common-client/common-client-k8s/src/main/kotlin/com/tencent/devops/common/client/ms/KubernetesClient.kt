@@ -10,7 +10,6 @@ import feign.Request
 import feign.RequestInterceptor
 import feign.RetryableException
 import feign.Retryer
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.kubernetes.client.discovery.KubernetesInformerDiscoveryClient
 import kotlin.reflect.KClass
 
