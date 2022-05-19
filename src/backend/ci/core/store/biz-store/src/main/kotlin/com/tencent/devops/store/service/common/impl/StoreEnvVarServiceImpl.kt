@@ -85,7 +85,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType)) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
-        if (storeEnvVarDao.querySameNameVariable(
+        if (storeEnvVarDao.queryRepeatVariable(
                 dslContext = dslContext,
                 userId = userId,
                 storeType = storeType,
@@ -155,7 +155,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
             createTime = DateTimeUtil.toDateTime(envVarOne[KEY_CREATE_TIME] as LocalDateTime),
             updateTime = DateTimeUtil.toDateTime(envVarOne[KEY_UPDATE_TIME] as LocalDateTime)
         )
-        if (storeEnvVarRequest.scope != maxVersionData.scope && storeEnvVarDao.querySameNameVariable(
+        if (storeEnvVarRequest.scope != maxVersionData.scope && storeEnvVarDao.queryRepeatVariable(
                 dslContext = dslContext,
                 userId = userId,
                 storeType = storeType,

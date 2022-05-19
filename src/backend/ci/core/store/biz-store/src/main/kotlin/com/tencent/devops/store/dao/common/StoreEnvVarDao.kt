@@ -129,7 +129,7 @@ class StoreEnvVarDao {
     /**
      * 查询目标环境是否存在同名变量
      */
-    fun querySameNameVariable(
+    fun queryRepeatVariable(
         dslContext: DSLContext,
         userId: String,
         storeType: Byte,
