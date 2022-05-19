@@ -59,6 +59,11 @@ class DispatchClient @Autowired constructor(
 
     fun refreshStatus(containerRunningsCount: Int) {
         val dockerIp = CommonUtils.getHostIp()
+
+        if (containerRunningsCount <= 0) {
+            logger.warn("Node: $dockerIp no running containers in containerPool.")
+        }
+
         val dockerIpInfoVO = DockerIpInfoVO(
             id = 0L,
             dockerIp = dockerIp,
