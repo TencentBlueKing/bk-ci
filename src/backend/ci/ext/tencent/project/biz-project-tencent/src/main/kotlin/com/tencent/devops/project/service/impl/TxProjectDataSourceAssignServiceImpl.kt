@@ -27,12 +27,14 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.pojo.constant.PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY
 import com.tencent.devops.process.pojo.constant.PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY
 import com.tencent.devops.project.dao.DataSourceDao
 import com.tencent.devops.project.service.ShardingRoutingRuleService
+import com.tencent.devops.project.service.TableShardingConfigService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -42,8 +44,14 @@ class TxProjectDataSourceAssignServiceImpl(
     dslContext: DSLContext,
     dataSourceDao: DataSourceDao,
     shardingRoutingRuleService: ShardingRoutingRuleService,
+    tableShardingConfigService: TableShardingConfigService,
     private val redisOperation: RedisOperation
-) : AbsProjectDataSourceAssignServiceImpl(dslContext, dataSourceDao, shardingRoutingRuleService) {
+) : AbsProjectDataSourceAssignServiceImpl(
+    dslContext,
+    dataSourceDao,
+    shardingRoutingRuleService,
+    tableShardingConfigService
+) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxProjectDataSourceAssignServiceImpl::class.java)
@@ -53,10 +61,15 @@ class TxProjectDataSourceAssignServiceImpl(
     /**
      * 获取可用数据源名称
      * @param clusterName db集群名称
+     * @param moduleCode 模块代码
      * @param dataSourceNames 数据源名称集合
      * @return 可用数据源名称
      */
-    override fun getValidDataSourceName(clusterName: String, dataSourceNames: List<String>): String {
+    override fun getValidDataSourceName(
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        dataSourceNames: List<String>
+    ): String {
         if (
             !redisOperation.hasKey(getKeyByClusterName(PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY, clusterName)) ||
             !redisOperation.hasKey(getKeyByClusterName(PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY, clusterName))

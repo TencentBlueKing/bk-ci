@@ -28,12 +28,14 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.PROFILE_PRODUCTION
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.lambda.api.service.ServiceBkDataResource
 import com.tencent.devops.lambda.pojo.bkdata.BkDataQueryData
 import com.tencent.devops.lambda.pojo.bkdata.BkDataQueryParam
@@ -98,19 +100,22 @@ class ShardingDbBuildService @Autowired constructor(
         // 1、从数据平台获取各分区库最近一段时间的构建数据
         val keyName = "ROUTING_RULE"
         val valueName = "TOTAL_BUILD_NUM"
-        val bkDataQueryParam = BkDataQueryParam("SELECT $keyName, $valueName, thedate\n" +
-            "FROM 100205_T_SHARDING_DB_BUILD_DETAIL\n" +
-            "WHERE thedate>='$startDateStr' AND thedate<'$endDateStr'")
-        val bkDataQueryData = queryBkData(bkDataQueryParam).data
-        // 2、统计各分区库最近总构建量
-        val shardingDbBuildNumMap = generateShardingDbBuildInfoMap(bkDataQueryData, keyName, valueName)
-        // 3、将各分区库最近总构建量存入redis中
-        shardingDbBuildNumMap.forEach { (routingRule, totalBuildNum) ->
-            redisOperation.hset(
-                key = getKeyByRedisName(PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY),
-                hashKey = routingRule,
-                values = totalBuildNum.toString()
-            )
+        val moduleCodes = listOf(SystemModuleEnum.PROCESS.name, SystemModuleEnum.METRICS.name)
+        moduleCodes.forEach { moduleCode ->
+            val bkDataQueryParam = BkDataQueryParam("SELECT $keyName, $valueName, thedate\n" +
+                "FROM 100205_T_SHARDING_DB_BUILD_DETAIL\n" +
+                "WHERE MODULE_CODE='$moduleCode' AND thedate>='$startDateStr' AND thedate<'$endDateStr'")
+            val bkDataQueryData = queryBkData(bkDataQueryParam).data
+            // 2、统计各分区库最近总构建量
+            val shardingDbBuildNumMap = generateShardingDbBuildInfoMap(bkDataQueryData, keyName, valueName)
+            // 3、将各分区库最近总构建量存入redis中
+            shardingDbBuildNumMap.forEach { (routingRule, totalBuildNum) ->
+                redisOperation.hset(
+                    key = getKeyByModuleCode(PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY, moduleCode),
+                    hashKey = routingRule,
+                    values = totalBuildNum.toString()
+                )
+            }
         }
     }
 
@@ -123,19 +128,22 @@ class ShardingDbBuildService @Autowired constructor(
         // 1、从数据平台获取各分区库最近一段时间的构建数据
         val keyName = "ROUTING_RULE"
         val valueName = "TOTAL_PROJECT_NUM"
-        val bkDataQueryParam = BkDataQueryParam("SELECT $keyName, $valueName, thedate\n" +
-            "FROM 100205_T_SHARDING_DB_ACTIVE_PROJECT_DETAIL\n" +
-            "WHERE thedate>='$startDateStr' AND thedate<'$endDateStr'")
-        val bkDataQueryData = queryBkData(bkDataQueryParam).data
-        // 2、统计各分区库最近构建项目总数量
-        val shardingDbBuildProjectNumMap = generateShardingDbBuildInfoMap(bkDataQueryData, keyName, valueName)
-        // 3、将各分区库最近构建项目总数量存入redis中
-        shardingDbBuildProjectNumMap.forEach { (routingRule, totalBuildProjectNum) ->
-            redisOperation.hset(
-                key = getKeyByRedisName(PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY),
-                hashKey = routingRule,
-                values = totalBuildProjectNum.toString()
-            )
+        val moduleCodes = listOf(SystemModuleEnum.PROCESS.name, SystemModuleEnum.METRICS.name)
+        moduleCodes.forEach { moduleCode ->
+            val bkDataQueryParam = BkDataQueryParam("SELECT $keyName, $valueName, thedate\n" +
+                "FROM 100205_T_SHARDING_DB_ACTIVE_PROJECT_DETAIL\n" +
+                "WHERE MODULE_CODE='$moduleCode' AND thedate>='$startDateStr' AND thedate<'$endDateStr'")
+            val bkDataQueryData = queryBkData(bkDataQueryParam).data
+            // 2、统计各分区库最近构建项目总数量
+            val shardingDbBuildProjectNumMap = generateShardingDbBuildInfoMap(bkDataQueryData, keyName, valueName)
+            // 3、将各分区库最近构建项目总数量存入redis中
+            shardingDbBuildProjectNumMap.forEach { (routingRule, totalBuildProjectNum) ->
+                redisOperation.hset(
+                    key = getKeyByModuleCode(PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY),
+                    hashKey = routingRule,
+                    values = totalBuildProjectNum.toString()
+                )
+            }
         }
     }
 
@@ -182,21 +190,14 @@ class ShardingDbBuildService @Autowired constructor(
     }
 
     /**
-     * 根据redis名称获取真实的key值
+     * 根据模块代码获取真实的key值
      * @param key 原始key
+     * @param moduleCode 模块代码
      * @return 真实的key值
      */
-    private fun getKeyByRedisName(key: String): String {
-        val redisName = redisOperation.getRedisName()
-        return if (!redisName.isNullOrBlank()) {
-            if (redisName.contains("v3")) {
-                // v3集群的服务器的数据也落到正式环境数据库
-                "$PROFILE_PRODUCTION:$key"
-            } else {
-                "$redisName:$key"
-            }
-        } else {
-            key
-        }
+    private fun getKeyByModuleCode(key: String, moduleCode: String): String {
+        // 获取集群名称
+        val clusterName = CommonUtils.getDbClusterName()
+        return "$clusterName:$moduleCode:$key"
     }
 }
