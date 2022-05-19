@@ -39,6 +39,24 @@ BEGIN
     END IF;
 	
 	IF NOT EXISTS(SELECT 1
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_SHARDING_ROUTING_RULE'
+                        AND COLUMN_NAME = 'DATA_SOURCE_NAME') THEN
+        ALTER TABLE T_SHARDING_ROUTING_RULE
+            ADD `DATA_SOURCE_NAME` varchar(128) NOT NULL DEFAULT 'ds_0' COMMENT '数据源名称';
+    END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_SHARDING_ROUTING_RULE'
+                        AND COLUMN_NAME = 'TABLE_NAME') THEN
+        ALTER TABLE T_SHARDING_ROUTING_RULE
+            ADD `TABLE_NAME` varchar(128) DEFAULT NULL COMMENT '数据库表名称';
+    END IF;
+	
+	IF NOT EXISTS(SELECT 1
 			  FROM information_schema.statistics
 			  WHERE TABLE_SCHEMA = db
 				 AND TABLE_NAME = 'T_SHARDING_ROUTING_RULE'

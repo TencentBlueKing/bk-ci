@@ -56,18 +56,23 @@ class StreamGitProjectInfoCache @Autowired constructor(
         useAccessToken: Boolean,
         userId: String?,
         accessToken: String? = null
-    ): StreamGitProjectBaseInfoCache {
+    ): StreamGitProjectBaseInfoCache? {
         val cache = getRequestGitProjectInfo(gitProjectName = gitProjectId.toString())
         if (cache != null) {
             return cache
         }
 
-        val cacheData = streamGitTransferService.getGitProjectCache(
-            gitProjectId = gitProjectId.toString(),
-            useAccessToken = useAccessToken,
-            userId = userId,
-            accessToken = accessToken
-        )
+        val cacheData = try {
+            streamGitTransferService.getGitProjectCache(
+                gitProjectId = gitProjectId.toString(),
+                useAccessToken = useAccessToken,
+                userId = userId,
+                accessToken = accessToken
+            )
+        } catch (ignored: Throwable) {
+            logger.error("update cache error| ${ignored.message}", ignored)
+            return null
+        }
 
         saveRequestGitProjectInfo(
             gitProjectName = gitProjectId.toString(),

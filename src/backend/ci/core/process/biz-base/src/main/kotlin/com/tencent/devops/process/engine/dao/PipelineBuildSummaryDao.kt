@@ -106,6 +106,15 @@ class PipelineBuildSummaryDao {
         }
     }
 
+    fun getBuildNo(dslContext: DSLContext, projectId: String, pipelineId: String): Int? {
+        return with(T_PIPELINE_BUILD_SUMMARY) {
+            dslContext.select(BUILD_NO)
+                .from(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .fetchOne(0, Int::class.java)
+        }
+    }
+
     fun updateBuildNum(
         dslContext: DSLContext,
         projectId: String,

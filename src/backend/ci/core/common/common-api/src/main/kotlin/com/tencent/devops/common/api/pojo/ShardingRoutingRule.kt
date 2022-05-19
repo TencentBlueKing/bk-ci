@@ -35,6 +35,10 @@ data class ShardingRoutingRule(
     val clusterName: String,
     @ApiModelProperty("模块标识")
     val moduleCode: SystemModuleEnum,
+    @ApiModelProperty("数据源名称")
+    val dataSourceName: String = "",
+    @ApiModelProperty("数据库表名称")
+    val tableName: String? = null,
     @ApiModelProperty("规则类型")
     val type: ShardingRuleTypeEnum,
     @ApiModelProperty("路由规则名称")
