@@ -33,7 +33,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.notify.command.BuildNotifyContext
 import com.tencent.devops.process.notify.command.impl.NotifyUrlBuildCmd
-import com.tencent.devops.process.util.ServiceHomeUrlUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -61,7 +60,7 @@ class TxNotifyUrlCmdImpl @Autowired constructor(
     }
 
     private fun detailUrl(projectId: String, pipelineId: String, processInstanceId: String) =
-        "${ServiceHomeUrlUtils.server()}/console/pipeline/$projectId/$pipelineId/detail/$processInstanceId"
+        "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$processInstanceId"
 
     private fun detailOuterUrl(projectId: String, pipelineId: String, processInstanceId: String) =
         "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html" +

@@ -150,6 +150,23 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         )
     }
 
+    override fun getSetting(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<PipelineSetting> {
+        logger.info("Get a pipeline setting at project:$projectId, pipelineId:$pipelineId")
+        return client.get(ServicePipelineResource::class).getSettingWithPermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = apiGatewayUtil.getChannelCode(),
+            checkPermission = true
+        )
+    }
+
     override fun getBatch(
         appCode: String?,
         apigwType: String?,

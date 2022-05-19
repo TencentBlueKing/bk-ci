@@ -93,7 +93,8 @@ class AgentUpgradeService @Autowired constructor(
         ).toSet()
         val needUpgradeAgents = importOKAgents.filter {
             when {
-                it.version.isNullOrBlank() || it.masterVersion.isNullOrBlank() -> false
+                // #5806 #5045 解决worker过老，或者异常，导致拿不到版本号，而无法自愈或升级的问题
+                // it.version.isNullOrBlank() || it.masterVersion.isNullOrBlank() -> false
                 checkProjectRouter(it.projectId) ->
                     it.version != currentVersion || it.masterVersion != currentMasterVersion
                 else -> false

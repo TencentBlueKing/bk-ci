@@ -39,8 +39,8 @@ import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
-import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.service.PipelineStageService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -93,6 +93,8 @@ class StartContainerStageCmd(
 
         if (stageStatus.isFinish() || stageStatus == BuildStatus.STAGE_SUCCESS) {
             commandContext.buildStatus = stageStatus // 已经是结束或者是STAGE_SUCCESS就直接返回
+        } else if (commandContext.containers.isEmpty()) {
+            commandContext.buildStatus = BuildStatus.SUCCEED
         } else {
             stageStatus = pickJob(commandContext, actionType = newActionType, userId = event.userId)
 
@@ -150,6 +152,7 @@ class StartContainerStageCmd(
         }
         // 同一Stage下的多个Container是并行
         commandContext.containers.forEach { container ->
+            val jobCount = container.controlOption?.matrixControlOption?.totalCount ?: 1 // MatrixGroup存在裂变计算
             if (container.status.isCancel()) {
                 commandContext.cancelContainerNum++
                 cancel = BuildStatusSwitcher.stageStatusMaker.cancel(container.status)
@@ -159,15 +162,26 @@ class StartContainerStageCmd(
             } else if (container.status == BuildStatus.SKIP) {
                 commandContext.skipContainerNum++
             } else if (container.status.isRunning() && !actionType.isEnd()) {
+                commandContext.concurrency += jobCount
                 // 已经在运行中的, 只接受终止
                 running = BuildStatus.RUNNING
             } else if (!container.status.isFinish()) {
                 running = BuildStatus.RUNNING
+                commandContext.concurrency += jobCount
                 sendBuildContainerEvent(commandContext, container, actionType = actionType, userId = userId)
 
-                LOG.info("ENGINE|${container.buildId}|STAGE_CONTAINER_SEND|s(${container.stageId})|" +
-                    "j(${container.containerId})|status=${container.status}|newActonType=$actionType")
+                LOG.info(
+                    "ENGINE|${container.buildId}|STAGE_CONTAINER_SEND|s(${container.stageId})|" +
+                        "j(${container.containerId})|status=${container.status}|newActonType=$actionType"
+                )
             }
+        }
+
+        if (commandContext.concurrency > commandContext.maxConcurrency) { // #5109 增加日志埋点监控，以免影响Redis性能
+            LOG.warn(
+                "ENGINE|${stage.buildId}|JOB_BOMB_CK|${stage.projectId}|${stage.pipelineId}|s(${stage.stageId})" +
+                    "|concurrency=${commandContext.concurrency}"
+            )
         }
 
         // 如果有运行态,否则返回失败，如无失败，则返回取消，最后成功

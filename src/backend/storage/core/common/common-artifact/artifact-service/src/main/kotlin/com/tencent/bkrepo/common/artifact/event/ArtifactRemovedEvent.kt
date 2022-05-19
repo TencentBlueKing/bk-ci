@@ -35,4 +35,4 @@ import com.tencent.bkrepo.common.artifact.repository.context.ArtifactUploadConte
 
 data class ArtifactRemovedEvent(
     override val context: ArtifactUploadContext
-) : ArtifactEvent(context, ArtifactEventType.REMOVED)
+) : ArtifactContextEvent(context, ArtifactEventType.REMOVED)

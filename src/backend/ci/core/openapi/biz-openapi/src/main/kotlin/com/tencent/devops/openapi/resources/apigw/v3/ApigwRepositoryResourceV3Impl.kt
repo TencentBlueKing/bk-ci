@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwRepositoryResourceV3
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -43,6 +44,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwRepositoryResourceV3Impl @Autowired constructor(private val client: Client) :
     ApigwRepositoryResourceV3 {
+
+    @BkTimed(extraTags = ["operate", "create"])
     override fun create(
         appCode: String?,
         apigwType: String?,
@@ -58,6 +61,7 @@ class ApigwRepositoryResourceV3Impl @Autowired constructor(private val client: C
         )
     }
 
+    @BkTimed(extraTags = ["operate", "get"])
     override fun hasPermissionList(
         appCode: String?,
         apigwType: String?,

@@ -96,7 +96,8 @@ interface PackageClient {
     @ApiOperation("创建包版本")
     @PostMapping("/version/create")
     fun createVersion(
-        @RequestBody request: PackageVersionCreateRequest
+        @RequestBody request: PackageVersionCreateRequest,
+        @RequestParam realIpAddress: String? = null
     ): Response<Void>
 
     @ApiOperation("删除包")
@@ -104,7 +105,8 @@ interface PackageClient {
     fun deletePackage(
         @PathVariable projectId: String,
         @PathVariable repoName: String,
-        @RequestParam packageKey: String
+        @RequestParam packageKey: String,
+        @RequestParam realIpAddress: String? = null
     ): Response<Void>
 
     @ApiOperation("删除版本")
@@ -113,19 +115,22 @@ interface PackageClient {
         @PathVariable projectId: String,
         @PathVariable repoName: String,
         @RequestParam packageKey: String,
-        @RequestParam version: String
+        @RequestParam version: String,
+        @RequestParam realIpAddress: String? = null
     ): Response<Void>
 
     @ApiOperation("更新包")
     @PostMapping("/package/update")
     fun updatePackage(
-        @RequestBody request: PackageUpdateRequest
+        @RequestBody request: PackageUpdateRequest,
+        @RequestParam realIpAddress: String? = null
     ): Response<Void>
 
     @ApiOperation("更新版本")
     @PostMapping("/version/update")
     fun updateVersion(
-        @RequestBody request: PackageVersionUpdateRequest
+        @RequestBody request: PackageVersionUpdateRequest,
+        @RequestParam realIpAddress: String? = null
     ): Response<Void>
 
     @ApiOperation("搜索包")
@@ -160,6 +165,15 @@ interface PackageClient {
         @RequestBody option: PackageListOption = PackageListOption()
     ): Response<Page<PackageSummary>>
 
+    @ApiOperation("列出包中已存在的版本")
+    @PostMapping("/exist/list/{projectId}/{repoName}")
+    fun listExistPackageVersion(
+        @PathVariable projectId: String,
+        @PathVariable repoName: String,
+        @RequestParam packageKey: String,
+        @RequestBody packageVersionList: List<String> = emptyList()
+    ): Response<List<String>>
+
     @ApiOperation("查询所有包名称")
     @PostMapping("/package/list/{projectId}/{repoName}")
     fun listAllPackageNames(
@@ -176,10 +190,8 @@ interface PackageClient {
 
     /**
      * 包版本数据填充，该过程会自动累加downloads和version数量到包信息中
-     *
      * 1. 如果包已经存在则不会更新包，跳到步骤2，否则创建新包
      * 2. 遍历versionList进行版本创建，如果版本已经存在则跳过。
-     *
      */
     @ApiOperation("包版本数据填充")
     @PostMapping("/package/populate")

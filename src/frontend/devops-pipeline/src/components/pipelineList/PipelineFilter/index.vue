@@ -188,7 +188,7 @@
                 color: $fontWeightColor;
                 .devops-icon {
                     font-size: 10px;
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                 }
                 .menu-btn {
                     position: relative;
@@ -287,22 +287,22 @@
             .form-group {
                 margin-bottom: 15px;
                 ::-webkit-input-placeholder { /* WebKit browsers */
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                 }
                 :-moz-placeholder { /* Mozilla Firefox 4 to 18 */
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                 }
                 ::-moz-placeholder { /* Mozilla Firefox 19+ */
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                 }
                 :-ms-input-placeholder { /* Internet Explorer 10+ */
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                 }
                 .input-text {
                     cursor: text;
                 }
                 .devops-icon {
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                     &:hover {
                         color:$fontWeightColor;
                     }

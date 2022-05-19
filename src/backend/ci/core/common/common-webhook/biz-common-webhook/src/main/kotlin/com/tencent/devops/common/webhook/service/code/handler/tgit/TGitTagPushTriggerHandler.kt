@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM
@@ -130,6 +131,7 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
             startParams[PIPELINE_GIT_TAG_FROM] = event.create_from!!
         }
         startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/-/tags/${getBranchName(event)}"
+        startParams[PIPELINE_GIT_TAG_MESSAGE] = event.message ?: ""
         return startParams
     }
 
@@ -164,17 +166,13 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
                 includedUsers = WebhookUtils.convert(includeUsers),
                 excludedUsers = WebhookUtils.convert(excludeUsers)
             )
-            val filters = mutableListOf(urlFilter, eventTypeFilter, branchFilter, userFilter)
-            if (event.create_from != null) {
-                val fromBranchFilter = BranchFilter(
-                    pipelineId = pipelineId,
-                    triggerOnBranchName = event.create_from!!,
-                    includedBranches = WebhookUtils.convert(fromBranches),
-                    excludedBranches = emptyList()
-                )
-                filters.add(fromBranchFilter)
-            }
-            return filters
+            val fromBranchFilter = BranchFilter(
+                pipelineId = pipelineId,
+                triggerOnBranchName = event.create_from ?: "",
+                includedBranches = WebhookUtils.convert(fromBranches),
+                excludedBranches = emptyList()
+            )
+            return listOf(urlFilter, eventTypeFilter, branchFilter, userFilter, fromBranchFilter)
         }
     }
 }

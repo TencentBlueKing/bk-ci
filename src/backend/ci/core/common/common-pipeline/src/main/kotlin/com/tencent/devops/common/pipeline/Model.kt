@@ -52,9 +52,9 @@ data class Model(
     val instanceFromTemplate: Boolean? = null,
     @ApiModelProperty("创建人", required = false)
     var pipelineCreator: String? = null,
-    @ApiModelProperty("源模版ID", required = false)
+    @ApiModelProperty("当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = false)
     var srcTemplateId: String? = null,
-    @ApiModelProperty("模板ID", required = false)
+    @ApiModelProperty("当前模板的ID", required = false)
     var templateId: String? = null,
     @ApiModelProperty("提示", required = false)
     var tips: String? = null,

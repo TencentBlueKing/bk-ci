@@ -39,6 +39,7 @@ import com.tencent.bkrepo.common.artifact.util.PackageKeys
 import com.tencent.bkrepo.common.security.permission.Permission
 import com.tencent.bkrepo.common.service.util.ResponseBuilder
 import com.tencent.bkrepo.npm.artifact.NpmArtifactInfo
+import com.tencent.bkrepo.npm.pojo.NpmDomainInfo
 import com.tencent.bkrepo.npm.pojo.user.request.PackageDeleteRequest
 import com.tencent.bkrepo.npm.pojo.user.request.PackageVersionDeleteRequest
 import com.tencent.bkrepo.npm.pojo.user.PackageVersionInfo
@@ -55,6 +56,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @Api("npm 用户接口")
 @RequestMapping("/ext")
+@Suppress("MVCPathVariableInspection")
 @RestController
 class UserNpmController(
     private val npmWebService: NpmWebService
@@ -115,5 +117,11 @@ class UserNpmController(
             npmWebService.deleteVersion(this, deleteRequest)
             return ResponseBuilder.success()
         }
+    }
+
+    @ApiOperation("获取npm域名地址")
+    @GetMapping("/address")
+    fun getRegistryDomain(): Response<NpmDomainInfo> {
+        return ResponseBuilder.success(npmWebService.getRegistryDomain())
     }
 }

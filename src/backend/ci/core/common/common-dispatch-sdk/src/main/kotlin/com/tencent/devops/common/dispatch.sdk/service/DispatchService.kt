@@ -53,6 +53,7 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.slf4j.LoggerFactory
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 class DispatchService constructor(
     private val redisOperation: RedisOperation,
@@ -242,7 +243,7 @@ class DispatchService constructor(
             key = redisKey(hashId, secretKey),
             value = objectMapper.writeValueAsString(
                 RedisBuild(
-                    vmName = if (event.vmNames.isBlank()) "Dispatcher-sdk-${event.vmSeqId}" else event.vmNames,
+                    vmName = event.vmNames.ifBlank { "Dispatcher-sdk-${event.vmSeqId}" },
                     projectId = event.projectId,
                     pipelineId = event.pipelineId,
                     buildId = event.buildId,
@@ -253,7 +254,7 @@ class DispatchService constructor(
                     executeCount = event.executeCount ?: 1
                 )
             ),
-            expiredInSecond = 7 * 24 * 3600
+            expiredInSecond = TimeUnit.DAYS.toSeconds(7)
         )
 
         // 一周过期时间
@@ -262,7 +263,7 @@ class DispatchService constructor(
             secretInfoRedisMapKey(event.vmSeqId, event.executeCount ?: 1),
             JsonUtil.toJson(SecretInfo(hashId, secretKey))
         )
-        val expireAt = System.currentTimeMillis() + 24 * 7 * 3600 * 1000
+        val expireAt = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(7)
         redisOperation.expireAt(secretInfoRedisKey, Date(expireAt))
         return SecretInfo(
             hashId = hashId,

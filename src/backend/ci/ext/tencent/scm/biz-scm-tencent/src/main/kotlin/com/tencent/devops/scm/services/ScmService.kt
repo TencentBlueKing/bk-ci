@@ -40,6 +40,7 @@ import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -50,7 +51,6 @@ import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.lang.IllegalArgumentException
 
 @Service
 class ScmService @Autowired constructor(
@@ -99,7 +99,9 @@ class ScmService @Autowired constructor(
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String? = null
+        search: String? = null,
+        page: Int,
+        pageSize: Int
     ): List<String> {
         logger.info("[$projectName|$url|$type|$userName] Start to list branches")
         val startEpoch = System.currentTimeMillis()
@@ -114,7 +116,7 @@ class ScmService @Autowired constructor(
                 token = token,
                 region = region,
                 userName = userName
-            ).getBranches(search = search)
+            ).getBranches(search = search, page = page, pageSize = pageSize)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list branches")
         }
@@ -471,6 +473,28 @@ class ScmService @Autowired constructor(
             userName = null
         )
             .getMrReviewInfo(mrId = mrId)
+    }
+
+    fun getMrCommitList(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long,
+        page: Int,
+        size: Int
+    ): List<GitCommit> {
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null
+        ).getMrCommitList(mrId = mrId, page = page, size = size)
     }
 
     companion object {

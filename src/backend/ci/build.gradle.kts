@@ -9,7 +9,7 @@ allprojects {
     // 包路径
     group = "com.tencent.bk.devops.ci"
     // 版本
-    version = (System.getProperty("ci_version") ?: "1.7.0") +
+    version = (System.getProperty("ci_version") ?: "1.9.0") +
             if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
 
     // 版本管理
@@ -47,6 +47,7 @@ allprojects {
             dependency("org.elasticsearch:elasticsearch:${Versions.Elasticsearch}")
             dependency("org.elasticsearch.client:elasticsearch-rest-client:${Versions.Elasticsearch}")
             dependency("org.elasticsearch.client:elasticsearch-rest-high-level-client:${Versions.Elasticsearch}")
+            dependency("org.apache.pulsar:pulsar-client:${Versions.Pulsar}")
             dependency("com.github.oshi:oshi-core:${Versions.Oshi}")
             dependency("com.tencent.devops.leaf:leaf-boot-starter:${Versions.Leaf}")
             dependency("com.github.xingePush:xinge:${Versions.Xinge}")
@@ -59,9 +60,10 @@ allprojects {
                 entry("docker-java")
                 entry("docker-java-transport-okhttp")
             }
-            dependencySet("com.tencent.bkrepo:${Versions.TencentBkRepo}") {
+            dependencySet("com.tencent.bk.repo:${Versions.TencentBkRepo}") {
                 entry("api-generic")
                 entry("api-repository")
+                entry("api-webhook")
             }
             dependencySet("org.apache.poi:${Versions.Poi}") {
                 entry("poi")
@@ -71,6 +73,7 @@ allprojects {
                 entry("pinyin-plus")
             }
             dependency("com.perforce:p4java:${Versions.p4}")
+            dependency("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Versions.JacksonDatatypeJsr}")
         }
     }
 

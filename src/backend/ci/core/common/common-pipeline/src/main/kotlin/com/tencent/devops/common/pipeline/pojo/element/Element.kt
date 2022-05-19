@@ -56,6 +56,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import io.swagger.annotations.ApiModelProperty
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
 @JsonSubTypes(
@@ -87,20 +88,35 @@ import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 )
 @Suppress("ALL")
 abstract class Element(
+    @ApiModelProperty("任务名称", required = false)
     open val name: String,
+    @ApiModelProperty("id", required = false)
     open var id: String? = null,
+    @ApiModelProperty("状态", required = false)
     open var status: String? = null,
+    @ApiModelProperty("执行次数", required = false)
     open var executeCount: Int = 1,
+    @ApiModelProperty("是否重试", required = false)
     open var canRetry: Boolean? = null,
+    @ApiModelProperty("是否跳过", required = false)
     open var canSkip: Boolean? = null,
+    @ApiModelProperty("执行时间", required = false)
     open var elapsed: Long? = null,
+    @ApiModelProperty("启动时间", required = false)
     open var startEpoch: Long? = null,
+    @ApiModelProperty("插件版本", required = false)
     open var version: String = "1.*",
+    @ApiModelProperty("模板对比的时候是不是有变更", required = false)
     open var templateModify: Boolean? = null, // 模板对比的时候是不是又变更
+    @ApiModelProperty("附加参数", required = false)
     open var additionalOptions: ElementAdditionalOptions? = null,
+    @ApiModelProperty("用户自定义ID，用于上下文键值设置", required = false)
     open var stepId: String? = null, // 用于上下文键值设置
+    @ApiModelProperty("错误类型", required = false)
     open var errorType: String? = null,
+    @ApiModelProperty("错误代码", required = false)
     open var errorCode: Int? = null,
+    @ApiModelProperty("错误信息", required = false)
     open var errorMsg: String? = null
 ) {
 

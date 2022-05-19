@@ -38,7 +38,11 @@ import java.io.InputStream
 @RestResource
 class OpFileResourceImpl @Autowired constructor(private val fileService: FileService) : OpFileResource {
 
-    override fun uploadFile(userId: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<String?> {
-        return fileService.uploadFile(inputStream, disposition)
+    override fun uploadFile(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<String?> {
+        return fileService.uploadFile(userId, inputStream, disposition)
     }
 }

@@ -28,8 +28,8 @@
 package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
@@ -61,7 +61,9 @@ interface IScmService {
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String? = null
+        search: String? = null,
+        page: Int = 1,
+        pageSize: Int = 20
     ): List<String>
 
     fun deleteBranch(
@@ -203,4 +205,14 @@ interface IScmService {
         token: String?,
         mrId: Long
     ): GitMrReviewInfo?
+
+    fun getMrCommitList(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long,
+        page: Int,
+        size: Int
+    ): List<GitCommit>
 }

@@ -15,7 +15,7 @@ bk-ci removes all the tedious tasks in R&D process and enables you to focus on c
 - Running test cases to find bugs in time
 - Deployment and release
 
-bk-ci provides six core services, namely Process, CodeCheck, Repository, Ticket, Environment and Store. They can be combined in multiple ways to meet business needs in different scenarios.
+bk-ci provides seven core services, namely Process, CodeCheck, Repository, Ticket, Environment, Store and Turbo. They can be combined in multiple ways to meet business needs in different scenarios.
 
 - **Process**: It visualizes current R&D process of the team. One pipeline can handle compilation, testing and deployment.
 - **CodeCheck**：Provide professional code-check solutions to check multiple dimensions of code issues such as defects, security vulnerabilities, code styles, etc., to promote product quality.
@@ -23,6 +23,7 @@ bk-ci provides six core services, namely Process, CodeCheck, Repository, Ticket,
 - **Ticket**: It provides the management of various kinds of tickets and certificates for services like Repository and Process.
 - **Environment**: It can host the internal agents of the enterprise on bk-ci.
 - **Store**: It consists of pipeline plugins and pipeline templates. Plugins are used to integrate with various third-party services of the enterprise and templates help to standardize its internal R&D process.
+- **Turbo**: Based on self-developed acceleration engine, it supports acceleration in multiple scenarios such as C/C++ compilation, UE4 code compilation, and UE4 Shader compilation, making construction tasks faster
 
 
 ## Overview
@@ -57,11 +58,10 @@ bk-ci provides six core services, namely Process, CodeCheck, Repository, Ticket,
 ## BlueKing Community
 
 - [BK-BCS](https://github.com/Tencent/bk-bcs): BlueKing Container Service is an orchestration platform for microservices based on container technology.
-- [BK-BCS-SaaS](https://github.com/Tencent/bk-bcs-saas): SaaS of BlueKing Container Service is based on two modes, the native Kubernetes mode and the Mesos self-developed mode. It provides highly scalable, flexible and easy-to-use container management service for users.
 - [BK-CMDB](https://github.com/Tencent/bk-cmdb): BlueKing Configuration Management DataBase (BlueKing CMDB) is an enterprise level configuration management platform for assets and applications.
+- [BK-JOB](https://github.com/Tencent/bk-job): BlueKing JOB is a set of operation and maintenance script management platform with the ability to handle a large number of tasks concurrently.
 - [BK-PaaS](https://github.com/Tencent/bk-PaaS): BlueKing PaaS is an open development platform that allows developers to create, develop, deploy and manage SaaS applications quickly and easily.
 - [BK-SOPS](https://github.com/Tencent/bk-sops): BlueKing Standard OPS (SOPS) is a light-weighted SaaS product in the Tencent BlueKing product system designed for the orchestration and execution of tasks through a graphical interface.
-
 ## Contributing
 
 - Please read [Contributing](CONTRIBUTING.en.md) for the branch management, issue and pr specifications of bk-ci.
@@ -70,3 +70,4 @@ bk-ci provides six core services, namely Process, CodeCheck, Repository, Ticket,
 ## License
 BK-CI is based on the MIT license. Please refer to [LICENCE](LICENSE.txt) for details.
 
+We undertake not to change the open source license (MIT license) applicable to the current version of the project delivered to anyone in the future.

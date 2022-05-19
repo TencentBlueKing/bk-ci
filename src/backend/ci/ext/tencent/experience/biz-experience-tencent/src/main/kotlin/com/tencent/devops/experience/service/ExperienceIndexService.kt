@@ -36,13 +36,16 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperiencePublicType
+import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.index.HotCategoryParam
 import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
 import com.tencent.devops.experience.pojo.index.IndexBannerVO
 import com.tencent.devops.experience.pojo.index.NewCategoryParam
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
+import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -50,6 +53,7 @@ import org.springframework.stereotype.Service
 class ExperienceIndexService @Autowired constructor(
     val experienceBaseService: ExperienceBaseService,
     val experiencePublicDao: ExperiencePublicDao,
+    val experienceDao: ExperienceDao,
     val dslContext: DSLContext,
     val redisOperation: RedisOperation
 ) {
@@ -271,6 +275,23 @@ class ExperienceIndexService @Autowired constructor(
                     HashUtil.encodeLongId(it.id) +
                     "&userId=" + userId
         } else ""
+
+        // 同步版本号
+        if (StringUtils.isBlank(it.version) && it.recordId > 0) {
+            try {
+                val record = experienceDao.get(dslContext, it.recordId)
+                it.version = record.version
+                experiencePublicDao.updateById(
+                    dslContext = dslContext,
+                    id = it.id,
+                    version = it.version
+                )
+            } catch (e: Exception) {
+                logger.warn("Can`t not find experience:{}", it.recordId)
+                it.version = "0.0.0"
+            }
+        }
+
         return IndexAppInfoVO(
             experienceHashId = HashUtil.encodeLongId(it.recordId),
             experienceName = it.experienceName,
@@ -283,7 +304,12 @@ class ExperienceIndexService @Autowired constructor(
             expired = false,
             lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
                 ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
-            type = it.type
+            type = it.type,
+            version = it.version
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExperienceIndexService::class.java)
     }
 }

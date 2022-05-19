@@ -113,4 +113,18 @@ class ExperiencePushSubscribeDao {
                 .fetch()
         }
     }
+
+    fun listByUserId(
+        dslContext: DSLContext,
+        userId: String,
+        limit: Int
+    ): Result<TExperienceSubscribeRecord> {
+        with(TExperienceSubscribe.T_EXPERIENCE_SUBSCRIBE) {
+            return dslContext.selectFrom(this)
+                .where(USER_ID.eq(userId))
+                .orderBy(UPDATE_TIME.desc())
+                .limit(limit)
+                .fetch()
+        }
+    }
 }

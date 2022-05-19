@@ -34,14 +34,15 @@ package com.tencent.bkrepo.repository.job
 import com.tencent.bkrepo.common.service.log.LoggerHolder
 import com.tencent.bkrepo.repository.constant.SHARDING_COUNT
 import com.tencent.bkrepo.repository.dao.NodeDao
+import com.tencent.bkrepo.repository.job.base.CenterNodeJob
 import com.tencent.bkrepo.repository.model.TNode
 import com.tencent.bkrepo.repository.service.node.NodeService
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.time.Duration
 import java.time.LocalDateTime
 
 /**
@@ -51,14 +52,15 @@ import java.time.LocalDateTime
 class ExpiredNodeMarkupJob(
     private val nodeDao: NodeDao,
     private val nodeService: NodeService
-) {
+) : CenterNodeJob() {
 
     @Scheduled(cron = "0 0 0/6 * * ?") // 凌晨开始，6小时执行一次
-    @SchedulerLock(name = "ExpiredNodeMarkupJob", lockAtMostFor = "PT6H")
-    fun cleanup() {
-        logger.info("Starting to mark up expired nodes.")
+    override fun start() {
+        super.start()
+    }
+
+    override fun run() {
         var markupCount = 0L
-        val startTimeMillis = System.currentTimeMillis()
         val query = Query.query(Criteria.where(TNode::expireDate.name).lt(LocalDateTime.now()))
         val mongoTemplate = nodeDao.determineMongoTemplate()
         for (sequence in 0 until SHARDING_COUNT) {
@@ -77,9 +79,10 @@ class ExpiredNodeMarkupJob(
                 deletedNodeList = mongoTemplate.find(query, TNode::class.java, collectionName)
             }
         }
-        val elapseTimeMillis = System.currentTimeMillis() - startTimeMillis
-        logger.info("[$markupCount] nodes were marked up with deleted status, elapse [$elapseTimeMillis] ms totally.")
+        logger.info("[$markupCount] nodes were marked up with deleted status.")
     }
+
+    override fun getLockAtMostFor(): Duration = Duration.ofDays(1)
 
     companion object {
         private val logger = LoggerHolder.jobLogger

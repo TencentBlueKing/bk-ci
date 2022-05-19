@@ -67,6 +67,21 @@ class WoaAtomPropsDecorateImpl : FirstAtomPropsDecorateImpl() {
                     LOG.info("$key replace $entry to $newUrl")
                     mutable[key] = newUrl
                 }
+            } else if (entry is List<*>) {
+                entry.forEach {
+                    if (it is Map<*, *>) {
+                        try {
+                            @Suppress("UNCHECKED_CAST")
+                            val p = replaceWoa(it as Map<String, Any>, replaceMap)
+                            if (p.second) {
+                                isChange = true
+                                mutable[key] = p.first
+                            }
+                        } catch (ignore: Exception) {
+                            LOG.warn("BKSystemErrorMonitor| cast replaceWoa failed in $entry", ignore)
+                        }
+                    }
+                }
             } else if (entry is Map<*, *>) {
                 try {
                     @Suppress("UNCHECKED_CAST")

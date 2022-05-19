@@ -32,13 +32,12 @@
 package com.tencent.bkrepo.repository.job
 
 import com.tencent.bkrepo.common.service.log.LoggerHolder
-import com.tencent.bkrepo.repository.config.RepositoryProperties
 import com.tencent.bkrepo.repository.dao.NodeDao
 import com.tencent.bkrepo.repository.dao.RepositoryDao
+import com.tencent.bkrepo.repository.job.base.CenterNodeJob
 import com.tencent.bkrepo.repository.model.TNode
 import com.tencent.bkrepo.repository.model.TRepository
 import com.tencent.bkrepo.repository.service.file.FileReferenceService
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.and
@@ -46,6 +45,7 @@ import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.data.mongodb.core.query.where
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.time.Duration
 import java.time.LocalDateTime
 
 /**
@@ -55,44 +55,33 @@ import java.time.LocalDateTime
 class DeletedNodeCleanupJob(
     private val nodeDao: NodeDao,
     private val repositoryDao: RepositoryDao,
-    private val fileReferenceService: FileReferenceService,
-    private val repositoryProperties: RepositoryProperties
-) {
+    private val fileReferenceService: FileReferenceService
+) : CenterNodeJob() {
 
     @Scheduled(cron = "0 0 2/6 * * ?") // 2点开始，6小时执行一次
-    @SchedulerLock(name = "DeletedNodeCleanupJob", lockAtMostFor = "PT6H")
-    fun cleanup() {
-        logger.info("Starting to clean up deleted nodes.")
+    override fun start() {
+        super.start()
+    }
+
+    override fun run() {
         val reserveDays = repositoryProperties.deletedNodeReserveDays
         if (reserveDays < 0) {
             logger.info("Reserve days[$reserveDays] for deleted nodes is less than 0, skip cleaning up.")
             return
         }
-        var totalCleanupCount = 0L
-        var fileCleanupCount = 0L
-        var folderCleanupCount = 0L
-        val startTimeMillis = System.currentTimeMillis()
-        val expireDate = LocalDateTime.now().minusDays(reserveDays)
-
-        repositoryDao.findAll().forEach { repo ->
-            handleRepo(repo, expireDate).let {
-                totalCleanupCount += it.totalCleanupCount
-                fileCleanupCount += it.fileCleanupCount
-                folderCleanupCount += it.folderCleanupCount
-            }
+        val context = JobContext(LocalDateTime.now().minusDays(reserveDays))
+        with(context) {
+            repositoryDao.findAll().forEach { repo -> cleanupRepo(repo, context) }
+            logger.info("[$total] nodes has been clean up, file[$file], folder[$folder]")
         }
-        val elapseTimeMillis = System.currentTimeMillis() - startTimeMillis
-        logger.info(
-            "[$totalCleanupCount] nodes has been clean up, file[$fileCleanupCount], folder[$folderCleanupCount]" +
-                ", elapse [$elapseTimeMillis] ms totally."
-        )
     }
 
-    private fun handleRepo(repo: TRepository, expireDate: LocalDateTime): CleanupResult {
-        val result = CleanupResult()
+    override fun getLockAtMostFor(): Duration = Duration.ofDays(7)
+
+    private fun cleanupRepo(repo: TRepository, context: JobContext) {
         val criteria = where(TNode::projectId).isEqualTo(repo.projectId)
             .and(TNode::repoName).isEqualTo(repo.name)
-            .and(TNode::deleted).lt(expireDate)
+            .and(TNode::deleted).lt(context.expireDate)
         val query = Query.query(criteria).with(PageRequest.of(0, PAGE_SIZE))
         var deletedNodeList = nodeDao.find(query)
         while (deletedNodeList.isNotEmpty()) {
@@ -101,15 +90,14 @@ class DeletedNodeCleanupJob(
                 cleanUpNode(repo, node)
                 if (node.folder) {
                     FileReferenceCleanupJob
-                    result.folderCleanupCount += 1
+                    context.folder += 1
                 } else {
-                    result.fileCleanupCount += 1
+                    context.file += 1
                 }
             }
-            result.totalCleanupCount += deletedNodeList.size
+            context.total += deletedNodeList.size
             deletedNodeList = nodeDao.find(query)
         }
-        return result
     }
 
     private fun cleanUpNode(repo: TRepository, node: TNode) {
@@ -133,10 +121,11 @@ class DeletedNodeCleanupJob(
         }
     }
 
-    data class CleanupResult(
-        var folderCleanupCount: Int = 0,
-        var fileCleanupCount: Int = 0,
-        var totalCleanupCount: Int = 0
+    data class JobContext(
+        val expireDate: LocalDateTime,
+        var folder: Int = 0,
+        var file: Int = 0,
+        var total: Int = 0
     )
 
     companion object {
