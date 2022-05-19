@@ -48,6 +48,7 @@ dependencies {
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:environment:api-environment-tencent"))
     api(project(":ext:tencent:prebuild:model-prebuild"))
+    api(project(":ext:tencent:process:common-pipeline-yaml"))
 
     api("com.github.docker-java:docker-java")
     api("org.apache.httpcomponents:httpclient")
