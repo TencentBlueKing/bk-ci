@@ -365,7 +365,7 @@ class GitService @Autowired constructor(
         return res
     }
 
-    @BkTimed(extraTags = ["operation", "获取项目"])
+    @BkTimed(extraTags = ["operation", "refresh_token"])
     fun refreshToken(userId: String, accessToken: GitToken): GitToken {
         logger.info("Start to refresh the token of user $userId")
         val startEpoch = System.currentTimeMillis()
@@ -390,7 +390,7 @@ class GitService @Autowired constructor(
         }
     }
 
-    @BkTimed(extraTags = ["operation", "获取项目"])
+    @BkTimed(extraTags = ["operation", "refresh_token"])
     fun refreshProjectToken(projectId: String, refreshToken: String): GitToken {
         logger.info("Start to refresh the token of projectId $projectId")
         val startEpoch = System.currentTimeMillis()
@@ -1278,7 +1278,7 @@ class GitService @Autowired constructor(
         }
     }
 
-    @BkTimed(extraTags = ["operation", "get_project_member_info"])
+    @BkTimed(extraTags = ["operation", "delete_project_member_info"])
     fun deleteGitProject(repoName: String, token: String, tokenType: TokenTypeEnum): Result<Boolean> {
         logger.info("deleteGitProject repoName is:$repoName,tokenType is:$tokenType")
         val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
