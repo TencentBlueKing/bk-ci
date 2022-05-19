@@ -43,7 +43,7 @@ import java.time.temporal.ChronoUnit
 @Component
 @ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "lucene")
 class IndexCleanJobLuceneImpl @Autowired constructor(
-    private val storageProperties: StorageProperties,
+    storageProperties: StorageProperties,
     private val luceneClient: LuceneClient
 ) : IndexCleanJob {
 
