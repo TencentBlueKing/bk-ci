@@ -44,11 +44,12 @@ dependencies {
     api(project(":core:common:common-auth"))
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-db"))
+    api(project(":core:process:common-pipeline-yaml"))
     api(project(":ext:tencent:common:common-wechatwork"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:environment:api-environment-tencent"))
     api(project(":ext:tencent:prebuild:model-prebuild"))
-    api(project(":ext:tencent:process:common-pipeline-yaml"))
+    api(project(":ext:tencent:process:common-pipeline-yaml-tencent"))
 
     api("com.github.docker-java:docker-java")
     api("org.apache.httpcomponents:httpclient")
