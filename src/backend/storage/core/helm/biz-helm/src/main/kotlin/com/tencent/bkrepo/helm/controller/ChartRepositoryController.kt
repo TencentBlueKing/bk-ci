@@ -34,19 +34,23 @@ package com.tencent.bkrepo.helm.controller
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.common.artifact.api.ArtifactPathVariable
 import com.tencent.bkrepo.common.service.util.ResponseBuilder
-import com.tencent.bkrepo.helm.artifact.HelmArtifactInfo
-import com.tencent.bkrepo.helm.artifact.HelmArtifactInfo.Companion.HELM_INDEX_YAML_URL
-import com.tencent.bkrepo.helm.artifact.HelmArtifactInfo.Companion.HELM_INSTALL_URL
-import com.tencent.bkrepo.helm.artifact.HelmArtifactInfo.Companion.HELM_PROV_INSTALL_URL
+import com.tencent.bkrepo.helm.pojo.artifact.HelmArtifactInfo
+import com.tencent.bkrepo.helm.pojo.artifact.HelmArtifactInfo.Companion.HELM_INDEX_YAML_URL
+import com.tencent.bkrepo.helm.pojo.artifact.HelmArtifactInfo.Companion.HELM_INSTALL_URL
+import com.tencent.bkrepo.helm.pojo.artifact.HelmArtifactInfo.Companion.HELM_PROV_INSTALL_URL
 import com.tencent.bkrepo.helm.service.ChartRepositoryService
+import com.tencent.bkrepo.helm.service.impl.HelmOperationService
+import java.time.LocalDateTime
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.time.LocalDateTime
 
+@Suppress("MVCPathVariableInspection")
 @RestController
 class ChartRepositoryController(
-    private val chartRepositoryService: ChartRepositoryService
+    private val chartRepositoryService: ChartRepositoryService,
+    private val helmOperationService: HelmOperationService
 ) {
     /**
      * query index.yaml
@@ -75,9 +79,18 @@ class ChartRepositoryController(
     /**
      * regenerate index.yaml
      */
-    @GetMapping("/{projectId}/{repoName}/regenerate")
+    @PostMapping("/{projectId}/{repoName}/regenerate")
     fun regenerateIndexYaml(@ArtifactPathVariable artifactInfo: HelmArtifactInfo): Response<Void> {
         chartRepositoryService.regenerateIndexYaml(artifactInfo)
+        return ResponseBuilder.success()
+    }
+
+    /**
+     * refresh index.yaml and package info for remote
+     */
+    @PostMapping("/{projectId}/{repoName}/refresh")
+    fun refreshIndexYamlAndPackage(@ArtifactPathVariable artifactInfo: HelmArtifactInfo): Response<Void> {
+        helmOperationService.updatePackageForRemote(artifactInfo.projectId, artifactInfo.repoName)
         return ResponseBuilder.success()
     }
 

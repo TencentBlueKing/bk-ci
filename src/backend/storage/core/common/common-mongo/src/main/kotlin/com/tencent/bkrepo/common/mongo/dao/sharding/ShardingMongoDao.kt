@@ -34,7 +34,7 @@ package com.tencent.bkrepo.common.mongo.dao.sharding
 import com.mongodb.BasicDBList
 import com.tencent.bkrepo.common.mongo.dao.AbstractMongoDao
 import com.tencent.bkrepo.common.mongo.dao.util.MongoIndexResolver
-import com.tencent.bkrepo.common.mongo.dao.util.ShardingUtils
+import com.tencent.bkrepo.common.mongo.dao.util.sharding.ShardingUtils
 import org.apache.commons.lang3.reflect.FieldUtils
 import org.apache.commons.lang3.reflect.FieldUtils.getFieldsListWithAnnotation
 import org.bson.Document
@@ -42,6 +42,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.annotation.AnnotationUtils
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.aggregation.Aggregation
 import org.springframework.data.mongodb.core.index.IndexDefinition
@@ -65,15 +68,24 @@ abstract class ShardingMongoDao<E> : AbstractMongoDao<E>() {
     /**
      * 分表Field
      */
-    private val shardingField: Field
+    protected val shardingField: Field
+
     /**
      * 分表列名
      */
     private val shardingColumn: String
+
     /**
      * 分表数
      */
-    private var shardingCount: Int = 1
+    protected var shardingCount: Int = 1
+
+    /**
+     * 分表工具类
+     */
+    protected val shardingUtils by lazy {
+        determineShardingUtils()
+    }
 
     init {
         @Suppress("LeakingThis")
@@ -94,6 +106,9 @@ abstract class ShardingMongoDao<E> : AbstractMongoDao<E>() {
     }
 
     private fun ensureIndex() {
+        if (shardingCount < 0) {
+            return
+        }
         val start = System.currentTimeMillis()
         val indexDefinitions = MongoIndexResolver.resolveIndexFor(classType)
         val nonexistentIndexDefinitions = filterExistedIndex(indexDefinitions)
@@ -126,7 +141,7 @@ abstract class ShardingMongoDao<E> : AbstractMongoDao<E>() {
     }
 
     private fun shardingKeyToCollectionName(shardValue: Any): String {
-        val shardingSequence = ShardingUtils.shardingSequenceFor(shardValue, shardingCount)
+        val shardingSequence = shardingUtils.shardingSequenceFor(shardValue, shardingCount)
         return parseSequenceToCollectionName(shardingSequence)
     }
 
@@ -142,7 +157,7 @@ abstract class ShardingMongoDao<E> : AbstractMongoDao<E>() {
 
     private fun determineShardingCount(): Int {
         val shardingKey = AnnotationUtils.getAnnotation(shardingField, ShardingKey::class.java)!!
-        return ShardingUtils.shardingCountFor(shardingKey.count)
+        return shardingUtils.shardingCountFor(shardingKey.count)
     }
 
     private fun determineShardingColumn(): String {
@@ -200,7 +215,7 @@ abstract class ShardingMongoDao<E> : AbstractMongoDao<E>() {
         return shardingKeyToCollectionName(shardingValue)
     }
 
-    private fun determineCollectionName(document: Document): Any? {
+    fun determineCollectionName(document: Document): Any? {
         for ((key, value) in document) {
             if (key == shardingColumn) return value
             if (key == "\$and") {
@@ -223,8 +238,78 @@ abstract class ShardingMongoDao<E> : AbstractMongoDao<E>() {
         throw UnsupportedOperationException()
     }
 
+    /**
+     * 支持查询条件不包含sharding key的分页查询
+     *
+     * @param pageRequest 分页信息
+     * @param query 查询条件，不要在其中包含分页查询条件
+     */
+    fun pageWithoutShardingKey(pageRequest: PageRequest, query: Query): Page<E> {
+        if (shardingCount <= 0 || shardingCount > MAX_SHARDING_COUNT_OF_PAGE_QUERY) {
+            throw UnsupportedOperationException()
+        }
+
+        val startIndex = pageRequest.pageNumber * pageRequest.pageSize
+        var limit = pageRequest.pageSize
+
+        var preIndex = -1L
+        var curIndex: Long
+        var total = 0L
+        val result = ArrayList<E>()
+
+        // 遍历所有分表进行查询
+        val template = determineMongoTemplate()
+        for (sequence in 0 until shardingCount) {
+            // 重置需要跳过的记录数量和limit
+            query.skip(0L)
+            query.limit(0)
+
+            val collectionName = parseSequenceToCollectionName(sequence)
+
+            // 统计总数
+            val count = template.count(query, classType, collectionName)
+            if (count == 0L) {
+                continue
+            }
+            total += count
+            curIndex = total - 1
+
+            // 当到达目标分页时才进行查询
+            if (curIndex >= startIndex && limit > 0) {
+                if (preIndex < startIndex) {
+                    // 跳过属于前一个分页的数据
+                    query.skip(startIndex - preIndex - 1)
+                }
+                query.limit(limit)
+                val nodes = template.find(query, classType, collectionName)
+                // 更新还需要的数据数
+                limit -= nodes.size
+                result.addAll(nodes)
+            }
+            preIndex = curIndex
+        }
+
+        return PageImpl(result, pageRequest, total)
+    }
+
+    override fun insert(entityCollection: Collection<E>): Collection<E> {
+        if (AbstractMongoDao.logger.isDebugEnabled) {
+            AbstractMongoDao.logger.debug("Mongo Dao insert many: [$entityCollection]")
+        }
+        checkCollectionConsistency(entityCollection)
+        return determineMongoTemplate().insert(entityCollection, determineCollectionName(entityCollection.first()))
+    }
+
+    private fun checkCollectionConsistency(entityCollection: Collection<E>) {
+        val sequences = entityCollection.map { determineCollectionName(it) }.distinct()
+        require(sequences.size == 1)
+    }
+
+    abstract fun determineShardingUtils(): ShardingUtils
+
     companion object {
 
         private val logger = LoggerFactory.getLogger(ShardingMongoDao::class.java)
+        private const val MAX_SHARDING_COUNT_OF_PAGE_QUERY = 256
     }
 }

@@ -136,6 +136,10 @@ class StreamScheduleAction(
         )
     }
 
+    override fun getChangeSet(): Set<String>? {
+        return null
+    }
+
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         return TriggerResult(
             trigger = true,

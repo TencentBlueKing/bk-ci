@@ -2,16 +2,18 @@ package com.tencent.bkrepo.nuget.util
 
 import com.github.zafarkhaja.semver.Version
 import com.tencent.bkrepo.common.api.util.JsonUtils
-import com.tencent.bkrepo.nuget.model.nuspec.Dependency
-import com.tencent.bkrepo.nuget.model.nuspec.NuspecMetadata
-import com.tencent.bkrepo.nuget.model.v3.DependencyGroups
-import com.tencent.bkrepo.nuget.model.v3.RegistrationCatalogEntry
-import com.tencent.bkrepo.nuget.model.v3.RegistrationIndex
-import com.tencent.bkrepo.nuget.model.v3.RegistrationLeaf
-import com.tencent.bkrepo.nuget.model.v3.RegistrationPage
-import com.tencent.bkrepo.nuget.model.v3.search.SearchRequest
-import com.tencent.bkrepo.nuget.model.v3.search.SearchResponseData
-import com.tencent.bkrepo.nuget.model.v3.search.SearchResponseDataVersion
+import com.tencent.bkrepo.nuget.pojo.nuspec.Dependency
+import com.tencent.bkrepo.nuget.pojo.nuspec.NuspecMetadata
+import com.tencent.bkrepo.nuget.pojo.request.NugetSearchRequest
+import com.tencent.bkrepo.nuget.pojo.response.search.SearchResponseData
+import com.tencent.bkrepo.nuget.pojo.response.search.SearchResponseDataVersion
+import com.tencent.bkrepo.nuget.pojo.v3.metadata.index.DependencyGroups
+import com.tencent.bkrepo.nuget.pojo.v3.metadata.index.RegistrationCatalogEntry
+import com.tencent.bkrepo.nuget.pojo.v3.metadata.index.RegistrationIndex
+import com.tencent.bkrepo.nuget.pojo.v3.metadata.index.RegistrationItem
+import com.tencent.bkrepo.nuget.pojo.v3.metadata.index.RegistrationPageItem
+import com.tencent.bkrepo.nuget.pojo.v3.metadata.leaf.RegistrationLeaf
+import com.tencent.bkrepo.nuget.pojo.v3.metadata.page.RegistrationPage
 import com.tencent.bkrepo.repository.pojo.packages.PackageSummary
 import com.tencent.bkrepo.repository.pojo.packages.PackageVersion
 import org.slf4j.Logger
@@ -24,35 +26,92 @@ object NugetV3RegistrationUtils {
 
     private val logger: Logger = LoggerFactory.getLogger(NugetV3RegistrationUtils::class.java)
 
-    fun metadataToRegistrationIndex(
-        metadataList: List<Map<String, Any>>,
-        v3RegistrationUrl: String
-    ): RegistrationIndex {
-        val registrationLeafList = metadataList.stream().map {
-            metadataToRegistrationLeaf(it, v3RegistrationUrl)
-        }.toList()
-        // 涉及到分页的问题需要处理
-        return registrationLeafListToRegistrationIndex(registrationLeafList, v3RegistrationUrl)
-    }
-
-    private fun metadataToRegistrationLeaf(
-        metadataMap: Map<String, Any>?,
+    fun metadataToRegistrationLeaf(
+        packageId: String,
+        version: String,
+        listed: Boolean,
         v3RegistrationUrl: String
     ): RegistrationLeaf {
-        val writeValueAsString = JsonUtils.objectMapper.writeValueAsString(metadataMap)
-        val nuspecMetadata = JsonUtils.objectMapper.readValue(writeValueAsString, NuspecMetadata::class.java)
-        val registrationLeafId =
+        return RegistrationLeaf(
+            id = NugetUtils.buildRegistrationLeafUrl(v3RegistrationUrl, packageId, version),
+            listed = listed,
+            packageContent = NugetUtils.buildPackageContentUrl(v3RegistrationUrl, packageId, version),
+            registration = NugetUtils.buildRegistrationIndexUrl(v3RegistrationUrl, packageId)
+        )
+    }
+
+    fun metadataToRegistrationPage(
+        sortedPackageVersionList: List<PackageVersion>,
+        packageId: String,
+        lowerVersion: String,
+        upperVersion: String,
+        v3RegistrationUrl: String
+    ): RegistrationPage {
+        val registrationPageItemList = sortedPackageVersionList.stream().filter {
+            betweenVersions(lowerVersion, upperVersion, it.name)
+        }.map {
+            metadataToRegistrationPageItem(it, v3RegistrationUrl)
+        }.toList()
+        // 涉及到分页的问题需要处理
+        return registrationPageItemToRegistrationPage(
+            registrationPageItemList, packageId, lowerVersion, upperVersion, v3RegistrationUrl
+        )
+    }
+
+    private fun betweenVersions(lowerVersion: String, upperVersion: String, version: String): Boolean {
+        return NugetVersionUtils.compareSemVer(lowerVersion, version) <= 0 &&
+            NugetVersionUtils.compareSemVer(upperVersion, version) >= 0
+    }
+
+    fun registrationPageItemToRegistrationPage(
+        registrationPageItemList: List<RegistrationPageItem>,
+        packageId: String,
+        lowerVersion: String,
+        upperVersion: String,
+        v3RegistrationUrl: String
+    ): RegistrationPage {
+        if (registrationPageItemList.isEmpty()) {
+            throw IllegalArgumentException("Cannot build registration with no package version")
+        } else {
+            val pageURI =
+                NugetUtils.buildRegistrationPageUrl(v3RegistrationUrl, packageId, lowerVersion, upperVersion)
+            val count = registrationPageItemList.size
+            val registrationUrl: URI = NugetUtils.buildRegistrationIndexUrl(v3RegistrationUrl, packageId)
+            return RegistrationPage(
+                pageURI, count, registrationPageItemList, lowerVersion, registrationUrl, upperVersion
+            )
+        }
+    }
+
+    fun metadataToRegistrationIndex(
+        sortedPackageVersionList: List<PackageVersion>,
+        v3RegistrationUrl: String
+    ): RegistrationIndex {
+        val registrationLeafList = sortedPackageVersionList.stream().map {
+            metadataToRegistrationPageItem(it, v3RegistrationUrl)
+        }.toList()
+        // 涉及到分页的问题需要处理
+        return registrationPageItemToRegistrationIndex(registrationLeafList, v3RegistrationUrl)
+    }
+
+    fun metadataToRegistrationPageItem(
+        packageVersion: PackageVersion,
+        v3RegistrationUrl: String
+    ): RegistrationPageItem {
+//        val writeValueAsString = JsonUtils.objectMapper.writeValueAsString(metadataMap)
+//        val nuspecMetadata = JsonUtils.objectMapper.readValue(writeValueAsString, NuspecMetadata::class.java)
+        val nuspecMetadata = NugetUtils.resolveVersionMetadata(packageVersion)
+        val registrationPageItemId =
             NugetUtils.buildRegistrationLeafUrl(v3RegistrationUrl, nuspecMetadata.id, nuspecMetadata.version)
         val packageContent =
             NugetUtils.buildPackageContentUrl(v3RegistrationUrl, nuspecMetadata.id, nuspecMetadata.version)
         // dependency 需要处理
         val dependencyGroups = metadataToDependencyGroups(nuspecMetadata.dependencies, v3RegistrationUrl)
         val catalogEntry = metadataToRegistrationCatalogEntry(nuspecMetadata, v3RegistrationUrl, dependencyGroups)
-        return RegistrationLeaf(
-            id = registrationLeafId,
+        return RegistrationPageItem(
+            id = registrationPageItemId,
             catalogEntry = catalogEntry,
-            packageContent = packageContent,
-            registration = NugetUtils.buildRegistrationIndexUrl(v3RegistrationUrl, nuspecMetadata.id)
+            packageContent = packageContent
         )
     }
 
@@ -96,8 +155,8 @@ object NugetV3RegistrationUtils {
         }
     }
 
-    private fun registrationLeafListToRegistrationIndex(
-        registrationLeafList: List<RegistrationLeaf>,
+    fun registrationPageItemToRegistrationIndex(
+        registrationLeafList: List<RegistrationPageItem>,
         v3RegistrationUrl: String
     ): RegistrationIndex {
         if (registrationLeafList.isEmpty()) {
@@ -107,18 +166,18 @@ object NugetV3RegistrationUtils {
             val pagesCount = versionCount / 64 + if (versionCount % 64 != 0) 1 else 0
             val packageId = registrationLeafList[0].catalogEntry.packageId
             val registrationPageList =
-                buildRegistrationPageList(registrationLeafList, v3RegistrationUrl, versionCount, pagesCount, packageId)
+                buildRegistrationItems(registrationLeafList, v3RegistrationUrl, versionCount, pagesCount, packageId)
             return RegistrationIndex(pagesCount, registrationPageList)
         }
     }
 
-    private fun buildRegistrationPageList(
-        registrationLeafList: List<RegistrationLeaf>,
+    private fun buildRegistrationItems(
+        registrationLeafList: List<RegistrationPageItem>,
         v3RegistrationUrl: String,
         versionCount: Int,
         pagesCount: Int,
         packageId: String
-    ): List<RegistrationPage> {
+    ): List<RegistrationItem> {
         return IntStream.range(0, pagesCount).mapToObj { i ->
             // 计算每一页中的最小版本与最大版本
             val lowerVersion = registrationLeafList[64 * i].catalogEntry.version
@@ -126,7 +185,7 @@ object NugetV3RegistrationUtils {
             val lastPackageIndexInPage = if (isLastPage) versionCount - 1 else 64 * i + 63
             val upperVersion = registrationLeafList[lastPackageIndexInPage].catalogEntry.version
             val packagesInPageCount = computedPageCount(isLastPage, versionCount)
-            RegistrationPage(
+            RegistrationItem(
                 id = NugetUtils.buildRegistrationPageUrl(v3RegistrationUrl, packageId, lowerVersion, upperVersion),
                 count = packagesInPageCount,
                 items = registrationLeafList,
@@ -163,13 +222,14 @@ object NugetV3RegistrationUtils {
     fun versionListToSearchResponse(
         sortedPackageVersionList: List<PackageVersion>,
         packageSummary: PackageSummary,
-        searchRequest: SearchRequest,
+        searchRequest: NugetSearchRequest,
         v3RegistrationUrl: String
     ): SearchResponseData {
         val latestVersionPackage = sortedPackageVersionList.last()
         val searchResponseDataVersionList =
-            sortedPackageVersionList.filter { searchRequest.prerelease || !isPreRelease(latestVersionPackage.name) }
-                .map { buildSearchResponseDataVersion(it, packageSummary.name, v3RegistrationUrl) }
+            sortedPackageVersionList.filter {
+                searchRequest.prerelease ?: false || !isPreRelease(latestVersionPackage.name)
+            }.map { buildSearchResponseDataVersion(it, packageSummary.name, v3RegistrationUrl) }
         val writeValueAsString = JsonUtils.objectMapper.writeValueAsString(latestVersionPackage.metadata)
         val nuspecMetadata = JsonUtils.objectMapper.readValue(writeValueAsString, NuspecMetadata::class.java)
         return buildSearchResponseData(v3RegistrationUrl, searchResponseDataVersionList, nuspecMetadata, packageSummary)
@@ -185,7 +245,6 @@ object NugetV3RegistrationUtils {
             return SearchResponseData(
                 id = NugetUtils.buildRegistrationIndexUrl(v3RegistrationUrl, id),
                 version = version,
-                packageId = id,
                 description = description,
                 versions = searchResponseDataVersionList,
                 authors = authors.split(','),

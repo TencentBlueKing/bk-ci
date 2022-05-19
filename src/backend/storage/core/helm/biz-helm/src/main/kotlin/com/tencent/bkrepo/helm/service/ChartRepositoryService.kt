@@ -32,8 +32,8 @@
 package com.tencent.bkrepo.helm.service
 
 import com.tencent.bkrepo.common.artifact.api.ArtifactPathVariable
-import com.tencent.bkrepo.helm.artifact.HelmArtifactInfo
-import com.tencent.bkrepo.helm.model.metadata.HelmIndexYamlMetadata
+import com.tencent.bkrepo.helm.pojo.artifact.HelmArtifactInfo
+import com.tencent.bkrepo.helm.pojo.metadata.HelmIndexYamlMetadata
 import org.springframework.web.bind.annotation.RequestParam
 import java.time.LocalDateTime
 
