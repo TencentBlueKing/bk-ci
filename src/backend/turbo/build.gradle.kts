@@ -11,13 +11,6 @@ allprojects {
 
     apply(plugin = "com.tencent.devops.boot")
 
-
-	group = "com.tencent.bk.devops.turbo"
-	version = "0.0.1"
-
-	apply(plugin = "com.tencent.devops.boot")
-
-
 	configurations.all {
 		exclude(group = "org.slf4j", module = "log4j-over-slf4j")
 		exclude(group = "org.slf4j", module = "slf4j-log4j12")
