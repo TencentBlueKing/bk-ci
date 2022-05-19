@@ -40,8 +40,6 @@ public class CommonCheckReportBizServiceImpl implements ICheckReportBizService
 {
     @Value("${bkci.public.url:#{null}}")
     private String DEVOPS_HOST;
-    @Value("${bkci.public.schema:http}")
-    protected String DEVOPS_SCHEMA;
 
     @Autowired
     private TaskLogService taskLogService;
@@ -226,11 +224,11 @@ public class CommonCheckReportBizServiceImpl implements ICheckReportBizService
         compileSnapShotEntity.setToolNameEn(toolName);
         if(StringUtils.isNotEmpty(projectId))
         {
-            String defectDetailUrl = String.format("%s://%s/console/codecc/%s/task/%d/defect/compile/%s/list?buildId=%s&status=7",DEVOPS_SCHEMA,
+            String defectDetailUrl = String.format("%s/console/codecc/%s/task/%d/defect/compile/%s/list?buildId=%s&status=7",
                     DEVOPS_HOST, projectId, taskId,
                     toolName, buildId);
             compileSnapShotEntity.setDefectDetailUrl(defectDetailUrl);
-            String defectReportUrl = String.format("%s://%s/console/codecc/%s/task/%d/defect/compile/%s/charts", DEVOPS_SCHEMA,
+            String defectReportUrl = String.format("%s/console/codecc/%s/task/%d/defect/compile/%s/charts",
                     DEVOPS_HOST, projectId, taskId, toolName);
             compileSnapShotEntity.setDefectReportUrl(defectReportUrl);
         }

@@ -33,12 +33,10 @@ import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.kubernetes.client.discovery.KubernetesInformerDiscoveryClient
 
 class KubernetesServiceTarget<T> constructor(
-        override val servicePrefix: String,
         override val serviceName: String,
         override val type: Class<T>,
         private val discoveryClient: KubernetesInformerDiscoveryClient
 ) : FeignTarget<T>(
-    servicePrefix,
     serviceName,
     type
 ) {
@@ -82,10 +80,6 @@ class KubernetesServiceTarget<T> constructor(
 
         usedInstance[matchTagInstances[0].url()] = matchTagInstances[0]
         return matchTagInstances[0]
-    }
-
-    override fun url(): String {
-        return choose("$servicePrefix-$serviceName").url()
     }
 
 }

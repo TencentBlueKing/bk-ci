@@ -38,7 +38,6 @@ import org.springframework.cloud.client.ServiceInstance
 import java.util.concurrent.ConcurrentHashMap
 
 abstract class FeignTarget<T>(
-    protected open val servicePrefix: String,
     protected open val serviceName: String,
     protected open val type: Class<T>,
     private val commonUrlPrefix: String = "/api",
@@ -65,6 +64,10 @@ abstract class FeignTarget<T>(
     override fun name() = serviceName
 
     protected fun ServiceInstance.url() = "${if (isSecure) "https" else "http"}://$host:$port$commonUrlPrefix"
+
+    override fun url(): String {
+        return choose(serviceName).url()
+    }
 
     protected abstract fun choose(serviceName: String): ServiceInstance
 }

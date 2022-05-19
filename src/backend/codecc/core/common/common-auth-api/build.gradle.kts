@@ -29,7 +29,7 @@ plugins {
 }
 
 dependencies {
-    api(fileTree(mapOf("dir" to "lib/iam-sdk-1.0.0.jar", "include" to listOf("*.jar"))))
+    api(fileTree(mapOf("dir" to "lib/iam-sdk-1.0.1.jar", "include" to listOf("*.jar"))))
     api(project(":core:common:common-service"))
     api(project(":core:common:common-api"))
     api(project(":core:common:common-util"))

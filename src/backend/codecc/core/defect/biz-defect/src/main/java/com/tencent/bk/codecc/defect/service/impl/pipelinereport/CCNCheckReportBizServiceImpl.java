@@ -60,8 +60,6 @@ public class CCNCheckReportBizServiceImpl implements ICheckReportBizService
 
     @Value("${bkci.public.url:#{null}}")
     private String devopsHost;
-    @Value("${bkci.public.schema:http}")
-    protected String devopsSchema;
 
     @Autowired
     private NewDefectJudgeService newDefectJudgeService;
@@ -107,10 +105,10 @@ public class CCNCheckReportBizServiceImpl implements ICheckReportBizService
         ccnSnapShotEntity.setToolNameEn(toolName);
         if (StringUtils.isNotEmpty(projectId))
         {
-            String defectDetailUrl = String.format("%s://%s/console/codecc/%s/task/%d/defect/ccn/list?buildId=%s",devopsSchema,
+            String defectDetailUrl = String.format("%s/console/codecc/%s/task/%d/defect/ccn/list?buildId=%s",
                     devopsHost, projectId, taskId, buildId);
             ccnSnapShotEntity.setDefectDetailUrl(defectDetailUrl);
-            String defectReportUrl = String.format("%s://%s/console/codecc/%s/task/%d/defect/ccn/charts", devopsSchema,
+            String defectReportUrl = String.format("%s/console/codecc/%s/task/%d/defect/ccn/charts",
                     devopsHost, projectId, taskId);
             ccnSnapShotEntity.setDefectReportUrl(defectReportUrl);
         }

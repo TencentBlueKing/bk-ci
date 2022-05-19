@@ -34,13 +34,11 @@ import org.springframework.cloud.client.discovery.DiscoveryClient
 import org.springframework.cloud.consul.discovery.ConsulServiceInstance
 
 open class ConsulServiceTarget<T> constructor(
-        override val servicePrefix: String,
         override val serviceName: String,
         override val type: Class<T>,
         private val discoveryClient: DiscoveryClient,
         private val tag: String?,
 ) : FeignTarget<T>(
-    servicePrefix,
     serviceName,
     type
 ) {
@@ -85,10 +83,6 @@ open class ConsulServiceTarget<T> constructor(
 
         usedInstance[matchTagInstances[0].url()] = matchTagInstances[0]
         return matchTagInstances[0]
-    }
-
-    override fun url(): String {
-        return choose(serviceName).url()
     }
 
 }

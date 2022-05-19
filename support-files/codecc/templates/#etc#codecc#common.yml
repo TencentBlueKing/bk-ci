@@ -69,10 +69,12 @@ server:
 
 
 # monitor path config
-management:
+management: 
+  endpoints:
+    web:
+      base-path: /management
   security:
     enabled: false
-  context-path: /management
 
 bkci:
   public:

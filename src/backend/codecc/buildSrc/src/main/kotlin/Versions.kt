@@ -37,7 +37,6 @@ object Versions {
     const val lettuceVersion = "4.5.0.Final"
     const val springRedisVersion = "2.4.5.RELEASE"
     const val springWebSocketVersion = "2.3.4.RELEASE"
-    const val jerseyValidationVersion = "2.32"
     const val commonsIOVersion = "2.8.0"
     const val commonsHttpclientVersion = "3.1"
     const val ktlintVersion = "0.29.0"
@@ -47,6 +46,6 @@ object Versions {
     const val lucene = "8.11.0"
     const val log4j = "2.17.1"
     const val beanUtils = "1.9.4"
-    const val jerseyCommon = "2.34"
+    const val jersey = "2.34"
     const val guava = "30.0-jre"
 }
