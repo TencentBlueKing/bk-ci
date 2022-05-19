@@ -27,7 +27,13 @@
 
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
+import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
+import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
+import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.process.yaml.modelCreate.ModelCommon
+import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
 import com.tencent.devops.stream.dao.GitCIServicesConfDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -66,5 +72,11 @@ class TXInnerModelCreatorImpl @Autowired constructor(
             params = params,
             serviceEnv = record.env
         )
+    }
+
+    override fun preInstallMarketAtom(client: Client, event: ModelCreateEvent) {
+        ModelCommon.installMarketAtom(client, event.projectCode, event.userId, GitCiCodeRepoTask.atomCode)
+        ModelCommon.installMarketAtom(client, event.projectCode, event.userId, DockerRunDevCloudTask.atomCode)
+        ModelCommon.installMarketAtom(client, event.projectCode, event.userId, ServiceJobDevCloudTask.atomCode)
     }
 }

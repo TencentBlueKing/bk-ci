@@ -86,3 +86,25 @@ data class StreamData(
     val requestEventId: Long,
     val objectKind: StreamObjectKind
 )
+
+
+/**
+ * preci相关信息
+ */
+data class PreCIInfo(
+    val agentId: String,
+    val workspace: String,
+    val userId: String,
+    val projectId: String = "_$userId",
+    val extraParam: ExtraParam?
+)
+
+/**
+ * preci扩展信息
+ */
+data class ExtraParam(
+    val codeccScanPath: String? = null,
+    val incrementFileList: List<String>? = null,
+    val ideVersion: String? = null,
+    val pluginVersion: String? = null
+)

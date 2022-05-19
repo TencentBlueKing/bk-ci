@@ -30,6 +30,7 @@ package com.tencent.devops.prebuild.v2.service
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
@@ -40,7 +41,11 @@ import com.tencent.devops.prebuild.v2.component.PipelineLayout
 import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidator
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
+import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import com.tencent.devops.scm.api.ServiceGitCiResource
 import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -56,6 +61,7 @@ class PreBuildV2Service @Autowired constructor(
 ) : CommonPreBuildService(client, dslContext, prebuildProjectDao) {
     companion object {
         private val logger = LoggerFactory.getLogger(PreBuildV2Service::class.java)
+        private const val TEMPLATE_DIR = ".ci/templates/"
     }
 
     /**
@@ -90,23 +96,40 @@ class PreBuildV2Service @Autowired constructor(
         agentInfo: ThirdPartyAgentStaticInfo
     ): BuildId {
         // 1.校验yaml合法性
-        val (isPassed, preYamlObject, errorMsg) = preCIYAMLValidator.validate(startUpReq.yaml)
+        val (isPassed, _, errorMsg) = preCIYAMLValidator.validate(startUpReq.yaml)
         if (!isPassed) {
             throw CustomException(Response.Status.BAD_REQUEST, "Invalid yaml: $errorMsg")
         }
 
-        // 2.标准化处理
-        val scriptBuildYaml = ScriptYmlUtils.normalizePreCiYaml(preYamlObject!!)
+        val preTemplateYamlObject =
+            YamlUtil.getObjectMapper().readValue(startUpReq.yaml, PreTemplateScriptBuildYaml::class.java)
 
+        val preYamlObject = YamlTemplate(
+            filePath = "",
+            yamlObject = preTemplateYamlObject,
+            extraParameters = null,
+            getTemplateMethod = ::getTemplate,
+            nowRepo = null,
+            repo = null,
+            resourcePoolMapExt = null
+        ).replace()
+
+        // 2.标准化处理
+        val scriptBuildYaml = ScriptYmlUtils.normalizePreCiYaml(preYamlObject)
+
+
+//        PreCIInfo()
+//        PreCIModelCreatorImpl()
+//        ModelCreate(client, objectMapper,)
         // 3.生成流水线编排
         val createStagesRequest = CreateStagesRequest(userId, startUpReq, scriptBuildYaml, agentInfo, channelCode)
         val pipelineModel = PipelineLayout.Builder()
-            .pipelineName(pipelineName)
-            .description("From PreCI YAML 2.0")
-            .creator(userId)
-            .labels(emptyList())
-            .stages(createStagesRequest)
-            .build()
+                .pipelineName(pipelineName)
+                .description("From PreCI YAML 2.0")
+                .creator(userId)
+                .labels(emptyList())
+                .stages(createStagesRequest)
+                .build()
 
         // 4.存储upsert
         val pipelineId = createOrUpdatePipeline(userId, pipelineName, startUpReq, pipelineModel)
@@ -122,5 +145,60 @@ class PreBuildV2Service @Autowired constructor(
         }
 
         return BuildId(startupResp.data!!.id)
+    }
+
+    private fun getTemplate(
+        param: GetTemplateParam<Any?>
+    ): String {
+        if (param.targetRepo == null) {
+            throw CustomException(Response.Status.BAD_REQUEST, "PreCI仅支持远程模板")
+        }
+
+        if (param.targetRepo?.credentials?.personalAccessToken.isNullOrBlank() ||
+                param.targetRepo?.repository.isNullOrBlank() ||
+                param.targetRepo?.ref.isNullOrBlank()
+        ) {
+            throw CustomException(
+                status = Response.Status.BAD_REQUEST,
+                message = "远程仓关键字不能为空: repository, ref, personal-access-token"
+            )
+        }
+
+        return getTemplateCntFromGit(
+            token = param.targetRepo?.credentials?.personalAccessToken!!,
+            gitProjectId = param.targetRepo?.repository!!,
+            ref = param.targetRepo?.ref!!,
+            fileName = TEMPLATE_DIR + param.path
+        )
+    }
+
+
+    fun getTemplateCntFromGit(
+        token: String,
+        gitProjectId: String,
+        fileName: String,
+        ref: String
+    ): String {
+        logger.info("getTemplateCntFromGit: [$gitProjectId|$fileName|$ref]")
+        try {
+            return client.getScm(ServiceGitCiResource::class).getGitCIFileContent(
+                gitProjectId = gitProjectId,
+                filePath = fileName,
+                token = token,
+                ref = getTriggerBranch(ref),
+                useAccessToken = false
+            ).data!!
+        } catch (e: Throwable) {
+            logger.error("get yaml template error from git, $gitProjectId", e)
+            throw e
+        }
+    }
+
+    fun getTriggerBranch(branch: String): String {
+        return when {
+            branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
+            branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
+            else -> branch
+        }
     }
 }

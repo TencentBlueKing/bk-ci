@@ -37,18 +37,6 @@ dependencies {
     api(project(":core:process:api-process"))
     api(project(":core:project:api-project"))
     api(project(":core:plugin:codecc-plugin:api-codecc"))
-    api("com.github.docker-java:docker-java")
-    api("org.apache.httpcomponents:httpclient")
-    api("org.glassfish.jersey.core:jersey-client")
-    api("org.glassfish.jersey.containers:jersey-container-servlet")
-    api("org.glassfish.jersey.core:jersey-server")
-    api("org.glassfish.jersey.core:jersey-common")
-    api("org.slf4j:slf4j-api")
-    api("com.squareup.okhttp3:okhttp")
-    api("com.fasterxml.jackson.module:jackson-module-jsonSchema")
-
-    api(project(":ext:tencent:process:common-pipeline-yaml-tencent"))
-
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))
     api(project(":core:common:common-client"))
@@ -60,6 +48,16 @@ dependencies {
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:environment:api-environment-tencent"))
     api(project(":ext:tencent:prebuild:model-prebuild"))
+
+    api("com.github.docker-java:docker-java")
+    api("org.apache.httpcomponents:httpclient")
+    api("org.glassfish.jersey.core:jersey-client")
+    api("org.glassfish.jersey.containers:jersey-container-servlet")
+    api("org.glassfish.jersey.core:jersey-server")
+    api("org.glassfish.jersey.core:jersey-common")
+    api("org.slf4j:slf4j-api")
+    api("com.squareup.okhttp3:okhttp")
+    api("com.fasterxml.jackson.module:jackson-module-jsonSchema")
     api("com.zaxxer:HikariCP")
     api("mysql:mysql-connector-java")
     api("org.apache.commons:commons-exec")
@@ -72,6 +70,7 @@ dependencies {
     api("io.undertow:undertow-websockets-jsr")
     api("com.vmware:vijava")
     api("org.json:json")
+
     testImplementation(project(":core:common:common-test"))
     testImplementation("org.mockito:mockito-inline")
 }

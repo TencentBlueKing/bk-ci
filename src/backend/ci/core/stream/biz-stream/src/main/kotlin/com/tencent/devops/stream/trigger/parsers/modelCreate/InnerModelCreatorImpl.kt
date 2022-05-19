@@ -28,11 +28,13 @@
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.process.yaml.modelCreate.inner.InnerModelCreator
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
+import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.step.Step
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import org.jooq.DSLContext
@@ -124,6 +126,28 @@ class InnerModelCreatorImpl @Autowired constructor(
             data = data,
             additionalOptions = additionalOptions
         )
+    }
+
+    override fun makeMarketBuildAtomElement(
+        job: Job,
+        step: Step,
+        event: ModelCreateEvent,
+        additionalOptions: ElementAdditionalOptions
+    ): MarketBuildAtomElement? {
+        val data = mutableMapOf<String, Any>()
+        data["input"] = step.with ?: Any()
+        return MarketBuildAtomElement(
+            id = step.taskId,
+            name = step.name ?: step.uses!!.split('@')[0],
+            stepId = step.id,
+            atomCode = step.uses!!.split('@')[0],
+            version = step.uses!!.split('@')[1],
+            data = data,
+            additionalOptions = additionalOptions
+        )
+    }
+
+    override fun preInstallMarketAtom(client: Client, event: ModelCreateEvent) {
     }
 
     private fun makeCheckoutSelf(inputMap: MutableMap<String, Any?>, event: ModelCreateEvent) {
