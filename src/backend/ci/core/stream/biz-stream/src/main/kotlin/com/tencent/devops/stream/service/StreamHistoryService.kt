@@ -147,7 +147,7 @@ class StreamHistoryService @Autowired constructor(
                         gitProjectId = gitRequestEvent.gitProjectId,
                         useAccessToken = true,
                         userId = conf.enableUserId
-                    ).pathWithNamespace
+                    )?.pathWithNamespace
                     GitCommonUtils.checkAndGetRepoBranch(gitRequestEvent, pathWithNamespace)
                 }
             val pipeline =
@@ -156,7 +156,7 @@ class StreamHistoryService @Autowired constructor(
                 StreamBuildHistory(
                     displayName = pipeline.displayName,
                     pipelineId = pipeline.pipelineId,
-                    gitRequestEvent = StreamGitRequestEventReq(realEvent),
+                    gitRequestEvent = StreamGitRequestEventReq(realEvent, conf.homepage),
                     buildHistory = buildHistory,
                     reason = StreamTriggerMessageUtils.getEventMessageTitle(realEvent)
                 )

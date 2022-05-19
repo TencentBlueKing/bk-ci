@@ -145,7 +145,20 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
         val model = pipelineModelAndSetting.model
         modelCheckPlugin.clearUpModel(model)
-
+        if (model.srcTemplateId.isNullOrBlank()) {
+            val validateRet = client.get(ServiceTemplateResource::class)
+                .validateModelComponentVisibleDept(
+                    userId = userId,
+                    model = model,
+                    projectCode = projectId
+                )
+            if (validateRet.isNotOk()) {
+                throw ErrorCodeException(
+                    errorCode = validateRet.status.toString(),
+                    defaultMessage = validateRet.message
+                )
+            }
+        }
         val newPipelineId = createPipeline(
             userId = userId,
             projectId = projectId,

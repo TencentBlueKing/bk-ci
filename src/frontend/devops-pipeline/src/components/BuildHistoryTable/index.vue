@@ -244,7 +244,7 @@
                             ...stage,
                             tooltip: this.getStageTooltip(stage),
                             icon: this.statusIconMap[stage.status] || 'circle',
-                            statusCls: `${stage.status}${stage.status === 'RUNNING' ? ' spin-icon' : ''}`
+                            statusCls: stage.status
                         }))
                         : null
                     return {

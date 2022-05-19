@@ -203,9 +203,19 @@ class ServiceGitResourceImpl @Autowired constructor(
         userId: String,
         repository: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        search: String?
     ): Result<List<GitBranch>> {
-        return Result(gitService.getBranch(accessToken, userId, repository, page, pageSize))
+        return Result(
+            gitService.getBranch(
+                accessToken = accessToken,
+                userId = userId,
+                repository = repository,
+                page = page,
+                pageSize = pageSize,
+                search = search
+            )
+        )
     }
 
     override fun getTag(

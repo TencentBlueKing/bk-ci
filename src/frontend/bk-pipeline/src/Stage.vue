@@ -38,6 +38,7 @@
             </span>
             <span v-if="!stage.isError" class="stage-entry-btns">
                 <Logo
+                    class="copy-stage"
                     v-if="showCopyStage"
                     name="clipboard"
                     size="14"
@@ -222,7 +223,7 @@
                 return this.stage.canRetry === true
             },
             showCopyStage () {
-                return this.isMiddleStage && this.editable
+                return this.isMiddleStage && this.editable && !this.isFirstStage
             },
             showDeleteStage () {
                 return this.editable && !this.isTriggerStage
@@ -240,7 +241,7 @@
                 return this.stage.finally === true
             },
             isMiddleStage () {
-                return !(this.isTriggerStage || this.isFinallyStage || this.isFirstStage)
+                return !(this.isTriggerStage || this.isFinallyStage)
             },
             stageTitle () {
                 return this.stage ? this.stage.name : 'stage'
@@ -265,7 +266,8 @@
                     {
                         'is-final-stage': this.isFinallyStage,
                         'pipeline-drag': this.editable && !this.isTriggerStage,
-                        readonly: !this.editable || this.stageDisabled
+                        readonly: !this.editable || this.stageDisabled,
+                        editable: this.editable
                     }
                 ]
             },
@@ -509,7 +511,6 @@
         padding: 0 0 24px 0;
         background: $stageBGColor;
         margin: 0 $StageMargin 0 0;
-        z-index: 1;
 
         .pipeline-stage-entry {
             position: relative;
@@ -522,7 +523,6 @@
             background-color: #EFF5FF;
             border: 1px solid #D4E8FF;
             color: $primaryColor;
-            z-index: 2;
 
             &:hover {
                 border-color: #1a6df3;
@@ -582,6 +582,11 @@
                 justify-content: flex-end;
                 color: white;
                 fill: white;
+                z-index: 2;
+
+                .copy-stage:hover {
+                  color: $primaryColor;
+                }
                 
                 .close {
                     @include add-plus-icon(#2E2E3A, #2E2E3A, white, 16px, true);
@@ -598,11 +603,15 @@
             }
         }
 
-        &:not(.readonly) {
+        &.editable {
+            &:not(.readonly) {
+              .pipeline-stage-entry:hover {
+                  color: black;
+                  border-color: #1A6DF3;
+                  background-color: #D1E2FD;
+              }
+            }
             .pipeline-stage-entry:hover {
-                color: black;
-                border-color: #1A6DF3;
-                background-color: #D1E2FD;
                 .stage-entry-btns {
                     display: flex;
                 }
