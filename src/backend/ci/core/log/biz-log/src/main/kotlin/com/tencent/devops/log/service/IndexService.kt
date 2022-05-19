@@ -137,7 +137,7 @@ class IndexService @Autowired constructor(
             return
         }
         val latestLineNum = try {
-            lineNum!!.toLong()
+            lineNum.toLong()
         } catch (e: Exception) {
             logger.warn("[$buildId|$lineNum] Fail to convert line num to long", e)
             return

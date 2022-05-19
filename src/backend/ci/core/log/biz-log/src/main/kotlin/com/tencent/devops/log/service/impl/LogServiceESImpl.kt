@@ -30,27 +30,28 @@ package com.tencent.devops.log.service.impl
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
-import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.common.log.pojo.LogLine
-import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
-import com.tencent.devops.log.event.LogOriginEvent
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.LogClient
+import com.tencent.devops.log.event.LogOriginEvent
+import com.tencent.devops.log.event.LogStatusEvent
+import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.log.jmx.CreateIndexBean
 import com.tencent.devops.log.jmx.LogStorageBean
+import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.Constants
 import com.tencent.devops.log.util.ESIndexUtils
-import com.tencent.devops.log.service.BuildLogPrintService
 import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest
 import org.elasticsearch.action.bulk.BulkRequest
@@ -66,6 +67,7 @@ import org.elasticsearch.core.TimeValue
 import org.elasticsearch.index.query.BoolQueryBuilder
 import org.elasticsearch.index.query.Operator
 import org.elasticsearch.index.query.QueryBuilders
+import org.elasticsearch.search.SearchHits
 import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder
 import org.elasticsearch.search.sort.SortOrder
@@ -93,12 +95,17 @@ class LogServiceESImpl constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(LogServiceESImpl::class.java)
+        private const val LONG_SEARCH_TIME: Long = 64000
+        private const val SHORT_SEARCH_TIME: Long = 32000
+        private const val INDEX_CACHE_MAX_SIZE = 100000L
+        private const val INDEX_CACHE_EXPIRE_MINUTES = 30L
+        private const val INDEX_STORAGE_WARN_MILLIS = 1000
     }
 
     private val indexCache = Caffeine.newBuilder()
-        .maximumSize(100000)
-        .expireAfterAccess(30, TimeUnit.MINUTES)
-        .build<String/*BuildId*/, Boolean/*Has create the index*/>()
+        .maximumSize(INDEX_CACHE_MAX_SIZE)
+        .expireAfterAccess(INDEX_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
+        .build<String/*BuildId*/, Boolean/*Has created the index*/>()
 
     override fun addLogEvent(event: LogOriginEvent) {
         val logMessage = addLineNo(event.buildId, event.logs)
@@ -139,7 +146,7 @@ class LogServiceESImpl constructor(
             logStorageBean.batchWrite(elapse, success)
 
             // #4265 当日志消息处理时间过长时打印消息内容
-            if (elapse >= 1000 && event.logs.isNotEmpty()) logger.warn(
+            if (elapse >= INDEX_STORAGE_WARN_MILLIS && event.logs.isNotEmpty()) logger.warn(
                 "[${event.buildId}] addBatchLogEvent spent too much time($elapse) with tag=${event.logs.first().tag}"
             )
         }
@@ -168,25 +175,16 @@ class LogServiceESImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        val currentEpoch = System.currentTimeMillis()
-        var success = false
-        try {
-            val index = indexService.getIndexName(buildId)
-            val result = doQueryInitLogs(
-                buildId = buildId,
-                index = index,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-            success = logStatusSuccess(result.status)
-            return result
-        } finally {
-            logStorageBean.query(System.currentTimeMillis() - currentEpoch, success)
-        }
+        return doQueryInitLogs(
+            buildId = buildId,
+            index = indexService.getIndexName(buildId),
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
     }
 
     override fun queryLogsBetweenLines(
@@ -202,87 +200,50 @@ class LogServiceESImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        val startEpoch = System.currentTimeMillis()
-        var success = false
+        val queryLogs = QueryLogs(buildId, getLogStatus(buildId, tag, subTag, jobId, executeCount))
         try {
-            val index = indexService.getIndexName(buildId)
+            val query = getQuery(
+                buildId = buildId,
+                debug = debug,
+                logType = logType,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            ).must(QueryBuilders.rangeQuery("lineNo").gte(start).lte(end))
 
-            val queryLogs = QueryLogs(
-                buildId, getLogStatus(
-                    buildId = buildId,
-                    tag = tag,
-                    subTag = subTag,
-                    jobId = jobId,
-                    executeCount = executeCount
+            val sortOrder = if (fromStart) SortOrder.ASC else SortOrder.DESC
+            val searchRequest = SearchRequest(indexService.getIndexName(buildId))
+                .source(
+                    SearchSourceBuilder()
+                        .query(query)
+                        .highlighter(
+                            HighlightBuilder().preTags("\u001b[31m").postTags("\u001b[0m")
+                                .field("message").fragmentSize(100000)
+                        )
+                        .docValueField("lineNo")
+                        .docValueField("timestamp")
+                        .size(num)
+                        .sort("timestamp", sortOrder)
+                        .sort("lineNo", sortOrder)
+                        .timeout(TimeValue.timeValueSeconds(60))
                 )
-            )
-
-            try {
-                val query = getQuery(
-                    buildId = buildId,
-                    debug = debug,
-                    logType = logType,
-                    tag = tag,
-                    subTag = subTag,
-                    jobId = jobId,
-                    executeCount = executeCount
-                ).must(QueryBuilders.rangeQuery("lineNo").gte(start).lte(end))
-
-                val sortOrder = if (fromStart) SortOrder.ASC else SortOrder.DESC
-                val searchRequest = SearchRequest(index)
-                    .source(
-                        SearchSourceBuilder()
-                            .query(query)
-                            .highlighter(
-                                HighlightBuilder().preTags("\u001b[31m").postTags("\u001b[0m")
-                                    .field("message").fragmentSize(100000)
-                            )
-                            .docValueField("lineNo")
-                            .docValueField("timestamp")
-                            .size(num)
-                            .sort("timestamp", sortOrder)
-                            .sort("lineNo", sortOrder)
-                            .timeout(TimeValue.timeValueSeconds(60))
-                    )
-
-                val searchResponse = try {
-                    logClient.hashClient(buildId).restClient.search(searchRequest, RequestOptions.DEFAULT)
-                } catch (e: IOException) {
-                    logClient.hashClient(buildId).restClient.search(searchRequest, genLargeSearchOptions())
-                }
-
-                searchResponse.hits.forEach { searchHitFields ->
-                    val sourceMap = searchHitFields.sourceAsMap
-                    val logLine = LogLine(
-                        lineNo = sourceMap["lineNo"].toString().toLong(),
-                        timestamp = sourceMap["timestamp"].toString().toLong(),
-                        message = sourceMap["message"].toString(),
-                        priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
-                        tag = sourceMap["tag"].toString(),
-                        subTag = sourceMap["subTag"].toString(),
-                        jobId = sourceMap["jobId"].toString()
-                    )
-                    queryLogs.logs.add(logLine)
-                }
-                if (!fromStart) {
-                    queryLogs.logs.reverse()
-                }
-                if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
-                success = true
-            } catch (e: ElasticsearchStatusException) {
-                e.status()
-                val exString = e.toString()
-                if (exString.contains("index_closed_exception")) {
-                    logger.error("[$buildId] Can't search because of index_closed_exception", e)
-                    queryLogs.status = LogStatus.CLOSED.status
-                }
-            } catch (e: Exception) {
-                logger.error("Query more logs between lines failed because of ${e.javaClass}. buildId: $buildId", e)
+            queryLogs.logs = searchByClient(buildId, searchRequest)
+            if (!fromStart) {
+                queryLogs.logs.reverse()
             }
-            return queryLogs
-        } finally {
-            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
+            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
+        } catch (e: ElasticsearchStatusException) {
+            e.status()
+            val exString = e.toString()
+            if (exString.contains("index_closed_exception")) {
+                logger.error("[$buildId] Can't search because of index_closed_exception", e)
+                queryLogs.status = LogStatus.CLOSED.status
+            }
+        } catch (e: Exception) {
+            logger.error("Query more logs between lines failed because of ${e.javaClass}. buildId: $buildId", e)
         }
+        return queryLogs
     }
 
     override fun queryLogsAfterLine(
@@ -295,26 +256,17 @@ class LogServiceESImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        val startEpoch = System.currentTimeMillis()
-        var success = false
-        try {
-            val index = indexService.getIndexName(buildId)
-            val result = doQueryLogsAfterLine(
-                buildId = buildId,
-                index = index,
-                start = start,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-            success = logStatusSuccess(result.status)
-            return result
-        } finally {
-            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
-        }
+        return doQueryLogsAfterLine(
+            buildId = buildId,
+            index = indexService.getIndexName(buildId),
+            start = start,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
     }
 
     override fun queryLogsBeforeLine(
@@ -328,28 +280,18 @@ class LogServiceESImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        val startEpoch = System.currentTimeMillis()
-        var success = false
-        try {
-            val index = indexService.getIndexName(buildId)
-            val result = doQueryLogsBeforeLine(
-                buildId = buildId,
-                index = index,
-                end = end,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount,
-                size = size ?: Constants.NORMAL_MAX_LINES
-            )
-            result.timeUsed = System.currentTimeMillis() - startEpoch
-            success = logStatusSuccess(result.status)
-            return result
-        } finally {
-            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
-        }
+        return doQueryLogsBeforeLine(
+            buildId = buildId,
+            index = indexService.getIndexName(buildId),
+            end = end,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount,
+            size = size ?: Constants.NORMAL_MAX_LINES
+        )
     }
 
     override fun downloadLogs(
@@ -361,79 +303,71 @@ class LogServiceESImpl constructor(
         executeCount: Int?,
         fileName: String?
     ): Response {
-        val startEpoch = System.currentTimeMillis()
-        var success = false
-        try {
-            val index = indexService.getIndexName(buildId)
-            val query = getQuery(
-                buildId = buildId,
-                debug = false,
-                logType = null,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
+        val query = getQuery(
+            buildId = buildId,
+            debug = false,
+            logType = null,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
 
-            val scrollClient = logClient.hashClient(buildId)
-            val searchRequest = SearchRequest(index)
-                .source(
-                    SearchSourceBuilder()
-                        .query(query)
-                        .docValueField("lineNo")
-                        .docValueField("timestamp")
-                        .size(Constants.SCROLL_MAX_LINES)
-                        .sort("timestamp", SortOrder.ASC)
-                        .sort("lineNo", SortOrder.ASC)
-                ).scroll(TimeValue(1000 * 64))
+        val scrollClient = logClient.hashClient(buildId)
+        val searchRequest = SearchRequest(indexService.getIndexName(buildId))
+            .source(
+                SearchSourceBuilder()
+                    .query(query)
+                    .docValueField("lineNo")
+                    .docValueField("timestamp")
+                    .size(Constants.SCROLL_MAX_LINES)
+                    .sort("timestamp", SortOrder.ASC)
+                    .sort("lineNo", SortOrder.ASC)
+            ).scroll(TimeValue(LONG_SEARCH_TIME))
 
-            var scrollResp = try {
-                scrollClient.restClient.search(searchRequest, RequestOptions.DEFAULT)
-            } catch (e: IOException) {
-                scrollClient.restClient.search(searchRequest, genLargeSearchOptions())
-            }
+        var scrollResp = try {
+            scrollClient.restClient.search(searchRequest, RequestOptions.DEFAULT)
+        } catch (e: IOException) {
+            scrollClient.restClient.search(searchRequest, genLargeSearchOptions())
+        }
 
-            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
-            // 一边读一边流式下载
-            val fileStream = StreamingOutput { output ->
-                do {
-                    val sb = StringBuilder()
-                    scrollResp.hits.hits.forEach { searchHit ->
-                        val sourceMap = searchHit.sourceAsMap
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
+        // 一边读一边流式下载
+        val fileStream = StreamingOutput { output ->
+            do {
+                val sb = StringBuilder()
+                scrollResp.hits.hits.forEach { searchHit ->
+                    val sourceMap = searchHit.sourceAsMap
 
-                        val logLine = LogLine(
-                            sourceMap["lineNo"].toString().toLong(),
-                            sourceMap["timestamp"].toString().toLong(),
-                            sourceMap["message"].toString().removePrefix("\u001b[31m")
-                                .removePrefix("\u001b[1m").replace(
+                    val logLine = LogLine(
+                        sourceMap["lineNo"].toString().toLong(),
+                        sourceMap["timestamp"].toString().toLong(),
+                        sourceMap["message"].toString().removePrefix("\u001b[31m")
+                            .removePrefix("\u001b[1m").replace(
                                 "\u001B[m",
                                 ""
                             ).removeSuffix("\u001b[m"),
-                            Constants.DEFAULT_PRIORITY_NOT_DELETED
-                        )
-                        val dateTime = sdf.format(Date(logLine.timestamp))
-                        val str = "$dateTime : ${logLine.message}" + System.lineSeparator()
-                        sb.append(str)
-                    }
-                    output.write(sb.toString().toByteArray())
-                    output.flush()
-                    scrollResp = scrollClient.restClient.scroll(
-                        SearchScrollRequest(scrollResp.scrollId).scroll(TimeValue(1000 * 64)),
-                        RequestOptions.DEFAULT
+                        Constants.DEFAULT_PRIORITY_NOT_DELETED
                     )
-                } while (scrollResp.hits.hits.isNotEmpty())
-            }
-
-            val resultName = fileName ?: "$pipelineId-$buildId-log"
-            success = true
-            return Response
-                .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-                .header("content-disposition", "attachment; filename = \"$resultName.log\"")
-                .header("Cache-Control", "no-cache")
-                .build()
-        } finally {
-            logStorageBean.download(System.currentTimeMillis() - startEpoch, success)
+                    val dateTime = sdf.format(Date(logLine.timestamp))
+                    val str = "$dateTime : ${logLine.message}" + System.lineSeparator()
+                    sb.append(str)
+                }
+                output.write(sb.toString().toByteArray())
+                output.flush()
+                scrollResp = scrollClient.restClient.scroll(
+                    SearchScrollRequest(scrollResp.scrollId).scroll(TimeValue(LONG_SEARCH_TIME)),
+                    RequestOptions.DEFAULT
+                )
+            } while (scrollResp.hits.hits.isNotEmpty())
         }
+
+        val resultName = fileName ?: "$pipelineId-$buildId-log"
+        return Response
+            .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .header("content-disposition", "attachment; filename = \"$resultName.log\"")
+            .header("Cache-Control", "no-cache")
+            .build()
     }
 
     override fun getEndLogsPage(
@@ -447,28 +381,20 @@ class LogServiceESImpl constructor(
         executeCount: Int?,
         size: Int
     ): EndPageQueryLogs {
-        val startEpoch = System.currentTimeMillis()
         val queryLogs = EndPageQueryLogs(buildId)
-        var success = false
-        try {
-            val result = doGetEndLogs(
-                buildId = buildId,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount,
-                size = size
-            )
-            success = logStatusSuccess(result.status)
-            queryLogs.startLineNo = result.logs.lastOrNull()?.lineNo ?: 0
-            queryLogs.endLineNo = result.logs.firstOrNull()?.lineNo ?: 0
-            queryLogs.logs = result.logs
-            queryLogs.timeUsed = System.currentTimeMillis() - startEpoch
-        } finally {
-            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
-        }
+        val result = doGetEndLogs(
+            buildId = buildId,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount,
+            size = size
+        )
+        queryLogs.startLineNo = result.logs.lastOrNull()?.lineNo ?: 0
+        queryLogs.endLineNo = result.logs.firstOrNull()?.lineNo ?: 0
+        queryLogs.logs = result.logs
         return queryLogs
     }
 
@@ -483,25 +409,16 @@ class LogServiceESImpl constructor(
         executeCount: Int?,
         size: Int?
     ): QueryLogs {
-        val startEpoch = System.currentTimeMillis()
-        var success = false
-        try {
-            val result = doGetEndLogs(
-                buildId = buildId,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount,
-                size = size ?: Constants.NORMAL_MAX_LINES
-            )
-            success = logStatusSuccess(result.status)
-            result.timeUsed = System.currentTimeMillis() - startEpoch
-            return result
-        } finally {
-            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
-        }
+        return doGetEndLogs(
+            buildId = buildId,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount,
+            size = size ?: Constants.NORMAL_MAX_LINES
+        )
     }
 
     override fun queryInitLogsPage(
@@ -515,20 +432,9 @@ class LogServiceESImpl constructor(
         page: Int,
         pageSize: Int
     ): PageQueryLogs {
-        val startEpoch = System.currentTimeMillis()
-        var success = false
-        var queryLogs = QueryLogs(
-            buildId, getLogStatus(
-                buildId = buildId,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-        )
+        var queryLogs = QueryLogs(buildId, getLogStatus(buildId, tag, subTag, jobId, executeCount))
         var logSize = 0L
         try {
-            val index = indexService.getIndexName(buildId)
             queryLogs = doQueryInitLogsPage(
                 buildId = buildId,
                 debug = debug,
@@ -541,7 +447,7 @@ class LogServiceESImpl constructor(
                 pageSize = pageSize
             )
             logSize = getLogSize(
-                index = index,
+                index = indexService.getIndexName(buildId),
                 buildId = buildId,
                 debug = debug,
                 logType = logType,
@@ -550,7 +456,6 @@ class LogServiceESImpl constructor(
                 jobId = jobId,
                 executeCount = executeCount
             )
-            success = logStatusSuccess(queryLogs.status)
             if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         } catch (e: ElasticsearchStatusException) {
             val exString = e.toString()
@@ -561,8 +466,6 @@ class LogServiceESImpl constructor(
         } catch (e: Exception) {
             logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
             queryLogs.status = LogStatus.FAIL.status
-        } finally {
-            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
 
         return PageQueryLogs(
@@ -586,9 +489,6 @@ class LogServiceESImpl constructor(
         return openIndex(buildId, index)
     }
 
-    private fun logStatusSuccess(logStatus: Int) =
-        (LogStatus.parse(logStatus) == LogStatus.EMPTY || LogStatus.parse(logStatus) == LogStatus.SUCCEED)
-
     private fun openIndex(buildId: String, index: String): Boolean {
         logger.info("[$buildId|$index] Start to open the index")
         return logClient.hashClient(buildId).restClient.indices()
@@ -607,15 +507,7 @@ class LogServiceESImpl constructor(
         page: Int,
         pageSize: Int
     ): QueryLogs {
-        val queryLogs = QueryLogs(
-            buildId, getLogStatus(
-                buildId = buildId,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-        )
+        val queryLogs = QueryLogs(buildId, getLogStatus(buildId, tag, subTag, jobId, executeCount))
         val index = indexService.getIndexName(buildId)
 
         val boolQuery = QueryBuilders.boolQuery()
@@ -647,7 +539,7 @@ class LogServiceESImpl constructor(
                     .sort("lineNo", SortOrder.ASC)
                     .timeout(TimeValue.timeValueSeconds(60))
             )
-            .scroll(TimeValue(1000 * 64))
+            .scroll(TimeValue(LONG_SEARCH_TIME))
 
         var searchResponse = try {
             logClient.hashClient(buildId).restClient.search(searchRequest, RequestOptions.DEFAULT)
@@ -655,19 +547,9 @@ class LogServiceESImpl constructor(
             logClient.hashClient(buildId).restClient.search(searchRequest, genLargeSearchOptions())
         }
         do {
-            searchResponse.hits.hits.forEach { searchHit ->
-                val sourceMap = searchHit.sourceAsMap
-                val type = sourceMap["logType"].toString()
-                val logLine = LogLine(
-                    sourceMap["lineNo"].toString().toLong(),
-                    sourceMap["timestamp"].toString().toLong(),
-                    if (type == LogType.LOG.name) sourceMap["message"].toString() else "",
-                    Constants.DEFAULT_PRIORITY_NOT_DELETED
-                )
-                queryLogs.logs.add(logLine)
-            }
+            queryLogs.logs.addAll(parseResponse(searchResponse.hits))
             searchResponse = scrollClient.restClient.scroll(
-                SearchScrollRequest(searchResponse.scrollId).scroll(TimeValue(1000 * 64)),
+                SearchScrollRequest(searchResponse.scrollId).scroll(TimeValue(LONG_SEARCH_TIME)),
                 RequestOptions.DEFAULT
             )
         } while (searchResponse.hits.hits.isNotEmpty())
@@ -735,30 +617,8 @@ class LogServiceESImpl constructor(
                         .sort("lineNo", SortOrder.ASC)
                         .timeout(TimeValue.timeValueSeconds(60))
                 )
-                .scroll(TimeValue(1000 * 32))
-
-            val searchResponse = try {
-                logClient.hashClient(buildId).restClient.search(searchRequest, RequestOptions.DEFAULT)
-            } catch (ex: IOException) {
-                logClient.hashClient(buildId).restClient.search(searchRequest, genLargeSearchOptions())
-            }
-
-            val logs = mutableListOf<LogLine>()
-            searchResponse.hits.hits.forEach { searchHit ->
-                val sourceMap = searchHit.sourceAsMap
-                val logLine = LogLine(
-                    lineNo = sourceMap["lineNo"].toString().toLong(),
-                    timestamp = sourceMap["timestamp"].toString().toLong(),
-                    message = sourceMap["message"].toString(),
-                    priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
-                    tag = sourceMap["tag"].toString(),
-                    subTag = sourceMap["subTag"].toString(),
-                    jobId = sourceMap["jobId"].toString(),
-                    executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
-                )
-                logs.add(logLine)
-            }
-            queryLogs.logs = logs
+                .scroll(TimeValue(SHORT_SEARCH_TIME))
+            queryLogs.logs = searchByClient(buildId, searchRequest)
             queryLogs.hasMore = logSize > queryLogs.logs.size
             return queryLogs
         } catch (e: ElasticsearchStatusException) {
@@ -784,22 +644,7 @@ class LogServiceESImpl constructor(
         jobId: String? = null,
         executeCount: Int?
     ): QueryLogs {
-        val logStatus = if (tag == null && jobId != null) getLogStatus(
-            buildId = buildId,
-            tag = jobId,
-            subTag = null,
-            jobId = null,
-            executeCount = executeCount
-        ) else getLogStatus(
-            buildId = buildId,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        )
-
-        val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag!!)
-        val queryLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
+        val queryLogs = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
 
         try {
             val logSize = getLogSize(
@@ -824,7 +669,10 @@ class LogServiceESImpl constructor(
                 jobId = jobId,
                 executeCount = executeCount
             )
-            logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryInitLogs get the query builder: $boolQueryBuilder")
+            logger.info(
+                "[$index|$buildId|$tag|$subTag|$jobId|$executeCount] " +
+                    "doQueryInitLogs get the query builder: $boolQueryBuilder"
+            )
 
             val searchRequest = SearchRequest(index)
                 .source(
@@ -837,29 +685,7 @@ class LogServiceESImpl constructor(
                         .sort("lineNo", SortOrder.ASC)
                         .timeout(TimeValue.timeValueSeconds(60))
                 )
-
-            val searchResponse = try {
-                logClient.hashClient(buildId).restClient.search(searchRequest, RequestOptions.DEFAULT)
-            } catch (e: IOException) {
-                logClient.hashClient(buildId).restClient.search(searchRequest, genLargeSearchOptions())
-            }
-
-            searchResponse.hits.forEach { searchHitFields ->
-                val sourceMap = searchHitFields.sourceAsMap
-                val ln = sourceMap["lineNo"].toString().toLong()
-                val t = sourceMap["tag"]?.toString() ?: ""
-                val logLine = LogLine(
-                    lineNo = ln,
-                    timestamp = sourceMap["timestamp"].toString().toLong(),
-                    message = sourceMap["message"].toString(),
-                    priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
-                    tag = t,
-                    subTag = sourceMap["subTag"]?.toString() ?: "",
-                    jobId = sourceMap["jobId"]?.toString() ?: "",
-                    executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
-                )
-                queryLogs.logs.add(logLine)
-            }
+            queryLogs.logs = searchByClient(buildId, searchRequest)
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
             if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
             queryLogs.hasMore = logSize > queryLogs.logs.size
@@ -887,26 +713,7 @@ class LogServiceESImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        val logStatus = if (tag == null && jobId != null) {
-            getLogStatus(
-                buildId = buildId,
-                tag = jobId,
-                subTag = null,
-                jobId = null,
-                executeCount = executeCount
-            )
-        } else {
-            getLogStatus(
-                buildId = buildId,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-        }
-
-        val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag!!)
-        val queryLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
+        val queryLogs = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
 
         try {
             val startTime = System.currentTimeMillis()
@@ -932,7 +739,10 @@ class LogServiceESImpl constructor(
                 executeCount = executeCount
             ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
 
-            logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryLogsAfterLine get the query builder: $boolQueryBuilder")
+            logger.info(
+                "[$index|$buildId|$tag|$subTag|$jobId|$executeCount] " +
+                    "doQueryLogsAfterLine get the query builder: $boolQueryBuilder"
+            )
             val searchRequest = SearchRequest(index)
                 .source(
                     SearchSourceBuilder()
@@ -943,7 +753,7 @@ class LogServiceESImpl constructor(
                         .sort("timestamp", SortOrder.ASC)
                         .sort("lineNo", SortOrder.ASC)
                 )
-                .scroll(TimeValue(1000 * 64))
+                .scroll(TimeValue(LONG_SEARCH_TIME))
             val scrollClient = logClient.hashClient(buildId)
 
             // 初始化请求
@@ -959,24 +769,9 @@ class LogServiceESImpl constructor(
             // 开始滚动
             var times = 1
             do {
-                hits.forEach { searchHitFields ->
-                    val sourceMap = searchHitFields.sourceAsMap
-                    val ln = sourceMap["lineNo"].toString().toLong()
-                    val t = sourceMap["tag"]?.toString() ?: ""
-                    val logLine = LogLine(
-                        lineNo = ln,
-                        timestamp = sourceMap["timestamp"].toString().toLong(),
-                        message = sourceMap["message"].toString(),
-                        priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
-                        tag = t,
-                        subTag = sourceMap["subTag"]?.toString() ?: "",
-                        jobId = sourceMap["jobId"]?.toString() ?: "",
-                        executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
-                    )
-                    queryLogs.logs.add(logLine)
-                }
+                queryLogs.logs.addAll(parseResponse(hits))
                 times++
-                val scrollRequest = SearchScrollRequest(scrollId).scroll(TimeValue(1000 * 64))
+                val scrollRequest = SearchScrollRequest(scrollId).scroll(TimeValue(LONG_SEARCH_TIME))
                 val searchScrollResponse = try {
                     scrollClient.restClient.scroll(scrollRequest, RequestOptions.DEFAULT)
                 } catch (e: IOException) {
@@ -1014,27 +809,7 @@ class LogServiceESImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        val logStatus = if (tag == null && jobId != null) {
-            getLogStatus(
-                buildId = buildId,
-                tag = jobId,
-                subTag = null,
-                jobId = null,
-                executeCount = executeCount
-            )
-        } else {
-            getLogStatus(
-                buildId = buildId,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-        }
-
-        val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag!!)
-        val queryLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
-
+        val queryLogs = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
         try {
             val startTime = System.currentTimeMillis()
             val logSize = getLogSize(
@@ -1070,8 +845,10 @@ class LogServiceESImpl constructor(
                 executeCount = executeCount
             ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
                 .must(QueryBuilders.rangeQuery("lineNo").lte(end))
-
-            logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryLogsBeforeLine get the query builder: $boolQueryBuilder")
+            logger.info(
+                "[$index|$buildId|$tag|$subTag|$jobId|$executeCount] " +
+                    "doQueryLogsBeforeLine get the query builder: $boolQueryBuilder"
+            )
             val searchRequest = SearchRequest(index)
                 .source(
                     SearchSourceBuilder()
@@ -1084,28 +861,7 @@ class LogServiceESImpl constructor(
                         .timeout(TimeValue.timeValueSeconds(60))
                 )
 
-            val searchResponse = try {
-                logClient.hashClient(buildId).restClient.search(searchRequest, RequestOptions.DEFAULT)
-            } catch (e: IOException) {
-                logClient.hashClient(buildId).restClient.search(searchRequest, genLargeSearchOptions())
-            }
-
-            searchResponse.hits.forEach { searchHitFields ->
-                val sourceMap = searchHitFields.sourceAsMap
-                val ln = sourceMap["lineNo"].toString().toLong()
-                val t = sourceMap["tag"]?.toString() ?: ""
-                val logLine = LogLine(
-                    lineNo = ln,
-                    timestamp = sourceMap["timestamp"].toString().toLong(),
-                    message = sourceMap["message"].toString(),
-                    priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
-                    tag = t,
-                    subTag = sourceMap["subTag"]?.toString() ?: "",
-                    jobId = sourceMap["jobId"]?.toString() ?: "",
-                    executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
-                )
-                queryLogs.logs.add(logLine)
-            }
+            queryLogs.logs = searchByClient(buildId, searchRequest)
             queryLogs.hasMore = logSize > queryLogs.logs.size
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
         } catch (e: ElasticsearchStatusException) {
@@ -1121,6 +877,64 @@ class LogServiceESImpl constructor(
             queryLogs.hasMore = false
         }
         return queryLogs
+    }
+
+    private fun searchByClient(buildId: String, searchRequest: SearchRequest): MutableList<LogLine> {
+        val searchResponse = try {
+            logClient.hashClient(buildId).restClient.search(searchRequest, RequestOptions.DEFAULT)
+        } catch (e: IOException) {
+            logClient.hashClient(buildId).restClient.search(searchRequest, genLargeSearchOptions())
+        }
+        return parseResponse(searchResponse.hits)
+    }
+
+    private fun parseResponse(hits: SearchHits): MutableList<LogLine> {
+        val logs = mutableListOf<LogLine>()
+        hits.forEach { searchHitFields ->
+            val sourceMap = searchHitFields.sourceAsMap
+            val ln = sourceMap["lineNo"].toString().toLong()
+            val t = sourceMap["tag"]?.toString() ?: ""
+            val logLine = LogLine(
+                lineNo = ln,
+                timestamp = sourceMap["timestamp"].toString().toLong(),
+                message = sourceMap["message"].toString(),
+                priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
+                tag = t,
+                subTag = sourceMap["subTag"]?.toString() ?: "",
+                jobId = sourceMap["jobId"]?.toString() ?: "",
+                executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
+            )
+            logs.add(logLine)
+        }
+        return logs
+    }
+
+    private fun getQueryLogs(
+        buildId: String,
+        jobId: String?,
+        tag: String?,
+        subTag: String?,
+        executeCount: Int?
+    ): QueryLogs {
+        val logStatus = if (tag == null && jobId != null) {
+            getLogStatus(
+                buildId = buildId,
+                tag = jobId,
+                subTag = null,
+                jobId = null,
+                executeCount = executeCount
+            )
+        } else {
+            getLogStatus(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
+        }
+        val subTags = tag?.let { logTagService.getSubTags(buildId, it) }
+        return QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
     }
 
     private fun getLogStatus(
@@ -1235,7 +1049,7 @@ class LogServiceESImpl constructor(
         }
     }
 
-    private fun addLineNo(buildId: String, logMessages: List<com.tencent.devops.common.log.pojo.message.LogMessage>): List<LogMessageWithLineNo> {
+    private fun addLineNo(buildId: String, logMessages: List<LogMessage>): List<LogMessageWithLineNo> {
         val lineNum = indexService.getAndAddLineNum(buildId, logMessages.size)
         if (lineNum == null) {
             logger.error("Got null logIndex from indexService, buildId: $buildId")
@@ -1305,14 +1119,18 @@ class LogServiceESImpl constructor(
         val startEpoch = System.currentTimeMillis()
         val createClient = logClient.hashClient(buildId)
         return try {
-            logger.info("[${createClient.clusterName}][$index]|createIndex|: shards[${createClient.shards}]" +
-                " replicas[${createClient.replicas}] shardsPerNode[${createClient.shardsPerNode}]")
+            logger.info(
+                "[${createClient.clusterName}][$index]|createIndex|: shards[${createClient.shards}]" +
+                    " replicas[${createClient.replicas}] shardsPerNode[${createClient.shardsPerNode}]"
+            )
             val request = CreateIndexRequest(index)
-                .settings(ESIndexUtils.getIndexSettings(
-                    shards = createClient.shards,
-                    replicas = createClient.replicas,
-                    shardsPerNode = createClient.shardsPerNode
-                ))
+                .settings(
+                    ESIndexUtils.getIndexSettings(
+                        shards = createClient.shards,
+                        replicas = createClient.replicas,
+                        shardsPerNode = createClient.shardsPerNode
+                    )
+                )
                 .mapping(ESIndexUtils.getTypeMappings())
             request.setTimeout(TimeValue.timeValueSeconds(30))
             val response = createClient.restClient.indices()
@@ -1366,8 +1184,9 @@ class LogServiceESImpl constructor(
 
     private fun genLargeSearchOptions(): RequestOptions {
         val builder = RequestOptions.DEFAULT.toBuilder()
-        builder.setHttpAsyncResponseConsumerFactory(HeapBufferedResponseConsumerFactory(
-            Constants.RESPONSE_ENTITY_MAX_SIZE))
+        builder.setHttpAsyncResponseConsumerFactory(
+            HeapBufferedResponseConsumerFactory(Constants.RESPONSE_ENTITY_MAX_SIZE)
+        )
         return builder.build()
     }
 }
