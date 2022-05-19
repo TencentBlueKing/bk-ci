@@ -46,8 +46,10 @@ import java.util.concurrent.TimeUnit
 /**
  * 清理`T_LOG_INDICES` `T_LOG_STATUS`三个月前的构建
  */
+@Suppress("ReturnCount")
 @Component
 class DataCleanJob @Autowired constructor(
+    storageProperties: StorageProperties,
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
     private val storageProperties: StorageProperties,
@@ -70,8 +72,8 @@ class DataCleanJob @Autowired constructor(
             }
             clean()
             logger.info("[cleanBuilds] Finish cleaning the builds")
-        } catch (t: Throwable) {
-            logger.warn("[cleanBuilds] Fail to clean builds", t)
+        } catch (ignore: Throwable) {
+            logger.warn("[cleanBuilds] Fail to clean builds", ignore)
         } finally {
             redisLock.unlock()
         }
