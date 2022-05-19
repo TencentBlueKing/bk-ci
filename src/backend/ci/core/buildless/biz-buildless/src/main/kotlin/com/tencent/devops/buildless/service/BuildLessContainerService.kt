@@ -234,16 +234,16 @@ class BuildLessContainerService(
         return containerInfo.size
     }
 
-    fun getDockerRunTimeoutContainers(): MutableList<Container> {
+    fun getDockerRunTimeoutContainers(): MutableList<String> {
         val containerInfo = httpDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
-        val timeoutContainerList = mutableListOf<Container>()
+        val timeoutContainerList = mutableListOf<String>()
         for (container in containerInfo) {
             val startTime = httpDockerCli.inspectContainerCmd(container.id).exec().state.startedAt
             // 是否已运行超过12小时
-            if (checkStartTime(startTime)) {
-                timeoutContainerList.add(container)
-                // logger.info("Clear 12h timeout container, containerId: ${container.id}")
-                // httpDockerCli.stopContainerCmd(container.id).withTimeout(15).exec()
+            val buildLessPoolInfo = redisUtils.getBuildLessPoolContainer(container.id)
+            if (checkStartTime(startTime) &&
+                (buildLessPoolInfo == null || buildLessPoolInfo.status == ContainerStatus.IDLE)) {
+                timeoutContainerList.add(container.id)
             }
         }
 
