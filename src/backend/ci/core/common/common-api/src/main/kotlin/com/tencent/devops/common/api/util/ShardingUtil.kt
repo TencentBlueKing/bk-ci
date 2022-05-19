@@ -16,8 +16,14 @@ object ShardingUtil {
         clusterName: String,
         moduleCode: String,
         ruleType: String,
-        routingName: String
+        routingName: String,
+        tableName: String? = null
     ): String {
-        return "$SHARDING_ROUTING_RULE_KEY_PREFIX:$clusterName:$moduleCode:$ruleType:$routingName"
+        val prefix = "$SHARDING_ROUTING_RULE_KEY_PREFIX:$clusterName:$moduleCode:$ruleType"
+        return if (tableName.isNullOrBlank()) {
+            "$prefix:$routingName"
+        } else {
+            "$prefix:$tableName:$routingName"
+        }
     }
 }

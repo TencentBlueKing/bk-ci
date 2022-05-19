@@ -164,7 +164,7 @@ class StreamEventService @Autowired constructor(
                 gitProjectId = event.gitProjectId,
                 useAccessToken = true,
                 userId = userId
-            ).pathWithNamespace
+            )?.pathWithNamespace
             GitCommonUtils.checkAndGetRepoBranch(event, pathWithNamespace)
         } else event
         val messageTitle = StreamTriggerMessageUtils.getEventMessageTitle(realEvent, checkRepoHookTrigger)

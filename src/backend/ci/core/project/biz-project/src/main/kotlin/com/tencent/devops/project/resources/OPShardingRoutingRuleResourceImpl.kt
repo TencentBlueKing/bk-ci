@@ -59,9 +59,17 @@ class OPShardingRoutingRuleResourceImpl @Autowired constructor(
     override fun getShardingRoutingRuleByName(
         routingName: String,
         moduleCode: SystemModuleEnum,
-        ruleType: ShardingRuleTypeEnum
+        ruleType: ShardingRuleTypeEnum,
+        tableName: String?
     ): Result<ShardingRoutingRule?> {
-        return Result(shardingRoutingRuleService.getShardingRoutingRuleByName(moduleCode, ruleType, routingName))
+        return Result(
+            shardingRoutingRuleService.getShardingRoutingRuleByName(
+                moduleCode = moduleCode,
+                ruleType = ruleType,
+                routingName = routingName,
+                tableName = tableName
+            )
+        )
     }
 
     override fun deleteShardingRoutingRuleById(userId: String, id: String): Result<Boolean> {

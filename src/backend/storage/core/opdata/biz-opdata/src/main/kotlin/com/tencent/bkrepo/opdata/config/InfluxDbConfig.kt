@@ -36,6 +36,7 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class InfluxDbConfig {
+
     @Value("\${spring.influx.url:''}")
     private val influxDBUrl: String? = null
     @Value("\${spring.influx.user:''}")

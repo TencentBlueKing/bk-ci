@@ -239,7 +239,8 @@ internal class CacheStorageServiceTest {
 
         @Bean
         fun storageHealthMonitor(storageProperties: StorageProperties): StorageHealthMonitor {
-            return StorageHealthMonitor(storageProperties)
+            val path = storageProperties.defaultStorageCredentials().upload.location
+            return StorageHealthMonitor(storageProperties, path)
         }
     }
 }

@@ -38,6 +38,15 @@ import org.apache.skywalking.apm.toolkit.trace.TraceContext
 object ResponseBuilder {
     fun <T> build(code: Int, message: String?, data: T?) = Response(code, message, data, TraceContext.traceId())
 
+    /**
+     * 创建确定类型的[Response]，规避Jackson序列化时不包含类型信息问题
+     */
+    inline fun <reified T> buildTyped(
+        data: T,
+        message: String? = null,
+        code: Int = CommonMessageCode.SUCCESS.getCode()
+    ): Response<T> = object : Response<T>(code, message, data) {}
+
     fun success() = build(CommonMessageCode.SUCCESS.getCode(), null, null)
 
     fun <T> success(data: T) = build(CommonMessageCode.SUCCESS.getCode(), null, data)

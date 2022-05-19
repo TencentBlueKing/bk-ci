@@ -61,13 +61,15 @@ class OPDataSourceResourceImpl @Autowired constructor(
         projectId: String,
         moduleCode: SystemModuleEnum,
         clusterName: String,
-        ruleType: ShardingRuleTypeEnum
+        ruleType: ShardingRuleTypeEnum,
+        tableName: String?
     ): Result<DataBasePiecewiseInfo?> {
         return Result(dataSourceService.getDataBasePiecewiseById(
             projectId = projectId,
             moduleCode = moduleCode,
             clusterName = clusterName,
-            ruleType = ruleType
+            ruleType = ruleType,
+            tableName = tableName
         ))
     }
 }
