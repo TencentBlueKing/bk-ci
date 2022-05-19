@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+@Suppress("ReturnCount")
 interface IndexCleanJob {
 
     fun cleanIndex()
@@ -53,8 +54,8 @@ interface IndexCleanJob {
                 logger.info("[$index] The index is expire ($deathLine|$date)")
                 return true
             }
-        } catch (t: Throwable) {
-            logger.warn("[$index] Fail to check if the index expire", t)
+        } catch (ignore: Throwable) {
+            logger.warn("[$index] Fail to check if the index expire", ignore)
         }
         return false
     }

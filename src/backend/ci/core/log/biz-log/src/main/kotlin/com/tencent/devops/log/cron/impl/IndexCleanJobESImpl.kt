@@ -34,11 +34,11 @@ import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.cron.IndexCleanJob
 import com.tencent.devops.log.util.IndexNameUtils.LOG_INDEX_PREFIX
-import org.elasticsearch.client.indices.CloseIndexRequest
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest
-import org.elasticsearch.client.indices.GetIndexRequest
 import org.elasticsearch.client.RequestOptions
 import org.elasticsearch.client.RestHighLevelClient
+import org.elasticsearch.client.indices.CloseIndexRequest
+import org.elasticsearch.client.indices.GetIndexRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -47,6 +47,7 @@ import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
+@Suppress("MagicNumber")
 @Component
 @ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
 class IndexCleanJobESImpl @Autowired constructor(
@@ -72,8 +73,8 @@ class IndexCleanJobESImpl @Autowired constructor(
             }
             closeESIndexes()
             deleteESIndexes()
-        } catch (t: Throwable) {
-            logger.warn("Fail to clean the index", t)
+        } catch (ignore: Throwable) {
+            logger.warn("Fail to clean the index", ignore)
         } finally {
             redisLock.unlock()
         }
