@@ -72,12 +72,11 @@ class UserStoreEnvVarResourceImpl @Autowired constructor(
         varName: String?
     ): Result<List<StoreEnvVarInfo>?> {
         return storeEnvVarService.getLatestEnvVarList(
-            userId = userId,
-            storeType = storeType,
-            storeCode = storeCode,
-            scope = scope,
-            varName = varName,
-            isDecrypt = false
+            userId,
+            storeType,
+            storeCode,
+            scope,
+            varName
         )
     }
 

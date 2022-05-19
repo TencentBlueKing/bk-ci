@@ -70,7 +70,7 @@ interface StoreEnvVarService {
         userId: String,
         storeType: String,
         storeCode: String,
-        scope: String? = null,
+        scopes: String? = null,
         varName: String? = null,
         isDecrypt: Boolean = false,
         checkPermissionFlag: Boolean = true
