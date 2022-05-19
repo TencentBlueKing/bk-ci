@@ -147,10 +147,10 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                 // 第三方镜像 DevCloud
                 if (dispatchType is PublicDevCloudDispathcType) {
                     genThirdDevCloudDispatchMessage(dispatchType, projectId, buildId)
-                } /*else if (dispatchType is PublicBcsDispatchType) {
+                } else if (dispatchType is PublicBcsDispatchType) {
                     // 在商店发布的第三方源镜像，带凭证
                     genThirdBcsDispatchMessage(dispatchType, projectId, buildId)
-                }*/
+                }
             }
             logger.info("DispatchTypeParserTxImpl:AfterTransfer:dispatchType=(${JsonUtil.toJson(dispatchType)})")
         } else {
