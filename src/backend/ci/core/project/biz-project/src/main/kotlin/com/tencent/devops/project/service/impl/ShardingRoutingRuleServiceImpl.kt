@@ -55,7 +55,8 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
             clusterName = shardingRoutingRule.clusterName,
             moduleCode = shardingRoutingRule.moduleCode,
             type = shardingRoutingRule.type,
-            routingName = routingName
+            routingName = routingName,
+            tableName = shardingRoutingRule.tableName
         )
         if (nameCount > 0) {
             // 抛出错误提示
@@ -71,7 +72,8 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
             clusterName = CommonUtils.getDbClusterName(),
             moduleCode = shardingRoutingRule.moduleCode.name,
             ruleType = shardingRoutingRule.type.name,
-            routingName = routingName
+            routingName = routingName,
+            tableName = shardingRoutingRule.tableName
         )
         redisOperation.set(
             key = key,
@@ -92,7 +94,8 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
                 clusterName = CommonUtils.getDbClusterName(),
                 moduleCode = shardingRoutingRuleRecord.moduleCode,
                 ruleType = shardingRoutingRuleRecord.type,
-                routingName = routingName
+                routingName = routingName,
+                tableName = shardingRoutingRuleRecord.tableName
             )
             redisOperation.delete(key)
         }
@@ -110,7 +113,8 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
             clusterName = shardingRoutingRule.clusterName,
             moduleCode = shardingRoutingRule.moduleCode,
             type = shardingRoutingRule.type,
-            routingName = routingName
+            routingName = routingName,
+            tableName = shardingRoutingRule.tableName
         )
         if (nameCount > 0) {
             // 判断更新的名称是否属于自已
@@ -146,6 +150,8 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
             ShardingRoutingRule(
                 clusterName = record.clusterName,
                 moduleCode = SystemModuleEnum.valueOf(record.moduleCode),
+                dataSourceName = record.dataSourceName,
+                tableName = record.tableName,
                 type = ShardingRuleTypeEnum.valueOf(record.type),
                 routingName = record.routingName,
                 routingRule = record.routingRule
@@ -158,18 +164,19 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
     override fun getShardingRoutingRuleByName(
         moduleCode: SystemModuleEnum,
         ruleType: ShardingRuleTypeEnum,
-        routingName: String
+        routingName: String,
+        tableName: String?
     ): ShardingRoutingRule? {
+        // 获取集群名称
+        val clusterName = CommonUtils.getDbClusterName()
         // 从redis缓存中获取规则信息
         val key = ShardingUtil.getShardingRoutingRuleKey(
-            clusterName = CommonUtils.getDbClusterName(),
+            clusterName = clusterName,
             moduleCode = moduleCode.name,
             ruleType = ruleType.name,
             routingName = routingName
         )
         val routingRule = redisOperation.get(key)
-        // 获取集群名称
-        val clusterName = CommonUtils.getDbClusterName()
         return if (routingRule.isNullOrBlank()) {
             // redis缓存中未取到规则信息则从db查
             val record = shardingRoutingRuleDao.getByName(dslContext, routingName)
@@ -183,6 +190,8 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
                 ShardingRoutingRule(
                     clusterName = record.clusterName,
                     moduleCode = moduleCode,
+                    dataSourceName = record.dataSourceName,
+                    tableName = record.tableName,
                     type = ruleType,
                     routingName = routingName,
                     routingRule = record.routingRule
@@ -194,6 +203,7 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
             ShardingRoutingRule(
                 clusterName = clusterName,
                 moduleCode = moduleCode,
+                tableName = tableName,
                 type = ruleType,
                 routingName = routingName,
                 routingRule = routingRule

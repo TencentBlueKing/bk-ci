@@ -54,13 +54,15 @@ class TxShardingRoutingRuleDao {
         id: String,
         type: String,
         clusterName: String,
-        moduleCode: String
+        moduleCode: String,
+        dataSourceName: String
     ) {
         with(TShardingRoutingRule.T_SHARDING_ROUTING_RULE) {
             dslContext.update(this)
                 .set(TYPE, type)
                 .set(CLUSTER_NAME, clusterName)
                 .set(MODULE_CODE, moduleCode)
+                .set(DATA_SOURCE_NAME, dataSourceName)
                 .where(ID.eq(id))
                 .execute()
         }

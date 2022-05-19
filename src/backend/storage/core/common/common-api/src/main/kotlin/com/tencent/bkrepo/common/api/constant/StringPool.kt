@@ -44,6 +44,7 @@ object StringPool {
     const val AT = "@"
     const val QUESTION = "?"
     const val DOUBLE_DOT = ".."
+    const val POUND = "*"
     const val HTTP = "http://"
     const val HTTPS = "https://"
     const val UNKNOWN = "Unknown"

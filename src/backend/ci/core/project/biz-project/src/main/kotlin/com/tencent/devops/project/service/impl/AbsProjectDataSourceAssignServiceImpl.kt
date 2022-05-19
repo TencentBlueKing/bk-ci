@@ -94,6 +94,7 @@ abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
             val shardingRoutingRule = ShardingRoutingRule(
                 clusterName = clusterName,
                 moduleCode = moduleCode,
+                dataSourceName = dataSourceName,
                 type = ShardingRuleTypeEnum.DB,
                 routingName = projectId,
                 routingRule = dataSourceName

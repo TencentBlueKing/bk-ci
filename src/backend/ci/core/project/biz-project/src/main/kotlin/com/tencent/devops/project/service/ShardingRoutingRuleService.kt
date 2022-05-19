@@ -70,11 +70,13 @@ interface ShardingRoutingRuleService {
      * @param moduleCode 模块标识
      * @param ruleType 规则类型
      * @param routingName 规则名称
+     * @param tableName 数据库表名称
      * @return 分片路由规则信息
      */
     fun getShardingRoutingRuleByName(
         moduleCode: SystemModuleEnum,
         ruleType: ShardingRuleTypeEnum,
-        routingName: String
+        routingName: String,
+        tableName: String? = null
     ): ShardingRoutingRule?
 }

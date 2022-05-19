@@ -67,13 +67,13 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_DESCRIPTION
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_ID
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_IID
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_OWNER
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_STATE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_TITLE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_OWNER
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STATE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_TITLE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_COMMITTER
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_COMMENT
@@ -98,7 +98,9 @@ object PipelineVarUtil {
         "pipeline.material.aliasName" to PIPELINE_MATERIAL_ALIASNAME,
         "pipeline.material.new.commit.id" to PIPELINE_MATERIAL_NEW_COMMIT_ID,
         "pipeline.material.new.commit.times" to PIPELINE_MATERIAL_NEW_COMMIT_TIMES,
-        "pipeline.material.new.commit.comment" to PIPELINE_MATERIAL_NEW_COMMIT_COMMENT
+        "pipeline.material.new.commit.comment" to PIPELINE_MATERIAL_NEW_COMMIT_COMMENT,
+        "BK_REPO_GIT_WEBHOOK_REVIEW" to "BK_CI_REPO_GIT_WEBHOOK_REVIEW",
+        "BK_REPO_P4" to "BK_CI_REPO_P4"
     )
 
     private val newPrefixMappingOld = oldPrefixMappingNew.map { kv -> kv.value to kv.key }.toMap()
@@ -156,7 +158,9 @@ object PipelineVarUtil {
         "pipeline.job.id" to PIPELINE_VMSEQ_ID,
         "pipeline.task.id" to PIPELINE_ELEMENT_ID,
         "turbo.task.id" to PIPELINE_TURBO_TASK_ID,
-        "report.dynamic.root.url" to REPORT_DYNAMIC_ROOT_URL
+        "report.dynamic.root.url" to REPORT_DYNAMIC_ROOT_URL,
+        "BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM" to "BK_CI_REPO_GIT_WEBHOOK_TAG_CREATE_FROM",
+        "BK_REPO_SVN_WEBHOOK_FINAL_INCLUDE_PATH" to "BK_CI_REPO_SVN_WEBHOOK_FINAL_INCLUDE_PATH"
     )
 
     /**
@@ -200,13 +204,13 @@ object PipelineVarUtil {
         "ci.mr_desc" to PIPELINE_GIT_MR_DESC,
         "ci.mr_proposer" to PIPELINE_GIT_MR_PROPOSER,
         "ci.mr_action" to PIPELINE_GIT_MR_ACTION,
-        "ci.issue_title" to PIPELINE_WEBHOOK_ISSUE_TITLE,
-        "ci.issue_id" to PIPELINE_WEBHOOK_ISSUE_ID,
-        "ci.issue_iid" to PIPELINE_WEBHOOK_ISSUE_IID,
-        "ci.issue_description" to PIPELINE_WEBHOOK_ISSUE_DESCRIPTION,
-        "ci.issue_state" to PIPELINE_WEBHOOK_ISSUE_STATE,
-        "ci.issue_owner" to PIPELINE_WEBHOOK_ISSUE_OWNER,
-        "ci.issue_milestone_id" to PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID,
+        "ci.issue_title" to BK_REPO_GIT_WEBHOOK_ISSUE_TITLE,
+        "ci.issue_id" to BK_REPO_GIT_WEBHOOK_ISSUE_ID,
+        "ci.issue_iid" to BK_REPO_GIT_WEBHOOK_ISSUE_IID,
+        "ci.issue_description" to BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION,
+        "ci.issue_state" to BK_REPO_GIT_WEBHOOK_ISSUE_STATE,
+        "ci.issue_owner" to BK_REPO_GIT_WEBHOOK_ISSUE_OWNER,
+        "ci.issue_milestone_id" to BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID,
         "ci.review_id" to BK_REPO_GIT_WEBHOOK_REVIEW_ID,
         "ci.review_iid" to BK_REPO_GIT_WEBHOOK_REVIEW_IID,
         "ci.review_owner" to BK_REPO_GIT_WEBHOOK_REVIEW_OWNER,
@@ -214,7 +218,8 @@ object PipelineVarUtil {
         "ci.review_reviewers" to BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS,
         "ci.note_comment" to PIPELINE_WEBHOOK_NOTE_COMMENT,
         "ci.note_id" to PIPELINE_WEBHOOK_NOTE_ID,
-        "ci.action" to PIPELINE_GIT_ACTION
+        "ci.action" to PIPELINE_GIT_ACTION,
+        "ci.build_url" to PIPELINE_BUILD_URL
     )
 
     /**

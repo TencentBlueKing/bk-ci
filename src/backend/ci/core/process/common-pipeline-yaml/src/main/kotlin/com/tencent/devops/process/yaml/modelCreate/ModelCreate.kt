@@ -150,8 +150,10 @@ class ModelCreate @Autowired constructor(
                     val varMap = pipelineParams.associate { param -> param.id to param.defaultValue.toString() }
                     EnvUtils.parseEnv(it, PipelineVarUtil.fillContextVarMap(varMap))
                 },
-                // Cancel-In-Progress入口先不放开给用户配置
-                concurrencyCancelInProgress = true,
+                // Cancel-In-Progress 配置group后默认为true
+                concurrencyCancelInProgress = yaml.concurrency?.cancelInProgress
+                    ?: yaml.concurrency?.group?.let { true }
+                    ?: false,
                 runLockType = when {
                     yaml.concurrency?.group != null -> PipelineRunLockType.SINGLE
                     else -> PipelineRunLockType.MULTIPLE

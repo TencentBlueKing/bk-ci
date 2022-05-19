@@ -46,6 +46,7 @@ interface DataSourceService {
         projectId: String,
         moduleCode: SystemModuleEnum,
         clusterName: String,
-        ruleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.DB
+        ruleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.DB,
+        tableName: String? = null
     ): DataBasePiecewiseInfo?
 }

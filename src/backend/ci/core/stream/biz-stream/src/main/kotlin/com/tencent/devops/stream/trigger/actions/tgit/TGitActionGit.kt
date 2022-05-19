@@ -41,13 +41,15 @@ abstract class TGitActionGit(
         return TGitCred(data.setting.enableUser)
     }
 
+    override fun getChangeSet(): Set<String>? = null
+
     override fun getUserVariables(yamlVariables: Map<String, Variable>?): Map<String, Variable>? = null
 
     override fun needSaveOrUpdateBranch() = false
 
     override fun needSendCommitCheck() = true
 
-    override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) {}
+    override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) = Unit
 
     override fun sendCommitCheck(
         buildId: String,
@@ -75,12 +77,17 @@ abstract class TGitActionGit(
             context = context,
             targetUrl = targetUrl,
             description = description,
-            if (data.event is GitMergeRequestEvent) {
+            mrId = if (data.event is GitMergeRequestEvent) {
                 (data.event as GitMergeRequestEvent).object_attributes.iid
             } else {
                 null
             },
-            reportData
+            manualUnlock = if (data.event is GitMergeRequestEvent) {
+                (data.event as GitMergeRequestEvent).manual_unlock
+            } else {
+                false
+            },
+            reportData = reportData
         )
     }
 }
