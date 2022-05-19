@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,14 +30,16 @@ package httputil
 import (
 	"encoding/json"
 	"errors"
+	"github.com/Tencent/bk-ci/src/agent/internal/third_party/dep/fs"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/astaxie/beego/logs"
 )
 
 type DevopsResult struct {
@@ -173,7 +176,7 @@ func DownloadUpgradeFile(url string, headers map[string]string, filepath string)
 		return "", errors.New("download upgrade file failed")
 	}
 
-	err = writeToFile(filepath, resp.Body)
+	err = AtomicWriteFile(filepath, resp.Body, 0644)
 	if err != nil {
 		logs.Error("download upgrade file failed", err)
 		return "", errors.New("download upgrade file failed")
@@ -208,4 +211,27 @@ func writeToFile(file string, content io.Reader) error {
 		return err
 	}
 	return nil
+}
+
+func AtomicWriteFile(filename string, reader io.Reader, mode os.FileMode) error {
+	tempFile, err := ioutil.TempFile(filepath.Split(filename))
+	if err != nil {
+		return err
+	}
+	tempName := tempFile.Name()
+
+	if _, err := io.Copy(tempFile, reader); err != nil {
+		tempFile.Close() // return value is ignored as we are already on error path
+		return err
+	}
+
+	if err := tempFile.Close(); err != nil {
+		return err
+	}
+
+	if err := os.Chmod(tempName, mode); err != nil {
+		return err
+	}
+
+	return fs.RenameWithFallback(tempName, filename)
 }
