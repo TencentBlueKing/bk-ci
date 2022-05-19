@@ -25,22 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.auth.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("流水线文件路径模型")
-data class StreamGitPipelineDir(
-    @ApiModelProperty("当前流水线文件子路径", required = false)
-    val currentPath: String?,
-    @ApiModelProperty("所有子路径", required = false)
-    var allPath: List<AllPathPair>?
-)
+class BkLocalManagerServiceImp @Autowired constructor() : LocalManagerService {
 
-data class AllPathPair(
-    @ApiModelProperty("子路径", required = true)
-    val path: String,
-    @ApiModelProperty("文件夹名字", required = true)
-    val name: String
-)
+    override fun projectManagerCheck(
+        userId: String,
+        projectCode: String,
+        action: String,
+        resourceType: String
+    ): Boolean {
+        if (isAdmin(userId)) {
+            return true
+        }
+        return false
+    }
+
+    // 有用户相关功能后， 需要校验真是的管理员账号
+    private fun isAdmin(userId: String): Boolean {
+        if (userId == "admin") {
+            return true
+        }
+        return false
+    }
+}

@@ -25,22 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.repository.pojo.github
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线文件路径模型")
-data class StreamGitPipelineDir(
-    @ApiModelProperty("当前流水线文件子路径", required = false)
-    val currentPath: String?,
-    @ApiModelProperty("所有子路径", required = false)
-    var allPath: List<AllPathPair>?
-)
-
-data class AllPathPair(
-    @ApiModelProperty("子路径", required = true)
-    val path: String,
-    @ApiModelProperty("文件夹名字", required = true)
-    val name: String
+/**
+ * github获取分支列表:/repos/{owner}/{repo}/branches
+     {
+    "name": "release-1.2",
+    "commit": {
+    "sha": "7dcca23c12383c18d4b1710c42fe97adb44c7c8b",
+    "url": "https://api.github.com/repos/Tencent/bk-ci/commits/7dcca23c12383c18d4b1710c42fe97adb44c7c8b"
+    },
+    "protected": true
+    }
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+@ApiModel("仓库分支信息")
+data class GithubRepoBranch(
+    @ApiModelProperty("名称")
+    val name: String,
+    @ApiModelProperty("提交信息")
+    val commit: GithubRepoCommit,
+    @ApiModelProperty("是否是保护分支")
+    val protected: Boolean
 )
