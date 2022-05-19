@@ -76,4 +76,25 @@ class SemanticAnalysisTest {
             fail()
         }
     }
+
+    @Test
+    fun analysis5() {
+        val a = mapOf("variables.a" to "")
+        val str = "variables.a == \"\""
+        val originItems = Lex(str.toList().toMutableList()).getToken()
+        GrammarAnalysis(originItems).analysis()
+        val items = mutableListOf<Word>()
+        originItems.forEach {
+            if (it.symbol == "ident") {
+                items.add(Word(EvalExpress.replaceVariable(it.str, a), it.symbol))
+            } else {
+                items.add(Word(it.str, it.symbol))
+            }
+        }
+        try {
+            assertEquals(true, SemanticAnalysis(items).analysis())
+        } catch (e: Exception) {
+            fail()
+        }
+    }
 }

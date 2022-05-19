@@ -62,7 +62,7 @@ class Lex(var str: MutableList<Char>) {
                         else if (ch == ')') state = 13
 //                        else if (ch == '{') state = 14
 //                        else if (ch == '}') state = 15
-//                        else if (ch == '"') state = 16
+                        else if (ch == '"') state = 16
                         else if (ch == '&') state = 17
                         else if (ch == '|') state = 18
 //                        else if (ch == '.') state = 19
@@ -179,6 +179,21 @@ class Lex(var str: MutableList<Char>) {
                             syn = 22
                         } else {
                             state = 99
+                        }
+                    }
+                    16 -> {
+                        token.add(ch!!)
+                        ch = getNext()
+                        if (ch == '"' && ch in token) {
+                            token.removeAt(0)
+                            state = 100
+                            syn = 27
+                        } else if (ch == null) {
+                            state = 100
+                            syn = 27
+                        } else {
+                            state = 16
+                            syn = 27
                         }
                     }
                     // 匹配到字母

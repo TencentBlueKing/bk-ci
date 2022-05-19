@@ -86,7 +86,7 @@ object EvalExpress {
         }
     }
 
-    private fun replaceVariable(str: String, variables: Map<String, Any>): String {
+    fun replaceVariable(str: String, variables: Map<String, Any>): String {
         // 暂时判断这些前缀，根据需要再加
         contextPrefix.forEach {
             if (str.startsWith(it)) {
