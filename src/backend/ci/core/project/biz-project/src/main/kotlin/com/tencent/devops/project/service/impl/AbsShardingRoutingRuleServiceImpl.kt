@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.api.util.ShardingUtil
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.project.dao.ShardingRoutingRuleDao
@@ -54,24 +55,6 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
      */
     override fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Boolean {
         val routingName = shardingRoutingRule.routingName
-        val nameCount = shardingRoutingRuleDao.countByName(
-            dslContext = dslContext,
-            clusterName = shardingRoutingRule.clusterName,
-            moduleCode = shardingRoutingRule.moduleCode,
-            type = shardingRoutingRule.type,
-            routingName = routingName,
-            tableName = shardingRoutingRule.tableName
-        )
-        if (nameCount > 0) {
-            // 抛出错误提示
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf(routingName)
-            )
-        }
-        // 规则入库
-        shardingRoutingRuleDao.add(dslContext, userId, shardingRoutingRule)
-        // 规则写入redis缓存
         val key = ShardingUtil.getShardingRoutingRuleKey(
             clusterName = CommonUtils.getDbClusterName(),
             moduleCode = shardingRoutingRule.moduleCode.name,
@@ -79,11 +62,35 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
             routingName = routingName,
             tableName = shardingRoutingRule.tableName
         )
-        redisOperation.set(
-            key = key,
-            value = shardingRoutingRule.routingRule,
-            expired = false
-        )
+        val lock = RedisLock(redisOperation, key, 10)
+        try {
+            lock.lock()
+            val nameCount = shardingRoutingRuleDao.countByName(
+                dslContext = dslContext,
+                clusterName = shardingRoutingRule.clusterName,
+                moduleCode = shardingRoutingRule.moduleCode,
+                type = shardingRoutingRule.type,
+                routingName = routingName,
+                tableName = shardingRoutingRule.tableName
+            )
+            if (nameCount > 0) {
+                // 抛出错误提示
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                    params = arrayOf(routingName)
+                )
+            }
+            // 规则入库
+            shardingRoutingRuleDao.add(dslContext, userId, shardingRoutingRule)
+            // 规则写入redis缓存
+            redisOperation.set(
+                key = key,
+                value = shardingRoutingRule.routingRule,
+                expired = false
+            )
+        } finally {
+            lock.unlock()
+        }
         return true
     }
 
@@ -125,27 +132,6 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
         shardingRoutingRule: ShardingRoutingRule
     ): Boolean {
         val routingName = shardingRoutingRule.routingName
-        val nameCount = shardingRoutingRuleDao.countByName(
-            dslContext = dslContext,
-            clusterName = shardingRoutingRule.clusterName,
-            moduleCode = shardingRoutingRule.moduleCode,
-            type = shardingRoutingRule.type,
-            routingName = routingName,
-            tableName = shardingRoutingRule.tableName
-        )
-        if (nameCount > 0) {
-            val rule = shardingRoutingRuleDao.getById(dslContext, id)
-            if (null != rule && routingName != rule.routingName) {
-                // 抛出错误提示
-                throw ErrorCodeException(
-                    errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                    params = arrayOf(routingName)
-                )
-            }
-        }
-        // 更新db中规则信息
-        shardingRoutingRuleDao.update(dslContext, id, shardingRoutingRule)
-        // 更新redis缓存规则信息
         val key = ShardingUtil.getShardingRoutingRuleKey(
             clusterName = CommonUtils.getDbClusterName(),
             moduleCode = shardingRoutingRule.moduleCode.name,
@@ -153,11 +139,38 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
             routingName = routingName,
             tableName = shardingRoutingRule.tableName
         )
-        redisOperation.set(
-            key = key,
-            value = shardingRoutingRule.routingRule,
-            expired = false
-        )
+        val lock = RedisLock(redisOperation, key, 10)
+        try {
+            lock.lock()
+            val nameCount = shardingRoutingRuleDao.countByName(
+                dslContext = dslContext,
+                clusterName = shardingRoutingRule.clusterName,
+                moduleCode = shardingRoutingRule.moduleCode,
+                type = shardingRoutingRule.type,
+                routingName = routingName,
+                tableName = shardingRoutingRule.tableName
+            )
+            if (nameCount > 0) {
+                val rule = shardingRoutingRuleDao.getById(dslContext, id)
+                if (null != rule && routingName != rule.routingName) {
+                    // 抛出错误提示
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                        params = arrayOf(routingName)
+                    )
+                }
+            }
+            // 更新db中规则信息
+            shardingRoutingRuleDao.update(dslContext, id, shardingRoutingRule)
+            // 更新redis缓存规则信息
+            redisOperation.set(
+                key = key,
+                value = shardingRoutingRule.routingRule,
+                expired = false
+            )
+        } finally {
+            lock.unlock()
+        }
         return true
     }
 
