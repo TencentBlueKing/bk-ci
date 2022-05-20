@@ -65,7 +65,6 @@ class PreBuildV2Service @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val prebuildProjectDao: PrebuildProjectDao,
-    @Qualifier("TXModelCreate")
     private val modelCreate: ModelCreate
 ) : CommonPreBuildService(client, dslContext, prebuildProjectDao) {
     companion object {
