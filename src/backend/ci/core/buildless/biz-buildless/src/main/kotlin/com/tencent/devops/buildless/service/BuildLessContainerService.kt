@@ -52,10 +52,12 @@ import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_IP
 import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_PORT
 import com.tencent.devops.buildless.utils.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.buildless.utils.ENV_KEY_GATEWAY
+import com.tencent.devops.buildless.utils.ENV_KEY_PROJECT_ID
 import com.tencent.devops.buildless.utils.RandomUtil
 import com.tencent.devops.buildless.utils.RedisUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.gray.Gray
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
@@ -71,11 +73,11 @@ import kotlin.streams.toList
 
 @Service
 class BuildLessContainerService(
+    private val gray: Gray,
     private val redisUtils: RedisUtils,
     private val commonConfig: CommonConfig,
     private val buildLessConfig: BuildLessConfig
 ) {
-
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
         .withDockerConfig(buildLessConfig.dockerConfig)
         .withApiVersion(buildLessConfig.apiVersion)
@@ -100,7 +102,6 @@ class BuildLessContainerService(
         val volumeLogs = Volume(buildLessConfig.volumeLogs)
         val volumeWs = Volume(buildLessConfig.volumeWorkspace)
 
-        val gateway = buildLessConfig.gateway
         val containerName = "$BUILDLESS_POOL_PREFIX-${RandomUtil.randomString()}"
 
         val hostWorkspace = buildLessConfig.hostPathWorkspace + "/$containerName"
@@ -116,6 +117,13 @@ class BuildLessContainerService(
             Bind(linkPath, Volume(linkPath))
         )
 
+        // 设置默认灰度项目
+        val defaultProject = if (gray.isGray()) {
+            "grayproject"
+        } else {
+            ""
+        }
+
         try {
             val container = httpDockerCli.createContainerCmd(buildLessConfig.containerPoolBaseImage)
                 .withName(containerName)
@@ -123,8 +131,9 @@ class BuildLessContainerService(
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
                 .withEnv(
                     listOf(
-                        "$ENV_KEY_GATEWAY=$gateway",
+                        "$ENV_KEY_GATEWAY=${buildLessConfig.gateway}",
                         "TERM=xterm-256color",
+                        "$ENV_KEY_PROJECT_ID=$defaultProject",
                         "$ENV_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
                         "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
                         "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
