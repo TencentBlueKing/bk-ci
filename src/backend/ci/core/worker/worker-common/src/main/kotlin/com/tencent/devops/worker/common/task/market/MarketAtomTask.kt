@@ -166,7 +166,6 @@ open class MarketAtomTask : ITask() {
             )
         }.toMap()
             .plus(buildTask.buildVariable ?: emptyMap())
-            .plus(WORKSPACE_CONTEXT to workspacePath)
             .plus(getStepContextMap(buildTask, buildVariables, workspacePath))
 
         // 解析输入输出字段模板
@@ -724,7 +723,8 @@ open class MarketAtomTask : ITask() {
                         atomCode,
                         buildTask.taskId ?: "",
                         buildTask.elementName ?: "",
-                        qualityMap)
+                        qualityMap
+                    )
                 }
             } else {
                 if (atomResult.qualityData != null && atomResult.qualityData.isNotEmpty()) {
