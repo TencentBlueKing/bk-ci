@@ -138,7 +138,7 @@ open class CommonPreBuildService constructor(
         startUpReq: StartUpReq,
         model: Model,
         pipelineId: String
-    ): Unit {
+    ) {
         val projectId = getUserProjectId(userId)
         client.get(ServicePipelineResource::class).edit(userId, projectId, pipelineId, model, channelCode)
         prebuildProjectDao.createOrUpdate(

@@ -47,7 +47,6 @@ class PreCITXInnerModelCreatorImpl(private val preCIInfo: PreCIInfo) : TXInnerMo
     override val defaultImage: String
         get() = "http://mirrors.tencent.com/ci/tlinux3_ci:1.5.0"
 
-
     override fun makeCheckoutElement(
         step: Step,
         event: ModelCreateEvent,
@@ -82,7 +81,6 @@ class PreCITXInnerModelCreatorImpl(private val preCIInfo: PreCIInfo) : TXInnerMo
     }
 
     override fun preInstallMarketAtom(client: Client, event: ModelCreateEvent) {
-
     }
 
     override fun makeMarketBuildAtomElement(
