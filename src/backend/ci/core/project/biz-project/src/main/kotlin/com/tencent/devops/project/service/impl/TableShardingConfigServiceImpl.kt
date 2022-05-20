@@ -116,6 +116,29 @@ class TableShardingConfigServiceImpl @Autowired constructor(
         }
     }
 
+    override fun getTableShardingConfigByName(
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        tableName: String
+    ): TableShardingConfig? {
+        val record = tableShardingConfigDao.getByName(
+            dslContext = dslContext,
+            clusterName = clusterName,
+            moduleCode = moduleCode,
+            tableName = tableName
+        )
+        return if (record != null) {
+            TableShardingConfig(
+                clusterName = record.clusterName,
+                moduleCode = SystemModuleEnum.valueOf(record.moduleCode),
+                tableName = record.tableName,
+                shardingNum = record.shardingNum
+            )
+        } else {
+            null
+        }
+    }
+
     override fun listByModule(
         dslContext: DSLContext,
         clusterName: String,

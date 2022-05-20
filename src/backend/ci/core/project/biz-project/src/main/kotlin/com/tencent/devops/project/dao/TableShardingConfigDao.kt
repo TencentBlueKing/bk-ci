@@ -102,6 +102,24 @@ class TableShardingConfigDao {
         }
     }
 
+    fun getByName(
+        dslContext: DSLContext,
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        tableName: String
+    ): TTableShardingConfigRecord? {
+        return with(TTableShardingConfig.T_TABLE_SHARDING_CONFIG) {
+            dslContext.selectFrom(this)
+                .where(
+                    CLUSTER_NAME.eq(clusterName)
+                        .and(MODULE_CODE.eq(moduleCode.name))
+                        .and(TABLE_NAME.eq(tableName))
+                )
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
     fun listByModule(
         dslContext: DSLContext,
         clusterName: String,

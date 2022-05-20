@@ -24,25 +24,27 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.common.api.pojo
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("DB分片路由规则")
-data class ShardingRoutingRule(
-    @ApiModelProperty("集群名称")
-    val clusterName: String,
-    @ApiModelProperty("模块标识")
-    val moduleCode: SystemModuleEnum,
-    @ApiModelProperty("数据源名称")
-    val dataSourceName: String,
-    @ApiModelProperty("数据库表名称")
-    val tableName: String? = null,
-    @ApiModelProperty("规则类型")
-    val type: ShardingRuleTypeEnum,
-    @ApiModelProperty("路由规则名称")
-    val routingName: String,
-    @ApiModelProperty("路由规则值")
-    val routingRule: String
-)
+package com.tencent.devops.project.service
+
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.ShardingRoutingRule
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
+
+interface ShardingRoutingRuleFacadeService {
+
+    /**
+     * 根据规则名称查找分片路由规则
+     * @param moduleCode 模块标识
+     * @param ruleType 规则类型
+     * @param routingName 规则名称
+     * @param tableName 数据库表名称
+     * @return 分片路由规则信息
+     */
+    fun getShardingRoutingRuleByName(
+        moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum,
+        routingName: String,
+        tableName: String? = null
+    ): ShardingRoutingRule?
+}

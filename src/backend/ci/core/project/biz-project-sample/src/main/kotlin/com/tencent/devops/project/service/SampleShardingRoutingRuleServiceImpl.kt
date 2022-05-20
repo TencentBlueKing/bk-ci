@@ -28,23 +28,22 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.project.dao.DataSourceDao
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.project.dao.ShardingRoutingRuleDao
 import com.tencent.devops.project.pojo.TableShardingConfig
-import com.tencent.devops.project.service.impl.AbsProjectDataSourceAssignServiceImpl
+import com.tencent.devops.project.service.impl.AbsShardingRoutingRuleServiceImpl
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 
 @Service
-class SampleProjectDataSourceAssignServiceImpl(
+class SampleShardingRoutingRuleServiceImpl(
     dslContext: DSLContext,
-    dataSourceDao: DataSourceDao,
-    shardingRoutingRuleService: ShardingRoutingRuleService,
-    tableShardingConfigService: TableShardingConfigService
-) : AbsProjectDataSourceAssignServiceImpl(
+    shardingRoutingRuleDao: ShardingRoutingRuleDao,
+    redisOperation: RedisOperation
+) : AbsShardingRoutingRuleServiceImpl(
     dslContext,
-    dataSourceDao,
-    shardingRoutingRuleService,
-    tableShardingConfigService
+    shardingRoutingRuleDao,
+    redisOperation
 ) {
 
     /**
@@ -67,16 +66,10 @@ class SampleProjectDataSourceAssignServiceImpl(
 
     /**
      * 获取可用数据库表名称
-     * @param clusterName db集群名称
-     * @param moduleCode 模块代码
      * @param tableShardingConfig 分表配置
      * @return 可用数据库表名称
      */
-    override fun getValidTableName(
-        clusterName: String,
-        moduleCode: SystemModuleEnum,
-        tableShardingConfig: TableShardingConfig
-    ): String {
+    override fun getValidTableName(tableShardingConfig: TableShardingConfig): String {
         // 从可用的数据库表中随机选择一个分配给该项目
         val tableName = tableShardingConfig.tableName
         val shardingNum = tableShardingConfig.shardingNum

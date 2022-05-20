@@ -28,20 +28,46 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.ShardingRoutingRule
+import com.tencent.devops.project.pojo.TableShardingConfig
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 
-interface ProjectDataSourceAssignService {
+interface ShardingRoutingRuleAssignService {
 
     /**
-     * 为项目分配分片路由规则
+     * 分配分片路由规则
      * @param channelCode 渠道代码
-     * @param projectId 项目ID
+     * @param routingName 规则名称
      * @param moduleCodes 模块代码列表
      * @return 布尔值
      */
     fun assignShardingRoutingRule(
         channelCode: ProjectChannelCode,
-        projectId: String,
+        routingName: String,
         moduleCodes: List<SystemModuleEnum>
     ): Boolean
+
+    /**
+     * 分配DB分片路由规则
+     * @param moduleCode 模块代码
+     * @param routingName 规则名称
+     * @return DB分片路由规则
+     */
+    fun assignDbShardingRoutingRule(
+        moduleCode: SystemModuleEnum,
+        routingName: String
+    ): ShardingRoutingRule
+
+    /**
+     * 分配数据库表分片路由规则
+     * @param tableShardingConfig 数据库表分片配置
+     * @param dataSourceName 数据源名称
+     * @param routingName 规则名称
+     * @return DB分片路由规则
+     */
+    fun assignTableShardingRoutingRule(
+        tableShardingConfig: TableShardingConfig,
+        dataSourceName: String,
+        routingName: String
+    ): ShardingRoutingRule
 }
