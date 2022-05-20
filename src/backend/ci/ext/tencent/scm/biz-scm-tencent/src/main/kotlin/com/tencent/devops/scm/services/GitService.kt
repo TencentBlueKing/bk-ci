@@ -186,7 +186,7 @@ class GitService @Autowired constructor(
                                 obj["name"].asString,
                                 obj["name_with_namespace"].asString,
                                 obj["ssh_url_to_repo"].asString,
-                                obj["http_url_to_repo"].asString,
+                                obj["https_url_to_repo"].asString,
                                 DateTimeUtil.convertLocalDateTimeToTimestamp(
                                     LocalDateTime.parse(lastActivityTime)
                                 ) * 1000L
@@ -247,7 +247,7 @@ class GitService @Autowired constructor(
                             project["name"].asString,
                             project["name_with_namespace"].asString,
                             project["ssh_url_to_repo"].asString,
-                            project["http_url_to_repo"].asString,
+                            project["https_url_to_repo"].asString,
                             DateTimeUtil.convertLocalDateTimeToTimestamp(
                                 LocalDateTime.parse(lastActivityTime)
                             ) * 1000L
@@ -1311,7 +1311,12 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             val data = it.body()!!.string()
-            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            if (!it.isSuccessful) {
+                logger.warn(
+                    "getGitProjectInfo not successful |code=${it.code()}|message=${it.message()}|body=$data"
+                )
+                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            }
             return Result(JsonUtil.to(data, GitProjectInfo::class.java))
         }
     }
