@@ -150,7 +150,6 @@ class ShardingRoutingRuleDao {
         }
     }
 
-
     private fun TShardingRoutingRule.getQueryShardingRoutingRuleCondition(
         clusterName: String,
         moduleCode: SystemModuleEnum,
