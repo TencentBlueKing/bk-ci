@@ -85,14 +85,14 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType)) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
-        if (storeEnvVarDao.queryRepeatVariable(
+        if (storeEnvVarDao.queryEnvironmentVariable(
                 dslContext = dslContext,
                 userId = userId,
                 storeType = storeType,
                 storeCode = storeCode,
                 scope = storeEnvVarRequest.scope,
                 varName = storeEnvVarRequest.varName
-        ) > 0) {
+        ) != null) {
             return MessageCodeUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
                 params = arrayOf(storeEnvVarRequest.varName),
@@ -155,14 +155,14 @@ class StoreEnvVarServiceImpl @Autowired constructor(
             createTime = DateTimeUtil.toDateTime(envVarOne[KEY_CREATE_TIME] as LocalDateTime),
             updateTime = DateTimeUtil.toDateTime(envVarOne[KEY_UPDATE_TIME] as LocalDateTime)
         )
-        if (storeEnvVarRequest.scope != maxVersionData.scope && storeEnvVarDao.queryRepeatVariable(
+        if (storeEnvVarRequest.scope != maxVersionData.scope && storeEnvVarDao.queryEnvironmentVariable(
                 dslContext = dslContext,
                 userId = userId,
                 storeType = storeType,
                 storeCode = storeCode,
                 scope = storeEnvVarRequest.scope,
                 varName = storeEnvVarRequest.varName
-            ) != 0
+            ) != null
         ) {
             return MessageCodeUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,

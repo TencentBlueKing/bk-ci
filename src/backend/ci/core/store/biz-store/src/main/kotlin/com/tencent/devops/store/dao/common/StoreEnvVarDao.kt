@@ -127,23 +127,23 @@ class StoreEnvVarDao {
     }
 
     /**
-     * 查询目标环境是否存在同名变量
+     * 查询环境变量
      */
-    fun queryRepeatVariable(
+    fun queryEnvironmentVariable(
         dslContext: DSLContext,
         userId: String,
         storeType: Byte,
         storeCode: String,
         scope: String,
         varName: String
-    ): Int {
+    ): Record? {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
-            return dslContext.selectCount().from(this)
+            return dslContext.select().from(this)
                 .where(STORE_CODE.eq(storeCode)
                     .and(STORE_TYPE.eq(storeType))
                     .and(SCOPE.eq(scope))
                     .and(VAR_NAME.eq(varName)))
-                .fetchOne(0, Int::class.java) ?: 0
+                .fetchOne()
         }
     }
 
