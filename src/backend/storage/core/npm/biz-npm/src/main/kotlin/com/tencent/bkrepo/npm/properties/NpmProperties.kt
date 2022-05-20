@@ -31,6 +31,7 @@
 
 package com.tencent.bkrepo.npm.properties
 
+import com.tencent.bkrepo.common.api.constant.StringPool
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.NestedConfigurationProperty
 
@@ -44,4 +45,6 @@ class NpmProperties {
 
     @NestedConfigurationProperty
     var migration: MigrationProperties = MigrationProperties()
+
+    var domain: String = StringPool.EMPTY
 }

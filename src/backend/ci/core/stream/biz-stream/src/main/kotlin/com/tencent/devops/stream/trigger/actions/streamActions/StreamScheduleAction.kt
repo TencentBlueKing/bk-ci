@@ -136,6 +136,10 @@ class StreamScheduleAction(
         )
     }
 
+    override fun getChangeSet(): Set<String>? {
+        return null
+    }
+
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         return TriggerResult(
             trigger = true,
@@ -162,7 +166,7 @@ class StreamScheduleAction(
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
     ) {
         gitCheckService.pushCommitCheck(
-            userId = data.eventCommon.userId,
+            userId = data.getUserId(),
             projectCode = getProjectCode(),
             buildId = buildId,
             gitProjectId = data.eventCommon.gitProjectId,

@@ -52,6 +52,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToSec
 import com.tencent.devops.process.engine.common.VMUtils
@@ -60,6 +61,7 @@ import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
@@ -72,6 +74,7 @@ import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.BuildTask
+import com.tencent.devops.process.pojo.BuildTaskErrorMessage
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.service.BuildVariableService
@@ -116,6 +119,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     companion object {
         private val LOG = LoggerFactory.getLogger(EngineVMBuildService::class.java)
         const val ENV_CONTEXT_KEY_PREFIX = "envs."
+
         // 任务结束上报Key
         private fun completeTaskKey(buildId: String, vmSeqId: String) = "build:$buildId:job:$vmSeqId:ending_task"
     }
@@ -159,7 +163,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         LOG.info("ENGINE|$buildId|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
         // var表中获取环境变量，并对老版本变量进行兼容
         val variables = buildVariableService.getAllVariable(projectId, buildId)
-
         val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
         val model = containerBuildDetailService.getBuildModel(projectId, buildId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
@@ -202,11 +205,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                 ).data?.let { self -> envList.add(self) }
                             }
 
-                            // 设置Job环境变量customBuildEnv到variablesWithType中
+                            // 设置Job环境变量customBuildEnv到variablesWithType和variables中
+                            // TODO 此处应收敛到variablesWithType或variables的其中一个
                             c.customBuildEnv?.map { (t, u) ->
+                                val value = EnvUtils.parseEnv(u, contextMap)
+                                contextMap[t] = value
                                 BuildParameters(
                                     key = t,
-                                    value = EnvUtils.parseEnv(u, contextMap),
+                                    value = value,
                                     valueType = BuildFormPropertyType.STRING,
                                     readOnly = true
                                 )
@@ -595,15 +601,16 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
             projectId = projectId, buildId = buildId, taskId = result.elementId,
             buildStatus = buildStatus, errorType = errorType, errorCode = result.errorCode,
-            errorMsg = result.message
+            errorMsg = result.message, taskVersion = result.elementVersion
         )
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
             pipelineTaskService.updateTaskStatusInfo(
-                transactionContext = null,
-                projectId = projectId,
-                buildId = buildId,
-                taskId = updateTaskStatusInfo.taskId,
-                taskStatus = updateTaskStatusInfo.buildStatus
+                updateTaskInfo = UpdateTaskInfo(
+                    projectId = projectId,
+                    buildId = buildId,
+                    taskId = updateTaskStatusInfo.taskId,
+                    taskStatus = updateTaskStatusInfo.buildStatus
+                )
             )
             if (!updateTaskStatusInfo.message.isNullOrBlank()) {
                 buildLogPrinter.addLine(
@@ -621,7 +628,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             completeTask = CompleteTask(
                 projectId = projectId, buildId = buildId, taskId = result.taskId,
                 userId = buildInfo.startUser, buildStatus = buildStatus,
-                errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
+                errorType = errorType, errorCode = result.errorCode, errorMsg = result.message,
+                platformCode = result.platformCode, platformErrorCode = result.platformErrorCode
             )
         )
 
@@ -630,7 +638,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             task?.errorCode = result.errorCode
             task?.errorType = errorType
             task?.errorMsg = result.message
-            logTaskFailed(task, errorType)
+            logTaskFailed(task, errorType, result.buildTaskErrorMessage)
             // 打印出失败继续的日志
             if (ControlUtils.continueWhenFailure(task?.additionalOptions)) {
                 buildLogPrinter.addRedLine(
@@ -791,23 +799,49 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     /**
      *  #4191 输出失败任务流水线日志
      */
-    private fun logTaskFailed(task: PipelineBuildTask?, errorType: ErrorType?) {
+    private fun logTaskFailed(task: PipelineBuildTask?, errorType: ErrorType?, errorInfo: BuildTaskErrorMessage?) {
         task?.run {
             errorType?.also { // #5046 增加错误信息
-                val errMsg = "Error: Process completed with exit code $errorCode: $errorMsg. " +
-                    (errorCode?.let {
-                        "\n${MessageCodeUtil.getCodeLanMessage(messageCode = errorCode.toString())}\n"
-                    }
-                        ?: "") +
-                    when (errorType) {
-                        ErrorType.USER -> "Please check your input or service."
-                        ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."
-                        ErrorType.PLUGIN -> "Please contact the plugin developer."
-                        ErrorType.SYSTEM -> "Please contact platform."
-                    }
+                val overview = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.ERROR_TASK_LOG_OVERVIEW,
+                    params = arrayOf(
+                        MessageCodeUtil.getMessageByLocale(errorType.typeName, errorType.name),
+                        errorCode.toString()
+                    ),
+                    checkUrlDecoder = true
+                )
+                val typeMessage = when (errorType) {
+                    ErrorType.USER -> MessageCodeUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.ERROR_TASK_LOG_USER_FAILED
+                    )
+                    ErrorType.THIRD_PARTY -> MessageCodeUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.ERROR_TASK_LOG_THIRD_PARTY_FAILED
+                    )
+                    ErrorType.PLUGIN -> MessageCodeUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.ERROR_TASK_LOG_PLUGIN_FAILED,
+                        params = arrayOf(errorInfo?.atomCreator.orEmpty())
+                    )
+                    ErrorType.SYSTEM -> MessageCodeUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.ERROR_TASK_LOG_SYSTEM_FAILED
+                    )
+                }
+                val codeMessage = errorCode?.let {
+                    MessageCodeUtil.getCodeLanMessage(
+                        messageCode = errorCode.toString(),
+                        defaultMessage = "",
+                        checkUrlDecoder = true
+                    )
+                } ?: ""
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = errMsg,
+                    message = "$typeMessage\n$overview \n$errorMsg",
+                    tag = taskId,
+                    jobId = containerHashId,
+                    executeCount = executeCount ?: 1
+                )
+                buildLogPrinter.addLine(
+                    buildId = buildId,
+                    message = codeMessage,
                     tag = taskId,
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1

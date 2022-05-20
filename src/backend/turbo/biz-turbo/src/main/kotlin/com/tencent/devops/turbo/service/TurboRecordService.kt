@@ -240,8 +240,7 @@ class TurboRecordService @Autowired constructor(
                                   pageSize: Int?,
                                   sortField: String?,
                                   sortType: String?,
-                                  turboRecordModel: TurboRecordModel,
-                                  useStartTime: Boolean = true
+                                  turboRecordModel: TurboRecordModel
     ): Page<TurboRecordHistoryVO> {
 
         val sortFieldInDb = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, sortField ?: "execute_num")
@@ -261,9 +260,6 @@ class TurboRecordService @Autowired constructor(
         val dataList: List<TurboRecordHistoryVO> = defectStatModelList.map {
             val turboRecordHistoryVO = TurboRecordHistoryVO()
             BeanUtils.copyProperties(it, turboRecordHistoryVO)
-            if (!useStartTime) {
-                turboRecordHistoryVO.startTime = null
-            }
             if (it.status == EnumDistccTaskStatus.FAILED.getTBSStatus()) {
                 turboRecordHistoryVO.message = it.rawData["client_message"] as String?
             }

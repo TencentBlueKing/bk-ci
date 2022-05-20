@@ -42,8 +42,8 @@ import io.swagger.annotations.ApiModelProperty
 data class PreJob(
     // val job: JobDetail,
     val name: String?,
-    @JsonProperty("resource-exclusive-declaration")
-    val resourceExclusiveDeclaration: ResourceExclusiveDeclaration? = null,
+    @JsonProperty("mutex")
+    val mutex: Mutex? = null,
     @ApiModelProperty(name = "runs-on")
     @JsonProperty("runs-on")
     val runsOn: Any?,

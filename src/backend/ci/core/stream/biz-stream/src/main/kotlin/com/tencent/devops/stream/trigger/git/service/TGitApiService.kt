@@ -54,6 +54,8 @@ import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitUserInfo
+import com.tencent.devops.stream.trigger.pojo.MrCommentBody
+import com.tencent.devops.stream.util.QualityUtils
 import com.tencent.devops.stream.util.RetryUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -224,7 +226,7 @@ class TGitApiService @Autowired constructor(
         cred as TGitCred
         return doRetryFun(
             retry = retry,
-            log = "$gitProjectId get yaml $fileName fail",
+            log = "$gitProjectId get yaml $fileName from $ref fail",
             apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR
         ) {
             client.get(ServiceGitResource::class).getGitFileContent(
@@ -235,9 +237,17 @@ class TGitApiService @Autowired constructor(
                     RepoAuthType.SSH
                 },
                 repoName = gitProjectId,
-                ref = ref,
+                ref = getTriggerBranch(ref),
                 filePath = fileName
             ).data!!
+        }
+    }
+
+    private fun getTriggerBranch(branch: String): String {
+        return when {
+            branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
+            branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
+            else -> branch
         }
     }
 
@@ -365,13 +375,14 @@ class TGitApiService @Autowired constructor(
         cred: TGitCred,
         gitProjectId: String,
         mrId: Long,
-        mrBody: String
+        mrBody: MrCommentBody
     ) {
+        // 暂时无法兼容，服务间调用 mrBody 字符串转义存在问题
         return client.get(ServiceGitResource::class).addMrComment(
             token = cred.toToken(),
             gitProjectId = gitProjectId,
             mrId = mrId,
-            mrBody = mrBody,
+            mrBody = QualityUtils.getQualityReport(mrBody.reportData.first, mrBody.reportData.second),
             tokenType = cred.toTokenType()
         )
     }

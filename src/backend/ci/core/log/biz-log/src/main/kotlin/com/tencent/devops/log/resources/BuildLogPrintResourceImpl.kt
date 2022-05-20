@@ -38,6 +38,7 @@ import com.tencent.devops.log.api.print.BuildLogPrintResource
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.LogStatusService
+import io.micrometer.core.annotation.Timed
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
@@ -103,6 +104,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @Timed
     override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.error("Invalid build ID[$buildId]")
@@ -127,14 +129,14 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         }
         buildLogPrintService.dispatchEvent(
             LogStatusEvent(
-            buildId = buildId,
-            finished = false,
-            tag = tag ?: "",
-            subTag = subTag,
-            jobId = jobId ?: "",
-            executeCount = executeCount,
-            logStorageMode = LogStorageMode.parse(logMode)
-        )
+                buildId = buildId,
+                finished = false,
+                tag = tag ?: "",
+                subTag = subTag,
+                jobId = jobId ?: "",
+                executeCount = executeCount,
+                logStorageMode = LogStorageMode.parse(logMode)
+            )
         )
         return Result(true)
     }
@@ -154,14 +156,14 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         }
         buildLogPrintService.dispatchEvent(
             LogStatusEvent(
-            buildId = buildId,
-            finished = finished,
-            tag = tag ?: "",
-            subTag = subTag,
-            jobId = jobId ?: "",
-            executeCount = executeCount,
-            logStorageMode = LogStorageMode.parse(logMode)
-        )
+                buildId = buildId,
+                finished = finished,
+                tag = tag ?: "",
+                subTag = subTag,
+                jobId = jobId ?: "",
+                executeCount = executeCount,
+                logStorageMode = LogStorageMode.parse(logMode)
+            )
         )
         return Result(false)
     }

@@ -31,11 +31,11 @@
 
 package com.tencent.bkrepo.auth
 
+import com.tencent.bkrepo.auth.pojo.enums.RoleType
 import com.tencent.bkrepo.auth.pojo.role.CreateRoleRequest
 import com.tencent.bkrepo.auth.pojo.user.CreateUserRequest
 import com.tencent.bkrepo.auth.pojo.user.CreateUserToProjectRequest
 import com.tencent.bkrepo.auth.pojo.user.UpdateUserRequest
-import com.tencent.bkrepo.auth.pojo.enums.RoleType
 import com.tencent.bkrepo.auth.service.RoleService
 import com.tencent.bkrepo.auth.service.UserService
 import com.tencent.bkrepo.auth.util.DataDigestUtils
@@ -165,7 +165,7 @@ class UserServiceTest {
         val newUserName = "test1"
         val nwePwd = "!@#$%^&*"
         val updateUserRequest =
-            UpdateUserRequest(newUserName, nwePwd, true)
+            UpdateUserRequest(newUserName, nwePwd)
         val result = userService.updateUserById(userId, updateUserRequest)
         Assertions.assertEquals(result, true)
         userService.getUserById(userId)?.let {

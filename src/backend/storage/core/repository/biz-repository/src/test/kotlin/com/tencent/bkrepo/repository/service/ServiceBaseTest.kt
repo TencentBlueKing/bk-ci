@@ -31,8 +31,10 @@
 
 package com.tencent.bkrepo.repository.service
 
+import com.tencent.bkrepo.auth.api.ServicePermissionResource
 import com.tencent.bkrepo.auth.api.ServiceRoleResource
 import com.tencent.bkrepo.auth.api.ServiceUserResource
+import com.tencent.bkrepo.common.artifact.event.base.ArtifactEvent
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import com.tencent.bkrepo.common.artifact.pojo.configuration.local.LocalConfiguration
@@ -42,6 +44,7 @@ import com.tencent.bkrepo.common.service.util.ResponseBuilder
 import com.tencent.bkrepo.common.service.util.SpringContextUtils
 import com.tencent.bkrepo.common.storage.core.StorageProperties
 import com.tencent.bkrepo.common.storage.core.StorageService
+import com.tencent.bkrepo.common.stream.event.supplier.EventSupplier
 import com.tencent.bkrepo.repository.UT_PROJECT_ID
 import com.tencent.bkrepo.repository.UT_REPO_DESC
 import com.tencent.bkrepo.repository.UT_REPO_DISPLAY
@@ -51,11 +54,16 @@ import com.tencent.bkrepo.repository.config.RepositoryProperties
 import com.tencent.bkrepo.repository.dao.ProjectDao
 import com.tencent.bkrepo.repository.dao.RepositoryDao
 import com.tencent.bkrepo.repository.pojo.project.ProjectCreateRequest
+import com.tencent.bkrepo.repository.pojo.project.ProjectInfo
 import com.tencent.bkrepo.repository.pojo.repo.RepoCreateRequest
+import com.tencent.bkrepo.repository.pojo.repo.RepositoryDetail
 import com.tencent.bkrepo.repository.service.repo.ProjectService
 import com.tencent.bkrepo.repository.service.repo.RepositoryService
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.ComponentScan
@@ -84,7 +92,13 @@ open class ServiceBaseTest {
     lateinit var userResource: ServiceUserResource
 
     @MockBean
+    lateinit var servicePermissionResource: ServicePermissionResource
+
+    @MockBean
     lateinit var permissionManager: PermissionManager
+
+    @MockBean
+    lateinit var eventSupplier: EventSupplier
 
     @Autowired
     lateinit var springContextUtils: SpringContextUtils
@@ -101,6 +115,19 @@ open class ServiceBaseTest {
         Mockito.`when`(userResource.addUserRole(anyString(), anyString())).thenReturn(
             ResponseBuilder.success()
         )
+
+        whenever(servicePermissionResource.listPermissionProject(anyString())).thenReturn(
+            ResponseBuilder.success()
+        )
+
+        whenever(servicePermissionResource.checkPermission(any())).thenReturn(
+            ResponseBuilder.success()
+        )
+        whenever(servicePermissionResource.listPermissionRepo(anyString(), anyString(), anyString())).thenReturn(
+            ResponseBuilder.success()
+        )
+
+        whenever(eventSupplier.delegateToSupplier(any<ArtifactEvent>(), anyOrNull(), anyString(), anyOrNull())).then{}
     }
 
     fun initRepoForUnitTest(
@@ -124,5 +151,33 @@ open class ServiceBaseTest {
             )
             repositoryService.createRepo(repoCreateRequest)
         }
+    }
+
+    fun createProject(
+        projectService: ProjectService,
+        projectId: String = UT_PROJECT_ID
+    ): ProjectInfo {
+        val projectCreateRequest = ProjectCreateRequest(projectId, UT_REPO_NAME, UT_REPO_DISPLAY, UT_USER)
+        return projectService.createProject(projectCreateRequest)
+    }
+
+    fun createRepository(
+        repositoryService: RepositoryService,
+        repoName: String = UT_REPO_NAME,
+        projectId: String = UT_PROJECT_ID,
+        credentialsKey: String? = null
+    ): RepositoryDetail {
+        val repoCreateRequest = RepoCreateRequest(
+            projectId = projectId,
+            name = repoName,
+            type = RepositoryType.GENERIC,
+            category = RepositoryCategory.LOCAL,
+            public = false,
+            description = UT_REPO_DESC,
+            configuration = LocalConfiguration(),
+            operator = UT_USER,
+            storageCredentialsKey = credentialsKey
+        )
+        return repositoryService.createRepo(repoCreateRequest)
     }
 }

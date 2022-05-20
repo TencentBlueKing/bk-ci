@@ -32,6 +32,7 @@
 package com.tencent.bkrepo.repository.service
 
 import com.tencent.bkrepo.common.api.exception.ErrorCodeException
+import com.tencent.bkrepo.common.artifact.constant.DownloadInterceptorType
 import com.tencent.bkrepo.common.artifact.constant.PRIVATE_PROXY_REPO_NAME
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
@@ -42,6 +43,7 @@ import com.tencent.bkrepo.common.artifact.pojo.configuration.local.LocalConfigur
 import com.tencent.bkrepo.common.artifact.pojo.configuration.remote.RemoteConfiguration
 import com.tencent.bkrepo.common.storage.credentials.FileSystemCredentials
 import com.tencent.bkrepo.repository.UT_PROJECT_ID
+import com.tencent.bkrepo.repository.UT_REGION
 import com.tencent.bkrepo.repository.UT_REPO_DISPLAY
 import com.tencent.bkrepo.repository.UT_REPO_NAME
 import com.tencent.bkrepo.repository.UT_STORAGE_CREDENTIALS_KEY
@@ -100,8 +102,8 @@ class RepositoryServiceTest @Autowired constructor(
             val projectCreateRequest = ProjectCreateRequest(UT_PROJECT_ID, UT_REPO_NAME, UT_REPO_DISPLAY, UT_USER)
             projectService.createProject(projectCreateRequest)
         }
-        val storageCreateRequest = StorageCredentialsCreateRequest(UT_STORAGE_CREDENTIALS_KEY, storageCredentials)
-        storageCredentialService.create(UT_USER, storageCreateRequest)
+        val request = StorageCredentialsCreateRequest(UT_STORAGE_CREDENTIALS_KEY, storageCredentials, UT_REGION)
+        storageCredentialService.create(UT_USER, request)
     }
 
     @BeforeEach
@@ -170,6 +172,14 @@ class RepositoryServiceTest @Autowired constructor(
 
         repositoryService.deleteRepo(RepoDeleteRequest(UT_PROJECT_ID, UT_REPO_NAME, operator = SYSTEM_USER))
         assertFalse(repositoryService.checkExist(UT_PROJECT_ID, UT_REPO_NAME))
+    }
+
+    @Test
+    @DisplayName("测试仓库名称校验")
+    fun `test repo name`() {
+        repositoryService.createRepo(createRequest("a..."))
+        assertThrows<ErrorCodeException> { repositoryService.createRepo(createRequest("...")) }
+        assertThrows<ErrorCodeException> { repositoryService.createRepo(createRequest("...a")) }
     }
 
     @Test
@@ -339,7 +349,7 @@ class RepositoryServiceTest @Autowired constructor(
         assertNotNull(privateProxyRepo1)
         privateProxyRepo2 = repositoryService.getRepoDetail(UT_PROJECT_ID, privateProxyRepoName2, "GENERIC")
         assertNull(privateProxyRepo2)
-        var privateProxyRepo3 = repositoryService.getRepoDetail(UT_PROJECT_ID, privateProxyRepoName3, "GENERIC")
+        val privateProxyRepo3 = repositoryService.getRepoDetail(UT_PROJECT_ID, privateProxyRepoName3, "GENERIC")
         assertNotNull(privateProxyRepo3)
 
         // 更新 1 4，1 4同名不同url，报错
@@ -386,6 +396,16 @@ class RepositoryServiceTest @Autowired constructor(
     }
 
     private fun createRequest(name: String = UT_REPO_NAME, storageCredentialsKey: String? = null): RepoCreateRequest {
+        val configuration = LocalConfiguration()
+        val type = DownloadInterceptorType.WEB
+        val rules = mapOf(
+            "filename" to "*.apk",
+            "metadata" to "key: value"
+        )
+        configuration.settings["interceptors"] = listOf(mapOf(
+            "type" to type,
+            "rules" to rules
+        ))
         return RepoCreateRequest(
             projectId = UT_PROJECT_ID,
             name = name,
@@ -393,7 +413,7 @@ class RepositoryServiceTest @Autowired constructor(
             category = RepositoryCategory.LOCAL,
             public = true,
             description = "simple description",
-            configuration = LocalConfiguration(),
+            configuration = configuration,
             storageCredentialsKey = storageCredentialsKey,
             operator = UT_USER
         )

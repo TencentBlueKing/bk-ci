@@ -89,7 +89,6 @@ import com.tencent.bkrepo.repository.pojo.packages.request.PackageVersionCreateR
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.InputStreamResource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpHeaders.CONTENT_LENGTH
@@ -109,9 +108,6 @@ class DockerV2LocalRepoService @Autowired constructor(
     val artifactRepo: DockerArtifactRepo,
     val packageRepo: DockerPackageRepo
 ) : DockerV2RepoService {
-
-    @Value("\${docker.domain: ''}")
-    val domain: String = EMPTY
 
     var httpHeaders: HttpHeaders = HttpHeaders()
 
@@ -188,13 +184,15 @@ class DockerV2LocalRepoService @Autowired constructor(
         RepoUtil.loadContext(artifactRepo, context)
         logger.info("get manifest params [$context,$reference]")
         // packageRepo.addDownloadStatic(context, reference)
-        return try {
+
+        // get manifest by sha256
+        if (DockerDigest.isValid(reference)) {
             val digest = DockerDigest(reference)
-            manifestProcess.getManifestByDigest(context, digest, httpHeaders)
-        } catch (exception: IllegalArgumentException) {
-            logger.warn("unable to parse digest, get manifest by tag [$context,$reference]")
-            manifestProcess.getManifestByTag(context, reference, httpHeaders)
+            return manifestProcess.getManifestByDigest(context, digest, httpHeaders)
         }
+        // get manifest by tag
+        logger.info("unable to parse digest, get manifest by tag [$context,$reference]")
+        return manifestProcess.getManifestByTag(context, reference, httpHeaders)
     }
 
     override fun getRepoList(
@@ -392,7 +390,8 @@ class DockerV2LocalRepoService @Autowired constructor(
             val mountDigest = DockerDigest(mount)
             val mountableBlob = BlobUtil.getBlobByName(artifactRepo, context, mountDigest.fileName())
             mountableBlob?.let {
-                val location = ResponseUtil.getDockerURI("${context.artifactName}$BLOB_PATTERN/$mount", httpHeaders)
+                val path = "${context.artifactName}$BLOB_PATTERN/$mount"
+                val location = ResponseUtil.getDockerURI(path, httpHeaders, artifactRepo.enableHttp)
                 logger.info("found accessible blob at [$mountableBlob] to mount  [$context,$mount]")
                 return ResponseEntity.status(HttpStatus.CREATED).apply {
                     header(DOCKER_HEADER_API_VERSION, DOCKER_API_VERSION)
@@ -406,12 +405,13 @@ class DockerV2LocalRepoService @Autowired constructor(
             }
         }
         val uuid = artifactRepo.startAppend(context)
-        var startUrl: String
+        var path: String
         with(context) {
-            startUrl = "$projectId/$repoName/$artifactName/blobs/uploads/$uuid"
+            path = "$projectId/$repoName/$artifactName/blobs/uploads/$uuid"
         }
 
-        val location = ResponseUtil.getDockerURI(startUrl, httpHeaders)
+        val location = ResponseUtil.getDockerURI(path, httpHeaders, artifactRepo.enableHttp)
+        logger.info("upload location [$location]")
         return ResponseEntity.status(HttpStatus.ACCEPTED).apply {
             header(DOCKER_HEADER_API_VERSION, DOCKER_API_VERSION)
         }.apply {
@@ -444,7 +444,7 @@ class DockerV2LocalRepoService @Autowired constructor(
             logger.info("patch upload blob [$context, $uuid]")
             val appendId = artifactRepo.writeAppend(context, uuid, file)
             val url = "$projectId/$repoName/$artifactName/blobs/uploads/$uuid"
-            val location = ResponseUtil.getDockerURI(url, httpHeaders)
+            val location = ResponseUtil.getDockerURI(url, httpHeaders, artifactRepo.enableHttp)
             return ResponseEntity.status(HttpStatus.ACCEPTED).apply {
                 header(CONTENT_LENGTH, DOCKER_LENGTH_EMPTY)
             }.apply {
@@ -478,7 +478,7 @@ class DockerV2LocalRepoService @Autowired constructor(
                 DOCKER_CREATE_DATE to versionDetail.createdDate,
                 DOCKER_CREATE_BY to versionDetail.createdBy,
                 DOCKER_VERSION to tag,
-                DOCKER_VERSION_DOMAIN to domain,
+                DOCKER_VERSION_DOMAIN to artifactRepo.domain,
                 LAST_MODIFIED_BY to nodeDetail.lastModifiedBy,
                 LAST_MODIFIED_DATE to nodeDetail.lastModifiedDate,
                 DOWNLOAD_COUNT to versionDetail.downloads,
@@ -564,7 +564,8 @@ class DockerV2LocalRepoService @Autowired constructor(
             logger.warn("error upload blob [$blobPath]")
             return DockerV2Errors.blobUploadInvalid(context.artifactName)
         }
-        val location = ResponseUtil.getDockerURI("${context.artifactName}$BLOB_PATTERN/$digest", httpHeaders)
+        val path = "${context.artifactName}$BLOB_PATTERN/$digest"
+        val location = ResponseUtil.getDockerURI(path, httpHeaders, artifactRepo.enableHttp)
         return ResponseEntity.created(location).apply {
             header(DOCKER_HEADER_API_VERSION, DOCKER_API_VERSION)
         }.apply {
@@ -583,7 +584,7 @@ class DockerV2LocalRepoService @Autowired constructor(
         with(context) {
             url = "$projectId/$repoName/$artifactName$BLOB_PATTERN/$digest"
         }
-        val location = ResponseUtil.getDockerURI(url, httpHeaders)
+        val location = ResponseUtil.getDockerURI(url, httpHeaders, artifactRepo.enableHttp)
         return ResponseEntity.created(location).apply {
             header(DOCKER_HEADER_API_VERSION, DOCKER_API_VERSION)
         }.apply {

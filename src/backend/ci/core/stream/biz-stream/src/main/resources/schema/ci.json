@@ -1083,7 +1083,7 @@
                 "type" : "string"
               }
             },
-            "resource-exclusive-declaration" : {
+            "mutex" : {
               "$ref" : "#/definitions/resourceExclusiveDeclaration"
             }
           }
@@ -1461,7 +1461,7 @@
             "if-modify" : {
               "$ref" : "#/definitions/ifModify"
             },
-            "resource-exclusive-declaration" : {
+            "mutex" : {
               "$ref" : "#/definitions/resourceExclusiveDeclaration"
             }
           }

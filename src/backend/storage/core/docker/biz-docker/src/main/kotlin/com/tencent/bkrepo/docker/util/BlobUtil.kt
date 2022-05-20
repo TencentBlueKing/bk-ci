@@ -60,22 +60,6 @@ object BlobUtil {
         return IMAGES_DIR + imageId.substring(0, 2) + PATH_DELIMITER + imageId
     }
 
-    fun imageBinaryPath(imageId: String): String {
-        return imagePath(imageId) + PATH_DELIMITER + LAYER_FILENAME
-    }
-
-    fun imageJsonPath(imageId: String): String {
-        return imagePath(imageId) + PATH_DELIMITER + JSON_FILENAME
-    }
-
-    fun tagJsonPath(namespace: String, repoName: String, tagName: String): String {
-        return repositoryPath(namespace, repoName) + PATH_DELIMITER + tagName + PATH_DELIMITER + TAG_FILENAME
-    }
-
-    fun tagJsonPath(repository: String, tagName: String): String {
-        return repositoryPath(repository) + PATH_DELIMITER + tagName + PATH_DELIMITER + TAG_FILENAME
-    }
-
     // get blob by file name cross repo
     fun getBlobByName(repo: DockerArtifactRepo, context: RequestContext, fileName: String): DockerArtifact? {
         val result = repo.getArtifactListByName(context.projectId, context.repoName, fileName)
@@ -124,17 +108,5 @@ object BlobUtil {
 
     private fun sha256FromFileName(fileName: String): String {
         return fileName.replace(SHA256_PREFIX, EMPTY)
-    }
-
-    private fun repositoryPath(namespace: String, repoName: String): String {
-        return "$REPOSITORIES_DIR/" + repositoryName(namespace, repoName)
-    }
-
-    private fun repositoryName(namespace: String, repoName: String): String {
-        return "$namespace/$repoName"
-    }
-
-    private fun repositoryPath(repository: String): String {
-        return "$REPOSITORIES_DIR/$repository"
     }
 }

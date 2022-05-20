@@ -1,0 +1,34 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: bk-repo
+spec:
+  endpoints:
+    - basicAuth:
+        password:
+          name: bkrepo-basic-auth
+          key: password
+        username:
+          name: bkrepo-basic-auth
+          key: user
+      interval: 30s # 采集周期
+      path: /actuator/prometheus # 指标接口路径
+      port: http # service的端口名，必须使用端口名，不能使用数字
+  namespaceSelector:
+    any: true
+  selector: # 过滤出需要采集的service
+    matchLabels: {{- include "common.labels.standard" . | nindent 6 }}
+      {{ include "bkrepo.labelValues.scope" . }}: {{ include "bkrepo.labelValues.scope.backend" . }}
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bkrepo-basic-auth
+data:
+  password: {{ .Values.common.password | b64enc }}
+  user: {{ .Values.common.username | b64enc }}
+type: Opaque
+
+{{- end }}

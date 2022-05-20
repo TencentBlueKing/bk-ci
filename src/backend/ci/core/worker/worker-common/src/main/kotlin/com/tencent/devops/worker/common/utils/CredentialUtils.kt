@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.worker.common.api.ApiFactory
@@ -86,6 +87,18 @@ object CredentialUtils {
             throw ignored
         }
     }
+
+    fun String.parseCredentialValue(
+        context: Map<String, String>? = null,
+        acrossProjectId: String? = null
+    ) = ReplacementUtils.replace(this, object : ReplacementUtils.KeyReplacement {
+        override fun getReplacement(key: String): String? {
+            // 支持嵌套的二次替换
+            context?.get(key)?.let { return it }
+            // 如果不是凭据上下文则直接返回原value值
+            return getCredentialContextValue(key, acrossProjectId)
+        }
+    }, context)
 
     private fun requestCredential(
         credentialId: String,

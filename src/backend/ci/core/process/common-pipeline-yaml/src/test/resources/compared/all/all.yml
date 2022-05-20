@@ -24,7 +24,7 @@ stages:
   jobs:
   - id: "job_1"
     name: null
-    resource-exclusive-declaration: null
+    mutex: null
     runs-on:
       self-hosted: false
       pool-name: "docker"

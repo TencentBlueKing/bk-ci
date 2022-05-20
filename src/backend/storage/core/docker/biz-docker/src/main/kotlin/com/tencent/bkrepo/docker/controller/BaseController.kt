@@ -41,13 +41,14 @@ import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestAttribute
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class BaseController {
 
     @GetMapping(DOCKER_API_PREFIX)
-    fun ping(userId: String): DockerResponse {
+    fun ping(@RequestAttribute userId: String): DockerResponse {
         if (userId == ANONYMOUS_USER) {
             throw AuthenticationException()
         }
