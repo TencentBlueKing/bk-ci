@@ -36,7 +36,7 @@ data class ShardingRoutingRule(
     @ApiModelProperty("模块标识")
     val moduleCode: SystemModuleEnum,
     @ApiModelProperty("数据源名称")
-    val dataSourceName: String = "",
+    val dataSourceName: String,
     @ApiModelProperty("数据库表名称")
     val tableName: String? = null,
     @ApiModelProperty("规则类型")
