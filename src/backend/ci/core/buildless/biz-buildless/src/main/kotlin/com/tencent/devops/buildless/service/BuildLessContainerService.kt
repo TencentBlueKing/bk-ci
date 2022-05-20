@@ -117,13 +117,6 @@ class BuildLessContainerService(
             Bind(linkPath, Volume(linkPath))
         )
 
-        // 设置默认灰度项目
-        val defaultProject = if (gray.isGray()) {
-            "grayproject"
-        } else {
-            ""
-        }
-
         try {
             val container = httpDockerCli.createContainerCmd(buildLessConfig.containerPoolBaseImage)
                 .withName(containerName)
@@ -133,7 +126,13 @@ class BuildLessContainerService(
                     listOf(
                         "$ENV_KEY_GATEWAY=${buildLessConfig.gateway}",
                         "TERM=xterm-256color",
-                        "$ENV_KEY_PROJECT_ID=$defaultProject",
+                        "$ENV_KEY_PROJECT_ID=${
+                            if (gray.isGray()) {
+                                "grayproject"
+                            } else {
+                                ""
+                            }
+                        }",
                         "$ENV_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
                         "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
                         "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
