@@ -156,8 +156,7 @@ open class MarketAtomTask : ITask() {
         cleanOutput(atomTmpSpace)
 
         // 将Job传入的流水线变量先进行凭据替换
-        // 插件接收的流水线参数 = Job级别参数 + Task调度时参数 + 本插件上下文 + 环境参数 + ci.workspace上下文
-        // 原因：WORKSPACE区分度太低，插件input替换变量时不能引入，只新增上下文
+        // 插件接收的流水线参数 = Job级别参数 + Task调度时参数 + 本插件上下文 + 编译机环境参数
         val acrossInfo by lazy { TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId) }
         var variables = buildVariables.variables.map {
             it.key to it.value.parseCredentialValue(
@@ -166,7 +165,7 @@ open class MarketAtomTask : ITask() {
             )
         }.toMap()
             .plus(buildTask.buildVariable ?: emptyMap())
-            .plus(getStepContextMap(buildTask, buildVariables, workspacePath))
+            .plus(getContainerVariables(buildTask, buildVariables, workspacePath))
 
         // 解析输入输出字段模板
         val props = JsonUtil.toMutableMap(atomData.props!!)
@@ -215,10 +214,9 @@ open class MarketAtomTask : ITask() {
         writeSdkEnv(atomTmpSpace, buildTask, buildVariables)
         writeParamEnv(atomCode, atomTmpSpace, workspace, buildTask, buildVariables)
 
-        // 环境变量 = 所有插件变量 + Worker端执行插件依赖的变量 + WORKSPACE变量
+        // 环境变量 = 所有插件变量 + Worker端执行插件依赖的预置变量
         val runtimeVariables = variables.plus(
             mapOf(
-                WORKSPACE_ENV to workspacePath,
                 DIR_ENV to atomTmpSpace.absolutePath,
                 INPUT_ENV to inputFile,
                 OUTPUT_ENV to outputFile,
@@ -946,7 +944,7 @@ open class MarketAtomTask : ITask() {
 
     private fun getJavaFile() = File(System.getProperty("java.home"), "/bin/java")
 
-    private fun getStepContextMap(
+    private fun getContainerVariables(
         buildTask: BuildTask,
         buildVariables: BuildVariables,
         workspacePath: String
@@ -957,10 +955,15 @@ open class MarketAtomTask : ITask() {
             context["step.status"] = BuildStatus.RUNNING.name
             context["steps.$stepId.status"] = BuildStatus.RUNNING.name
         }
+        // 将token加入上下文
+        buildVariables.variables[CI_TOKEN_CONTEXT]?.let { context[CI_TOKEN_CONTEXT] = it }
+
+        // 如果为有编译环境则追加WORKSPACE，无编译环境不添加
         if (buildTask.containerType == VMBuildContainer.classType) {
             // 只有构建环境下运行的插件才有workspace变量
             context.putAll(
                 mapOf(
+                    WORKSPACE_ENV to workspacePath,
                     WORKSPACE_CONTEXT to workspacePath,
                     CI_TOKEN_CONTEXT to (buildVariables.variables[CI_TOKEN_CONTEXT] ?: ""),
                     JOB_OS_CONTEXT to AgentEnv.getOS().name
