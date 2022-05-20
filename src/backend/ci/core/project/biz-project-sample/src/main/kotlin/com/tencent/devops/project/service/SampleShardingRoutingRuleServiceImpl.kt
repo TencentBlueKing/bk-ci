@@ -38,12 +38,12 @@ import org.springframework.stereotype.Service
 @Service
 class SampleShardingRoutingRuleServiceImpl(
     dslContext: DSLContext,
-    shardingRoutingRuleDao: ShardingRoutingRuleDao,
-    redisOperation: RedisOperation
+    redisOperation: RedisOperation,
+    shardingRoutingRuleDao: ShardingRoutingRuleDao
 ) : AbsShardingRoutingRuleServiceImpl(
     dslContext,
-    shardingRoutingRuleDao,
-    redisOperation
+    redisOperation,
+    shardingRoutingRuleDao
 ) {
 
     /**
