@@ -42,9 +42,14 @@ import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
+import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
+import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
+import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.job.Container
@@ -103,6 +108,7 @@ object TXStreamDispatchUtils {
         job: Job,
         projectCode: String,
         defaultImage: String,
+        bizType: DispatchBizType,
         resources: Resources? = null,
         context: Map<String, String>? = null,
         containsMatrix: Boolean? = false,
@@ -133,73 +139,144 @@ object TXStreamDispatchUtils {
         }
 
         // 公共docker构建机
-        if (poolName == "docker") {
-            var containerPool = Pool(
-                container = defaultImage,
-                credential = Credential(
-                    user = "",
-                    password = ""
-                ),
-                macOS = null,
-                third = null,
-                env = job.env,
-                buildType = BuildType.DOCKER_VM
-            )
-
-            if (job.runsOn.container != null) {
-                try {
-                    val container = YamlUtil.getObjectMapper().readValue(
-                        JsonUtil.toJson(job.runsOn.container!!),
-                        Container::class.java
-                    )
-
-                    containerPool = Pool(
-                        container = EnvUtils.parseEnv(container.image, context ?: mapOf()),
-                        credential = Credential(
-                            user = EnvUtils.parseEnv(container.credentials?.username, context ?: mapOf()),
-                            password = EnvUtils.parseEnv(container.credentials?.password, context ?: mapOf())
-                        ),
-                        macOS = null,
-                        third = null,
-                        env = job.env,
-                        buildType = BuildType.DOCKER_VM
-                    )
-                } catch (e: Exception) {
-                    val container = YamlUtil.getObjectMapper().readValue(
-                        JsonUtil.toJson(job.runsOn.container!!),
-                        Container2::class.java
-                    )
-
-                    var user = ""
-                    var password = ""
-                    if (!container.credentials.isNullOrEmpty()) {
-                        val ticketsMap = getTicket(client, projectCode, container, context, buildTemplateAcrossInfo)
-                        user = ticketsMap["v1"] as String
-                        password = ticketsMap["v2"] as String
-                    }
-
-                    containerPool = Pool(
-                        container = EnvUtils.parseEnv(container.image, context ?: mapOf()),
-                        credential = Credential(
-                            user = user,
-                            password = password
-                        ),
-                        macOS = null,
-                        third = null,
-                        env = job.env,
-                        buildType = BuildType.DOCKER_VM
+        if (poolName == "docker" && bizType != DispatchBizType.PRECI) {
+            // 在构建机类型有差异的地方根据业务场景区分
+            when (bizType) {
+                DispatchBizType.RDS -> {
+                    return PublicDevCloudDispathcType(
+                        image = defaultImage,
+                        imageType = ImageType.THIRD,
+                        performanceConfigId = "0"
                     )
                 }
+                else -> {}
             }
+
+            val containerPool =
+                makeContainerPool(poolName, client, job, projectCode, defaultImage, context, buildTemplateAcrossInfo)
 
             return GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
         }
 
+        if (bizType == DispatchBizType.PRECI) {
+            if (poolName == JobRunsOnType.LOCAL.type) {
+                return ThirdPartyAgentIDDispatchType(
+                    displayName = "",
+                    workspace = "",
+                    agentType = AgentType.ID
+                )
+            }
+
+            val containerPool =
+                makeContainerPool(poolName, client, job, projectCode, defaultImage, context, buildTemplateAcrossInfo)
+
+            when (poolName) {
+                JobRunsOnType.DEV_CLOUD.type -> {
+                    return PublicDevCloudDispathcType(
+                        image = containerPool.container,
+                        performanceConfigId = "0",
+                        imageType = ImageType.THIRD,
+                        credentialId = containerPool.credential?.credentialId
+                    )
+                }
+                JobRunsOnType.DOCKER.type -> {
+                    return DockerDispatchType(
+                        dockerBuildVersion = containerPool.container,
+                        imageType = ImageType.THIRD,
+                        credentialId = containerPool.credential?.credentialId
+                    )
+                }
+                else -> {}
+            }
+        }
+
         if (containsMatrix == true) {
-            return GitCIDispatchType(defaultImage)
+            return when (bizType) {
+                DispatchBizType.RDS -> PublicDevCloudDispathcType(
+                    image = defaultImage,
+                    imageType = ImageType.THIRD,
+                    performanceConfigId = "0"
+                )
+                else -> GitCIDispatchType(defaultImage)
+            }
         } else {
             throw CustomException(Response.Status.NOT_FOUND, "公共构建资源池不存在，请检查yml配置.")
         }
+    }
+
+    private fun makeContainerPool(
+        poolName: String,
+        client: Client,
+        job: Job,
+        projectCode: String,
+        defaultImage: String,
+        context: Map<String, String>? = null,
+        buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
+    ): Pool {
+        var buildType = when (poolName) {
+            JobRunsOnType.DEV_CLOUD.type -> BuildType.DEVCLOUD
+            else -> BuildType.DOCKER_VM
+        }
+
+        var containerPool = Pool(
+            container = defaultImage,
+            credential = Credential(
+                user = "",
+                password = ""
+            ),
+            macOS = null,
+            third = null,
+            env = job.env,
+            buildType = buildType
+        )
+
+        if (job.runsOn.container != null) {
+            try {
+                val container = YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(job.runsOn.container!!),
+                    Container::class.java
+                )
+
+                containerPool = Pool(
+                    container = EnvUtils.parseEnv(container.image, context ?: mapOf()),
+                    credential = Credential(
+                        user = EnvUtils.parseEnv(container.credentials?.username, context ?: mapOf()),
+                        password = EnvUtils.parseEnv(container.credentials?.password, context ?: mapOf())
+                    ),
+                    macOS = null,
+                    third = null,
+                    env = job.env,
+                    buildType = buildType
+                )
+            } catch (e: Exception) {
+                val container = YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(job.runsOn.container!!),
+                    Container2::class.java
+                )
+
+                var user = ""
+                var password = ""
+                if (!container.credentials.isNullOrEmpty()) {
+                    val ticketsMap = getTicket(client, projectCode, container, context, buildTemplateAcrossInfo)
+                    user = ticketsMap["v1"] as String
+                    password = ticketsMap["v2"] as String
+                }
+
+                containerPool = Pool(
+                    container = EnvUtils.parseEnv(container.image, context ?: mapOf()),
+                    credential = Credential(
+                        user = user,
+                        password = password
+                    ),
+                    macOS = null,
+                    third = null,
+                    env = job.env,
+                    buildType = buildType
+                )
+            }
+        }
+
+        return containerPool
     }
 
     private fun getTicket(

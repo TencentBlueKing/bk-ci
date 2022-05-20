@@ -5,12 +5,15 @@ import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.modelCreate.inner.PreCIInfo
 import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
+import com.tencent.devops.process.yaml.modelCreate.pojo.PreCIDispatchInfo
+import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v2.models.step.Step
@@ -19,9 +22,9 @@ import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.Response
 
-class PreCIInnerModelCreatorImpl(private val preCIInfo: PreCIInfo) : TXInnerModelCreator {
+class PreCITXInnerModelCreatorImpl(private val preCIInfo: PreCIInfo) : TXInnerModelCreator {
     companion object {
-        private val logger = LoggerFactory.getLogger(PreCIInnerModelCreatorImpl::class.java)
+        private val logger = LoggerFactory.getLogger(PreCITXInnerModelCreatorImpl::class.java)
         private const val REMOTE_SYNC_CODE_PLUGIN_ATOM_CODE = "syncCodeToRemote"
         private const val LOCAL_SYNC_CODE_PLUGIN_ATOM_CODE = "syncLocalCode"
     }
@@ -56,6 +59,22 @@ class PreCIInnerModelCreatorImpl(private val preCIInfo: PreCIInfo) : TXInnerMode
         params: String
     ): ServiceJobDevCloudInput? {
         throw CustomException(Response.Status.BAD_REQUEST, "not support")
+    }
+
+    override fun getDispatchInfo(
+        name: String,
+        job: Job,
+        projectCode: String,
+        defaultImage: String,
+        resources: Resources?
+    ): DispatchInfo {
+        return PreCIDispatchInfo(
+            name = "dispatchInfo_${job.id}",
+            job = job,
+            projectCode = projectCode,
+            defaultImage = defaultImage,
+            resources = resources
+        )
     }
 
     override fun preInstallMarketAtom(client: Client, event: ModelCreateEvent) {
