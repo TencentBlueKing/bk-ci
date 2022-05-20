@@ -43,7 +43,7 @@ import com.tencent.devops.prebuild.service.CommonPreBuildService
 import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidator
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.process.yaml.modelCreate.TXModelCreate
+import com.tencent.devops.process.yaml.modelCreate.ModelCreate
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.modelCreate.inner.PipelineInfo
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
@@ -55,6 +55,7 @@ import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
@@ -64,7 +65,8 @@ class PreBuildV2Service @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val prebuildProjectDao: PrebuildProjectDao,
-    private val modelCreate: TXModelCreate
+    @Qualifier("TXModelCreate")
+    private val modelCreate: ModelCreate
 ) : CommonPreBuildService(client, dslContext, prebuildProjectDao) {
     companion object {
         private val logger = LoggerFactory.getLogger(PreBuildV2Service::class.java)
