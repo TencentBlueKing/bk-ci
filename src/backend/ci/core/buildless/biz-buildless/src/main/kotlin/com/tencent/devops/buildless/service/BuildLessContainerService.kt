@@ -32,7 +32,6 @@ import com.github.dockerjava.api.exception.NotModifiedException
 import com.github.dockerjava.api.model.AccessMode
 import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.Binds
-import com.github.dockerjava.api.model.Container
 import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.core.DefaultDockerClientConfig
