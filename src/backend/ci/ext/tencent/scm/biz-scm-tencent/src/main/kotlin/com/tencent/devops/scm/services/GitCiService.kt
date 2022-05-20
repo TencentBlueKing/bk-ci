@@ -216,7 +216,7 @@ class GitCiService {
                 .url(url)
                 .get()
                 .build()
-            OkhttpUtils.doHttp(request).use { response ->
+            gitCodeOkHttpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
                     throw CustomException(
                         status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
