@@ -156,7 +156,8 @@ open class MarketAtomTask : ITask() {
         cleanOutput(atomTmpSpace)
 
         // 将Job传入的流水线变量先进行凭据替换
-        // 插件接收的流水线参数 = Job级别参数 + Task调度时参数 + 本插件上下文 + 环境参数
+        // 插件接收的流水线参数 = Job级别参数 + Task调度时参数 + 本插件上下文 + 环境参数 + ci.workspace上下文
+        // 原因：WORKSPACE区分度太低，插件input替换变量时不能引入，只新增上下文
         val acrossInfo by lazy { TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId) }
         var variables = buildVariables.variables.map {
             it.key to it.value.parseCredentialValue(
@@ -165,7 +166,6 @@ open class MarketAtomTask : ITask() {
             )
         }.toMap()
             .plus(buildTask.buildVariable ?: emptyMap())
-            .plus(WORKSPACE_ENV to workspacePath)
             .plus(getStepContextMap(buildTask, buildVariables, workspacePath))
 
         // 解析输入输出字段模板
@@ -215,9 +215,10 @@ open class MarketAtomTask : ITask() {
         writeSdkEnv(atomTmpSpace, buildTask, buildVariables)
         writeParamEnv(atomCode, atomTmpSpace, workspace, buildTask, buildVariables)
 
-        // 环境变量 = 所有插件变量 + Worker端执行插件依赖的变量
+        // 环境变量 = 所有插件变量 + Worker端执行插件依赖的变量 + WORKSPACE变量
         val runtimeVariables = variables.plus(
             mapOf(
+                WORKSPACE_ENV to workspacePath,
                 DIR_ENV to atomTmpSpace.absolutePath,
                 INPUT_ENV to inputFile,
                 OUTPUT_ENV to outputFile,
@@ -722,7 +723,8 @@ open class MarketAtomTask : ITask() {
                         atomCode,
                         buildTask.taskId ?: "",
                         buildTask.elementName ?: "",
-                        qualityMap)
+                        qualityMap
+                    )
                 }
             } else {
                 if (atomResult.qualityData != null && atomResult.qualityData.isNotEmpty()) {
