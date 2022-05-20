@@ -131,7 +131,6 @@ class PreBuildV2Service @Autowired constructor(
             pipelineId = createEmptyPipeline(userId, pipelineName)
         }
 
-
         val preCIInfo = PreCIInfo(
             agentId = agentInfo.agentId,
             workspace = startUpReq.workspace,
