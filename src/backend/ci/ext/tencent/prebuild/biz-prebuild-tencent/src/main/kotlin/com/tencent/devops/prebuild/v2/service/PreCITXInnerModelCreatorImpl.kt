@@ -161,15 +161,15 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
         val whitePathList = mutableListOf<String>()
 
         // idea右键扫描
-        if (!(info.extraParam!!.codeccScanPath.isNullOrBlank())) {
+        if (!(info.extraParam?.codeccScanPath.isNullOrBlank())) {
             whitePathList.add(info.extraParam!!.codeccScanPath!!)
         }
 
         // push/commit前扫描的文件路径
-        if (info.extraParam!!.incrementFileList != null &&
-                info.extraParam!!.incrementFileList!!.isNotEmpty()
+        if (info.extraParam?.incrementFileList != null &&
+                info.extraParam?.incrementFileList!!.isNotEmpty()
         ) {
-            whitePathList.addAll(info.extraParam!!.incrementFileList!!)
+            whitePathList.addAll(info.extraParam?.incrementFileList!!)
         }
 
         // 若不是容器中执行的，则无法进行本地路径替换
