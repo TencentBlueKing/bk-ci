@@ -49,8 +49,8 @@ class ShardingRoutingRuleDao {
                 CLUSTER_NAME,
                 MODULE_CODE,
                 DATA_SOURCE_NAME,
-                ROUTING_NAME,
                 TABLE_NAME,
+                ROUTING_NAME,
                 ROUTING_RULE,
                 CREATOR,
                 MODIFIER

@@ -85,7 +85,7 @@ class TxOpShardingRuleService @Autowired constructor(
                         type = ShardingRuleTypeEnum.DB.name,
                         clusterName = clusterName,
                         moduleCode = SystemModuleEnum.PROCESS.name,
-                        dataSourceName = shardingRoutingRuleRecord.dataSourceName
+                        dataSourceName = "ds_0"
                     )
                 }
                 offset += DEFAULT_PAGE_SIZE
