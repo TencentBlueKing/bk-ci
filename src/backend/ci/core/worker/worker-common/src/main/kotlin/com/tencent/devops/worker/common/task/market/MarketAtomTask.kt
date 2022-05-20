@@ -965,7 +965,6 @@ open class MarketAtomTask : ITask() {
                 mapOf(
                     WORKSPACE_ENV to workspacePath,
                     WORKSPACE_CONTEXT to workspacePath,
-                    CI_TOKEN_CONTEXT to (buildVariables.variables[CI_TOKEN_CONTEXT] ?: ""),
                     JOB_OS_CONTEXT to AgentEnv.getOS().name
                 )
             )
