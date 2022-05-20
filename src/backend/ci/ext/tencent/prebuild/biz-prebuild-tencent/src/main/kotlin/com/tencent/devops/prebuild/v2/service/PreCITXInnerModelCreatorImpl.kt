@@ -26,7 +26,7 @@ import javax.ws.rs.core.Response
 
 @Primary
 @Component
-class PreCITXInnerModelCreatorImpl(private val preCIInfo: PreCIInfo) : TXInnerModelCreator {
+class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
     companion object {
         private val logger = LoggerFactory.getLogger(PreCITXInnerModelCreatorImpl::class.java)
         private const val REMOTE_SYNC_CODE_PLUGIN_ATOM_CODE = "syncCodeToRemote"
@@ -92,6 +92,7 @@ class PreCITXInnerModelCreatorImpl(private val preCIInfo: PreCIInfo) : TXInnerMo
     ): MarketBuildAtomElement? {
         val data = mutableMapOf<String, Any>()
         val atomCode = step.uses!!.split('@')[0]
+        val preCIInfo = event.preCIInfo!!
 
         // 若是"代码同步"插件标识
         if (atomCode.equals(LOCAL_SYNC_CODE_PLUGIN_ATOM_CODE, ignoreCase = true)) {
@@ -101,7 +102,7 @@ class PreCITXInnerModelCreatorImpl(private val preCIInfo: PreCIInfo) : TXInnerMo
             }
 
             // 安装"代码同步"插件
-            installMarketAtom(REMOTE_SYNC_CODE_PLUGIN_ATOM_CODE)
+            installMarketAtom(REMOTE_SYNC_CODE_PLUGIN_ATOM_CODE, preCIInfo)
             val input = step.with?.toMutableMap() ?: mutableMapOf()
             input["agentId"] = input["agentId"] ?: preCIInfo.agentId
             input["workspace"] = input["workspace"] ?: preCIInfo.workspace
@@ -119,7 +120,7 @@ class PreCITXInnerModelCreatorImpl(private val preCIInfo: PreCIInfo) : TXInnerMo
             )
         } else {
             data["input"] = step.with ?: Any()
-            setWhitePath(atomCode, data, job)
+            setWhitePath(atomCode, data, job, preCIInfo)
 
             return MarketBuildAtomElement(
                 name = step.name ?: step.uses!!.split('@')[0],
@@ -135,22 +136,29 @@ class PreCITXInnerModelCreatorImpl(private val preCIInfo: PreCIInfo) : TXInnerMo
     /**
      * 设置白名单
      */
-    private fun setWhitePath(atomCode: String, data: MutableMap<String, Any>, job: Job) {
-        if (atomCode == CodeCCScanInContainerTask.atomCode && preCIInfo?.extraParam != null
+    private fun setWhitePath(
+        atomCode: String,
+        data: MutableMap<String, Any>,
+        job: Job,
+        preCIInfo: PreCIInfo
+    ) {
+        if (atomCode == CodeCCScanInContainerTask.atomCode && preCIInfo.extraParam != null
         ) {
             val input = (data["input"] as Map<*, *>).toMutableMap()
             val isRunOnDocker =
                 JobRunsOnType.DEV_CLOUD.type == job.runsOn.poolName || JobRunsOnType.DOCKER.type == job.runsOn.poolName
-            input["path"] = getWhitePathList(isRunOnDocker)
+            input["path"] = getWhitePathList(isRunOnDocker, preCIInfo)
         }
     }
 
     /**
      * 获取白名单列表
      */
-    private fun getWhitePathList(isRunOnDocker: Boolean = false): List<String> {
+    private fun getWhitePathList(
+        isRunOnDocker: Boolean = false,
+        info: PreCIInfo
+    ): List<String> {
         val whitePathList = mutableListOf<String>()
-        val info = preCIInfo
 
         // idea右键扫描
         if (!(info.extraParam!!.codeccScanPath.isNullOrBlank())) {
@@ -189,7 +197,10 @@ class PreCITXInnerModelCreatorImpl(private val preCIInfo: PreCIInfo) : TXInnerMo
     /**
      * 安装插件
      */
-    private fun installMarketAtom(atomCode: String) {
+    private fun installMarketAtom(
+        atomCode: String,
+        preCIInfo: PreCIInfo
+    ) {
         val projectCodes = ArrayList<String>().apply { add(preCIInfo.projectId) }
 
         try {

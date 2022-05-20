@@ -47,7 +47,8 @@ data class ModelCreateEvent(
     val gitData: GitData? = null,
     val streamData: StreamData? = null,
     val changeSet: Set<String>? = null,
-    val jobTemplateAcrossInfo: Map<String, BuildTemplateAcrossInfo>? = null
+    val jobTemplateAcrossInfo: Map<String, BuildTemplateAcrossInfo>? = null,
+    val preCIInfo: PreCIInfo? = null
 )
 
 /**
