@@ -20,8 +20,12 @@ import com.tencent.devops.process.yaml.v2.models.step.Step
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Component
 import javax.ws.rs.core.Response
 
+@Primary
+@Component
 class PreCITXInnerModelCreatorImpl(private val preCIInfo: PreCIInfo) : TXInnerModelCreator {
     companion object {
         private val logger = LoggerFactory.getLogger(PreCITXInnerModelCreatorImpl::class.java)
