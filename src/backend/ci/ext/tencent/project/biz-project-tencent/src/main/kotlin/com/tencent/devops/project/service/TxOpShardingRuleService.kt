@@ -36,6 +36,7 @@ import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
@@ -52,6 +53,15 @@ class TxOpShardingRuleService @Autowired constructor(
         private const val DEFAULT_PAGE_SIZE = 100
     }
 
+    @Value("\${tag.prod:prod}")
+    private val prodTag: String = "prod"
+
+    @Value("\${tag.auto:auto}")
+    private val autoTag: String = "auto"
+
+    @Value("\${tag.stream:stream}")
+    private val streamTag: String = "stream"
+
     fun syncShardingRoutingRuleInfo(): Boolean {
         Executors.newFixedThreadPool(1).submit {
             logger.info("begin syncShardingRoutingRuleInfo!!")
@@ -67,16 +77,17 @@ class TxOpShardingRuleService @Autowired constructor(
                     val routingName = shardingRoutingRuleRecord.routingName
                     val projectRecord = projectDao.getByEnglishName(dslContext, routingName) ?: return@forEach
                     val channelCode = ProjectChannelCode.valueOf(projectRecord.channel)
+                    // 根据channelCode获取集群名称
                     val clusterName = if (channelCode == ProjectChannelCode.BS ||
                         channelCode == ProjectChannelCode.PREBUILD) {
-                        "prod"
+                        prodTag
                     } else if (channelCode == ProjectChannelCode.CODECC || channelCode == ProjectChannelCode.AUTO) {
-                        "auto"
+                        autoTag
                     } else if (channelCode == ProjectChannelCode.GITCI) {
-                        "stream"
+                        streamTag
                     } else {
                         // 其他渠道的项目的接口请求默认路由到正式集群
-                        "prod"
+                        prodTag
                     }
                     // 同步历史规则集群、模块等信息
                     txShardingRoutingRuleDao.updateShardingRoutingRule(
@@ -85,7 +96,7 @@ class TxOpShardingRuleService @Autowired constructor(
                         type = ShardingRuleTypeEnum.DB.name,
                         clusterName = clusterName,
                         moduleCode = SystemModuleEnum.PROCESS.name,
-                        dataSourceName = "ds_0"
+                        dataSourceName = shardingRoutingRuleRecord.routingRule
                     )
                 }
                 offset += DEFAULT_PAGE_SIZE
