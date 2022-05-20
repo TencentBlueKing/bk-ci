@@ -327,10 +327,7 @@ class PipelineBuildTaskDao {
         }
     }
 
-    fun updateTaskInfo(
-        dslContext: DSLContext,
-        updateTaskInfo: UpdateTaskInfo
-    ) {
+    fun updateTaskInfo(dslContext: DSLContext, updateTaskInfo: UpdateTaskInfo) {
         with(T_PIPELINE_BUILD_TASK) {
             val projectId = updateTaskInfo.projectId
             val buildId = updateTaskInfo.buildId

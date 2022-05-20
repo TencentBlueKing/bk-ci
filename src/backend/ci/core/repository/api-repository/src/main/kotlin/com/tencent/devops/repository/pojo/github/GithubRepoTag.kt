@@ -25,15 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.repository.pojo.github
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线模型-构建任务失败时用于通知的信息")
-data class BuildTaskErrorMessage(
-    @ApiModelProperty("插件创建人", required = false)
-    var atomCreator: String?,
-    @ApiModelProperty("第三方服务助手信息", required = false)
-    var thirdPartyAssistant: String?
+/**
+ * github获取tag列表接口: /repos/{owner}/{repo}/tags
+ * {
+        "name": "v1.7.22-RC.2",
+        "zipball_url": "https://api.github.com/repos/Tencent/bk-ci/zipball/refs/tags/v1.7.22-RC.2",
+        "tarball_url": "https://api.github.com/repos/Tencent/bk-ci/tarball/refs/tags/v1.7.22-RC.2",
+        "commit": {
+        "sha": "c4a9464c710eae94c1538ede27e538c61643fe65",
+        "url": "https://api.github.com/repos/Tencent/bk-ci/commits/c4a9464c710eae94c1538ede27e538c61643fe65"
+        },
+        "node_id": "MDM6UmVmMTg5MTUzNDkxOnJlZnMvdGFncy92MS43LjIyLVJDLjI="
+    }
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+@ApiModel("仓库tag信息")
+data class GithubRepoTag(
+    @ApiModelProperty("名称")
+    val name: String,
+    @JsonProperty("zipball_url")
+    val zipballUrl: String,
+    @JsonProperty("tarball_url")
+    val tarballUrl: String,
+    val commit: GithubRepoCommit,
+    @JsonProperty("node_id")
+    val nodeId: String
 )

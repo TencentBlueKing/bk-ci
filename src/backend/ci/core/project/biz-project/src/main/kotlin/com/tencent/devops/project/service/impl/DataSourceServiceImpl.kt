@@ -117,14 +117,16 @@ class DataSourceServiceImpl @Autowired constructor(
         projectId: String,
         moduleCode: SystemModuleEnum,
         clusterName: String,
-        ruleType: ShardingRuleTypeEnum
+        ruleType: ShardingRuleTypeEnum,
+        tableName: String?
     ): DataBasePiecewiseInfo? {
         val routingRuleRecord = shardingRoutingRuleDao.get(
             dslContext = dslContext,
             clusterName = clusterName,
             moduleCode = moduleCode,
             type = ruleType,
-            routingName = projectId
+            routingName = projectId,
+            tableName = tableName
         )
         if (routingRuleRecord != null) {
             val dataSource = dataSourceDao.getDataBasePiecewiseById(

@@ -32,29 +32,25 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.pojo.constant.PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY
 import com.tencent.devops.process.pojo.constant.PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY
-import com.tencent.devops.project.dao.DataSourceDao
-import com.tencent.devops.project.service.ShardingRoutingRuleService
-import com.tencent.devops.project.service.TableShardingConfigService
+import com.tencent.devops.project.dao.ShardingRoutingRuleDao
+import com.tencent.devops.project.pojo.TableShardingConfig
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class TxProjectDataSourceAssignServiceImpl(
+class TxShardingRoutingRuleServiceImpl(
     dslContext: DSLContext,
-    dataSourceDao: DataSourceDao,
-    shardingRoutingRuleService: ShardingRoutingRuleService,
-    tableShardingConfigService: TableShardingConfigService,
-    private val redisOperation: RedisOperation
-) : AbsProjectDataSourceAssignServiceImpl(
+    shardingRoutingRuleDao: ShardingRoutingRuleDao,
+    redisOperation: RedisOperation
+) : AbsShardingRoutingRuleServiceImpl(
     dslContext,
-    dataSourceDao,
-    shardingRoutingRuleService,
-    tableShardingConfigService
+    shardingRoutingRuleDao,
+    redisOperation
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TxProjectDataSourceAssignServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(TxShardingRoutingRuleServiceImpl::class.java)
         private const val LOCK_KEY = "getValidDataSourceName"
     }
 
@@ -89,6 +85,20 @@ class TxProjectDataSourceAssignServiceImpl(
             // 释放锁
             lock.unlock()
         }
+    }
+
+    /**
+     * 获取可用数据库表名称
+     * @param tableShardingConfig 分表配置
+     * @return 可用数据库表名称
+     */
+    override fun getValidTableName(tableShardingConfig: TableShardingConfig): String {
+        // 从可用的数据库表中随机选择一个分配给该项目
+        val tableName = tableShardingConfig.tableName
+        val shardingNum = tableShardingConfig.shardingNum
+        val maxSizeIndex = shardingNum - 1
+        val randomIndex = (0..maxSizeIndex).random()
+        return "${tableName}_$randomIndex"
     }
 
     /**

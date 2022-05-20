@@ -29,6 +29,16 @@ export default {
         template: null,
         fetchingAtmoModal: false,
         fetchingContainer: false,
+        commendAtomCount: 0,
+        isAtomPageOver: false,
+        atomList: [],
+        requestAtomData: {
+            recommendFlag: true,
+            keyword: '',
+            page: 1,
+            pageSize: 50
+        },
+        fetchingAtomMoreLoading: false,
         fetchingAtomList: false,
         atomCodeList: [],
         fetchingAtmoVersion: false,

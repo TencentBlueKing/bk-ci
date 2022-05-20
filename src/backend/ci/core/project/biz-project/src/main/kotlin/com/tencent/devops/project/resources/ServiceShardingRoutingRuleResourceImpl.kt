@@ -28,23 +28,31 @@ package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
-import com.tencent.devops.project.service.ShardingRoutingRuleService
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
+import com.tencent.devops.project.service.ShardingRoutingRuleFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceShardingRoutingRuleResourceImpl @Autowired constructor(
-    private val shardingRoutingRuleService: ShardingRoutingRuleService
+    private val shardingRoutingRuleFacadeService: ShardingRoutingRuleFacadeService
 ) : ServiceShardingRoutingRuleResource {
 
     override fun getShardingRoutingRuleByName(
         routingName: String,
         moduleCode: SystemModuleEnum,
-        ruleType: ShardingRuleTypeEnum
+        ruleType: ShardingRuleTypeEnum,
+        tableName: String?
     ): Result<ShardingRoutingRule?> {
-        return Result(shardingRoutingRuleService.getShardingRoutingRuleByName(moduleCode, ruleType, routingName))
+        return Result(
+            shardingRoutingRuleFacadeService.getShardingRoutingRuleByName(
+                moduleCode = moduleCode,
+                ruleType = ruleType,
+                routingName = routingName,
+                tableName = tableName
+            )
+        )
     }
 }

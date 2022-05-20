@@ -65,7 +65,7 @@ import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.ProjectDataSourceAssignService
+import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.util.ProjectUtils
@@ -93,7 +93,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val projectDispatcher: ProjectDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
-    private val projectDataSourceAssignService: ProjectDataSourceAssignService
+    private val shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService
 ) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
@@ -214,9 +214,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     throw e
                 }
                 // 为项目分配数据源
-                projectDataSourceAssignService.assignShardingRoutingRule(
+                shardingRoutingRuleAssignService.assignShardingRoutingRule(
                     channelCode = projectChannel,
-                    projectId = projectCreateInfo.englishName,
+                    routingName = projectCreateInfo.englishName,
                     moduleCodes = listOf(SystemModuleEnum.PROCESS, SystemModuleEnum.METRICS)
                 )
                 if (projectInfo.secrecy) {

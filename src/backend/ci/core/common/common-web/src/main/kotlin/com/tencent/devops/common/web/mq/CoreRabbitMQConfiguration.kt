@@ -68,6 +68,8 @@ class CoreRabbitMQConfiguration {
     private var channelCacheSize: Int? = null
     @Value("\${spring.rabbitmq.listener.simple.prefetch:#{null}}")
     private val preFetchCount: Int? = null
+    @Value("\${spring.rabbitmq.core.channel-rpc-timeout:#{null}}")
+    private val channelRpcTimeout: Int? = null
 
     @Bean(name = [CORE_CONNECTION_FACTORY_NAME])
     @Primary
@@ -81,6 +83,9 @@ class CoreRabbitMQConfiguration {
         connectionFactory.setAddresses(addresses!!)
         if (channelCacheSize != null && channelCacheSize!! > 0) {
             connectionFactory.channelCacheSize = channelCacheSize!!
+        }
+        if (channelRpcTimeout != null && channelRpcTimeout > 0) {
+            connectionFactory.rabbitConnectionFactory.channelRpcTimeout = channelRpcTimeout
         }
         return connectionFactory
     }

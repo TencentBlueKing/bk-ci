@@ -46,7 +46,11 @@ class BkMetricsTableShardingAlgorithm : StandardShardingAlgorithm<String> {
         shardingValue: PreciseShardingValue<String>
     ): String {
         val routingName = shardingValue.value
-        val defaultTableName = availableTargetNames.filter { it.contains("_0") }[0]
+        val fistTableNameSuffix = "_0"
+        // 获取第一个分表的表名作为默认表名
+        val defaultTableName = availableTargetNames.filter { it.endsWith(fistTableNameSuffix) }[0]
+        // 获取逻辑表名
+        val logicTableName = defaultTableName.removeSuffix(fistTableNameSuffix)
         if (routingName.isNullOrBlank()) {
             // 如果分片键为空则路由到默认数据库表
             return defaultTableName
@@ -56,7 +60,8 @@ class BkMetricsTableShardingAlgorithm : StandardShardingAlgorithm<String> {
             clusterName = CommonUtils.getDbClusterName(),
             moduleCode = SystemModuleEnum.METRICS.name,
             ruleType = ShardingRuleTypeEnum.TABLE.name,
-            routingName = routingName
+            routingName = routingName,
+            tableName = logicTableName
         )
         // 从本地缓存获取路由规则
         var routingRule = BkShardingRoutingCacheUtil.getIfPresent(key)
@@ -67,7 +72,8 @@ class BkMetricsTableShardingAlgorithm : StandardShardingAlgorithm<String> {
                 .getShardingRoutingRuleByName(
                     routingName = routingName,
                     moduleCode = SystemModuleEnum.METRICS,
-                    ruleType = ShardingRuleTypeEnum.TABLE
+                    ruleType = ShardingRuleTypeEnum.TABLE,
+                    tableName = logicTableName
                 ).data
             if (ruleObj != null) {
                 routingRule = ruleObj.routingRule

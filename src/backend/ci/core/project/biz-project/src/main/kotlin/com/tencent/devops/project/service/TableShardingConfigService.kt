@@ -41,6 +41,12 @@ interface TableShardingConfigService {
 
     fun getTableShardingConfigById(id: String): TableShardingConfig?
 
+    fun getTableShardingConfigByName(
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        tableName: String
+    ): TableShardingConfig?
+
     fun listByModule(
         dslContext: DSLContext,
         clusterName: String,

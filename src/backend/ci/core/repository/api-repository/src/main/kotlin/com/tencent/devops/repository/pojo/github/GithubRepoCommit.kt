@@ -25,23 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.repository.pojo.github
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-interface ProjectDataSourceAssignService {
-
-    /**
-     * 为项目分配分片路由规则
-     * @param channelCode 渠道代码
-     * @param projectId 项目ID
-     * @param moduleCodes 模块代码列表
-     * @return 布尔值
-     */
-    fun assignShardingRoutingRule(
-        channelCode: ProjectChannelCode,
-        projectId: String,
-        moduleCodes: List<SystemModuleEnum>
-    ): Boolean
-}
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GithubRepoCommit(
+    val sha: String,
+    val url: String
+)

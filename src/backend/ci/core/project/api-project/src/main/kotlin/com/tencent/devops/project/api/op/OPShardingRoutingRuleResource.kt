@@ -110,7 +110,11 @@ interface OPShardingRoutingRuleResource {
         moduleCode: SystemModuleEnum,
         @ApiParam("规则类型", required = true)
         @QueryParam("ruleType")
-        ruleType: ShardingRuleTypeEnum
+        ruleType: ShardingRuleTypeEnum,
+        @ApiParam("数据库表名称", required = false)
+        @QueryParam("tableName")
+        @BkField(minLength = 1, maxLength = 128, required = false)
+        tableName: String? = null
     ): Result<ShardingRoutingRule?>
 
     @ApiOperation("根据ID删除分片规则信息")

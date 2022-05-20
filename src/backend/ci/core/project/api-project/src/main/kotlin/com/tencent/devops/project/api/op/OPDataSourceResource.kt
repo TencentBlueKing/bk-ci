@@ -127,6 +127,10 @@ interface OPDataSourceResource {
         clusterName: String,
         @ApiParam("规则类型", required = true)
         @QueryParam("ruleType")
-        ruleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.DB
+        ruleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.DB,
+        @ApiParam("数据库表名称", required = false)
+        @QueryParam("tableName")
+        @BkField(minLength = 1, maxLength = 128, required = false)
+        tableName: String? = null
     ): Result<DataBasePiecewiseInfo?>
 }
