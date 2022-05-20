@@ -701,7 +701,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
 
         // 删除代码库
-        val extServiceRecord = extFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
+        val extServiceRecord = extFeatureDao.getServiceByCode(dslContext, serviceCode)
         deleteExtServiceRepository(
             userId = userId,
             projectCode = initProjectCode,
