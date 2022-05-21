@@ -28,6 +28,8 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
+import com.tencent.devops.common.api.util.ShardingUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.pojo.constant.PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY
@@ -41,12 +43,12 @@ import org.springframework.stereotype.Service
 @Service
 class TxShardingRoutingRuleServiceImpl(
     dslContext: DSLContext,
-    shardingRoutingRuleDao: ShardingRoutingRuleDao,
-    redisOperation: RedisOperation
+    redisOperation: RedisOperation,
+    shardingRoutingRuleDao: ShardingRoutingRuleDao
 ) : AbsShardingRoutingRuleServiceImpl(
     dslContext,
-    shardingRoutingRuleDao,
-    redisOperation
+    redisOperation,
+    shardingRoutingRuleDao
 ) {
 
     companion object {
@@ -66,10 +68,19 @@ class TxShardingRoutingRuleServiceImpl(
         moduleCode: SystemModuleEnum,
         dataSourceNames: List<String>
     ): String {
-        if (
-            !redisOperation.hasKey(getKeyByClusterName(PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY, clusterName)) ||
-            !redisOperation.hasKey(getKeyByClusterName(PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY, clusterName))
-        ) {
+        val dbBuildNumRedisKey = ShardingUtil.getShardingRoutingRuleKey(
+            clusterName = clusterName,
+            moduleCode = moduleCode.name,
+            ruleType = ShardingRuleTypeEnum.DB.name,
+            routingName = PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY
+        )
+        val dbBuildProjectNumRedisKey = ShardingUtil.getShardingRoutingRuleKey(
+            clusterName = clusterName,
+            moduleCode = moduleCode.name,
+            ruleType = ShardingRuleTypeEnum.DB.name,
+            routingName = PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY
+        )
+        if (!redisOperation.hasKey(dbBuildNumRedisKey) || !redisOperation.hasKey(dbBuildProjectNumRedisKey)) {
             logger.info("load shardingDbBuildCache fail,randomly select an available dataSource")
             // 如果没有成功同步构建数据则从可用的数据源中随机选择一个分配给该项目
             val maxSizeIndex = dataSourceNames.size - 1
@@ -80,7 +91,7 @@ class TxShardingRoutingRuleServiceImpl(
         try {
             lock.lock()
             // 获取最小构建量数据源名称
-            return getMinBuildNumDataSourceName(clusterName, dataSourceNames)
+            return getMinBuildNumDataSourceName(clusterName, moduleCode, dataSourceNames)
         } finally {
             // 释放锁
             lock.unlock()
@@ -104,20 +115,37 @@ class TxShardingRoutingRuleServiceImpl(
     /**
      * 获取最小构建量数据源名称
      * @param clusterName db集群名称
+     * @param moduleCode 模块代码
      * @param dataSourceNames 数据源名称集合
      * @return 最小构建量数据源名称
      */
-    private fun getMinBuildNumDataSourceName(clusterName: String, dataSourceNames: List<String>): String {
+    private fun getMinBuildNumDataSourceName(
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        dataSourceNames: List<String>
+    ): String {
         var totalBuildNum = 0L // 总构建量
         var totalBuildProjectNum = 0L // 总构建项目数量
         // 1、找出低于平均构建量的最小构建量数据源(默认取第一个数据源作为最小数据源)
         var minBuildNumDataSourceName = dataSourceNames[0]
+        val dbBuildNumRedisKey = ShardingUtil.getShardingRoutingRuleKey(
+            clusterName = clusterName,
+            moduleCode = moduleCode.name,
+            ruleType = ShardingRuleTypeEnum.DB.name,
+            routingName = PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY
+        )
         var minBuildNumDataSourceBuildNum = redisOperation.hget(
-            key = getKeyByClusterName(PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY, clusterName),
+            key = dbBuildNumRedisKey,
             hashKey = minBuildNumDataSourceName
         )?.toLong() ?: 0L
+        val dbBuildProjectNumRedisKey = ShardingUtil.getShardingRoutingRuleKey(
+            clusterName = clusterName,
+            moduleCode = moduleCode.name,
+            ruleType = ShardingRuleTypeEnum.DB.name,
+            routingName = PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY
+        )
         var minBuildNumDataSourceBuildProjectNum = redisOperation.hget(
-            key = getKeyByClusterName(PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY, clusterName),
+            key = dbBuildProjectNumRedisKey,
             hashKey = minBuildNumDataSourceName
         )?.toLong() ?: 0L
         // 从redis中获取数据源构建数据和构建项目数据来得到最小构建量数据源
@@ -125,7 +153,7 @@ class TxShardingRoutingRuleServiceImpl(
             var changeFlag = false // 最小构建量数据源是否需要调整标识
             val dataSourceBuildNum = if (dataSourceName != minBuildNumDataSourceName) {
                 val buildNum = redisOperation.hget(
-                    key = getKeyByClusterName(PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY, clusterName),
+                    key = dbBuildNumRedisKey,
                     hashKey = dataSourceName
                 )?.toLong() ?: 0L
                 if (buildNum < minBuildNumDataSourceBuildNum) {
@@ -140,7 +168,7 @@ class TxShardingRoutingRuleServiceImpl(
             totalBuildNum += dataSourceBuildNum
             val dataSourceBuildProjectNum = if (dataSourceName != minBuildNumDataSourceName) {
                 val buildProjectNum = redisOperation.hget(
-                    key = getKeyByClusterName(PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY, clusterName),
+                    key = dbBuildProjectNumRedisKey,
                     hashKey = dataSourceName
                 )?.toLong() ?: 0L
                 if (changeFlag) {
@@ -157,6 +185,7 @@ class TxShardingRoutingRuleServiceImpl(
         // 更新数据源redis缓存数据以便能为下一个项目分配最近一段时间构建量最低的数据源
         updateDataSourceRedisCache(
             clusterName = clusterName,
+            moduleCode = moduleCode,
             totalBuildNum = totalBuildNum,
             totalBuildProjectNum = totalBuildProjectNum,
             minBuildNumDataSourceName = minBuildNumDataSourceName,
@@ -169,6 +198,7 @@ class TxShardingRoutingRuleServiceImpl(
     /**
      * 更新数据源redis缓存数据
      * @param clusterName db集群名称
+     * @param moduleCode 模块代码
      * @param totalBuildNum 总构建量
      * @param totalBuildProjectNum 总构建项目数量
      * @param minBuildNumDataSourceName 最小构建量数据源名称
@@ -177,6 +207,7 @@ class TxShardingRoutingRuleServiceImpl(
      */
     private fun updateDataSourceRedisCache(
         clusterName: String,
+        moduleCode: SystemModuleEnum,
         totalBuildNum: Long,
         totalBuildProjectNum: Long,
         minBuildNumDataSourceName: String,
@@ -186,25 +217,28 @@ class TxShardingRoutingRuleServiceImpl(
         // 计算最近一段时间每个项目平均构建量
         val projectAvgBuildNum = totalBuildNum / totalBuildProjectNum
         // 2、刷新redis中最小构建量数据源的总构建量（总构建量加上项目的平均构建量）
+        val dbBuildNumRedisKey = ShardingUtil.getShardingRoutingRuleKey(
+            clusterName = clusterName,
+            moduleCode = moduleCode.name,
+            ruleType = ShardingRuleTypeEnum.DB.name,
+            routingName = PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY
+        )
         redisOperation.hset(
-            key = getKeyByClusterName(PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY, clusterName),
+            key = dbBuildNumRedisKey,
             hashKey = minBuildNumDataSourceName,
             values = (minBuildNumDataSourceBuildNum + projectAvgBuildNum).toString()
         )
         // 3、刷新redis中最小构建量数据源的总构建项目量（总构建项目量加上1）
+        val dbBuildProjectNumRedisKey = ShardingUtil.getShardingRoutingRuleKey(
+            clusterName = clusterName,
+            moduleCode = moduleCode.name,
+            ruleType = ShardingRuleTypeEnum.DB.name,
+            routingName = PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY
+        )
         redisOperation.hset(
-            key = getKeyByClusterName(PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY, clusterName),
+            key = dbBuildProjectNumRedisKey,
             hashKey = minBuildNumDataSourceName,
             values = (minBuildNumDataSourceBuildProjectNum + 1).toString()
         )
-    }
-
-    /**
-     * 根据db集群名称获取真实的key值
-     * @param key 原始key
-     * @return 真实的key值
-     */
-    private fun getKeyByClusterName(key: String, clusterName: String): String {
-        return "$clusterName:$key"
     }
 }

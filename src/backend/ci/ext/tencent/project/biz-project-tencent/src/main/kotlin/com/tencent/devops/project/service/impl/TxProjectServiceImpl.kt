@@ -66,11 +66,11 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.ProjectDataSourceAssignService
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectTagService
+import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ImageUtil
@@ -103,7 +103,7 @@ class TxProjectServiceImpl @Autowired constructor(
     private val projectDispatcher: ProjectDispatcher,
     authPermissionApi: AuthPermissionApi,
     projectAuthServiceCode: ProjectAuthServiceCode,
-    projectDataSourceAssignService: ProjectDataSourceAssignService,
+    shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
     private val managerService: ManagerService,
     private val projectIamV0Service: ProjectIamV0Service,
     private val tokenService: ClientTokenService,
@@ -121,7 +121,7 @@ class TxProjectServiceImpl @Autowired constructor(
     projectDispatcher = projectDispatcher,
     authPermissionApi = authPermissionApi,
     projectAuthServiceCode = projectAuthServiceCode,
-    projectDataSourceAssignService = projectDataSourceAssignService
+    shardingRoutingRuleAssignService = shardingRoutingRuleAssignService
 ) {
 
     @Value("\${iam.v0.url:#{null}}")

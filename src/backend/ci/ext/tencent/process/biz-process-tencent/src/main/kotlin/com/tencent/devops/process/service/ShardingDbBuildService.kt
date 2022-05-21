@@ -30,7 +30,9 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.ShardingUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -101,6 +103,7 @@ class ShardingDbBuildService @Autowired constructor(
         val keyName = "ROUTING_RULE"
         val valueName = "TOTAL_BUILD_NUM"
         val moduleCodes = listOf(SystemModuleEnum.PROCESS.name, SystemModuleEnum.METRICS.name)
+        val clusterName = CommonUtils.getDbClusterName()
         moduleCodes.forEach { moduleCode ->
             val bkDataQueryParam = BkDataQueryParam("SELECT $keyName, $valueName, thedate\n" +
                 "FROM 100205_T_SHARDING_DB_BUILD_DETAIL\n" +
@@ -110,8 +113,14 @@ class ShardingDbBuildService @Autowired constructor(
             val shardingDbBuildNumMap = generateShardingDbBuildInfoMap(bkDataQueryData, keyName, valueName)
             // 3、将各分区库最近总构建量存入redis中
             shardingDbBuildNumMap.forEach { (routingRule, totalBuildNum) ->
+                val dbBuildNumRedisKey = ShardingUtil.getShardingRoutingRuleKey(
+                    clusterName = clusterName,
+                    moduleCode = moduleCode,
+                    ruleType = ShardingRuleTypeEnum.DB.name,
+                    routingName = PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY
+                )
                 redisOperation.hset(
-                    key = getKeyByModuleCode(PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY, moduleCode),
+                    key = dbBuildNumRedisKey,
                     hashKey = routingRule,
                     values = totalBuildNum.toString()
                 )
@@ -129,6 +138,7 @@ class ShardingDbBuildService @Autowired constructor(
         val keyName = "ROUTING_RULE"
         val valueName = "TOTAL_PROJECT_NUM"
         val moduleCodes = listOf(SystemModuleEnum.PROCESS.name, SystemModuleEnum.METRICS.name)
+        val clusterName = CommonUtils.getDbClusterName()
         moduleCodes.forEach { moduleCode ->
             val bkDataQueryParam = BkDataQueryParam("SELECT $keyName, $valueName, thedate\n" +
                 "FROM 100205_T_SHARDING_DB_ACTIVE_PROJECT_DETAIL\n" +
@@ -137,9 +147,15 @@ class ShardingDbBuildService @Autowired constructor(
             // 2、统计各分区库最近构建项目总数量
             val shardingDbBuildProjectNumMap = generateShardingDbBuildInfoMap(bkDataQueryData, keyName, valueName)
             // 3、将各分区库最近构建项目总数量存入redis中
+            val dbBuildProjectNumRedisKey = ShardingUtil.getShardingRoutingRuleKey(
+                clusterName = clusterName,
+                moduleCode = moduleCode,
+                ruleType = ShardingRuleTypeEnum.DB.name,
+                routingName = PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY
+            )
             shardingDbBuildProjectNumMap.forEach { (routingRule, totalBuildProjectNum) ->
                 redisOperation.hset(
-                    key = getKeyByModuleCode(PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY),
+                    key = dbBuildProjectNumRedisKey,
                     hashKey = routingRule,
                     values = totalBuildProjectNum.toString()
                 )
@@ -187,17 +203,5 @@ class ShardingDbBuildService @Autowired constructor(
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
         }
         return bkDataQueryResult
-    }
-
-    /**
-     * 根据模块代码获取真实的key值
-     * @param key 原始key
-     * @param moduleCode 模块代码
-     * @return 真实的key值
-     */
-    private fun getKeyByModuleCode(key: String, moduleCode: String): String {
-        // 获取集群名称
-        val clusterName = CommonUtils.getDbClusterName()
-        return "$clusterName:$moduleCode:$key"
     }
 }

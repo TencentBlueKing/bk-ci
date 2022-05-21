@@ -42,9 +42,9 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
 abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val shardingRoutingRuleDao: ShardingRoutingRuleDao,
-    private val redisOperation: RedisOperation
+    val dslContext: DSLContext,
+    val redisOperation: RedisOperation,
+    private val shardingRoutingRuleDao: ShardingRoutingRuleDao
 ) : ShardingRoutingRuleService {
 
     /**
