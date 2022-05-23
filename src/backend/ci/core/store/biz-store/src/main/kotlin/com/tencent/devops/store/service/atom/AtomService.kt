@@ -36,6 +36,7 @@ import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.common.UnInstallReq
 
@@ -57,7 +58,7 @@ interface AtomService {
         jobType: String?,
         os: String?,
         projectCode: String,
-        category: String?,
+        category: String? = AtomCategoryEnum.TASK.name,
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
@@ -77,7 +78,7 @@ interface AtomService {
         jobType: String?,
         os: String?,
         projectCode: String,
-        category: String?,
+        category: String? = AtomCategoryEnum.TASK.name,
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
