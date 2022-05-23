@@ -179,11 +179,9 @@ jobs:
             ${{ runner.os }}-codecc-gradle-
       - name: Gradle Build
         id: codecc-backend
-        uses: eskatos/gradle-command-action@v1
-        with:
-          gradle-version: 4.6
-          build-root-directory: src/backend/codecc
-          arguments: clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
+        working-directory: src/backend/codecc
+        run: |
+          ./gradlew clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
 
       - name: frontend
         id: codecc-frontend
