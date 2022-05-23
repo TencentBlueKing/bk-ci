@@ -35,7 +35,7 @@ import com.tencent.devops.stream.pojo.BranchBuilds
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record2
+import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
@@ -415,14 +415,14 @@ class GitRequestEventBuildDao {
         gitProjectId: Long,
         page: Int = 1,
         pageSize: Int = 20
-    ): Result<Record2<String, LocalDateTime>> {
+    ): Result<Record1<String>> {
         val offset = (page - 1) * pageSize
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            val requestEventBuildTriggerUsers = dslContext.select(TRIGGER_USER, DSL.max(CREATE_TIME))
+            val requestEventBuildTriggerUsers = dslContext.select(TRIGGER_USER)
                 .from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .groupBy(TRIGGER_USER)
-                .orderBy(CREATE_TIME)
+                .orderBy(CREATE_TIME.desc())
                 .asTable()
             return dslContext.selectFrom(requestEventBuildTriggerUsers).limit(pageSize).offset(offset).fetch()
         }
