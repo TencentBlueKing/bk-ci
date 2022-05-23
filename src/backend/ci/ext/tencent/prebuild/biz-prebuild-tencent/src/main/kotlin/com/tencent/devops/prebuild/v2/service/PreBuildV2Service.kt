@@ -196,36 +196,34 @@ class PreBuildV2Service @Autowired constructor(
             throw CustomException(Response.Status.BAD_REQUEST, "PreCI仅支持远程模板")
         }
 
-        if (param.targetRepo?.credentials?.personalAccessToken.isNullOrBlank() ||
-                param.targetRepo?.repository.isNullOrBlank() ||
-                param.targetRepo?.ref.isNullOrBlank()
+        if (param.targetRepo?.repository.isNullOrBlank() || param.targetRepo?.name.isNullOrBlank()
         ) {
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
-                message = "远程仓关键字不能为空: repository, ref, personal-access-token"
+                message = "远程仓关键字不能为空: repository, name"
             )
         }
 
         return getTemplateCntFromGit(
-            token = param.targetRepo?.credentials?.personalAccessToken!!,
+            token = param.targetRepo?.credentials?.personalAccessToken,
             gitProjectId = param.targetRepo?.repository!!,
-            ref = param.targetRepo?.ref!!,
+            ref = param.targetRepo?.ref,
             fileName = TEMPLATE_DIR + param.path
         )
     }
 
     private fun getTemplateCntFromGit(
-        token: String,
+        token: String?,
         gitProjectId: String,
         fileName: String,
-        ref: String
+        ref: String?
     ): String {
         logger.info("getTemplateCntFromGit: [$gitProjectId|$fileName|$ref]")
         try {
             return client.getScm(ServiceGitCiResource::class).getGitCIFileContent(
                 gitProjectId = gitProjectId,
                 filePath = fileName,
-                token = token,
+                token = token ?: "",
                 ref = getTriggerBranch(ref),
                 useAccessToken = false
             ).data!!
@@ -235,11 +233,11 @@ class PreBuildV2Service @Autowired constructor(
         }
     }
 
-    private fun getTriggerBranch(branch: String): String {
+    private fun getTriggerBranch(branch: String?): String {
         return when {
-            branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
-            branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
-            else -> branch
+            branch != null && branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
+            branch != null && branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
+            else -> branch ?: "master"
         }
     }
 
