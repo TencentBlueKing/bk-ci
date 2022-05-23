@@ -57,7 +57,6 @@ dependencies {
     api(group = "javax.websocket", name = "javax.websocket-api")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
-    api("com.vmware:vijava")
     api("org.json:json")
     api(group = "org.apache.ant", name = "ant")
 

@@ -4,7 +4,6 @@ object Versions {
     const val CommonExec = "1.3"
     const val CommonIo = "2.7"
     const val CommonText = "1.9"
-    const val Vmware = "5.1"
     const val BouncyCastle = "1.70"
     const val Dom4j = "2.0.3"
     const val Compress = "1.21"

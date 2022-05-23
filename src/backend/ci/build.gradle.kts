@@ -35,7 +35,6 @@ allprojects {
             dependency("com.cronutils:cron-utils:${Versions.CronUtils}")
             dependency("org.apache.commons:commons-collections4:${Versions.CommonCollections4}")
             dependency("net.coobird:thumbnailator:${Versions.Thumbnailator}")
-            dependency("com.vmware:vijava:${Versions.Vmware}")
             dependency("net.sf.json-lib:json-lib:${Versions.JsonLib}")
             dependency("com.googlecode.plist:dd-plist:${Versions.DdPlist}")
             dependency("net.dongliu:apk-parser:${Versions.ApkParser}")
