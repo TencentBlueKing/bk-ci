@@ -106,10 +106,10 @@ class PreBuildV2Service @Autowired constructor(
         agentInfo: ThirdPartyAgentStaticInfo
     ): BuildId {
         // 1.校验yaml合法性
-        val (isPassed, _, errorMsg) = preCIYAMLValidator.validate(startUpReq.yaml)
+        /*val (isPassed, _, errorMsg) = preCIYAMLValidator.validate(startUpReq.yaml)
         if (!isPassed) {
             throw CustomException(Response.Status.BAD_REQUEST, "Invalid yaml: $errorMsg")
-        }
+        }*/
 
         // 2.标准化处理
         val scriptBuildYaml = ScriptYmlUtils.normalizePreCiYaml(
