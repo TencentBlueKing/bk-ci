@@ -103,7 +103,7 @@ public class ToolMetaCacheMQListenerConfig
         container.setQueueNames(toolMetaCacheQueue.getName());
         container.setConcurrentConsumers(2);
         container.setMaxConcurrentConsumers(2);
-        container.setRabbitAdmin(toolMetaCacheRabbitAdmin);
+        container.setAmqpAdmin(toolMetaCacheRabbitAdmin);
         container.setStartConsumerMinInterval(10000);
         container.setConsecutiveActiveTrigger(5);
         MessageListenerAdapter adapter = new MessageListenerAdapter(refreshToolMetaCacheConsumer, "refreshToolMetaCache");

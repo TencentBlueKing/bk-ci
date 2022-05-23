@@ -77,6 +77,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -91,7 +92,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -211,7 +212,7 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
                 baseCheckerSets.sort(((o1, o2) -> o2.getVersion().compareTo(o1.getVersion())));
                 baseCheckerSet = baseCheckerSets.get(0);
             } else {
-                baseCheckerSet = checkerSetRepository.findByCheckerSetIdAndVersion(
+                baseCheckerSet = checkerSetRepository.findFirstByCheckerSetIdAndVersion(
                         createCheckerSetReqVO.getBaseCheckerSetId(),
                         createCheckerSetReqVO.getBaseCheckerSetVersion());
             }
@@ -364,7 +365,7 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
                 if (newCheckerSetVersion != ToolIntegratedStatus.T.value()
                         && newCheckerSetVersion != ToolIntegratedStatus.G.value()) {
                     projectRelationships.forEach(it -> it.setVersion(newCheckerSetVersion));
-                    checkerSetProjectRelationshipRepository.save(projectRelationships);
+                    checkerSetProjectRelationshipRepository.saveAll(projectRelationships);
 
                     handleNormalProject(checkerSetEntity, projectRelationships, user);
                 } else {
@@ -553,7 +554,7 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
         }
         int pageNum = Math.max(queryCheckerSetReq.getPageNum() - 1, 0);
         int pageSize = queryCheckerSetReq.getPageSize() <= 0 ? 10 : queryCheckerSetReq.getPageSize();
-        Pageable pageable = new PageRequest(pageNum, pageSize, new Sort(queryCheckerSetReq.getSortType(),
+        Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by(queryCheckerSetReq.getSortType(),
                 queryCheckerSetReq.getSortField()));
 
         // 先查出项目已安装的规则集列表
@@ -670,10 +671,11 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
 
         Pageable pageable = null;
         if (queryCheckerSetReq.getPageNum() != null && queryCheckerSetReq.getPageSize() != null) {
+            Optional<Sort.Direction> direction = Sort.Direction.fromOptionalString(queryCheckerSetReq.getSortType());
             pageable = PageableUtils.getPageable(queryCheckerSetReq.getPageNum(),
                     queryCheckerSetReq.getPageSize(),
                     queryCheckerSetReq.getSortField(),
-                    Sort.Direction.fromStringOrNull(queryCheckerSetReq.getSortType()),
+                    direction.orElse(null),
                     "task_usage");
         }
         List<CheckerSetEntity> pCheckerSetEntityList =
@@ -798,7 +800,7 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
         //封装分页类
         int pageNum = Math.max(queryCheckerSetReq.getPageNum() - 1, 0);
         int pageSize = queryCheckerSetReq.getPageSize() <= 0 ? 10 : queryCheckerSetReq.getPageSize();
-        Pageable pageable = new PageRequest(pageNum, pageSize, new Sort(queryCheckerSetReq.getSortType(),
+        Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by(queryCheckerSetReq.getSortType(),
                 queryCheckerSetReq.getSortField()));
         long total = pageNum * pageSize + result.size() + 1;
         return new PageImpl<>(result, pageable, total);
@@ -984,7 +986,6 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
         }
 
         BeanUtils.copyProperties(selectedCheckerSet, checkerSetVO);
-
         // 加入工具列表
         if (CollectionUtils.isNotEmpty(selectedCheckerSet.getCheckerProps())) {
             for (CheckerPropsEntity checkerPropsEntity : selectedCheckerSet.getCheckerProps()) {
@@ -1318,14 +1319,16 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
         CheckerSetVO checkerSetVO = new CheckerSetVO();
         if (needProps) {
             BeanUtils.copyProperties(checkerSetEntity, checkerSetVO);
-            List<CheckerPropVO> checkerPropsVOS = checkerSetEntity.getCheckerProps()
-                    .stream()
-                    .map(checkerPropsEntity -> {
-                        CheckerPropVO checkerPropVO = new CheckerPropVO();
-                        BeanUtils.copyProperties(checkerPropsEntity, checkerPropVO);
-                        return checkerPropVO;
-                    }).collect(Collectors.toList());
-            checkerSetVO.setCheckerProps(checkerPropsVOS);
+            if(CollectionUtils.isNotEmpty(checkerSetEntity.getCheckerProps())){
+                List<CheckerPropVO> checkerPropsVOS = checkerSetEntity.getCheckerProps()
+                        .stream()
+                        .map(checkerPropsEntity -> {
+                            CheckerPropVO checkerPropVO = new CheckerPropVO();
+                            BeanUtils.copyProperties(checkerPropsEntity, checkerPropVO);
+                            return checkerPropVO;
+                        }).collect(Collectors.toList());
+                checkerSetVO.setCheckerProps(checkerPropsVOS);
+            }
         } else {
             BeanUtils.copyProperties(checkerSetEntity, checkerSetVO, "checkerProps");
         }
@@ -1416,8 +1419,8 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
         //封装分页类
         int pageNum = Math.max(queryCheckerSetReq.getPageNum() - 1, 0);
         int pageSize = queryCheckerSetReq.getPageSize() <= 0 ? 10 : queryCheckerSetReq.getPageSize();
-        Pageable pageable = new PageRequest(pageNum, pageSize,
-                new Sort(queryCheckerSetReq.getSortType(), queryCheckerSetReq.getSortField()));
+        Pageable pageable = PageRequest.of(pageNum, pageSize,
+                Sort.by(queryCheckerSetReq.getSortType(), queryCheckerSetReq.getSortField()));
         long total = pageNum * pageSize + result.size() + 1;
         return new PageImpl<>(result, pageable, total);
     }
@@ -1488,11 +1491,11 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
                 }
             }
         } else {
-            selectedCheckerSetEntity = checkerSetRepository.findByCheckerSetIdAndVersion(checkerSetId, version);
+            selectedCheckerSetEntity = checkerSetRepository.findFirstByCheckerSetIdAndVersion(checkerSetId, version);
         }
         CheckerSetVO checkerSetVO = new CheckerSetVO();
         if (selectedCheckerSetEntity != null) {
-            BeanUtils.copyProperties(selectedCheckerSetEntity, checkerSetVO);
+            BeanUtils.copyProperties(selectedCheckerSetEntity,checkerSetVO);
             checkerSetVO.setCodeLangList(List2StrUtil.fromString(selectedCheckerSetEntity.getCheckerSetLang(), ","));
         }
 
@@ -1532,7 +1535,7 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
                 checkerSetEntity.setDescription(updateCheckerSetReq.getDescription());
                 checkerSetEntity.setCatagories(catagoryEntities);
             }
-            checkerSetRepository.save(checkerSetEntities);
+            checkerSetRepository.saveAll(checkerSetEntities);
         }
     }
 
@@ -1565,7 +1568,7 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
         if (CheckerConstants.CheckerSetRelationshipType.PROJECT.name().equals(checkerSetRelationshipVO.getType())) {
 
             projectRelationshipEntity =
-                    checkerSetProjectRelationshipRepository.findByCheckerSetIdAndProjectId(checkerSetId, projectId);
+                    checkerSetProjectRelationshipRepository.findFirstByCheckerSetIdAndProjectId(checkerSetId, projectId);
             if (projectRelationshipEntity != null) {
                 log.error("关联已存在！: {}, {}, {}", checkerSetId, projectId, taskId);
                 return;
@@ -1643,7 +1646,7 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
             log.info("set new task relation ship successfully: {}, {}, {}", checkerSetId, projectId, taskId);
 
             // 任务关联规则集需要设置全量扫描
-            CheckerSetEntity checkerSetEntity = checkerSetRepository.findByCheckerSetIdAndVersion(checkerSetId,
+            CheckerSetEntity checkerSetEntity = checkerSetRepository.findFirstByCheckerSetIdAndVersion(checkerSetId,
                     projectRelationshipEntity.getVersion());
             if (CollectionUtils.isNotEmpty(checkerSetEntity.getCheckerProps())) {
                 Set<String> toolSet = Sets.newHashSet();
@@ -1866,18 +1869,18 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
             throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{errMsg.toString()}, null);
         }
 
-        checkerSetTaskRelationshipRepository.save(taskRelationshipEntityList);
+        checkerSetTaskRelationshipRepository.saveAll(taskRelationshipEntityList);
 
         //保存官方优选和官方推荐
         if (CollectionUtils.isNotEmpty(projectRelationshipEntities)) {
-            checkerSetProjectRelationshipRepository.save(projectRelationshipEntities);
+            checkerSetProjectRelationshipRepository.saveAll(projectRelationshipEntities);
         }
 
         // 解除规则集关联
         if (MapUtils.isNotEmpty(existTaskRelatedCheckerMap)) {
             Collection<CheckerSetTaskRelationshipEntity> needDeleteTaskRelationshens =
                     existTaskRelatedCheckerMap.values();
-            checkerSetTaskRelationshipRepository.delete(needDeleteTaskRelationshens);
+            checkerSetTaskRelationshipRepository.deleteAll(needDeleteTaskRelationshens);
 
             // 解除关联的规则集涉及的工具也需要强制全量扫描
             Set<String> needDeleteCheckerSeIds = needDeleteTaskRelationshens.stream()
@@ -2088,7 +2091,7 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
                 checkerSetEntity.setScope(CheckerConstants.CheckerSetScope.PRIVATE.code());
             }
         }
-        checkerSetRepository.save(checkerSetEntities);
+        checkerSetRepository.saveAll(checkerSetEntities);
 
         // 从本项目中卸载规则集，或者删除本项目的规则集，都要删除关联数据
         CheckerSetProjectRelationshipEntity relationshipEntity = projectRelationshipEntityMap.get(checkerSetId);
@@ -2767,7 +2770,7 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
                     checkerSetTaskRelationshipEntityList.stream()
                             .filter(it -> needToUnbindList.contains(it.getCheckerSetId())).collect(Collectors.toList());
             if (CollectionUtils.isNotEmpty(needToUnbindRelationEntityList)) {
-                checkerSetTaskRelationshipRepository.delete(needToUnbindRelationEntityList);
+                checkerSetTaskRelationshipRepository.deleteAll(needToUnbindRelationEntityList);
                 for (CheckerSetTaskRelationshipEntity unbindRelationEntity : needToUnbindRelationEntityList) {
                     newCheckerSetVersionMap.remove(unbindRelationEntity.getCheckerSetId());
                 }
@@ -2804,7 +2807,7 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
             }
 
             if (CollectionUtils.isNotEmpty(needToBindCheckerSet)) {
-                checkerSetProjectRelationshipRepository.save(
+                checkerSetProjectRelationshipRepository.saveAll(
                         needToBindCheckerSet.stream().filter(checkerSetId -> !checkerSetIds.contains(checkerSetId))
                                 .map(checkerSetId -> {
                                     CheckerSetProjectRelationshipEntity checkerSetProjectRelationshipEntity =
@@ -2817,7 +2820,7 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
                                     return checkerSetProjectRelationshipEntity;
                                 }).collect(Collectors.toList()));
 
-                checkerSetTaskRelationshipRepository.save(needToBindCheckerSet.stream().filter(StringUtils::isNotBlank)
+                checkerSetTaskRelationshipRepository.saveAll(needToBindCheckerSet.stream().filter(StringUtils::isNotBlank)
                         .map(checkerSetId -> {
                             CheckerSetTaskRelationshipEntity checkerSetTaskRelationshipEntity =
                                     new CheckerSetTaskRelationshipEntity();
@@ -3241,7 +3244,7 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
         defectVOs = defectVOs.subList(subListBeginIdx, subListEndIdx > total ? total : subListEndIdx);
 
         //封装分页类
-        Pageable pageable = new PageRequest(pageNum, pageSize, new Sort(sortType, sortField));
+        Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by(sortType, sortField));
         return new PageImpl<>(defectVOs, pageable, total);
     }
 
@@ -3322,7 +3325,7 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService {
             @NotNull V3UpdateCheckerSetReqExtVO updateCheckerSetReqExtVO) {
         boolean result = false;
         CheckerSetEntity checkerSetEntity = checkerSetRepository
-                .findByCheckerSetIdAndVersion(updateCheckerSetReqExtVO.getCheckerSetId(),
+                .findFirstByCheckerSetIdAndVersion(updateCheckerSetReqExtVO.getCheckerSetId(),
                         updateCheckerSetReqExtVO.getVersion());
         if (null != checkerSetEntity) {
             checkerSetEntity.setCatagories(getCatagoryEntities(updateCheckerSetReqExtVO.getCatagories()));

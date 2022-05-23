@@ -40,4 +40,6 @@ public interface UploadDownloadService
     FileIndexVO getFileIndex(String fileName, String type);
 
     Response download(String downloadType, String fileName);
+
+    FileIndexVO updateFileIndex(FileIndexVO fileInfoVo);
 }

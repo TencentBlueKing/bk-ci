@@ -34,7 +34,7 @@ object Versions {
     const val KtlintHtmlReport = "0.1.2"
     const val Ktlint = "0.29.0"
     const val Elasticsearch = "7.17.3"
-    const val Lucene = "8.2.0"
+    const val Lucene = "8.11.1"
     const val Feign = "11.6" // TODO 修复这个BUG:https://github.com/OpenFeign/feign/pull/1347 , 后续SpringCloud升级后可以去掉
     const val PinyinPlus = "1.0"
     const val Oshi = "5.8.3"
