@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.VersionInfo
 import io.swagger.annotations.Api
@@ -86,7 +87,7 @@ interface UserAtomResource {
         projectCode: String,
         @ApiParam("插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
         @QueryParam("category")
-        category: String?,
+        category: String? = AtomCategoryEnum.TASK.name,
         @ApiParam("插件分类id", required = false)
         @QueryParam("classifyId")
         classifyId: String?,

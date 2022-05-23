@@ -822,8 +822,8 @@ class AtomDao : AtomBaseDao() {
                 conditions.add(ta.JOB_TYPE.eq(jobType).or(ta.BUILD_LESS_RUN_FLAG.eq(true)))
             } else {
                 conditions.add(ta.JOB_TYPE.eq(jobType))
-                if (queryFitAgentBuildLessAtomFlag == false && category == null) {
-                    conditions.add(ta.CATEGROY.eq(AtomCategoryEnum.TASK.category.toByte()))
+                if (queryFitAgentBuildLessAtomFlag == false) {
+                    conditions.add(ta.BUILD_LESS_RUN_FLAG.ne(true))
                 }
             }
         }
