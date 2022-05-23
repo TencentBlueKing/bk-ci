@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -30,7 +31,7 @@
 package command
 
 import (
-	"github.com/astaxie/beego/logs"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"os/exec"
 )
 
