@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.engine.control.DependOnUtils
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
@@ -51,6 +52,9 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
  * 启动流水线上下文类，属于非线程安全类
  */
 data class StartBuildContext(
+    val projectId: String,
+    val pipelineId: String,
+    val buildId: String,
     val actionType: ActionType,
     val executeCount: Int = 1,
     val stageRetry: Boolean,
@@ -66,7 +70,9 @@ data class StartBuildContext(
     val channelCode: ChannelCode,
     val retryFailedContainer: Boolean,
     var needUpdateStage: Boolean,
-    val skipFailedTask: Boolean // 跳过失败的插件 配合 stageRetry 可判断是否跳过所有失败插件
+    val skipFailedTask: Boolean, // 跳过失败的插件 配合 stageRetry 可判断是否跳过所有失败插件
+    var buildNoType: BuildNoType? = null,
+    var currentBuildNo: Int? = null
 ) {
 
     /**
@@ -147,7 +153,7 @@ data class StartBuildContext(
 
     companion object {
 
-        fun init(params: Map<String, Any>): StartBuildContext {
+        fun init(projectId: String, pipelineId: String, buildId: String, params: Map<String, Any>): StartBuildContext {
 
             val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]?.toString()
 
@@ -163,6 +169,9 @@ data class StartBuildContext(
             }
 
             return StartBuildContext(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
                 actionType = actionType,
                 executeCount = executeCount,
                 firstTaskId = params[PIPELINE_START_TASK_ID]?.toString() ?: "",

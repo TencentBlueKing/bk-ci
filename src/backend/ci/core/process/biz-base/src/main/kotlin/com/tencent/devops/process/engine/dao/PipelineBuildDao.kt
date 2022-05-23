@@ -882,21 +882,6 @@ class PipelineBuildDao {
         }
     }
 
-    fun updateBuildParameters(
-        dslContext: DSLContext,
-        projectId: String,
-        buildId: String,
-        buildParameters: List<BuildParameters>
-    ) {
-        with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.update(this)
-                .set(BUILD_PARAMETERS, JsonUtil.toJson(buildParameters, formatted = false))
-                .where(BUILD_ID.eq(buildId))
-                .and(PROJECT_ID.eq(projectId))
-                .execute()
-        }
-    }
-
     fun getBuildParameters(dslContext: DSLContext, projectId: String, buildId: String): String? {
         with(T_PIPELINE_BUILD_HISTORY) {
             val record = dslContext.selectFrom(this)

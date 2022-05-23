@@ -46,13 +46,13 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.io.FileNotFoundException
 import java.util.Base64
 import kotlin.system.exitProcess
 
 object WorkRunner {
     private val logger = LoggerFactory.getLogger(WorkRunner::class.java)
 
-    @Suppress("ALL")
     fun execute(args: Array<String>) {
         try {
             val buildInfo = getBuildInfo(args)!!
@@ -89,8 +89,8 @@ object WorkRunner {
                         workspace
                     }
                     val workspaceDir = WorkspaceUtils.getPipelineWorkspace(pipelineId, replaceWorkspace)
-                    if (!workspaceDir.exists()) {
-                        workspaceDir.mkdirs()
+                    if (!workspaceDir.exists() && !workspaceDir.mkdirs()) { // #5555 第三方构建机工作空间校验
+                        throw FileNotFoundException("无法创建工作空间(illegal workspace): [$workspaceDir]")
                     }
                     val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
                     return Pair(workspaceDir, logPathDir)

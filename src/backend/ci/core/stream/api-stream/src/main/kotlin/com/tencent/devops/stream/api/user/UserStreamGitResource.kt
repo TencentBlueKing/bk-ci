@@ -157,4 +157,19 @@ interface UserStreamGitResource {
         @QueryParam("sort")
         sort: StreamSortAscOrDesc?
     ): Result<List<String>?>
+
+    @ApiOperation("获取项目触发人")
+    @GET
+    @Path("/projects/triggers")
+    fun getTriggerUser(
+        @ApiParam(value = "蓝盾项目ID")
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "页码", defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam(value = "每页数量,最大100", defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<List<String>>
 }

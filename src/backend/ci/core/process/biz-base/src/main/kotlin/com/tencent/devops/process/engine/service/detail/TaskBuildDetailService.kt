@@ -243,9 +243,9 @@ class TaskBuildDetailService(
 
             var update = false
             override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
-                // 判断取消的task任务对应的container是否包含post任务
-                val cancelTaskPostFlag = buildStatus == BuildStatus.CANCELED && c.containPostTaskFlag == true
                 if (e.id == taskId) {
+                    // 判断取消的task任务对应的container是否包含post任务
+                    val cancelTaskPostFlag = buildStatus == BuildStatus.CANCELED && c.containPostTaskFlag == true
                     e.status = buildStatus.name
                     if (e.startEpoch == null) {
                         e.elapsed = 0

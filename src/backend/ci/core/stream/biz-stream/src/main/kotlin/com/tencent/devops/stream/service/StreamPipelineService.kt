@@ -35,10 +35,12 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
+import com.tencent.devops.stream.pojo.AllPathPair
 import com.tencent.devops.stream.pojo.StreamGitPipelineDir
 import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import org.jooq.DSLContext
@@ -56,7 +58,8 @@ class StreamPipelineService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val websocketService: StreamWebsocketService,
     private val streamGitTransferService: StreamGitTransferService,
-    private val streamBasicSettingService: StreamBasicSettingService
+    private val streamBasicSettingService: StreamBasicSettingService,
+    private val gitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamPipelineService::class.java)
@@ -93,6 +96,7 @@ class StreamPipelineService @Autowired constructor(
         val count = pipelineResourceDao.getPipelineCount(dslContext, gitProjectId)
         // 获取流水线最后一次构建分支
         val pipelineBranchMap = getPipelineLastBuildBranch(gitProjectId, pipelines.map { it.pipelineId }.toSet())
+        val basicSetting = streamBasicSettingService.getStreamConf(gitProjectId)
         return Page(
             count = count.toLong(),
             page = pageNotNull,
@@ -107,10 +111,20 @@ class StreamPipelineService @Autowired constructor(
                     enabled = it.enabled,
                     creator = it.creator,
                     latestBuildInfo = null,
-                    latestBuildBranch = pipelineBranchMap[it.pipelineId] ?: "master"
+                    latestBuildBranch = pipelineBranchMap[it.pipelineId] ?: "master",
+                    yamlLink = genYamlLink(
+                        pathWithNamespace = basicSetting?.pathWithNamespace,
+                        pipelineBranch = pipelineBranchMap[it.pipelineId],
+                        filePath = it.filePath
+                    )
                 )
             }
         )
+    }
+
+    private fun genYamlLink(pathWithNamespace: String?, pipelineBranch: String?, filePath: String): String {
+        val branch = pipelineBranch ?: "master"
+        return "${gitConfig.gitUrl}/$pathWithNamespace/blob/$branch/$filePath"
     }
 
     fun getPipelineDirList(
@@ -125,7 +139,10 @@ class StreamPipelineService @Autowired constructor(
         )
         return StreamGitPipelineDir(
             currentPath = allPipeline.find { it.value2() == pipelineId }?.value1(),
-            allPath = allPipeline.map { it.value1() }.distinct().filterNot { it == CIDir }
+            allPath = allPipeline.map { it.value1() }.distinct().mapNotNull {
+                if (it == CIDir) return@mapNotNull null
+                AllPathPair(path = it, name = it.removePrefix(CIDir).removeSuffix("/"))
+            }
         )
     }
 
