@@ -282,10 +282,6 @@ export default {
                 fitOsFlag = undefined
                 jobType = 'AGENT'
             }
-
-            if (!queryProjectAtomFlag) {
-                category = undefined
-            }
             
             if (page === 1 && !isCommendAtomPageOver) {
                 commit(FETCHING_ATOM_LIST, true)
