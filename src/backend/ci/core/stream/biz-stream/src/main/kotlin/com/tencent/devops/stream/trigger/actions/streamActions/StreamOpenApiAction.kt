@@ -74,6 +74,9 @@ class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
     override fun getYamlPathList(): List<YamlPathListEntry> = action.getYamlPathList()
 
     override fun getYamlContent(fileName: String) = action.getYamlContent(fileName)
+    override fun getChangeSet(): Set<String>? {
+        return action.getChangeSet()
+    }
 
     override fun isMatch(triggerOn: TriggerOn) = action.isMatch(triggerOn)
 

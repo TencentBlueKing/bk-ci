@@ -226,7 +226,7 @@ class TGitApiService @Autowired constructor(
         cred as TGitCred
         return doRetryFun(
             retry = retry,
-            log = "$gitProjectId get yaml $fileName fail",
+            log = "$gitProjectId get yaml $fileName from $ref fail",
             apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR
         ) {
             client.get(ServiceGitResource::class).getGitFileContent(
@@ -237,9 +237,17 @@ class TGitApiService @Autowired constructor(
                     RepoAuthType.SSH
                 },
                 repoName = gitProjectId,
-                ref = ref,
+                ref = getTriggerBranch(ref),
                 filePath = fileName
             ).data!!
+        }
+    }
+
+    private fun getTriggerBranch(branch: String): String {
+        return when {
+            branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
+            branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
+            else -> branch
         }
     }
 

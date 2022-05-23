@@ -46,7 +46,7 @@ object GitUtils {
 
     fun getDomainAndRepoName(gitUrl: String): Pair<String/*domain*/, String/*repoName*/> {
         // 兼容http存在端口的情況 http://gitlab.xx:8888/xx.git
-        val groups = Regex("git@([-.a-z0-9A-Z]+):([0-9]+)?/?(.*).git").find(gitUrl)?.groups
+        val groups = Regex("git@([-.a-z0-9A-Z]+):([0-9]+/)?(.*).git").find(gitUrl)?.groups
             ?: Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*).git").find(gitUrl)?.groups
             ?: Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*)").find(gitUrl)?.groups
             ?: throw ScmException("Invalid git url $gitUrl", ScmType.CODE_GIT.name)
@@ -65,7 +65,7 @@ object GitUtils {
 
     private fun hasPort(port: MatchGroup?): String {
         return if (port == null) ""
-        else ":${port.value}"
+        else ":${port.value.removeSuffix("/")}"
     }
 
     /**

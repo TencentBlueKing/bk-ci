@@ -1210,6 +1210,7 @@ class PipelineListFacadeService @Autowired constructor(
                     currentTimestamp = currentTimestamp,
                     hasPermission = authPipelines.contains(pipelineId),
                     hasCollect = favorPipelines.contains(pipelineId),
+                    updater = it.lastModifyUser,
                     creator = it.creator
                 )
             )

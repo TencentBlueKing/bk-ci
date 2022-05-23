@@ -33,6 +33,7 @@ import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
@@ -87,6 +88,7 @@ class ContainerControl @Autowired constructor(
             }
         )
 
+    @BkTimed
     fun handle(event: PipelineBuildContainerEvent) {
         val watcher = Watcher(id = "ENGINE|ContainerControl|${event.traceId}|${event.buildId}|Job#${event.containerId}")
         with(event) {

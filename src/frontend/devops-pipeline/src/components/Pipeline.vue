@@ -13,7 +13,7 @@
                 <bk-pipeline
                     :key="pipeline.name"
                     :pipeline="pipeline"
-                    :user-name="$userInfo.username"
+                    :user-name="userName"
                     :editable="pipelineEditable"
                     :can-skip-element="canSkipElement"
                     :is-preview="isPreview"
@@ -152,6 +152,9 @@
                 'isAddParallelStage',
                 'showStageReviewPanel'
             ]),
+            userName () {
+                return this.$userInfo && this.$userInfo.username ? this.$userInfo.username : ''
+            },
             routeParams () {
                 return this.$route.params
             },
