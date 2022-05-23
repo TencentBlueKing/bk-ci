@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.service.gitci
 
 import com.google.common.cache.CacheBuilder
+import com.tencent.devops.auth.ScmRetryUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.slf4j.LoggerFactory
@@ -38,24 +39,27 @@ class GitProjectInfoService @Autowired constructor(
     val client: Client
 ) {
     private val gitCIUserCache = CacheBuilder.newBuilder()
-        .maximumSize(2000)
-        .expireAfterWrite(24, TimeUnit.HOURS)
+        .maximumSize(MAX_CACHE_COUNT)
+        .expireAfterWrite(USER_CACHE_TIMEOUT, TimeUnit.HOURS)
         .build<String/*userId*/, String>()
 
     private val projectPublicCache = CacheBuilder.newBuilder()
-        .maximumSize(2000)
-        .expireAfterWrite(5, TimeUnit.MINUTES)
+        .maximumSize(MAX_CACHE_COUNT)
+        .expireAfterWrite(PROJECT_CACHE_TIMEOUT, TimeUnit.MINUTES)
         .build<String/*project*/, String?>()
 
     fun checkProjectPublic(projectCode: String): Boolean {
         if (!projectPublicCache.getIfPresent(projectCode).isNullOrEmpty()) {
             return true
         } else {
-            val gitProjectInfo = client.getScm(ServiceGitCiResource::class).getGitCodeProjectInfo(projectCode).data
-            if (gitProjectInfo != null) {
-                logger.info("project $projectCode visibilityLevel: ${gitProjectInfo?.visibilityLevel}")
-                if (gitProjectInfo.visibilityLevel != null && gitProjectInfo.visibilityLevel!! > 0) {
-                    projectPublicCache.put(projectCode, gitProjectInfo.visibilityLevel.toString())
+            val visibilityLevel = ScmRetryUtils.callScm(0, logger) {
+                client.getScm(ServiceGitCiResource::class)
+                    .getGitCodeProjectInfo(projectCode).data?.visibilityLevel
+            }
+            if (visibilityLevel != null) {
+                logger.info("project $projectCode visibilityLevel: $visibilityLevel")
+                if (visibilityLevel > 0) {
+                    projectPublicCache.put(projectCode, visibilityLevel.toString())
                     return true
                 }
             } else {
@@ -69,15 +73,20 @@ class GitProjectInfoService @Autowired constructor(
         return if (!gitCIUserCache.getIfPresent(rtxUserId).isNullOrEmpty()) {
             gitCIUserCache.getIfPresent(rtxUserId)!!
         } else {
-            val gitUserId = client.getScm(ServiceGitCiResource::class).getGitUserId(rtxUserId, projectCode).data
-            if (gitUserId != null) {
-                gitCIUserCache.put(rtxUserId, gitUserId)
+            val userId = ScmRetryUtils.callScm(0, logger) {
+                client.getScm(ServiceGitCiResource::class).getGitUserId(rtxUserId, projectCode).data
             }
-            gitUserId
+            if (userId != null) {
+                gitCIUserCache.put(rtxUserId, userId.toString())
+            }
+            userId
         }
     }
 
     companion object {
         val logger = LoggerFactory.getLogger(GitProjectInfoService::class.java)
+        const val MAX_CACHE_COUNT = 2000L
+        const val USER_CACHE_TIMEOUT = 24L
+        const val PROJECT_CACHE_TIMEOUT = 5L
     }
 }

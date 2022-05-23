@@ -46,6 +46,8 @@ import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubRepo
+import com.tencent.devops.repository.pojo.github.GithubRepoBranch
+import com.tencent.devops.repository.pojo.github.GithubRepoTag
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
@@ -55,7 +57,6 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
 import org.springframework.stereotype.Service
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -65,7 +66,6 @@ import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
-@ConditionalOnMissingClass
 class GithubService @Autowired constructor(
     private val githubTokenService: GithubTokenService,
     private val githubOAuthService: GithubOAuthService,
@@ -231,6 +231,40 @@ class GithubService @Autowired constructor(
         }
     }
 
+    override fun listBranches(token: String, projectName: String): List<String> {
+        logger.info("listBranches| $projectName")
+        return RetryUtils.execute(object : RetryUtils.Action<List<String>> {
+            override fun fail(e: Throwable): List<String> {
+                logger.error("listBranches fail| e=${e.message}", e)
+                throw e
+            }
+
+            override fun execute(): List<String> {
+                val path = "repos/$projectName/branches?page=1&per_page=100"
+                val request = buildGet(token, path)
+                val body = getBody(OPERATION_LIST_BRANCHS, request)
+                return objectMapper.readValue<List<GithubRepoBranch>>(body).map { it.name }
+            }
+        }, 3, SLEEP_MILLS_FOR_RETRY_500)
+    }
+
+    override fun listTags(token: String, projectName: String): List<String> {
+        logger.info("listTags| $projectName")
+        return RetryUtils.execute(object : RetryUtils.Action<List<String>> {
+            override fun fail(e: Throwable): List<String> {
+                logger.error("listTags fail| e=${e.message}", e)
+                throw e
+            }
+
+            override fun execute(): List<String> {
+                val path = "repos/$projectName/tags?page=1&per_page=100"
+                val request = buildGet(token, path)
+                val body = getBody(OPERATION_LIST_TAGS, request)
+                return objectMapper.readValue<List<GithubRepoTag>>(body).map { it.name }
+            }
+        }, 3, SLEEP_MILLS_FOR_RETRY_500)
+    }
+
     private fun buildPost(token: String, path: String, body: String): Request {
         return request(token, path)
             .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
@@ -306,5 +340,7 @@ class GithubService @Autowired constructor(
         private const val OPERATION_GET_REPOS = "获取仓库列表"
         private const val OPERATION_GET_BRANCH = "获取指定分支"
         private const val OPERATION_GET_TAG = "获取指定Tag"
+        private const val OPERATION_LIST_BRANCHS = "获取分支列表"
+        private const val OPERATION_LIST_TAGS = "获取Tag列表"
     }
 }

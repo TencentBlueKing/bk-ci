@@ -265,7 +265,7 @@
                 if (val) {
                     this.filter = {}
                     this.currentFilter = {}
-                    this.initPage()
+                    // this.initPage()
                     this.$nextTick(() => {
                         if (this.$refs.infiniteScroll) {
                             this.$refs.infiniteScroll.fetchData()
@@ -363,7 +363,11 @@
                 this.slideShow = val
             },
             togglePageLoading (val) {
-                this.$store.commit('pipelines/showPageLoading', val)
+                if (this.pageLoading !== val) {
+                    this.$nextTick(() => {
+                        this.$store.commit('pipelines/showPageLoading', val)
+                    })
+                }
             },
             calcLatestStartBuildTime (row) {
                 if (row.latestBuildStartTime) {
@@ -422,12 +426,8 @@
             },
 
             async initPage () {
-                performance.mark('initList:start')
                 this.togglePageLoading(true)
                 await this.init()
-
-                performance.mark('initList:end')
-                performance.measure('initList', 'initList:start', 'initList:end')
                 this.togglePageLoading(false)
             },
 
