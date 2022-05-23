@@ -73,7 +73,8 @@ import {
     FETCHING_ATOM_MORE_LOADING,
     SET_ATOMS_CLASSIFY,
     SET_ATOM_PAGE_OVER,
-    CLEAR_ATOM_DATA
+    CLEAR_ATOM_DATA,
+    SET_COMMEND_ATOM_PAGE_OVER
 } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import { hashID, randomString } from '@/utils/util'
@@ -247,22 +248,18 @@ export default {
 
     fetchAtoms: async ({ commit, state, getters }, { projectCode, category, jobType, classifyId, os, searchKey, queryProjectAtomFlag, fitOsFlag = undefined }) => {
         try {
+            const isCommendAtomPageOver = state.isCommendAtomPageOver
             const requestAtomData = state.requestAtomData
             const keyword = searchKey || requestAtomData.keyword || ''
             let recommendFlag = requestAtomData.recommendFlag
             let page = requestAtomData.page || 1
-            const pageSize = requestAtomData.pageSize || 50
-            const curOs = os
-
-            // 查询无编译环境下的不适用当前job => queryFitAgentBuildLessAtomFlag 传 false （如果不传这里会包含那些能在有编译环境下使用的无编译环境插件）
+            let pageSize = requestAtomData.pageSize || 50
             let queryFitAgentBuildLessAtomFlag
-            if (!recommendFlag && jobType === 'AGENT_LESS') {
-                queryFitAgentBuildLessAtomFlag = false
-            }
+            const curOs = os
             
             if (keyword) {
                 // 关键字查询 => 搜索研发商店插件数据 (全局搜索 => 无操作系统、无编译环境限制)
-                requestAtomData.pageSize = 100
+                pageSize = 100
                 queryProjectAtomFlag = false
                 fitOsFlag = false
                 os = undefined
@@ -270,15 +267,23 @@ export default {
                 jobType = undefined
                 classifyId = undefined
             }
-            
+
             // 查询不适用插件 category 不传
-            if (recommendFlag === undefined) {
+            if (isCommendAtomPageOver) {
                 category = undefined
                 fitOsFlag = false
+                queryFitAgentBuildLessAtomFlag = false
+            }
+
+            if (!keyword && isCommendAtomPageOver && os) {
                 jobType = undefined
+                queryFitAgentBuildLessAtomFlag = false
+            } else if (!keyword && isCommendAtomPageOver && !os) {
+                fitOsFlag = undefined
+                jobType = 'AGENT'
             }
             
-            if (page === 1) {
+            if (page === 1 && !isCommendAtomPageOver) {
                 commit(FETCHING_ATOM_LIST, true)
             } else {
                 commit(FETCHING_ATOM_MORE_LOADING, true)
@@ -303,16 +308,9 @@ export default {
                 const curAtomList = getters.getAtomDisabled(res.data.records, curOs, category)
                 const [cruAtomCodeList, curAtomMap] = getMapByKey(curAtomList, 'atomCode')
 
-                let atomCodeList, atomMap, atomList
-                if (recommendFlag && page === 1) {
-                    atomCodeList = cruAtomCodeList
-                    atomMap = curAtomMap
-                    atomList = curAtomList
-                } else {
-                    atomCodeList = [...state.atomCodeList, ...cruAtomCodeList]
-                    atomMap = Object.assign(state.atomMap, curAtomMap)
-                    atomList = [...state.atomList, ...curAtomList]
-                }
+                const atomCodeList = [...state.atomCodeList, ...cruAtomCodeList]
+                const atomMap = Object.assign(state.atomMap, curAtomMap)
+                const atomList = [...state.atomList, ...curAtomList]
 
                 const count = res.data.count
                 if (recommendFlag) {
@@ -323,12 +321,13 @@ export default {
                         page = 0
                     }
                     commit(SET_COMMEND_ATOM_COUNT, count)
+                    commit(SET_COMMEND_ATOM_PAGE_OVER, atomCodeList.length === count)
                 }
                 
-                let isAtomPageOver
+                let isAtomPageOver = false
                 if (category === 'TRIGGER') {
                     isAtomPageOver = atomList.length === count
-                } else if (!recommendFlag) {
+                } else if (!recommendFlag && count !== 0) {
                     isAtomPageOver = atomList.length === state.commendAtomCount + count
                 }
                 commit(SET_ATOM_PAGE_OVER, isAtomPageOver)
@@ -349,8 +348,8 @@ export default {
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
         } finally {
-            commit(FETCHING_ATOM_LIST, false)
             commit(FETCHING_ATOM_MORE_LOADING, false)
+            commit(FETCHING_ATOM_LIST, false)
         }
     },
 

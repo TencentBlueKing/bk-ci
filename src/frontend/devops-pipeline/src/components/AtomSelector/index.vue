@@ -128,7 +128,8 @@
                 'atomMap',
                 'atomList',
                 'fetchingAtomMoreLoading',
-                'isAtomPageOver'
+                'isAtomPageOver',
+                'isCommendAtomPageOver'
             ]),
 
             atomCode () {
@@ -208,6 +209,16 @@
                     }
                 },
                 immediate: true
+            },
+
+            fetchingAtomList: {
+                handler () {
+                    // 如果获取完可用插件, 就请求一页不可用插件数据
+                    if (this.isCommendAtomPageOver) {
+                        this.fetchAtomList()
+                    }
+                },
+                immediate: true
             }
         },
 
@@ -247,7 +258,7 @@
                             searchKey: this.searchKey,
                             queryProjectAtomFlag
                         })
-                    }, 300)
+                    }, 100)
                 }
             },
 
