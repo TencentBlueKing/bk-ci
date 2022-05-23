@@ -66,10 +66,14 @@ class SampleShardingRoutingRuleServiceImpl(
 
     /**
      * 获取可用数据库表名称
+     * @param dataSourceName 数据源名称
      * @param tableShardingConfig 分表配置
      * @return 可用数据库表名称
      */
-    override fun getValidTableName(tableShardingConfig: TableShardingConfig): String {
+    override fun getValidTableName(
+        dataSourceName: String,
+        tableShardingConfig: TableShardingConfig
+    ): String {
         // 从可用的数据库表中随机选择一个分配给该项目
         val tableName = tableShardingConfig.tableName
         val shardingNum = tableShardingConfig.shardingNum

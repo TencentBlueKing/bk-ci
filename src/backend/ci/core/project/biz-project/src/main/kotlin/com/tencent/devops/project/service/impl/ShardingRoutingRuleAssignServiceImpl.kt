@@ -144,7 +144,7 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
         routingName: String
     ): ShardingRoutingRule {
         // 获取可用数据表真实名称
-        val validTableName = shardingRoutingRuleService.getValidTableName(tableShardingConfig)
+        val validTableName = shardingRoutingRuleService.getValidTableName(dataSourceName, tableShardingConfig)
         val tableShardingRoutingRule = ShardingRoutingRule(
             clusterName = tableShardingConfig.clusterName,
             moduleCode = tableShardingConfig.moduleCode,
