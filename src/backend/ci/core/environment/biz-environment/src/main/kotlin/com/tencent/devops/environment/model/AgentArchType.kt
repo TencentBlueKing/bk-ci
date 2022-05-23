@@ -25,15 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.environment.model
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("流水线模型-构建任务失败时用于通知的信息")
-data class BuildTaskErrorMessage(
-    @ApiModelProperty("插件创建人", required = false)
-    var atomCreator: String?,
-    @ApiModelProperty("第三方服务助手信息", required = false)
-    var thirdPartyAssistant: String?
-)
+enum class AgentArchType(val arch: String) {
+    ARM64("arm64"),
+    MIPS64("mips64")
+}
