@@ -181,6 +181,7 @@ jobs:
         id: codecc-backend
         working-directory: src/backend/codecc
         run: |
+          chmod +x gradlew
           ./gradlew clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
 
       - name: frontend
