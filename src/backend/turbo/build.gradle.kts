@@ -26,6 +26,11 @@ allprojects {
             dependency("io.springfox:springfox-boot-starter:${Versions.swaggerVersion}")
             dependency("com.google.guava:guava:${Versions.guavaVersion}")
             dependency("io.jsonwebtoken:jjwt:${Versions.jjwtVersion}")
+            dependency("io.micrometer:micrometer-spring-legacy:${Versions.micrometerSpringVersion}")
+            dependencySet("io.micrometer:${Versions.micrometerVersion}") {
+                entry("micrometer-jersey2")
+                entry("micrometer-registry-prometheus")
+            }
         }
     }
 }
