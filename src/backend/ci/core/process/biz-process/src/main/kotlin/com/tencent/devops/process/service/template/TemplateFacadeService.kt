@@ -49,7 +49,6 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
@@ -1121,15 +1120,15 @@ class TemplateFacadeService @Autowired constructor(
             return true
         }
 
-        val v1Map = v1Properties.map {
+        val v1Map = v1Properties.associate {
             it.isAccessible = true
             it.name to it.get(e1)
-        }.toMap()
+        }
 
-        val v2Map = v2Properties.map {
+        val v2Map = v2Properties.associate {
             it.isAccessible = true
             it.name to it.get(e2)
-        }.toMap()
+        }
 
         if (v1Map.size != v2Map.size) {
             return true
@@ -1404,15 +1403,17 @@ class TemplateFacadeService @Autowired constructor(
             }
             tmpLabels
         }
-        val instanceModel = getInstanceModel(
-            projectId = projectId,
-            pipelineId = templateInstanceUpdate.pipelineId,
+
+        val instanceModel = PipelineUtils.instanceModel(
             templateModel = templateModel,
             pipelineName = templateInstanceUpdate.pipelineName,
             buildNo = templateInstanceUpdate.buildNo,
             param = templateInstanceUpdate.param,
-            labels = labels
+            instanceFromTemplate = true,
+            labels = labels,
+            defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
         )
+
         instanceModel.templateId = templateId
         pipelineInfoFacadeService.editPipeline(
             userId = userId,
@@ -1530,63 +1531,6 @@ class TemplateFacadeService @Autowired constructor(
             }
         }
         return true
-    }
-
-    /**
-     *  实例内有codeccId则用实例内的数据
-     */
-    private fun getInstanceModel(
-        projectId: String,
-        pipelineId: String,
-        templateModel: Model,
-        pipelineName: String,
-        buildNo: BuildNo?,
-        param: List<BuildFormProperty>?,
-        labels: List<String>? = null
-    ): Model {
-
-        val model = PipelineUtils.instanceModel(
-            templateModel = templateModel,
-            pipelineName = pipelineName,
-            buildNo = buildNo,
-            param = param,
-            instanceFromTemplate = true,
-            labels = labels,
-            defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
-        )
-
-        val instanceModelStr = pipelineResDao.getLatestVersionModelString(dslContext, projectId, pipelineId)
-        val instanceModel = objectMapper.readValue(instanceModelStr, Model::class.java)
-        var codeCCTaskId: String? = null
-        var codeCCTaskCnName: String? = null
-        var codeCCTaskName: String? = null
-
-        instanceModel.stages.forEach outer@{ stage ->
-            stage.containers.forEach { container ->
-                container.elements.forEach { element ->
-                    if (element is LinuxPaasCodeCCScriptElement) {
-                        codeCCTaskId = element.codeCCTaskId
-                        codeCCTaskCnName = element.codeCCTaskCnName
-                        codeCCTaskName = element.codeCCTaskName
-                        return@outer
-                    }
-                }
-            }
-        }
-        if (codeCCTaskId != null) {
-            model.stages.forEach { stage ->
-                stage.containers.forEach { container ->
-                    container.elements.forEach { element ->
-                        if (element is LinuxPaasCodeCCScriptElement) {
-                            element.codeCCTaskId = codeCCTaskId
-                            element.codeCCTaskName = codeCCTaskName
-                            element.codeCCTaskCnName = codeCCTaskCnName
-                        }
-                    }
-                }
-            }
-        }
-        return model
     }
 
     fun copySetting(setting: PipelineSetting, pipelineId: String, templateName: String): PipelineSetting {
