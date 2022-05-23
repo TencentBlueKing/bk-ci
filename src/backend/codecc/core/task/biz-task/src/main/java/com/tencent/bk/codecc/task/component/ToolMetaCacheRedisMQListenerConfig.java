@@ -15,6 +15,8 @@ package com.tencent.bk.codecc.task.component;
 import com.tencent.bk.codecc.task.consumer.RefreshToolMetaCacheConsumer;
 import com.tencent.devops.common.web.mq.ConstantsKt;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -32,6 +34,11 @@ import org.springframework.data.redis.serializer.GenericToStringSerializer;
 @Configuration
 @Slf4j
 public class ToolMetaCacheRedisMQListenerConfig {
+
+    @Bean
+    public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory)  {
+        return new RabbitAdmin(connectionFactory);
+    }
 
     /**
      * 消息监听器，使用MessageAdapter可实现自动化解码及方法代理

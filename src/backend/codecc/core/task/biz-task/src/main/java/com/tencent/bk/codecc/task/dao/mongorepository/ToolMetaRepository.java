@@ -80,6 +80,5 @@ public interface ToolMetaRepository extends MongoRepository<ToolMetaEntity, Stri
      * @param name
      * @return
      */
-    @Query(fields = "{'name':1, 'lang':1}", value = "{'name' : ?0}")
     ToolMetaEntity findFirstByName(String name);
 }
