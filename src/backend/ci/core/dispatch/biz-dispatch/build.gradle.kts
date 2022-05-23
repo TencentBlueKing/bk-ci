@@ -26,7 +26,6 @@
  */
 
 dependencies {
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
     api(project(":core:process:api-process"))
     api(project(":core:project:api-project"))
     api(project(":core:dispatch:api-dispatch"))

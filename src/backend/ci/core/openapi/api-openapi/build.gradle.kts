@@ -30,7 +30,7 @@ dependencies {
     api(project(":core:common:common-web"))
     api(project(":core:common:common-util"))
     api(project(":core:quality:api-quality"))
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
+    api(project(":core:common:common-archive"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:store:api-store"))
     api(project(":core:auth:api-auth"))

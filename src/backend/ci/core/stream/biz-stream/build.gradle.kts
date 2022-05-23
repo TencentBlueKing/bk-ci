@@ -36,7 +36,6 @@ dependencies {
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-db"))
     api(project(":core:common:common-scm"))
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
     api(project(":core:common:common-websocket"))
     api(project(":core:common:common-webhook:biz-common-webhook"))
     api(project(":core:store:api-store"))

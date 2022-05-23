@@ -27,9 +27,6 @@
 
 package com.tencent.devops.plugin.codecc
 
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
-
 object CodeccUtils {
 
     const val BK_CI_CODECC_TASK_ID = "BK_CI_CODECC_TASK_ID"
@@ -37,30 +34,23 @@ object CodeccUtils {
     const val BK_CI_CODECC_V3_ATOM = "CodeccCheckAtomDebug"
 
     fun isCodeccAtom(atomName: String?): Boolean {
-        return isCodeccNewAtom(atomName) || isCodeccV1Atom(atomName)
+        return isCodeccNewAtom(atomName)
     }
 
-    fun isCodeccNewAtom(atomName: String?): Boolean {
+    private fun isCodeccNewAtom(atomName: String?): Boolean {
         return isCodeccV2Atom(atomName) || isCodeccV3Atom(atomName)
     }
 
-    fun isCodeccV1Atom(atomName: String?): Boolean {
-        return atomName == LinuxCodeCCScriptElement.classType ||
-            atomName == LinuxPaasCodeCCScriptElement.classType
-    }
-
-    fun isCodeccV2Atom(atomName: String?): Boolean {
+    private fun isCodeccV2Atom(atomName: String?): Boolean {
         return atomName == "CodeccCheckAtom"
     }
 
-    fun isCodeccV3Atom(atomName: String?): Boolean {
+    private fun isCodeccV3Atom(atomName: String?): Boolean {
         return atomName == BK_CI_CODECC_V3_ATOM
     }
 
     // 主要是因为codecc插件版本太多，又要统一处理，故加此map
     val realAtomCodeMap = mapOf(
-        LinuxCodeCCScriptElement.classType to BK_CI_CODECC_V3_ATOM,
-        LinuxPaasCodeCCScriptElement.classType to BK_CI_CODECC_V3_ATOM,
         "CodeccCheckAtom" to BK_CI_CODECC_V3_ATOM,
         BK_CI_CODECC_V3_ATOM to BK_CI_CODECC_V3_ATOM
     )
