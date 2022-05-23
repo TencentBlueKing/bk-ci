@@ -96,8 +96,12 @@ interface ShardingRoutingRuleService {
 
     /**
      * 获取可用数据库表名称
+     * @param dataSourceName 数据源名称
      * @param tableShardingConfig 分表配置
      * @return 可用数据库表名称
      */
-    fun getValidTableName(tableShardingConfig: TableShardingConfig): String
+    fun getValidTableName(
+        dataSourceName: String,
+        tableShardingConfig: TableShardingConfig
+    ): String
 }
