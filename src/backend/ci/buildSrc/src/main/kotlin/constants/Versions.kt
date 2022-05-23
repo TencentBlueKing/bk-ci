@@ -40,4 +40,5 @@ object Versions {
     const val Xinge = "1.2.4.9"
     const val Pulsar = "2.7.2"
     const val JacksonDatatypeJsr = "2.11.4"
+    const val reflections = "0.10.2"
 }

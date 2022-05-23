@@ -51,6 +51,7 @@ allprojects {
             dependency("com.github.oshi:oshi-core:${Versions.Oshi}")
             dependency("com.tencent.devops.leaf:leaf-boot-starter:${Versions.Leaf}")
             dependency("com.github.xingePush:xinge:${Versions.Xinge}")
+            dependency("org.reflections:reflections:${Versions.reflections}")
             dependencySet("io.swagger:${Versions.Swagger}") {
                 entry("swagger-annotations")
                 entry("swagger-jersey2-jaxrs")
