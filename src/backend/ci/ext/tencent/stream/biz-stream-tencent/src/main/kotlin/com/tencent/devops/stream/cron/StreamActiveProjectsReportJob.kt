@@ -84,10 +84,11 @@ class StreamActiveProjectsReportJob @Autowired constructor(
     }
 
     private fun doReport() {
-        // 获取v2版本的指定日志的日活跃项目
-        val yesterday = LocalDateTime.now().minusDays(1)
-        val startTime = yesterday.withHour(0).withMinute(0).withSecond(0).timestampmilli()
-        val endTime = yesterday.withHour(23).withMinute(59).withSecond(59).timestampmilli()
+        // 获取v2版本的指定日期的日活跃项目
+        val startDay = LocalDateTime.now().minusDays(7)
+        val endDay = LocalDateTime.now().minusDays(1)
+        val startTime = startDay.withHour(0).withMinute(0).withSecond(0).timestampmilli()
+        val endTime = endDay.withHour(23).withMinute(59).withSecond(59).timestampmilli()
         val projectCount = gitRequestEventBuildDao.getBuildActiveProjectCount(dslContext, startTime, endTime)
         // 上报数据
         oteamStatus(projectCount.toDouble(), streamSlaConfig.oteamActiveProjectTarget, startTime)
