@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.pojo.element
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
