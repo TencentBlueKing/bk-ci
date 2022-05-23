@@ -10,7 +10,7 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
-import com.tencent.devops.process.yaml.modelCreate.inner.PreCIInfo
+import com.tencent.devops.process.yaml.modelCreate.inner.PreCIData
 import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
 import com.tencent.devops.process.yaml.modelCreate.pojo.PreCIDispatchInfo
 import com.tencent.devops.process.yaml.v2.models.Resources
@@ -92,7 +92,7 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
     ): MarketBuildAtomElement? {
         val data = mutableMapOf<String, Any>()
         val atomCode = step.uses!!.split('@')[0]
-        val preCIInfo = event.preCIInfo!!
+        val preCIData = event.preCIData!!
 
         // 若是"代码同步"插件标识
         if (atomCode.equals(LOCAL_SYNC_CODE_PLUGIN_ATOM_CODE, ignoreCase = true)) {
@@ -102,10 +102,10 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
             }
 
             // 安装"代码同步"插件
-            installMarketAtom(REMOTE_SYNC_CODE_PLUGIN_ATOM_CODE, preCIInfo)
+            installMarketAtom(REMOTE_SYNC_CODE_PLUGIN_ATOM_CODE, preCIData)
             val input = step.with?.toMutableMap() ?: mutableMapOf()
-            input["agentId"] = input["agentId"] ?: preCIInfo.agentId
-            input["workspace"] = input["workspace"] ?: preCIInfo.workspace
+            input["agentId"] = input["agentId"] ?: preCIData.agentId
+            input["workspace"] = input["workspace"] ?: preCIData.workspace
             input["useDelete"] = input["useDelete"] ?: true
             input["syncGitRepository"] = input["syncGitRepository"] ?: false
             data["input"] = input
@@ -120,7 +120,7 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
             )
         } else {
             data["input"] = step.with ?: Any()
-            setWhitePath(atomCode, data, job, preCIInfo)
+            setWhitePath(atomCode, data, job, preCIData)
 
             return MarketBuildAtomElement(
                 name = step.name ?: step.uses!!.split('@')[0],
@@ -140,14 +140,14 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
         atomCode: String,
         data: MutableMap<String, Any>,
         job: Job,
-        preCIInfo: PreCIInfo
+        preCIData: PreCIData
     ) {
-        if (atomCode == CodeCCScanInContainerTask.atomCode && preCIInfo.extraParam != null
+        if (atomCode == CodeCCScanInContainerTask.atomCode && preCIData.extraParam != null
         ) {
             val input = (data["input"] as Map<*, *>).toMutableMap()
             val isRunOnDocker =
                 JobRunsOnType.DEV_CLOUD.type == job.runsOn.poolName || JobRunsOnType.DOCKER.type == job.runsOn.poolName
-            input["path"] = getWhitePathList(isRunOnDocker, preCIInfo)
+            input["path"] = getWhitePathList(isRunOnDocker, preCIData)
         }
     }
 
@@ -156,20 +156,20 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
      */
     private fun getWhitePathList(
         isRunOnDocker: Boolean = false,
-        info: PreCIInfo
+        data: PreCIData
     ): List<String> {
         val whitePathList = mutableListOf<String>()
 
         // idea右键扫描
-        if (!(info.extraParam?.codeccScanPath.isNullOrBlank())) {
-            whitePathList.add(info.extraParam!!.codeccScanPath!!)
+        if (!(data.extraParam?.codeccScanPath.isNullOrBlank())) {
+            whitePathList.add(data.extraParam!!.codeccScanPath!!)
         }
 
         // push/commit前扫描的文件路径
-        if (info.extraParam?.incrementFileList != null &&
-                info.extraParam?.incrementFileList!!.isNotEmpty()
+        if (data.extraParam?.incrementFileList != null &&
+                data.extraParam?.incrementFileList!!.isNotEmpty()
         ) {
-            whitePathList.addAll(info.extraParam?.incrementFileList!!)
+            whitePathList.addAll(data.extraParam?.incrementFileList!!)
         }
 
         // 若不是容器中执行的，则无法进行本地路径替换
@@ -179,11 +179,11 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
 
         // 容器文件路径处理
         whitePathList.forEachIndexed { index, path ->
-            val filePath = path.removePrefix(info.workspace)
+            val filePath = path.removePrefix(data.workspace)
             // 路径开头不匹配则不替换
             if (filePath != path) {
                 // 兼容workspace可能带'/'的情况
-                if (info.workspace.last() == '/') {
+                if (data.workspace.last() == '/') {
                     whitePathList[index] = "/data/landun/workspace/$filePath"
                 } else {
                     whitePathList[index] = "/data/landun/workspace$filePath"
@@ -199,14 +199,14 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
      */
     private fun installMarketAtom(
         atomCode: String,
-        preCIInfo: PreCIInfo
+        preCIData: PreCIData
     ) {
-        val projectCodes = ArrayList<String>().apply { add(preCIInfo.projectId) }
+        val projectCodes = ArrayList<String>().apply { add(preCIData.projectId) }
 
         try {
             val request = InstallAtomReq(projectCodes, atomCode)
             val client = SpringContextUtil.getBean(Client::class.java)
-            client.get(ServiceMarketAtomResource::class).installAtom(preCIInfo.userId, channelCode, request)
+            client.get(ServiceMarketAtomResource::class).installAtom(preCIData.userId, channelCode, request)
         } catch (e: Throwable) {
             // 可能之前安装过，继续执行不中断
             logger.error("install atom($atomCode) failed, exception:", e)

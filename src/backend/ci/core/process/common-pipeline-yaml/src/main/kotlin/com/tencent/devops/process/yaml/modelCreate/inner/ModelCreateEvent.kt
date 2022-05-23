@@ -48,7 +48,7 @@ data class ModelCreateEvent(
     val streamData: StreamData? = null,
     val changeSet: Set<String>? = null,
     val jobTemplateAcrossInfo: Map<String, BuildTemplateAcrossInfo>? = null,
-    val preCIInfo: PreCIInfo? = null
+    val preCIData: PreCIData? = null
 )
 
 /**
@@ -89,9 +89,9 @@ data class StreamData(
 )
 
 /**
- * preci相关信息
+ * preci
  */
-data class PreCIInfo(
+data class PreCIData(
     val agentId: String,
     val workspace: String,
     val userId: String,
@@ -99,9 +99,6 @@ data class PreCIInfo(
     val extraParam: ExtraParam?
 )
 
-/**
- * preci扩展信息
- */
 data class ExtraParam(
     val codeccScanPath: String? = null,
     val incrementFileList: List<String>? = null,

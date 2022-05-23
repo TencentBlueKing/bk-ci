@@ -47,7 +47,7 @@ import com.tencent.devops.process.yaml.modelCreate.ModelCreate
 import com.tencent.devops.process.yaml.modelCreate.inner.ExtraParam
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.modelCreate.inner.PipelineInfo
-import com.tencent.devops.process.yaml.modelCreate.inner.PreCIInfo
+import com.tencent.devops.process.yaml.modelCreate.inner.PreCIData
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
@@ -131,7 +131,7 @@ class PreBuildV2Service @Autowired constructor(
             pipelineId = createEmptyPipeline(userId, pipelineName)
         }
 
-        val preCIInfo = PreCIInfo(
+        val preCIData = PreCIData(
             agentId = agentInfo.agentId,
             workspace = startUpReq.workspace,
             userId = userId,
@@ -147,7 +147,7 @@ class PreBuildV2Service @Autowired constructor(
             userId = userId,
             projectCode = projectId,
             pipelineInfo = PipelineInfo(pipelineId),
-            preCIInfo = preCIInfo,
+            preCIData = preCIData,
             gitData = null,
             streamData = null,
             changeSet = null,
