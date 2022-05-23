@@ -124,7 +124,6 @@
                 } else {
                     contxt = this.$t('editPage.noEnvUseTips')
                 }
-                console.log(atom.disabled, contxt, 'content')
                 return {
                     delay: 300,
                     disabled: !atom.disabled,

@@ -261,7 +261,7 @@ export default {
             }
             
             if (keyword) {
-                // 关键字查询 => 搜索研发商店插件数据 (全局搜索)
+                // 关键字查询 => 搜索研发商店插件数据 (全局搜索 => 无操作系统、无编译环境限制)
                 requestAtomData.pageSize = 100
                 queryProjectAtomFlag = false
                 fitOsFlag = false
@@ -275,6 +275,7 @@ export default {
             if (recommendFlag === undefined) {
                 category = undefined
                 fitOsFlag = false
+                jobType = undefined
             }
             
             if (page === 1) {
