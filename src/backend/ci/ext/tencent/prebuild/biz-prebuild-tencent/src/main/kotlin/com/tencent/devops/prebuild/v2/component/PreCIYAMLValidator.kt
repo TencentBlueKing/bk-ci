@@ -72,10 +72,10 @@ class PreCIYAMLValidator {
             return Triple(false, null, errorMessage)
         }
 
-        val preScriptBuildYaml = YamlUtil.getObjectMapper().readValue(formatYamlStr, PreScriptBuildYaml::class.java)
-        checkYamlBusiness(preScriptBuildYaml, originYaml)
+        //val preScriptBuildYaml = YamlUtil.getObjectMapper().readValue(formatYamlStr, PreScriptBuildYaml::class.java)
+        //checkYamlBusiness(preScriptBuildYaml, originYaml)
 
-        return Triple(true, preScriptBuildYaml, "")
+        return Triple(true, null, "")
     }
 
     /**
