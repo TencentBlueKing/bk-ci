@@ -160,6 +160,7 @@ object TXStreamDispatchUtils {
 
         if (bizType == DispatchBizType.PRECI) {
             if (poolName == JobRunsOnType.LOCAL.type) {
+                logger.info("preci local dispatch type")
                 return ThirdPartyAgentIDDispatchType(
                     displayName = "",
                     workspace = "",
@@ -172,6 +173,7 @@ object TXStreamDispatchUtils {
 
             when (poolName) {
                 JobRunsOnType.DEV_CLOUD.type -> {
+                    logger.info("preci docker on dev cloud dispatch type")
                     return PublicDevCloudDispathcType(
                         image = containerPool.container,
                         performanceConfigId = "0",
@@ -180,6 +182,7 @@ object TXStreamDispatchUtils {
                     )
                 }
                 JobRunsOnType.DOCKER.type -> {
+                    logger.info("preci docker dispatch type")
                     return DockerDispatchType(
                         dockerBuildVersion = containerPool.container,
                         imageType = ImageType.THIRD,
