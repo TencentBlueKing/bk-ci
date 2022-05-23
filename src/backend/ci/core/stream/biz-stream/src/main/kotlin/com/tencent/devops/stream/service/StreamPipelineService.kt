@@ -59,7 +59,7 @@ class StreamPipelineService @Autowired constructor(
     private val websocketService: StreamWebsocketService,
     private val streamGitTransferService: StreamGitTransferService,
     private val streamBasicSettingService: StreamBasicSettingService,
-    private val gitConfig: StreamGitConfig,
+    private val gitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamPipelineService::class.java)
