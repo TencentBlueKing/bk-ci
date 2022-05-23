@@ -153,7 +153,7 @@ open class CommonPreBuildService constructor(
             pluginVersion = startUpReq.extraParam?.pluginVersion
         )
 
-        logger.info("preci pipelineId: $pipelineId")
+        logger.info("preci projectId: ${projectId}, pipelineId: $pipelineId")
     }
 
     protected fun createOrUpdatePipeline(
@@ -185,7 +185,7 @@ open class CommonPreBuildService constructor(
             pluginVersion = startUpReq.extraParam?.pluginVersion
         )
 
-        logger.info("preci pipelineId: $pipelineId")
+        logger.info("preci projectId: ${projectId}, pipelineId: $pipelineId")
 
         return pipelineId
     }
