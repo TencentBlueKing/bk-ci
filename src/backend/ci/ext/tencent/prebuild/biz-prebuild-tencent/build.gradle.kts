@@ -44,7 +44,6 @@ dependencies {
     api(project(":core:common:common-auth"))
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-db"))
-    api(project(":core:process:common-pipeline-yaml"))
     api(project(":ext:tencent:common:common-wechatwork"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:environment:api-environment-tencent"))
