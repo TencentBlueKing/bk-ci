@@ -73,16 +73,17 @@ class TencentProjectEventListener @Autowired constructor(
         }
     }
 
+    // 已改成同步，无需重复添加
     override fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
         val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
         // 过渡期间让新建项目直接设置为灰度v2
 //        opProjectService.setGrayProject(projectCodeList = listOf(event.projectInfo.englishName), operateFlag = 1)
-        projectPaasCCService.createPaasCCProject(
-            userId = event.userId,
-            projectId = event.projectId,
-            accessToken = accessToken,
-            projectCreateInfo = event.projectInfo
-        )
+//        projectPaasCCService.createPaasCCProject(
+//            userId = event.userId,
+//            projectId = event.projectId,
+//            accessToken = accessToken,
+//            projectCreateInfo = event.projectInfo
+//        )
     }
 
     override fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent) {
