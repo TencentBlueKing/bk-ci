@@ -48,7 +48,7 @@ class ElementTest {
 
     @Test
     fun unknownSubType() {
-        val json ="""{
+        val json = """{
             "@type" : "not exist sub type",
             "name" : "这个是不存在的Element，为了验证反序列化Json时不出错",
             "id" : "e-e89bb10191344f6b84e42c358050dbea",
@@ -144,10 +144,12 @@ class ElementTest {
         }
 
         run WebHookTriggerElement@{
-            val element = CodeGitWebHookTriggerElement(id = "3",
+            val element = CodeGitWebHookTriggerElement(
+                id = "3",
                 branchName = "master", eventType = CodeEventType.MERGE_REQUEST, block = false,
                 repositoryHashId = null, excludeBranchName = null, excludePaths = null,
-                excludeTagName = null, excludeUsers = null, includePaths = null)
+                excludeTagName = null, excludeUsers = null, includePaths = null
+            )
             assertNotEquals(element.id, element.findFirstTaskIdByStartType(StartType.MANUAL))
             assertNotEquals(element.id, element.findFirstTaskIdByStartType(StartType.SERVICE))
             assertNotEquals(element.id, element.findFirstTaskIdByStartType(StartType.PIPELINE))
