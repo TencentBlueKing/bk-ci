@@ -47,6 +47,19 @@ import org.junit.Test
 class ElementTest {
 
     @Test
+    fun unknownSubType() {
+        val json ="""{
+            "@type" : "not exist sub type",
+            "name" : "这个是不存在的Element，为了验证反序列化Json时不出错",
+            "id" : "e-e89bb10191344f6b84e42c358050dbea",
+            "atomCode" : "builder3Dunity"
+          } """
+        val element = JsonUtil.to(json, Element::class.java)
+        println(JsonUtil.toJson(element))
+        assertTrue(element is EmptyElement)
+    }
+
+    @Test
     fun takeStatus() {
         val element = ManualTriggerElement(id = "1")
         element.status = BuildStatus.QUEUE.name
