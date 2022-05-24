@@ -30,16 +30,19 @@ package collector
 import (
 	"context"
 	"fmt"
+	"github.com/influxdata/telegraf/logger"
 	"time"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
-	"github.com/influxdata/telegraf/cmd/bktelegraf"
+
+	"github.com/influxdata/telegraf/agent"
+	telegrafConfig "github.com/influxdata/telegraf/config"
 
 	"io/ioutil"
 	"strings"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/astaxie/beego/logs"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 )
 
 const (
@@ -212,7 +215,7 @@ func DoAgentCollect() {
 
 	writeTelegrafConfig()
 
-	tAgent, err := bktelegraf.GetTelegrafAgent(
+	tAgent, err := getTelegrafAgent(
 		fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), telegrafConfigFile),
 		fmt.Sprintf("%s/logs/telegraf.log", systemutil.GetWorkDir()),
 	)
@@ -228,6 +231,23 @@ func DoAgentCollect() {
 		}
 		time.Sleep(telegrafRelaunchTime)
 	}
+}
+
+func getTelegrafAgent(configFile, logFile string) (*agent.Agent, error) {
+	// get a new config and parse configuration from file.
+	c := telegrafConfig.NewConfig()
+	if err := c.LoadConfig(configFile); err != nil {
+		return nil, err
+	}
+
+	logConfig := logger.LogConfig{
+		Logfile:             logFile,
+		LogTarget:           logger.LogTargetFile,
+		RotationMaxArchives: -1,
+	}
+
+	logger.SetupLogging(logConfig)
+	return agent.NewAgent(c)
 }
 
 func writeTelegrafConfig() {
