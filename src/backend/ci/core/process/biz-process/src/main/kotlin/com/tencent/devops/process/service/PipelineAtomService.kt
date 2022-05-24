@@ -43,19 +43,25 @@ import com.tencent.devops.common.api.util.CsvUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineAtomRel
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
+import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
 import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
 import com.tencent.devops.store.pojo.common.KEY_VERSION
@@ -70,6 +76,7 @@ import org.springframework.stereotype.Service
 import java.text.MessageFormat
 import java.time.LocalDateTime
 import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.core.Response
 
 @Service
 @RefreshScope
@@ -81,6 +88,8 @@ class PipelineAtomService @Autowired constructor(
     private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val pipelineAtomReplaceBaseDao: PipelineAtomReplaceBaseDao,
     private val pipelineAtomReplaceItemDao: PipelineAtomReplaceItemDao,
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client
 ) {
 
@@ -374,5 +383,37 @@ class PipelineAtomService @Autowired constructor(
                 params = arrayOf(atomCode)
             )
         }
+    }
+
+    fun getPipelineAtomPropList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        checkPermission: Boolean = true
+    ): Result<Map<String, AtomProp>?> {
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = "用户($userId)无权限在工程($projectId)下获取流水线($pipelineId)"
+            )
+        }
+        val model = pipelineRepositoryService.getModel(projectId, pipelineId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+            )
+        // 获取流水线下插件标识集合
+        val atomCodes = mutableSetOf<String>()
+        model.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                container.elements.forEach { element ->
+                    atomCodes.add(element.getAtomCode())
+                }
+            }
+        }
+        return client.get(ServiceAtomResource::class).getAtomProps(atomCodes)
     }
 }

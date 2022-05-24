@@ -29,6 +29,7 @@ package com.tencent.devops.ticket.resources
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.ticket.api.BuildCredentialResource
@@ -41,13 +42,16 @@ class BuildCredentialResourceImpl @Autowired constructor(
     private val credentialService: CredentialService
 ) : BuildCredentialResource {
     @SensitiveApiPermission("get_credential")
+    @BkTimed(extraTags = ["operate", "get"])
     override fun get(
         projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String,
         credentialId: String,
-        publicKey: String
+        publicKey: String,
+        taskId: String?,
+        oldTaskId: String?
     ): Result<CredentialInfo?> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
@@ -64,10 +68,19 @@ class BuildCredentialResourceImpl @Autowired constructor(
         if (publicKey.isBlank()) {
             throw ParamBlankException("Invalid publicKey")
         }
-        return Result(credentialService.buildGet(projectId, buildId, credentialId, publicKey))
+        return Result(
+            credentialService.buildGet(
+                projectId = projectId,
+                buildId = buildId,
+                credentialId = credentialId,
+                publicKey = publicKey,
+                taskId = taskId ?: oldTaskId
+            )
+        )
     }
 
     @SensitiveApiPermission("get_credential")
+    @BkTimed(extraTags = ["operate", "get"])
     override fun getAcrossProject(
         projectId: String,
         buildId: String,
@@ -98,6 +111,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
     }
 
     @SensitiveApiPermission("get_credential")
+    @BkTimed(extraTags = ["operate", "get"])
     override fun getDetail(
         projectId: String,
         buildId: String,

@@ -71,7 +71,7 @@ object XmlStrUtils {
     ): Int {
         logger.info(
             "updatePackageIndex: indexType: $indexType, " +
-                    "locationStr: ${locationStr.replace("\n", "")}"
+                "locationStr: ${locationStr.replace("\n", "")}"
         )
         val stopWatch = StopWatch("updatePackageIndex")
 
@@ -106,7 +106,7 @@ object XmlStrUtils {
     fun deletePackageIndex(randomAccessFile: RandomAccessFile, indexType: IndexType, locationStr: String): Int {
         logger.info(
             "deletePackageIndex: indexType: $indexType, " +
-                    "locationStr: ${locationStr.replace("\n", "")}"
+                "locationStr: ${locationStr.replace("\n", "")}"
         )
 
         val stopWatch = StopWatch("deletePackageIndex")
@@ -269,8 +269,8 @@ object XmlStrUtils {
         return if (prefixIndex <= 0L || locationIndex <= 0L || suffixIndex <= 0L) {
             logger.warn(
                 "findPackageIndex failed, locationStr: $locationStr, " +
-                        "prefixIndex: $prefixIndex, " +
-                        "locationIndex: $locationIndex, suffixIndex: $suffixIndex"
+                    "prefixIndex: $prefixIndex, " +
+                    "locationIndex: $locationIndex, suffixIndex: $suffixIndex"
             )
             null
         } else {
@@ -311,8 +311,8 @@ object XmlStrUtils {
     ) {
         logger.info(
             "updatePackageCount, indexType: $indexType, " +
-                    "changCount: $changCount, " +
-                    "calculatePackage: $calculatePackage"
+                "changCount: $changCount, " +
+                "calculatePackage: $calculatePackage"
         )
         val currentCount = resolvePackageCount(randomAccessFile, indexType)
         logger.info("currentCount: $currentCount")
@@ -336,7 +336,7 @@ object XmlStrUtils {
             IndexType.FILELISTS ->
                 """<?xml version="1.0" encoding="UTF-8" ?>
 <metadata xmlns="http://linux.duke.edu/metadata/filelists" packages="""".length
-            IndexType.OTHERS ->
+            IndexType.OTHER ->
                 """<?xml version="1.0" encoding="UTF-8" ?>
 <metadata xmlns="http://linux.duke.edu/metadata/other" packages="""".length
         }
@@ -364,8 +364,8 @@ object XmlStrUtils {
         if (logger.isDebugEnabled) {
             logger.debug(
                 "updatePackageXml: updateIndex: $updateIndex, " +
-                        "cleanLength: $cleanLength, " +
-                        "newContentSize: ${newContent.size}"
+                    "cleanLength: $cleanLength, " +
+                    "newContentSize: ${newContent.size}"
             )
         }
 
@@ -438,7 +438,7 @@ object XmlStrUtils {
 
     private fun getPackagePrefix(indexType: IndexType): String {
         return when (indexType) {
-            IndexType.OTHERS, IndexType.FILELISTS -> {
+            IndexType.OTHER, IndexType.FILELISTS -> {
                 "  <package pkgid"
             }
             IndexType.PRIMARY -> {
@@ -457,7 +457,7 @@ object XmlStrUtils {
     private fun calculatePackageCount(randomAccessFile: RandomAccessFile, indexType: IndexType): Int {
         val markStr = when (indexType) {
             IndexType.PRIMARY -> """<package type="rpm">"""
-            IndexType.FILELISTS, IndexType.OTHERS -> "<package pkgid="
+            IndexType.FILELISTS, IndexType.OTHER -> "<package pkgid="
         }
         randomAccessFile.seek(0L)
         var line: String?
@@ -475,10 +475,12 @@ object XmlStrUtils {
      */
     fun resolvePackageCount(randomAccessFile: RandomAccessFile, indexType: IndexType): Int {
         val regex = when (indexType) {
-            IndexType.PRIMARY -> ("""^<metadata xmlns="http://linux.duke.edu/metadata/common" xmlns:rpm=""" +
-                    """"http://linux.duke.edu/metadata/rpm" packages="(\d+)">$""").trimMargin()
+            IndexType.PRIMARY -> (
+                """^<metadata xmlns="http://linux.duke.edu/metadata/common" xmlns:rpm=""" +
+                    """"http://linux.duke.edu/metadata/rpm" packages="(\d+)">$"""
+                ).trimMargin()
             IndexType.FILELISTS -> """^<metadata xmlns="http://linux.duke.edu/metadata/filelists" packages="(\d+)">$"""
-            IndexType.OTHERS -> """^<metadata xmlns="http://linux.duke.edu/metadata/other" packages="(\d+)">$"""
+            IndexType.OTHER -> """^<metadata xmlns="http://linux.duke.edu/metadata/other" packages="(\d+)">$"""
         }
 
         randomAccessFile.seek(0L)
@@ -502,10 +504,10 @@ object XmlStrUtils {
      */
     fun toMarkFileXml(rpmXmlMetadata: RpmXmlMetadata, indexType: IndexType): String {
         val prefix = when (indexType) {
-            IndexType.OTHERS -> "<metadata xmlns=\"http://linux.duke.edu/metadata/other\" packages=\"1\">\n"
+            IndexType.OTHER -> "<metadata xmlns=\"http://linux.duke.edu/metadata/other\" packages=\"1\">\n"
             IndexType.PRIMARY ->
                 "<metadata xmlns=\"http://linux.duke.edu/metadata/common\" " +
-                        "xmlns:rpm=\"http://linux.duke.edu/metadata/rpm\" packages=\"1\">\n"
+                    "xmlns:rpm=\"http://linux.duke.edu/metadata/rpm\" packages=\"1\">\n"
             IndexType.FILELISTS -> "<metadata xmlns=\"http://linux.duke.edu/metadata/filelists\" packages=\"1\">\n"
         }
         return rpmXmlMetadata.toXml().removePrefix(prefix).removeSuffix(METADATA_SUFFIX)

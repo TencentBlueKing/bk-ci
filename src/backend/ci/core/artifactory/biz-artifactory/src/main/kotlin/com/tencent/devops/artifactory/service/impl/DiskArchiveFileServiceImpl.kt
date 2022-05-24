@@ -606,6 +606,18 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         FileSystemUtils.deleteRecursively(File("$archiveLocalBasePath/$filePath"))
     }
 
+    override fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        filePath: String,
+        includeFolder: Boolean?,
+        deep: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Page<FileInfo> {
+        TODO("Not yet implemented")
+    }
+
     companion object {
         private const val DEFAULT_PAGESIZE = 100
         private val logger = LoggerFactory.getLogger(DiskArchiveFileServiceImpl::class.java)

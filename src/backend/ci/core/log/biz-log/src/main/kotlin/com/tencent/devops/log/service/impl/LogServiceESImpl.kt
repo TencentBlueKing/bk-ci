@@ -29,17 +29,15 @@ package com.tencent.devops.log.service.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
-import com.tencent.devops.common.log.pojo.LogBatchEvent
-import com.tencent.devops.common.log.pojo.LogEvent
+import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.common.log.pojo.LogLine
-import com.tencent.devops.common.log.pojo.LogStatusEvent
+import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
-import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -64,7 +62,7 @@ import org.elasticsearch.client.RequestOptions
 import org.elasticsearch.client.core.CountRequest
 import org.elasticsearch.client.indices.CreateIndexRequest
 import org.elasticsearch.client.indices.GetIndexRequest
-import org.elasticsearch.common.unit.TimeValue
+import org.elasticsearch.core.TimeValue
 import org.elasticsearch.index.query.BoolQueryBuilder
 import org.elasticsearch.index.query.Operator
 import org.elasticsearch.index.query.QueryBuilders
@@ -102,20 +100,14 @@ class LogServiceESImpl constructor(
         .expireAfterAccess(30, TimeUnit.MINUTES)
         .build<String/*BuildId*/, Boolean/*Has create the index*/>()
 
-    override fun pipelineFinish(event: PipelineBuildFinishBroadCastEvent) {
-        with(event) {
-            indexService.flushLineNum2DB(buildId)
-        }
-    }
-
-    override fun addLogEvent(event: LogEvent) {
+    override fun addLogEvent(event: LogOriginEvent) {
         val logMessage = addLineNo(event.buildId, event.logs)
         if (logMessage.isNotEmpty()) {
-            buildLogPrintService.dispatchEvent(LogBatchEvent(event.buildId, logMessage))
+            buildLogPrintService.dispatchEvent(LogStorageEvent(event.buildId, logMessage))
         }
     }
 
-    override fun addBatchLogEvent(event: LogBatchEvent) {
+    override fun addBatchLogEvent(event: LogStorageEvent) {
         val currentEpoch = System.currentTimeMillis()
         var success = false
         try {
@@ -369,72 +361,79 @@ class LogServiceESImpl constructor(
         executeCount: Int?,
         fileName: String?
     ): Response {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val index = indexService.getIndexName(buildId)
+            val query = getQuery(
+                buildId = buildId,
+                debug = false,
+                logType = null,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
 
-        val index = indexService.getIndexName(buildId)
-        val query = getQuery(
-            buildId = buildId,
-            debug = false,
-            logType = null,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        )
+            val scrollClient = logClient.hashClient(buildId)
+            val searchRequest = SearchRequest(index)
+                .source(
+                    SearchSourceBuilder()
+                        .query(query)
+                        .docValueField("lineNo")
+                        .docValueField("timestamp")
+                        .size(Constants.SCROLL_MAX_LINES)
+                        .sort("timestamp", SortOrder.ASC)
+                        .sort("lineNo", SortOrder.ASC)
+                ).scroll(TimeValue(1000 * 64))
 
-        val scrollClient = logClient.hashClient(buildId)
-        val searchRequest = SearchRequest(index)
-            .source(
-                SearchSourceBuilder()
-                    .query(query)
-                    .docValueField("lineNo")
-                    .docValueField("timestamp")
-                    .size(Constants.SCROLL_MAX_LINES)
-                    .sort("timestamp", SortOrder.ASC)
-                    .sort("lineNo", SortOrder.ASC)
-            ).scroll(TimeValue(1000 * 64))
+            var scrollResp = try {
+                scrollClient.restClient.search(searchRequest, RequestOptions.DEFAULT)
+            } catch (e: IOException) {
+                scrollClient.restClient.search(searchRequest, genLargeSearchOptions())
+            }
 
-        var scrollResp = try {
-            scrollClient.restClient.search(searchRequest, RequestOptions.DEFAULT)
-        } catch (e: IOException) {
-            scrollClient.restClient.search(searchRequest, genLargeSearchOptions())
-        }
+            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
+            // 一边读一边流式下载
+            val fileStream = StreamingOutput { output ->
+                do {
+                    val sb = StringBuilder()
+                    scrollResp.hits.hits.forEach { searchHit ->
+                        val sourceMap = searchHit.sourceAsMap
 
-        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
-        // 一边读一边流式下载
-        val fileStream = StreamingOutput { output ->
-            do {
-                val sb = StringBuilder()
-                scrollResp.hits.hits.forEach { searchHit ->
-                    val sourceMap = searchHit.sourceAsMap
-
-                    val logLine = LogLine(
-                        sourceMap["lineNo"].toString().toLong(),
-                        sourceMap["timestamp"].toString().toLong(),
-                        sourceMap["message"].toString().removePrefix("\u001b[31m").removePrefix("\u001b[1m").replace(
-                            "\u001B[m",
-                            ""
-                        ).removeSuffix("\u001b[m"),
-                        Constants.DEFAULT_PRIORITY_NOT_DELETED
+                        val logLine = LogLine(
+                            sourceMap["lineNo"].toString().toLong(),
+                            sourceMap["timestamp"].toString().toLong(),
+                            sourceMap["message"].toString().removePrefix("\u001b[31m")
+                                .removePrefix("\u001b[1m").replace(
+                                "\u001B[m",
+                                ""
+                            ).removeSuffix("\u001b[m"),
+                            Constants.DEFAULT_PRIORITY_NOT_DELETED
+                        )
+                        val dateTime = sdf.format(Date(logLine.timestamp))
+                        val str = "$dateTime : ${logLine.message}" + System.lineSeparator()
+                        sb.append(str)
+                    }
+                    output.write(sb.toString().toByteArray())
+                    output.flush()
+                    scrollResp = scrollClient.restClient.scroll(
+                        SearchScrollRequest(scrollResp.scrollId).scroll(TimeValue(1000 * 64)),
+                        RequestOptions.DEFAULT
                     )
-                    val dateTime = sdf.format(Date(logLine.timestamp))
-                    val str = "$dateTime : ${logLine.message}" + System.lineSeparator()
-                    sb.append(str)
-                }
-                output.write(sb.toString().toByteArray())
-                output.flush()
-                scrollResp = scrollClient.restClient.scroll(
-                    SearchScrollRequest(scrollResp.scrollId).scroll(TimeValue(1000 * 64)),
-                    RequestOptions.DEFAULT
-                )
-            } while (scrollResp.hits.hits.isNotEmpty())
-        }
+                } while (scrollResp.hits.hits.isNotEmpty())
+            }
 
-        val resultName = fileName ?: "$pipelineId-$buildId-log"
-        return Response
-            .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-            .header("content-disposition", "attachment; filename = $resultName.log")
-            .header("Cache-Control", "no-cache")
-            .build()
+            val resultName = fileName ?: "$pipelineId-$buildId-log"
+            success = true
+            return Response
+                .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+                .header("content-disposition", "attachment; filename = \"$resultName.log\"")
+                .header("Cache-Control", "no-cache")
+                .build()
+        } finally {
+            logStorageBean.download(System.currentTimeMillis() - startEpoch, success)
+        }
     }
 
     override fun getEndLogsPage(
@@ -1236,7 +1235,7 @@ class LogServiceESImpl constructor(
         }
     }
 
-    private fun addLineNo(buildId: String, logMessages: List<LogMessage>): List<LogMessageWithLineNo> {
+    private fun addLineNo(buildId: String, logMessages: List<com.tencent.devops.common.log.pojo.message.LogMessage>): List<LogMessageWithLineNo> {
         val lineNum = indexService.getAndAddLineNum(buildId, logMessages.size)
         if (lineNum == null) {
             logger.error("Got null logIndex from indexService, buildId: $buildId")

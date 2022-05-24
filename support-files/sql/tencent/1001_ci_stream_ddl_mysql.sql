@@ -26,6 +26,14 @@ CREATE TABLE IF NOT EXISTS `T_GIT_BASIC_SETTING` (
     `CREATOR_BG_NAME` varchar(128) DEFAULT NULL COMMENT 'CI开启人所在事业群',
     `CREATOR_DEPT_NAME` varchar(128) DEFAULT NULL COMMENT 'CI开启人所在部门',
     `CREATOR_CENTER_NAME` varchar(128) DEFAULT NULL COMMENT 'CI开启人所在中心',
+    `GIT_PROJECT_DESC` varchar(1024)  NULL DEFAULT NULL COMMENT 'GIT项目的描述信息',
+    `GIT_PROJECT_AVATAR` varchar(1024)  NULL DEFAULT NULL COMMENT 'GIT项目的头像信息',
+    `LAST_CI_INFO` text  NULL DEFAULT NULL COMMENT '最后一次构建的CI信息',
+    `OAUTH_OPERATOR` varchar(32) NOT NULL DEFAULT '' COMMENT 'OAUTH身份的修改者',
+    `ENABLE_COMMIT_CHECK` bit(1) NOT NULL DEFAULT 1 COMMENT '项目中的构建是否发送commitcheck',
+    `PATH_WITH_NAME_SPACE` varchar(1024)  NULL DEFAULT NULL COMMENT '带有名空间的项目路径',
+    `NAME_WITH_NAME_SPACE` varchar(1024)  NOT NULL DEFAULT '' COMMENT '带有名空间的项目名称',
+    `ENABLE_MR_COMMENT` bit(1) NOT NULL DEFAULT 1 COMMENT '项目中的MR是否发送评论',
     PRIMARY KEY (`ID`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -448,3 +456,20 @@ CREATE TABLE IF NOT EXISTS `T_STREAM_DELETE_EVENT`  (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ----------------------------
+-- Table structure for T_GIT_PIPELINE_REPO_RESOURCE
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_GIT_PIPELINE_REPO_RESOURCE` (
+    `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `SOURCE_GIT_PROJECT_PATH` varchar(255) charset utf8mb4                          not null comment '触发库工蜂项目ID',
+    `TARGET_GIT_PROJECT_ID`   bigint(11)                                            not null comment '流水线主库工蜂项目ID',
+    `PIPELINE_ID`             varchar(34) charset utf8mb4 default ''                not null comment '对应蓝盾流水线ID',
+    `CREATE_TIME`             timestamp                   default CURRENT_TIMESTAMP not null comment '创建时间',
+    `UPDATE_TIME`             timestamp                   default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '修改时间',
+    PRIMARY KEY (`ID`),
+    KEY `idx_pipeline_id` (`PIPELINE_ID`),
+    KEY `idx_source_project_path` (`SOURCE_GIT_PROJECT_PATH`),
+    KEY `idx_target_project_id` (`TARGET_GIT_PROJECT_ID`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='工蜂流水线资源表-存储远程仓库流水线相关信息';

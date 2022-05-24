@@ -82,12 +82,13 @@ class BuildVarResourceImpl @Autowired constructor(
         val allContext = pipelineContextService.buildContext(
             projectId = projectId,
             buildId = buildId,
+            pipelineId = pipelineId,
             stageId = null,
             containerId = containerId,
             taskId = taskId,
             variables = variables
         )
-        return Result(allContext[varName] ?: allContext[alisName])
+        return Result(variables[varName] ?: allContext[varName] ?: allContext[alisName])
     }
 
     fun checkPermission(projectId: String, pipelineId: String) {

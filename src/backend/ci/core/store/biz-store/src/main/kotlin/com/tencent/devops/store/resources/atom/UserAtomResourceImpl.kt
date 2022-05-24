@@ -46,7 +46,12 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
     UserAtomResource {
 
     override fun getPipelineAtom(projectCode: String, atomCode: String, version: String): Result<PipelineAtom?> {
-        return atomService.getPipelineAtom(projectCode, atomCode, version)
+        return atomService.getPipelineAtom(
+            projectCode = projectCode,
+            atomCode = atomCode,
+            version = version,
+            queryOfflineFlag = true
+        )
     }
 
     override fun listAllPipelineAtoms(

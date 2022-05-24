@@ -46,9 +46,7 @@ import {
     UPDATE_CONTAINER,
     ADD_STAGE,
     UPDATE_STAGE,
-    CONTAINER_TYPE_SELECTION_VISIBLE,
-    SET_INSERT_STAGE_INDEX,
-    SET_INSERT_STAGE_ISFINALLY,
+    SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
     SET_BUILD_PARAM,
     DELETE_ATOM_PROP,
@@ -61,8 +59,6 @@ import {
     UPDATE_ATOM_OUTPUT,
     UPDATE_ATOM_OUTPUT_NAMESPACE,
     FETCHING_ATOM_LIST,
-    SET_STORE_DATA,
-    SET_STORE_LOADING,
     SET_STORE_SEARCH,
     FETCHING_ATOM_VERSION,
     SET_ATOM_VERSION_LIST,
@@ -71,7 +67,13 @@ import {
     SET_DEFAULT_STAGE_TAG,
     TOGGLE_STAGE_REVIEW_PANEL,
     SET_IMPORTED_JSON,
-    SET_EDIT_FROM
+    SET_EDIT_FROM,
+    SET_COMMEND_ATOM_COUNT,
+    SET_REQUEST_ATOM_DATA,
+    FETCHING_ATOM_MORE_LOADING,
+    SET_ATOMS_CLASSIFY,
+    SET_ATOM_PAGE_OVER,
+    CLEAR_ATOM_DATA
 } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import { hashID, randomString } from '@/utils/util'
@@ -120,43 +122,13 @@ export default {
         commit(SET_SAVE_STATUS, status)
     },
     toggleStageReviewPanel: actionCreator(TOGGLE_STAGE_REVIEW_PANEL),
-    addStoreAtom ({ commit, state }) {
-        const store = state.storeAtomData || {}
-        let page = store.page || 1
-        const pageSize = store.pageSize || 1500
-        const keyword = store.keyword || undefined
-        const loadEnd = store.loadEnd || false
-        const loading = store.loading || false
-        if (loadEnd || loading) return
-
-        commit(SET_STORE_LOADING, true)
-        return request.get(`${STORE_API_URL_PREFIX}/user/market/atom/list`, { params: { page, pageSize, keyword } }).then((res) => {
-            const data = res.data || {}
-            const records = data.records || []
-            const atomList = store.data || []
-            const storeData = {
-                data: [...atomList, ...records],
-                page: ++page,
-                pageSize: 2000,
-                loadEnd: records.length < pageSize,
-                loading: false,
-                keyword
-            }
-            commit(SET_STORE_DATA, storeData)
-        }).catch((e) => {
-            if (e.code === 403) e.message = ''
-            rootCommit(commit, FETCH_ERROR, e)
-        }).finally(() => {
-            commit(SET_STORE_LOADING, false)
-        })
-    },
 
     setStoreSearch ({ commit }, str) {
         commit(SET_STORE_SEARCH, str)
     },
 
-    clearStoreAtom ({ commit }) {
-        commit(SET_STORE_DATA, {})
+    setRequestAtomData ({ commit }, data) {
+        commit(SET_REQUEST_ATOM_DATA, data)
     },
 
     setPipelineStage ({ commit }, stages) {
@@ -191,10 +163,21 @@ export default {
             return response.data
         })
     },
-    requestPipeline: async ({ commit, dispatch }, { projectId, pipelineId }) => {
+    requestPipeline: async ({ commit, dispatch, getters }, { projectId, pipelineId }) => {
         try {
-            const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`)
-            dispatch('setPipeline', response.data)
+            const [pipelineRes, atomPropRes] = await Promise.all([
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`),
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`)
+            ])
+            const pipeline = pipelineRes.data
+            const atomProp = atomPropRes.data
+            const elements = getters.getAllElements(pipeline.stages)
+            elements.forEach(element => { // 将os属性设置到model内
+                Object.assign(element, {
+                    ...atomProp[element.atomCode]
+                })
+            })
+            dispatch('setPipeline', pipeline)
         } catch (e) {
             if (e.code === 403) {
                 e.message = ''
@@ -202,6 +185,7 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
+    
     requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId }) => {
         try {
             const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`)
@@ -236,32 +220,140 @@ export default {
     fetchBuildResourceByType: ({ commit }, { projectCode, containerId, os, buildType }) => {
         return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${projectCode}/containers/${containerId}/oss/${os}?buildType=${buildType}`)
     },
-    fetchAtoms: async ({ commit }, { projectCode }) => {
-        try {
-            commit(FETCHING_ATOM_LIST, true)
-            const [{ data: atomClassifyList }, { data: atomList }] = await Promise.all([
-                request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/classify`),
-                request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
-                    params: {
-                        projectCode
-                    }
-                })
-            ])
 
-            const [atomCodeList, atomMap] = getMapByKey(atomList.records, 'atomCode')
-            const [atomClassifyCodeList, atomClassifyMap] = getMapByKey(atomClassifyList, 'classifyCode')
-            commit(SET_ATOMS, {
-                atomCodeList,
+    fetchClassify: async ({ commit }) => {
+        request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/classify`).then(res => {
+            const [atomClassifyCodeList, atomClassifyMap] = getMapByKey(res.data, 'classifyCode')
+
+            Object.assign(atomClassifyMap, {
+                all: {
+                    classifyCode: 'all',
+                    classifyName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('all')) || 'all'
+                },
+                rdStore: {
+                    classifyCode: 'rdStore',
+                    classifyName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('store')) || 'store'
+                }
+            })
+
+            commit(SET_ATOMS_CLASSIFY, {
                 atomClassifyCodeList,
-                atomMap,
                 atomClassifyMap
+            })
+        }).catch((e) => {
+            console.error(e)
+        })
+    },
+
+    fetchAtoms: async ({ commit, state, getters }, { projectCode, category, jobType, classifyId, os, searchKey, queryProjectAtomFlag }) => {
+        try {
+            const requestAtomData = state.requestAtomData
+            const keyword = searchKey || requestAtomData.keyword || undefined
+            let recommendFlag = requestAtomData.recommendFlag
+            let page = requestAtomData.page || 1
+            const pageSize = requestAtomData.pageSize || 50
+            
+            if (keyword) {
+                // 关键字查询 => 搜索研发商店插件数据
+                requestAtomData.pageSize = 100
+                queryProjectAtomFlag = false
+            }
+
+            // 查询无编译环境下的不适用当前job => queryFitAgentBuildLessAtomFlag 传 false （如果不传这里会包含那些能在有编译环境下使用的无编译环境插件）
+            let queryFitAgentBuildLessAtomFlag
+            if (!recommendFlag && jobType === 'AGENT_LESS') {
+                queryFitAgentBuildLessAtomFlag = false
+            }
+            
+            // 查询不适用插件 category 不传
+            if (recommendFlag === false) {
+                category = undefined
+            }
+
+            if (page === 1) {
+                commit(FETCHING_ATOM_LIST, true)
+            } else {
+                commit(FETCHING_ATOM_MORE_LOADING, true)
+            }
+
+            await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
+                params: {
+                    page,
+                    pageSize,
+                    projectCode,
+                    jobType,
+                    category,
+                    classifyId,
+                    os,
+                    keyword,
+                    recommendFlag,
+                    queryProjectAtomFlag,
+                    queryFitAgentBuildLessAtomFlag,
+                    fitOsFlag: recommendFlag !== undefined
+                }
+            }).then(res => {
+                const curAtomList = getters.getAtomDisabled(res.data.records, os, category)
+                const [cruAtomCodeList, curAtomMap] = getMapByKey(curAtomList, 'atomCode')
+
+                let atomCodeList, atomMap, atomList
+                if (recommendFlag && page === 1) {
+                    atomCodeList = cruAtomCodeList
+                    atomMap = curAtomMap
+                    atomList = curAtomList
+                } else {
+                    atomCodeList = [...state.atomCodeList, ...cruAtomCodeList]
+                    atomMap = Object.assign(state.atomMap, curAtomMap)
+                    atomList = [...state.atomList, ...curAtomList]
+                }
+
+                const count = res.data.count
+                if (recommendFlag) {
+                    // 如果长度大于等于 `适用插件` 总条数 => 代表已经拉取完全部适用插件
+                    // 下次请求的是 `不适用插件` 数据，页面调整为0页
+                    if (category !== 'TRIGGER' && atomCodeList.length === count) {
+                        recommendFlag = undefined
+                        page = 0
+                    }
+                    commit(SET_COMMEND_ATOM_COUNT, count)
+                }
+                
+                let isAtomPageOver
+                if (category === 'TRIGGER') {
+                    isAtomPageOver = atomList.length === count
+                } else if (!recommendFlag) {
+                    isAtomPageOver = atomList.length === state.commendAtomCount + count
+                }
+                commit(SET_ATOM_PAGE_OVER, isAtomPageOver)
+
+                const curRequestAtomData = {
+                    page: ++page,
+                    pageSize,
+                    recommendFlag,
+                    keyword
+                }
+                commit(SET_REQUEST_ATOM_DATA, curRequestAtomData)
+                commit(SET_ATOMS, {
+                    atomCodeList,
+                    atomMap,
+                    atomList
+                })
             })
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
         } finally {
             commit(FETCHING_ATOM_LIST, false)
+            commit(FETCHING_ATOM_MORE_LOADING, false)
         }
     },
+
+    setAtomPageOver: ({ commit }) => {
+        commit(SET_ATOM_PAGE_OVER, false)
+    },
+
+    clearAtomData: ({ commit }) => {
+        commit(CLEAR_ATOM_DATA)
+    },
+
     fetchAtomModal: async ({ commit, dispatch }, { projectCode, atomCode, version, atomIndex, container }) => {
         try {
             commit(SET_ATOM_MODAL_FETCHING, true)
@@ -292,9 +384,7 @@ export default {
             commit(FETCHING_ATOM_VERSION, false)
         }
     },
-    setInertStageIndex: actionCreator(SET_INSERT_STAGE_INDEX),
-    setInsertStageIsFinally: actionCreator(SET_INSERT_STAGE_ISFINALLY),
-    toggleStageSelectPopup: actionCreator(CONTAINER_TYPE_SELECTION_VISIBLE),
+    setInsertStageState: actionCreator(SET_INSERT_STAGE_STATE),
     addStage: PipelineEditActionCreator(ADD_STAGE),
     deleteStage: ({ commit }, payload) => {
         commit(DELETE_STAGE, payload)
@@ -362,8 +452,8 @@ export default {
         commit(SET_PIPELINE_EDITING, true)
     },
     updateAtomType: PipelineEditActionCreator(UPDATE_ATOM_TYPE),
-    updateAtom: ({ commit }, { element: atom, newParam }) => {
-        PipelineEditActionCreator(UPDATE_ATOM)({ commit }, { atom, newParam })
+    updateAtom: (action, { element: atom, newParam }) => {
+        PipelineEditActionCreator(UPDATE_ATOM)(action, { atom, newParam })
     },
     updateAtomInput: PipelineEditActionCreator(UPDATE_ATOM_INPUT),
     updateWholeAtomInput: PipelineEditActionCreator(UPDATE_WHOLE_ATOM_INPUT),
@@ -528,6 +618,11 @@ export default {
             document.body.appendChild(a)
             a.click()
             document.body.removeChild(a)
+        })
+    },
+    reviewExcuteAtom: async ({ commit }, { projectId, pipelineId, buildId, elementId, action }) => {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/quality/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`).then(response => {
+            return response.data
         })
     }
 }

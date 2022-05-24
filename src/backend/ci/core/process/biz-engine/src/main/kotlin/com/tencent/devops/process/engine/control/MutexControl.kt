@@ -117,7 +117,8 @@ class MutexControl @Autowired constructor(
                     buildId = container.buildId,
                     stageId = container.stageId,
                     containerId = container.containerId,
-                    mutexGroup = mutexGroup
+                    mutexGroup = mutexGroup,
+                    executeCount = container.executeCount
                 )
             }
             queueResult
@@ -134,10 +135,12 @@ class MutexControl @Autowired constructor(
         buildId: String,
         stageId: String,
         containerId: String,
-        mutexGroup: MutexGroup?
+        mutexGroup: MutexGroup?,
+        executeCount: Int?
     ) {
-        LOG.info("[$buildId]|RELEASE_MUTEX_LOCK|s($stageId)|j($containerId)|projectId=$projectId")
-        if (mutexGroup != null) {
+        if (mutexGroup != null && mutexGroup.enable) {
+            val mutexGroupName = mutexGroup.mutexGroupName
+            LOG.info("[$buildId]|RELEASE_MUTEX_LOCK|s($stageId)|j($containerId)|project=$projectId|[$mutexGroupName]")
             val containerMutexId = getMutexContainerId(buildId = buildId, containerId = containerId)
             val lockKey = mutexGroup.genMutexLockKey(projectId)
             val containerMutexLock = RedisLockByValue(redisOperation, lockKey, containerMutexId, 1)
@@ -148,6 +151,15 @@ class MutexControl @Autowired constructor(
                 buildId = buildId,
                 containerId = containerId,
                 mutexGroup = mutexGroup
+            )
+
+            // 完善日志
+            buildLogPrinter.addYellowLine(
+                buildId = buildId,
+                message = "释放互斥组锁(Release Lock) Mutex[$mutexGroupName]",
+                tag = VMUtils.genStartVMTaskId(containerId),
+                jobId = null,
+                executeCount = executeCount ?: 1
             )
         }
     }
@@ -194,18 +206,23 @@ class MutexControl @Autowired constructor(
             mutexGroup.linkTip?.let {
                 redisOperation.set(mutexGroup.genMutexLinkTipKey(containerMutexId), mutexGroup.linkTip!!, expireSec)
             }
-            logContainerMutex(container, mutexGroup, lockedContainerMutexId = null, msg = "获得锁定(Matched)")
+            logContainerMutex(container, mutexGroup, null, msg = "获得锁定(Matched) 锁定期(Exp): ${expireSec}s")
         }
 
         return lockResult
     }
 
     /**
-     * 获取锁的过期时间以[container]Job的超时时间为准并冗余2分钟，默认902分钟
+     * 获取锁的过期时间以[container]Job的超时时间为准，并冗余2分钟，默认902分钟
+     * 如果是以前的设置0的情况，则设置为最大超时时间
      */
     private fun getTimeoutSec(container: PipelineBuildContainer): Long {
-        val tm = (container.controlOption?.jobControlOption?.timeout ?: Timeout.DEFAULT_TIMEOUT_MIN) + 2L // 冗余2分钟
-        return TimeUnit.MINUTES.toSeconds(tm)
+        var tm = (container.controlOption?.jobControlOption?.timeout ?: Timeout.DEFAULT_TIMEOUT_MIN)
+        // 兼容设置为0的情况（最大默认值）
+        if (tm == 0) {
+            tm = Timeout.MAX_MINUTES
+        }
+        return TimeUnit.MINUTES.toSeconds(tm + 2L) // 冗余2分钟
     }
 
     @Suppress("LongMethod")

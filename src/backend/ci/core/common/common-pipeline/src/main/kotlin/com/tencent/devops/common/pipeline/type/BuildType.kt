@@ -47,5 +47,6 @@ enum class BuildType(
     THIRD_PARTY_PCG("PCG公共构建资源", listOf(OS.LINUX), false, false, false),
     THIRD_PARTY_DEVCLOUD("腾讯自研云（云devnet资源）", listOf(OS.LINUX), false, false, false),
     GIT_CI("工蜂CI", listOf(OS.LINUX), false, false, false),
+    STREAM("stream", listOf(OS.LINUX), false, false, false),
     AGENT_LESS("无编译环境", listOf(OS.LINUX), false, false, false)
 }

@@ -33,11 +33,11 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepositoryInfo
-import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import io.swagger.annotations.Api

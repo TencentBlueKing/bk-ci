@@ -30,6 +30,8 @@ package com.tencent.devops.repository.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.pojo.AuthorizeResult
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.service.scm.IGitOauthService
@@ -45,5 +47,23 @@ class ServiceOauthResourceImpl @Autowired constructor(
 
     override fun gitCallback(code: String, state: String): Result<GitOauthCallback> {
         return Result(gitOauthService.gitCallback(code = code, state = state))
+    }
+
+    override fun isOAuth(
+        userId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?,
+        gitProjectId: Long?,
+        refreshToken: Boolean?
+    ): Result<AuthorizeResult> {
+        return Result(
+            gitOauthService.isOAuth(
+                userId = userId,
+                redirectUrlType = redirectUrlType,
+                redirectUrl = redirectUrl,
+                gitProjectId = gitProjectId,
+                refreshToken
+            )
+        )
     }
 }

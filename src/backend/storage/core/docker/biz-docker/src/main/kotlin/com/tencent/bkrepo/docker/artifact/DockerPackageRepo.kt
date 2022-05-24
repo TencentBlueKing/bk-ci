@@ -32,7 +32,9 @@
 package com.tencent.bkrepo.docker.artifact
 
 import com.tencent.bkrepo.common.artifact.util.PackageKeys
+import com.tencent.bkrepo.common.service.util.HttpContextHolder
 import com.tencent.bkrepo.docker.context.RequestContext
+import com.tencent.bkrepo.repository.api.OperateLogClient
 import com.tencent.bkrepo.repository.api.PackageClient
 import com.tencent.bkrepo.repository.api.PackageDownloadsClient
 import com.tencent.bkrepo.repository.pojo.download.PackageDownloadRecord
@@ -45,7 +47,8 @@ import org.springframework.stereotype.Service
 @Service
 class DockerPackageRepo @Autowired constructor(
     private val packageClient: PackageClient,
-    private val packageDownloadsClient: PackageDownloadsClient
+    private val packageDownloadsClient: PackageDownloadsClient,
+    private val operateLogClient: OperateLogClient
 ) {
 
     /**
@@ -54,11 +57,11 @@ class DockerPackageRepo @Autowired constructor(
      * @return Boolean is the package version create success
      */
     fun createVersion(request: PackageVersionCreateRequest): Boolean {
-        return packageClient.createVersion(request).isOk()
+        return packageClient.createVersion(request, HttpContextHolder.getClientAddress()).isOk()
     }
 
     /**
-     * populalate package
+     * populate package
      * @param request the request to populate version
      * @return Boolean is the package version create success
      */
@@ -73,7 +76,12 @@ class DockerPackageRepo @Autowired constructor(
      */
     fun deletePackage(context: RequestContext): Boolean {
         with(context) {
-            return packageClient.deletePackage(projectId, repoName, PackageKeys.ofDocker(artifactName)).isOk()
+            return packageClient.deletePackage(
+                projectId,
+                repoName,
+                PackageKeys.ofDocker(artifactName),
+                HttpContextHolder.getClientAddress()
+            ).isOk()
         }
     }
 
@@ -85,7 +93,13 @@ class DockerPackageRepo @Autowired constructor(
      */
     fun deletePackageVersion(context: RequestContext, version: String): Boolean {
         with(context) {
-            return packageClient.deleteVersion(projectId, repoName, PackageKeys.ofDocker(artifactName), version).isOk()
+            return packageClient.deleteVersion(
+                projectId,
+                repoName,
+                PackageKeys.ofDocker(artifactName),
+                version,
+                HttpContextHolder.getClientAddress()
+            ).isOk()
         }
     }
 

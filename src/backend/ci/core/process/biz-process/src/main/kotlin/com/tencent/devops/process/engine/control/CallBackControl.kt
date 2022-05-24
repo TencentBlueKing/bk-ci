@@ -53,6 +53,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import com.tencent.devops.process.pojo.CallBackHeader
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
+import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import okhttp3.MediaType
@@ -96,6 +97,9 @@ class CallBackControl @Autowired constructor(
         callBackPipelineEvent(projectId, pipelineId, CallBackEvent.UPDATE_PIPELINE)
     }
 
+    fun pipelineRestoreEvent(projectId: String, pipelineId: String) {
+        callBackPipelineEvent(projectId, pipelineId, CallBackEvent.RESTORE_PIPELINE)
+    }
     private fun callBackPipelineEvent(projectId: String, pipelineId: String, callBackEvent: CallBackEvent) {
         logger.info("$projectId|$pipelineId|$callBackEvent|callback pipeline event")
         val list = projectPipelineCallBackService.listProjectCallBack(
@@ -238,7 +242,9 @@ class CallBackControl @Autowired constructor(
         var errorMsg: String? = null
         var status = ProjectPipelineCallbackStatus.SUCCESS
         try {
-            callbackClient.newCall(request).execute()
+            HttpRetryUtils.retry(MAX_RETRY_COUNT) {
+                callbackClient.newCall(request).execute()
+            }
         } catch (e: Exception) {
             logger.warn("BKSystemErrorMonitor|[${callBack.projectId}]|CALL_BACK|" +
                 "url=${callBack.callBackUrl}|${callBack.events}", e)
@@ -390,6 +396,7 @@ class CallBackControl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(CallBackControl::class.java)
         private val JSON = MediaType.parse("application/json;charset=utf-8")
+        const val MAX_RETRY_COUNT = 3
 
         private fun anySslSocketFactory(): SSLSocketFactory {
             try {

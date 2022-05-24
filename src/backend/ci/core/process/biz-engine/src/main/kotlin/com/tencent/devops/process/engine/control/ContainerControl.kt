@@ -33,6 +33,7 @@ import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
@@ -40,6 +41,7 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCmdC
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
 import com.tencent.devops.process.engine.control.command.container.impl.CheckConditionalSkipContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.CheckDependOnContainerCmd
+import com.tencent.devops.process.engine.control.command.container.impl.CheckDispatchQueueContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.CheckMutexContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.CheckPauseContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.ContainerCmdLoop
@@ -86,6 +88,7 @@ class ContainerControl @Autowired constructor(
             }
         )
 
+    @BkTimed
     fun handle(event: PipelineBuildContainerEvent) {
         val watcher = Watcher(id = "ENGINE|ContainerControl|${event.traceId}|${event.buildId}|Job#${event.containerId}")
         with(event) {
@@ -140,7 +143,8 @@ class ContainerControl @Autowired constructor(
                 buildId = buildId,
                 stageId = stageId,
                 containerId = containerId,
-                mutexGroup = controlOption?.mutexGroup
+                mutexGroup = controlOption?.mutexGroup,
+                executeCount = executeCount
             )
             return
         }
@@ -152,10 +156,18 @@ class ContainerControl @Autowired constructor(
         // 已按任务序号递增排序，如未排序要注意
         val containerTasks = pipelineTaskService.listContainerBuildTasks(projectId, buildId, containerId)
         val executeCount = buildVariableService.getBuildExecuteCount(projectId, buildId)
+        val stageMatrixCount = pipelineContainerService.countStageContainers(
+            transactionContext = null,
+            projectId = projectId,
+            buildId = buildId,
+            stageId = stageId,
+            onlyMatrixGroup = true
+        )
 
         val context = ContainerContext(
             buildStatus = this.status, // 初始状态为容器状态，中间流转会切换状态，并最终赋值给该容器状态
             mutexGroup = mutexGroup,
+            stageMatrixCount = stageMatrixCount,
             event = event,
             container = this,
             latestSummary = event.reason ?: "init",
@@ -171,6 +183,7 @@ class ContainerControl @Autowired constructor(
             commandCache.get(CheckConditionalSkipContainerCmd::class.java), // 检查条件跳过处理
             commandCache.get(CheckPauseContainerCmd::class.java), // 检查暂停处理
             commandCache.get(CheckMutexContainerCmd::class.java), // 检查Job互斥组处理
+            commandCache.get(CheckDispatchQueueContainerCmd::class.java), // 检查流水线全局Job并发队列
             commandCache.get(InitializeMatrixGroupStageCmd::class.java), // 执行matrix运算生成所有Container数据
             commandCache.get(MatrixExecuteContainerCmd::class.java), // 循环进行矩阵执行和状态刷新
             commandCache.get(StartActionTaskContainerCmd::class.java), // 检查启动事件消息

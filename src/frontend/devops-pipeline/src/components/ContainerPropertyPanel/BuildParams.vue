@@ -447,7 +447,7 @@
                     if (value && typeof value === 'string') {
                         opts = value.split('\n').map(opt => {
                             const v = opt.trim()
-                            const res = v.match(/^([\w\.\-\\\/]+)=(\S+)$/) || [v, v, v]
+                            const res = v.match(/^([\w\.\-\\\/]+)=([\S\s]+)$/) || [v, v, v]
                             const [, key, value] = res
                             console.log(key, value)
                             return {

@@ -35,6 +35,13 @@ pluginManagement {
             maven(url = "https://mirrors.tencent.com/nexus/repository/maven-public")
             maven(url = "https://mirrors.tencent.com/nexus/repository/gradle-plugins/")
         } else { // GitHub Action 环境
+            maven {
+                name = "MavenSnapshot"
+                url = java.net.URI("https://oss.sonatype.org/content/repositories/snapshots/")
+                mavenContent {
+                    snapshotsOnly()
+                }
+            }
             mavenCentral()
             gradlePluginPortal()
         }
@@ -62,6 +69,7 @@ include(":core:common:common-archive")
 include(":core:common:common-quality")
 include(":core:common:common-service")
 include(":core:common:common-pipeline")
+include(":core:common:common-stream")
 include(":core:common:common-test")
 include(":core:common:common-auth")
 include(":core:common:common-auth:common-auth-api")
@@ -169,6 +177,12 @@ include(":core:store:biz-store-image-sample")
 include(":core:store:boot-store")
 include(":core:store:model-store")
 
+include(":core:stream")
+include(":core:stream:api-stream")
+include(":core:stream:biz-stream")
+include(":core:stream:boot-stream")
+include(":core:stream:model-stream")
+
 include(":core:process")
 include(":core:process:api-process")
 include(":core:process:biz-base")
@@ -181,6 +195,7 @@ include(":core:process:model-process")
 include(":core:process:plugin-load")
 include(":core:process:plugin-sdk")
 include(":core:process:plugin-trigger")
+include(":core:process:common-pipeline-yaml")
 
 include(":core:dispatch")
 include(":core:dispatch:api-dispatch")
@@ -361,7 +376,7 @@ include(":ext:tencent:process:biz-engine-tencent")
 include(":ext:tencent:process:biz-process-tencent")
 include(":ext:tencent:process:boot-process-tencent")
 include(":ext:tencent:process:boot-engine-tencent")
-include(":ext:tencent:process:common-pipeline-yaml")
+include(":ext:tencent:process:common-pipeline-yaml-tencent")
 
 include(":ext:tencent:dispatch")
 include(":ext:tencent:dispatch:api-dispatch-bcs")
@@ -432,7 +447,8 @@ include(":ext:tencent:openapi:biz-openapi-tencent")
 include(":ext:tencent:openapi:boot-openapi-tencent")
 include(":ext:tencent:openapi:model-openapi")
 
-include(":ext:tencent:config-server")
+include(":ext:tencent:config")
+include(":ext:tencent:config:boot-config-tencent")
 include(":ext:tencent:log:api-log-tencent")
 
 include(":ext:tencent:auth")

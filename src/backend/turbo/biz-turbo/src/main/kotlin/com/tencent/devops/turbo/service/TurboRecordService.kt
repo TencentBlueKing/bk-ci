@@ -38,7 +38,7 @@ import java.time.ZoneOffset
 import java.util.Base64
 import kotlin.reflect.full.memberProperties
 
-@Suppress("MaxLineLength","ComplexMethod")
+@Suppress("MaxLineLength")
 @Service
 class TurboRecordService @Autowired constructor(
     private val turboRecordRepository: TurboRecordRepository,
@@ -236,9 +236,14 @@ class TurboRecordService @Autowired constructor(
     /**
      * 获取加速历史列表
      */
-    fun getTurboRecordHistoryList(pageNum: Int?, pageSize: Int?, sortField: String?, sortType: String?, turboRecordModel: TurboRecordModel): Page<TurboRecordHistoryVO> {
+    fun getTurboRecordHistoryList(pageNum: Int?,
+                                  pageSize: Int?,
+                                  sortField: String?,
+                                  sortType: String?,
+                                  turboRecordModel: TurboRecordModel
+    ): Page<TurboRecordHistoryVO> {
 
-        val sortFieldInDb = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, sortField ?: "executeNum")
+        val sortFieldInDb = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, sortField ?: "execute_num")
 
         val turboRecordHistoryList = turboRecordDao.getTurboRecordHistoryList(
             pageable = PageUtils.convertPageSizeToPageable(pageNum, pageSize, sortFieldInDb, sortType ?: "DESC"),
@@ -297,6 +302,7 @@ class TurboRecordService @Autowired constructor(
     /**
      * 获取编译加速记录显示信息
      */
+    @Suppress("ComplexMethod")
     fun getTurboRecordDisplayInfo(turboRecordEntity: TTurboRecordEntity, turboPlanEntity: TTurboPlanEntity): TurboRecordDisplayVO {
         val displayFields = mutableListOf(
             TurboDisplayFieldVO(

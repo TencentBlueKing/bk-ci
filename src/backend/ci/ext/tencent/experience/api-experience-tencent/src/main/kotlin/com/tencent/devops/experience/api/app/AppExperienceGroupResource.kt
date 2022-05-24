@@ -45,7 +45,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["EXPERIENCE_GROUP"], description = "版本体验-用户分组")
-@Path("/app/experience/group")
+@Path("/app/experiences/group")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface AppExperienceGroupResource {

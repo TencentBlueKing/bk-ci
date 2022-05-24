@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.service.gitci
 
+import com.tencent.devops.auth.ScmRetryUtils
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.stream.StreamPermissionServiceImpl
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -88,8 +89,14 @@ class StreamGitPermissionServiceImpl @Autowired constructor(
 
     private fun checkDeveloper(gitUserId: String, gitProjectId: String): Boolean {
         return try {
-            val checkResult = client.getScm(ServiceGitCiResource::class)
-                .checkUserGitAuth(gitUserId, gitProjectId).data ?: false
+            val checkResult = ScmRetryUtils.callScm(0, logger) {
+                client.getScm(ServiceGitCiResource::class)
+                    .checkUserGitAuth(
+                        userId = gitUserId,
+                        gitProjectId = gitProjectId,
+                        accessLevel = 30
+                    ).data ?: false
+            }
             if (!checkResult) {
                 logger.warn("$gitUserId not $gitProjectId developerUp")
             }
@@ -103,22 +110,27 @@ class StreamGitPermissionServiceImpl @Autowired constructor(
     private fun checkProjectUser(userId: String, gitProjectId: String): Boolean {
         try {
             val projectUser = mutableListOf<String>()
-            client.getScm(ServiceGitCiResource::class).getProjectMembersAll(
-                gitProjectId = gitProjectId,
-                page = 0,
-                pageSize = 100,
-                search = userId
-            ).data?.forEach {
-                projectUser.add(it.username)
+            ScmRetryUtils.callScm(0, logger) {
+                client.getScm(ServiceGitCiResource::class).getProjectMembersAll(
+                    gitProjectId = gitProjectId,
+                    page = 0,
+                    pageSize = 100,
+                    search = userId
+                ).data?.forEach {
+                    projectUser.add(it.username)
+                }
             }
             if (projectUser.isNotEmpty() && projectUser.contains(userId)) {
                 return true
             }
             logger.warn("$gitProjectId $userId is project check fail")
             return false
-        } catch (e: Exception) {
+        } catch (re: RuntimeException) {
             // scm非项目成员会直接报错。 catch异常直接给false
             logger.warn("$userId checkProjectUser $gitProjectId fail")
+            return false
+        } catch (e: Exception) {
+            logger.error("maybe network fail. $e")
             return false
         }
     }
