@@ -69,7 +69,7 @@ init:
 multiCluster:
   enabled: false
   # 兜底策略, 为空则不用兜底
-  defaultNamespace: 
+  defaultNamespace: ""
 
 # 内部数据源配置
 mysql:

@@ -73,7 +73,7 @@ spec:
             - name: CHART_NAME
               value: {{ .Chart.Name }}
             - name: MULTI_CLUSTER
-              value: {{ .Values.multiCluster.enabled }}
+              value: {{ .Values.multiCluster.enabled | quote }}
             - name: DEFAULT_NAMESPACE
               value: {{ .Values.multiCluster.defaultNamespace }}
           envFrom:
