@@ -65,6 +65,10 @@ init:
   bkrepo: true
   defaultImage: true
 
+# 多集群开关
+multiCluster:
+  enabled: false
+
 # 内部数据源配置
 mysql:
   image: 

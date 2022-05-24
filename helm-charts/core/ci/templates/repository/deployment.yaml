@@ -69,8 +69,12 @@ spec:
               value: repository
             - name: NAMESPACE
               value: {{ .Release.Namespace }}
-            - name: SERVICE_PREFIX
-              value: {{ include "common.names.fullname" . }}
+            - name: RELEASE_NAME
+              value: {{ .Release.Name }}
+            - name: CHART_NAME
+              value: {{ .Chart.Name }}
+            - name: MULTI_CLUSTER
+              value: {{ .Values.multiCluster.enabled }}
           workingDir: /data/workspace/repository
           {{ if .Values.entrypoint.override }}
           command:
