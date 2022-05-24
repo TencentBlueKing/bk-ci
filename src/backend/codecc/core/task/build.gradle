@@ -1,6 +1,0 @@
-subprojects {
-    dependencies {
-        compile "org.glassfish.jersey.ext:jersey-bean-validation"
-        compile group: 'com.tencent.bk.devops.ci.repository', name: 'api-repository', version: version, changing: true
-    }
-}

@@ -55,7 +55,7 @@ import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.quality.api.v2.pojo.request.MetadataCallback
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.beans.BeanUtils
+import com.tencent.devops.common.util.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
@@ -78,7 +78,9 @@ open class PipelineServiceImpl @Autowired constructor(
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
         }
         val buildEntity = BuildEntity()
-        BeanUtils.copyProperties(buildInfoResult.data!![buildId], buildEntity)
+        if (buildInfoResult.data!![buildId] != null) {
+            BeanUtils.copyProperties(buildInfoResult.data!![buildId]!!, buildEntity)
+        }
         buildEntity.buildId = buildId
         return buildEntity
     }
