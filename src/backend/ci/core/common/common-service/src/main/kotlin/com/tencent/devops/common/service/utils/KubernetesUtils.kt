@@ -1,11 +1,14 @@
 package com.tencent.devops.common.service.utils
 
+import org.apache.commons.lang3.BooleanUtils
 import org.apache.commons.lang3.StringUtils
 
 object KubernetesUtils {
     private val namespace = System.getenv("NAMESPACE")
-    private val serviceSuffix = System.getenv("SERVICE_PREFIX")
-    private val innerName = System.getenv("INNER_NAME")
+    private val releaseName = System.getenv("RELEASE_NAME")
+    private val chartName = System.getenv("CHART_NAME")
+    private val multiCluster = BooleanUtils.toBoolean(System.getenv("MULTI_CLUSTER"))
+    private val defaultNamespace = System.getenv("DEFAULT_NAMESPACE")
 
     /**
      * 服务是否在容器中
@@ -21,14 +24,17 @@ object KubernetesUtils {
      * 获取服务发现的名称
      */
     fun getSvrName(serviceName: String): String {
-        return if (innerName.isNullOrEmpty()) {
-            // 单一集群
-            "$serviceSuffix-$serviceName"
+        return if (multiCluster) {
+            "$serviceName-$chartName-$serviceName"
         } else {
-            // 多个集群
-            "$serviceName-$innerName-$serviceName"
+            "$releaseName-$chartName-$serviceName"
         }
     }
+
+    /**
+     * 获取兜底ns
+     */
+    fun getDefaultNamespace(): String = defaultNamespace
 
     /**
      * 获取namespace

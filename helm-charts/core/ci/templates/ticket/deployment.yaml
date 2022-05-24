@@ -75,6 +75,8 @@ spec:
               value: {{ .Chart.Name }}
             - name: MULTI_CLUSTER
               value: {{ .Values.multiCluster.enabled }}
+            - name: DEFAULT_NAMESPACE
+              value: {{ .Values.multiCluster.defaultNamespace }}
           workingDir: /data/workspace/ticket
           {{ if .Values.entrypoint.override }}
           command:
