@@ -41,7 +41,7 @@ import com.tencent.devops.prebuild.dao.PrebuildProjectDao
 import com.tencent.devops.prebuild.pojo.StartUpReq
 import com.tencent.devops.prebuild.pojo.StreamCommonVariables
 import com.tencent.devops.prebuild.service.CommonPreBuildService
-import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidator
+import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidatorV2
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.yaml.modelCreate.ModelCreate
@@ -63,11 +63,11 @@ import javax.ws.rs.core.Response
 
 @Service
 class PreBuildV2Service @Autowired constructor(
-    private val preCIYAMLValidator: PreCIYAMLValidator,
     private val client: Client,
     private val dslContext: DSLContext,
     private val prebuildProjectDao: PrebuildProjectDao,
-    private val modelCreate: ModelCreate
+    private val modelCreate: ModelCreate,
+    private val preCIYAMLValidatorV2: PreCIYAMLValidatorV2
 ) : CommonPreBuildService(client, dslContext, prebuildProjectDao) {
     companion object {
         private val logger = LoggerFactory.getLogger(PreBuildV2Service::class.java)
@@ -82,12 +82,12 @@ class PreBuildV2Service @Autowired constructor(
      * @return web api result
      */
     fun checkYamlSchema(originYaml: String): Result<String> {
-        val (isPassed, ignore, errorMsg) = preCIYAMLValidator.validate(originYaml)
-
-        return if (isPassed) {
+        return try {
+            preCIYAMLValidatorV2.check(originYaml, null, true)
             Result("OK")
-        } else {
-            Result(1, "Invalid yaml: $errorMsg")
+        } catch (e: Exception) {
+            logger.error("Check yaml schema failed.", e)
+            Result(1, "Invalid yaml: ${e.message}")
         }
     }
 
