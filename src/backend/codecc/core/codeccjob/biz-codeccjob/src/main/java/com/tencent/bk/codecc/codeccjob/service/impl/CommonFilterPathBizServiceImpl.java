@@ -87,7 +87,7 @@ public class CommonFilterPathBizServiceImpl extends AbstractFilterPathBizService
 
             });
 
-            defectRepository.save(needUpdateDefectList);
+            defectRepository.saveAll(needUpdateDefectList);
         }
         return new Result(CommonMessageCode.SUCCESS);
     }

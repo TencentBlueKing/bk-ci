@@ -138,7 +138,7 @@ public class LintDataReportBizServiceImpl extends AbstractDataReportBizService {
         int totalPage;
         do {
             log.info("query page:{} for taskId:{}, toolName:{}", pageNum, taskId, toolName);
-            Pageable pageable = new PageRequest(pageNum, pageSize);
+            Pageable pageable = PageRequest.of(pageNum, pageSize);
             Page<LintDefectV2Entity> defectPage = lintDefectV2Repository.findByTaskIdAndToolNameAndStatus(
                     taskId, toolName, ComConstants.DefectStatus.NEW.value(), pageable);
             totalPage = defectPage.getTotalPages();

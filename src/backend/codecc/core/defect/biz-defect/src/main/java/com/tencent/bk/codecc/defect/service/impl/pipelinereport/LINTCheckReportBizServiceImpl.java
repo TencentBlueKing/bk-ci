@@ -177,10 +177,12 @@ public class LINTCheckReportBizServiceImpl implements ICheckReportBizService
         lintSnapShotEntity.setToolNameEn(toolName);
         if (StringUtils.isNotEmpty(projectId))
         {
-            String defectDetailUrl = String.format("%s/console/codecc/%s/task/%d/defect/lint/%s/list?buildId=%s", devopsHost, projectId, taskId,
+            String defectDetailUrl = String.format("%s/console/codecc/%s/task/%d/defect/lint/%s/list?buildId=%s",
+                    devopsHost, projectId, taskId,
                     toolName.toUpperCase(), buildId);
             lintSnapShotEntity.setDefectDetailUrl(defectDetailUrl);
-            String defectReportUrl = String.format("%s/console/codecc/%s/task/%d/defect/lint/%s/charts", devopsHost, projectId, taskId,
+            String defectReportUrl = String.format("%s/console/codecc/%s/task/%d/defect/lint/%s/charts",
+                     devopsHost, projectId, taskId,
                     toolName.toUpperCase());
             lintSnapShotEntity.setDefectReportUrl(defectReportUrl);
         }

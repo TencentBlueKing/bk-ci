@@ -3,7 +3,6 @@ package com.tencent.bk.codecc.defect.service.impl
 import com.tencent.bk.codecc.defect.constant.DefectConstants
 import com.tencent.bk.codecc.defect.dao.ToolMetaCacheServiceImpl
 import com.tencent.bk.codecc.defect.dao.mongorepository.*
-import com.tencent.bk.codecc.defect.model.CLOCStatisticEntity
 import com.tencent.bk.codecc.defect.model.LintStatisticEntity
 import com.tencent.bk.codecc.defect.model.MetricsEntity
 import com.tencent.bk.codecc.defect.model.TaskLogEntity
@@ -16,7 +15,6 @@ import com.tencent.bk.codecc.task.vo.GrayTaskStatVO
 import com.tencent.bk.codecc.task.vo.TaskDetailVO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.constant.ComConstants
-import com.tencent.devops.common.service.annotation.tool_type.STANDARD
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.redis.core.RedisTemplate
@@ -277,7 +275,7 @@ class CodeScoringServiceImpl @Autowired constructor(
      * @param buildId
      */
     private fun getCCNDefectNum(taskId: Long, buildId: String): Pair<Double, Double> {
-        val res = ccnStatisticRepository.findByTaskIdAndBuildId(taskId, buildId)
+        val res = ccnStatisticRepository.findFirstByTaskIdAndBuildId(taskId, buildId)
         return Pair(res.ccnBeyondThresholdSum.toDouble(), 0.toDouble())
     }
 
@@ -334,7 +332,8 @@ class CodeScoringServiceImpl @Autowired constructor(
         val peckerCheckerSet = mutableSetOf<CheckerPropsEntity>()
         checkerSetProj.filter { it.checkerSetId.matches(Regex("^pecker_.*_no_coverity")) }
             .forEach {
-                val checkerSetEntity = checkerSetRepository.findByCheckerSetIdAndVersion(it.checkerSetId, it.version)
+                val checkerSetEntity =
+                    checkerSetRepository.findFirstByCheckerSetIdAndVersion(it.checkerSetId, it.version)
                 peckerCheckerSet.addAll(checkerSetEntity.checkerProps)
             }
 
@@ -759,7 +758,7 @@ class CodeScoringServiceImpl @Autowired constructor(
         return if (null == lintStatisticEntity || lintStatisticEntity.entityId.isNullOrBlank()) {
             null
         } else {
-            val taskLogEntity = taskLogRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId)
+            val taskLogEntity = taskLogRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId)
             if (null == taskLogEntity || taskLogEntity.entityId.isNullOrBlank()) {
                 null
             } else {
