@@ -71,6 +71,12 @@ init:
   bkrepo: false
   defaultImage: false
 
+# 多集群开关
+multiCluster:
+  enabled: false
+  # 兜底策略, 为空则不用兜底
+  defaultNamespace: ""
+
 # 内部数据源配置
 mysql:
   image: 

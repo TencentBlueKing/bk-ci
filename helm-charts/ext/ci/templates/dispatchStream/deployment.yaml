@@ -69,8 +69,14 @@ spec:
               value: dispatch-stream
             - name: NAMESPACE
               value: {{ .Release.Namespace }}
-            - name: SERVICE_PREFIX
-              value: {{ include "common.names.fullname" . }}
+            - name: RELEASE_NAME
+              value: {{ .Release.Name }}
+            - name: CHART_NAME
+              value: {{ .Chart.Name }}
+            - name: MULTI_CLUSTER
+              value: {{ .Values.multiCluster.enabled | quote }}
+            - name: DEFAULT_NAMESPACE
+              value: {{ .Values.multiCluster.defaultNamespace }}
           workingDir: /data/workspace/dispatch-stream
           livenessProbe:
             httpGet:
