@@ -262,7 +262,7 @@
 
         watch: {
             pageType (val) {
-                if (val !== this.pageType) {
+                if (val) {
                     this.filter = {}
                     this.currentFilter = {}
                     // this.initPage()

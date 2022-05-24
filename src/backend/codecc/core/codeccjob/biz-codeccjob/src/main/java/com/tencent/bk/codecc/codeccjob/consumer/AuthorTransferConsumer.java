@@ -34,7 +34,6 @@ import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.service.IBizService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.ListUtils;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -120,7 +119,7 @@ public class AuthorTransferConsumer
      */
     private List<AuthorTransferVO.TransferAuthorPair> saveTransferAuthor(AuthorTransferVO authorTransferVO)
     {
-        TransferAuthorEntity transferAuthorEntity = transferAuthorRepository.findByTaskId(authorTransferVO.getTaskId());
+        TransferAuthorEntity transferAuthorEntity = transferAuthorRepository.findFirstByTaskId(authorTransferVO.getTaskId());
         Map<List<String>, List<String>> oldTransferAuthorPairMap = new HashMap<>();
         if (transferAuthorEntity != null && CollectionUtils.isNotEmpty(transferAuthorEntity.getTransferAuthorList()))
         {

@@ -22,7 +22,7 @@ public interface ToolBuildInfoRepository extends MongoRepository<ToolBuildInfoEn
      * @param toolName
      * @return
      */
-    ToolBuildInfoEntity findByTaskIdAndToolName(long taskId, String toolName);
+    ToolBuildInfoEntity findFirstByTaskIdAndToolName(long taskId, String toolName);
 
     /**
      * 根据工具名称查询

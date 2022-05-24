@@ -27,37 +27,16 @@
 package com.tencent.bk.codecc.defect.service.impl.pipelinereport;
 
 import com.tencent.bk.codecc.defect.dao.mongorepository.DUPCStatisticRepository;
-import com.tencent.bk.codecc.defect.model.CCNStatisticEntity;
 import com.tencent.bk.codecc.defect.model.DUPCStatisticEntity;
 import com.tencent.bk.codecc.defect.model.pipelinereport.DUPCSnapShotEntity;
-import com.tencent.bk.codecc.defect.model.DupcChartTrendEntity;
 import com.tencent.bk.codecc.defect.model.pipelinereport.ToolSnapShotEntity;
 import com.tencent.bk.codecc.defect.service.ICheckReportBizService;
-import com.tencent.bk.codecc.defect.service.IDataReportBizService;
-import com.tencent.bk.codecc.defect.service.TaskLogService;
-import com.tencent.bk.codecc.defect.vo.DupcChartTrendVO;
-import com.tencent.bk.codecc.defect.vo.DupcDataReportRspVO;
-import com.tencent.devops.common.api.analysisresult.DUPCLastAnalysisResultVO;
-import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
-import com.tencent.devops.common.client.Client;
-import com.tencent.devops.common.constant.ComConstants;
-import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.service.ToolMetaCacheService;
-import com.tencent.devops.common.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 重复率分析结果报告生成服务代码
@@ -83,7 +62,7 @@ public class DUPCCheckReportBizServiceImpl implements ICheckReportBizService
     {
         DUPCSnapShotEntity dupcSnapShotEntity = new DUPCSnapShotEntity();
         handleToolBaseInfo(dupcSnapShotEntity, taskId, toolName, projectId);
-        DUPCStatisticEntity dupcStatistic = dupcStatisticRepository.findByTaskIdAndBuildId(taskId, buildId);
+        DUPCStatisticEntity dupcStatistic = dupcStatisticRepository.findFirstByTaskIdAndBuildId(taskId, buildId);
         if (dupcStatistic == null)
         {
             return dupcSnapShotEntity;
@@ -108,9 +87,11 @@ public class DUPCCheckReportBizServiceImpl implements ICheckReportBizService
         dupcSnapShotEntity.setToolNameEn(toolName);
         if (StringUtils.isNotEmpty(projectId))
         {
-            String defectDetailUrl = String.format("%s/console/codecc/%s/task/%d/defect/dupc/list", devopsHost, projectId, taskId);
+            String defectDetailUrl = String.format("%s/console/codecc/%s/task/%d/defect/dupc/list",
+                    devopsHost, projectId, taskId);
             dupcSnapShotEntity.setDefectDetailUrl(defectDetailUrl);
-            String defectReportUrl = String.format("%s/console/codecc/%s/task/%d/defect/dupc/charts", devopsHost, projectId, taskId);
+            String defectReportUrl = String.format("%s/console/codecc/%s/task/%d/defect/dupc/charts",
+                    devopsHost, projectId, taskId);
             dupcSnapShotEntity.setDefectReportUrl(defectReportUrl);
         }
     }

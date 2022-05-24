@@ -30,9 +30,9 @@ package systemutil
 import (
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/astaxie/beego/logs"
 	"github.com/gofrs/flock"
 	"net"
 	"net/url"
@@ -59,28 +59,34 @@ const (
 
 	TotalLock = "total-lock"
 )
+
 // IsWindows 是否是Windows OS
 func IsWindows() bool {
 	return runtime.GOOS == osWindows
 }
+
 // IsLinux IsLinux
 func IsLinux() bool {
 	return runtime.GOOS == osLinux
 }
+
 // IsMacos IsMacos
 func IsMacos() bool {
 	return runtime.GOOS == osMacos
 }
+
 // GetCurrentUser get current process user
 func GetCurrentUser() *user.User {
 	currentUser, _ := user.Current()
 	return currentUser
 }
+
 // GetWorkDir get agent work dir
 func GetWorkDir() string {
 	dir, _ := os.Getwd()
 	return strings.Replace(dir, "\\", "/", -1)
 }
+
 // GetUpgradeDir get upgrader dir
 func GetUpgradeDir() string {
 	return GetWorkDir() + "/tmp"
@@ -90,10 +96,12 @@ func GetUpgradeDir() string {
 func GetWorkerErrorMsgFile(buildId string, vmSeqId string) string {
 	return fmt.Sprintf("%s/%s_%s_build_msg.log", fmt.Sprintf("%s/build_tmp", GetWorkDir()), buildId, vmSeqId)
 }
+
 // GetLogDir get agent logs dir
 func GetLogDir() string {
 	return GetWorkDir() + "/logs"
 }
+
 // GetRuntimeDir get agent runtime dir
 func GetRuntimeDir() string {
 	runDir := fmt.Sprintf("%s/runtime", GetWorkDir())
@@ -102,6 +110,7 @@ func GetRuntimeDir() string {
 	}
 	return GetWorkDir()
 }
+
 // GetExecutableDir get excutable jar dir
 func GetExecutableDir() string {
 	if len(GExecutableDir) == 0 {
@@ -111,6 +120,7 @@ func GetExecutableDir() string {
 	}
 	return GExecutableDir
 }
+
 // GetOsName GetOsName
 func GetOsName() string {
 	switch runtime.GOOS {
@@ -124,6 +134,7 @@ func GetOsName() string {
 		return osNameOther
 	}
 }
+
 // GetOs get os
 func GetOs() string {
 	switch runtime.GOOS {
@@ -137,6 +148,7 @@ func GetOs() string {
 		return osOther
 	}
 }
+
 // GetHostName GetHostName
 func GetHostName() string {
 	name, _ := os.Hostname()
@@ -195,16 +207,19 @@ func GetAgentIp(ignoreIps []string) string {
 
 	return defaultIp
 }
+
 // ExitProcess Exit by code
 func ExitProcess(exitCode int) {
 	os.Exit(exitCode)
 }
 
 var processLock *flock.Flock
+
 // KeepProcessAlive keep process alive
 func KeepProcessAlive() {
 	runtime.KeepAlive(*processLock)
 }
+
 // CheckProcess check process and lock
 func CheckProcess(name string) bool {
 	processLockFile := fmt.Sprintf("%s/%s.lock", GetRuntimeDir(), name)
