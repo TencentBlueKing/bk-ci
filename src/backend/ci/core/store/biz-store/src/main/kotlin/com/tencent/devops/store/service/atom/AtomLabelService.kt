@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.service.atom
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.Label
 
 /**
@@ -38,7 +37,12 @@ import com.tencent.devops.store.pojo.common.Label
 interface AtomLabelService {
 
     /**
-     * 查找插件标签
+     * 根据插件ID查找插件标签
      */
-    fun getLabelsByAtomId(atomId: String): Result<List<Label>?>
+    fun getLabelsByAtomId(atomId: String): List<Label>?
+
+    /**
+     * 根据插件ID批量查找插件标签
+     */
+    fun getLabelsByAtomIds(atomIds: Set<String>): Map<String, List<Label>>?
 }

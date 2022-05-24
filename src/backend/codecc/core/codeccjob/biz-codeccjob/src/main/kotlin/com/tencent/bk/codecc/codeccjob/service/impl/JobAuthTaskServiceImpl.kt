@@ -39,7 +39,7 @@ class JobAuthTaskServiceImpl @Autowired constructor(
             }
 
         }
-        return createFrom
+        return createFrom  ?: ""
     }
 
     override fun getGongfengProjInfo(taskId: Long): GongfengBaseInfo? {
@@ -65,7 +65,7 @@ class JobAuthTaskServiceImpl @Autowired constructor(
                 }
             }
         }
-        return pipelineId
+        return pipelineId  ?: ""
     }
 
     override fun getGongfengCIProjInfo(gongfengId: Int): GongfengBaseInfo? {

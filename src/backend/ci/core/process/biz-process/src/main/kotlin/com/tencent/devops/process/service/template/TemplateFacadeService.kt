@@ -29,6 +29,7 @@ package com.tencent.devops.process.service.template
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -165,6 +166,9 @@ class TemplateFacadeService @Autowired constructor(
 
     @Value("\${template.maxSaveVersionNum:300}")
     private val maxSaveVersionNum: Int = 300
+
+    @Value("\${template.maxUpdateInstanceNum:100}")
+    private val maxUpdateInstanceNum: Int = 100
 
     @Value("\${template.maxSaveVersionRecordNum:2}")
     private val maxSaveVersionRecordNum: Int = 2
@@ -1317,42 +1321,57 @@ class TemplateFacadeService @Autowired constructor(
         projectId: String,
         userId: String,
         templateId: String,
-        version: Long,
+        version: Long? = null,
+        versionName: String? = null,
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
         logger.info("UPDATE_TEMPLATE_INST[$projectId|$userId|$templateId|$version|$instances|$useTemplateSettings]")
-
+        if (instances.size > maxUpdateInstanceNum) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.FAIL_TEMPLATE_UPDATE_NUM_TOO_BIG,
+                params = arrayOf("${instances.size}", "$maxUpdateInstanceNum")
+            )
+        }
         val successPipelines = ArrayList<String>()
         val failurePipelines = ArrayList<String>()
         val messages = HashMap<String, String>()
-
-        val template = templateDao.getTemplate(dslContext = dslContext, version = version)
-
-        instances.forEach {
-            try {
-                updateTemplateInstanceInfo(
-                    userId = userId,
-                    useTemplateSettings = useTemplateSettings,
-                    projectId = projectId,
-                    templateId = templateId,
-                    templateVersion = template.version,
-                    versionName = template.versionName,
-                    templateContent = template.template,
-                    templateInstanceUpdate = it
-                )
-                successPipelines.add(it.pipelineName)
-            } catch (t: DuplicateKeyException) {
-                logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", t)
-                failurePipelines.add(it.pipelineName)
-                messages[it.pipelineName] = "流水线已经存在"
-            } catch (t: Throwable) {
-                logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", t)
-                failurePipelines.add(it.pipelineName)
-                messages[it.pipelineName] = t.message ?: "更新流水线失败"
-            }
+        if (version == null && versionName.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                params = arrayOf("version or versionName")
+            )
         }
-
+        val template = templateDao.getTemplate(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            versionName = versionName,
+            version = version
+        )
+            instances.forEach {
+                    try {
+                        updateTemplateInstanceInfo(
+                            userId = userId,
+                            useTemplateSettings = useTemplateSettings,
+                            projectId = projectId,
+                            templateId = templateId,
+                            templateVersion = template.version,
+                            versionName = template.versionName,
+                            templateContent = template.template,
+                            templateInstanceUpdate = it
+                        )
+                        successPipelines.add(it.pipelineName)
+                    } catch (t: DuplicateKeyException) {
+                        logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", t)
+                        failurePipelines.add(it.pipelineName)
+                        messages[it.pipelineName] = "流水线已经存在"
+                    } catch (t: Throwable) {
+                        logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", t)
+                        failurePipelines.add(it.pipelineName)
+                        messages[it.pipelineName] = t.message ?: "更新流水线失败"
+                    }
+            }
         return TemplateOperationRet(0, TemplateOperationMessage(successPipelines, failurePipelines, messages), "")
     }
 

@@ -32,13 +32,16 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
-import com.tencent.devops.store.pojo.common.VersionInfo
+import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.VersionInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -73,6 +76,9 @@ interface UserAtomResource {
         @ApiParam("支持的服务范围（pipeline/quality/all 分别表示流水线/质量红线/全部）", required = false)
         @QueryParam("serviceScope")
         serviceScope: String?,
+        @ApiParam("job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
+        @QueryParam("jobType")
+        jobType: String?,
         @ApiParam("操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
         @QueryParam("os")
         os: String?,
@@ -81,16 +87,32 @@ interface UserAtomResource {
         projectCode: String,
         @ApiParam("插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
         @QueryParam("category")
-        category: String?,
+        category: String? = AtomCategoryEnum.TASK.name,
         @ApiParam("插件分类id", required = false)
         @QueryParam("classifyId")
         classifyId: String?,
-        @ApiParam("页码", required = false)
+        @ApiParam("是否推荐", required = false)
+        @QueryParam("recommendFlag")
+        recommendFlag: Boolean?,
+        @ApiParam("搜索关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?,
+        @ApiParam("查询项目插件标识", required = true)
+        @QueryParam("queryProjectAtomFlag")
+        queryProjectAtomFlag: Boolean = true,
+        @ApiParam("是否适配操作系统标识", required = false)
+        @QueryParam("fitOsFlag")
+        fitOsFlag: Boolean? = true,
+        @ApiParam("查询支持有编译环境下的无编译环境插件标识", required = false)
+        @QueryParam("queryFitAgentBuildLessAtomFlag")
+        queryFitAgentBuildLessAtomFlag: Boolean? = true,
+        @ApiParam("页码", required = true)
         @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页数量", required = false)
+        page: Int = 1,
+        @ApiParam("每页数量", required = true)
         @QueryParam("pageSize")
-        pageSize: Int?
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
+        pageSize: Int = 10
     ): Result<AtomResp<AtomRespItem>?>
 
     @ApiOperation("根据插件代码和版本号获取流水线插件详细信息")
@@ -122,7 +144,7 @@ interface UserAtomResource {
 
     @ApiOperation("获取项目下已安装的插件列表")
     @GET
-    @Path("/projectCodes/{projectCode}/list")
+    @Path("/projectCodes/{projectCode}/installedAtoms/list")
     fun getInstalledAtoms(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -133,12 +155,16 @@ interface UserAtomResource {
         @ApiParam("插件分类", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
-        @ApiParam("页码", required = false)
+        @ApiParam("名称", required = false)
+        @QueryParam("name")
+        name: String?,
+        @ApiParam("页码", required = true)
         @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页数量", required = false)
+        page: Int = 1,
+        @ApiParam("每页数量", required = true)
         @QueryParam("pageSize")
-        pageSize: Int?
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
+        pageSize: Int = 10
     ): Result<Page<InstalledAtom>>
 
     @ApiOperation("更新流水线插件信息")

@@ -29,7 +29,6 @@ package com.tencent.devops.common.web.handler
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.web.jmx.exception.JmxExceptions
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -55,7 +54,6 @@ class RuntimeExceptionMapper : ExceptionMapper<RuntimeException> {
         } else {
             "访问后台数据失败，已通知产品、开发，请稍后重试"
         }
-        JmxExceptions.encounter(exception)
 //        AlertUtils.doAlert(AlertLevel.CRITICAL, "RuntimeException", exception.message ?: "Unknown exception")
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE).entity(Result<Void>(status.statusCode, message)).build()
     }

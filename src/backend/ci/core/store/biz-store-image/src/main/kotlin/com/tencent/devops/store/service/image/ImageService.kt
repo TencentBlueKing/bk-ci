@@ -103,6 +103,7 @@ import com.tencent.devops.store.pojo.image.response.MarketImageResp
 import com.tencent.devops.store.pojo.image.response.MyImage
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
+import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
@@ -168,6 +169,8 @@ abstract class ImageService @Autowired constructor() {
     @Autowired
     lateinit var imageCategoryService: ImageCategoryService
     @Autowired
+    lateinit var storeCommonService: StoreCommonService
+    @Autowired
     lateinit var client: Client
 
     @Value("\${store.baseImageDocsLink}")
@@ -221,14 +224,6 @@ abstract class ImageService @Autowired constructor() {
         return Result(pageObj)
     }
 
-    abstract fun generateInstallFlag(
-        defaultFlag: Boolean,
-        members: MutableList<String>?,
-        userId: String,
-        visibleList: MutableList<Int>?,
-        userDeptList: List<Int>
-    ): Boolean
-
     @Suppress("UNCHECKED_CAST")
     fun count(
         userId: String,
@@ -243,7 +238,7 @@ abstract class ImageService @Autowired constructor() {
         interfaceName: String? = "Anon interface"
     ): Int {
         // 获取镜像
-        val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
+        val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
         return marketImageDao.count(
             dslContext = dslContext,
             keyword = keyword,
@@ -276,7 +271,7 @@ abstract class ImageService @Autowired constructor() {
         val results = mutableListOf<MarketImageItem>()
 
         // 获取镜像
-        val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
+        val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
         val images = marketImageDao.list(
             dslContext = dslContext,
             keyword = keyword,
@@ -300,7 +295,7 @@ abstract class ImageService @Autowired constructor() {
 
         // 获取可见范围
         val storeType = StoreTypeEnum.IMAGE
-        val imageVisibleData = batchGetVisibleDept(imageCodeList, storeType)
+        val imageVisibleData = storeCommonService.generateStoreVisibleData(imageCodeList, storeType)
         val imageVisibleDataStr = StringBuilder("\n")
         imageVisibleData?.forEach {
             imageVisibleDataStr.append("${it.key}->${it.value}\n")
@@ -326,7 +321,7 @@ abstract class ImageService @Autowired constructor() {
             val statistic = imageStatisticData[imageCode]
             val members = memberData?.get(imageCode)
 
-            val installFlag = generateInstallFlag(
+            val installFlag = storeCommonService.generateInstallFlag(
                 defaultFlag = it[KEY_IMAGE_FEATURE_PUBLIC_FLAG] as Boolean,
                 members = members,
                 userId = userId,
@@ -365,11 +360,6 @@ abstract class ImageService @Autowired constructor() {
         }
         return results
     }
-
-    abstract fun batchGetVisibleDept(
-        imageCodeList: List<String>,
-        image: StoreTypeEnum
-    ): HashMap<String, MutableList<Int>>?
 
     private fun getDefaultDescTypeBySortType(sortType: MarketImageSortTypeEnum?): Boolean {
         return when (sortType) {
@@ -585,7 +575,11 @@ abstract class ImageService @Autowired constructor() {
         )
         myImageRecords?.forEach {
             val imageCode = it.get(KEY_IMAGE_CODE) as String
-            val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(dslContext, userId, imageCode, StoreTypeEnum.IMAGE) ?: ""
+            val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = imageCode,
+                storeType = StoreTypeEnum.IMAGE) ?: ""
             myImageCodeList.add(imageCode)
             projectCodeList.add(projectCode)
         }
@@ -886,7 +880,10 @@ abstract class ImageService @Autowired constructor() {
             storeType = StoreTypeEnum.IMAGE
         )
         // 查关联镜像时的调试项目
-        val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(dslContext, userId, imageCode, StoreTypeEnum.IMAGE)
+        val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(dslContext = dslContext,
+            userId = userId,
+            storeCode = imageCode,
+            storeType = StoreTypeEnum.IMAGE)
         val (imageSizeNum, imageSize) = getImageSizeInfoByStr(imageRecord.imageSize as String)
         val agentTypeScope = if (ImageStatusEnum.getInprocessStatusSet().contains(imageRecord.imageStatus.toInt())) {
             // 非终止态镜像应采用当前版本范畴与适用机器类型
@@ -1044,7 +1041,7 @@ abstract class ImageService @Autowired constructor() {
         categoryCode: String?
     ) {
         if (!categoryCode.isNullOrBlank()) {
-            if (categoryDao.countByCode(context, categoryCode!!, StoreTypeEnum.IMAGE.type.toByte()) == 0) {
+            if (categoryDao.countByCode(context, categoryCode, StoreTypeEnum.IMAGE.type.toByte()) == 0) {
                 throw CategoryNotExistException(
                     message = "category does not exist, categoryCode:$categoryCode",
                     params = arrayOf(categoryCode)

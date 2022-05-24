@@ -76,7 +76,10 @@ open class WebSocketConfig @Autowired constructor(
     override fun registerStompEndpoints(registry: StompEndpointRegistry) {
         registry.addEndpoint("/websocket/user/taskLog/analysisInfo").addInterceptors(
                 object : HandshakeInterceptor {
-                    override fun afterHandshake(request: ServerHttpRequest?, response: ServerHttpResponse?, wsHandler: WebSocketHandler?, exception: Exception?) {
+                    override fun afterHandshake(request: ServerHttpRequest,
+                                                response: ServerHttpResponse,
+                                                wsHandler: WebSocketHandler,
+                                                exception: java.lang.Exception?) {
                         logger.info("after hand shake, end point established")
                         val req = request as ServletServerHttpRequest
                         val taskId = req.servletRequest.getParameter(AUTH_HEADER_DEVOPS_TASK_ID)
@@ -146,7 +149,7 @@ open class WebSocketConfig @Autowired constructor(
                         return false
                     }
                 }
-        ).setAllowedOrigins("*").withSockJS()
+        ).setAllowedOriginPatterns("*").withSockJS()
     }
 
 
