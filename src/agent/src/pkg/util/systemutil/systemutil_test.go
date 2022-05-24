@@ -28,9 +28,9 @@
 package systemutil
 
 import (
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 	"net"
 	"testing"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 func Test_IP(t *testing.T) {

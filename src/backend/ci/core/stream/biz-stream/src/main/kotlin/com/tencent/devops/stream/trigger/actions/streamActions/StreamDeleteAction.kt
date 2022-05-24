@@ -69,7 +69,7 @@ class StreamDeleteAction(
     }
 
     override fun getChangeSet(): Set<String>? {
-        return gitAction.getChangeSet()
+        return null
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {

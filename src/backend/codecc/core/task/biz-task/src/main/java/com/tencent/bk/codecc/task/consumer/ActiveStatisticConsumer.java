@@ -33,7 +33,7 @@ import com.tencent.bk.codecc.task.model.ToolCountScriptEntity;
 import com.tencent.bk.codecc.task.model.ToolStatisticEntity;
 import com.tencent.bk.codecc.task.service.TaskService;
 import com.tencent.devops.common.api.QueryTaskListReqVO;
-import com.tencent.devops.common.api.util.JsonUtil;
+import com.tencent.devops.common.api.codecc.util.JsonUtil;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.ComConstants.DefectStatType;
@@ -109,8 +109,9 @@ public class ActiveStatisticConsumer {
     /**
      * 定时任务统计每日数据
      */
-    @RabbitListener(bindings = @QueueBinding(key = ROUTE_ACTIVE_STAT, value = @Queue(value = QUEUE_ACTIVE_STAT),
-            exchange = @Exchange(value = EXCHANGE_ACTIVE_STAT)))
+    @RabbitListener(bindings = @QueueBinding(key = ROUTE_ACTIVE_STAT,
+            value = @Queue(value = QUEUE_ACTIVE_STAT, durable = "false"),
+            exchange = @Exchange(value = EXCHANGE_ACTIVE_STAT, durable = "false")))
     public void consumer() {
         try {
             String date = DateTimeUtils.getDateByDiff(-1);
@@ -162,7 +163,7 @@ public class ActiveStatisticConsumer {
      * @param dataFrom  数据来源范围
      */
     private void taskStatistic(Long endTime, String date, String dataFrom, List<Long> taskIds) {
-        TaskStatisticEntity taskStat = taskStatisticRepository.findByDateAndDataFrom(date, dataFrom);
+        TaskStatisticEntity taskStat = taskStatisticRepository.findFirstByDateAndDataFrom(date, dataFrom);
         if (taskStat == null) {
             taskStat = new TaskStatisticEntity();
         }
@@ -265,7 +266,7 @@ public class ActiveStatisticConsumer {
             toolStatisticEntities.add(toolStat);
         }
 
-        toolStatisticRepository.save(toolStatisticEntities);
+        toolStatisticRepository.saveAll(toolStatisticEntities);
         // 清理冗余数据
         delRedisKeyBefore7Days(RedisKeyConstants.PREFIX_ACTIVE_TOOL, dataFrom.value());
         delToolRedisKeyBeforeDays(dataFrom.value(), toolArr);
@@ -412,7 +413,7 @@ public class ActiveStatisticConsumer {
             analyzeCountStatEntities.add(countStatEntity);
         }
 
-        analyzeCountStatRepository.save(analyzeCountStatEntities);
+        analyzeCountStatRepository.saveAll(analyzeCountStatEntities);
     }
 
     /**
@@ -480,7 +481,7 @@ public class ActiveStatisticConsumer {
             }
         }
 
-        toolElapseTimeRepository.save(toolElapseTimeEntities);
+        toolElapseTimeRepository.saveAll(toolElapseTimeEntities);
         log.info("toolAnalyzeElapseTimeStat finish.");
     }
 

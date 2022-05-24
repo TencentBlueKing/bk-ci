@@ -202,4 +202,16 @@ class StreamRequestService @Autowired constructor(
         }
         return null
     }
+
+    fun getRequestBuildTriggers(projectId: Long, page: Int?, pageSize: Int?): List<String> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
+        val requestEventBuildList = gitRequestEventBuildDao.getTriggerUserByGitProjectID(
+            dslContext = dslContext,
+            gitProjectId = projectId,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull
+        )
+        return requestEventBuildList.map { it.value1() }
+    }
 }

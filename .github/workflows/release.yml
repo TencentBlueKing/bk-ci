@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v2
         with:
-          go-version: 1.13.15
+          go-version: 1.18.1
       - uses: actions/checkout@v2
       - run: make clean build_linux
         working-directory: src/agent/
@@ -177,10 +177,10 @@ jobs:
             ${{ runner.os }}-codecc-gradle-
       - name: Gradle Build
         id: codecc-backend
-        uses: eskatos/gradle-command-action@v1
-        with:
-          gradle-version: 4.6
-          build-root-directory: src/backend/codecc
+        working-directory: src/backend/codecc
+        run: |
+          chmod +x gradlew
+          ./gradlew clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
 
       - name: frontend
         id: codecc-frontend
