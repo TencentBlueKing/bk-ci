@@ -29,7 +29,7 @@
                         <span v-if="row.artifactoryType === 'PIPELINE'">{{ $t('details.pipelineRepo') }}</span>
                     </div>
                     <div class="table-part-item part-item-handler">
-                        <!-- <i @click.stop="gotoArtifactory" class="devops-icon icon-position-shape handler-btn" :title="$t('editPage.atomForm.toArtifactory')"></i> -->
+                        <i @click.stop="gotoArtifactory(row)" class="devops-icon icon-position-shape handler-btn" :title="$t('editPage.atomForm.toArtifactory')"></i>
                         <i class="devops-icon icon-new-download handler-btn" v-if="hasPermission" :title="$t('download')"
                             @click="requestUrl(row, 'download')"></i>
                         <!-- <i class="devops-icon icon-tree-module-shape handler-btn" v-if="hasPermission && isMof && isWindows && isApkOrIpa(row)" :title="$t('details.mofDownload')"
@@ -424,6 +424,14 @@
                         theme
                     })
                 }
+            },
+
+            /**
+             * 查看仓库
+             */
+            gotoArtifactory (row) {
+                const url = `https://${window.BK_REPO_URL_PREFIX}/ui/${this.projectId}/generic?repoName=${row.artifactoryType.toLowerCase()}&path=${row.path}`
+                window.open(url, '_blank')
             }
         }
     }
