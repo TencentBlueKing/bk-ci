@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchTy
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
 import com.tencent.devops.prebuild.pojo.StartUpReq
+import com.tencent.devops.prebuild.pojo.StreamCommonVariables
 import com.tencent.devops.prebuild.service.CommonPreBuildService
 import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidator
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -159,7 +160,7 @@ class PreBuildV2Service @Autowired constructor(
             modelName = pipelineName,
             event = modelCreateEvent,
             yaml = scriptBuildYaml,
-            pipelineParams = getPipelineParams(scriptBuildYaml.variables)
+            pipelineParams = getPipelineParams(scriptBuildYaml.variables, userId, pipelineName)
         ).model
 
         // 若是本机构建，需后置填充调度信息
@@ -257,17 +258,27 @@ class PreBuildV2Service @Autowired constructor(
     /**
      * 获取流水线参数
      */
-    private fun getPipelineParams(variables: Map<String, Variable>?): List<BuildFormProperty> {
+    private fun getPipelineParams(
+        variables: Map<String, Variable>?,
+        userId: String,
+        pipelineName: String
+    ): List<BuildFormProperty> {
         if (variables.isNullOrEmpty()) {
             return emptyList()
         }
 
         val retList = mutableListOf<BuildFormProperty>()
         val startParams = mutableMapOf<String, String>()
+
+
         variables.forEach { (key, variable) ->
             startParams[VARIABLE_PREFIX + key] =
                 variable.copy(value = formatVariablesValue(variable.value, startParams)).value ?: ""
         }
+
+        startParams[StreamCommonVariables.CI_PIPELINE_NAME] = pipelineName
+        startParams[StreamCommonVariables.CI_ACTOR] = userId
+        startParams[StreamCommonVariables.CI_BRANCH] = "PRECI_VIRTUAL_BRANCH"
 
         startParams.forEach {
             val property = BuildFormProperty(
