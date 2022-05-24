@@ -51,26 +51,27 @@ allprojects {
             dependency("org.apache.pulsar:pulsar-client:${Versions.Pulsar}")
             dependency("com.github.oshi:oshi-core:${Versions.Oshi}")
             dependency("com.tencent.devops.leaf:leaf-boot-starter:${Versions.Leaf}")
+            dependency("com.github.xingePush:xinge:${Versions.Xinge}")
             dependency("org.dom4j:dom4j:${Versions.Dom4j}")
             dependency("org.apache.commons:commons-compress:${Versions.Compress}")
             dependency("org.bouncycastle:bcprov-ext-jdk15on:${Versions.BouncyCastle}")
             dependency("org.mybatis:mybatis:${Versions.MyBatis}")
             dependency("commons-io:commons-io:${Versions.CommonIo}")
-            dependencySet("org.glassfish.jersey.containers:${Versions.Jersey}"){
+            dependencySet("org.glassfish.jersey.containers:${Versions.Jersey}") {
                 entry("jersey-container-servlet-core")
                 entry("jersey-container-servlet")
             }
-            dependencySet("org.glassfish.jersey.core:${Versions.Jersey}"){
+            dependencySet("org.glassfish.jersey.core:${Versions.Jersey}") {
                 entry("jersey-server")
                 entry("jersey-common")
                 entry("jersey-client")
             }
-            dependencySet("org.glassfish.jersey.ext:${Versions.Jersey}"){
+            dependencySet("org.glassfish.jersey.ext:${Versions.Jersey}") {
                 entry("jersey-bean-validation")
                 entry("jersey-entity-filtering")
                 entry("jersey-spring5")
             }
-            dependencySet("org.glassfish.jersey.media:${Versions.Jersey}"){
+            dependencySet("org.glassfish.jersey.media:${Versions.Jersey}") {
                 entry("jersey-media-multipart")
                 entry("jersey-media-json-jackson")
             }

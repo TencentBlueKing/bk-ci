@@ -9,4 +9,6 @@ object Versions {
     const val commonIo = "2.7"
     const val jjwtVersion = "0.9.0"
     const val ciAuthVersion = "1.8.0-RC.3-RELEASE"
+    const val springFeign = "3.1.2"
+    const val commonIo = "2.7"
 }
