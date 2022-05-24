@@ -33,30 +33,26 @@ class PreCIYAMLValidatorV2 {
     }
 
     fun check(originYaml: String, templateType: TemplateType?, isCiFile: Boolean) {
-        checkYamlSchema(originYaml, templateType, isCiFile)
+        checkYamlSchemaCore(originYaml, templateType, isCiFile)
     }
 
-    private fun checkYamlSchema(originYaml: String, templateType: TemplateType? = null, isCiFile: Boolean) {
+    private fun checkYamlSchemaCore(originYaml: String, templateType: TemplateType? = null, isCiFile: Boolean) {
         val loadYaml = try {
             YamlUtil.toYaml(Yaml().load(originYaml))
         } catch (ignored: Throwable) {
             throw YamlFormatException("There may be a problem with your yaml syntax ${ignored.message}")
         }
-        // 解析锚点
+
         val yamlJson = YamlUtil.getObjectMapper().readTree(YamlUtil.toYaml(loadYaml)).replaceOn()
-        // v1 不走这里的校验逻辑
-        if (yamlJson.checkV1()) {
-            return
-        }
+
+        // 若是校验顶级整体
         if (isCiFile) {
             getSchema(CI_SCHEMA).check(yamlJson)
             // 校验schema后有一些特殊的校验
             yamlJson.checkCiRequired()
             yamlJson.checkVariablesFormat()
         }
-        if (templateType == null) {
-            return
-        }
+
         when (templateType) {
             TemplateType.EXTEND -> {
                 getSchema(TEMPLATE_EXTEND_SCHEMA).check(yamlJson)
@@ -84,7 +80,9 @@ class PreCIYAMLValidatorV2 {
                     .build()
                     .getSchema(
                         getStrFromResource("schema/$file.json").ifBlank {
-                            throw RuntimeException("init yaml schema for git error: yaml blank")
+                            val msg = "yaml schema is blank from resources file"
+                            logger.error(msg)
+                            throw RuntimeException(msg)
                         }
                     )
         }
