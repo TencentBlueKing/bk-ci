@@ -29,7 +29,6 @@
 
 package com.tencent.devops.scm.utils
 
-import com.tencent.devops.scm.services.GitCiService
 import java.net.SocketTimeoutException
 import org.slf4j.LoggerFactory
 

@@ -30,9 +30,7 @@ package com.tencent.devops.scm.services
 import com.fasterxml.jackson.core.type.TypeReference
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -55,7 +53,6 @@ import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.utils.GitCodeUtils
 import com.tencent.devops.scm.utils.QualityUtils
 import com.tencent.devops.scm.utils.RetryUtils
-import java.net.SocketTimeoutException
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
