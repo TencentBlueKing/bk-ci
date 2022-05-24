@@ -25,15 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service.bkrepo
+package com.tencent.devops.auth
 
-import com.tencent.devops.artifactory.service.CustomDirGsService
-import com.tencent.devops.common.api.exception.OperationException
-import org.springframework.stereotype.Service
+import org.slf4j.Logger
+import java.lang.RuntimeException
+import java.util.concurrent.TimeoutException
 
-@Service
-class BkRepoCustomDirGsService : CustomDirGsService {
-    override fun getDownloadUrl(projectId: String, fileName: String, userId: String): String {
-        throw OperationException("not supported")
+object ScmRetryUtils {
+    fun <T> callScm(
+        retryCount: Int,
+        logger: Logger,
+        action: () -> T
+    ): T {
+        return try {
+            action()
+        } catch (re: RuntimeException) {
+            // 非项目成员，scm会直接报RuntimeException 无需重试
+            throw re
+        } catch (e: Exception) {
+            if (retryCount < 3) {
+                callScm(retryCount + 1, logger, action)
+            } else {
+                logger.error("auth retry call scm fail, maybe devnet network has error")
+                throw TimeoutException()
+            }
+        }
     }
 }

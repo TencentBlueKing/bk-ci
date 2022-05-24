@@ -92,7 +92,7 @@ class RepositoryDao {
     fun countByProject(
         dslContext: DSLContext,
         projectIds: Collection<String>,
-        repositoryType: ScmType?,
+        repositoryTypes: List<ScmType>?,
         aliasName: String?,
         repositoryIds: Set<Long>?
     ): Long {
@@ -107,12 +107,12 @@ class RepositoryDao {
             if (!aliasName.isNullOrBlank()) {
                 step.and(ALIAS_NAME.like("%$aliasName%"))
             }
-            return when (repositoryType) {
+            return when (repositoryTypes) {
                 null -> {
                     step.fetchOne(0, Long::class.java)!!
                 }
                 else -> {
-                    step.and(TYPE.eq(repositoryType.name))
+                    step.and(TYPE.`in`(repositoryTypes))
                     step.fetchOne(0, Long::class.java)!!
                 }
             }
@@ -214,7 +214,7 @@ class RepositoryDao {
     fun listByProject(
         dslContext: DSLContext,
         projectId: String,
-        repositoryType: ScmType?,
+        repositoryTypes: List<ScmType>?,
         aliasName: String?,
         repositoryIds: Set<Long>?,
         offset: Int,
@@ -232,11 +232,11 @@ class RepositoryDao {
                 step.and(ALIAS_NAME.like("%$aliasName%"))
             }
 
-            when (repositoryType) {
+            when (repositoryTypes) {
                 null -> {
                 }
                 else -> {
-                    step.and(TYPE.eq(repositoryType.name))
+                    step.and(TYPE.`in`(repositoryTypes))
                 }
             }
 

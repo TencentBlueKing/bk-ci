@@ -25,8 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.process.pojo
 
-interface CustomDirGsService {
-    fun getDownloadUrl(projectId: String, fileName: String, userId: String): String
-}
+/**
+ * 构建表单代码库值
+ */
+data class BuildFormRepositoryValue(
+    val id: String,
+    val name: String
+)
