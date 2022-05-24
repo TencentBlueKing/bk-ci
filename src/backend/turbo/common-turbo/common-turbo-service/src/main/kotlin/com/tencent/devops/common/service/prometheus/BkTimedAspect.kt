@@ -64,7 +64,7 @@ class BkTimedAspect(
         private val pathMap = ConcurrentHashMap<String,String>()
     }
 
-    @Around("execution (@com.tencent.devops.common.service.prometheus.BkTimed * *.*(..))")
+    @Around("execution(@com.tencent.devops.common.service.prometheus.BkTimed * *.*(..))")
     @Throws(Throwable::class)
     fun timedMethod(point: ProceedingJoinPoint): Any {
         var method = (point.signature as MethodSignature).method
