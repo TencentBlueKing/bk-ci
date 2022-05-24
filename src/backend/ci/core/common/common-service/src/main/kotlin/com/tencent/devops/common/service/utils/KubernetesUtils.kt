@@ -32,6 +32,11 @@ object KubernetesUtils {
     }
 
     /**
+     * 是否开启多集群模式
+     */
+    fun isMultiCluster() = multiCluster
+
+    /**
      * 获取兜底ns
      */
     fun getDefaultNamespace(): String = defaultNamespace
