@@ -250,7 +250,7 @@ class PreBuildV2Service @Autowired constructor(
     }
 
     private fun getGitAccessToken(gitProjectId: String): String {
-        val tokenObj = client.get(ServiceGitCiResource::class).getToken(gitProjectId)
+        val tokenObj = client.getScm(ServiceGitCiResource::class).getToken(gitProjectId)
 
         return tokenObj.data!!.accessToken
     }
