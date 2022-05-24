@@ -148,7 +148,7 @@ for env in gateway_envs:
         gateway_config_file.write(env.replace(
             "__", "")+": {{ .Values.config."+humps.camelize(env.replace("__", "").lower())+" | quote }}\n")
 gateway_config_file.write('NAMESPACE: {{ .Release.Namespace }}\n')
-gateway_config_file.write('SERVICE_PREFIX: {{ include "common.names.fullname" . }}\n')
+gateway_config_file.write('CHART_NAME: {{ include "common.names.fullname" . }}\n')
 gateway_config_file.write('{{- end -}}')
 gateway_config_file.flush()
 gateway_config_file.close()

@@ -152,9 +152,6 @@ class Client @Autowired constructor(
     @Value("\${service-suffix:#{null}}")
     private val serviceSuffix: String? = null
 
-    @Value("\${colour.enabled:false}")
-    private val colour: Boolean = false
-
     fun <T : Any> get(clz: KClass<T>): T {
         return get(clz, "")
     }
@@ -205,7 +202,6 @@ class Client @Autowired constructor(
                     findServiceName(clz),
                     clz.java,
                     compositeDiscoveryClient!!,
-                    colour,
                     bkTag
                 )
             )
@@ -230,7 +226,7 @@ class Client @Autowired constructor(
                     throw e
                 }
             })
-            .target(MicroServiceTarget(serviceName, clz.java, compositeDiscoveryClient!!, colour, bkTag))
+            .target(MicroServiceTarget(serviceName, clz.java, compositeDiscoveryClient!!, bkTag))
     }
 
     /**
@@ -289,7 +285,6 @@ class Client @Autowired constructor(
                     findServiceName(clz),
                     clz.java,
                     compositeDiscoveryClient!!,
-                    colour,
                     bkTag
                 )
             )
@@ -300,7 +295,6 @@ class Client @Autowired constructor(
             findServiceName(clz),
             clz.java,
             compositeDiscoveryClient!!,
-            colour,
             bkTag
         ).url()
     }

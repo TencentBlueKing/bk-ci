@@ -27,28 +27,26 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
 
     -- 容器环境
     if in_container then
-        local is_multi_namespace = ngx.var.inner_name ~= '' and ngx.var.inner_name ~= nil
-        if is_multi_namespace then
-            -- 多集群场景
-            local dns, err = resolver:new{
+        if ngx.var.multi_cluster == 'true' then -- 多集群场景
+            local dns = resolver:new{
                 nameservers = resolvUtil.nameservers,
                 retrans = 5,
                 timeout = 2000 -- 2 sec
             }
             -- 先查询当前ns下的服务
-            local devops_ns = string.sub(devops_tag, 12)
-            local domain = service_name .. '-' .. ngx.var.inner_name .. '-' .. service_name .. '.' .. devops_ns ..
-                               '.svc.cluster.local'
-            local records, err = dns:query(domain, {qtype = dns.TYPE_A})
-            if not records then
-                -- 使用 develop 下的服务
-                domain = service_name .. '-' .. ngx.var.inner_name .. '-' .. service_name ..
-                             '.develop.svc.cluster.local'
+            local devops_ns = string.sub(devops_tag, 12) -- 去掉 "kubernetes-" 头部
+            local prefix = service_name .. '-' .. ngx.var.chart_name .. '-' .. service_name
+            local domain = prefix .. '.' .. devops_ns .. '.svc.cluster.local'
+            local records = dns:query(domain, {qtype = dns.TYPE_A})
+            -- 兜底策略
+            if ngx.var.default_namespace ~= '' and ngx.var.default_namespace ~= nil and not records then
+                domain = prefix .. ngx.var.default_namespace .. '.svc.cluster.local'
             end
             return domain
-        else
-            -- 单一集群场景
-            return ngx.var.service_prefix .. '-' .. service_name .. '.' .. ngx.var.namespace .. '.svc.cluster.local'
+        else -- 单一集群场景
+            return
+                ngx.var.release_name .. '-' .. ngx.var.chart_name .. '-' .. service_name .. '.' .. ngx.var.namespace ..
+                    '.svc.cluster.local'
         end
     end
 

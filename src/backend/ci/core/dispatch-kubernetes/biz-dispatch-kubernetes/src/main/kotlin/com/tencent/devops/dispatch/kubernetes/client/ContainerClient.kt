@@ -55,7 +55,7 @@ class ContainerClient @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ContainerClient::class.java)
-        private const val MAX_WAIT = 10
+        private const val MAX_WAIT = 1000
     }
 
     /**

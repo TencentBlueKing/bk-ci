@@ -37,6 +37,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
 import feign.RequestTemplate
 import org.apache.commons.lang3.RandomUtils
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
@@ -48,7 +49,6 @@ class MicroServiceTarget<T> constructor(
     private val serviceName: String,
     private val type: Class<T>,
     private val compositeDiscoveryClient: CompositeDiscoveryClient,
-    private val colour: Boolean,
     private val bkTag: BkTag
 ) : FeignTarget<T> {
     private val msCache =
@@ -64,9 +64,6 @@ class MicroServiceTarget<T> constructor(
     private val errorInfo =
         MessageCodeUtil.generateResponseDataObject<String>(ERROR_SERVICE_NO_FOUND, arrayOf(serviceName))
 
-    private val namespace = System.getenv("NAMESPACE")
-    private val serviceSuffix = System.getenv("SERVICE_PREFIX")
-
     private fun choose(serviceName: String): ServiceInstance {
         val discoveryTag = bkTag.getFinalTag()
 
@@ -74,8 +71,8 @@ class MicroServiceTarget<T> constructor(
             val namespace = discoveryTag.replace("kubernetes-", "")
             val pods = msCache.get(KubernetesUtils.getSvrName(serviceName))
             pods.filter { inNamespace(it.metadata, namespace) }.ifEmpty {
-                if (colour) {
-                    pods.filter { inNamespace(it.metadata, "develop") }
+                if (StringUtils.isNotBlank(KubernetesUtils.getDefaultNamespace())) {
+                    pods.filter { inNamespace(it.metadata, KubernetesUtils.getDefaultNamespace()) }
                 } else {
                     emptyList()
                 }

@@ -65,6 +65,12 @@ init:
   bkrepo: true
   defaultImage: true
 
+# 多集群开关
+multiCluster:
+  enabled: false
+  # 兜底策略, 为空则不用兜底
+  defaultNamespace: ""
+
 # 内部数据源配置
 mysql:
   image: 
@@ -1151,8 +1157,12 @@ turbo:
   replicaCount: 1
   hostAliases: []
   resources:
-    limits: {}
-    requests: {}
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 3000Mi
   containerSecurityContext:
     enabled: false
     runAsUser: 1001

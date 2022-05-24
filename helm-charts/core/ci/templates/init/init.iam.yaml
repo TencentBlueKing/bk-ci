@@ -43,10 +43,6 @@ spec:
             - "/bin/bash"
             - "-c"
             - |
-              # 准备环境
-              yum install -y epel-release;
-              yum install -y python3;
-              pip3 install requests;
               # 修改auth链接
               sed -i 's/ci-auth.service.consul:21936/{{- .Values.config.bkCiHost -}}\/auth/g' *.json
               # 导入模型
