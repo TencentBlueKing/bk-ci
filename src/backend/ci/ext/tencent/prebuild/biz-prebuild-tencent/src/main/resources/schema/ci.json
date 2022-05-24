@@ -171,7 +171,7 @@
                 }
               },
               "action" : {
-                "description" : "缺省为 open、reopen、push-update，mr事件参见：https://git.woa.com/help/menu/manual/webhooks.html#%E5%90%88%E5%B9%B6%E8%AF%B7%E6%B1%82%E4%BA%8B%E4%BB%B6",
+                "description" : "缺省为 open、reopen、push-update，mr事件参见：补充文档/help/menu/manual/webhooks.html#%E5%90%88%E5%B9%B6%E8%AF%B7%E6%B1%82%E4%BA%8B%E4%BB%B6",
                 "type" : "array",
                 "uniqueItems" : true,
                 "items" : {
@@ -515,7 +515,7 @@
                           }
                         },
                         "action" : {
-                          "description" : "缺省为 open、reopen、push-update，mr事件参见：https://git.woa.com/help/menu/manual/webhooks.html#%E5%90%88%E5%B9%B6%E8%AF%B7%E6%B1%82%E4%BA%8B%E4%BB%B6",
+                          "description" : "缺省为 open、reopen、push-update，mr事件参见：补充文档/help/menu/manual/webhooks.html#%E5%90%88%E5%B9%B6%E8%AF%B7%E6%B1%82%E4%BA%8B%E4%BB%B6",
                           "type" : "array",
                           "uniqueItems" : true,
                           "items" : {
