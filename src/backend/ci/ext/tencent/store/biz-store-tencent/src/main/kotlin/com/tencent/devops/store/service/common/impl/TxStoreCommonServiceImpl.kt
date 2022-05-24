@@ -25,10 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.image.impl
+package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.store.service.image.ImageService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class TxImageService : ImageService()
+class TxStoreCommonServiceImpl : StoreCommonServiceImpl() {
+
+    @Autowired
+    private lateinit var storeVisibleDeptService: StoreVisibleDeptService
+
+    override fun generateInstallFlag(
+        defaultFlag: Boolean,
+        members: MutableList<String>?,
+        userId: String,
+        visibleList: MutableList<Int>?,
+        userDeptList: List<Int>
+    ): Boolean {
+        return if (defaultFlag || (members != null && members.contains(userId))) {
+            true
+        } else {
+            visibleList != null && (visibleList.contains(0) || visibleList.intersect(userDeptList).count() > 0)
+        }
+    }
+
+    override fun generateStoreVisibleData(
+        storeCodeList: List<String?>,
+        storeType: StoreTypeEnum
+    ): HashMap<String, MutableList<Int>>? {
+        return storeVisibleDeptService.batchGetVisibleDept(storeCodeList, storeType).data
+    }
+}
