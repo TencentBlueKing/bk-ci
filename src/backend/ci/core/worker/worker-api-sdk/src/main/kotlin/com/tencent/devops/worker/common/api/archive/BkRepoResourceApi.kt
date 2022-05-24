@@ -28,7 +28,6 @@
 package com.tencent.devops.worker.common.api.archive
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.common.collect.Maps
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.common.query.enums.OperationType
 import com.tencent.bkrepo.common.query.model.PageLimit
@@ -279,8 +278,8 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         file: File,
         buildVariables: BuildVariables,
         parseAppMetadata: Boolean = true
-    ): HashMap<String, String> {
-        val header = Maps.newHashMap<String, String>()
+    ): Map<String, String> {
+        val header = mutableMapOf<String, String>()
         header[BKREPO_UID] = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
         header[BKREPO_OVERRIDE] = "true"
 

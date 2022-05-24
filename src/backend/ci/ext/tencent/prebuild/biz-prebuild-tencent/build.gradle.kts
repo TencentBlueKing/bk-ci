@@ -70,7 +70,6 @@ dependencies {
     api("javax.websocket:javax.websocket-api")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
-    api("com.vmware:vijava")
     api("org.json:json")
     testImplementation(project(":core:common:common-test"))
     testImplementation("org.mockito:mockito-inline")

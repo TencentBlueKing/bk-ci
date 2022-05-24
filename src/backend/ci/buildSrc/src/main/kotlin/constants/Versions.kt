@@ -4,7 +4,6 @@ object Versions {
     const val CommonExec = "1.3"
     const val CommonIo = "2.7"
     const val CommonText = "1.9"
-    const val Vmware = "5.1"
     const val BouncyCastle = "1.46"
     const val Dom4j = "2.0.3"
     const val Compress = "1.21"
@@ -44,4 +43,5 @@ object Versions {
     const val Xinge = "1.2.4.9"
     const val Pulsar = "2.7.2"
     const val JacksonDatatypeJsr = "2.11.4"
+    const val reflections = "0.10.2"
 }
