@@ -16,7 +16,7 @@ BEGIN
                     WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_NOTICE'
                         AND COLUMN_NAME = 'SERVICE_NAME') THEN
-        ALTER TABLE T_DATA_SOURCE
+        ALTER TABLE T_NOTICE
             ADD SERVICE_NAME varchar(1024) NULL COMMENT '服务名称' ;
     END IF;
 
