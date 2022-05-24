@@ -44,6 +44,7 @@ export default {
     },
     
     isAtomDisabled: state => ({ os, atom, category }) => {
+        if (atom.category === 'TRIGGER') return atom.category !== category
         return (!os && atom.os.length > 0 && category !== 'TRIGGER') || (os && atom.os.length > 0 && !atom.os.includes(os)) || (os && atom.os.length === 0 && !atom.buildLessRunFlag) || false
     },
     getAtomModal: state => ({ atomCode, version }) => {
