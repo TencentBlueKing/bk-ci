@@ -205,12 +205,14 @@ class PreBuildV2Service @Autowired constructor(
             )
         }
 
-        return getTemplateCntFromGit(
+        val content = getTemplateCntFromGit(
             personalToken = param.targetRepo?.credentials?.personalAccessToken,
             gitProjectId = param.targetRepo?.repository!!,
             ref = param.targetRepo?.ref,
             fileName = TEMPLATE_DIR + param.path
         )
+
+        return ScriptYmlUtils.formatYaml(content)
     }
 
     private fun getTemplateCntFromGit(
