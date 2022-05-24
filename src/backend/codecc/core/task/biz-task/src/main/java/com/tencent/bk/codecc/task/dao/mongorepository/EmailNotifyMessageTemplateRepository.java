@@ -12,5 +12,5 @@ public interface EmailNotifyMessageTemplateRepository  extends
     *
     * @param templateId
     */
-   EmailNotifyMessageTemplateEntity findByTemplateId(String templateId);
+   EmailNotifyMessageTemplateEntity findFirstByTemplateId(String templateId);
 }

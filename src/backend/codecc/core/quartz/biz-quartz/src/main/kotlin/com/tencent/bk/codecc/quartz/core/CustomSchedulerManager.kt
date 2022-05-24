@@ -34,7 +34,7 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.text.SimpleDateFormat
 
-class CustomSchedulerManager @Autowired constructor(
+open class CustomSchedulerManager @Autowired constructor(
     private val applicationContext: ApplicationContext,
     private val shardingRouterService: ShardingRouterService,
     private val jobManageService: JobManageService,

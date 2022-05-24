@@ -6,9 +6,7 @@ import com.tencent.devops.common.auth.api.pojo.external.KEY_CREATE_FROM
 import com.tencent.devops.common.auth.api.pojo.external.KEY_PIPELINE_ID
 import com.tencent.devops.common.auth.api.pojo.external.PREFIX_TASK_INFO
 import com.tencent.devops.common.pojo.GongfengBaseInfo
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
@@ -28,13 +26,13 @@ class AuthTaskServiceImpl @Autowired constructor(
     ): String {
         var createFrom = redisTemplate.opsForHash<String, String>().get(PREFIX_TASK_INFO + taskId, KEY_CREATE_FROM)
         if (createFrom.isNullOrEmpty()) {
-            val taskInfoEntity = taskRepository.findByTaskId(taskId)
+            val taskInfoEntity = taskRepository.findFirstByTaskId(taskId)
             if (!taskInfoEntity.createFrom.isNullOrEmpty()) {
                 createFrom = taskInfoEntity.createFrom
                 redisTemplate.opsForHash<String, String>().put(PREFIX_TASK_INFO + taskId, KEY_CREATE_FROM, createFrom)
             }
         }
-        return createFrom
+        return createFrom ?: ""
     }
 
     override fun getGongfengProjInfo(taskId: Long): GongfengBaseInfo? {
@@ -50,13 +48,13 @@ class AuthTaskServiceImpl @Autowired constructor(
     ): String {
         var pipelineId = redisTemplate.opsForHash<String, String>().get(PREFIX_TASK_INFO + taskId, KEY_PIPELINE_ID)
         if (pipelineId.isNullOrEmpty()) {
-            val taskInfoEntity = taskRepository.findByTaskId(taskId)
+            val taskInfoEntity = taskRepository.findFirstByTaskId(taskId)
             if (!taskInfoEntity.pipelineId.isNullOrEmpty()) {
                 pipelineId = taskInfoEntity.pipelineId
                 redisTemplate.opsForHash<String, String>().put(PREFIX_TASK_INFO + taskId, KEY_PIPELINE_ID, pipelineId)
             }
         }
-        return pipelineId
+        return pipelineId ?: ""
     }
 
     override fun getGongfengCIProjInfo(gongfengId: Int): GongfengBaseInfo? {

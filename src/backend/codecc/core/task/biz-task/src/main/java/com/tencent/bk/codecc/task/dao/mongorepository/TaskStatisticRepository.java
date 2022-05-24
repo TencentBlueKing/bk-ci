@@ -33,6 +33,6 @@ public interface TaskStatisticRepository extends MongoRepository<TaskStatisticEn
      * @param dataFrom 统计来源
      * @return entity
      */
-    TaskStatisticEntity findByDateAndDataFrom(String date, String dataFrom);
+    TaskStatisticEntity findFirstByDateAndDataFrom(String date, String dataFrom);
 
 }

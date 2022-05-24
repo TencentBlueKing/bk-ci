@@ -224,10 +224,12 @@ public class CommonCheckReportBizServiceImpl implements ICheckReportBizService
         compileSnapShotEntity.setToolNameEn(toolName);
         if(StringUtils.isNotEmpty(projectId))
         {
-            String defectDetailUrl = String.format("%s/console/codecc/%s/task/%d/defect/compile/%s/list?buildId=%s&status=7", DEVOPS_HOST, projectId, taskId,
+            String defectDetailUrl = String.format("%s/console/codecc/%s/task/%d/defect/compile/%s/list?buildId=%s&status=7",
+                    DEVOPS_HOST, projectId, taskId,
                     toolName, buildId);
             compileSnapShotEntity.setDefectDetailUrl(defectDetailUrl);
-            String defectReportUrl = String.format("%s/console/codecc/%s/task/%d/defect/compile/%s/charts", DEVOPS_HOST, projectId, taskId, toolName);
+            String defectReportUrl = String.format("%s/console/codecc/%s/task/%d/defect/compile/%s/charts",
+                    DEVOPS_HOST, projectId, taskId, toolName);
             compileSnapShotEntity.setDefectReportUrl(defectReportUrl);
         }
     }
