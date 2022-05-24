@@ -76,6 +76,7 @@ class CoreRabbitMQConfiguration {
 
     @Value("\${spring.rabbitmq.listener.simple.prefetch:#{null}}")
     private val preFetchCount: Int? = null
+
     @Value("\${spring.rabbitmq.core.channel-rpc-timeout:#{null}}")
     private val channelRpcTimeout: Int? = null
 
@@ -87,7 +88,7 @@ class CoreRabbitMQConfiguration {
         connectionFactory.port = config.port
         connectionFactory.username = username!!
         connectionFactory.setPassword(password!!)
-        connectionFactory.virtualHost = virtualHost!! + vhostTail()
+        connectionFactory.virtualHost = getVirtualHost()
         connectionFactory.setAddresses(addresses!!)
         if (channelCacheSize != null && channelCacheSize!! > 0) {
             connectionFactory.channelCacheSize = channelCacheSize!!
@@ -145,5 +146,7 @@ class CoreRabbitMQConfiguration {
     fun messageConverter(objectMapper: ObjectMapper) =
         Jackson2JsonMessageConverter(objectMapper)
 
-    private fun vhostTail() = if (KubernetesUtils.inContainer()) "-k8s" else ""
+    fun getVirtualHost(): String {
+        return virtualHost + if (KubernetesUtils.isMultiCluster()) "-k8s" else ""
+    }
 }
