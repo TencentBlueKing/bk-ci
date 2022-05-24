@@ -269,16 +269,14 @@ class PreBuildV2Service @Autowired constructor(
 
         val retList = mutableListOf<BuildFormProperty>()
         val startParams = mutableMapOf<String, String>()
-
+        startParams[StreamCommonVariables.CI_PIPELINE_NAME] = pipelineName
+        startParams[StreamCommonVariables.CI_ACTOR] = userId
+        startParams[StreamCommonVariables.CI_BRANCH] = "PRECI_VIRTUAL_BRANCH"
 
         variables.forEach { (key, variable) ->
             startParams[VARIABLE_PREFIX + key] =
                 variable.copy(value = formatVariablesValue(variable.value, startParams)).value ?: ""
         }
-
-        startParams[StreamCommonVariables.CI_PIPELINE_NAME] = pipelineName
-        startParams[StreamCommonVariables.CI_ACTOR] = userId
-        startParams[StreamCommonVariables.CI_BRANCH] = "PRECI_VIRTUAL_BRANCH"
 
         startParams.forEach {
             val property = BuildFormProperty(
