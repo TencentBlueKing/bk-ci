@@ -15,6 +15,7 @@ import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
+import java.util.concurrent.ConcurrentHashMap
 
 @Component
 class PreCIYAMLValidatorV2 {
@@ -27,26 +28,17 @@ class PreCIYAMLValidatorV2 {
         private const val TEMPLATE_STEP_SCHEMA = "template-steps"
         private const val TEMPLATE_VARIABLE_SCHEMA = "template-variables"
         private const val TEMPLATE_GATE_SCHEMA = "template-gates"
+        private val logger = LoggerFactory.getLogger(PreCIYAMLValidatorV2::class.java)
+        private val schemaCacheMap = ConcurrentHashMap<String, JsonSchema>()
     }
 
-    private val logger = LoggerFactory.getLogger(PreCIYAMLValidatorV2::class.java)
-
-    private val yaml = Yaml()
-
-    private val schemaFactory = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7))
-            .objectMapper(YamlUtil.getObjectMapper())
-            .build()
-
-    private val schemaCacheMap = mutableMapOf<String, JsonSchema>()
-
-    // 给来自前端的接口用，直接扔出去就好
     fun check(originYaml: String, templateType: TemplateType?, isCiFile: Boolean) {
         checkYamlSchema(originYaml, templateType, isCiFile)
     }
 
     private fun checkYamlSchema(originYaml: String, templateType: TemplateType? = null, isCiFile: Boolean) {
         val loadYaml = try {
-            YamlUtil.toYaml(yaml.load(originYaml))
+            YamlUtil.toYaml(Yaml().load(originYaml))
         } catch (ignored: Throwable) {
             throw YamlFormatException("There may be a problem with your yaml syntax ${ignored.message}")
         }
@@ -86,18 +78,16 @@ class PreCIYAMLValidatorV2 {
     }
 
     private fun getSchema(file: String): JsonSchema {
-        if (schemaCacheMap[file] != null) {
-            return schemaCacheMap[file]!!
+        return schemaCacheMap.getOrPut(file) {
+            JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7))
+                    .objectMapper(YamlUtil.getObjectMapper())
+                    .build()
+                    .getSchema(
+                        getStrFromResource("schema/$file.json").ifBlank {
+                            throw RuntimeException("init yaml schema for git error: yaml blank")
+                        }
+                    )
         }
-
-        val schema = schemaFactory.getSchema(
-            getStrFromResource("schema/$file.json").ifBlank {
-                throw RuntimeException("init yaml schema for git error: yaml blank")
-            }
-        )
-        schemaCacheMap[file] = schema
-
-        return schema
     }
 
     private fun getStrFromResource(path: String): String {
