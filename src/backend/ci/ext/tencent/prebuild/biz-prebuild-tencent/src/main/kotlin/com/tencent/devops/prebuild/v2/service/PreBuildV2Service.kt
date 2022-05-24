@@ -205,7 +205,7 @@ class PreBuildV2Service @Autowired constructor(
         }
 
         return getTemplateCntFromGit(
-            token = param.targetRepo?.credentials?.personalAccessToken,
+            personalToken = param.targetRepo?.credentials?.personalAccessToken,
             gitProjectId = param.targetRepo?.repository!!,
             ref = param.targetRepo?.ref,
             fileName = TEMPLATE_DIR + param.path
@@ -213,19 +213,26 @@ class PreBuildV2Service @Autowired constructor(
     }
 
     private fun getTemplateCntFromGit(
-        token: String?,
+        personalToken: String?,
         gitProjectId: String,
         fileName: String,
         ref: String?
     ): String {
         logger.info("getTemplateCntFromGit: [$gitProjectId|$fileName|$ref]")
         try {
+            var useAccessToken = false
+            var token = personalToken
+            if (token.isNullOrBlank()) {
+                token = getGitAccessToken(gitProjectId)
+                useAccessToken = true
+            }
+
             return client.getScm(ServiceGitCiResource::class).getGitCIFileContent(
                 gitProjectId = gitProjectId,
                 filePath = fileName,
-                token = token ?: "",
+                token = token,
                 ref = getTriggerBranch(ref),
-                useAccessToken = false
+                useAccessToken = useAccessToken
             ).data!!
         } catch (e: Throwable) {
             logger.error("get yaml template error from git, $gitProjectId", e)
@@ -239,6 +246,12 @@ class PreBuildV2Service @Autowired constructor(
             branch != null && branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
             else -> branch ?: "master"
         }
+    }
+
+    private fun getGitAccessToken(gitProjectId: String): String {
+        val tokenObj = client.get(ServiceGitCiResource::class).getToken(gitProjectId)
+
+        return tokenObj.data!!.accessToken
     }
 
     /**
