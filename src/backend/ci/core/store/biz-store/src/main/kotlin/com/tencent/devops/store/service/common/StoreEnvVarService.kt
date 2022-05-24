@@ -43,12 +43,22 @@ interface StoreEnvVarService {
     ): Result<Boolean>
 
     /**
+     * 更新环境变量
+     */
+    fun update(
+        userId: String,
+        variableId: String,
+        storeEnvVarRequest: StoreEnvVarRequest
+    ): Result<Boolean>
+
+    /**
      * 删除环境变量
      */
     fun delete(
         userId: String,
         storeType: String,
         storeCode: String,
+        scope: String,
         varNames: String
     ): Result<Boolean>
 
@@ -73,6 +83,7 @@ interface StoreEnvVarService {
         userId: String,
         storeType: String,
         storeCode: String,
+        scope: String,
         varName: String
     ): Result<List<StoreEnvChangeLogInfo>?>
 }
