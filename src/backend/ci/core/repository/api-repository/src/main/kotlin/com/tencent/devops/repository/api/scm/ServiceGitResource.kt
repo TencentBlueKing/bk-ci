@@ -804,6 +804,9 @@ interface ServiceGitResource {
         minAccessLevel: GitAccessLevelEnum?
     ): Result<List<GitCodeProjectInfo>>
 
+    @ApiOperation("获取mr关联的tapd单")
+    @GET
+    @Path("/getTapdWorkItems")
     fun getTapdWorkItems(
         @ApiParam("accessToken", required = true)
         @QueryParam("accessToken")
