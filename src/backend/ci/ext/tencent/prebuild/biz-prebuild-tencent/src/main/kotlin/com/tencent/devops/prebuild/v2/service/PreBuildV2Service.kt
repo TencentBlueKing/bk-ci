@@ -36,6 +36,8 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
 import com.tencent.devops.prebuild.pojo.StartUpReq
@@ -59,6 +61,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 
 @Service
@@ -67,12 +70,16 @@ class PreBuildV2Service @Autowired constructor(
     private val dslContext: DSLContext,
     private val prebuildProjectDao: PrebuildProjectDao,
     private val modelCreate: ModelCreate,
-    private val preCIYAMLValidatorV2: PreCIYAMLValidatorV2
+    private val preCIYAMLValidatorV2: PreCIYAMLValidatorV2,
+    private val redisOperation: RedisOperation
 ) : CommonPreBuildService(client, dslContext, prebuildProjectDao) {
     companion object {
         private val logger = LoggerFactory.getLogger(PreBuildV2Service::class.java)
         private const val TEMPLATE_DIR = ".ci/templates/"
         private const val VARIABLE_PREFIX = "variables."
+        private const val REDIS_KEY_GIT_TOKEN_LOCK_PREFIX = "preci:git:token:lock:"
+        private const val REDIS_KEY_GIT_TOKEN_PREFIX = "preci:git:token:"
+        private val GIT_TOKEN_EXPIRE_TIME = TimeUnit.HOURS.toSeconds(7)
     }
 
     /**
@@ -85,7 +92,7 @@ class PreBuildV2Service @Autowired constructor(
         return try {
             preCIYAMLValidatorV2.check(originYaml, null, true)
             Result("OK")
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             logger.error("Check yaml schema failed.", e)
             Result(1, "Invalid yaml: ${e.message}")
         }
@@ -107,10 +114,11 @@ class PreBuildV2Service @Autowired constructor(
         agentInfo: ThirdPartyAgentStaticInfo
     ): BuildId {
         // 1.校验yaml合法性
-        /*val (isPassed, _, errorMsg) = preCIYAMLValidator.validate(startUpReq.yaml)
-        if (!isPassed) {
-            throw CustomException(Response.Status.BAD_REQUEST, "Invalid yaml: $errorMsg")
-        }*/
+        try {
+            preCIYAMLValidatorV2.check(startUpReq.yaml, null, true)
+        } catch (e: Throwable) {
+            throw CustomException(Response.Status.BAD_REQUEST, "Invalid yaml: ${e.message}")
+        }
 
         // 2.标准化处理
         val scriptBuildYaml = ScriptYmlUtils.normalizePreCiYaml(
@@ -212,6 +220,14 @@ class PreBuildV2Service @Autowired constructor(
             fileName = TEMPLATE_DIR + param.path
         )
 
+        val templateRelPath = TEMPLATE_DIR + param.path
+        try {
+            preCIYAMLValidatorV2.check(content, param.templateType, false)
+        } catch (e: Throwable) {
+            logger.error("template yaml check fail, [$param.templateType?.text|$templateRelPath|$e.message")
+            throw CustomException(Response.Status.BAD_REQUEST, "template yaml check fail: ${e.message}")
+        }
+
         return ScriptYmlUtils.formatYaml(content)
     }
 
@@ -234,27 +250,46 @@ class PreBuildV2Service @Autowired constructor(
                 gitProjectId = gitProjectId,
                 filePath = fileName,
                 token = token,
-                ref = getTriggerBranch(ref),
+                ref = getTriggerBranch(ref, token, useAccessToken, gitProjectId),
                 useAccessToken = useAccessToken
             ).data!!
         } catch (e: Throwable) {
             logger.error("get yaml template error from git, $gitProjectId", e)
-            throw e
+            throw CustomException(Response.Status.BAD_REQUEST, "get yaml template error from git")
         }
     }
 
-    private fun getTriggerBranch(branch: String?): String {
+    private fun getTriggerBranch(
+        branch: String?,
+        token: String,
+        useAccessToken: Boolean,
+        gitProjectId: String
+    ): String {
         return when {
             branch != null && branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
             branch != null && branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
-            else -> branch ?: "master"
+            else ->
+                branch ?: getGitProjectDefaultBranch(token, useAccessToken, gitProjectId) ?: "master"
         }
     }
 
     private fun getGitAccessToken(gitProjectId: String): String {
-        val tokenObj = client.getScm(ServiceGitCiResource::class).getToken(gitProjectId)
+        val keyForVal = REDIS_KEY_GIT_TOKEN_PREFIX + gitProjectId
+        val token = redisOperation.get(keyForVal)
 
-        return tokenObj.data!!.accessToken
+        if (!token.isNullOrBlank()) {
+            return token
+        }
+
+        val keyForLock = REDIS_KEY_GIT_TOKEN_LOCK_PREFIX + gitProjectId
+        val redisLock = RedisLock(redisOperation, keyForLock, 10)
+        redisLock.use {
+            redisLock.lock()
+            val newToken = client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data!!.accessToken
+            logger.info("PRECI|getToken|gitProjectId=$gitProjectId|newToken=$newToken")
+            redisOperation.set(keyForVal, newToken, GIT_TOKEN_EXPIRE_TIME)
+            return newToken
+        }
     }
 
     /**
@@ -314,5 +349,16 @@ class PreBuildV2Service @Autowired constructor(
         }
 
         return ScriptYmlUtils.parseVariableValue(varValue, settingMap)
+    }
+
+    /**
+     * 获取git项目设定的默认分支
+     */
+    private fun getGitProjectDefaultBranch(token: String, useAccessToken: Boolean, gitProjectId: String): String? {
+        return client.getScm(ServiceGitCiResource::class).getProjectInfo(
+            accessToken = token,
+            useAccessToken = useAccessToken,
+            gitProjectId = gitProjectId
+        ).data?.defaultBranch
     }
 }
