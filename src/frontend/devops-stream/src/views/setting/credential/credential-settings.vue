@@ -31,7 +31,7 @@
                 isSaving: false,
                 ticket: {},
                 navList: [
-                    { link: { name: 'credentialList' }, title: 'Credential Settings' },
+                    { link: { name: 'credentialList' }, title: this.$t('setting.credentialSetting') },
                     { link: '', title: this.$route.params.credentialId },
                     { link: '', title: 'Settings' }
                 ]

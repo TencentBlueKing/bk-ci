@@ -22,10 +22,10 @@
         </span>
         <bk-radio-group v-model="isCancel" class="review-result">
             <bk-radio :value="false" :disabled="disabled">
-                {{$t('pipeline.Approve')}} <span class="gray-color">（{{$t('pipeline.approveResult')}}）</span>
+                {{$t('pipeline.approve')}} <span class="gray-color">（{{$t('pipeline.approveResult')}}）</span>
             </bk-radio>
             <bk-radio :value="true" :disabled="disabled" class="ml40">
-                {{$t('pipeline.Reject')}} <span class="gray-color">（{{$t('pipeline.rejectResult')}}）</span>
+                {{$t('pipeline.reject')}} <span class="gray-color">（{{$t('pipeline.rejectResult')}}）</span>
             </bk-radio>
         </bk-radio-group>
 

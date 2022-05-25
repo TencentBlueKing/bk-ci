@@ -1,7 +1,7 @@
 <template>
     <article class="group-home" v-bkloading="{ isLoading }">
         <header class="home-header">
-            <bk-button theme="primary" @click="addGroup">New Group</bk-button>
+            <bk-button theme="primary" @click="addGroup">{{$t('setting.userGroup.createGroup')}}</bk-button>
         </header>
 
         <bk-table :data="groupList"
@@ -15,7 +15,7 @@
             class="group-table"
         >
             <bk-table-column label="Id" prop="groupHashId"></bk-table-column>
-            <bk-table-column :label="$t('Name')" prop="name"></bk-table-column>
+            <bk-table-column :label="$t('name')" prop="name"></bk-table-column>
             <bk-table-column :label="$t('setting.userGroup.innerUsers')" prop="innerUsers">
                 <template slot-scope="props">
                     <span>{{props.row.innerUsers.join(';')}}</span>
