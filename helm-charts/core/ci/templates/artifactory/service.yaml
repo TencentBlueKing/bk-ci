@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "common.names.fullname" . }}-artifactory
+  name: {{ include "bkci.names.fullname" . }}-artifactory
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/name: artifactory
     app.kubernetes.io/component: microservice

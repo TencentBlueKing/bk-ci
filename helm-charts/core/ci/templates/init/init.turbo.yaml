@@ -4,7 +4,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "common.names.fullname" . }}-init-turbo
+  name: {{ include "bkci.names.fullname" . }}-init-turbo
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: init-turbo
   annotations:
@@ -24,7 +24,7 @@ spec:
           workingDir: /data/workspace/support-files/turbo
           env:
             - name: ENDPOINT_CI_TURBO
-              value: http://{{ include "common.names.fullname" . }}-turbo
+              value: http://{{ include "bkci.names.fullname" . }}-turbo
             - name: BK_TURBO_PUBLIC_URL
               value: {{ .Values.config.bkTurboPublicUrl }}
           command:
@@ -41,7 +41,7 @@ spec:
                 "linkNew": "/turbo/",
                 "css_url": "{{ .Values.config.bkCiPublicUrl }}/turbo/turbo.css",
                 "js_url": "{{ .Values.config.bkCiPublicUrl }}/turbo/turbo.js" 
-              }' "http://{{ include "common.names.fullname" . }}-project/api/op/services/update/Turbo"
+              }' "http://{{ include "bkci.names.fullname" . }}-project/api/op/services/update/Turbo"
       restartPolicy: Never
 {{- end -}}
 {{- end -}}

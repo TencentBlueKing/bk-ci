@@ -2,7 +2,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ include "common.names.fullname" . }}-bkmonitor-turbo
+  name: {{ include "bkci.names.fullname" . }}-bkmonitor-turbo
 spec:
   endpoints:
     - interval: 30s # 采集周期

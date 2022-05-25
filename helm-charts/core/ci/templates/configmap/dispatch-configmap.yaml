@@ -3,7 +3,7 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: {{ include "common.names.fullname" . }}-dispatch
+  name: {{ include "bkci.names.fullname" . }}-dispatch
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: dispatch
     {{- if .Values.commonLabels }}

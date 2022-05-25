@@ -3,7 +3,7 @@
 apiVersion: bk.tencent.com/v1alpha1
 kind: BkLogConfig
 metadata:
-  name: {{ include "common.names.fullname" . }}-bklog-service
+  name: {{ include "bkci.names.fullname" . }}-bklog-service
 spec:
   dataId: {{ .Values.bkLogConfig.service.dataId }}
   logConfigType: container_log_config
@@ -30,7 +30,7 @@ spec:
 apiVersion: bk.tencent.com/v1alpha1
 kind: BkLogConfig
 metadata:
-  name: {{ include "common.names.fullname" . }}-bklog-gateway-access
+  name: {{ include "bkci.names.fullname" . }}-bklog-gateway-access
 spec:
   dataId: {{ .Values.bkLogConfig.gatewayAccess.dataId }}
   logConfigType: container_log_config
@@ -53,7 +53,7 @@ spec:
 apiVersion: bk.tencent.com/v1alpha1
 kind: BkLogConfig
 metadata:
-  name: {{ include "common.names.fullname" . }}-bklog-gateway-error
+  name: {{ include "bkci.names.fullname" . }}-bklog-gateway-error
 spec:
   dataId: {{ .Values.bkLogConfig.gatewayError.dataId }}
   logConfigType: container_log_config

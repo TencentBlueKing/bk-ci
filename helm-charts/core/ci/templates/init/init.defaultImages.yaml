@@ -3,7 +3,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "common.names.fullname" . }}-init-default-image
+  name: {{ include "bkci.names.fullname" . }}-init-default-image
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: init-default-image
   annotations:
@@ -26,6 +26,6 @@ spec:
             - "-c"
             - |
               sleep 240s;
-              curl "http://{{ include "common.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local/api/op/market/image/init" -X POST
+              curl "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local/api/op/market/image/init" -X POST
       restartPolicy: OnFailure
 {{- end -}}

@@ -4,7 +4,7 @@
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "common.names.fullname" . }}-artifactory
+  name: {{ include "bkci.names.fullname" . }}-artifactory
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/name: artifactory
     app.kubernetes.io/component: microservice
@@ -18,7 +18,7 @@ spec:
   scaleTargetRef:
     apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
     kind: Deployment
-    name: {{ include "common.names.fullname" . }}-artifactory
+    name: {{ include "bkci.names.fullname" . }}-artifactory
   minReplicas: {{ .Values.artifactory.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.artifactory.autoscaling.maxReplicas }}
   metrics:

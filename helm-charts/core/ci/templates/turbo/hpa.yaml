@@ -3,7 +3,7 @@
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "common.names.fullname" . }}-turbo
+  name: {{ include "bkci.names.fullname" . }}-turbo
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/name: turbo
     app.kubernetes.io/component: microservice
@@ -17,7 +17,7 @@ spec:
   scaleTargetRef:
     apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
     kind: Deployment
-    name: {{ include "common.names.fullname" . }}-turbo
+    name: {{ include "bkci.names.fullname" . }}-turbo
   minReplicas: {{ .Values.turbo.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.turbo.autoscaling.maxReplicas }}
   metrics:

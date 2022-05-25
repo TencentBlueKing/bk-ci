@@ -3,7 +3,7 @@
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
-  name: {{ include "common.names.fullname" . }}-turbo
+  name: {{ include "bkci.names.fullname" . }}-turbo
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/name: turbo
     app.kubernetes.io/component: microservice-turbo
@@ -68,7 +68,7 @@ spec:
             - name: TURBO_JVM_OPTION
               value: {{ .Values.common.jvmOption }}
             - name: TURBO_SERVICE_PREFIX
-              value: {{ include "common.names.fullname" . }}-
+              value: {{ include "bkci.names.fullname" . }}-
           ports:
             - name: http
               containerPort: 8080
@@ -101,7 +101,7 @@ spec:
       volumes:
         - name: quartz-config
           configMap:
-            name: {{ include "common.names.fullname" . }}-turbo
+            name: {{ include "bkci.names.fullname" . }}-turbo
             items:
               - key: quartz.properties
                 path: quartz.properties
