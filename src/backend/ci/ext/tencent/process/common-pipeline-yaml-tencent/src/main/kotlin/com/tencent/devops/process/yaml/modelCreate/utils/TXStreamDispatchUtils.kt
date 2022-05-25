@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.image.BuildType
 import com.tencent.devops.common.ci.image.Credential
 import com.tencent.devops.common.ci.image.Pool
+import com.tencent.devops.common.ci.image.PoolType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.DispatchType
@@ -44,7 +45,6 @@ import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
@@ -152,41 +152,52 @@ object TXStreamDispatchUtils {
                 else -> {}
             }
 
-            val containerPool =
-                makeContainerPool(poolName, client, job, projectCode, defaultImage, context, buildTemplateAcrossInfo)
+            val dockerVMContainerPool = makeContainerPool(
+                BuildType.DOCKER_VM,
+                client,
+                job,
+                projectCode,
+                defaultImage,
+                context,
+                buildTemplateAcrossInfo
+            )
 
-            return GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
+            return GitCIDispatchType(objectMapper.writeValueAsString(dockerVMContainerPool))
         }
 
         if (bizType == DispatchBizType.PRECI) {
-            if (poolName == JobRunsOnType.LOCAL.type) {
-                logger.info("preci local dispatch type")
-                return ThirdPartyAgentIDDispatchType(
-                    displayName = "",
-                    workspace = "",
-                    agentType = AgentType.ID
-                )
-            }
-
-            val containerPool =
-                makeContainerPool(poolName, client, job, projectCode, defaultImage, context, buildTemplateAcrossInfo)
-
             when (poolName) {
+                JobRunsOnType.LOCAL.type -> {
+                    return ThirdPartyAgentIDDispatchType(
+                        displayName = "",
+                        workspace = "",
+                        agentType = AgentType.ID
+                    )
+                }
                 JobRunsOnType.DEV_CLOUD.type -> {
-                    logger.info("preci docker on dev cloud dispatch type")
-                    return PublicDevCloudDispathcType(
-                        image = containerPool.container,
-                        performanceConfigId = "0",
-                        imageType = ImageType.THIRD,
-                        credentialId = containerPool.credential?.credentialId
+                    return PoolType.DockerOnDevCloud.toDispatchType(
+                        makeContainerPool(
+                            BuildType.DEVCLOUD,
+                            client,
+                            job,
+                            projectCode,
+                            defaultImage,
+                            context,
+                            buildTemplateAcrossInfo
+                        )
                     )
                 }
                 JobRunsOnType.DOCKER.type -> {
-                    logger.info("preci docker dispatch type")
-                    return DockerDispatchType(
-                        dockerBuildVersion = containerPool.container,
-                        imageType = ImageType.THIRD,
-                        credentialId = containerPool.credential?.credentialId
+                    return PoolType.DockerOnVm.toDispatchType(
+                        makeContainerPool(
+                            BuildType.DOCKER_VM,
+                            client,
+                            job,
+                            projectCode,
+                            defaultImage,
+                            context,
+                            buildTemplateAcrossInfo
+                        )
                     )
                 }
                 else -> {}
@@ -195,7 +206,7 @@ object TXStreamDispatchUtils {
 
         if (containsMatrix == true) {
             return when (bizType) {
-                DispatchBizType.RDS -> PublicDevCloudDispathcType(
+                DispatchBizType.RDS, DispatchBizType.PRECI -> PublicDevCloudDispathcType(
                     image = defaultImage,
                     imageType = ImageType.THIRD,
                     performanceConfigId = "0"
@@ -208,7 +219,7 @@ object TXStreamDispatchUtils {
     }
 
     private fun makeContainerPool(
-        poolName: String,
+        buildType: BuildType,
         client: Client,
         job: Job,
         projectCode: String,
@@ -216,11 +227,6 @@ object TXStreamDispatchUtils {
         context: Map<String, String>? = null,
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ): Pool {
-        var buildType = when (poolName) {
-            JobRunsOnType.DEV_CLOUD.type -> BuildType.DEVCLOUD
-            else -> BuildType.DOCKER_VM
-        }
-
         var containerPool = Pool(
             container = defaultImage,
             credential = Credential(
