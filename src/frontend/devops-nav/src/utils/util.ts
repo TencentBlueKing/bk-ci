@@ -162,3 +162,19 @@ export class HttpError extends Error {
         this.code = code
     }
 }
+
+// 判断是否显示公告
+export function ifShowNotice (currentNotice) {
+    const announcementHistory = localStorage.getItem('announcementHistory') ? JSON.parse(localStorage.getItem('announcementHistory')) : []
+    // 判断当前公告是否生效中，并且未展示过
+    if (currentNotice && currentNotice.id && currentNotice.noticeType === 0 && announcementHistory.indexOf(currentNotice.id) === -1) {
+        // 判断当前公共是否只在特定服务展示
+        const noticeService = currentNotice.noticeService || []
+        if (!(noticeService.length > 0 && noticeService.indexOf(window.currentPage && window.currentPage.link_new) === -1)) {
+            announcementHistory.push(currentNotice.id)
+            localStorage.setItem('announcementHistory', JSON.stringify(announcementHistory))
+            return true
+        }
+    }
+    return false
+}

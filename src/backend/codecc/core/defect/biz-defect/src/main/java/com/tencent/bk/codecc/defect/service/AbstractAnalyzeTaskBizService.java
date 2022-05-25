@@ -70,7 +70,7 @@ import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -147,7 +147,7 @@ public abstract class AbstractAnalyzeTaskBizService implements IBizService<Uploa
         long taskId = taskVO.getTaskId();
         uploadTaskLogStepVO.setTaskId(taskId);
 
-        TaskLogEntity lastTaskLogEntity = taskLogRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        TaskLogEntity lastTaskLogEntity = taskLogRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
         ToolConfigBaseVO toolConfigBaseVO;
 
         //如果是流水线运行失败
@@ -363,7 +363,7 @@ public abstract class AbstractAnalyzeTaskBizService implements IBizService<Uploa
                 }
             }
             CodeRepoFromAnalyzeLogEntity codeRepoFromAnalyzeLogEntity = codeRepoFromAnalyzeLogRepository
-                .findCodeRepoFromAnalyzeLogEntityByTaskId(uploadTaskLogStepVO.getTaskId());
+                .findCodeRepoFromAnalyzeLogEntityFirstByTaskId(uploadTaskLogStepVO.getTaskId());
             if (codeRepoFromAnalyzeLogEntity == null) {
                 codeRepoFromAnalyzeLogEntity = new CodeRepoFromAnalyzeLogEntity();
                 codeRepoFromAnalyzeLogEntity.setTaskId(uploadTaskLogStepVO.getTaskId());
@@ -383,7 +383,7 @@ public abstract class AbstractAnalyzeTaskBizService implements IBizService<Uploa
         }
 
         if (scmInfoStrBuf.length() > 0) {
-            TaskLogEntity taskLogEntity = taskLogRepository.findByTaskIdAndToolNameAndBuildId(
+            TaskLogEntity taskLogEntity = taskLogRepository.findFirstByTaskIdAndToolNameAndBuildId(
                 uploadTaskLogStepVO.getTaskId(),
                 uploadTaskLogStepVO.getToolName(),
                 uploadTaskLogStepVO.getPipelineBuildId());
@@ -697,7 +697,7 @@ public abstract class AbstractAnalyzeTaskBizService implements IBizService<Uploa
                         || ComConstants.ToolPattern.CCN.name().equals(pattern)
                         || ComConstants.Tool.CLOC.name().equals(pattern)) {
                     ToolBuildStackEntity toolBuildStackEntity =
-                            toolBuildStackRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+                            toolBuildStackRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
                     boolean isFullScan = toolBuildStackEntity != null ? toolBuildStackEntity.isFullScan() : true;
                     if (taskVO.getScanType() != null && taskVO.getScanType() == ComConstants.ScanType.DIFF_MODE.code) {
                         scanTypeMsg = "MR/PR扫描";
@@ -809,7 +809,7 @@ public abstract class AbstractAnalyzeTaskBizService implements IBizService<Uploa
         String pipeline = taskLogEntity.getPipelineId();
         String buildId = taskLogEntity.getBuildId();
         if (StringUtils.isNotEmpty(pipeline) && StringUtils.isNotEmpty(buildId)) {
-            BuildEntity buildEntity = buildRepository.findByBuildId(buildId);
+            BuildEntity buildEntity = buildRepository.findFirstByBuildId(buildId);
             if (buildEntity == null) {
                 BuildEntity buildInfo = pipelineService.getBuildIdInfo(buildId);
                 if (buildInfo != null) {

@@ -22,7 +22,7 @@ open class QuartzConfig {
     @Bean
     open fun schedulerFactoryBean(@Autowired jobFactory: AdaptableJobFactory): SchedulerFactoryBean {
         val schedulerFactoryBean = SchedulerFactoryBean()
-        schedulerFactoryBean.setDataSource(null)
+//        schedulerFactoryBean.setDataSource(null)
         schedulerFactoryBean.setJobFactory(jobFactory)
         val res = ClassPathResource("quartz.properties")
         schedulerFactoryBean.setConfigLocation(res)

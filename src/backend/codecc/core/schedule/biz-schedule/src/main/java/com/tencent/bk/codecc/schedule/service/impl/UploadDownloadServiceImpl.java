@@ -26,6 +26,8 @@ import com.tencent.bk.codecc.schedule.vo.FileIndexVO;
 import com.tencent.bk.codecc.schedule.vo.FileInfoModel;
 import com.tencent.bk.codecc.schedule.vo.GetFileSizeVO;
 import com.tencent.bk.codecc.schedule.vo.UploadVO;
+import com.tencent.devops.common.storage.StorageService;
+import com.tencent.devops.common.storage.constant.StorageType;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.util.MD5Utils;
@@ -35,7 +37,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -52,6 +54,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,6 +79,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService {
 
     @Autowired
     private FileIndexRepository fileIndexRepository;
+
+    @Autowired
+    private StorageService storageService;
 
     @Value("${codecc.file.data.path:/data/bkce/codecc/nfs}")
     private String codeccFileDataPath = "";
@@ -167,6 +174,12 @@ public class UploadDownloadServiceImpl implements UploadDownloadService {
                 fileOutputStream.write(bytes, 0, index);
                 fileOutputStream.flush();
             }
+            if (uploadVO.getChunks() == null || uploadVO.getChunks() <= 0) {
+                //上传至文件存储
+                uploadToStorage(uploadVO.getFileName());
+            }else {
+                uploadChunkToStorage(uploadVO.getFileName(), uploadVO.getChunk(), outFile);
+            }
         } catch (IOException e) {
             log.error("upload file {} exception", fileBaseName, e);
             throw new CodeCCException(DispatchMessageCode.UPLOAD_FILE_ERR);
@@ -213,6 +226,8 @@ public class UploadDownloadServiceImpl implements UploadDownloadService {
                     files.sort(Comparator.comparing((file) -> getCompareChunkNo(file, fileBaseName)));
 
                     merge(files, uploadFolder, fileBaseName);
+
+                    finishChunkToStorage(fileIndexVO.getFileName());
                 }
             } catch (Exception ex) {
                 log.error("数据分片合并失败", ex);
@@ -288,7 +303,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService {
         } else {
             downloadFolder = codeccFileDataPath + FOLDER_MAP.get(downloadVO.getDownloadType());
         }
-
+        //如果需要的话，下载文件
+        downloadFromStorage(Paths.get(downloadFolder, fileName).toString(),fileName);
+        //判断文件是否存在
         File target = new File(downloadFolder, fileName);
         if (!target.exists()) {
             log.error("{}不存在", target.getAbsolutePath());
@@ -396,20 +413,8 @@ public class UploadDownloadServiceImpl implements UploadDownloadService {
 
         if (fileIndexEntity == null
                 || fileIndexEntity.getFileFolder().contains("fail_result_upload")) {
-
-            String uploadFolders = FOLDER_MAP.get(type);
-            if (StringUtils.isEmpty(uploadFolders)) {
-                log.error("indexed file {} fail, type [{}] invalid", fileName, type);
-                throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"type"}, null);
-            }
-            String[] uploadFolderArr = uploadFolders.split(";");
-            int chooseIndex = (int) (System.currentTimeMillis() % uploadFolderArr.length);
-            String uploadFolder = codeccFileDataPath + uploadFolderArr[chooseIndex];
-
-            String fileNameMD5 = MD5Utils.getMD5(fileName);
-            String dir1 = fileNameMD5.substring(0, 2);
-            String dir2 = fileNameMD5.substring(2, 4);
-            String fileFolder = String.format("%s/%s/%s", uploadFolder, dir1, dir2);
+            //获取文件夹
+            String fileFolder = getFileFolder(fileName, type);
 
             ChunkUploadUtil.createFileFolder(fileFolder);
 
@@ -419,6 +424,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService {
             }
             fileIndexEntity.setFileName(fileName);
             fileIndexEntity.setFileFolder(fileFolder);
+            fileIndexEntity.setUploadType(type);
             fileIndexEntity.setCreatedDate(System.currentTimeMillis());
             fileIndexEntity.setUpdatedDate(System.currentTimeMillis());
 
@@ -429,6 +435,22 @@ public class UploadDownloadServiceImpl implements UploadDownloadService {
 
         log.info("end index cost: {}, {}", System.currentTimeMillis() - beginTime, fileIndexVO);
         return fileIndexVO;
+    }
+
+    private String getFileFolder(String fileName, String type){
+        String uploadFolders = FOLDER_MAP.get(type);
+        if (StringUtils.isEmpty(uploadFolders)) {
+            log.error("indexed file {} fail, type [{}] invalid", fileName, type);
+            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"type"}, null);
+        }
+        String[] uploadFolderArr = uploadFolders.split(";");
+        int chooseIndex = (int) (System.currentTimeMillis() % uploadFolderArr.length);
+        String uploadFolder = codeccFileDataPath + uploadFolderArr[chooseIndex];
+
+        String fileNameMD5 = MD5Utils.getMD5(fileName);
+        String dir1 = fileNameMD5.substring(0, 2);
+        String dir2 = fileNameMD5.substring(2, 4);
+        return String.format("%s/%s/%s", uploadFolder, dir1, dir2);
     }
 
     @Override
@@ -462,7 +484,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService {
         } else {
             downloadFolder = codeccFileDataPath + FOLDER_MAP.get(downloadType);
         }
-
+        //如果需要的话，下载文件
+        downloadFromStorage(Paths.get(downloadFolder, fileName).toString(),fileName);
+        //判断文件是否存在
         File target = new File(downloadFolder, fileName);
         if (!target.exists()) {
             log.error("{}不存在", target.getAbsolutePath());
@@ -473,7 +497,6 @@ public class UploadDownloadServiceImpl implements UploadDownloadService {
             log.error("{}不是一个文件", target.getAbsolutePath());
             throw new CodeCCException(DispatchMessageCode.NOT_A_FILE, new String[]{fileName}, null);
         }
-
         StreamingOutput fileStream = output ->
         {
             log.info("downloading: {}", target.getAbsoluteFile());
@@ -492,6 +515,24 @@ public class UploadDownloadServiceImpl implements UploadDownloadService {
 
         log.info("end download. downloadType: {}, fileName: {}", downloadType, fileName);
         return response;
+    }
+
+    @Override
+    public FileIndexVO updateFileIndex(FileIndexVO fileInfoVo) {
+        FileIndexEntity fileIndexEntity = fileIndexRepository.findFirstByFileName(fileInfoVo.getFileName());
+        if(fileIndexEntity == null){
+            fileIndexEntity = new FileIndexEntity();
+            fileIndexEntity.setFileName(fileInfoVo.getFileName());
+            fileIndexEntity.setFileFolder(getFileFolder(fileInfoVo.getFileName(), fileInfoVo.getUploadType()));
+            fileIndexEntity.setUploadType(fileInfoVo.getUploadType());
+            fileIndexEntity.setCreatedDate(System.currentTimeMillis());
+            fileIndexEntity.setUpdatedDate(System.currentTimeMillis());
+        }
+        fileIndexEntity.setStoreType(fileInfoVo.getStoreType());
+        fileIndexEntity.setDownloadUrl(fileInfoVo.getDownloadUrl());
+        fileIndexRepository.save(fileIndexEntity);
+        BeanUtils.copyProperties(fileIndexEntity, fileInfoVo);
+        return fileInfoVo;
     }
 
     private String getFileMd5(String fileName, File file) {
@@ -514,7 +555,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService {
             log.warn("文件[{}]已经存在，删除重新创建", outputFile.getAbsolutePath());
             outputFile.delete();
         }
-
+        outputFile.getParentFile().mkdirs();
         boolean newFile = outputFile.createNewFile();
         if (!newFile) {
             log.error("创建文件失败");
@@ -600,6 +641,93 @@ public class UploadDownloadServiceImpl implements UploadDownloadService {
             return false;
         }
         return true;
+    }
+
+    /**
+     * 将文件上传到文件存储引擎
+     * NFS挂载本机目录不需要上传
+     * @param fileName
+     */
+    private void uploadToStorage(String fileName){
+        FileIndexEntity index = fileIndexRepository.findFirstByFileName(fileName);
+        if (index == null || storageService.getStorageType().equals(StorageType.NFS.code())) {
+            return;
+        }
+        String localFilePath = Paths.get(index.getFileFolder(), index.getFileName()).toString();
+        try {
+            String url = storageService.upload(localFilePath, index.getUploadType(), index.getFileName());
+            index.setStoreType(storageService.getStorageType());
+            index.setDownloadUrl(url);
+            fileIndexRepository.save(index);
+        } catch (Exception e) {
+            log.error("uploadToStorage filename:" + fileName + " storage:" +
+                    storageService.getStorageType() + " fail!", e);
+        }
+    }
+
+    /**
+     * 将分片文件上传到文件存储引擎
+     * NFS挂载本机目录不需要上传
+     * @param fileName
+     */
+    private void uploadChunkToStorage(String fileName,Integer chunkNo, File file) {
+        FileIndexEntity index = fileIndexRepository.findFirstByFileName(fileName);
+        if (index == null || storageService.getStorageType().equals(StorageType.NFS.code())) {
+            return;
+        }
+        try {
+            if(chunkNo == 1){
+                //初次上传，初始化
+                String uploadId = storageService.startChunk(index.getUploadType(), index.getFileName());
+                index.setStoreType(storageService.getStorageType());
+                index.setUploadId(uploadId);
+                fileIndexRepository.save(index);
+            }
+            storageService.chunkUpload(file.getAbsolutePath(), index.getUploadType(), index.getFileName(),
+                    chunkNo, index.getUploadId());
+        } catch (Exception e) {
+            log.error("uploadToStorage filename:" + fileName + " storage:" +
+                    storageService.getStorageType() + " fail!", e);
+        }
+    }
+
+    /**
+     * 完成分配上传
+     * @param fileName
+     */
+    private void finishChunkToStorage(String fileName) {
+        FileIndexEntity index = fileIndexRepository.findFirstByFileName(fileName);
+        if (index == null || storageService.getStorageType().equals(StorageType.NFS.code())) {
+            return;
+        }
+        try {
+            String url = storageService.finishChunk(index.getUploadType(), index.getFileName(), index.getUploadId());
+            index.setDownloadUrl(url);
+            fileIndexRepository.save(index);
+        } catch (Exception e) {
+            log.error("finishChunkToStorage filename:" + fileName + " storage:" +
+                    storageService.getStorageType() + " fail!", e);
+        }
+    }
+
+    /**
+     * 将文件上传到文件存储引擎
+     * NFS挂载本机目录不需要上传
+     * @param fileName
+     */
+    private void downloadFromStorage(String downloadFolder, String fileName) {
+        FileIndexEntity index = fileIndexRepository.findFirstByFileName(fileName);
+        Path localFilePath = Paths.get(downloadFolder, fileName);
+        if(Files.exists(localFilePath) || index == null || index.getStoreType() == null
+                || index.getStoreType().equals(StorageType.NFS.code())){
+            return;
+        }
+        try {
+            storageService.download(localFilePath.toString(), index.getStoreType(), index.getFileName());
+        } catch (Exception e) {
+            log.error("downloadFromToStorage filename:" + fileName + " storage:" +
+                    storageService.getStorageType() + " fail!", e);
+        }
     }
 
 }

@@ -26,8 +26,8 @@
 
 package com.tencent.bk.codecc.defect.dao.mongotemplate;
 
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.defect.model.IgnoreCheckerEntity;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -79,11 +79,11 @@ public class IgnoreCheckerDao
      */
     public List<IgnoreCheckerEntity> queryCloseDefaultCheckers(String toolName, Collection<String> checkers)
     {
-        BasicDBObject fieldsObj = new BasicDBObject();
+        Document fieldsObj = new Document();
         fieldsObj.put("task_id", true);
         fieldsObj.put("close_default_checkers", true);
 
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        Query query = new BasicQuery(new Document(), fieldsObj);
 
         Criteria criteria = new Criteria();
         criteria.and("tool_name").is(toolName);

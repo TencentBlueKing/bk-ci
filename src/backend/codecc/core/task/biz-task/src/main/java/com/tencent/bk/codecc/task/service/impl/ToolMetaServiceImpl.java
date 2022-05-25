@@ -46,7 +46,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -295,7 +295,7 @@ public class ToolMetaServiceImpl implements ToolMetaService {
         log.info("refresh dockerImageHash: {}", GsonUtils.toJson(refreshDockerImageHashReqVO));
         String toolName = refreshDockerImageHashReqVO.getToolName();
         String versionType = refreshDockerImageHashReqVO.getVersionType();
-        ToolMetaEntity toolMetaEntity = toolMetaRepository.findByName(toolName);
+        ToolMetaEntity toolMetaEntity = toolMetaRepository.findFirstByName(toolName);
 
         if (toolMetaEntity == null) {
             log.error("not found tool by toolName: {}", toolName);
@@ -446,7 +446,7 @@ public class ToolMetaServiceImpl implements ToolMetaService {
      */
     @Override
     public ToolMetaDetailVO obtainToolMetaData(String toolName) {
-        ToolMetaEntity toolMetaEntity = toolMetaRepository.findByName(toolName);
+        ToolMetaEntity toolMetaEntity = toolMetaRepository.findFirstByName(toolName);
         ToolMetaDetailVO toolMetaDetailVO = new ToolMetaDetailVO();
         if (org.apache.commons.lang3.StringUtils.isNotBlank(toolMetaEntity.getCustomToolInfo())) {
             ToolMetaDetailVO.CustomToolInfo customToolInfo;
@@ -534,7 +534,7 @@ public class ToolMetaServiceImpl implements ToolMetaService {
 
     @Override
     public String updateToolMetaToStatus(String toolName, ToolIntegratedStatus status, String username) {
-        ToolMetaEntity toolEntity = toolMetaRepository.findByName(toolName);
+        ToolMetaEntity toolEntity = toolMetaRepository.findFirstByName(toolName);
 
         if (toolEntity == null) {
             throw new CodeCCException(CommonMessageCode.INVALID_TOOL_NAME, new String[]{toolName}, null);
@@ -558,7 +558,7 @@ public class ToolMetaServiceImpl implements ToolMetaService {
 
     @Override
     public String revertToolMetaStatus(String toolName, ToolIntegratedStatus status, String username) {
-        ToolMetaEntity toolEntity = toolMetaRepository.findByName(toolName);
+        ToolMetaEntity toolEntity = toolMetaRepository.findFirstByName(toolName);
 
         if (toolEntity == null) {
             throw new CodeCCException(CommonMessageCode.INVALID_TOOL_NAME, new String[]{toolName}, null);
