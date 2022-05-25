@@ -40,21 +40,28 @@ class RedisUtils @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper
 ) {
+    /**
+     * containerId 12位容器ID
+     */
     fun setBuildLessPoolContainer(
         containerId: String,
         containerStatus: ContainerStatus,
         buildLessTask: BuildLessTask? = null
     ) {
+        val formatContainerId = CommonUtils.formatContainerId(containerId)
         val buildLessPoolInfo = BuildLessPoolInfo(
             status = containerStatus,
             buildLessTask = buildLessTask
         )
         redisOperation.hset(
             key = buildLessPoolKey(),
-            hashKey = CommonUtils.formatContainerId(containerId),
+            hashKey = formatContainerId,
             values = JsonUtil.toJson(buildLessPoolInfo))
     }
 
+    /**
+     * containerId 64位容器ID
+     */
     fun deleteBuildLessPoolContainer(containerId: String) {
         logger.info("----> buildLessPoolKey hdelete $containerId")
         redisOperation.hdelete(buildLessPoolKey(), CommonUtils.formatContainerId(containerId))
@@ -64,8 +71,12 @@ class RedisUtils @Autowired constructor(
         return redisOperation.hentries(buildLessPoolKey()) ?: mutableMapOf()
     }
 
+    /**
+     * containerId 12位容器ID
+     */
     fun getBuildLessPoolContainer(containerId: String): BuildLessPoolInfo? {
-        val result = redisOperation.hget(buildLessPoolKey(), containerId)
+        val formatContainerId = CommonUtils.formatContainerId(containerId)
+        val result = redisOperation.hget(buildLessPoolKey(), formatContainerId)
         return if (result != null) {
             return objectMapper.readValue(result, BuildLessPoolInfo::class.java)
         } else {
