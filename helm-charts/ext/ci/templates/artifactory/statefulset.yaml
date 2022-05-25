@@ -3,7 +3,7 @@
 apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
 kind: Deployment
 metadata:
-  name: {{ include "common.names.fullname" . }}-artifactory
+  name: {{ include "bkci.names.fullname" . }}-artifactory
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}

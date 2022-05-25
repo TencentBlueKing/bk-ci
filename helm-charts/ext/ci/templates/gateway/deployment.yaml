@@ -3,7 +3,7 @@
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
-  name: {{ include "common.names.fullname" . }}-gateway
+  name: {{ include "bkci.names.fullname" . }}-gateway
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: gateway
     app.kubernetes.io/name: gateway

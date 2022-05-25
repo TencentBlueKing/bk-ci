@@ -3,7 +3,7 @@
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
-  name: {{ include "common.names.fullname" . }}-lambda
+  name: {{ include "bkci.names.fullname" . }}-lambda
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
@@ -54,7 +54,7 @@ spec:
       volumes:
         - name: secret-volume
           secret:
-            secretName: {{ include "common.names.fullname" . }}-lambda
+            secretName: {{ include "bkci.names.fullname" . }}-lambda
       containers:
         - name: lambda
           image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}

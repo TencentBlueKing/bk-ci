@@ -3,7 +3,7 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: {{ include "common.names.fullname" . }}-stream
+  name: {{ include "bkci.names.fullname" . }}-stream
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: stream
     {{- if .Values.commonLabels }}

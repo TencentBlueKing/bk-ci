@@ -3,7 +3,7 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: {{ include "common.names.fullname" . }}-monitoring
+  name: {{ include "bkci.names.fullname" . }}-monitoring
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: monitoring
     {{- if .Values.commonLabels }}
