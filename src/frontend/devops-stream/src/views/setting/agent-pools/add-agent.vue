@@ -81,7 +81,7 @@
                 navList: [
                     { link: { name: 'agentPools' }, title: this.$t('setting.agent.agentPools') },
                     { link: { name: 'agentList' }, title: this.$route.params.poolName },
-                    { link: '', title: 'Add Agent' }
+                    { link: '', title: this.$t('setting.agent.addAgent') }
                 ],
                 architectures: ['x64'],
                 machine: {
@@ -109,7 +109,7 @@
 
             computedHtml () {
                 const unixHtml = `
-                    <h3>Download & Install</h3>
+                    <h3>${this.$t('setting.agent.downloadAndInstall')}</h3>
                     <p>
                         <span class="gray"># Create a folder</span>
                         <span class="mb10">$ mkdir /data/landun && cd  /data/landun</span>
@@ -118,7 +118,7 @@
                     </p>
                 `
                 const windowHtml = `
-                    <h3>Download & Install</h3>
+                    <h3>${this.$t('setting.agent.downloadAndInstall')}</h3>
                     <p>
                         <span class="mb10">1. Download the latest agent<a href="${this.machine.link}" target="_blank">Click here to download agent</a></span>
                         <span class="mb10">2. Create a folder, such as D:\\data\\landun</span>

@@ -20,7 +20,7 @@
             <bk-table-column :label="$t('description')" prop="credentialRemark"></bk-table-column>
             <bk-table-column :label="$t('operation')" width="200" class-name="handler-btn">
                 <template slot-scope="props">
-                    <span :class="{ 'update-btn': true, disabled: !props.row.permissions.edit }" @click="editCredential(props.row)">{{$t('Edit')}}</span>
+                    <span :class="{ 'update-btn': true, disabled: !props.row.permissions.edit }" @click="editCredential(props.row)">{{$t('edit')}}</span>
                     <span :class="{ 'update-btn': true, disabled: !props.row.permissions.edit }" @click="credentialSetting(props.row.credentialId)">{{$t('settings')}}</span>
                     <span :class="{ 'update-btn': true, disabled: !props.row.permissions.delete }" @click="deleteCredential(props.row)">{{$t('delete')}}</span>
                 </template>

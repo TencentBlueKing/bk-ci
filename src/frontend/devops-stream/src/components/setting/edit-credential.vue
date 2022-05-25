@@ -20,7 +20,7 @@
                 <bk-input v-model="formData[com.id]" :type="com.type" :placeholder="com.placeholder"></bk-input>
             </bk-form-item>
             <bk-form-item :label="$t('description')" property="credentialRemark">
-                <bk-input type="textarea" v-model="formData.credentialRemark" :placeholder="$t('setting.ticket.descriptionPlaceholder')"></bk-input>
+                <bk-input type="textarea" v-model="formData.credentialRemark" :placeholder="$t('descriptionPlaceholder')"></bk-input>
             </bk-form-item>
             <bk-form-item>
                 <bk-button ext-cls="mr5" theme="primary" title="Submit" @click.stop.prevent="submitData" :loading="isLoading">{{$t('submit')}}</bk-button>

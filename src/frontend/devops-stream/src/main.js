@@ -37,7 +37,10 @@ Vue.component('Icon', icon)
 Vue.use(log)
 Vue.use(VeeValidate)
 Vue.use(VueCompositionAPI)
-Vue.use(bkPipeline)
+
+Vue.use(bkPipeline, {
+    i18n
+})
 
 Vue.prototype.$bkMessage = function (config) {
     config.ellipsisLine = config.ellipsisLine || 3
