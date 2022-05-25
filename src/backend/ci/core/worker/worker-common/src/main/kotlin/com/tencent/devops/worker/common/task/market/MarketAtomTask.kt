@@ -162,9 +162,7 @@ open class MarketAtomTask : ITask() {
                 context = buildTask.buildVariable,
                 acrossProjectId = acrossInfo?.targetProjectId
             )
-        }.toMap()
-            .plus(buildTask.buildVariable ?: emptyMap())
-            .plus(getContainerVariables(buildTask, buildVariables, workspacePath))
+        }.toMap().plus(buildTask.buildVariable ?: emptyMap())
 
         // 解析输入输出字段模板
         val props = JsonUtil.toMutableMap(atomData.props!!)
@@ -175,7 +173,7 @@ open class MarketAtomTask : ITask() {
         val inputParams = map["input"]?.let { input ->
             parseInputParams(
                 inputMap = input as Map<String, Any>,
-                variables = variables,
+                variables = variables.plus(getContainerVariables(buildTask, buildVariables, workspacePath)),
                 acrossInfo = acrossInfo
             )
         } ?: emptyMap()
@@ -251,7 +249,7 @@ open class MarketAtomTask : ITask() {
             val buildEnvs = buildVariables.buildEnvs
             if (!preCmd.isNullOrBlank()) {
                 val preCmds = mutableListOf<String>()
-                if (preCmd.contains(Regex("^\\s*\\[[\\w\\s\\S\\W]*\\]\\s*$"))) {
+                if (preCmd.contains(Regex("^\\s*\\[[\\w\\s\\S\\W]*]\\s*$"))) {
                     preCmds.addAll(JsonUtil.to(preCmd))
                 } else {
                     preCmds.add(preCmd)

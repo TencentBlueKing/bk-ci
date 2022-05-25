@@ -25,24 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.utils
+package com.tencent.devops.scm.utils
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
+import java.net.SocketTimeoutException
+import org.slf4j.LoggerFactory
 
-@Suppress("ALL")
-class VMLock(
-    redisOperation: RedisOperation,
-    vmIp: String
-) {
+object RetryUtils {
 
-    private val redisLock = RedisLock(redisOperation, "DISPATCH_REDIS_LOCK_VM_$vmIp", 60L)
+    private val logger = LoggerFactory.getLogger(RetryUtils::class.java)
 
-    fun tryLock() =
-            redisLock.tryLock()
+    fun <T> retryFun(
+        funName: String,
+        action: () -> T
+    ): T {
+        try {
+            return timeoutRetry(
+                5,
+                500
+            ) {
+                action()
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.warn("scm $funName request timeout retry 5 times error: ${e.message} ")
+            throw e
+        }
+    }
 
-    fun lock() = redisLock.lock()
-
-    fun unlock() =
-            redisLock.unlock()
+    private fun <T> timeoutRetry(retryTime: Int = 5, retryPeriodMills: Long = 500, action: () -> T): T {
+        return try {
+            action()
+        } catch (re: SocketTimeoutException) {
+            if (retryTime - 1 < 0) {
+                throw re
+            }
+            if (retryPeriodMills > 0) {
+                Thread.sleep(retryPeriodMills)
+            }
+            timeoutRetry(action = action, retryTime = retryTime - 1, retryPeriodMills = retryPeriodMills)
+        }
+    }
 }
