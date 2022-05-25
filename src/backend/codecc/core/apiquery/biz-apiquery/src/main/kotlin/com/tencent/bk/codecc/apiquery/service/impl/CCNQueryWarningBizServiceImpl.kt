@@ -30,7 +30,7 @@ import org.apache.commons.collections.CollectionUtils
 import org.apache.commons.lang.StringUtils
 import org.bson.types.ObjectId
 import org.slf4j.LoggerFactory
-import org.springframework.beans.BeanUtils
+import com.tencent.devops.common.util.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service

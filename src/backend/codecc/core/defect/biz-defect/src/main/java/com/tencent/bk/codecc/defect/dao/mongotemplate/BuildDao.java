@@ -48,14 +48,14 @@ public class BuildDao
      */
     public BuildEntity getAndSaveBuildInfo(String buildId)
     {
-        BuildEntity buildInfo = buildRepository.findByBuildId(buildId);
+        BuildEntity buildInfo = buildRepository.findFirstByBuildId(buildId);
         if (buildInfo == null)
         {
             RedisLock lock = new RedisLock(redisTemplate, LOCK_KEY_PREFIX + buildId, LOCK_TIMEOUT);
             try
             {
                 lock.lock();
-                buildInfo = buildRepository.findByBuildId(buildId);
+                buildInfo = buildRepository.findFirstByBuildId(buildId);
                 if (buildInfo == null)
                 {
                     buildInfo = pipelineService.getBuildIdInfo(buildId);

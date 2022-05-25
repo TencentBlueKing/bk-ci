@@ -7,7 +7,7 @@ import com.tencent.devops.common.api.CodeRepoVO
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.CodeCCException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.codecc.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.constant.CommonMessageCode
@@ -175,8 +175,7 @@ class PipelineScmServiceImpl @Autowired constructor(
             mapOf()
         } else codeRepoInfoEntities.associate {
             it.taskId to if (it.repoList.isEmpty()) setOf() else it.repoList.map { codeRepoEntity ->
-                with(codeRepoEntity)
-                {
+                with(codeRepoEntity) {
                     CodeRepoVO(repoId, revision, branch, repoMap[repoId], null)
                 }
             }.toSet()

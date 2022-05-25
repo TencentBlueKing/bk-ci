@@ -84,6 +84,26 @@ class ApigwTemplateInstanceResourceV4Impl @Autowired constructor(private val cli
         )
     }
 
+    override fun updateTemplateInstances(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        templateId: String,
+        versionName: String,
+        useTemplateSettings: Boolean,
+        instances: List<TemplateInstanceUpdate>
+    ): TemplateOperationRet {
+        return client.get(ServiceTemplateInstanceResource::class).updateTemplate(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            versionName = versionName,
+            useTemplateSettings = useTemplateSettings,
+            instances = instances
+        )
+    }
+
     override fun listTemplateInstances(
         appCode: String?,
         apigwType: String?,

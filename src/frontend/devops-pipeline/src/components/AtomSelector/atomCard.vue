@@ -1,5 +1,4 @@
 <template>
-    
     <div
         :class="atomCls"
         ref="atomCard"
@@ -118,18 +117,17 @@
             atomOsTooltips () {
                 const { atom } = this
                 const os = atom.os || []
-                let contxt
+                let context
                 if (os.length && !os.includes('NONE')) {
                     const osListStr = os.map(val => jobConst[val]).join('、')
-                    contxt = `${osListStr}${this.$t('editPage.envUseTips')}`
+                    context = `${osListStr}${this.$t('editPage.envUseTips')}`
                 } else {
-                    contxt = this.$t('editPage.noEnvUseTips')
+                    context = this.$t('editPage.noEnvUseTips')
                 }
-                
                 return {
                     delay: 300,
                     disabled: !atom.disabled,
-                    content: contxt,
+                    content: context,
                     zIndex: 10001
                 }
             }
@@ -183,6 +181,7 @@
                 this.installAtom(param).then(() => {
                     this.$bkMessage({ message: this.$t('editPage.installSuc'), theme: 'success', extCls: 'install-tips' })
                     this.atom.installed = !this.atom.installed
+                    this.$emit('installAtomSuccess', this.atom)
                 }).catch((err) => {
                     this.$bkMessage({ message: err.message || err, theme: 'error' })
                 }).finally(() => {
