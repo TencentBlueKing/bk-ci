@@ -59,6 +59,7 @@ import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import javax.servlet.http.HttpServletResponse
 
 @Suppress("ALL")
@@ -335,4 +336,12 @@ interface IGitService {
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
     ): Result<List<GitCodeProjectInfo>>
+
+    fun getTapdWorkItems(
+        accessToken: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        type: String,
+        iid: Long
+    ): Result<List<TapdWorkItem>>
 }
