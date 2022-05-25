@@ -339,7 +339,10 @@ class PreBuildV2Service @Autowired constructor(
     /**
      * 格式化构建参数
      */
-    private fun formatVariablesValue(varValue: String?, startParams: MutableMap<String, String>): String? {
+    private fun formatVariablesValue(
+        varValue: String?,
+        startParams: MutableMap<String, String>
+    ): String? {
         if (varValue.isNullOrEmpty()) {
             return ""
         }
@@ -354,7 +357,11 @@ class PreBuildV2Service @Autowired constructor(
     /**
      * 获取git项目设定的默认分支
      */
-    private fun getGitProjectDefaultBranch(token: String, useAccessToken: Boolean, gitProjectId: String): String? {
+    private fun getGitProjectDefaultBranch(
+        token: String,
+        useAccessToken: Boolean,
+        gitProjectId: String
+    ): String? {
         return client.getScm(ServiceGitCiResource::class).getProjectInfo(
             accessToken = token,
             useAccessToken = useAccessToken,
