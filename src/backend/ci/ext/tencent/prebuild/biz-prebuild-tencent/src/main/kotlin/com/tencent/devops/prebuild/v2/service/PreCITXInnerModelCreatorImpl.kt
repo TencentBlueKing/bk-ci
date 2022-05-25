@@ -52,7 +52,7 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
         event: ModelCreateEvent,
         additionalOptions: ElementAdditionalOptions
     ): MarketBuildAtomElement {
-        throw CustomException(Response.Status.BAD_REQUEST, "not support")
+        throw CustomException(Response.Status.BAD_REQUEST, "不支持checkout关键字进行代码检出")
     }
 
     override fun getServiceJobDevCloudInput(
@@ -61,7 +61,7 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
         imageTag: String,
         params: String
     ): ServiceJobDevCloudInput? {
-        throw CustomException(Response.Status.BAD_REQUEST, "not support")
+        throw CustomException(Response.Status.BAD_REQUEST, "不支持services关键字")
     }
 
     override fun getDispatchInfo(
