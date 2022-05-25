@@ -79,6 +79,7 @@ class PreBuildV2Service @Autowired constructor(
         private const val VARIABLE_PREFIX = "variables."
         private const val REDIS_KEY_GIT_TOKEN_LOCK_PREFIX = "preci:git:token:lock:"
         private const val REDIS_KEY_GIT_TOKEN_PREFIX = "preci:git:token:"
+        private const val REDIS_KEY_CREATE_PIPELINE_LOCK_PREFIX = "preci:create:pipeline:lock"
         private val GIT_TOKEN_EXPIRE_TIME = TimeUnit.HOURS.toSeconds(7)
     }
 
@@ -134,12 +135,8 @@ class PreBuildV2Service @Autowired constructor(
             ).replace()
         )
 
-        var pipelineId = getPipelineId(userId, pipelineName)
         // 若流水线不存在，则创建空流水线，服务于红线质量
-        if (pipelineId.isNullOrBlank()) {
-            pipelineId = createEmptyPipeline(userId, pipelineName)
-        }
-
+        var pipelineId = createPipelineIfNoExist(userId, pipelineName)
         val preCIData = PreCIData(
             agentId = agentInfo.agentId,
             workspace = startUpReq.workspace,
@@ -196,6 +193,29 @@ class PreBuildV2Service @Autowired constructor(
         }
 
         return BuildId(startupResp.data!!.id)
+    }
+
+    private fun createPipelineIfNoExist(
+        userId: String,
+        pipelineName: String
+    ): String {
+        var pipelineId = getPipelineId(userId, pipelineName)
+        if (!pipelineId.isNullOrBlank()) {
+            return pipelineId
+        }
+
+        val keyForLock = "$REDIS_KEY_CREATE_PIPELINE_LOCK_PREFIX:$userId:$pipelineName"
+        val redisLock = RedisLock(redisOperation, keyForLock, 5)
+        redisLock.use {
+            redisLock.lock()
+
+            pipelineId = getPipelineId(userId, pipelineName)
+            if (!pipelineId.isNullOrBlank()) {
+                return pipelineId!!
+            }
+
+            return createEmptyPipeline(userId, pipelineName)
+        }
     }
 
     private fun getTemplate(
@@ -273,21 +293,31 @@ class PreBuildV2Service @Autowired constructor(
         }
     }
 
+    /**
+     * 获取超级token
+     */
     private fun getGitAccessToken(gitProjectId: String): String {
         val keyForVal = REDIS_KEY_GIT_TOKEN_PREFIX + gitProjectId
-        val token = redisOperation.get(keyForVal)
+        var token = redisOperation.get(keyForVal)
 
         if (!token.isNullOrBlank()) {
             return token
         }
 
         val keyForLock = REDIS_KEY_GIT_TOKEN_LOCK_PREFIX + gitProjectId
-        val redisLock = RedisLock(redisOperation, keyForLock, 10)
+        val redisLock = RedisLock(redisOperation, keyForLock, 5)
         redisLock.use {
             redisLock.lock()
+
+            token = redisOperation.get(keyForVal)
+            if (!token.isNullOrBlank()) {
+                return token!!
+            }
+
             val newToken = client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data!!.accessToken
             logger.info("PRECI|getToken|gitProjectId=$gitProjectId|newToken=$newToken")
             redisOperation.set(keyForVal, newToken, GIT_TOKEN_EXPIRE_TIME)
+
             return newToken
         }
     }
