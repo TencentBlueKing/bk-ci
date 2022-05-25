@@ -62,7 +62,8 @@ class UpdateAgentRunner @Autowired constructor(
                     headerMap["X-DEVOPS-PROJECT-ID"] = "grayproject"
                 }
                 if (dockerHostConfig.gatewayHeaderTag != null) {
-                    logger.info("Now is ${dockerHostConfig.gatewayHeaderTag} environment, update agent request with the AUTH_HEADER_GATEWAY_TAG header.")
+                    logger.info("Now is ${dockerHostConfig.gatewayHeaderTag} environment, update agent request with " +
+                            "the AUTH_HEADER_GATEWAY_TAG header.")
                     headerMap[AUTH_HEADER_GATEWAY_TAG] = dockerHostConfig.gatewayHeaderTag!!
                 }
 
