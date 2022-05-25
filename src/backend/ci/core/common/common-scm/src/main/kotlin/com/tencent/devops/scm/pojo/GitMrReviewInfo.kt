@@ -89,10 +89,8 @@ data class GitMrReviewInfo(
     @JsonProperty("reviewable_id")
     val reviewableId: Long,
     @JsonProperty("reviewable_type")
-    val reviewableType: Long,
+    val reviewableType: String,
     val state: String,
-    @JsonProperty("restrict_type")
-    val restrictType: String?,
     @JsonProperty("created_at")
     val createTime: String? = "",
     @JsonProperty("updated_at")
