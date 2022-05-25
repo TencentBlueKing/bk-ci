@@ -92,6 +92,7 @@ import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.OwnerInfo
 import com.tencent.devops.scm.pojo.Project
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.utils.GitCodeUtils
 import com.tencent.devops.scm.utils.RetryUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -2217,5 +2218,28 @@ class GitService @Autowired constructor(
             }
             return true
         }
+    }
+
+    fun getTapdWorkItems(
+        accessToken: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        type: String,
+        iid: Long
+    ): Result<List<TapdWorkItem>> {
+        val gitApi = if (tokenType == TokenTypeEnum.OAUTH) {
+            GitOauthApi()
+        } else {
+            GitApi()
+        }
+        return Result(
+            gitApi.getTapdWorkitems(
+                host = gitConfig.gitApiUrl,
+                token = accessToken,
+                id = gitProjectId,
+                type = type,
+                iid = iid
+            )
+        )
     }
 }
