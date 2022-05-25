@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "common.names.fullname" . }}-dispatch-kubernetes
+  name: {{ include "bkci.names.fullname" . }}-dispatch-kubernetes
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/name: dispatch-kubernetes
     app.kubernetes.io/component: microservice

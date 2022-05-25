@@ -4,7 +4,7 @@
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "common.names.fullname" . }}-websocket
+  name: {{ include "bkci.names.fullname" . }}-websocket
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/name: websocket
     app.kubernetes.io/component: microservice
@@ -18,7 +18,7 @@ spec:
   scaleTargetRef:
     apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
     kind: Deployment
-    name: {{ include "common.names.fullname" . }}-websocket
+    name: {{ include "bkci.names.fullname" . }}-websocket
   minReplicas: {{ .Values.websocket.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.websocket.autoscaling.maxReplicas }}
   metrics:

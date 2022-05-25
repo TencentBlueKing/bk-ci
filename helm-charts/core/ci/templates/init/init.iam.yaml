@@ -4,7 +4,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "common.names.fullname" . }}-init-iam
+  name: {{ include "bkci.names.fullname" . }}-init-iam
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: init-iam
   annotations:

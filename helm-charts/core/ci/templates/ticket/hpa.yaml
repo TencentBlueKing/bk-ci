@@ -4,7 +4,7 @@
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "common.names.fullname" . }}-ticket
+  name: {{ include "bkci.names.fullname" . }}-ticket
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/name: ticket
     app.kubernetes.io/component: microservice
@@ -18,7 +18,7 @@ spec:
   scaleTargetRef:
     apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
     kind: Deployment
-    name: {{ include "common.names.fullname" . }}-ticket
+    name: {{ include "bkci.names.fullname" . }}-ticket
   minReplicas: {{ .Values.ticket.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.ticket.autoscaling.maxReplicas }}
   metrics:

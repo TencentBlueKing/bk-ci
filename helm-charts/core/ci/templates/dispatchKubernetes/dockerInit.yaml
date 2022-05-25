@@ -13,7 +13,7 @@ data:
     mkdir  -p /data/devops
     cd /data/devops
 
-    export devops_gateway={{ include "common.names.fullname" . }}-gateway
+    export devops_gateway={{ include "bkci.names.fullname" . }}-gateway
 
     mkdir -p logs
     echo "start to download the docker_init.sh..." > logs/docker.log

@@ -4,7 +4,7 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: {{ include "common.names.fullname" . }}-turbo
+  name: {{ include "bkci.names.fullname" . }}-turbo
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: turbo
     {{- if .Values.commonLabels }}

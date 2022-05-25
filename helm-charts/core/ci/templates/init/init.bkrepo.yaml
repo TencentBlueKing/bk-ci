@@ -3,7 +3,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "common.names.fullname" . }}-init-bkrepo
+  name: {{ include "bkci.names.fullname" . }}-init-bkrepo
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: init-bkrepo
   annotations:

@@ -3,7 +3,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "common.names.fullname" . }}-init-sql
+  name: {{ include "bkci.names.fullname" . }}-init-sql
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: init-sql
   annotations:

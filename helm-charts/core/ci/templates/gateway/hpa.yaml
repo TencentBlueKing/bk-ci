@@ -4,7 +4,7 @@
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "common.names.fullname" . }}-gateway
+  name: {{ include "bkci.names.fullname" . }}-gateway
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/name: gateway
     app.kubernetes.io/component: gateway
@@ -18,7 +18,7 @@ spec:
   scaleTargetRef:
     apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
     kind: Deployment
-    name: {{ include "common.names.fullname" . }}-gateway
+    name: {{ include "bkci.names.fullname" . }}-gateway
   minReplicas: {{ .Values.gateway.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.gateway.autoscaling.maxReplicas }}
   metrics:

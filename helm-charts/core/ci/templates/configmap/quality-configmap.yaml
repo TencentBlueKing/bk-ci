@@ -3,7 +3,7 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: {{ include "common.names.fullname" . }}-quality
+  name: {{ include "bkci.names.fullname" . }}-quality
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: quality
     {{- if .Values.commonLabels }}

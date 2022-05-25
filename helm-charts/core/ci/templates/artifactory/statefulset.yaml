@@ -3,7 +3,7 @@
 apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
 kind: StatefulSet
 metadata:
-  name: {{ include "common.names.fullname" . }}-artifactory
+  name: {{ include "bkci.names.fullname" . }}-artifactory
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
@@ -18,7 +18,7 @@ spec:
   {{- if not .Values.artifactory.autoscaling.enabled }}
   replicas: {{ .Values.artifactory.replicas }}
   {{- end }} 
-  serviceName: {{ include "common.names.fullname" . }}-artifactory
+  serviceName: {{ include "bkci.names.fullname" . }}-artifactory
   template:
     metadata:
       labels: {{- include "bkci.labels.standard" . | nindent 8 }}
@@ -118,7 +118,7 @@ spec:
         - name: storage
           {{- if .Values.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: {{ if .Values.persistence.existingClaim }}{{ .Values.persistence.existingClaim }}{{- else }}{{ template "common.names.fullname" . }}-storage{{- end }}
+            claimName: {{ if .Values.persistence.existingClaim }}{{ .Values.persistence.existingClaim }}{{- else }}{{ template "bkci.names.fullname" . }}-storage{{- end }}
           {{- else }}
           emptyDir: {}
           {{- end }}
