@@ -99,7 +99,7 @@ public class MetricsServiceImpl implements MetricsService {
                 int status = 2;
                 // task 已经创建，注入codecc概览页面链接
                 if (taskDetail != null) {
-                    metricsVO.setCodeccUrl(String.format("http://%s/codecc/%s/task/%s/detail",
+                    metricsVO.setCodeccUrl(String.format("%s/codecc/%s/task/%s/detail",
                             codeccHost,
                             taskDetail.getProjectId(),
                             taskDetail.getTaskId()));
@@ -141,7 +141,7 @@ public class MetricsServiceImpl implements MetricsService {
             metricsVO.setMessage("can not get any metrics info");
             return metricsVO;
         }
-        metricsVO.setCodeccUrl(String.format("http://%s/codecc/%s/task/%s/detail",
+        metricsVO.setCodeccUrl(String.format("%s/codecc/%s/task/%s/detail",
                 codeccHost,
                 taskDetail.getProjectId(),
                 taskDetail.getTaskId()));
@@ -184,7 +184,7 @@ public class MetricsServiceImpl implements MetricsService {
 
     private MetricsVO getMerticsByBuildId(TaskDetailVO taskDetail, String buildId) {
         long startTime = System.currentTimeMillis();
-        MetricsEntity metricsEntity = metricsRepository.findByTaskIdAndBuildId(taskDetail.getTaskId(),
+        MetricsEntity metricsEntity = metricsRepository.findFirstByTaskIdAndBuildId(taskDetail.getTaskId(),
                 buildId);
         MetricsVO metricsVO = new MetricsVO();
         if (metricsEntity == null) {
@@ -227,7 +227,7 @@ public class MetricsServiceImpl implements MetricsService {
             analysis.setPattern(toolMeta.getPattern());
             analysis.setDisplayName(toolMeta.getDisplayName());
             analysis.setType(toolMeta.getType());
-            analysis.setDefectUrl(String.format("http://%s/codecc/%s/task/%s/defect%s/%s/list",
+            analysis.setDefectUrl(String.format("%s/codecc/%s/task/%s/defect%s/%s/list",
                     codeccHost,
                     metricsVO.getProjectId(),
                     metricsVO.getTaskId(),
@@ -330,7 +330,7 @@ public class MetricsServiceImpl implements MetricsService {
 
     @Override
     public MetricsVO getMetrics(Long taskId, String buildId) {
-        MetricsEntity metricsEntity = metricsRepository.findByTaskIdAndBuildId(taskId, buildId);
+        MetricsEntity metricsEntity = metricsRepository.findFirstByTaskIdAndBuildId(taskId, buildId);
         MetricsVO metricsVO = new MetricsVO();
         if (metricsEntity == null) {
             return metricsVO;

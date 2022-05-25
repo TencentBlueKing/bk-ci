@@ -65,7 +65,7 @@ class DefectClusterDefectServiceImpl @Autowired constructor(
         val defectClusterResultVO = DefectClusterResultVO()
         defectClusterResultVO.type = ComConstants.ToolType.DEFECT.name
         val defectClusterStatisticEntity =
-                defectClusterStatisticRepository.findByTaskIdAndBuildId(taskId, buildId)
+                defectClusterStatisticRepository.findFirstByTaskIdAndBuildId(taskId, buildId)
                         ?: return defectClusterResultVO
         BeanUtils.copyProperties(defectClusterResultVO, defectClusterStatisticEntity)
         defectClusterResultVO.type = ComConstants.ToolType.DEFECT.name

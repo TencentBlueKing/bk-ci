@@ -1,15 +1,10 @@
 package com.tencent.devops.common.auth.utils
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.common.auth.code.AuthServiceCode
-import com.tencent.devops.common.auth.pojo.AncestorsApiReq
+import com.tencent.devops.common.auth.api.pojo.AncestorsApiReq
 import com.tencent.devops.common.auth.pojo.CodeCCAuthResourceType
-import com.tencent.devops.common.auth.pojo.CodeCCAuthServiceCode
-import com.tencent.devops.common.auth.pojo.IamCreateApiReq
+import com.tencent.devops.common.auth.api.pojo.EsbCreateApiReq
 import com.tencent.devops.common.auth.service.IamEsbService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -58,7 +53,7 @@ class CodeCCAuthResourceApi @Autowired constructor(
             type = AuthResourceType.PROJECT.value
         ))
 
-        val iamApiReq = IamCreateApiReq(
+        val iamApiReq = EsbCreateApiReq(
             creator = user,
             name = resourceName,
             id = resourceId,

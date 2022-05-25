@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Router, { RouteMeta } from 'vue-router'
-import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScript, importStyle } from '../utils/util'
+import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScript, importStyle, ifShowNotice } from '../utils/util'
 
 import compilePath from '../utils/pathExp'
 import cookie from 'js-cookie'
@@ -135,6 +135,9 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
         updateRecentVisitServiceList(route.path)
         
         store.dispatch('upadteHeaderConfig', updateHeaderConfig(route.meta))
+
+        const isShowNotice = ifShowNotice(store.state.currentNotice || {})
+        isShowNotice && store.dispatch('toggleNoticeDialog', isShowNotice)
     })
     return router
 }

@@ -16,7 +16,6 @@ import com.tencent.devops.common.api.CommonVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.jboss.logging.Field;
 
 import java.util.Set;
 

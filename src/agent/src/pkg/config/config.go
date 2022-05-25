@@ -33,18 +33,19 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"gopkg.in/ini.v1"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
-	bconfig "github.com/astaxie/beego/config"
-	"github.com/astaxie/beego/logs"
 )
 
 const (
@@ -210,68 +211,68 @@ func BuildAgentJarPath() string {
 func LoadAgentConfig() error {
 	GAgentConfig = new(AgentConfig)
 
-	conf, err := bconfig.NewConfig("ini", systemutil.GetWorkDir()+"/.agent.properties")
+	conf, err := ini.Load(filepath.Join(systemutil.GetWorkDir(), ".agent.properties"))
 	if err != nil {
 		logs.Error("load agent config failed, ", err)
 		return errors.New("load agent config failed")
 	}
 
-	parallelTaskCount, err := conf.Int(KeyTaskCount)
+	parallelTaskCount, err := conf.Section("").Key(KeyTaskCount).Int()
 	if err != nil || parallelTaskCount < 0 {
 		return errors.New("invalid parallelTaskCount")
 	}
 
-	projectId := strings.TrimSpace(conf.String(KeyProjectId))
+	projectId := strings.TrimSpace(conf.Section("").Key(KeyProjectId).String())
 	if len(projectId) == 0 {
 		return errors.New("invalid projectId")
 	}
 
-	agentId := conf.String(KeyAgentId)
+	agentId := conf.Section("").Key(KeyAgentId).String()
 	if len(agentId) == 0 {
 		return errors.New("invalid agentId")
 	}
 
-	secretKey := strings.TrimSpace(conf.String(KeySecretKey))
+	secretKey := strings.TrimSpace(conf.Section("").Key(KeySecretKey).String())
 	if len(secretKey) == 0 {
 		return errors.New("invalid secretKey")
 	}
 
-	landunGateway := strings.TrimSpace(conf.String(KeyDevopsGateway))
+	landunGateway := strings.TrimSpace(conf.Section("").Key(KeyDevopsGateway).String())
 	if len(landunGateway) == 0 {
 		return errors.New("invalid landunGateway")
 	}
 
-	landunFileGateway := strings.TrimSpace(conf.String(KeyDevopsFileGateway))
+	landunFileGateway := strings.TrimSpace(conf.Section("").Key(KeyDevopsFileGateway).String())
 	if len(landunFileGateway) == 0 {
 		logs.Warn("fileGateway is empty")
 	}
 
-	envType := strings.TrimSpace(conf.String(KeyEnvType))
+	envType := strings.TrimSpace(conf.Section("").Key(KeyEnvType).String())
 	if len(envType) == 0 {
 		return errors.New("invalid envType")
 	}
 
-	slaveUser := strings.TrimSpace(conf.String(KeySlaveUser))
+	slaveUser := strings.TrimSpace(conf.Section("").Key(KeySlaveUser).String())
 	if len(slaveUser) == 0 {
 		slaveUser = systemutil.GetCurrentUser().Username
 	}
 
-	collectorOn, err := conf.Bool(KeyCollectorOn)
+	collectorOn, err := conf.Section("").Key(KeyCollectorOn).Bool()
 	if err != nil {
 		collectorOn = true
 	}
-	timeout, err := conf.Int64(KeyRequestTimeoutSec)
+	timeout, err := conf.Section("").Key(KeyRequestTimeoutSec).Int64()
 	if err != nil {
 		timeout = 5
 	}
-	detectShell := conf.DefaultBool(KeyDetectShell, false)
+	detectShell := conf.Section("").Key(KeyDetectShell).MustBool(false)
 
-	ignoreLocalIps := strings.TrimSpace(conf.String(KeyIgnoreLocalIps))
+	ignoreLocalIps := strings.TrimSpace(conf.Section("").Key(KeyIgnoreLocalIps).String())
 	if len(ignoreLocalIps) == 0 {
 		ignoreLocalIps = "127.0.0.1,192.168.10.255" // 临时代码，上线更新即移除
 	}
 
-	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.String(KeyBatchInstall))
+	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.Section("").Key(KeyBatchInstall).String())
 
 	GAgentConfig.Gateway = landunGateway
 	systemutil.DevopsGateway = landunGateway
@@ -370,7 +371,7 @@ func initCert() {
 		logs.Warn("Reading server certificate: %s", err)
 		return
 	}
-	logs.Informational("Cert content is: %s", string(caCert))
+	logs.Info("Cert content is: %s", string(caCert))
 	caCertPool, err := x509.SystemCertPool()
 	// Windows 下 SystemCertPool 返回 nil
 	if err != nil || caCertPool == nil {
@@ -380,6 +381,6 @@ func initCert() {
 	caCertPool.AppendCertsFromPEM(caCert)
 	tlsConfig := &tls.Config{RootCAs: caCertPool}
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = tlsConfig
-	logs.Informational("load cert success")
+	logs.Info("load cert success")
 	UseCert = true
 }

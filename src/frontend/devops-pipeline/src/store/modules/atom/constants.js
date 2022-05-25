@@ -88,6 +88,7 @@ export const SET_SAVE_STATUS = 'SET_SAVE_STATUS'
 
 export const SET_PIPELINE_STAGE = 'SET_PIPELINE_STAGE'
 export const SET_PIPELINE_CONTAINER = 'SET_PIPELINE_CONTAINER'
+export const SET_COMMEND_ATOM_PAGE_OVER = 'SET_COMMEND_ATOM_PAGE_OVER'
 
 export const buildNoRules = [
     {
