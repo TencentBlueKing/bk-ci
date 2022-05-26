@@ -108,11 +108,10 @@ interface UserAtomResource {
         queryFitAgentBuildLessAtomFlag: Boolean? = true,
         @ApiParam("页码", required = false)
         @QueryParam("page")
-        page: Int = 1,
+        page: Int? = 1,
         @ApiParam("每页数量", required = false)
         @QueryParam("pageSize")
-        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = false)
-        pageSize: Int = 10
+        pageSize: Int? = 10
     ): Result<AtomResp<AtomRespItem>?>
 
     @ApiOperation("根据插件代码和版本号获取流水线插件详细信息")
