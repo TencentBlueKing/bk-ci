@@ -97,7 +97,7 @@ class QualityIndicatorService @Autowired constructor(
 
                 // 根据codeccToolNameMap的key顺序排序
                 val detailIndicatorSortedMap = Maps.newLinkedHashMap<String /*detail*/, MutableList<QualityIndicator>>()
-                if (CodeccUtils.isCodeccAtom(elementType)) {
+                if (CodeccUtils.isCodeccAtom(elementType) || CodeccUtils.isCodeccCommunityAtom(elementType)) {
                     val propertyMap = codeccToolNameMap.entries.mapIndexed { index, entry ->
                         entry.key to index
                     }.toMap()
@@ -121,7 +121,7 @@ class QualityIndicatorService @Autowired constructor(
                     val indicatorList: List<QualityIndicator> = detailEntry.value
 
                     // codecc的指标要排序和中文特殊处理
-                    if (CodeccUtils.isCodeccAtom(elementType)) {
+                    if (CodeccUtils.isCodeccAtom(elementType) || CodeccUtils.isCodeccCommunityAtom(elementType)) {
                         detailCnName = codeccToolNameMap[elementDetail] ?: elementDetail
                     }
 
@@ -351,13 +351,19 @@ class QualityIndicatorService @Autowired constructor(
                         extra = it.extra)
                 }
 
+                var indicatorCnName = ""
+                if (CodeccUtils.isCodeccAtom(indicator.elementType) ||
+                    CodeccUtils.isCodeccCommunityAtom(indicator.elementType)) {
+                    indicatorCnName = codeccToolNameMap[indicator.elementDetail] ?: ""
+                }
+
                 val item = IndicatorListResponse.IndicatorListItem(
                     hashId = HashUtil.encodeLongId(indicator.id),
                     name = indicator.enName,
                     cnName = indicator.cnName,
                     elementType = indicator.elementType,
                     elementName = indicator.elementName,
-                    elementDetail = indicator.elementDetail,
+                    elementDetail = if (indicatorCnName.isNullOrBlank()) indicator.elementDetail else indicatorCnName,
                     metadatas = metadata,
                     availableOperation = indicator.operationAvailable.split(",").map { QualityOperation.valueOf(it) },
                     dataType = QualityDataType.valueOf(indicator.thresholdType.toUpperCase()),
@@ -671,22 +677,24 @@ class QualityIndicatorService @Autowired constructor(
             "STANDARD" to "代码规范",
             "DEFECT" to "代码缺陷",
             "SECURITY" to "安全漏洞",
-            "CCN" to "圈复杂度",
-            "DUPC" to "重复率",
             "COVERITY" to "Coverity",
             "KLOCWORK" to "Klocwork",
-            "CPPLINT" to "CppLint",
-            "ESLINT" to "ESLint",
-            "PYLINT" to "PyLint",
-            "GOML" to "Gometalinter",
-            "CHECKSTYLE" to "Checkstyle",
-            "STYLECOP" to "StyleCop",
-            "DETEKT" to "detekt",
-            "PHPCS" to "PHPCS",
-            "SENSITIVE" to "敏感信息",
-            "OCCHECK" to "OCCheck",
             "RIPS" to "啄木鸟漏洞扫描-PHP",
-            "WOODPECKER_SENSITIVE" to "啄木鸟敏感信息")
+            "SENSITIVE" to "敏感信息",
+            "WOODPECKER_SENSITIVE" to "啄木鸟敏感信息",
+            "BKCHECK-CPP" to "bkcheck-cpp",
+            "BKCHECK-OC" to "bkcheck-oc",
+            "CHECKSTYLE" to "Checkstyle",
+            "CPPLINT" to "CppLint",
+            "DETEKT" to "detekt",
+            "ESLINT" to "ESLint",
+            "GOML" to "Gometalinter",
+            "OCCHECK" to "OCCheck",
+            "PHPCS" to "PHPCS",
+            "PYLINT" to "PyLint",
+            "STYLECOP" to "StyleCop",
+            "CCN" to "圈复杂度",
+            "DUPC" to "重复率")
 
         private val codeccToolDescMap = mapOf(
             "STANDARD" to "按维度(推荐)",
@@ -705,6 +713,9 @@ class QualityIndicatorService @Autowired constructor(
             "DETEKT" to "Kotlin静态代码分析工具 ",
             "PHPCS" to "PHP代码风格检查工具",
             "SENSITIVE" to "可扫描代码中有安全风险的敏感信息",
-            "OCCHECK" to "OC代码风格检查工具")
+            "OCCHECK" to "OC代码风格检查工具",
+            "WOODPECKER_SENSITIVE" to "敏感信息检查工具",
+            "BKCHECK-CPP" to "C++代码风格检查工具",
+            "BKCHECK-OC" to "OC代码风格检查工具")
     }
 }

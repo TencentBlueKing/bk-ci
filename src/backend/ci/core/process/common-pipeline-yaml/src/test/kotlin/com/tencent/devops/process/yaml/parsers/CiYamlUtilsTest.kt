@@ -25,31 +25,49 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v2.models
+package com.tencent.devops.process.yaml.parsers
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.process.yaml.v2.models.job.Job
-import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
-import com.tencent.devops.process.yaml.v2.models.stage.Stage
+import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
+import org.junit.Test
+import org.springframework.core.io.ClassPathResource
+import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
 
-/**
- * model
- *
- * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class ScriptBuildYaml(
-    val version: String?,
-    val name: String?,
-    val label: List<String>?,
-    val triggerOn: TriggerOn?,
-    val variables: Map<String, Variable>?,
-    val stages: List<Stage>,
-    val extends: Extends?,
-    val resource: Resources?,
-    val notices: List<GitNotices>?,
-    var finally: List<Job>?,
-    val concurrency: Concurrency?
-)
+internal class CiYamlUtilsTest {
+
+    @Test
+    fun versionExist() {
+        val classPathResource = ClassPathResource("test.yml")
+        val inputStream: InputStream = classPathResource.inputStream
+        val isReader = InputStreamReader(inputStream)
+
+        val reader = BufferedReader(isReader)
+        val sb = StringBuffer()
+        var str: String?
+        while (reader.readLine().also { str = it } != null) {
+            sb.append(str).append("\n")
+        }
+
+        println(sb.toString())
+    }
+
+    @Test
+    fun toYamlString() {
+        val yamlObj = ScriptBuildYaml(
+            version = "v2.0",
+            name = "myName",
+            label = null,
+            triggerOn = null,
+            variables = null,
+            stages = listOf(),
+            extends = null,
+            resource = null,
+            notices = null,
+            finally = listOf(),
+            concurrency = null
+        )
+        println(YamlUtil.toYaml(yamlObj))
+    }
+}
