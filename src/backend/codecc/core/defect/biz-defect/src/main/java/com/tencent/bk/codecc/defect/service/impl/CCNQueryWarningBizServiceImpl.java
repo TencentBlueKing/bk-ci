@@ -26,8 +26,6 @@
 
 package com.tencent.bk.codecc.defect.service.impl;
 
-import static com.tencent.devops.common.constant.ComConstants.MASK_STATUS;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.tencent.bk.codecc.defect.dao.mongorepository.BuildDefectRepository;
@@ -77,7 +75,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -176,7 +174,7 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         CCNDefectDetailQueryRspVO ccnDefectQueryRspVO = new CCNDefectDetailQueryRspVO();
 
         //查询告警信息
-        CCNDefectEntity ccnDefectEntity = ccnDefectRepository.findByEntityId(queryWarningDetailReq.getEntityId());
+        CCNDefectEntity ccnDefectEntity = ccnDefectRepository.findFirstByEntityId(queryWarningDetailReq.getEntityId());
 
         CCNDefectVO ccnDefectVO = new CCNDefectVO();
 

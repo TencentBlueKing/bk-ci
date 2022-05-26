@@ -76,7 +76,7 @@ public class CodeRepoStatConsumer {
             createFrom = ComConstants.DefectStatType.USER.value();
         }
 
-        CodeRepoInfoEntity codeRepoInfoEntity = codeRepoInfoRepository.findByTaskIdAndBuildId(taskId, buildId);
+        CodeRepoInfoEntity codeRepoInfoEntity = codeRepoInfoRepository.findFirstByTaskIdAndBuildId(taskId, buildId);
         if (codeRepoInfoEntity != null) {
             List<CodeRepoEntity> repoList = codeRepoInfoEntity.getRepoList();
             if (CollectionUtils.isEmpty(repoList)) {

@@ -46,6 +46,7 @@ import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.service.StreamGitService
 import com.tencent.devops.stream.service.StreamGitTransferService
 import com.tencent.devops.stream.service.StreamProjectService
+import com.tencent.devops.stream.service.StreamRequestService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,7 +58,8 @@ class UserStreamGitResourceImpl @Autowired constructor(
     private val streamGitService: StreamGitService,
     private val streamBasicSettingService: StreamBasicSettingService,
     private val streamProjectService: StreamProjectService,
-    private val streamGitTransferService: StreamGitTransferService
+    private val streamGitTransferService: StreamGitTransferService,
+    private val streamRequestService: StreamRequestService
 ) : UserStreamGitResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserStreamGitResourceImpl::class.java)
@@ -177,6 +179,21 @@ class UserStreamGitResourceImpl @Autowired constructor(
                 orderBy = orderBy,
                 sort = sort,
                 search = search
+            )
+        )
+    }
+
+    override fun getTriggerUser(
+        projectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<String>> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        return Result(
+            streamRequestService.getRequestBuildTriggers(
+                projectId = gitProjectId,
+                page = page,
+                pageSize = pageSize
             )
         )
     }
