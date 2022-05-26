@@ -25,37 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.common
+package com.tencent.devops.dispatch.docker.service
 
-object Constants {
-    /**
-     * Redis Key
-     */
-    const val DOCKER_IP_COUNT_KEY_PREFIX = "dispatch_docker_ip_count_"
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.docker.common.Constants
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerRoutingType
+import org.springframework.stereotype.Service
 
-    /**
-     * Docker构建高配资源白名单Key
-     */
-    const val DOCKER_RESOURCE_WHITE_LIST_KEY_PREFIX = "docker_resource_white_list_"
+@Service
+class DockerRoutingService constructor(
+    private val redisOperation: RedisOperation
+) {
+    fun addDockerRoutingType(userId: String, projectId: String, dockerRoutingType: DockerRoutingType): Boolean {
+        redisOperation.hset(Constants.DOCKER_ROUTING_KEY_PREFIX, projectId, dockerRoutingType.name)
+        return true
+    }
 
-    /**
-     * 无编译环境新方案白名单Key
-     */
-    const val BUILD_LESS_WHITE_LIST_KEY_PREFIX = "dispatchdocker:buildless_whitelist"
+    fun deleteDockerRoutingType(userId: String, projectId: String): Boolean {
+        redisOperation.hdelete(Constants.DOCKER_ROUTING_KEY_PREFIX, projectId)
+        return true
+    }
 
-    /**
-     * 拉代码优化工蜂项目ID白名单Key
-     */
-    const val QPC_WHITE_LIST_KEY_PREFIX = "dispatchdocker:qpc_white_list"
-
-    /**
-     * docker路由Key
-     */
-    const val DOCKER_ROUTING_KEY_PREFIX = "dispatchdocker:docker_routing"
-
-    const val DOCKERHOST_STARTUP_URI = "/api/docker/build/start"
-    const val DOCKERHOST_AGENTLESS_STARTUP_URI = "/api/docker-agentless/build/start"
-    const val BUILD_LESS_STARTUP_URI = "/api/service/build/start"
-    const val BUILD_LESS_END_URI = "/api/service/build/end"
-    const val DOCKERHOST_END_URI = "/api/docker/build/end"
+    fun getDockerRoutingType(projectId: String): DockerRoutingType {
+        val routingTypeStr =  redisOperation.hget(Constants.DOCKER_ROUTING_KEY_PREFIX, projectId)
+        return DockerRoutingType.valueOf(routingTypeStr ?: DockerRoutingType.VM.name)
+    }
 }

@@ -52,21 +52,18 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
-import com.tencent.devops.dispatch.docker.pojo.Credential
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.docker.pojo.Pool
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
 import com.tencent.devops.dispatch.docker.service.DockerHostQpcService
-import com.tencent.devops.dispatch.docker.utils.CommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import org.jooq.DSLContext
@@ -101,47 +98,10 @@ class DockerHostClient @Autowired constructor(
         dockerIp: String,
         dockerHostPort: Int,
         poolNo: Int,
-        driftIpInfo: String
+        driftIpInfo: String,
+        containerPool: Pool
     ) {
         val dispatchType = dispatchMessage.dispatchType as DockerDispatchType
-        val dockerImage = if (dispatchType.imageType == ImageType.THIRD) {
-            dispatchType.dockerBuildVersion
-        } else {
-            when (dispatchType.dockerBuildVersion) {
-                DockerVersion.TLINUX1_2.value -> {
-                    defaultImageConfig.getTLinux1_2CompleteUri()
-                }
-                DockerVersion.TLINUX2_2.value -> {
-                    defaultImageConfig.getTLinux2_2CompleteUri()
-                }
-                else -> {
-                    defaultImageConfig.getCompleteUriByImageName(dispatchType.dockerBuildVersion)
-                }
-            }
-        }
-        LOG.info("${dispatchMessage.buildId}|startBuild|${dispatchMessage.id}|$dockerImage" +
-            "|${dispatchType.imageCode}|${dispatchType.imageVersion}|${dispatchType.credentialId}" +
-            "|${dispatchType.credentialProject}")
-        var userName = dispatchType.imageRepositoryUserName
-        var password = dispatchType.imageRepositoryPassword
-        if (dispatchType.imageType == ImageType.THIRD) {
-            if (!dispatchType.credentialId.isNullOrBlank()) {
-                val projectId = if (dispatchType.credentialProject.isNullOrBlank()) {
-                    dispatchMessage.projectId
-                } else {
-                    dispatchType.credentialProject!!
-                }
-                val ticketsMap = CommonUtils.getCredential(
-                    client = client,
-                    projectId = projectId,
-                    credentialId = dispatchType.credentialId!!,
-                    type = CredentialType.USERNAME_PASSWORD
-                )
-                userName = ticketsMap["v1"] as String
-                password = ticketsMap["v2"] as String
-            }
-        }
-
         pipelineDockerBuildDao.saveBuildHistory(
             dslContext = dslContext,
             projectId = dispatchMessage.projectId,
@@ -158,8 +118,8 @@ class DockerHostClient @Autowired constructor(
             dockerIp = dockerIp,
             poolNo = poolNo,
             startupMessage = JsonUtil.toJson(Pool(
-                container = dockerImage,
-                credential = Credential(userName, password),
+                container = containerPool.container,
+                credential = containerPool.credential,
                 env = null,
                 imageType = dispatchType.imageType?.type
             ))
@@ -173,11 +133,11 @@ class DockerHostClient @Autowired constructor(
             vmSeqId = Integer.valueOf(dispatchMessage.vmSeqId),
             secretKey = dispatchMessage.secretKey,
             status = PipelineTaskStatus.RUNNING.status,
-            imageName = dockerImage!!,
+            imageName = containerPool.container!!,
             containerId = "",
             poolNo = poolNo,
-            registryUser = userName ?: "",
-            registryPwd = password ?: "",
+            registryUser = containerPool.credential?.user ?: "",
+            registryPwd = containerPool.credential?.password ?: "",
             imageType = dispatchType.imageType?.type,
             imagePublicFlag = dispatchType.imagePublicFlag,
             imageRDType = if (dispatchType.imageRDType == null) {
