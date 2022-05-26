@@ -19,7 +19,7 @@ class BkTag constructor(
 
     fun getLocalTag(): String {
         if (KubernetesUtils.inContainer()) {
-            return "kubernetes-" + KubernetesUtils.getNamespace()
+            return if (KubernetesUtils.isMultiCluster()) "kubernetes-" else "" + KubernetesUtils.getNamespace()
         }
         return consulTag
     }
