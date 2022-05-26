@@ -142,9 +142,7 @@ data class StartBuildContext(
 
     // 失败重试,跳过的dependOn容器也应该被执行
     private fun isRetryDependOnContainer(container: Container): Boolean {
-        return retryFailedContainer &&
-            DependOnUtils.enableDependOn(container) &&
-            BuildStatus.parse(container.status) == BuildStatus.SKIP
+        return DependOnUtils.enableDependOn(container) && BuildStatus.parse(container.status) == BuildStatus.SKIP
     }
 
     fun needRerun(stage: Stage): Boolean {
