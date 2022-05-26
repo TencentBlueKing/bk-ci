@@ -25,20 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.prebuild
+package com.tencent.devops.process.yaml.modelCreate.pojo
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
+import com.tencent.devops.common.pipeline.matrix.DispatchInfo
+import com.tencent.devops.process.yaml.v2.models.Resources
+import com.tencent.devops.process.yaml.v2.models.job.Job
 
-/**
- *
- * Powered By Tencent
- */
-@MicroService
-@ComponentScan("com.tencent.devops.prebuild", "com.tencent.devops.process.yaml")
-class Application
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
-}
+data class RdsDispatchInfo(
+    override val name: String,
+    val job: Job,
+    val projectCode: String,
+    var defaultImage: String,
+    val resources: Resources? = null
+) : DispatchInfo(name)
