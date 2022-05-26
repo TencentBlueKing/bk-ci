@@ -57,7 +57,7 @@ public interface DUPCDefectRepository extends MongoRepository<DUPCDefectEntity, 
      * @param entityId
      * @return
      */
-    DUPCDefectEntity findByEntityId(String entityId);
+    DUPCDefectEntity findFirstByEntityId(String entityId);
 
     /**
      * 根据任务id和相对路径查询告警信息

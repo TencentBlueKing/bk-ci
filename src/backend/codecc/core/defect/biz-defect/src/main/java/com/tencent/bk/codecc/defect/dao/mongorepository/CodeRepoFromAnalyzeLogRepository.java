@@ -35,7 +35,7 @@ public interface CodeRepoFromAnalyzeLogRepository extends MongoRepository<CodeRe
      * @param taskId
      * @return
      */
-    CodeRepoFromAnalyzeLogEntity findCodeRepoFromAnalyzeLogEntityByTaskId(long taskId);
+    CodeRepoFromAnalyzeLogEntity findCodeRepoFromAnalyzeLogEntityFirstByTaskId(long taskId);
 
     /**
      * 通过任务id集寻找仓库信息

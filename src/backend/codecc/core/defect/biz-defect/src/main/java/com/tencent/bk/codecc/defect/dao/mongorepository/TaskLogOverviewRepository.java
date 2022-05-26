@@ -6,13 +6,13 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 public interface TaskLogOverviewRepository extends MongoRepository<TaskLogOverviewEntity, String> {
     TaskLogOverviewEntity findFirstByTaskIdOrderByStartTimeDesc(long taskId);
 
-    TaskLogOverviewEntity findByTaskIdAndBuildId(Long taskId, String buildId);
+    TaskLogOverviewEntity findFirstByTaskIdAndBuildId(Long taskId, String buildId);
 
     TaskLogOverviewEntity findFirstByTaskIdAndStatusOrderByStartTimeDesc(long taskId, int status);
 
-    TaskLogOverviewEntity findByTaskIdAndBuildIdAndStatus(long taskId, String buildId, int status);
+    TaskLogOverviewEntity findFirstByTaskIdAndBuildIdAndStatus(long taskId, String buildId, int status);
 
     Long countByTaskId(Long taskId);
 
-    TaskLogOverviewEntity findByTaskIdAndBuildNum(Long taskId, String buildNum);
+    TaskLogOverviewEntity findFirstByTaskIdAndBuildNum(Long taskId, String buildNum);
 }

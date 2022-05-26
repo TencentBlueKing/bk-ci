@@ -45,5 +45,5 @@ public interface TransferAuthorRepository extends MongoRepository<TransferAuthor
      * @param taskId
      * @return
      */
-    TransferAuthorEntity findByTaskId(long taskId);
+    TransferAuthorEntity findFirstByTaskId(long taskId);
 }

@@ -8,7 +8,7 @@ import com.tencent.bk.codecc.defect.service.ICheckerIntegratedBizService;
 import com.tencent.devops.common.constant.ComConstants.ToolIntegratedStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -58,7 +58,7 @@ public class CheckerIntegratedBizServiceImpl implements ICheckerIntegratedBizSer
             it.setUpdatedDate(System.currentTimeMillis());
             return it;
         }).collect(Collectors.toList());
-        checkerRepository.save(newCheckerList);
+        checkerRepository.saveAll(newCheckerList);
 
         return newCheckerList;
     }
@@ -105,7 +105,7 @@ public class CheckerIntegratedBizServiceImpl implements ICheckerIntegratedBizSer
             return checkerDetailHisEntity;
         }).collect(Collectors.toList());
         checkerHisRepository.deleteByToolName(toolName);
-        checkerHisRepository.save(bakCheckerList);
+        checkerHisRepository.saveAll(bakCheckerList);
     }
 
     @Override
@@ -129,7 +129,7 @@ public class CheckerIntegratedBizServiceImpl implements ICheckerIntegratedBizSer
             it.setCheckerVersion(targetStatus.value());
         });
 
-        checkerRepository.save(originCheckerList);
+        checkerRepository.saveAll(originCheckerList);
 
         return String.format("batch revert checker successfully: %s, %s", toolName, status);
     }
