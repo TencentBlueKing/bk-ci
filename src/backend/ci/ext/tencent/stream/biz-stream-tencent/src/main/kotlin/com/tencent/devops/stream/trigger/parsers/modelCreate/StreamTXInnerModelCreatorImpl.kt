@@ -27,8 +27,18 @@
 
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
+import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
+import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
+import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.matrix.DispatchInfo
+import com.tencent.devops.process.yaml.modelCreate.ModelCommon
+import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
+import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
+import com.tencent.devops.process.yaml.v2.models.Resources
+import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.stream.dao.GitCIServicesConfDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import org.jooq.DSLContext
@@ -38,7 +48,7 @@ import org.springframework.stereotype.Component
 
 @Primary
 @Component
-class TXInnerModelCreatorImpl @Autowired constructor(
+class StreamTXInnerModelCreatorImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val gitServicesConfDao: GitCIServicesConfDao
@@ -66,5 +76,27 @@ class TXInnerModelCreatorImpl @Autowired constructor(
             params = params,
             serviceEnv = record.env
         )
+    }
+
+    override fun getDispatchInfo(
+        name: String,
+        job: Job,
+        projectCode: String,
+        defaultImage: String,
+        resources: Resources?
+    ): DispatchInfo {
+        return StreamDispatchInfo(
+            name = "dispatchInfo_${job.id}",
+            job = job,
+            projectCode = projectCode,
+            defaultImage = defaultImage,
+            resources = resources
+        )
+    }
+
+    override fun preInstallMarketAtom(client: Client, event: ModelCreateEvent) {
+        ModelCommon.installMarketAtom(client, event.projectCode, event.userId, GitCiCodeRepoTask.atomCode)
+        ModelCommon.installMarketAtom(client, event.projectCode, event.userId, DockerRunDevCloudTask.atomCode)
+        ModelCommon.installMarketAtom(client, event.projectCode, event.userId, ServiceJobDevCloudTask.atomCode)
     }
 }

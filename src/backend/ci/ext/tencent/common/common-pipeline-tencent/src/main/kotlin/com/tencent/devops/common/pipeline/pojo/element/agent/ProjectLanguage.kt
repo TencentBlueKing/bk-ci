@@ -25,49 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.devops.process.yaml
+package com.tencent.devops.common.pipeline.pojo.element.agent
 
-import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
-import org.junit.Test
-import org.springframework.core.io.ClassPathResource
-import java.io.BufferedReader
-import java.io.InputStream
-import java.io.InputStreamReader
+@Deprecated("无用，待删除")
+@Suppress("UNUSED")
+enum class ProjectLanguage(val value: String) {
+    C("c"),
+    C_PLUS_PLUSH("c++"),
+    C_CPP("cpp"),
+    OBJECTIVE_C("objective-C"),
+    OC("objective-C"),
+    C_SHARP("c#"),
+    JAVA("java"),
+    PYTHON("python"),
+    JAVASCRIPT("javascript"),
+    JS("javascript"),
+    PHP("php"),
+    RUBY("ruby"),
+    LUA("lua"),
+    GOLANG("golang"),
+    SWIFT("swift"),
+    TYPESCRIPT("typescript"),
+    KOTLIN("kotlin"),
+    CLOJURE("clojure"),
+    SOLIDITY("solidity"),
+    OTHERS("others");
 
-internal class CiYamlUtilsTest {
-
-    @Test
-    fun versionExist() {
-        val classPathResource = ClassPathResource("test.yml")
-        val inputStream: InputStream = classPathResource.inputStream
-        val isReader = InputStreamReader(inputStream)
-
-        val reader = BufferedReader(isReader)
-        val sb = StringBuffer()
-        var str: String?
-        while (reader.readLine().also { str = it } != null) {
-            sb.append(str).append("\n")
-        }
-
-        println(sb.toString())
-    }
-
-    @Test
-    fun toYamlString() {
-        val yamlObj = ScriptBuildYaml(
-            version = "v2.0",
-            name = "myName",
-            label = null,
-            triggerOn = null,
-            variables = null,
-            stages = listOf(),
-            extends = null,
-            resource = null,
-            notices = null,
-            finally = listOf(),
-            concurrency = null
-        )
-        println(YamlUtil.toYaml(yamlObj))
+    companion object {
+        fun fromValue(value: String) =
+            ProjectLanguage.values().associateBy(ProjectLanguage::value)[value]
+                ?: throw IllegalArgumentException("The project language($value) is not exist")
     }
 }
