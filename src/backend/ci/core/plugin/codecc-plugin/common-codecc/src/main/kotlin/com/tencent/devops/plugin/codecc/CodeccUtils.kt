@@ -59,6 +59,7 @@ object CodeccUtils {
         return atomName == BK_CI_CODECC_V3_ATOM
     }
 
+    // 社区版插件code和内网版不同
     fun isCodeccCommunityAtom(atomName: String?): Boolean {
         return atomName == BK_CI_CODECC_COMMUNITY_ATOM
     }
