@@ -153,8 +153,9 @@ class PipelineRetryFacadeService @Autowired constructor(
         val startAndEndTask = mutableListOf<PipelineBuildTask>()
         taskRecords.forEach { task ->
             if (task.taskId == taskId) {
-                // issues_6831: 若设置了手动跳过 且重试时选择了跳过当前插件则不刷新当前失败的插件。
+                // issues_6831: 若设置了手动跳过 且重试时选择了跳过当前插件则不刷新当前失败的插件,直接把task内状态改为SKIP
                 if (task.additionalOptions?.manualSkip == true && skipFailedTask!!) {
+                    pipelineTaskService.updateTaskStatus(task = task, userId = userId, buildStatus = BuildStatus.SKIP)
                     return@forEach
                 }
                 startAndEndTask.add(task)
