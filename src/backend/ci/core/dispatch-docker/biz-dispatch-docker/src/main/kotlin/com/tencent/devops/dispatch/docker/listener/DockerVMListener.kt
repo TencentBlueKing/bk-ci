@@ -140,9 +140,11 @@ class DockerVMListener @Autowired constructor(
                 }
             }
         }
-        logger.info("${dispatchMessage.buildId}|startBuild|${dispatchMessage.id}|$dockerImage" +
-                     "|${dispatchType.imageCode}|${dispatchType.imageVersion}|${dispatchType.credentialId}" +
-                     "|${dispatchType.credentialProject}")
+        logger.info(
+            "${dispatchMessage.buildId}|startBuild|${dispatchMessage.id}|$dockerImage" +
+                "|${dispatchType.imageCode}|${dispatchType.imageVersion}|${dispatchType.credentialId}" +
+                "|${dispatchType.credentialProject}"
+        )
         var userName = dispatchType.imageRepositoryUserName
         var password = dispatchType.imageRepositoryPassword
         if (dispatchType.imageType == ImageType.THIRD) {
