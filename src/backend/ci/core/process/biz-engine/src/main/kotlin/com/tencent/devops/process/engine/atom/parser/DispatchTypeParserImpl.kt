@@ -27,26 +27,19 @@
 
 package com.tencent.devops.process.engine.atom.parser
 
-import com.tencent.devops.process.yaml.utils.StreamDispatchUtils
-import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.container.image.Credential
-import com.tencent.devops.common.pipeline.container.image.Pool
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.matrix.SampleDispatchInfo
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
-import com.tencent.devops.common.pipeline.type.bcs.PublicBcsDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
-import com.tencent.devops.process.utils.CredentialUtils
-import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
+import com.tencent.devops.process.yaml.utils.StreamDispatchUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -110,20 +103,6 @@ class DispatchTypeParserImpl @Autowired constructor(
         } else {
             dispatchType.credentialProject = projectId
         }
-
-        if (dispatchType is PublicBcsDispatchType) {
-            if (dispatchType.imageType == ImageType.BKDEVOPS) {
-                // 在商店发布的蓝盾源镜像，无需凭证
-                val pool = Pool(
-                    dispatchType.value.removePrefix("/"), null, null,
-                    false, dispatchType.performanceConfigId
-                )
-                dispatchType.image = JsonUtil.toJson(pool)
-            } else {
-                // 在商店发布的第三方源镜像，带凭证
-                genThirdBcsDispatchMessage(dispatchType, projectId, buildId)
-            }
-        }
     }
 
     override fun parseInfo(
@@ -168,37 +147,5 @@ class DispatchTypeParserImpl @Autowired constructor(
             )
             else -> null
         }
-    }
-
-    private fun genThirdBcsDispatchMessage(
-        dispatchType: PublicBcsDispatchType,
-        projectId: String,
-        buildId: String
-    ) {
-        var user = ""
-        var password = ""
-        var credentialProject = projectId
-        if (!dispatchType.credentialProject.isNullOrBlank()) {
-            credentialProject = dispatchType.credentialProject!!
-        }
-        // 通过凭证获取账号密码
-        if (!dispatchType.credentialId.isNullOrBlank()) {
-            val realCredentialId = EnvUtils.parseEnv(
-                command = dispatchType.credentialId!!,
-                data = buildVariableService.getAllVariable(projectId, buildId))
-            if (realCredentialId.isNotEmpty()) {
-                val ticketsMap = CredentialUtils.getCredential(
-                    client = client,
-                    projectId = credentialProject,
-                    credentialId = realCredentialId,
-                    type = CredentialType.USERNAME_PASSWORD
-                )
-                user = ticketsMap["v1"] as String
-                password = ticketsMap["v2"] as String
-            }
-        }
-        val credential = Credential(user, password)
-        val pool = Pool(dispatchType.value, credential, null, true, dispatchType.performanceConfigId)
-        dispatchType.image = JsonUtil.toJson(pool)
     }
 }
