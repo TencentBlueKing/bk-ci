@@ -47,7 +47,7 @@ class DockerRoutingService constructor(
     }
 
     fun getDockerRoutingType(projectId: String): DockerRoutingType {
-        val routingTypeStr =  redisOperation.hget(Constants.DOCKER_ROUTING_KEY_PREFIX, projectId)
+        val routingTypeStr = redisOperation.hget(Constants.DOCKER_ROUTING_KEY_PREFIX, projectId)
         return DockerRoutingType.valueOf(routingTypeStr ?: DockerRoutingType.VM.name)
     }
 }
