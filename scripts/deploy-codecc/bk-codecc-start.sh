@@ -84,7 +84,7 @@ detect_main (){
 # 检查服务启动成功. health接口为格式化后的, 要求整行匹配.
 check_springboot_up (){
   local port="$1"
-  curl -m 1 -sf "http://127.0.0.1:$port/management/health" 2>/dev/null | grep -qx '  "status" : "UP",'
+  curl -m 1 -sf "http://127.0.0.1:$port/management/health" 2>/dev/null | grep -qx '  "status" : "UP"'
 }
 # 等待服务启动成功.
 wait_springboot_up (){

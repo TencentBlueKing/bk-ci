@@ -1,16 +1,14 @@
 package com.tencent.bk.codecc.apiquery.defect.dao
 
-import com.mongodb.BasicDBObject
 import com.tencent.bk.codecc.apiquery.defect.model.BuildDefectIdsModel
 import com.tencent.bk.codecc.apiquery.defect.model.BuildDefectModel
-import com.tencent.bk.codecc.apiquery.task.model.CustomProjModel
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.aggregation.Aggregation
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions
-import org.springframework.data.mongodb.core.query.BasicQuery
 import org.springframework.data.mongodb.core.query.Criteria
+import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -23,13 +21,9 @@ class BuildDefectDao @Autowired constructor(
         toolName: String,
         buildId: String
     ): List<BuildDefectModel> {
-        val query = BasicQuery(BasicDBObject())
-        query.addCriteria(
-            Criteria.where("task_id").`in`(taskIdList)
-                .and("tool_name").`is`(toolName)
-                .and("build_id").`is`(buildId)
-        )
-
+        val query = Query.query(Criteria.where("task_id").`in`(taskIdList)
+            .and("tool_name").`is`(toolName)
+            .and("build_id").`is`(buildId))
         return defectMongoTemplate.find(query, BuildDefectModel::class.java, "t_build_defect")
     }
 
@@ -56,7 +50,7 @@ class BuildDefectDao @Autowired constructor(
         //允许磁盘操作
         val options = AggregationOptions.Builder().allowDiskUse(true).build()
         val agg = if(!sortField.isNullOrBlank() && !sortType.isNullOrBlank()){
-            val sort = Aggregation.sort(Sort(Sort.Direction.fromString(sortType), sortField))
+            val sort = Aggregation.sort(Sort.by(Sort.Direction.fromString(sortType), sortField))
             Aggregation.newAggregation(match, sort, unwind, project, skip, limit).withOptions(options)
         } else {
             Aggregation.newAggregation(match, unwind, project, skip, limit).withOptions(options)

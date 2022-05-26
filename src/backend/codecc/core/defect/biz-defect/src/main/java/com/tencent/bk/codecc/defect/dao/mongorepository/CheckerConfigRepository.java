@@ -56,6 +56,6 @@ public interface CheckerConfigRepository extends MongoRepository<CheckerConfigEn
      * @param checkerKey
      * @return
      */
-    CheckerConfigEntity findByTaskIdAndToolNameAndCheckerKey(Long taskId, String toolName, String checkerKey);
+    CheckerConfigEntity findFirstByTaskIdAndToolNameAndCheckerKey(Long taskId, String toolName, String checkerKey);
 
 }

@@ -227,7 +227,6 @@ include(":core:plugin:codecc-plugin")
 include(":core:plugin:codecc-plugin:common-codecc")
 include(":core:plugin:codecc-plugin:api-codecc")
 include(":core:plugin:codecc-plugin:biz-codecc")
-include(":core:plugin:codecc-plugin:worker-plugin-codecc")
 
 include(":core:worker")
 include(":core:worker:worker-agent")

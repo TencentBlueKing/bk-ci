@@ -100,7 +100,7 @@ import lombok.extern.slf4j.Slf4j
 import net.sf.json.JSONArray
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
-import org.springframework.beans.BeanUtils
+import com.tencent.devops.common.util.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
@@ -1560,7 +1560,7 @@ open class PipelineServiceImpl @Autowired constructor(
         taskId: Long,
         checkerSets: List<ToolCheckerSetVO>
     ): Boolean {
-        var taskEntity = taskRepository.findByTaskId(taskId)
+        var taskEntity = taskRepository.findFirstByTaskId(taskId)
         updateCodeCCModel(userName, taskEntity, null, null, checkerSets, null, null, null, null, null)
         return true
     }

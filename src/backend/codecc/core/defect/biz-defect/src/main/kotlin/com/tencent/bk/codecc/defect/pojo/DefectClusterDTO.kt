@@ -8,5 +8,6 @@ data class DefectClusterDTO(
     val commitDefectVO: CommitDefectVO,
     val buildEntity : BuildEntity? = null,
     val transferAuthorList : List<TransferAuthorEntity.TransferAuthorPair>?,
-    var inputPathName :String
+    var inputFileName :String,
+    var inputFilePath :String,
 )
