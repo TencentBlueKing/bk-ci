@@ -1,6 +1,6 @@
 <template>
     <section class="tab-content">
-        <bk-table :data="qualityData" v-bkloading="{ isLoading }">
+        <bk-table :data="qualityData" v-bkloading="{ isLoading }" key="qualityTable">
             <bk-table-column :label="$t('store.指标名')" prop="enName" show-overflow-tooltip width="200"></bk-table-column>
             <bk-table-column :label="$t('store.指标中文名')" prop="cnName" show-overflow-tooltip width="220"></bk-table-column>
             <bk-table-column :label="$t('store.指标说明')" prop="desc" show-overflow-tooltip width="220"></bk-table-column>
