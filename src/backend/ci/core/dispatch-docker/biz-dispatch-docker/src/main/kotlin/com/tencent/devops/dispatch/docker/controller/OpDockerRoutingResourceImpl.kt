@@ -25,37 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.common
+package com.tencent.devops.dispatch.docker.controller
 
-object Constants {
-    /**
-     * Redis Key
-     */
-    const val DOCKER_IP_COUNT_KEY_PREFIX = "dispatch_docker_ip_count_"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.docker.api.op.OPDockerRoutingResource
+import com.tencent.devops.dispatch.docker.pojo.DockerRoutingVO
+import com.tencent.devops.dispatch.docker.service.DockerRoutingService
+import org.springframework.beans.factory.annotation.Autowired
 
-    /**
-     * Docker构建高配资源白名单Key
-     */
-    const val DOCKER_RESOURCE_WHITE_LIST_KEY_PREFIX = "docker_resource_white_list_"
+@RestResource
+class OpDockerRoutingResourceImpl @Autowired constructor(
+    private val dockerRoutingService: DockerRoutingService
+) : OPDockerRoutingResource {
 
-    /**
-     * 无编译环境新方案白名单Key
-     */
-    const val BUILD_LESS_WHITE_LIST_KEY_PREFIX = "dispatchdocker:buildless_whitelist"
+    override fun addDockerRouting(
+        userId: String,
+        projectId: String,
+        dockerRoutingVO: DockerRoutingVO
+    ): Result<Boolean> {
+        return Result(dockerRoutingService.addDockerRoutingType(
+            userId = userId,
+            projectId = projectId,
+            dockerRoutingType = dockerRoutingVO.dockerRoutingType
+        ))
+    }
 
-    /**
-     * 拉代码优化工蜂项目ID白名单Key
-     */
-    const val QPC_WHITE_LIST_KEY_PREFIX = "dispatchdocker:qpc_white_list"
-
-    /**
-     * docker路由Key
-     */
-    const val DOCKER_ROUTING_KEY_PREFIX = "dispatchdocker:docker_routing"
-
-    const val DOCKERHOST_STARTUP_URI = "/api/docker/build/start"
-    const val DOCKERHOST_AGENTLESS_STARTUP_URI = "/api/docker-agentless/build/start"
-    const val BUILD_LESS_STARTUP_URI = "/api/service/build/start"
-    const val BUILD_LESS_END_URI = "/api/service/build/end"
-    const val DOCKERHOST_END_URI = "/api/docker/build/end"
+    override fun deleteDockerRouting(userId: String, projectId: String): Result<Boolean> {
+        return Result(dockerRoutingService.deleteDockerRoutingType(userId, projectId))
+    }
 }

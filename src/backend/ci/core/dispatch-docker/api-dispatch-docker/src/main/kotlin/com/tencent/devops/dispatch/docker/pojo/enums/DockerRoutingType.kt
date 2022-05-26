@@ -25,37 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.common
+package com.tencent.devops.dispatch.docker.pojo.enums
 
-object Constants {
-    /**
-     * Redis Key
-     */
-    const val DOCKER_IP_COUNT_KEY_PREFIX = "dispatch_docker_ip_count_"
-
-    /**
-     * Docker构建高配资源白名单Key
-     */
-    const val DOCKER_RESOURCE_WHITE_LIST_KEY_PREFIX = "docker_resource_white_list_"
-
-    /**
-     * 无编译环境新方案白名单Key
-     */
-    const val BUILD_LESS_WHITE_LIST_KEY_PREFIX = "dispatchdocker:buildless_whitelist"
-
-    /**
-     * 拉代码优化工蜂项目ID白名单Key
-     */
-    const val QPC_WHITE_LIST_KEY_PREFIX = "dispatchdocker:qpc_white_list"
-
-    /**
-     * docker路由Key
-     */
-    const val DOCKER_ROUTING_KEY_PREFIX = "dispatchdocker:docker_routing"
-
-    const val DOCKERHOST_STARTUP_URI = "/api/docker/build/start"
-    const val DOCKERHOST_AGENTLESS_STARTUP_URI = "/api/docker-agentless/build/start"
-    const val BUILD_LESS_STARTUP_URI = "/api/service/build/start"
-    const val BUILD_LESS_END_URI = "/api/service/build/end"
-    const val DOCKERHOST_END_URI = "/api/docker/build/end"
+/**
+ *  Docker构建路由类型
+ */
+enum class DockerRoutingType {
+    VM, // 自研构建机
+    DEVCLOUD, // devcloud公共构建机
+    BCS, // bcs公共构建机
+    KUBERNETES // 云原生公共构建机
 }
