@@ -401,7 +401,9 @@ class PipelineContainerService @Autowired constructor(
             // #4245 直接将启动时跳过的插件置为不可用，减少存储变量
             atomElement.disableBySkipVar(variables = startParamMap)
 
-            val status = atomElement.initStatus(rerun = context.needRerun(stage))
+            val status = atomElement.initStatus(
+                rerun = context.needRerun(stage) || context.isRetryDependOnContainer(container)
+            )
             if (status.isFinish()) {
                 logger.info("[$buildId|${atomElement.id}] status=$status")
                 atomElement.status = status.name
