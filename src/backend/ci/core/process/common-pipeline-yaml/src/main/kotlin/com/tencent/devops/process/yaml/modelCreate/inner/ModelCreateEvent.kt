@@ -47,7 +47,8 @@ data class ModelCreateEvent(
     val gitData: GitData? = null,
     val streamData: StreamData? = null,
     val changeSet: Set<String>? = null,
-    val jobTemplateAcrossInfo: Map<String, BuildTemplateAcrossInfo>? = null
+    val jobTemplateAcrossInfo: Map<String, BuildTemplateAcrossInfo>? = null,
+    val preCIData: PreCIData? = null
 )
 
 /**
@@ -85,4 +86,22 @@ data class StreamData(
     val enableUserId: String,
     val requestEventId: Long,
     val objectKind: StreamObjectKind
+)
+
+/**
+ * preci
+ */
+data class PreCIData(
+    val agentId: String,
+    val workspace: String,
+    val userId: String,
+    val projectId: String = "_$userId",
+    val extraParam: ExtraParam?
+)
+
+data class ExtraParam(
+    val codeccScanPath: String? = null,
+    val incrementFileList: List<String>? = null,
+    val ideVersion: String? = null,
+    val pluginVersion: String? = null
 )

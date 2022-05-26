@@ -25,49 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.devops.process.yaml
+package com.tencent.devops.process.yaml.v2.models
 
-import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
-import org.junit.Test
-import org.springframework.core.io.ClassPathResource
-import java.io.BufferedReader
-import java.io.InputStream
-import java.io.InputStreamReader
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 
-internal class CiYamlUtilsTest {
-
-    @Test
-    fun versionExist() {
-        val classPathResource = ClassPathResource("test.yml")
-        val inputStream: InputStream = classPathResource.inputStream
-        val isReader = InputStreamReader(inputStream)
-
-        val reader = BufferedReader(isReader)
-        val sb = StringBuffer()
-        var str: String?
-        while (reader.readLine().also { str = it } != null) {
-            sb.append(str).append("\n")
-        }
-
-        println(sb.toString())
-    }
-
-    @Test
-    fun toYamlString() {
-        val yamlObj = ScriptBuildYaml(
-            version = "v2.0",
-            name = "myName",
-            label = null,
-            triggerOn = null,
-            variables = null,
-            stages = listOf(),
-            extends = null,
-            resource = null,
-            notices = null,
-            finally = listOf(),
-            concurrency = null
-        )
-        println(YamlUtil.toYaml(yamlObj))
-    }
-}
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class Concurrency(
+    val group: String?,
+    @JsonProperty("cancel-in-progress")
+    val cancelInProgress: Boolean?
+)
