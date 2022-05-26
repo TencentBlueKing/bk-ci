@@ -115,7 +115,12 @@ class DockerVMListener @Autowired constructor(
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
         logger.info("On shutdown - ($event)")
 
-        dockerHostBuildService.finishDockerBuild(event)
+        val dockerRoutingType = dockerRoutingService.getDockerRoutingType(event.projectId)
+        if (dockerRoutingType == DockerRoutingType.BCS) {
+            pipelineEventDispatcher.dispatch(event.copy(routeKeySuffix = DispatchRouteKeySuffix.BCS.routeKeySuffix))
+        } else {
+            dockerHostBuildService.finishDockerBuild(event)
+        }
     }
 
     private fun parseRoutingStartup(dispatchMessage: DispatchMessage, demoteFlag: Boolean = false) {
