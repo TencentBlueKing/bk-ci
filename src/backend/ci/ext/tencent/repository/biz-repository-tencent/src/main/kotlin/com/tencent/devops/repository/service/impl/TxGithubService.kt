@@ -41,9 +41,11 @@ import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.github.IGithubService
 import com.tencent.devops.scm.pojo.Project
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Service
+@Primary
 class TxGithubService @Autowired constructor(
     private val client: Client,
     private val githubTokenService: GithubTokenService
@@ -132,5 +134,19 @@ class TxGithubService @Autowired constructor(
             ref = ref,
             filePath = filePath
         ).data ?: ""
+    }
+
+    override fun listBranches(token: String, projectName: String): List<String> {
+        return client.get(ServiceGithubResource::class).listBranches(
+            accessToken = token,
+            projectName = projectName
+        ).data!!
+    }
+
+    override fun listTags(token: String, projectName: String): List<String> {
+        return client.get(ServiceGithubResource::class).listTags(
+            accessToken = token,
+            projectName = projectName
+        ).data!!
     }
 }

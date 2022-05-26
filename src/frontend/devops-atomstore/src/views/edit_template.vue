@@ -167,7 +167,7 @@
             return {
                 showContent: false,
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/store/store-home`,
+                docsLink: `${DOCS_URL_PREFIX}/Services/Store/start-new-template.md`,
                 sortList: [],
                 labelList: [],
                 categoryList: [],

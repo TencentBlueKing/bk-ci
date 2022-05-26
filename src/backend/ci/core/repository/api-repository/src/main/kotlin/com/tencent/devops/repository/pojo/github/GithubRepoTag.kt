@@ -25,32 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service.artifactory
+package com.tencent.devops.repository.pojo.github
 
-import com.tencent.devops.artifactory.client.JFrogApiService
-import com.tencent.devops.artifactory.service.CustomDirGsService
-import com.tencent.devops.artifactory.service.JFrogService
-import com.tencent.devops.artifactory.util.JFrogUtil
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-import javax.ws.rs.NotFoundException
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Service
-class ArtifactoryCustomDirGsService @Autowired constructor(
-    private val jFrogApiService: JFrogApiService,
-    private val jFrogService: JFrogService
-) : CustomDirGsService {
-    override fun getDownloadUrl(projectId: String, fileName: String, userId: String): String {
-        logger.info("getDownloadUrl, projectId: $projectId, fileName: $fileName, userId: $userId")
-        val path = JFrogUtil.getCustomDirPath(projectId, fileName)
-        if (!jFrogService.exist(path)) {
-            throw NotFoundException("文件不存在")
-        }
-        return jFrogApiService.internalDownloadUrl(path, 3 * 24 * 3600, userId)
+/**
+ * github获取tag列表接口: /repos/{owner}/{repo}/tags
+ * {
+        "name": "v1.7.22-RC.2",
+        "zipball_url": "https://api.github.com/repos/Tencent/bk-ci/zipball/refs/tags/v1.7.22-RC.2",
+        "tarball_url": "https://api.github.com/repos/Tencent/bk-ci/tarball/refs/tags/v1.7.22-RC.2",
+        "commit": {
+        "sha": "c4a9464c710eae94c1538ede27e538c61643fe65",
+        "url": "https://api.github.com/repos/Tencent/bk-ci/commits/c4a9464c710eae94c1538ede27e538c61643fe65"
+        },
+        "node_id": "MDM6UmVmMTg5MTUzNDkxOnJlZnMvdGFncy92MS43LjIyLVJDLjI="
     }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ArtifactoryCustomDirGsService::class.java)
-    }
-}
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+@ApiModel("仓库tag信息")
+data class GithubRepoTag(
+    @ApiModelProperty("名称")
+    val name: String,
+    @JsonProperty("zipball_url")
+    val zipballUrl: String,
+    @JsonProperty("tarball_url")
+    val tarballUrl: String,
+    val commit: GithubRepoCommit,
+    @JsonProperty("node_id")
+    val nodeId: String
+)

@@ -153,7 +153,7 @@
                 showContent: false,
                 isEmptyRule: false,
                 totalInterceptRecor: 0,
-                docsUrl: `${DOCS_URL_PREFIX}/x/MYbm`,
+                docsUrl: `${DOCS_URL_PREFIX.replace('持续集成平台', '质量红线')}/Inro/README.md`,
                 pipelineListLabel: [],
                 pipelineListValue: [],
                 trendList: [],

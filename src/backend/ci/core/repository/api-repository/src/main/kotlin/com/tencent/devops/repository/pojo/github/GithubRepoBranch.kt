@@ -25,32 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources.service
+package com.tencent.devops.repository.pojo.github
 
-import com.tencent.devops.artifactory.api.service.ServiceCustomDirResource
-import com.tencent.devops.artifactory.pojo.Url
-import com.tencent.devops.artifactory.service.bkrepo.BkRepoCustomDirGsService
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ServiceCustomDirResourceImpl @Autowired constructor(
-    private val bkRepoCustomDirGsService: BkRepoCustomDirGsService
-) : ServiceCustomDirResource {
-
-    override fun getGsDownloadUrl(projectId: String, fileName: String, userId: String): Result<Url> {
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-        if (fileName.isBlank()) {
-            throw ParamBlankException("Invalid fileName")
-        }
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-
-        return Result(Url(bkRepoCustomDirGsService.getDownloadUrl(projectId, fileName, userId)))
+/**
+ * github获取分支列表:/repos/{owner}/{repo}/branches
+     {
+    "name": "release-1.2",
+    "commit": {
+    "sha": "7dcca23c12383c18d4b1710c42fe97adb44c7c8b",
+    "url": "https://api.github.com/repos/Tencent/bk-ci/commits/7dcca23c12383c18d4b1710c42fe97adb44c7c8b"
+    },
+    "protected": true
     }
-}
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+@ApiModel("仓库分支信息")
+data class GithubRepoBranch(
+    @ApiModelProperty("名称")
+    val name: String,
+    @ApiModelProperty("提交信息")
+    val commit: GithubRepoCommit,
+    @ApiModelProperty("是否是保护分支")
+    val protected: Boolean
+)

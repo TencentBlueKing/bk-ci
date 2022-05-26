@@ -246,11 +246,4 @@ object ProcessMessageCode {
     const val ERROR_GROUP_COUNT_EXCEEDS_LIMIT = "2101401" // 一个项目标签组不能超过10个
     const val ERROR_LABEL_COUNT_EXCEEDS_LIMIT = "2101402" // 同一分组下最多可添加12个标签
     const val ERROR_LABEL_NAME_TOO_LONG = "2101403" // 一个标签最多输入20个字符
-
-    // 插件级别执行失败log错误组 21015开头
-    const val ERROR_TASK_LOG_USER_FAILED = "2101501" // 【ERROR】请检查脚本代码逻辑是否正确
-    const val ERROR_TASK_LOG_SYSTEM_FAILED = "2101502" // 【ERROR】请联系蓝盾助手DevOps-helper协助定位
-    const val ERROR_TASK_LOG_THIRD_PARTY_FAILED = "2101503" // 【ERROR】请联系该插件所属第三方服务的助手协助定位
-    const val ERROR_TASK_LOG_PLUGIN_FAILED = "2101504" // 【ERROR】请联系插件开发者{0}协助定位
-    const val ERROR_TASK_LOG_OVERVIEW = "2101505" // 错误类型：{0} \n错误代码：{1}
 }

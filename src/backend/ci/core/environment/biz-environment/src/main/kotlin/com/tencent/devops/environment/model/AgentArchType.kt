@@ -25,20 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.statistics.util.process
+package com.tencent.devops.environment.model
 
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_NAME
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
-import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
-import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
-
-object NotifyTemplateUtils {
-
-    const val COMMON_SHUTDOWN_SUCCESS_CONTENT =
-        "【\${$PROJECT_NAME_CHINESE}】- 【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} 执行成功，" +
-            "耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。"
-    const val COMMON_SHUTDOWN_FAILURE_CONTENT =
-        "【\${$PROJECT_NAME_CHINESE}】- 【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} 执行失败，" +
-            "耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。 "
+enum class AgentArchType(val arch: String) {
+    ARM64("arm64"),
+    MIPS64("mips64")
 }

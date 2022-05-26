@@ -191,7 +191,7 @@
                 'fetchError'
             ]),
             userName () {
-              return this.$userInfo && this.$userInfo.username ? this.$userInfo.username : ''
+                return this.$userInfo && this.$userInfo.username ? this.$userInfo.username : ''
             },
             panels () {
                 return [{

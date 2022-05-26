@@ -25,15 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.auth.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("流水线模型-构建任务失败时用于通知的信息")
-data class BuildTaskErrorMessage(
-    @ApiModelProperty("插件创建人", required = false)
-    var atomCreator: String?,
-    @ApiModelProperty("第三方服务助手信息", required = false)
-    var thirdPartyAssistant: String?
-)
+class BkLocalManagerServiceImp @Autowired constructor() : LocalManagerService {
+
+    override fun projectManagerCheck(
+        userId: String,
+        projectCode: String,
+        action: String,
+        resourceType: String
+    ): Boolean {
+        if (isAdmin(userId)) {
+            return true
+        }
+        return false
+    }
+
+    // 有用户相关功能后， 需要校验真是的管理员账号
+    private fun isAdmin(userId: String): Boolean {
+        if (userId == "admin") {
+            return true
+        }
+        return false
+    }
+}

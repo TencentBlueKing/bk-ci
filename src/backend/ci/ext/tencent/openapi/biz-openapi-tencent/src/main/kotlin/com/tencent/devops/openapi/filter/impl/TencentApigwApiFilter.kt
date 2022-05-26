@@ -38,9 +38,10 @@ import com.tencent.devops.openapi.filter.ApiFilter
 import com.tencent.devops.openapi.utils.ApiGatewayPubFile
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import io.jsonwebtoken.Jwts
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.jce.provider.JCERSAPublicKey
-import org.bouncycastle.openssl.PEMReader
+import org.bouncycastle.openssl.PEMParser
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
@@ -98,9 +99,10 @@ class TencentApigwApiFilter(
         val bkApiJwt = requestContext.getHeaderString(jwtHeader)
         if (bkApiJwt.isNullOrBlank()) {
             logger.error("Request bk api jwt is empty for ${requestContext.request}")
-            requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST)
-                .entity("Request bkapi jwt is empty.")
-                .build()
+            requestContext.abortWith(
+                Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Request bkapi jwt is empty.")
+                    .build()
             )
             return false
         }
@@ -149,9 +151,10 @@ class TencentApigwApiFilter(
                         requestContext.headers.add(AUTH_HEADER_DEVOPS_USER_ID, username)
                     }
                 } else if (apiType == ApiType.USER) {
-                    requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST)
-                        .entity("Request don't has user's access_token.")
-                        .build()
+                    requestContext.abortWith(
+                        Response.status(Response.Status.BAD_REQUEST)
+                            .entity("Request don't has user's access_token.")
+                            .build()
                     )
                     return false
                 }
@@ -198,7 +201,7 @@ class TencentApigwApiFilter(
     }
 
     private fun parseJwt(bkApiJwt: String, apigwtType: String?): Map<String, Any> {
-        var reader: PEMReader? = null
+        var reader: PEMParser? = null
         try {
             val key = if (!apigwtType.isNullOrEmpty() && apigwtType == "outer") {
                 SpringContextUtil.getBean(ApiGatewayPubFile::class.java).getPubOuter().toByteArray()
@@ -207,9 +210,10 @@ class TencentApigwApiFilter(
             }
             Security.addProvider(BouncyCastleProvider())
             val bais = ByteArrayInputStream(key)
-            reader = PEMReader(InputStreamReader(bais)) { "".toCharArray() }
-            val keyPair = reader.readObject() as JCERSAPublicKey
-            val jwtParser = Jwts.parser().setSigningKey(keyPair)
+            reader = PEMParser(InputStreamReader(bais))
+            val publicKeyInfo = reader.readObject() as SubjectPublicKeyInfo
+            val publicKey = JcaPEMKeyConverter().getPublicKey(publicKeyInfo)
+            val jwtParser = Jwts.parserBuilder().setSigningKey(publicKey).build()
             val parse = jwtParser.parse(bkApiJwt)
             logger.info("Get the parse body(${parse.body}) and header(${parse.header})")
             return JsonUtil.toMap(parse.body)

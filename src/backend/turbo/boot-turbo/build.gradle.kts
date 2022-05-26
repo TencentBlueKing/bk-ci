@@ -1,5 +1,5 @@
 dependencies {
     api(project(":biz-turbo"))
-    api("io.springfox:springfox-boot-starter")
+    api("io.swagger:swagger-annotations")
     implementation("org.springframework.boot:spring-boot-configuration-processor")
 }
