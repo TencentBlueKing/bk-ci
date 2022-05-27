@@ -42,7 +42,8 @@
     "devops-quality",
     "devops-nav",
     "devops-turbo",
-    "bk-pipeline"
+    "bk-pipeline",
+    "devops-metrics"
   ],
   "dependencies": {
     "cross-env": "^7.0.3",
