@@ -25,49 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.devops.process.yaml
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
-import org.junit.Test
-import org.springframework.core.io.ClassPathResource
-import java.io.BufferedReader
-import java.io.InputStream
-import java.io.InputStreamReader
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
 
-internal class CiYamlUtilsTest {
-
-    @Test
-    fun versionExist() {
-        val classPathResource = ClassPathResource("test.yml")
-        val inputStream: InputStream = classPathResource.inputStream
-        val isReader = InputStreamReader(inputStream)
-
-        val reader = BufferedReader(isReader)
-        val sb = StringBuffer()
-        var str: String?
-        while (reader.readLine().also { str = it } != null) {
-            sb.append(str).append("\n")
-        }
-
-        println(sb.toString())
-    }
-
-    @Test
-    fun toYamlString() {
-        val yamlObj = ScriptBuildYaml(
-            version = "v2.0",
-            name = "myName",
-            label = null,
-            triggerOn = null,
-            variables = null,
-            stages = listOf(),
-            extends = null,
-            resource = null,
-            notices = null,
-            finally = listOf(),
-            concurrency = null
-        )
-        println(YamlUtil.toYaml(yamlObj))
-    }
-}
+@ApiModel("mr绑定的TAPD单")
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TapdWorkItem(
+    val id: Long,
+    @JsonProperty("workspace_id")
+    val workspaceId: Long,
+    @JsonProperty("source_project_id")
+    val sourceProjectId: Long,
+    @JsonProperty("source_id")
+    val sourceId: Long,
+    @JsonProperty("source_type")
+    val sourceType: String,
+    @JsonProperty("tapd_id")
+    val tapdId: Long,
+    @JsonProperty("tapd_type")
+    val tapdType: String,
+    val name: String,
+    val status: String,
+    @JsonProperty("status_zh")
+    val statusZh: String
+)

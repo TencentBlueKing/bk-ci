@@ -148,7 +148,7 @@ class BuildStartControl @Autowired constructor(
         )
 
         buildLogPrinter.stopLog(buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount)
-        startPipelineCount(this)
+        startPipelineCount()
     }
 
     private fun PipelineBuildStartEvent.pickUpReadyBuild(executeCount: Int): BuildInfo? {
@@ -549,11 +549,9 @@ class BuildStartControl @Autowired constructor(
         return firstValidStage
     }
 
-    private fun startPipelineCount(event: PipelineBuildStartEvent) {
+    private fun startPipelineCount() {
         Counter
             .builder("start_pipeline_count")
-            .tag("projectId", event.projectId)
-            .tag("pipelineId", event.pipelineId)
             .register(meterRegistry)
             .increment()
     }
