@@ -28,6 +28,10 @@
 package com.tencent.devops.process.engine.service.detail
 
 import com.google.common.base.Preconditions
+import com.tencent.devops.common.api.constant.BUILD_CANCELED
+import com.tencent.devops.common.api.constant.BUILD_FAILED
+import com.tencent.devops.common.api.constant.BUILD_REVIEWING
+import com.tencent.devops.common.api.constant.BUILD_RUNNING
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -137,12 +141,21 @@ open class BaseBuildDetailService constructor(
 
     protected fun fetchHistoryStageStatus(
         model: Model,
-        statusMessage: String,
+        buildStatus: BuildStatus,
         cancelUser: String? = null
     ): List<BuildStageStatus> {
         val stageTagMap: Map<String, String>
             by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } }
         // 更新Stage状态至BuildHistory
+        val statusMessage = if (buildStatus == BuildStatus.REVIEWING) {
+            BUILD_REVIEWING
+        } else if (buildStatus.isFailure()) {
+            BUILD_FAILED
+        } else if (buildStatus.isCancel()) {
+            BUILD_CANCELED
+        } else {
+            BUILD_RUNNING
+        }
         return model.stages.map {
             BuildStageStatus(
                 stageId = it.id!!,

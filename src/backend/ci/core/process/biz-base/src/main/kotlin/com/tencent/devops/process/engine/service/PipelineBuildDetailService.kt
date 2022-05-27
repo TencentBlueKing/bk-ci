@@ -27,10 +27,6 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.common.api.constant.BUILD_CANCELED
-import com.tencent.devops.common.api.constant.BUILD_COMPLETED
-import com.tencent.devops.common.api.constant.BUILD_FAILED
-import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -272,13 +268,6 @@ class PipelineBuildDetailService @Autowired constructor(
     fun buildEnd(projectId: String, buildId: String, buildStatus: BuildStatus): List<BuildStageStatus> {
         logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
         var allStageStatus: List<BuildStageStatus> = emptyList()
-        val statusMessage = if (buildStatus.isFailure()) {
-            BUILD_FAILED
-        } else if (buildStatus.isCancel()) {
-            BUILD_CANCELED
-        } else {
-            BUILD_COMPLETED
-        }
         update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
             var update = false
 
@@ -298,7 +287,7 @@ class PipelineBuildDetailService @Autowired constructor(
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
                 if (allStageStatus.isEmpty()) {
-                    allStageStatus = fetchHistoryStageStatus(model, statusMessage, cancelUser)
+                    allStageStatus = fetchHistoryStageStatus(model, buildStatus)
                 }
                 if (BuildStatus.parse(stage.status).isRunning()) {
                     stage.status = buildStatus.name

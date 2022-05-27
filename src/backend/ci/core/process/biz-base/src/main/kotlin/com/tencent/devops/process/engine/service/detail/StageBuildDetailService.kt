@@ -27,8 +27,6 @@
 
 package com.tencent.devops.process.engine.service.detail
 
-import com.tencent.devops.common.api.constant.BUILD_REVIEWING
-import com.tencent.devops.common.api.constant.BUILD_RUNNING
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
@@ -81,7 +79,7 @@ class StageBuildDetailService(
                     } else if (buildStatus.isFinish() && stage.startEpoch != null) {
                         stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
                     }
-                    allStageStatus = fetchHistoryStageStatus(model, BUILD_RUNNING)
+                    allStageStatus = fetchHistoryStageStatus(model, buildStatus)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -107,7 +105,7 @@ class StageBuildDetailService(
                     stage.containers.forEach {
                         it.status = BuildStatus.SKIP.name
                     }
-                    allStageStatus = fetchHistoryStageStatus(model, BUILD_RUNNING)
+                    allStageStatus = fetchHistoryStageStatus(model, BuildStatus.RUNNING)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -141,7 +139,7 @@ class StageBuildDetailService(
                     stage.startEpoch = System.currentTimeMillis()
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
-                    allStageStatus = fetchHistoryStageStatus(model, BUILD_REVIEWING)
+                    allStageStatus = fetchHistoryStageStatus(model, BuildStatus.REVIEWING)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -193,11 +191,11 @@ class StageBuildDetailService(
         checkOut: StagePauseCheck?
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_check_quality|stageId=$stageId|checkIn=$checkIn|checkOut=$checkOut")
-        val (oldBuildStatus, newBuildStatus, statusMessage) = if (checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name ||
+        val (oldBuildStatus, newBuildStatus) = if (checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name ||
             checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
-            Triple(BuildStatus.RUNNING, BuildStatus.REVIEWING, BUILD_REVIEWING)
+            Pair(BuildStatus.RUNNING, BuildStatus.REVIEWING)
         } else {
-            Triple(BuildStatus.REVIEWING, BuildStatus.RUNNING, BUILD_RUNNING)
+            Pair(BuildStatus.REVIEWING, BuildStatus.RUNNING)
         }
         var allStageStatus: List<BuildStageStatus>? = null
         update(projectId, buildId, object : ModelInterface {
@@ -209,7 +207,7 @@ class StageBuildDetailService(
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
-                    allStageStatus = fetchHistoryStageStatus(model, statusMessage)
+                    allStageStatus = fetchHistoryStageStatus(model, newBuildStatus)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -272,7 +270,7 @@ class StageBuildDetailService(
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
-                    allStageStatus = fetchHistoryStageStatus(model, BUILD_RUNNING)
+                    allStageStatus = fetchHistoryStageStatus(model, BuildStatus.RUNNING)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -284,6 +282,4 @@ class StageBuildDetailService(
         }, BuildStatus.RUNNING, operation = "stageStart#$stageId")
         return allStageStatus ?: emptyList()
     }
-
-
 }
