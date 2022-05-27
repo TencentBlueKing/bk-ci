@@ -157,6 +157,8 @@ func (fsm *fileSendMap) updateStatus(desc dcSDK.FileDesc, status types.FileSendS
 
 // Init do the initialization for remote manager
 func (m *Mgr) Init() {
+	blog.Infof("remote: init for work:%s", m.work.ID())
+
 	settings := m.work.Basic().Settings()
 	m.resource = newResource(m.syncHostTimeNoWait(m.work.Resource().GetHosts()), settings.UsageLimit)
 
@@ -179,12 +181,30 @@ func (m *Mgr) Init() {
 func (m *Mgr) callback4ResChanged() error {
 	blog.Infof("remote: resource changed call back for work:%s", m.work.ID())
 
-	newhl, _ := m.resource.Reset(m.work.Resource().GetHosts())
-	if newhl != nil && len(newhl) > 0 {
+	hl := m.work.Resource().GetHosts()
+	m.resource.Reset(hl)
+	if hl != nil && len(hl) > 0 {
 		m.setLastApplied(uint64(time.Now().Local().Unix()))
-		m.syncHostTimeNoWait(newhl)
+		m.syncHostTimeNoWait(hl)
+	}
+
+	// if all workers released, we shoud clean the cache now
+	if hl == nil || len(hl) == 0 {
+		m.cleanFileCache()
 	}
 	return nil
+}
+
+func (m *Mgr) cleanFileCache() {
+	blog.Infof("remote: clean all file cache when all resource released for work:%s", m.work.ID())
+
+	m.fileSendMutex.Lock()
+	m.fileSendMap = make(map[string]*fileSendMap)
+	m.fileSendMutex.Unlock()
+
+	m.fileCollectionSendMutex.Lock()
+	m.fileCollectionSendMap = make(map[string]*[]*types.FileCollectionInfo)
+	m.fileCollectionSendMutex.Unlock()
 }
 
 func (m *Mgr) setLastUsed(v uint64) {
@@ -258,6 +278,9 @@ func (m *Mgr) resourceCheck(ctx context.Context) {
 				if needfree {
 					// disable all workers and release
 					m.resource.disableAllWorker()
+					// clean file cache
+					m.cleanFileCache()
+					// notify resource release
 					m.work.Resource().Release(nil)
 
 					// 重置最近一次使用时间
@@ -885,8 +908,8 @@ func (m *Mgr) checkOrLockFileCollection(server string, fc *types.FileCollectionI
 }
 
 func (m *Mgr) updateFileCollectionStatus(server string, fc *types.FileCollectionInfo, status types.FileSendStatus) {
-	m.fileSendMutex.Lock()
-	defer m.fileSendMutex.Unlock()
+	m.fileCollectionSendMutex.Lock()
+	defer m.fileCollectionSendMutex.Unlock()
 
 	blog.Infof("remote: ready add collection(%s) server(%s) timestamp(%d) status(%d) to cache",
 		fc.UniqID, server, fc.Timestamp, status)
@@ -915,8 +938,8 @@ func (m *Mgr) updateFileCollectionStatus(server string, fc *types.FileCollection
 
 // to ensure clear only once
 func (m *Mgr) clearOldFileCollectionFromCache(server string, fcs []*types.FileCollectionInfo) {
-	m.fileSendMutex.Lock()
-	defer m.fileSendMutex.Unlock()
+	m.fileCollectionSendMutex.Lock()
+	defer m.fileCollectionSendMutex.Unlock()
 
 	target, ok := m.fileCollectionSendMap[server]
 	if !ok {
@@ -955,8 +978,8 @@ func (m *Mgr) clearOldFileCollectionFromCache(server string, fcs []*types.FileCo
 }
 
 func (m *Mgr) getCachedToolChainTimestamp(server string, toolChainKey string) (int64, error) {
-	m.fileSendMutex.RLock()
-	defer m.fileSendMutex.RUnlock()
+	m.fileCollectionSendMutex.RLock()
+	defer m.fileCollectionSendMutex.RUnlock()
 
 	target, ok := m.fileCollectionSendMap[server]
 	if !ok {
@@ -973,8 +996,8 @@ func (m *Mgr) getCachedToolChainTimestamp(server string, toolChainKey string) (i
 }
 
 func (m *Mgr) getCachedToolChainStatus(server string, toolChainKey string) (types.FileSendStatus, error) {
-	m.fileSendMutex.RLock()
-	defer m.fileSendMutex.RUnlock()
+	m.fileCollectionSendMutex.RLock()
+	defer m.fileCollectionSendMutex.RUnlock()
 
 	target, ok := m.fileCollectionSendMap[server]
 	if !ok {

@@ -165,6 +165,8 @@ func (m *Mgr) SetSpecificHosts(hostList []string) {
 	if info.CanBeResourceApplied() {
 		info.ResourceApplied()
 	}
+
+	m.onResChanged()
 }
 
 // GetHosts return the worker list
@@ -553,7 +555,7 @@ func (m *Mgr) inspectInfo(taskID string) {
 				continue
 			}
 
-			blog.Infof("resource: inspectInfo get task info: %+v", info)
+			// blog.Infof("resource: inspectInfo get task info: %+v", info)
 
 			// Once task is running or terminated, no need keep inspecting info.
 			switch info.Status {

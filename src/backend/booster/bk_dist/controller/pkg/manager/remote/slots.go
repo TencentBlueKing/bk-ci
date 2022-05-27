@@ -46,14 +46,6 @@ func newResource(hl []*dcProtocol.Host, usageLimit map[dcSDK.JobUsage]int) *reso
 		})
 		total += h.Jobs
 	}
-	if total == 0 {
-		wl = append(wl, &worker{
-			host:          &dcProtocol.Host{},
-			totalSlots:    1,
-			occupiedSlots: 0,
-		})
-		total = 1
-	}
 
 	usageMap := make(map[dcSDK.JobUsage]*usageWorkerSet, 10)
 	// do not use usageLimit, we only need JobUsageRemoteExe, and it is always 0 by now
@@ -106,52 +98,48 @@ type resource struct {
 // reset with []*dcProtocol.Host
 // add new hosts and disable released hosts
 func (wr *resource) Reset(hl []*dcProtocol.Host) ([]*dcProtocol.Host, error) {
+	blog.Infof("remote slot: ready reset with %d host", len(hl))
 
 	wr.workerLock.Lock()
-	// new means in hl but not in wr.worker
-	newhl := make([]*dcProtocol.Host, 0)
+	defer wr.workerLock.Unlock()
+
+	wl := make([]*worker, 0, len(hl))
+	total := 0
 	for _, h := range hl {
-		existed := false
-		for _, w := range wr.worker {
-			if h.Equal(w.host) {
-				existed = true
-				break
-			}
+		if h.Jobs <= 0 {
+			continue
 		}
-		if !existed {
-			newhl = append(newhl, h)
-			blog.Infof("remote slot: found new host:%v", *h)
-		}
+
+		wl = append(wl, &worker{
+			host:          h,
+			totalSlots:    h.Jobs,
+			occupiedSlots: 0,
+		})
+		total += h.Jobs
 	}
 
-	// del means in wr.worker but not in hl
-	delhl := make([]*dcProtocol.Host, 0)
-	for _, w := range wr.worker {
-		existed := false
-		for _, h := range hl {
-			if h.Equal(w.host) {
-				existed = true
-				break
-			}
-		}
-		if !existed {
-			delhl = append(delhl, w.host)
-			blog.Infof("remote slot: found ready to delete host:%v", *w.host)
-		}
+	usageMap := make(map[dcSDK.JobUsage]*usageWorkerSet, 10)
+	// do not use usageLimit, we only need JobUsageRemoteExe, and it is always 0 by now
+	usageMap[dcSDK.JobUsageRemoteExe] = &usageWorkerSet{
+		limit:    total,
+		occupied: 0,
 	}
-	wr.workerLock.Unlock()
-
-	for _, h := range delhl {
-		wr.disableWorker(h)
+	usageMap[dcSDK.JobUsageDefault] = &usageWorkerSet{
+		limit:    total,
+		occupied: 0,
 	}
 
-	for _, h := range newhl {
-		wr.addWorker(h)
+	for _, v := range usageMap {
+		blog.Infof("remote slot: usage map:%v after reset with new resource", *v)
 	}
+	blog.Infof("remote slot: total slots:%d after reset with new resource", total)
 
-	blog.Infof("remote slot: total slots:%d after reset resource", wr.totalSlots)
+	wr.totalSlots = total
+	wr.occupiedSlots = 0
+	wr.usageMap = usageMap
+	wr.worker = wl
 
-	return newhl, nil
+	return hl, nil
 }
 
 // brings handler up and begin to handle requests
