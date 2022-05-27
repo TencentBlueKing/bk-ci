@@ -35,10 +35,13 @@ import io.kubernetes.client.openapi.models.V1Deployment
 import io.kubernetes.client.openapi.models.V1DeploymentList
 import io.kubernetes.client.openapi.models.V1Pod
 import io.kubernetes.client.openapi.models.V1PodList
-import org.apache.commons.lang3.RandomUtils
+import org.apache.commons.lang3.RandomStringUtils
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 
 object KubernetesClientUtil {
+
+    private val logger = LoggerFactory.getLogger(KubernetesClientUtil::class.java)
 
     fun Map<String, String>.toLabelSelector(): String {
         return this.map {
@@ -56,8 +59,8 @@ object KubernetesClientUtil {
     /**
      * 获取container名称
      */
-    fun getKubernetesWorkloadOnlyLabelValue(userId: String) =
-        "${userId}${System.currentTimeMillis()}-${RandomUtils.nextLong()}"
+    fun getKubernetesWorkloadOnlyLabelValue(buildId: String) =
+        "${buildId}-${RandomStringUtils.randomAlphabetic(6)}"
 
     fun V1DeploymentList?.getFirstDeploy(): V1Deployment? {
         return this?.items?.ifEmpty { null }?.get(0)
@@ -90,6 +93,7 @@ object KubernetesClientUtil {
                 )
             }
         } catch (e: ApiException) {
+            logger.error("api exception", e)
             Result(
                 status = e.code,
                 message = e.responseBody

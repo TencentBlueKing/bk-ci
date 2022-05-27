@@ -64,25 +64,29 @@ class ContainerClient @Autowired constructor(
     fun getContainerStatus(
         containerName: String
     ): Result<V1ContainerStatus> {
-        val result = podsClient.listWithHttpInfo(containerName)
-        if (result.isNotOk()) {
-            // 先不添加重试逻辑，看后续使用
-            //           if (retryTime > 0) {
-            //               val retryTimeLocal = retryTime - 1
-            //               return getContainerStatus(buildId, vmSeqId, userId, name, retryTimeLocal)
-            //           }
-            throw CommonUtils.buildFailureException(
-                ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR,
-                KubernetesClientUtil.getClientFailInfo(
-                    "获取容器状态接口异常（Fail to get container status, http response: $result"
+        try {
+            val result = podsClient.listWithHttpInfo(containerName)
+            if (result.isNotOk()) {
+                throw CommonUtils.buildFailureException(
+                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR,
+                    KubernetesClientUtil.getClientFailInfo(
+                        "获取容器状态接口异常（Fail to get container status, http response: $result"
+                    )
                 )
+            }
+            return Result(
+                status = result.status,
+                message = result.message,
+                data = result.data?.getFirstPod()?.status?.containerStatuses?.ifEmpty { null }?.get(0)
+            )
+        } catch (e: Throwable) {
+            logger.error("getContainerStatus error.", e)
+            return Result(
+                status = -1,
+                message = e.message,
+                data = null
             )
         }
-        return Result(
-            status = result.status,
-            message = null,
-            data = result.data?.getFirstPod()?.status?.containerStatuses?.ifEmpty { null }?.get(0)
-        )
     }
 
     /**
@@ -92,7 +96,7 @@ class ContainerClient @Autowired constructor(
         dispatchMessage: DispatchMessage,
         buildContainer: BuildContainer
     ): String {
-        val containerName = KubernetesClientUtil.getKubernetesWorkloadOnlyLabelValue(dispatchMessage.userId)
+        val containerName = KubernetesClientUtil.getKubernetesWorkloadOnlyLabelValue(dispatchMessage.buildId)
 
         logger.info("ContainerClient createContainer containerName: $containerName dispatchMessage: $dispatchMessage")
 
@@ -124,23 +128,16 @@ class ContainerClient @Autowired constructor(
     fun waitContainerStart(
         containerName: String
     ): OperateContainerResult {
-        var state = try {
-            getContainerStatus(containerName).data?.state
-        } catch (e: Throwable) {
-            return OperateContainerResult(containerName, false, e.message)
-        }
-
+        var statusResult = getContainerStatus(containerName)
+        var finish = statusResult.isOk() && statusResult.data?.state?.running != null
         var max = MAX_WAIT
-        while (state?.running == null && max != 0) {
-            if (state?.terminated != null) {
-                return OperateContainerResult(containerName, false, state.terminated?.message)
-            } else {
-                state = getContainerStatus(containerName).data?.state
-            }
+        while (!finish && max != 0) {
+            statusResult = getContainerStatus(containerName)
+            finish = statusResult.isOk() && statusResult.data?.state?.running != null
             Thread.sleep(1000)
             max--
         }
-        return OperateContainerResult(containerName, state?.running != null)
+        return OperateContainerResult(containerName, finish)
     }
 
     /**

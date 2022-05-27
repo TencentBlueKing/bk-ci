@@ -77,6 +77,11 @@ spec:
               value: {{ .Values.multiCluster.enabled | quote }}
             - name: DEFAULT_NAMESPACE
               value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
           workingDir: /data/workspace/plugin
           {{ if .Values.entrypoint.override }}
           command:
@@ -95,13 +100,12 @@ spec:
             timeoutSeconds: 10
             failureThreshold: 5
             successThreshold: 1
-          readinessProbe:
-            httpGet:
-              path: /management/health/readinessState
-              port: http
-            initialDelaySeconds: 60
-            periodSeconds: 15
-            timeoutSeconds: 10
-            failureThreshold: 5
-            successThreshold: 1
+          volumeMounts:
+          - mountPath: /data/workspace/plugin/jvm
+            name: log-volume
+            subPathExpr: jvm/$(POD_NAME)
+      volumes:
+      - hostPath:
+          path: /data/bkci
+        name: log-volume
 {{- end -}}
