@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service.measure
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.BuildEndContainerMetricsData
 import com.tencent.devops.common.api.pojo.BuildEndPipelineMetricsData
 import com.tencent.devops.common.api.pojo.BuildEndStageMetricsData
@@ -37,17 +38,36 @@ import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEven
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.dao.PipelineStageTagDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
+import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 @Service
 class MetricsServiceImpl constructor(
     private val pipelineInfoService: PipelineInfoService,
-    private val measureEventDispatcher: MeasureEventDispatcher
+    private val measureEventDispatcher: MeasureEventDispatcher,
+    private val dslContext: DSLContext,
+    private val pipelineStageTagDao: PipelineStageTagDao
 ) : MetricsService {
+
+    private val stageTagCache = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterAccess(6, TimeUnit.HOURS)
+        .build<String, String>()
+
+    private fun getStageTagName(stageTagId: String): String? {
+        var stageTagName = stageTagCache.getIfPresent(stageTagId)
+        if (stageTagName == null) {
+            stageTagName = pipelineStageTagDao.getStageTag(dslContext, stageTagId)?.stageTagName
+        }
+        stageTagName?.let { stageTagCache.put(stageTagId, it) }
+        return stageTagName
+    }
 
     override fun postMetricsData(buildInfo: BuildInfo, model: Model) {
         if (!ChannelCode.webChannel(buildInfo.channelCode)) {
@@ -116,10 +136,18 @@ class MetricsServiceImpl constructor(
                     )
                 )
             }
+            var stageTagNames:MutableList<String>? = null
+            stage.tag?.forEach { stageTagId ->
+                if (stageTagNames == null) {
+                    stageTagNames = mutableListOf()
+                }
+                val stageTagName = getStageTagName(stageTagId)
+                stageTagName?.let { stageTagNames?.add(stageTagName) }
+            }
             stageMetricsDatas.add(
                 BuildEndStageMetricsData(
                     stageId = stage.id ?: "",
-                    stageTagNames = stage.tag,
+                    stageTagNames = stageTagNames,
                     successFlag = BuildStatus.valueOf(stageStatus!!).isSuccess(),
                     costTime = stage.elapsed ?: 0L,
                     containers = containerMetricsDatas
@@ -140,9 +168,7 @@ class MetricsServiceImpl constructor(
             endTime = buildInfo.endTime?.let { DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS) },
             costTime = (buildInfo.endTime ?: 0L) - (buildInfo.startTime ?: 0L),
             successFlag = buildInfo.status.isSuccess(),
-            errorType = buildInfo.errorType,
-            errorCode = buildInfo.errorCode,
-            errorMsg = buildInfo.errorMsg,
+            errorInfos = buildInfo.errorInfoList,
             stages = stageMetricsDatas
         )
         measureEventDispatcher.dispatch(

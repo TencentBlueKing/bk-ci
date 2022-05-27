@@ -493,6 +493,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             )
         }
         val existUpdateStageOverviewDataPO = existUpdateStageOverviewDataPOs.firstOrNull()
+        val updateStageTagNames = existUpdateStageOverviewDataPOs.map { it.stageTagName }.toMutableSet()
         if (stageOverviewDataRecord != null || existUpdateStageOverviewDataPO != null) {
             // 由于stage的构建数据是遍历model完成才进行db操作处理，故集合中的数据代表是最新的统计数据
             val originStageAvgCostTime = existUpdateStageOverviewDataPO?.avgCostTime
@@ -509,13 +510,13 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 stageOverviewDataPO.modifier = startUser
                 stageOverviewDataPO.updateTime = currentTime
             }
-            val updateStageTagNames = updatePipelineStageOverviewDataPOs.map { it.stageTagName }
             // 更新db中已存在的stage统计记录数据
             stageOverviewDataRecords?.filter {
                 // 剔除掉集合中已存在的更新记录
                 !updateStageTagNames.contains(it.stageTagName)
             }?.forEach { tmpStageOverviewDataRecord ->
-                updatePipelineStageOverviewDataPOs.add(
+                updateStageTagNames.add(tmpStageOverviewDataRecord.stageTagName)
+                existUpdateStageOverviewDataPOs.add(
                     UpdatePipelineStageOverviewDataPO(
                         id = tmpStageOverviewDataRecord.id,
                         projectId = projectId,
@@ -527,8 +528,22 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     )
                 )
             }
-            // 排除已存在的stage统计记录
-            stageTagNames.removeAll(updateStageTagNames)
+        }
+        // 排除已存在的stage统计记录
+        stageTagNames.removeAll(updateStageTagNames)
+        stageTagNames.removeAll(existSaveStageOverviewDataPOs.map { it.stageTagName })
+        existUpdateStageOverviewDataPOs.forEach { tmpExistUpdateStageOverviewDataPO ->
+            val tmpUpdateStageOverviewDataPO = updatePipelineStageOverviewDataPOs.firstOrNull {
+                it.stageTagName == tmpExistUpdateStageOverviewDataPO.stageTagName
+            }
+            if (tmpUpdateStageOverviewDataPO != null) {
+                tmpUpdateStageOverviewDataPO.avgCostTime = tmpExistUpdateStageOverviewDataPO.avgCostTime
+                tmpUpdateStageOverviewDataPO.executeCount = tmpExistUpdateStageOverviewDataPO.executeCount
+                tmpUpdateStageOverviewDataPO.modifier = tmpExistUpdateStageOverviewDataPO.modifier
+                tmpUpdateStageOverviewDataPO.updateTime = tmpExistUpdateStageOverviewDataPO.updateTime
+            } else {
+                updatePipelineStageOverviewDataPOs.add(tmpExistUpdateStageOverviewDataPO)
+            }
         }
         stageTagNames.forEach { stageTagName ->
             savePipelineStageOverviewDataPOs.add(
@@ -558,9 +573,9 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         saveErrorCodeInfoPOs: MutableSet<SaveErrorCodeInfoPO>
     ) {
         // 没有报错信息则无需处理
-        val buildErrorType = buildEndPipelineMetricsData.errorType ?: return
+        val errorInfos = buildEndPipelineMetricsData.errorInfos ?: return
         val buildSuccessFlag = buildEndPipelineMetricsData.successFlag // 流水线构建是否成功标识
-        if (!buildSuccessFlag) {
+        if (buildSuccessFlag) {
             return
         }
         val projectId = buildEndPipelineMetricsData.projectId
@@ -570,72 +585,72 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val buildNum = buildEndPipelineMetricsData.buildNum // 构建序号
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         val startUser = buildEndPipelineMetricsData.startUser // 启动用户
-        // 插入流水线失败汇总数据
-        val pipelineFailSummaryDataRecord = metricsDataQueryDao.getPipelineFailSummaryData(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            statisticsTime = statisticsTime,
-            errorType = buildErrorType
-        )
-        if (pipelineFailSummaryDataRecord == null) {
-            val savePipelineFailSummaryDataPO = SavePipelineFailSummaryDataPO(
+        errorInfos.forEach { errorInfo ->
+            val errorType = errorInfo.errorType
+            // 插入流水线失败汇总数据
+            val pipelineFailSummaryDataRecord = metricsDataQueryDao.getPipelineFailSummaryData(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                statisticsTime = statisticsTime,
+                errorType = errorType
+            )
+            if (pipelineFailSummaryDataRecord == null) {
+                val savePipelineFailSummaryDataPO = SavePipelineFailSummaryDataPO(
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("PIPELINE_FAIL_SUMMARY_DATA").data ?: 0,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    pipelineName = pipelineName,
+                    errorType = errorType,
+                    errorCount = 1,
+                    statisticsTime = statisticsTime,
+                    creator = startUser,
+                    modifier = startUser,
+                    createTime = currentTime,
+                    updateTime = currentTime
+                )
+                metricsDataReportDao.savePipelineFailSummaryData(dslContext, savePipelineFailSummaryDataPO)
+            } else {
+                val updatePipelineFailSummaryDataPO = UpdatePipelineFailSummaryDataPO(
+                    id = pipelineFailSummaryDataRecord.id,
+                    projectId = projectId,
+                    errorCount = pipelineFailSummaryDataRecord.errorCount + 1,
+                    modifier = startUser,
+                    updateTime = currentTime
+                )
+                metricsDataReportDao.updatePipelineFailSummaryData(dslContext, updatePipelineFailSummaryDataPO)
+            }
+            // 插入流水线失败详情数据
+            val savePipelineFailDetailDataPO = SavePipelineFailDetailDataPO(
                 id = client.get(ServiceAllocIdResource::class)
-                    .generateSegmentId("PIPELINE_FAIL_SUMMARY_DATA").data ?: 0,
+                    .generateSegmentId("PIPELINE_FAIL_DETAIL_DATA").data ?: 0,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 pipelineName = pipelineName,
-                errorType = buildErrorType,
-                errorCount = 1,
+                buildId = buildId,
+                buildNum = buildNum,
+                repoUrl = buildEndPipelineMetricsData.repoUrl,
+                branch = buildEndPipelineMetricsData.branch,
+                startUser = startUser,
+                startTime = buildEndPipelineMetricsData.startTime?.let { DateTimeUtil.stringToLocalDateTime(it) },
+                endTime = buildEndPipelineMetricsData.endTime?.let { DateTimeUtil.stringToLocalDateTime(it) },
+                errorType = errorType,
+                errorCode = errorInfo.errorCode,
+                errorMsg = errorInfo.errorMsg,
                 statisticsTime = statisticsTime,
                 creator = startUser,
                 modifier = startUser,
                 createTime = currentTime,
                 updateTime = currentTime
             )
-            metricsDataReportDao.savePipelineFailSummaryData(dslContext, savePipelineFailSummaryDataPO)
-        } else {
-            val updatePipelineFailSummaryDataPO = UpdatePipelineFailSummaryDataPO(
-                id = pipelineFailSummaryDataRecord.id,
-                projectId = projectId,
-                errorCount = pipelineFailSummaryDataRecord.errorCount + 1,
-                modifier = startUser,
-                updateTime = currentTime
-            )
-            metricsDataReportDao.updatePipelineFailSummaryData(dslContext, updatePipelineFailSummaryDataPO)
-        }
-        // 插入流水线失败详情数据
-        val savePipelineFailDetailDataPO = SavePipelineFailDetailDataPO(
-            id = client.get(ServiceAllocIdResource::class)
-                .generateSegmentId("PIPELINE_FAIL_DETAIL_DATA").data ?: 0,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            pipelineName = pipelineName,
-            buildId = buildId,
-            buildNum = buildNum,
-            repoUrl = buildEndPipelineMetricsData.repoUrl,
-            branch = buildEndPipelineMetricsData.branch,
-            startUser = startUser,
-            startTime = buildEndPipelineMetricsData.startTime?.let { DateTimeUtil.stringToLocalDateTime(it) },
-            endTime = buildEndPipelineMetricsData.endTime?.let { DateTimeUtil.stringToLocalDateTime(it) },
-            errorType = buildEndPipelineMetricsData.errorType,
-            errorCode = buildEndPipelineMetricsData.errorCode,
-            errorMsg = buildEndPipelineMetricsData.errorMsg,
-            statisticsTime = statisticsTime,
-            creator = startUser,
-            modifier = startUser,
-            createTime = currentTime,
-            updateTime = currentTime
-        )
-        metricsDataReportDao.savePipelineFailDetailData(dslContext, savePipelineFailDetailDataPO)
-        // 添加错误信息
-        val buildErrorCode = buildEndPipelineMetricsData.errorCode
-        if (buildErrorCode != null) {
+            metricsDataReportDao.savePipelineFailDetailData(dslContext, savePipelineFailDetailDataPO)
+            // 添加错误信息
             addErrorCodeInfo(
                 saveErrorCodeInfoPOs = saveErrorCodeInfoPOs,
-                errorType = buildErrorType,
-                errorCode = buildErrorCode,
-                errorMsg = buildEndPipelineMetricsData.errorMsg,
+                errorType = errorType,
+                errorCode = errorInfo.errorCode,
+                errorMsg = errorInfo.errorMsg,
                 startUser = startUser,
                 currentTime = currentTime
             )
