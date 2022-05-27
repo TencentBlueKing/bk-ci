@@ -13,15 +13,34 @@ import org.springframework.beans.factory.annotation.Autowired
 class SdkJobResourceImpl @Autowired constructor(
     private val jobService: JobService
 ) : SdkJobResource {
-    override fun createJob(userId: String, jobReq: KubernetesJobReq): Result<KubernetesJobResp> {
-        return Result(jobService.createJob(userId, jobReq))
+    override fun createJob(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        jobReq: KubernetesJobReq
+    ): Result<KubernetesJobResp> {
+        return Result(jobService.createJob(buildId, jobReq))
     }
 
-    override fun getJobStatus(userId: String, jobName: String): Result<KubernetesJobStatusResp> {
+    override fun getJobStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        jobName: String
+    ): Result<KubernetesJobStatusResp> {
         return Result(jobService.getJobStatus(jobName))
     }
 
-    override fun getJobLogs(userId: String, jobName: String, sinceTime: Int?): Result<String?> {
+    override fun getJobLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        jobName: String,
+        sinceTime: Int?
+    ): Result<String?> {
         return Result(jobService.getJobLogs(jobName, sinceTime))
     }
 }

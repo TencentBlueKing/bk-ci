@@ -25,8 +25,8 @@ class JobService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(JobService::class.java)
     }
 
-    fun createJob(userId: String, jobReq: KubernetesJobReq): KubernetesJobResp {
-        val jobName = KubernetesClientUtil.getKubernetesWorkloadOnlyLabelValue(userId)
+    fun createJob(buildId: String, jobReq: KubernetesJobReq): KubernetesJobResp {
+        val jobName = KubernetesClientUtil.getKubernetesWorkloadOnlyLabelValue(buildId)
         // 获取创建调用方所在的节点
         val nodeName = podsClient.read(jobReq.podNameSelector!!)?.spec?.nodeName ?: CommonUtils.onFailure(
             ErrorCodeEnum.CREATE_JOB_ERROR.errorType,

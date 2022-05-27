@@ -96,7 +96,7 @@ class ContainerClient @Autowired constructor(
         dispatchMessage: DispatchMessage,
         buildContainer: BuildContainer
     ): String {
-        val containerName = KubernetesClientUtil.getKubernetesWorkloadOnlyLabelValue(dispatchMessage.userId)
+        val containerName = KubernetesClientUtil.getKubernetesWorkloadOnlyLabelValue(dispatchMessage.buildId)
 
         logger.info("ContainerClient createContainer containerName: $containerName dispatchMessage: $dispatchMessage")
 
