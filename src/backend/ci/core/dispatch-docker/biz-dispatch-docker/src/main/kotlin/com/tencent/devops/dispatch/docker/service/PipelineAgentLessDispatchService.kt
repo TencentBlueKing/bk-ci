@@ -92,7 +92,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
             )
         }
 
-        if (!buildLessWhitelistService.checkBuildLessWhitelist(event.projectId)) {
+        if (buildLessWhitelistService.checkBuildLessWhitelist(event.projectId)) {
             val agentLessDockerIp = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
