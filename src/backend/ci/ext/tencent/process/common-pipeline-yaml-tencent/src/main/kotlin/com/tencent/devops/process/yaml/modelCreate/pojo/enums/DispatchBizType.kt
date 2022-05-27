@@ -25,20 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.prebuild
+package com.tencent.devops.process.yaml.modelCreate.pojo.enums
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
-
-/**
- *
- * Powered By Tencent
- */
-@MicroService
-@ComponentScan("com.tencent.devops.prebuild", "com.tencent.devops.process.yaml")
-class Application
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+enum class DispatchBizType {
+    STREAM,
+    PRECI,
+    RDS
 }

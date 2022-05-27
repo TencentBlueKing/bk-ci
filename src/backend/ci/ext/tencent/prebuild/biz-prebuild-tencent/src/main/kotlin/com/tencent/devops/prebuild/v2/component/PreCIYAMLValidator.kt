@@ -40,9 +40,9 @@ import com.tencent.devops.process.yaml.v2.models.YAME_META_DATA_JSON_FILTER
 import com.tencent.devops.process.yaml.v2.models.job.PreJob
 import com.tencent.devops.process.yaml.v2.models.job.RunsOn
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import javax.ws.rs.core.Response
 
 /**
  * PreCI YAML 2.0 业务校验

@@ -25,20 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.prebuild
+package com.tencent.devops.common.pipeline.pojo.element.agent
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
+@Deprecated("无用，待删除")
+@Suppress("UNUSED")
+enum class ProjectLanguage(val value: String) {
+    C("c"),
+    C_PLUS_PLUSH("c++"),
+    C_CPP("cpp"),
+    OBJECTIVE_C("objective-C"),
+    OC("objective-C"),
+    C_SHARP("c#"),
+    JAVA("java"),
+    PYTHON("python"),
+    JAVASCRIPT("javascript"),
+    JS("javascript"),
+    PHP("php"),
+    RUBY("ruby"),
+    LUA("lua"),
+    GOLANG("golang"),
+    SWIFT("swift"),
+    TYPESCRIPT("typescript"),
+    KOTLIN("kotlin"),
+    CLOJURE("clojure"),
+    SOLIDITY("solidity"),
+    OTHERS("others");
 
-/**
- *
- * Powered By Tencent
- */
-@MicroService
-@ComponentScan("com.tencent.devops.prebuild", "com.tencent.devops.process.yaml")
-class Application
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    companion object {
+        fun fromValue(value: String) =
+            ProjectLanguage.values().associateBy(ProjectLanguage::value)[value]
+                ?: throw IllegalArgumentException("The project language($value) is not exist")
+    }
 }

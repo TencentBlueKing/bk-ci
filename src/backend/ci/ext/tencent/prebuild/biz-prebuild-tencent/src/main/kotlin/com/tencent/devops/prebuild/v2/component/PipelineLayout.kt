@@ -731,6 +731,23 @@ class PipelineLayout private constructor(
         }
 
         /**
+         * 空流水线阶段，仅保留触发器
+         */
+        fun stagesEmpty(): Builder {
+            val stageList = mutableListOf<Stage>()
+            val triggerContainer = TriggerContainer(
+                id = "0",
+                name = "构建触发",
+                elements = listOf(ManualTriggerElement("手动触发", "T-1-1-1")),
+                params = emptyList()
+            )
+            stageList.add(Stage(listOf(triggerContainer), "stage-1"))
+            this.stages = stageList
+
+            return this
+        }
+
+        /**
          * 生成流水线编排模型
          */
         fun build(): Model {
