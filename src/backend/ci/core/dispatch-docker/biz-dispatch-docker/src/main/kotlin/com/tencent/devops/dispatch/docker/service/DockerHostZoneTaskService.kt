@@ -87,12 +87,10 @@ class DockerHostZoneTaskService @Autowired constructor(
 
         try {
             specialDockerHostVOs.forEach { specialDockerHostVO ->
-                //在数据库根据projectId查数据
                 val history = pipelineDockerHostDao.getHost(
                     dslContext = dslContext,
                     projectId = specialDockerHostVO.projectId
                 )
-                //在查不到数据的情形下插入数据,查到就更新数据,打印日志
                 if (history == null) {
                     pipelineDockerHostDao.insertHost(
                         dslContext = dslContext,
