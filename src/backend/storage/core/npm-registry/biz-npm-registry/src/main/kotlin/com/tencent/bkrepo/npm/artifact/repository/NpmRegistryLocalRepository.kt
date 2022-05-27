@@ -40,6 +40,7 @@ import com.tencent.bkrepo.common.artifact.repository.context.ArtifactUploadConte
 import com.tencent.bkrepo.common.artifact.repository.local.LocalRepository
 import com.tencent.bkrepo.common.artifact.resolve.response.ArtifactChannel
 import com.tencent.bkrepo.common.artifact.resolve.response.ArtifactResource
+import com.tencent.bkrepo.common.service.util.HttpContextHolder
 import com.tencent.bkrepo.npm.constant.KEYWORDS
 import com.tencent.bkrepo.npm.constant.LATEST
 import com.tencent.bkrepo.npm.constant.MAINTAINERS
@@ -141,7 +142,13 @@ class NpmRegistryLocalRepository(
      */
     private fun removeVersion(artifactInfo: NpmArtifactInfo, version: PackageVersion, userId: String) {
         with(artifactInfo) {
-            packageClient.deleteVersion(projectId, repoName, packageName, version.name)
+            packageClient.deleteVersion(
+                projectId,
+                repoName,
+                packageName,
+                version.name,
+                HttpContextHolder.getClientAddress()
+            )
             val tarballPath = version.contentPath.orEmpty()
             if (tarballPath.isNotBlank()) {
                 val request = NodeDeleteRequest(projectId, repoName, tarballPath, userId)
@@ -214,7 +221,7 @@ class NpmRegistryLocalRepository(
                 overwrite = true,
                 createdBy = context.userId
             )
-            packageClient.createVersion(request)
+            packageClient.createVersion(request, HttpContextHolder.getClientAddress())
             addDependentsRelations(this)
         }
     }

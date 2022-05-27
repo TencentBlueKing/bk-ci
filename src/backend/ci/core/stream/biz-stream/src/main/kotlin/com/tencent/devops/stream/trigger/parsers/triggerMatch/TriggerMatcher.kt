@@ -127,7 +127,7 @@ class TriggerMatcher @Autowired constructor(
             eventBranch: String,
             changeSet: Set<String>?,
             userId: String,
-            isCreateBranch: Boolean
+            checkCreateAndUpdate: Boolean?
         ): Boolean {
             // 如果没有配置push，默认未匹配
             if (triggerOn.push == null) {
@@ -158,7 +158,7 @@ class TriggerMatcher @Autowired constructor(
                 return false
             }
             // action
-            if (!checkActionMatch(pushRule.action, isCreateBranch)) {
+            if (!checkActionMatch(pushRule.action, checkCreateAndUpdate)) {
                 return false
             }
             logger.info("Git trigger branch($eventBranch) is included and path(${pushRule.paths}) is included")
@@ -240,15 +240,18 @@ class TriggerMatcher @Autowired constructor(
             return true
         }
 
-        private fun checkActionMatch(actionList: List<String>?, isCreateBranch: Boolean): Boolean {
+        private fun checkActionMatch(actionList: List<String>?, checkCreateAndUpdate: Boolean?): Boolean {
             if (actionList.isNullOrEmpty()) {
                 return true
             }
             actionList.forEach {
-                if (it == StreamPushActionType.NEW_BRANCH.value && isCreateBranch) {
+                if (it == StreamPushActionType.NEW_BRANCH.value && checkCreateAndUpdate != null) {
                     return true
                 }
-                if (it == StreamPushActionType.PUSH_FILE.value && !isCreateBranch) {
+                if (it == StreamPushActionType.PUSH_FILE.value && checkCreateAndUpdate == null) {
+                    return true
+                }
+                if (it == StreamPushActionType.NEW_BRANCH_AND_PUSH_FILE.value && checkCreateAndUpdate == true) {
                     return true
                 }
             }

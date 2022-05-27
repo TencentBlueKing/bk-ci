@@ -42,9 +42,11 @@ import com.tencent.bkrepo.auth.pojo.user.CreateUserRequest
 import com.tencent.bkrepo.auth.pojo.user.CreateUserToProjectRequest
 import com.tencent.bkrepo.auth.pojo.user.CreateUserToRepoRequest
 import com.tencent.bkrepo.auth.pojo.user.User
+import com.tencent.bkrepo.auth.pojo.user.UserInfo
 import com.tencent.bkrepo.auth.repository.RoleRepository
 import com.tencent.bkrepo.auth.repository.UserRepository
 import com.tencent.bkrepo.common.api.exception.ErrorCodeException
+import org.bson.types.ObjectId
 import org.slf4j.LoggerFactory
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Criteria
@@ -84,13 +86,14 @@ open class AbstractServiceImpl constructor(
 
     // check role is exist
     fun checkRoleExist(roleId: String) {
-        roleRepository.findFirstById(roleId) ?: run {
-            logger.warn(" role not  exist.")
+        val role = roleRepository.findTRoleById(ObjectId(roleId))
+        role ?: run {
+            logger.warn("role not  exist.")
             throw ErrorCodeException(AuthMessageCode.AUTH_ROLE_NOT_EXIST)
         }
     }
 
-    fun convCreateProjectUserRequest(request: CreateUserToProjectRequest): CreateUserRequest {
+    fun transferCreateProjectUserRequest(request: CreateUserToProjectRequest): CreateUserRequest {
         return CreateUserRequest(
             request.userId,
             request.name,
@@ -101,7 +104,7 @@ open class AbstractServiceImpl constructor(
         )
     }
 
-    fun convCreateRepoUserRequest(request: CreateUserToRepoRequest): CreateUserRequest {
+    fun transferCreateRepoUserRequest(request: CreateUserToRepoRequest): CreateUserRequest {
         return CreateUserRequest(
             request.userId,
             request.name,
@@ -122,8 +125,7 @@ open class AbstractServiceImpl constructor(
 
     fun updatePermissionAction(pId: String, urId: String, actions: List<PermissionAction>, filed: String): Boolean {
         val update = Update()
-        var userAction =
-            PermissionSet(id = urId, action = actions)
+        val userAction = PermissionSet(id = urId, action = actions)
         update.addToSet(filed, userAction)
         val result = mongoTemplate.updateFirst(buildIdQuery(pId), update, TPermission::class.java)
         if (result.matchedCount == 1L) return true
@@ -144,34 +146,46 @@ open class AbstractServiceImpl constructor(
         return Query.query(Criteria.where("_id").`is`(id))
     }
 
-    fun transferPermission(tPermission: TPermission): Permission {
+    fun transferPermission(permission: TPermission): Permission {
         return Permission(
-            id = tPermission.id,
-            resourceType = tPermission.resourceType,
-            projectId = tPermission.projectId,
-            permName = tPermission.permName,
-            repos = tPermission.repos,
-            includePattern = tPermission.includePattern,
-            excludePattern = tPermission.excludePattern,
-            users = tPermission.users,
-            roles = tPermission.roles,
-            actions = tPermission.actions,
-            createBy = tPermission.createBy,
-            createAt = tPermission.createAt,
-            updatedBy = tPermission.updatedBy,
-            updateAt = tPermission.updateAt
+            id = permission.id,
+            resourceType = permission.resourceType,
+            projectId = permission.projectId,
+            permName = permission.permName,
+            repos = permission.repos,
+            includePattern = permission.includePattern,
+            excludePattern = permission.excludePattern,
+            users = permission.users,
+            roles = permission.roles,
+            actions = permission.actions,
+            createBy = permission.createBy,
+            createAt = permission.createAt,
+            updatedBy = permission.updatedBy,
+            updateAt = permission.updateAt
         )
     }
 
-    fun transferUser(tUser: TUser): User {
+    fun transferUser(user: TUser): User {
         return User(
-            userId = tUser.userId,
-            name = tUser.name,
-            pwd = tUser.pwd,
-            admin = tUser.admin,
-            locked = tUser.locked,
-            tokens = tUser.tokens,
-            roles = tUser.roles
+            userId = user.userId,
+            name = user.name,
+            pwd = user.pwd,
+            admin = user.admin,
+            locked = user.locked,
+            tokens = user.tokens,
+            roles = user.roles
+        )
+    }
+
+    fun transferUserInfo(user: TUser): UserInfo {
+        return UserInfo(
+            userId = user.userId,
+            name = user.name,
+            locked = user.locked,
+            email = user.email,
+            phone = user.phone,
+            createdDate = user.createdDate,
+            admin = user.admin
         )
     }
 

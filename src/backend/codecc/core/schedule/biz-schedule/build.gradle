@@ -1,8 +1,0 @@
-dependencies {
-    compile project(":core:common:common-util")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-web")
-    compile project(":core:schedule:api-schedule")
-    compile project(":core:schedule:model-schedule")
-    compile "commons-io:commons-io"
-}

@@ -141,7 +141,7 @@ open class BaseBuildDetailService constructor(
         cancelUser: String? = null
     ): List<BuildStageStatus> {
         val stageTagMap: Map<String, String>
-            by lazy { stageTagService.getAllStageTag().data?.associate { it.id to it.stageTagName } ?: emptyMap() }
+            by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } }
         // 更新Stage状态至BuildHistory
         return model.stages.map {
             BuildStageStatus(
@@ -176,8 +176,8 @@ open class BaseBuildDetailService constructor(
 
     @Suppress("NestedBlockDepth", "ReturnCount", "ComplexMethod")
     private fun traverseModel(model: Model, modelInterface: ModelInterface) {
-        for (i in 1 until model.stages.size) {
-            val stage = model.stages[i]
+        // 不应该过滤掉第一个Stage，交由子类决定
+        for (stage in model.stages) {
             val traverse = modelInterface.onFindStage(stage, model)
             if (Traverse.BREAK == traverse) {
                 return

@@ -36,11 +36,11 @@ import com.tencent.bkrepo.common.api.constant.StringPool.EMPTY
 /**
  * docker artifact describe class
  */
-class DockerArtifact(projectId: String, repoName: String, artifactName: String) {
+class DockerArtifact(projectId: String, repoName: String, imageName: String) {
 
     var projectId: String = EMPTY
     var repoName: String = EMPTY
-    var artifactName: String = EMPTY
+    var imageName: String = EMPTY
 
     var sha256: String? = null
     var length: Long = 0L
@@ -49,7 +49,7 @@ class DockerArtifact(projectId: String, repoName: String, artifactName: String) 
     init {
         this.projectId = projectId
         this.repoName = repoName
-        this.artifactName = artifactName
+        this.imageName = imageName
     }
 
     fun sha256(fileSha256: String): DockerArtifact {

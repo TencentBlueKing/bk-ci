@@ -183,11 +183,6 @@ class BuildMonitorControl @Autowired constructor(
 
     private fun PipelineBuildContainer.checkNextContainerMonitorIntervals(userId: String): Long {
 
-        var interval = 0L
-
-        if (status.isFinish()) {
-            return interval
-        }
         val (minute: Int, timeoutMills: Long) = Timeout.transMinuteTimeoutToMills(
             timeoutMinutes = controlOption?.jobControlOption?.timeout
         )
@@ -197,7 +192,7 @@ class BuildMonitorControl @Autowired constructor(
             0
         }
 
-        interval = timeoutMills - usedTimeMills
+        val interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
             val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_RUNNING,
@@ -261,7 +256,7 @@ class BuildMonitorControl @Autowired constructor(
 
         val timeoutMills = TimeUnit.HOURS.toMillis(hours.toLong())
         val usedTimeMills: Long = if (checkTime != null) {
-            System.currentTimeMillis() - checkTime!!.timestampmilli()
+            System.currentTimeMillis() - checkTime.timestampmilli()
         } else {
             0
         }
@@ -287,7 +282,7 @@ class BuildMonitorControl @Autowired constructor(
                         checkTimes = executeCount
                     ),
                     inOrOut = inOrOut,
-                    check = pauseCheck!!,
+                    check = pauseCheck,
                     timeout = true
                 )
             }
@@ -298,7 +293,7 @@ class BuildMonitorControl @Autowired constructor(
                     buildStage = this,
                     reviewRequest = StageReviewRequest(
                         reviewParams = listOf(),
-                        id = pauseCheck?.groupToReview()?.id,
+                        id = pauseCheck.groupToReview()?.id,
                         suggest = null
                     ),
                     timeout = true
@@ -324,11 +319,12 @@ class BuildMonitorControl @Autowired constructor(
                 messageCode = ERROR_TIMEOUT_IN_BUILD_QUEUE,
                 params = arrayOf(event.buildId)
             )
+            val jobId = "0"
             buildLogPrinter.addRedLine(
                 buildId = event.buildId,
-                message = errorInfo.message ?: "Queue timeout. Cancel build!",
-                tag = "QUEUE_TIME_OUT",
-                jobId = "",
+                message = errorInfo.message ?: "排队超时(Queue timeout). Cancel build!",
+                tag = VMUtils.genStartVMTaskId(jobId),
+                jobId = jobId,
                 executeCount = 1
             )
             pipelineEventDispatcher.dispatch(

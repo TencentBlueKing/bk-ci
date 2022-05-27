@@ -88,7 +88,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -158,7 +158,7 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         // 获取规则集的规则集合
         if (queryWarningReq.getCheckerSet() != null) {
             DefectQueryReqVO.CheckerSet queryCheckerSet = queryWarningReq.getCheckerSet();
-            CheckerSetEntity checkerSetItem = checkerSetRepository.findByCheckerSetIdAndVersion(
+            CheckerSetEntity checkerSetItem = checkerSetRepository.findFirstByCheckerSetIdAndVersion(
                 queryCheckerSet.getCheckerSetId(), queryCheckerSet.getVersion());
             Set<String> allChecker = checkerSetItem.getCheckerProps().stream()
                 .filter((it) -> toolNameSet.contains(it.getToolName()))
@@ -567,7 +567,7 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         // 获取规则集对应的规则
         if (defectQueryReqVO.getCheckerSet() != null) {
             DefectQueryReqVO.CheckerSet queryCheckerSet = defectQueryReqVO.getCheckerSet();
-            CheckerSetEntity checkerSetItem = checkerSetRepository.findByCheckerSetIdAndVersion(
+            CheckerSetEntity checkerSetItem = checkerSetRepository.findFirstByCheckerSetIdAndVersion(
                 queryCheckerSet.getCheckerSetId(), queryCheckerSet.getVersion());
             pkgChecker.addAll(checkerSetItem.getCheckerProps().stream()
                 .filter((it) -> toolNameSet.contains(it.getToolName()))

@@ -444,7 +444,8 @@ class RepositoryService @Autowired constructor(
     private fun generateFinalTokenType(tokenType: TokenTypeEnum, repoProjectName: String): TokenTypeEnum {
         // 兼容历史插件的代码库不在公共group下的情况，历史插件的代码库信息更新要用用户的token更新
         var finalTokenType = tokenType
-        if (!repoProjectName.startsWith(devopsGroupName)) {
+        if (!repoProjectName.startsWith(devopsGroupName) && !repoProjectName
+                .contains("bkdevops-extension-service", true)) {
             finalTokenType = TokenTypeEnum.OAUTH
         }
         return finalTokenType
@@ -973,14 +974,14 @@ class RepositoryService @Autowired constructor(
             repositoryDao.countByProject(
                 dslContext = dslContext,
                 projectIds = setOf(projectId),
-                repositoryType = repositoryType,
+                repositoryTypes = repositoryType?.let { listOf(it) },
                 aliasName = aliasName,
                 repositoryIds = hasListPermissionRepoList.toSet()
             )
         val repositoryRecordList = repositoryDao.listByProject(
             dslContext = dslContext,
             projectId = projectId,
-            repositoryType = repositoryType,
+            repositoryTypes = repositoryType?.let { listOf(it) },
             aliasName = aliasName,
             repositoryIds = hasListPermissionRepoList.toSet(),
             offset = offset,
@@ -1060,26 +1061,28 @@ class RepositoryService @Autowired constructor(
     fun hasPermissionList(
         userId: String,
         projectId: String,
-        repositoryType: ScmType?,
+        repositoryType: String?,
         authPermission: AuthPermission,
         offset: Int,
-        limit: Int
+        limit: Int,
+        aliasName: String? = null
     ): SQLPage<RepositoryInfo> {
         val hasPermissionList = repositoryPermissionService.filterRepository(userId, projectId, authPermission)
+        val repositoryTypes = repositoryType?.split(",")?.map { ScmType.valueOf(it) }
 
         val count = repositoryDao.countByProject(
             dslContext = dslContext,
             projectIds = setOf(projectId),
-            repositoryType = repositoryType,
-            aliasName = null,
+            repositoryTypes = repositoryTypes,
+            aliasName = aliasName,
             repositoryIds = hasPermissionList.toSet()
         )
         val repositoryRecordList =
             repositoryDao.listByProject(
                 dslContext = dslContext,
                 projectId = projectId,
-                repositoryType = repositoryType,
-                aliasName = null,
+                repositoryTypes = repositoryTypes,
+                aliasName = aliasName,
                 repositoryIds = hasPermissionList.toSet(),
                 offset = offset,
                 limit = limit
@@ -1107,7 +1110,7 @@ class RepositoryService @Autowired constructor(
         val count = repositoryDao.countByProject(
             dslContext = dslContext,
             projectIds = projectIds,
-            repositoryType = repositoryType,
+            repositoryTypes = repositoryType?.let { listOf(it) },
             aliasName = null,
             repositoryIds = null
         )
@@ -1143,7 +1146,7 @@ class RepositoryService @Autowired constructor(
         val count = repositoryDao.countByProject(
             dslContext = dslContext,
             projectIds = arrayListOf(projectId),
-            repositoryType = null,
+            repositoryTypes = null,
             aliasName = aliasName,
             repositoryIds = null
         )
@@ -1152,7 +1155,7 @@ class RepositoryService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 aliasName = aliasName,
-                repositoryType = null,
+                repositoryTypes = null,
                 repositoryIds = null,
                 offset = offset,
                 limit = limit

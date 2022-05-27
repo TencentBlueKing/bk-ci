@@ -69,6 +69,8 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_TIME_START
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -92,7 +94,8 @@ class BuildStartControl @Autowired constructor(
     private val buildDetailService: PipelineBuildDetailService,
     private val buildVariableService: BuildVariableService,
     private val scmProxyService: ScmProxyService,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val meterRegistry: MeterRegistry
 ) {
 
     companion object {
@@ -124,7 +127,8 @@ class BuildStartControl @Autowired constructor(
 
     fun PipelineBuildStartEvent.execute(watcher: Watcher) {
         val executeCount = buildVariableService.getBuildExecuteCount(projectId, buildId)
-        buildLogPrinter.addDebugLine(buildId = buildId, message = "Enter BuildStartControl",
+        buildLogPrinter.addDebugLine(
+            buildId = buildId, message = "Enter BuildStartControl",
             tag = TAG, jobId = JOB_ID, executeCount = executeCount
         )
 
@@ -138,11 +142,13 @@ class BuildStartControl @Autowired constructor(
         buildModel(buildInfo = buildInfo, executeCount = executeCount)
         watcher.stop()
 
-        buildLogPrinter.addDebugLine(buildId = buildId, message = "BuildStartControl End",
+        buildLogPrinter.addDebugLine(
+            buildId = buildId, message = "BuildStartControl End",
             tag = TAG, jobId = JOB_ID, executeCount = executeCount
         )
 
         buildLogPrinter.stopLog(buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount)
+        startPipelineCount()
     }
 
     private fun PipelineBuildStartEvent.pickUpReadyBuild(executeCount: Int): BuildInfo? {
@@ -152,7 +158,8 @@ class BuildStartControl @Autowired constructor(
             buildIdLock.lock()
             val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             if (buildInfo == null || buildInfo.status.isFinish() || buildInfo.status.isNeverRun()) {
-                buildLogPrinter.addLine(message = "Stop #${buildInfo?.buildNum} ${buildInfo?.status}",
+                buildLogPrinter.addLine(
+                    message = "Stop #${buildInfo?.buildNum} ${buildInfo?.status}",
                     buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
                 )
                 LOG.info("ENGINE|$buildId][$source|BUILD_START_DONE|status=${buildInfo?.status}")
@@ -173,10 +180,11 @@ class BuildStartControl @Autowired constructor(
         var canStart = true
         // 已经是启动状态的，直接返回
         if (!buildInfo.status.isReadyToRun()) {
-            buildLogPrinter.addLine(message = "Illegal build #${buildInfo.buildNum} [${buildInfo.status}]",
+            buildLogPrinter.addLine(
+                message = "Illegal build #${buildInfo.buildNum} [${buildInfo.status}]",
                 buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
             )
-            return canStart
+            return true
         }
         val pipelineBuildLock = PipelineBuildStartLock(redisOperation, pipelineId)
         try {
@@ -217,7 +225,8 @@ class BuildStartControl @Autowired constructor(
                         canStart = false
                     }
                 } else {
-                    buildLogPrinter.addLine(message = "Waiting build #${buildInfo.buildNum - 1}",
+                    buildLogPrinter.addLine(
+                        message = "Waiting build #${buildInfo.buildNum - 1}",
                         buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
                     )
                 }
@@ -465,27 +474,31 @@ class BuildStartControl @Autowired constructor(
 
     private fun PipelineBuildStartEvent.buildModel(buildInfo: BuildInfo, executeCount: Int) {
         val model = buildDetailService.getBuildModel(projectId, buildId) ?: run {
-            pipelineEventDispatcher.dispatch(PipelineBuildCancelEvent(
-                source = TAG, projectId = projectId, pipelineId = pipelineId,
-                userId = userId, buildId = buildId, status = BuildStatus.UNEXEC
-            )
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildCancelEvent(
+                    source = TAG, projectId = projectId, pipelineId = pipelineId,
+                    userId = userId, buildId = buildId, status = BuildStatus.UNEXEC
+                )
             )
             return // model不存在直接取消构建
         }
 
         // 单步重试不做操作，手动重试需还原各节点状态，启动需获取revision信息
-        buildLogPrinter.addLine(message = "Async fetch latest commit/revision, please wait...",
+        buildLogPrinter.addLine(
+            message = "Async fetch latest commit/revision, please wait...",
             buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
         )
         val startParams: Map<String, String> by lazy { buildVariableService.getAllVariable(projectId, buildId) }
         if (actionType == ActionType.START) {
-            supplementModel(projectId = projectId, pipelineId = pipelineId,
+            supplementModel(
+                projectId = projectId, pipelineId = pipelineId,
                 fullModel = model, startParams = startParams as MutableMap<String, String>
             )
         }
 
         if (buildInfo.status.isReadyToRun()) {
-            buildLogPrinter.addLine(message = "Updating model & start parameters & variables",
+            buildLogPrinter.addLine(
+                message = "Updating model & start parameters & variables",
                 buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
             )
             updateModel(model = model, buildInfo = buildInfo, taskId = taskId, executeCount = executeCount)
@@ -502,14 +515,16 @@ class BuildStartControl @Autowired constructor(
         val firstValidStage = getFirstValidStage(stages)
         if (stages.size == 1 || firstValidStage == null) { // 空节点或者没有可用的stage
             pipelineEventDispatcher.dispatch(
-                PipelineBuildFinishEvent(source = TAG,
+                PipelineBuildFinishEvent(
+                    source = TAG,
                     projectId = projectId, pipelineId = pipelineId, userId = userId,
                     buildId = buildId, status = BuildStatus.SUCCEED
                 )
             )
         } else { // 对第一个可用的Stage下发指令
             pipelineEventDispatcher.dispatch(
-                PipelineBuildStageEvent(source = TAG,
+                PipelineBuildStageEvent(
+                    source = TAG,
                     projectId = projectId, pipelineId = pipelineId, userId = userId,
                     buildId = buildId, stageId = firstValidStage.id!!, actionType = actionType
                 )
@@ -532,5 +547,12 @@ class BuildStartControl @Autowired constructor(
             }
         }
         return firstValidStage
+    }
+
+    private fun startPipelineCount() {
+        Counter
+            .builder("start_pipeline_count")
+            .register(meterRegistry)
+            .increment()
     }
 }

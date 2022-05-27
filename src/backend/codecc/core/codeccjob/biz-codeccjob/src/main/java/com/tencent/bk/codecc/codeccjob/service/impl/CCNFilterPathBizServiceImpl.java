@@ -70,7 +70,7 @@ public class CCNFilterPathBizServiceImpl extends AbstractFilterPathBizService
                 defectEntity.setStatus(getUpdateStatus(filterPathInputVO, defectEntity.getStatus()));
                 defectEntity.setExcludeTime(currTime);
             });
-            ccnDefectRepository.save(needUpdateDefectList);
+            ccnDefectRepository.saveAll(needUpdateDefectList);
         }
         return new Result(CommonMessageCode.SUCCESS);
     }
