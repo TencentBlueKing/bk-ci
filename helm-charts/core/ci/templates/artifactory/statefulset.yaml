@@ -78,6 +78,11 @@ spec:
               value: {{ .Values.multiCluster.enabled | quote }}
             - name: DEFAULT_NAMESPACE
               value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
           workingDir: /data/workspace/artifactory
           {{ if .Values.entrypoint.override }}
           command:
@@ -114,6 +119,9 @@ spec:
           volumeMounts:
             - name: storage
               mountPath: {{ .Values.persistence.mountPath }}
+            - mountPath: /data/workspace/dispatch/jvm
+              name: log-volume
+              subPathExpr: jvm/$(POD_NAME)
       volumes:
         - name: storage
           {{- if .Values.persistence.enabled }}
@@ -122,4 +130,7 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
+        - hostPath:
+            path: /data/bkci
+          name: log-volume
 {{- end -}}
