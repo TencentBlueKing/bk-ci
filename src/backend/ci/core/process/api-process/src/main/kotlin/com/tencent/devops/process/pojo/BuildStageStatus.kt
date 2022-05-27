@@ -43,5 +43,7 @@ data class BuildStageStatus(
     @ApiModelProperty("阶段启动时间", required = false, hidden = true)
     var startEpoch: Long? = null,
     @ApiModelProperty("容器运行时间", required = false, hidden = true)
-    var elapsed: Long? = null
+    var elapsed: Long? = null,
+    @ApiModelProperty("前端", required = false, hidden = true)
+    var showMsg: String? = null
 )

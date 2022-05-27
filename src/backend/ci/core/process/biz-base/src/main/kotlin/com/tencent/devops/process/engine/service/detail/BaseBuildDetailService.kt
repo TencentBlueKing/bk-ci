@@ -135,7 +135,11 @@ open class BaseBuildDetailService constructor(
         }
     }
 
-    protected fun fetchHistoryStageStatus(model: Model, statusMessage: String): List<BuildStageStatus> {
+    protected fun fetchHistoryStageStatus(
+        model: Model,
+        statusMessage: String,
+        cancelUser: String? = null
+    ): List<BuildStageStatus> {
         val stageTagMap: Map<String, String>
             by lazy { stageTagService.getAllStageTag().data?.associate { it.id to it.stageTagName } ?: emptyMap() }
         // 更新Stage状态至BuildHistory
@@ -143,15 +147,17 @@ open class BaseBuildDetailService constructor(
             BuildStageStatus(
                 stageId = it.id!!,
                 name = it.name ?: it.id!!,
-                // #6655 利用stageStatus中的第一个stage传递构建的状态信息
-                status = if (it.id == STATUS_STAGE) {
-                    MessageCodeUtil.getCodeLanMessage(statusMessage)
-                } else it.status,
+                status = it.status,
                 startEpoch = it.startEpoch,
                 elapsed = it.elapsed,
                 tag = it.tag?.map { _it ->
                     stageTagMap.getOrDefault(_it, "null")
-                }
+                },
+                // #6655 利用stageStatus中的第一个stage传递构建的状态信息
+                showMsg = if (it.id == STATUS_STAGE) {
+                    MessageCodeUtil.getCodeLanMessage(statusMessage) +
+                        (cancelUser?.let { "by $cancelUser" } ?: "")
+                } else null
             )
         }
     }
