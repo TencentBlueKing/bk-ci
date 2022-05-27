@@ -29,8 +29,8 @@ package com.tencent.devops.log.util
 
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import org.elasticsearch.common.settings.Settings
-import org.elasticsearch.xcontent.XContentBuilder
-import org.elasticsearch.xcontent.XContentFactory
+import org.elasticsearch.common.xcontent.XContentBuilder
+import org.elasticsearch.common.xcontent.XContentFactory
 
 object ESIndexUtils {
 

@@ -28,6 +28,7 @@
 package com.tencent.devops.log.service.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.LogLine
@@ -63,7 +64,7 @@ import org.elasticsearch.client.RequestOptions
 import org.elasticsearch.client.core.CountRequest
 import org.elasticsearch.client.indices.CreateIndexRequest
 import org.elasticsearch.client.indices.GetIndexRequest
-import org.elasticsearch.core.TimeValue
+import org.elasticsearch.common.unit.TimeValue
 import org.elasticsearch.index.query.BoolQueryBuilder
 import org.elasticsearch.index.query.Operator
 import org.elasticsearch.index.query.QueryBuilders
@@ -81,7 +82,14 @@ import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
 import kotlin.math.ceil
 
-@Suppress("ALL")
+@Suppress(
+    "LongParameterList",
+    "LargeClass",
+    "TooManyFunctions",
+    "NestedBlockDepth",
+    "LongMethod",
+    "ReturnCount"
+)
 class LogServiceESImpl constructor(
     private val logClient: LogClient,
     private val indexService: IndexService,
@@ -97,8 +105,11 @@ class LogServiceESImpl constructor(
         private val logger = LoggerFactory.getLogger(LogServiceESImpl::class.java)
         private const val LONG_SEARCH_TIME: Long = 64000
         private const val SHORT_SEARCH_TIME: Long = 32000
+        private const val SEARCH_TIMEOUT_SECONDS = 60L
+        private const val SEARCH_FRAGMENT_SIZE = 100000
         private const val INDEX_CACHE_MAX_SIZE = 100000L
         private const val INDEX_CACHE_EXPIRE_MINUTES = 30L
+        private const val INDEX_LOCK_EXPIRE_SECONDS = 10L
         private const val INDEX_STORAGE_WARN_MILLIS = 1000
     }
 
@@ -125,8 +136,9 @@ class LogServiceESImpl constructor(
                 buf.add(it)
                 if (buf.size == Constants.BULK_BUFFER_SIZE) {
                     if (doAddMultiLines(buf, event.buildId) == 0) {
-                        throw Exception(
-                            "None of lines is inserted successfully to ES [${event.buildId}|${event.retryTime}]"
+                        throw ExecuteException(
+                            "None of lines is inserted successfully to ES " +
+                                "[${event.buildId}|${event.retryTime}]"
                         )
                     } else {
                         buf.clear()
@@ -135,7 +147,7 @@ class LogServiceESImpl constructor(
             }
             if (buf.isNotEmpty()) {
                 if (doAddMultiLines(buf, event.buildId) == 0) {
-                    throw Exception(
+                    throw ExecuteException(
                         "None of lines is inserted successfully to ES [${event.buildId}|${event.retryTime}]"
                     )
                 }
@@ -219,14 +231,14 @@ class LogServiceESImpl constructor(
                         .query(query)
                         .highlighter(
                             HighlightBuilder().preTags("\u001b[31m").postTags("\u001b[0m")
-                                .field("message").fragmentSize(100000)
+                                .field("message").fragmentSize(SEARCH_FRAGMENT_SIZE)
                         )
                         .docValueField("lineNo")
                         .docValueField("timestamp")
                         .size(num)
                         .sort("timestamp", sortOrder)
                         .sort("lineNo", sortOrder)
-                        .timeout(TimeValue.timeValueSeconds(60))
+                        .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
                 )
             queryLogs.logs = searchByClient(buildId, searchRequest)
             if (!fromStart) {
@@ -240,8 +252,11 @@ class LogServiceESImpl constructor(
                 logger.error("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
             }
-        } catch (e: Exception) {
-            logger.error("Query more logs between lines failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error(
+                "Query more logs between lines failed because of ${ignore.javaClass}. buildId: $buildId",
+                ignore
+            )
         }
         return queryLogs
     }
@@ -327,7 +342,7 @@ class LogServiceESImpl constructor(
 
         var scrollResp = try {
             scrollClient.restClient.search(searchRequest, RequestOptions.DEFAULT)
-        } catch (e: IOException) {
+        } catch (ignore: IOException) {
             scrollClient.restClient.search(searchRequest, genLargeSearchOptions())
         }
 
@@ -463,8 +478,8 @@ class LogServiceESImpl constructor(
                 logger.error("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
             }
-        } catch (e: Exception) {
-            logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
         }
 
@@ -537,13 +552,13 @@ class LogServiceESImpl constructor(
                     .size(pageSize)
                     .sort("timestamp", SortOrder.ASC)
                     .sort("lineNo", SortOrder.ASC)
-                    .timeout(TimeValue.timeValueSeconds(60))
+                    .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
             )
             .scroll(TimeValue(LONG_SEARCH_TIME))
 
         var searchResponse = try {
             logClient.hashClient(buildId).restClient.search(searchRequest, RequestOptions.DEFAULT)
-        } catch (e: IOException) {
+        } catch (ignore: IOException) {
             logClient.hashClient(buildId).restClient.search(searchRequest, genLargeSearchOptions())
         }
         do {
@@ -615,7 +630,7 @@ class LogServiceESImpl constructor(
                         .size(size)
                         .sort("timestamp", SortOrder.ASC)
                         .sort("lineNo", SortOrder.ASC)
-                        .timeout(TimeValue.timeValueSeconds(60))
+                        .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
                 )
                 .scroll(TimeValue(SHORT_SEARCH_TIME))
             queryLogs.logs = searchByClient(buildId, searchRequest)
@@ -627,8 +642,8 @@ class LogServiceESImpl constructor(
                 logger.error("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
             }
-        } catch (e: Exception) {
-            logger.error("Query end logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query end logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
         }
         return queryLogs
@@ -683,7 +698,7 @@ class LogServiceESImpl constructor(
                         .size(Constants.NORMAL_MAX_LINES)
                         .sort("timestamp", SortOrder.ASC)
                         .sort("lineNo", SortOrder.ASC)
-                        .timeout(TimeValue.timeValueSeconds(60))
+                        .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
                 )
             queryLogs.logs = searchByClient(buildId, searchRequest)
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
@@ -695,8 +710,8 @@ class LogServiceESImpl constructor(
                 logger.error("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
             }
-        } catch (e: Exception) {
-            logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
         }
         return queryLogs
@@ -759,7 +774,7 @@ class LogServiceESImpl constructor(
             // 初始化请求
             val searchResponse = try {
                 scrollClient.restClient.search(searchRequest, RequestOptions.DEFAULT)
-            } catch (e: IOException) {
+            } catch (ignore: IOException) {
                 scrollClient.restClient.search(searchRequest, genLargeSearchOptions())
             }
 
@@ -774,7 +789,7 @@ class LogServiceESImpl constructor(
                 val scrollRequest = SearchScrollRequest(scrollId).scroll(TimeValue(LONG_SEARCH_TIME))
                 val searchScrollResponse = try {
                     scrollClient.restClient.scroll(scrollRequest, RequestOptions.DEFAULT)
-                } catch (e: IOException) {
+                } catch (ignore: IOException) {
                     scrollClient.restClient.scroll(scrollRequest, genLargeSearchOptions())
                 }
                 scrollId = searchScrollResponse.scrollId
@@ -788,8 +803,8 @@ class LogServiceESImpl constructor(
                 logger.error("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
             }
-        } catch (e: Exception) {
-            logger.error("Query after logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query after logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
             queryLogs.hasMore = false
@@ -858,7 +873,7 @@ class LogServiceESImpl constructor(
                         .size(size)
                         .sort("timestamp", SortOrder.ASC)
                         .sort("lineNo", SortOrder.ASC)
-                        .timeout(TimeValue.timeValueSeconds(60))
+                        .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
                 )
 
             queryLogs.logs = searchByClient(buildId, searchRequest)
@@ -870,8 +885,8 @@ class LogServiceESImpl constructor(
                 logger.error("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
             }
-        } catch (e: Exception) {
-            logger.error("Query before logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query before logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
             queryLogs.hasMore = false
@@ -882,7 +897,7 @@ class LogServiceESImpl constructor(
     private fun searchByClient(buildId: String, searchRequest: SearchRequest): MutableList<LogLine> {
         val searchResponse = try {
             logClient.hashClient(buildId).restClient.search(searchRequest, RequestOptions.DEFAULT)
-        } catch (e: IOException) {
+        } catch (ignore: IOException) {
             logClient.hashClient(buildId).restClient.search(searchRequest, genLargeSearchOptions())
         }
         return parseResponse(searchResponse.hits)
@@ -998,16 +1013,21 @@ class LogServiceESImpl constructor(
             val bulkResponse = bulkClient.restClient.bulk(bulkRequest, RequestOptions.DEFAULT)
             bulkLines = bulkResponse.count()
             return if (bulkResponse.hasFailures()) {
-                throw Exception(bulkResponse.buildFailureMessage())
+                throw ExecuteException(bulkResponse.buildFailureMessage())
             } else {
                 bulkLines
             }
-        } catch (ex: Exception) {
-            val exString = ex.toString()
+        } catch (ignore: Exception) {
+            val exString = ignore.toString()
             if (exString.contains("circuit_breaking_exception")) {
-                logger.error("$buildId|Add bulk lines failed|$exString, attempting to add index. [$logMessages]", ex)
-                val bulkResponse = bulkClient.restClient
-                    .bulk(bulkRequest.timeout(TimeValue.timeValueSeconds(60)), genLargeSearchOptions())
+                logger.error(
+                    "$buildId|Add bulk lines failed|$exString, attempting to add index. [$logMessages]",
+                    ignore
+                )
+                val bulkResponse = bulkClient.restClient.bulk(
+                    bulkRequest.timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS)),
+                    genLargeSearchOptions()
+                )
                 bulkLines = bulkResponse.count()
                 return if (bulkResponse.hasFailures()) {
                     logger.error(bulkResponse.buildFailureMessage())
@@ -1016,8 +1036,8 @@ class LogServiceESImpl constructor(
                     bulkLines
                 }
             } else {
-                logger.error("[$buildId] Add bulk lines failed because of unknown Exception. [$logMessages]", ex)
-                throw ex
+                logger.error("[$buildId] Add bulk lines failed because of unknown Exception. [$logMessages]", ignore)
+                throw ignore
             }
         } finally {
             if (bulkLines != lines) {
@@ -1027,7 +1047,7 @@ class LogServiceESImpl constructor(
             logStorageBean.bulkRequest(elapse, bulkLines > 0)
 
             // #4265 当日志消息处理时间过长时打印消息内容
-            if (elapse >= 500 && logMessages.isNotEmpty()) logger.warn(
+            if (elapse >= INDEX_STORAGE_WARN_MILLIS && logMessages.isNotEmpty()) logger.warn(
                 "[$buildId] doAddMultiLines spent too much time($elapse) with tag=${logMessages.first().tag}"
             )
         }
@@ -1094,7 +1114,7 @@ class LogServiceESImpl constructor(
         if (indexCache.getIfPresent(index) == true) {
             return true
         }
-        val redisLock = RedisLock(redisOperation, "LOG:index:create:lock:key:$index", 10)
+        val redisLock = RedisLock(redisOperation, "LOG:index:create:lock:key:$index", INDEX_LOCK_EXPIRE_SECONDS)
         try {
             redisLock.lock()
             if (indexCache.getIfPresent(index) == true) {
@@ -1132,7 +1152,7 @@ class LogServiceESImpl constructor(
                     )
                 )
                 .mapping(ESIndexUtils.getTypeMappings())
-            request.setTimeout(TimeValue.timeValueSeconds(30))
+            request.setTimeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
             val response = createClient.restClient.indices()
                 .create(request, RequestOptions.DEFAULT)
             success = true
@@ -1147,7 +1167,7 @@ class LogServiceESImpl constructor(
 
     private fun isExistIndex(buildId: String, index: String): Boolean {
         val request = GetIndexRequest(index)
-        request.setTimeout(TimeValue.timeValueSeconds(30))
+        request.setTimeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
         return logClient.hashClient(buildId).restClient.indices()
             .exists(request, RequestOptions.DEFAULT)
     }
