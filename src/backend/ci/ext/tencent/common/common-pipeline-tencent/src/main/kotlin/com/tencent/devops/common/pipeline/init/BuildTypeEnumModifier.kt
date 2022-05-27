@@ -63,7 +63,7 @@ class BuildTypeEnumModifier : EnumModifier {
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.PUBLIC_BCS.name,
-            additionalValues = arrayOf("公共：Docker on Bcs", listOf(OS.LINUX), true, true, true)
+            additionalValues = arrayOf("公共：Docker on Bcs", listOf(OS.LINUX), true, true, false)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
