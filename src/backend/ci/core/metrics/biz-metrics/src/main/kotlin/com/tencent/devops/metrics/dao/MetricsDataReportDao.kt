@@ -114,6 +114,7 @@ class MetricsDataReportDao {
                     .set(PIPELINE_NAME, savePipelineStageOverviewDataPO.pipelineName)
                     .set(STAGE_TAG_NAME, savePipelineStageOverviewDataPO.stageTagName)
                     .set(AVG_COST_TIME, savePipelineStageOverviewDataPO.avgCostTime)
+                    .set(EXECUTE_COUNT, savePipelineStageOverviewDataPO.executeCount)
                     .set(STATISTICS_TIME, savePipelineStageOverviewDataPO.statisticsTime)
                     .set(CREATOR, savePipelineStageOverviewDataPO.creator)
                     .set(MODIFIER, savePipelineStageOverviewDataPO.modifier)
@@ -132,6 +133,7 @@ class MetricsDataReportDao {
             updatePipelineStageOverviewDataPOs.forEach { updatePipelineStageOverviewDataPO ->
                 dslContext.update(this)
                     .set(AVG_COST_TIME, updatePipelineStageOverviewDataPO.avgCostTime)
+                    .set(EXECUTE_COUNT, updatePipelineStageOverviewDataPO.executeCount)
                     .set(MODIFIER, updatePipelineStageOverviewDataPO.modifier)
                     .set(UPDATE_TIME, updatePipelineStageOverviewDataPO.updateTime)
                     .where(

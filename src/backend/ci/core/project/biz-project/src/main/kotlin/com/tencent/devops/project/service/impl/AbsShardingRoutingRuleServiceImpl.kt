@@ -263,7 +263,11 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 )
             } else {
                 // 生成数据库表的分片规则
-                val dbShardingRoutingRule = getShardingRoutingRuleByName(moduleCode, ruleType, routingName)
+                val dbShardingRoutingRule = getShardingRoutingRuleByName(
+                    moduleCode = moduleCode,
+                    ruleType = ShardingRuleTypeEnum.DB,
+                    routingName = routingName
+                )
                 dbShardingRoutingRule?.let {
                     ShardingRoutingRule(
                         clusterName = clusterName,

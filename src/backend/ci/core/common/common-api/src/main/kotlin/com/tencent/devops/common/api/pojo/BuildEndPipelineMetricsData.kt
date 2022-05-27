@@ -58,12 +58,8 @@ data class BuildEndPipelineMetricsData(
     val costTime: Long,
     @ApiModelProperty("是否执行成功", required = true)
     val successFlag: Boolean,
-    @ApiModelProperty("错误类型", required = false)
-    val errorType: Int? = null,
-    @ApiModelProperty("错误码", required = false)
-    val errorCode: Int? = null,
-    @ApiModelProperty("错误描述", required = false)
-    val errorMsg: String? = null,
+    @ApiModelProperty("错误信息列表", required = false)
+    var errorInfos: List<ErrorInfo>? = null,
     @ApiModelProperty("stage指标数据列表", required = true)
     val stages: List<BuildEndStageMetricsData>
 )

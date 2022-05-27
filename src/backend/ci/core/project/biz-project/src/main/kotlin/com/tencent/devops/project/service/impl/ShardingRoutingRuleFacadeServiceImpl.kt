@@ -76,9 +76,8 @@ class ShardingRoutingRuleFacadeServiceImpl @Autowired constructor(
                 // 查找该分片规则对应的数据源
                 val dbShardingRoutingRule = shardingRoutingRuleService.getShardingRoutingRuleByName(
                     moduleCode = moduleCode,
-                    ruleType = ruleType,
-                    routingName = routingName,
-                    tableName = tableName
+                    ruleType = ShardingRuleTypeEnum.DB,
+                    routingName = routingName
                 )
                 if (dbShardingRoutingRule != null) {
                     // 分片数据库表分片规则
