@@ -5,8 +5,8 @@ export default (emit) => {
 
   const handleTimeChange = (time) => {
     const timeStatus = {
-      startTime: time,
-      endTime: time,
+      startTime: time[0],
+      endTime: time[1],
     };
     handleChange(timeStatus);
   };

@@ -16,6 +16,9 @@ export default createRouter({
     {
       path: '/metrics/:projectId/',
       component: MetricsEntry,
+      redirect: () => {
+        return { name: 'MetricsOverview' }
+      },
       children: [
         {
           path: 'overview',
