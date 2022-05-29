@@ -98,7 +98,7 @@ data class StartBuildContext(
         }
     }
 
-    fun needSkipTaskWhenRetry(stage: Stage, taskId: String?): Boolean {
+    fun needSkipTaskWhenRetry(stage: Stage, container: Container, taskId: String?): Boolean {
         return when {
             stage.finally -> {
                 false // finally stage 不会跳过
@@ -107,6 +107,9 @@ data class StartBuildContext(
                 false
             }
             retryStartTaskId.isNullOrBlank() -> { // rebuild or start 不会跳过
+                false
+            }
+            isRetryDependOnContainer(container) -> { // 开启dependOn Job并状态是跳过的不会跳过
                 false
             }
             else -> { // 当前插件不是要失败重试或要跳过的插件，会跳过
@@ -147,6 +150,10 @@ data class StartBuildContext(
 
     fun needRerun(stage: Stage): Boolean {
         return stage.finally || retryStartTaskId == null || stage.id!! == retryStartTaskId
+    }
+
+    fun needRerunTask(stage: Stage, container: Container): Boolean {
+        return needRerun(stage) || isRetryDependOnContainer(container)
     }
 
     companion object {
