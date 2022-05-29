@@ -89,7 +89,7 @@ class ModelElement @Autowired(required = false) constructor(
 
             additionalOptions.enable = jobEnable && PathMatchUtils.isIncludePathMatch(step.ifModify, changeSet)
             // bash
-            val element: Element = when {
+            val element: Element? = when {
                 step.run != null -> {
                     makeRunElement(step, job, additionalOptions)
                 }
@@ -97,25 +97,17 @@ class ModelElement @Autowired(required = false) constructor(
                     inner!!.makeCheckoutElement(step, event, additionalOptions)
                 }
                 else -> {
-                    val data = mutableMapOf<String, Any>()
-                    data["input"] = step.with ?: Any()
-                    MarketBuildAtomElement(
-                        id = step.taskId,
-                        name = step.name ?: step.uses!!.split('@')[0],
-                        stepId = step.id,
-                        atomCode = step.uses!!.split('@')[0],
-                        version = step.uses!!.split('@')[1],
-                        data = data,
-                        additionalOptions = additionalOptions
-                    )
+                    inner!!.makeMarketBuildAtomElement(job, step, event, additionalOptions)
                 }
             }
 
-            elementList.add(element)
+            if (element != null) {
+                elementList.add(element)
 
-            if (element is MarketBuildAtomElement) {
-                logger.info("install market atom: ${element.getAtomCode()}")
-                ModelCommon.installMarketAtom(client, event.projectCode, event.userId, element.getAtomCode())
+                if (element is MarketBuildAtomElement) {
+                    logger.info("install market atom: ${element.getAtomCode()}")
+                    ModelCommon.installMarketAtom(client, event.projectCode, event.userId, element.getAtomCode())
+                }
             }
         }
 

@@ -60,7 +60,6 @@ import com.tencent.devops.common.api.checkerset.CheckerSetVO;
 import com.tencent.devops.common.api.checkerset.DividedCheckerSetsVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.Result;
-import com.tencent.devops.common.auth.api.external.AuthExPermissionApi;
 import com.tencent.devops.common.auth.api.external.AuthTaskService;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.CheckerConstants;
@@ -74,7 +73,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -416,7 +415,7 @@ public class CheckerSetBizServiceImpl implements ICheckerSetBizService
                 }
                 else
                 {
-                    checkerSetEntity = checkerSetRepository.findByToolNameAndCheckerSetIdAndVersion(toolName, toolCheckerSetVO.getCheckerSetId(),
+                    checkerSetEntity = checkerSetRepository.findFirstByToolNameAndCheckerSetIdAndVersion(toolName, toolCheckerSetVO.getCheckerSetId(),
                             toolCheckerSetVO.getVersion());
                 }
                 if (checkerSetEntity != null && CollectionUtils.isNotEmpty(checkerSetEntity.getCheckerProps()))
@@ -611,7 +610,7 @@ public class CheckerSetBizServiceImpl implements ICheckerSetBizService
         {
             String checkerSetId = toolConfig.getCheckerSet().getCheckerSetId();
             int version = toolConfig.getCheckerSet().getVersion();
-            CheckerSetEntity checkerSetEntity = checkerSetRepository.findByToolNameAndCheckerSetIdAndVersion(toolConfig.getToolName(), checkerSetId, version);
+            CheckerSetEntity checkerSetEntity = checkerSetRepository.findFirstByToolNameAndCheckerSetIdAndVersion(toolConfig.getToolName(), checkerSetId, version);
             checkerSetEntity.getTasksInUse().remove(taskId);
             checkerSetRepository.save(checkerSetEntity);
         }
@@ -791,7 +790,7 @@ public class CheckerSetBizServiceImpl implements ICheckerSetBizService
     public Boolean updateCheckerSetConfigParam(String checkerSetId, Integer version, String checkerName,
                                                String paramName, String displayName, String paramValue)
     {
-        CheckerSetEntity checkerSetEntity = checkerSetRepository.findByCheckerSetIdAndVersion(checkerSetId, version);
+        CheckerSetEntity checkerSetEntity = checkerSetRepository.findFirstByCheckerSetIdAndVersion(checkerSetId, version);
         if (CollectionUtils.isNotEmpty(checkerSetEntity.getCheckerProps()))
         {
             CheckerPropsEntity checkerProp = checkerSetEntity.getCheckerProps().stream().filter(checkerPropsEntity -> checkerPropsEntity.getCheckerKey().equalsIgnoreCase(checkerName)).

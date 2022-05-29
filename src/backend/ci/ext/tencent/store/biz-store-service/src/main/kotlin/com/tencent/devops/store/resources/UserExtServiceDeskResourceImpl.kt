@@ -90,6 +90,10 @@ class UserExtServiceDeskResourceImpl @Autowired constructor(
         )
     }
 
+    override fun deleteExtensionService(userId: String, serviceCode: String): Result<Boolean> {
+        return extServiceBaseService.deleteExtensionService(userId, serviceCode)
+    }
+
     override fun getServiceDetails(userId: String, serviceId: String): Result<ServiceVersionVO?> {
         return extServiceBaseService.getServiceById(serviceId, userId)
     }

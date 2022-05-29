@@ -84,11 +84,6 @@ dispatch:
     systemAlertReceiver:
     enable: false
 
-codecc:
-  path: __BK_CODECC_DATA_DIR__/tools
-  covFile: build_dev.py
-  toolFile: build_tool_dev.py
-
 #### environment
 
 environment:

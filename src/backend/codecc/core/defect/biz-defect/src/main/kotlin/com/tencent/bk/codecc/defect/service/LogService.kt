@@ -47,7 +47,8 @@ interface LogService {
      * @param tag 对应element ID
      * @return 日志信息
      */
-    fun getAnalysisLog(projectId: String, pipelineId: String, buildId: String, queryKeywords: String?, tag: String?): QueryLogRepVO?
+    fun getAnalysisLog(userId: String, projectId: String, pipelineId: String, buildId: String,
+                       queryKeywords: String?, tag: String?): QueryLogRepVO?
 
 
     /**
@@ -64,7 +65,8 @@ interface LogService {
      * @param executeCount 执行次数
      * @return 日志信息
      */
-    fun getMoreLogs(projectId: String, pipelineId: String, buildId: String, num: Int?, fromStart: Boolean?, start: Long, end: Long, tag: String?, executeCount: Int?): QueryLogRepVO
+    fun getMoreLogs(userId: String, projectId: String, pipelineId: String, buildId: String, num: Int?,
+                    fromStart: Boolean?, start: Long, end: Long, tag: String?, executeCount: Int?): QueryLogRepVO
 
 
     /**
@@ -77,7 +79,8 @@ interface LogService {
      * @param executeCount 执行次数
      * @return 日志信息
      */
-    fun downloadLogs(projectId: String, pipelineId: String, buildId: String, tag: String?, executeCount: Int?)
+    fun downloadLogs(userId: String, projectId: String, pipelineId: String, buildId: String,
+                     tag: String?, executeCount: Int?)
 
 
     /**
@@ -92,5 +95,6 @@ interface LogService {
      * @param executeCount 执行次数
      * @return 日志信息
      */
-    fun getAfterLogs(projectId: String, pipelineId: String, buildId: String, start: Long, queryKeywords: String?, tag: String?, executeCount: Int?): QueryLogRepVO
+    fun getAfterLogs(userId: String, projectId: String, pipelineId: String, buildId: String,
+                     start: Long, queryKeywords: String?, tag: String?, executeCount: Int?): QueryLogRepVO
 }

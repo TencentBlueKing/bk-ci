@@ -15,7 +15,6 @@ package com.tencent.bk.codecc.defect.vo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.jboss.logging.Field;
 
 import java.util.ArrayList;
 import java.util.HashMap;

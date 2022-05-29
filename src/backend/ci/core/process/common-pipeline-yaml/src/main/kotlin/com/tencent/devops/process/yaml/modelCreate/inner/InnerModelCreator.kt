@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.yaml.modelCreate.inner
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.step.Step
 
 /**
@@ -58,4 +60,22 @@ interface InnerModelCreator {
         event: ModelCreateEvent,
         additionalOptions: ElementAdditionalOptions
     ): MarketBuildAtomElement
+
+    /**
+     * 构造编译类的插件
+     */
+    fun makeMarketBuildAtomElement(
+        job: Job,
+        step: Step,
+        event: ModelCreateEvent,
+        additionalOptions: ElementAdditionalOptions
+    ): MarketBuildAtomElement?
+
+    /**
+     * 预安装插件市场的插件
+     */
+    fun preInstallMarketAtom(
+        client: Client,
+        event: ModelCreateEvent
+    )
 }
