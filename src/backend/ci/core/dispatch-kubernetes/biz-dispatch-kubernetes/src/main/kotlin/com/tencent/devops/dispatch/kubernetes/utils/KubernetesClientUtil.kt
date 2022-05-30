@@ -60,7 +60,7 @@ object KubernetesClientUtil {
      * 获取container名称
      */
     fun getKubernetesWorkloadOnlyLabelValue(buildId: String) =
-        "${buildId}-${RandomStringUtils.randomAlphabetic(6)}"
+        "$buildId-${RandomStringUtils.randomAlphabetic(6)}"
 
     fun V1DeploymentList?.getFirstDeploy(): V1Deployment? {
         return this?.items?.ifEmpty { null }?.get(0)
