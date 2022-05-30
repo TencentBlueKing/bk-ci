@@ -77,6 +77,11 @@ spec:
               value: {{ .Values.multiCluster.enabled | quote }}
             - name: DEFAULT_NAMESPACE
               value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
           workingDir: /data/workspace/environment
           livenessProbe:
             httpGet:
@@ -99,9 +104,15 @@ spec:
           volumeMounts:
             - name: mypvc
               mountPath: /data/bkee/ci/
+            - mountPath: /data/workspace/environment/jvm
+              name: log-volume
+              subPathExpr: jvm/$(POD_NAME)
       volumes:
       - name: mypvc
         nfs:
           path: /4c1q3vbj/{{ .Values.cfsPath }}/environment
           server: 9.136.137.6
+      - hostPath:
+          path: /data/bkci
+        name: log-volume
 {{- end -}}
