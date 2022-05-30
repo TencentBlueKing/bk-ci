@@ -377,7 +377,7 @@ open class GitApi {
                 "operation", operation
             )
             SpringContextUtil.getBean(BkTimedAspect::class.java)
-                .record("bk_tgit_api_time", tags, "工蜂接口耗时度量", sample, exceptionClass)
+                .record("bk_method_time", tags, "工蜂接口耗时度量", sample, exceptionClass)
         }
     }
 
