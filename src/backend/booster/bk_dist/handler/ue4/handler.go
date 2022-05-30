@@ -224,6 +224,21 @@ func (u *UE4) initInnerHandle(command []string) {
 	}
 }
 
+// NeedRemoteResource check whether this command need remote resource
+func (u *UE4) NeedRemoteResource(command []string) bool {
+	if u.innerhandler != nil {
+		return u.innerhandler.NeedRemoteResource(command)
+	}
+
+	u.initInnerHandle(command)
+
+	if u.innerhandler != nil {
+		return u.innerhandler.NeedRemoteResource(command)
+	}
+
+	return false
+}
+
 // RemoteRetryTimes will return the remote retry times
 func (u *UE4) RemoteRetryTimes() int {
 	if u.innerhandler != nil {
