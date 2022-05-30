@@ -96,6 +96,12 @@ type RemoteMgr interface {
 
 	// get total remote worker slots
 	TotalSlots() int
+
+	// inc remote jobs
+	IncRemoteJobs()
+
+	// dec remote jobs
+	DecRemoteJobs()
 }
 
 // LocalMgr describe a manager for handling all actions with local execution for work

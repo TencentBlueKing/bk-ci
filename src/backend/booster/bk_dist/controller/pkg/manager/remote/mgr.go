@@ -223,11 +223,13 @@ func (m *Mgr) getLastApplied() uint64 {
 	return atomic.LoadUint64(&m.lastApplied)
 }
 
-func (m *Mgr) incRemoteJobs() {
+// IncRemoteJobs inc remote jobs
+func (m *Mgr) IncRemoteJobs() {
 	atomic.AddInt64(&m.remotejobs, 1)
 }
 
-func (m *Mgr) decRemoteJobs() {
+// DecRemoteJobs dec remote jobs
+func (m *Mgr) DecRemoteJobs() {
 	atomic.AddInt64(&m.remotejobs, -1)
 }
 
@@ -321,10 +323,10 @@ func (m *Mgr) ExecuteTask(req *types.RemoteTaskExecuteRequest) (*types.RemoteTas
 		m.work.Basic().UpdateJobStats(req.Stats)
 	}, req.Sandbox)
 
-	m.incRemoteJobs()
+	m.IncRemoteJobs()
 	defer func() {
 		m.setLastUsed(uint64(time.Now().Local().Unix()))
-		m.decRemoteJobs()
+		m.DecRemoteJobs()
 	}()
 
 	// 1. send toolchain if required  2. adjust exe remote path for req

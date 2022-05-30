@@ -166,10 +166,14 @@ func (m *Mgr) ExecuteTask(
 
 	// TODO : check whether need more resource
 
+	// !! remember dec after finished remote execute !!
 	m.work.Basic().Info().IncPrepared()
+	m.work.Remote().IncRemoteJobs()
+
 	c, err := e.executePreTask()
 	if err != nil {
 		m.work.Basic().Info().DecPrepared()
+		m.work.Remote().DecRemoteJobs()
 		blog.Warnf("local: execute pre-task for work(%s) from pid(%d) : %v", m.work.ID(), req.Pid, err)
 		return e.executeLocalTask(), nil
 	}
@@ -198,6 +202,7 @@ func (m *Mgr) ExecuteTask(
 		}
 	}
 	m.work.Basic().Info().DecPrepared()
+	m.work.Remote().DecRemoteJobs()
 	if err != nil {
 		return e.executeLocalTask(), nil
 	}
