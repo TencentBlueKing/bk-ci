@@ -7,6 +7,8 @@ import com.tencent.devops.stream.pojo.StreamBasicSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import org.hibernate.validator.constraints.Range
+import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -58,4 +60,21 @@ interface OpGitCIBasicSettingResource {
     @GET
     @Path("/fixNameSpace")
     fun fixProjectNameSpace(): Result<Int>
+
+    @ApiOperation("修改项目开启人")
+    @POST
+    @Path("/updateEnableUserId")
+    fun updateEnableUserIdByNewUser(
+        @ApiParam(value = "旧userId", required = true)
+        @QueryParam("oldUserId")
+        oldUserId: String,
+        @ApiParam(value = "新userId", required = true)
+        @QueryParam("newUserId")
+        newUserId: String,
+        @ApiParam(value = "更新的数量", required = true)
+        @QueryParam("limitNumber")
+        @Range(min = 1, max = 50, message = "修改的数量不能小于1、大于50")
+        @Valid
+        limitNumber: Int
+    ): Result<Boolean>
 }
