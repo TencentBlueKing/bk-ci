@@ -132,9 +132,9 @@ spec:
           volumeMounts:
           - mountPath: /data/workspace/project/jvm
             name: log-volume
-            subPathExpr: jvm/$(POD_NAME)
+            subPathExpr: bkci/jvm/$(POD_NAME)
       volumes:
       - hostPath:
-          path: /data/bkci
+          path: /data
         name: log-volume
 {{- end -}}
