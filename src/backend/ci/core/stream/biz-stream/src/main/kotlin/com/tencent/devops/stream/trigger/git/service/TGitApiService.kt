@@ -437,27 +437,27 @@ class TGitApiService @Autowired constructor(
                 action()
             }
         } catch (e: ClientException) {
-            logger.warn("retry 5 times $log: ${e.message} ")
+            logger.warn("retry 5 times $log", e)
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
                 defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
             )
         } catch (e: RemoteServiceException) {
-            logger.warn("GIT_API_ERROR $log: ${e.message} ")
+            logger.warn("GIT_API_ERROR $log", e)
             throw ErrorCodeException(
                 statusCode = e.httpStatus,
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = "$log: ${e.errorMessage}"
             )
         } catch (e: CustomException) {
-            logger.warn("GIT_SCM_ERROR $log: ${e.message} ")
+            logger.warn("GIT_SCM_ERROR $log", e)
             throw ErrorCodeException(
                 statusCode = e.status.statusCode,
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = "$log: ${e.message}"
             )
         } catch (e: Throwable) {
-            logger.error("retryFun error $log: ${e.message} ")
+            logger.error("retryFun error $log", e)
             throw ErrorCodeException(
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = if (e.message.isNullOrBlank()) {
