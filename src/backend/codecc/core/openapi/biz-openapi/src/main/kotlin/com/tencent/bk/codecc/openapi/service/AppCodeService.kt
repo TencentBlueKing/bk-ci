@@ -88,7 +88,7 @@ class AppCodeService(
         )
 
     private fun getAppCodeProject(appCode: String): Map<String, String> {
-        val appCodeProjectEntity = appCodeProjectDao.findByAppCode(appCode)
+        val appCodeProjectEntity = appCodeProjectDao.findFirstByAppCode(appCode)
         val result = mutableMapOf<String, String>()
         return when {
             null == appCodeProjectEntity -> mapOf()
@@ -103,7 +103,7 @@ class AppCodeService(
     }
 
     private fun getAppCodeGroup(appCode: String): List<OrgDetailEntity> {
-        val appCodeOrgEntity = appCodeOrgDao.findByAppCode(appCode)
+        val appCodeOrgEntity = appCodeOrgDao.findFirstByAppCode(appCode)
         return when {
             null == appCodeOrgEntity -> listOf()
             appCodeOrgEntity.orgList.isNullOrEmpty() -> listOf()

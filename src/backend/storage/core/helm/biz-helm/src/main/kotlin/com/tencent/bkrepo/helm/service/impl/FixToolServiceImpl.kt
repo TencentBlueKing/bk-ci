@@ -1,46 +1,87 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 package com.tencent.bkrepo.helm.service.impl
 
+import com.tencent.bkrepo.auth.pojo.enums.PermissionAction
+import com.tencent.bkrepo.auth.pojo.enums.ResourceType
 import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.util.readYamlString
 import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
 import com.tencent.bkrepo.common.artifact.constant.ARTIFACT_INFO_KEY
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
+import com.tencent.bkrepo.common.artifact.repository.context.ArtifactQueryContext
 import com.tencent.bkrepo.common.artifact.stream.Range
 import com.tencent.bkrepo.common.query.enums.OperationType
 import com.tencent.bkrepo.common.query.model.PageLimit
 import com.tencent.bkrepo.common.query.model.QueryModel
 import com.tencent.bkrepo.common.query.model.Rule
 import com.tencent.bkrepo.common.query.model.Sort
+import com.tencent.bkrepo.common.security.permission.Permission
 import com.tencent.bkrepo.common.service.exception.RemoteErrorCodeException
 import com.tencent.bkrepo.common.service.util.HttpContextHolder
 import com.tencent.bkrepo.common.storage.core.StorageService
-import com.tencent.bkrepo.helm.handler.HelmPackageHandler
 import com.tencent.bkrepo.helm.constants.CHART_PACKAGE_FILE_EXTENSION
+import com.tencent.bkrepo.helm.constants.FULL_PATH
+import com.tencent.bkrepo.helm.constants.NODE_FULL_PATH
+import com.tencent.bkrepo.helm.constants.SIZE
+import com.tencent.bkrepo.helm.constants.SLEEP_MILLIS
+import com.tencent.bkrepo.helm.exception.HelmBadRequestException
 import com.tencent.bkrepo.helm.exception.HelmFileNotFoundException
-import com.tencent.bkrepo.helm.model.metadata.HelmChartMetadata
-import com.tencent.bkrepo.helm.model.metadata.HelmIndexYamlMetadata
+import com.tencent.bkrepo.helm.pojo.artifact.HelmArtifactInfo
 import com.tencent.bkrepo.helm.pojo.fixtool.DateTimeRepairResponse
 import com.tencent.bkrepo.helm.pojo.fixtool.PackageManagerResponse
 import com.tencent.bkrepo.helm.pojo.fixtool.RepairResponse
+import com.tencent.bkrepo.helm.pojo.metadata.HelmChartMetadata
+import com.tencent.bkrepo.helm.pojo.metadata.HelmIndexYamlMetadata
 import com.tencent.bkrepo.helm.service.FixToolService
 import com.tencent.bkrepo.helm.utils.DecompressUtil.getArchivesContent
+import com.tencent.bkrepo.helm.utils.HelmMetadataUtils
 import com.tencent.bkrepo.helm.utils.HelmUtils
 import com.tencent.bkrepo.helm.utils.TimeFormatUtil
+import com.tencent.bkrepo.repository.pojo.metadata.MetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
 import com.tencent.bkrepo.repository.pojo.packages.request.PopulatedPackageVersion
 import com.tencent.bkrepo.repository.pojo.repo.RepositoryDetail
-import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.SortedSet
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
 @Service
 class FixToolServiceImpl(
-    private val storageService: StorageService,
-    private val helmPackageHandler: HelmPackageHandler
+    private val storageService: StorageService
 ) : FixToolService, AbstractChartService() {
 
     override fun repairPackageCreatedDate(): List<DateTimeRepairResponse> {
@@ -133,7 +174,7 @@ class FixToolServiceImpl(
 
     private fun helmIndexYamlMetadata(projectId: String, repoName: String): HelmIndexYamlMetadata {
         val nodeDetail =
-            nodeClient.getNodeDetail(projectId, repoName, HelmUtils.getIndexYamlFullPath()).data ?: run {
+            nodeClient.getNodeDetail(projectId, repoName, HelmUtils.getIndexCacheYamlFullPath()).data ?: run {
                 logger.error("query index-cache.yaml file failed in repo [$projectId/$repoName]")
                 throw HelmFileNotFoundException(
                     "the file index-cache.yaml not found in repo [$projectId/$repoName]"
@@ -179,7 +220,7 @@ class FixToolServiceImpl(
         try {
             // 查询索引文件
             val nodeDetail =
-                nodeClient.getNodeDetail(projectId, repoName, HelmUtils.getIndexYamlFullPath()).data ?: run {
+                nodeClient.getNodeDetail(projectId, repoName, HelmUtils.getIndexCacheYamlFullPath()).data ?: run {
                     logger.error("query index-cache.yaml file failed in repo [$projectId/$repoName]")
                     throw HelmFileNotFoundException(
                         "the file index-cache.yaml not found in repo [$projectId/$repoName]"
@@ -294,14 +335,14 @@ class FixToolServiceImpl(
                     name = version,
                     size = size,
                     downloads = 0,
-                    manifestPath = HelmUtils.getIndexYamlFullPath(),
+                    manifestPath = HelmUtils.getIndexCacheYamlFullPath(),
                     artifactPath = HelmUtils.getChartFileFullPath(name, version),
                     metadata = null
                 )
             }
         }.toList()
         try {
-            helmPackageHandler.populatePackage(versionList, nodeInfoList.first(), name, description)
+            populatePackage(versionList, nodeInfoList.first(), name, description)
         } catch (exception: RemoteErrorCodeException) {
             logger.error(
                 "add package manager for [$name] failed " +
@@ -351,6 +392,52 @@ class FixToolServiceImpl(
             repoName = record["repoName"] as String,
             metadata = null
         )
+    }
+
+    @Permission(ResourceType.REPO, PermissionAction.WRITE)
+    override fun metaDataRegenerate(userId: String, artifactInfo: HelmArtifactInfo) {
+        logger.info("handling meta data regenerate request: [$artifactInfo]")
+        when (getRepositoryInfo(artifactInfo).category) {
+            RepositoryCategory.REMOTE -> {
+                val message = "Unable to regenerate metadata for remote repository " +
+                    "[${artifactInfo.projectId}/${artifactInfo.repoName}]"
+                logger.warn(message)
+                throw HelmBadRequestException(message)
+            }
+        }
+        val nodeList = queryNodeList(artifactInfo, false)
+        logger.info(
+            "query node list for regenerating meta data in repo [${artifactInfo.getRepoIdentify()}]" +
+                ", size [${nodeList.size}] "
+        )
+        val context = ArtifactQueryContext()
+        nodeList.forEach {
+            Thread.sleep(SLEEP_MILLIS)
+            try {
+                val path = it[NODE_FULL_PATH] as String
+                val chartMetadata = queryHelmChartMetadata(context, path)
+                val metaMap = HelmMetadataUtils.convertToMap(chartMetadata)
+                context.putAttribute(FULL_PATH, path)
+                createVersion(
+                    userId = context.userId,
+                    projectId = artifactInfo.projectId,
+                    repoName = artifactInfo.repoName,
+                    chartInfo = chartMetadata,
+                    size = context.getLongAttribute(SIZE)!!,
+                    isOverwrite = true
+                )
+                val metadataSaveRequest = MetadataSaveRequest(
+                    artifactInfo.projectId,
+                    artifactInfo.repoName,
+                    path,
+                    metaMap,
+                    context.userId
+                )
+                metadataClient.saveMetadata(metadataSaveRequest)
+            } catch (e: Exception) {
+                logger.error("error occurred while updating meta data, error: ${e.message}")
+            }
+        }
     }
 
     companion object {

@@ -31,9 +31,11 @@
 
 package com.tencent.bkrepo.docker.response
 
+import com.tencent.bkrepo.common.api.constant.StringPool.EMPTY
+
 data class PackageManagerResponse(
-    val projectId: String = "",
-    val repoName: String = "",
+    val projectId: String = EMPTY,
+    val repoName: String = EMPTY,
     val totalCount: Long,
     val successCount: Long,
     val failedCount: Long,

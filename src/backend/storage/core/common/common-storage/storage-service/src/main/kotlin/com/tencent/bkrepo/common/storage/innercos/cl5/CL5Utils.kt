@@ -48,9 +48,7 @@ object CL5Utils {
             cmdId = cl5Info.cmdId
         }
         val retCode = cl5Instance.ApiGetRoute(request, cl5Info.timeout)
-        if (retCode != CL5_SUCCESS) {
-            throw RuntimeException("Failed to get cl5 route info[$cl5Info]，return code: $retCode")
-        }
+        check(retCode == CL5_SUCCESS) { "Failed to get cl5 route info[$cl5Info]，return code: $retCode" }
         val routeInfo = RouteInfo(request.hostIp, request.hostPort)
         if (logger.isDebugEnabled) {
             logger.debug("Success to get cl5 route info[$cl5Info]: $routeInfo")

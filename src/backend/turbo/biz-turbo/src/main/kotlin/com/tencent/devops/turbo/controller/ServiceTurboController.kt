@@ -54,8 +54,7 @@ class ServiceTurboController @Autowired constructor(
             throw TurboException(errorCode = IS_NOT_ADMIN_MEMBER, errorMessage = NO_ADMIN_MEMBER_MESSAGE)
         }
         return Response.success(
-            turboRecordService.getTurboRecordHistoryList(pageNum, pageSize, sortField, sortType, turboRecordModel,
-                false))
+            turboRecordService.getTurboRecordHistoryList(pageNum, pageSize, sortField, sortType, turboRecordModel))
     }
 
     override fun getTurboPlanDetailByPlanId(
@@ -67,9 +66,6 @@ class ServiceTurboController @Autowired constructor(
         if (!turboAuthService.getAuthResult(projectId, userId)) {
             throw TurboException(errorCode = IS_NOT_ADMIN_MEMBER, errorMessage = NO_ADMIN_MEMBER_MESSAGE)
         }
-        val turboPlanDetailVO = turboPlanService.getTurboPlanDetailByPlanId(planId)
-        turboPlanDetailVO.createdDate = null
-        turboPlanDetailVO.updatedDate = null
-        return Response.success(turboPlanDetailVO)
+        return Response.success(turboPlanService.getTurboPlanDetailByPlanId(planId))
     }
 }

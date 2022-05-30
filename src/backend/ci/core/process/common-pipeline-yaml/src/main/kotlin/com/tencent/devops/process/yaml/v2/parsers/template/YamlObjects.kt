@@ -37,8 +37,8 @@ import com.tencent.devops.process.yaml.v2.models.TemplateInfo
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.job.Container
 import com.tencent.devops.process.yaml.v2.models.job.Credentials
+import com.tencent.devops.process.yaml.v2.models.job.Mutex
 import com.tencent.devops.process.yaml.v2.models.job.PreJob
-import com.tencent.devops.process.yaml.v2.models.job.ResourceExclusiveDeclaration
 import com.tencent.devops.process.yaml.v2.models.job.Service
 import com.tencent.devops.process.yaml.v2.models.job.ServiceWith
 import com.tencent.devops.process.yaml.v2.models.job.Strategy
@@ -98,10 +98,10 @@ object YamlObjects {
         return preStep
     }
 
-    fun getResourceExclusiveDeclaration(fromPath: String, resource: Any): ResourceExclusiveDeclaration {
-        val resourceMap = transValue<Map<String, Any?>>(fromPath, "resource-exclusive-declaration", resource)
-        return ResourceExclusiveDeclaration(
-            label = getNotNullValue(key = "label", mapName = "resource-exclusive-declaration", map = resourceMap),
+    fun getResourceExclusiveDeclaration(fromPath: String, resource: Any): Mutex {
+        val resourceMap = transValue<Map<String, Any?>>(fromPath, "mutex", resource)
+        return Mutex(
+            label = getNotNullValue(key = "label", mapName = "mutex", map = resourceMap),
             queueLength = resourceMap["queue-length"]?.toString()?.toInt(),
             timeoutMinutes = resourceMap["timeout-minutes"]?.toString()?.toInt()
         )
@@ -320,10 +320,10 @@ fun <T> YamlTemplate<T>.getJob(fromPath: String, job: Map<String, Any>, deepTree
     val preJob = PreJob(
         name = job["name"]?.toString(),
         runsOn = job["runs-on"],
-        resourceExclusiveDeclaration = if (job["resource-exclusive-declaration"] == null) {
+        mutex = if (job["mutex"] == null) {
             null
         } else {
-            YamlObjects.getResourceExclusiveDeclaration(fromPath, job["resource-exclusive-declaration"]!!)
+            YamlObjects.getResourceExclusiveDeclaration(fromPath, job["mutex"]!!)
         },
         container = if (job["container"] == null) {
             null

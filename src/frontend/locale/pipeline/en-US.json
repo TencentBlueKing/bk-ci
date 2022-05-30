@@ -923,6 +923,7 @@
         "retryCountPlaceholder": "Integers between 1 and 5, default 1",
         "atomTimeout": "Timeout",
         "timeoutDesc": "All the integers between 0 and 10080 with 0 indicating the maximum timeout allowed by the system",
+        "prepareTimeoutDesc": "Timeout for queued waiting when the node is busy. Default 10 minutes",
         "timeoutPlaceholder": "Specifies the maximum time, in minutes, that a task is allowed to execute before being canceled by server. A zero value indicates an infinite timeout.",
         "atomRunCondition": "Run this task",
         "atomPreSuc": "Run when all pre-plugins run successfully (including continue when failed)",

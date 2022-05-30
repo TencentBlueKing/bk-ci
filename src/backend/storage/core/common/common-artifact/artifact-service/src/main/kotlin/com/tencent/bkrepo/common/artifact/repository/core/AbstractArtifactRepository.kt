@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,34 +10,34 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 package com.tencent.bkrepo.common.artifact.repository.core
 
 import com.tencent.bkrepo.common.api.exception.MethodNotAllowedException
+import com.tencent.bkrepo.common.artifact.constant.PARAM_DOWNLOAD
 import com.tencent.bkrepo.common.artifact.event.ArtifactDownloadedEvent
 import com.tencent.bkrepo.common.artifact.event.ArtifactResponseEvent
 import com.tencent.bkrepo.common.artifact.event.ArtifactUploadedEvent
+import com.tencent.bkrepo.common.artifact.event.packages.VersionDownloadEvent
 import com.tencent.bkrepo.common.artifact.exception.ArtifactNotFoundException
 import com.tencent.bkrepo.common.artifact.exception.ArtifactResponseException
+import com.tencent.bkrepo.common.artifact.manager.StorageManager
 import com.tencent.bkrepo.common.artifact.metrics.ArtifactMetrics
+import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactDownloadContext
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactMigrateContext
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactQueryContext
@@ -45,11 +45,13 @@ import com.tencent.bkrepo.common.artifact.repository.context.ArtifactRemoveConte
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactSearchContext
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactUploadContext
 import com.tencent.bkrepo.common.artifact.repository.migration.MigrateDetail
-import com.tencent.bkrepo.common.artifact.manager.StorageManager
 import com.tencent.bkrepo.common.artifact.resolve.response.ArtifactChannel
 import com.tencent.bkrepo.common.artifact.resolve.response.ArtifactResource
-import com.tencent.bkrepo.common.artifact.util.http.ArtifactResourceWriter
+import com.tencent.bkrepo.common.artifact.resolve.response.ArtifactResourceWriter
+import com.tencent.bkrepo.common.artifact.util.PackageKeys
 import com.tencent.bkrepo.common.security.util.SecurityUtils
+import com.tencent.bkrepo.common.service.util.HttpContextHolder
+import com.tencent.bkrepo.common.service.util.LocaleMessageUtils
 import com.tencent.bkrepo.common.storage.core.StorageService
 import com.tencent.bkrepo.common.storage.monitor.Throughput
 import com.tencent.bkrepo.repository.api.NodeClient
@@ -65,7 +67,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 /**
  * 构件仓库抽象类
  */
-// TooGenericExceptionCaught: 需要捕捉文件传输阶段网络、IO等不可控的异常
+// TooGenericExceptionCaught: 需要捕捉文件传输阶段网络、IO等无法预知的异常
 // LateinitUsage: AbstractArtifactRepository有大量子类，使用构造器注入将造成不便
 @Suppress("TooGenericExceptionCaught", "LateinitUsage")
 abstract class AbstractArtifactRepository : ArtifactRepository {
@@ -95,6 +97,9 @@ abstract class AbstractArtifactRepository : ArtifactRepository {
     lateinit var packageDownloadsClient: PackageDownloadsClient
 
     @Autowired
+    lateinit var artifactResourceWriter: ArtifactResourceWriter
+
+    @Autowired
     private lateinit var taskAsyncExecutor: ThreadPoolTaskExecutor
 
     override fun upload(context: ArtifactUploadContext) {
@@ -114,13 +119,20 @@ abstract class AbstractArtifactRepository : ArtifactRepository {
             this.onDownloadBefore(context)
             val artifactResponse = this.onDownload(context)
                 ?: throw ArtifactNotFoundException(context.artifactInfo.toString())
-            val throughput = ArtifactResourceWriter.write(artifactResponse)
+            val throughput = artifactResourceWriter.write(artifactResponse)
             this.onDownloadSuccess(context, artifactResponse, throughput)
-        } catch (responseException: ArtifactResponseException) {
+        } catch (exception: ArtifactResponseException) {
             val principal = SecurityUtils.getPrincipal()
             val artifactInfo = context.artifactInfo
-            logger.warn("User[$principal] download artifact[$artifactInfo] failed, ${responseException.message}")
-        } catch (exception: RuntimeException) {
+            val message = LocaleMessageUtils.getLocalizedMessage(exception.messageCode, exception.params)
+            val code = exception.messageCode.getCode()
+            val clientAddress = HttpContextHolder.getClientAddress()
+            val xForwardedFor = HttpContextHolder.getXForwardedFor()
+            logger.warn(
+                "User[$principal],ip[$clientAddress] download artifact[$artifactInfo] failed[$code]$message" +
+                    " X_FORWARDED_FOR: $xForwardedFor"
+            )
+        } catch (exception: Exception) {
             this.onDownloadFailed(context, exception)
         } finally {
             this.onDownloadFinished(context)
@@ -178,6 +190,8 @@ abstract class AbstractArtifactRepository : ArtifactRepository {
      * 下载前回调
      */
     open fun onDownloadBefore(context: ArtifactDownloadContext) {
+        // 控制浏览器直接下载，或打开预览
+        context.useDisposition = context.request.getParameter(PARAM_DOWNLOAD)?.toBoolean() ?: false
         artifactMetrics.downloadingCount.incrementAndGet()
     }
 
@@ -199,13 +213,14 @@ abstract class AbstractArtifactRepository : ArtifactRepository {
         if (artifactResource.channel == ArtifactChannel.LOCAL) {
             buildDownloadRecord(context, artifactResource)?.let {
                 taskAsyncExecutor.execute { packageDownloadsClient.record(it) }
+                publishDownloadEvent(context, it)
             }
         }
         if (throughput != Throughput.EMPTY) {
             publisher.publishEvent(ArtifactResponseEvent(artifactResource, throughput, context.storageCredentials))
+            publisher.publishEvent(ArtifactDownloadedEvent(context))
+            logger.info("User[${SecurityUtils.getPrincipal()}] download artifact[${context.artifactInfo}] success")
         }
-        publisher.publishEvent(ArtifactDownloadedEvent(context))
-        logger.info("User[${SecurityUtils.getPrincipal()}] download artifact[${context.artifactInfo}] success")
     }
 
     /**
@@ -241,6 +256,23 @@ abstract class AbstractArtifactRepository : ArtifactRepository {
      */
     open fun onDownloadFinished(context: ArtifactDownloadContext) {
         artifactMetrics.downloadingCount.decrementAndGet()
+    }
+
+    private fun publishDownloadEvent(context: ArtifactDownloadContext, record: PackageDownloadRecord) {
+        if (context.repositoryDetail.type != RepositoryType.GENERIC) {
+            val packageType = context.repositoryDetail.type.name
+            val packageName = PackageKeys.resolveName(packageType.toLowerCase(), record.packageKey)
+            publisher.publishEvent(VersionDownloadEvent(
+                projectId = record.projectId,
+                repoName = record.repoName,
+                userId = SecurityUtils.getUserId(),
+                packageKey = record.packageKey,
+                packageVersion = record.packageVersion,
+                packageName = packageName,
+                packageType = packageType,
+                realIpAddress = HttpContextHolder.getClientAddress()
+            ))
+        }
     }
 
     companion object {

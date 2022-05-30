@@ -1,15 +1,18 @@
 package com.tencent.bk.codecc.defect.component;
 
+import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Charsets;
 import com.tencent.bk.codecc.defect.pojo.FileMD5TotalModel;
 import com.tencent.bk.codecc.defect.vo.customtool.ScmBlameVO;
 import com.tencent.bk.codecc.schedule.api.ServiceFSRestResource;
 import com.tencent.bk.codecc.schedule.vo.FileIndexVO;
+import com.tencent.devops.common.storage.StorageService;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.CommonMessageCode;
+import com.tencent.devops.common.storage.constant.StorageType;
 import com.tencent.devops.common.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -22,6 +25,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,6 +67,42 @@ public class ScmJsonComponent
     @Autowired
     private Client client;
 
+    @Autowired
+    private StorageService storageService;
+
+
+    /**
+     * 创建文件的索引
+     *
+     * @param fileName
+     * @param type
+     * @return
+     */
+    public Boolean upload(String localFilePath, String fileName, String type) {
+        File file = new File(localFilePath);
+        if (!file.exists()) {
+            log.error("upload {} file not exist!", localFilePath);
+        }
+        try {
+            if (storageService.getStorageType().equals(StorageType.NFS.code())) {
+                return true;
+            }
+            //上传文件
+            String url = storageService.upload(localFilePath,fileName,type);
+            //更新索引
+            Result<FileIndexVO> result = client.get(ServiceFSRestResource.class)
+                    .updateUploadInfo(new FileIndexVO(fileName, null, type,
+                            storageService.getStorageType(), url, 1));
+            if (result.isNotOk() || result.getData() == null) {
+                log.error("upload {} file fail!", localFilePath);
+                return false;
+            }
+            return true;
+        } catch (Exception e) {
+            log.error("upload " + localFilePath + " file cause error!", e);
+        }
+        return false;
+    }
 
     /**
      * 创建文件的索引
@@ -81,12 +122,12 @@ public class ScmJsonComponent
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{fileName}, null);
         }
         FileIndexVO fileIndex = result.getData();
-        return String.format("%s/%s", fileIndex.getFileFolder(), fileIndex.getFileName());
+        return getLocalFilePath(fileIndex);
     }
 
     /**
      * 获取scm_jsom文件的索引
-     *
+     * 如果文件不在本地，下载
      * @param fileName
      * @param type
      * @return
@@ -95,9 +136,9 @@ public class ScmJsonComponent
     {
         //获取风险系数值
         Result<FileIndexVO> result = client.get(ServiceFSRestResource.class).getFileIndex(fileName, type);
-
-        if (result.isNotOk() || null == result.getData())
-        {
+        log.info("getFileIndex type : {} filename : {}, return {}", type, fileName,
+                result != null ? JSONObject.toJSONString(result) : "null");
+        if (result == null || result.isNotOk() || null == result.getData()) {
             log.error("get file {} index fail: {}", fileName, result);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{fileName}, null);
         }
@@ -107,8 +148,19 @@ public class ScmJsonComponent
             log.error("file not found: {}, {}", fileName, result);
             return "";
         }
-        return String.format("%s/%s", fileIndex.getFileFolder(), fileIndex.getFileName());
+        return getLocalFilePath(fileIndex);
     }
+
+    private String getLocalFilePath(FileIndexVO fileIndex){
+        //判断文件是否在本地存在，否则下载文件
+        String localFilePath = String.format("%s/%s", fileIndex.getFileFolder(), fileIndex.getFileName());
+        if (!Files.exists(Paths.get(localFilePath))
+                && storageService.ifNeedAndCanDownload(fileIndex.getStoreType(), fileIndex.getDownloadUrl())) {
+            storageService.download(localFilePath, fileIndex.getStoreType(), fileIndex.getDownloadUrl());
+        }
+        return localFilePath;
+    }
+
 
     /**
      * 从文件中提取代码库作者信息
@@ -311,6 +363,7 @@ public class ScmJsonComponent
             scmJsonFileName = String.format("%s_%s%s", streamName, toolName, RAW_DEFECTS_FILE_POSTFIX);
             fileIndex = getFileIndex(scmJsonFileName, SCM_JSON);
         }
+
         log.info(fileIndex);
         return fileIndex;
     }

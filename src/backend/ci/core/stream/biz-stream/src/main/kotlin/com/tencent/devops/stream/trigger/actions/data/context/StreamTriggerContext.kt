@@ -45,7 +45,7 @@ data class StreamTriggerContext(
     var requestEventId: Long? = null,
     var pipeline: StreamTriggerPipeline? = null,
     var repoTrigger: RepoTrigger? = null,
-    var changeSet: List<String>? = null,
+    var changeSet: Set<String>? = null,
     var defaultBranch: String? = null,
     var originYaml: String? = null,
     var parsedYaml: String? = null,
@@ -59,5 +59,6 @@ data class StreamTriggerContext(
  */
 data class RepoTrigger(
     val branch: String,
-    val repoTriggerPipelineList: List<StreamRepoHookEvent>
+    val repoTriggerPipelineList: List<StreamRepoHookEvent>,
+    val buildUserID: String? = null
 )

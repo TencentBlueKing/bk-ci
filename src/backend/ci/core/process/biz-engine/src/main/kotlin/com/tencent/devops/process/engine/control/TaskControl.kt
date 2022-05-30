@@ -36,11 +36,13 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.TaskAtomService
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.common.BS_TASK_HOST
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
@@ -52,6 +54,7 @@ import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 /**
  * 任务（最小单元Atom）控制器
@@ -75,6 +78,7 @@ class TaskControl @Autowired constructor(
     /**
      * 处理[event]插件任务执行逻辑入口
      */
+    @BkTimed
     fun handle(event: PipelineBuildAtomTaskEvent) {
         val watcher = Watcher(
             id = "ENGINE|TaskControl|${event.traceId}|${event.buildId}|Job#${event.containerId}|Task#${event.taskId}"
@@ -214,7 +218,10 @@ class TaskControl @Autowired constructor(
             // 删除redis中取消构建操作标识
             redisOperation.delete(BuildUtils.getCancelActionBuildKey(buildId))
             // 当task任务是取消状态时，把taskId存入redis供心跳接口获取
-            redisOperation.leftPush(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId), taskId)
+            val cancelTaskKey = TaskUtils.getCancelTaskIdRedisKey(buildId, containerId)
+            redisOperation.leftPush(cancelTaskKey, taskId)
+            // 为取消任务设置最大超时时间，防止构建异常产生的脏数据
+            redisOperation.expire(cancelTaskKey, TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS))
         }
         // 如果是取消的构建，则会统一取消子流水线的构建
         if (buildStatus.isPassiveStop() || buildStatus.isCancel()) {

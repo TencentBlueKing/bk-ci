@@ -52,6 +52,7 @@ import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tags
 import io.micrometer.core.instrument.Timer
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -84,6 +85,7 @@ open class GitApi {
         private const val OPERATION_GET_CHANGE_FILE_LIST = "查询变更文件列表"
         private const val OPERATION_GET_MR_COMMIT_LIST = "获取合并请求中的提交"
         private const val OPERATION_PROJECT_USER_INFO = "获取项目中成员信息"
+        private const val OPERATION_TAPD_WORKITEMS = "查看绑定的TAPD单"
     }
 
     fun listBranches(
@@ -433,13 +435,18 @@ open class GitApi {
         return result
     }
 
-    fun unlockHookLock(host: String, token: String, projectName: String, mrId: Long) {
+    fun unlockHookLock(host: String, token: String, projectName: String, mrId: Long, retryTimes: Int = 5) {
 
         val url = "projects/${urlEncode(projectName)}/merge_request/$mrId/unlock_hook_lock"
         logger.info("unlock hook lock for project($projectName): url($url)")
         val request = put(host, token, url, "")
         try {
-            callMethod(OPERATION_UNLOCK_HOOK_LOCK, request, String::class.java)
+            val result = callMethod(OPERATION_UNLOCK_HOOK_LOCK, request, String::class.java)
+            // 工蜂解锁可能会失败,增加重试
+            if (result == "false" && retryTimes > 0) {
+                Thread.sleep(500)
+                unlockHookLock(host, token, projectName, mrId, retryTimes - 1)
+            }
         } catch (t: GitApiException) {
             if (t.code == 403) {
                 throw GitApiException(t.code, "unlock webhooklock失败,请确认token是否已经配置")
@@ -528,6 +535,19 @@ open class GitApi {
             )
         val request = get(host, token, url, queryParam)
         return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_PROJECT_USER_INFO, request))
+    }
+
+    fun getTapdWorkitems(
+        host: String,
+        token: String,
+        id: String,
+        type: String,
+        iid: Long
+    ): List<TapdWorkItem> {
+        val url = "projects/$id/tapd_workitems"
+        val queryParam = "type=$type&iid=$iid"
+        val request = get(host, token, url, queryParam)
+        return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_TAPD_WORKITEMS, request))
     }
 
     private fun String.addParams(args: Map<String, Any?>): String {

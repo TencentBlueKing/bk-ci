@@ -59,6 +59,7 @@ import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -145,7 +146,10 @@ interface ServiceGitResource {
         page: Int?,
         @ApiParam("每页数据条数", required = true)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("搜索条件", required = true)
+        @QueryParam("search")
+        search: String?
     ): Result<List<GitBranch>>
 
     @ApiOperation("获取用户所有git TAG")
@@ -799,4 +803,25 @@ interface ServiceGitResource {
         @QueryParam("minAccessLevel")
         minAccessLevel: GitAccessLevelEnum?
     ): Result<List<GitCodeProjectInfo>>
+
+    @ApiOperation("获取mr关联的tapd单")
+    @GET
+    @Path("/getTapdWorkItems")
+    fun getTapdWorkItems(
+        @ApiParam("accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "类型,可选mr,cr,issue")
+        @QueryParam("type")
+        type: String,
+        @ApiParam(value = "iid,类型对应的iid")
+        @QueryParam("iid")
+        iid: Long
+    ): Result<List<TapdWorkItem>>
 }

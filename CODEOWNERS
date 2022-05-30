@@ -2,7 +2,7 @@
 /.github @irwinsun
 /CODEOWNERS @irwinsun @zanyzhao
 /docs @zanyzhao @irwinsun
-/*.MD @zanyzhao
+/*.md @zanyzhao
 
 /scripts @fighter-liu @irwinsun
 /src/agent @hingbong @irwinsun @tangruotian

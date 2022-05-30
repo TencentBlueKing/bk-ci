@@ -60,6 +60,7 @@ import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
@@ -159,7 +160,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         LOG.info("ENGINE|$buildId|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
         // var表中获取环境变量，并对老版本变量进行兼容
         val variables = buildVariableService.getAllVariable(projectId, buildId)
-
         val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
         val model = containerBuildDetailService.getBuildModel(projectId, buildId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
@@ -202,11 +202,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                 ).data?.let { self -> envList.add(self) }
                             }
 
-                            // 设置Job环境变量customBuildEnv到variablesWithType中
+                            // 设置Job环境变量customBuildEnv到variablesWithType和variables中
+                            // TODO 此处应收敛到variablesWithType或variables的其中一个
                             c.customBuildEnv?.map { (t, u) ->
+                                val value = EnvUtils.parseEnv(u, contextMap)
+                                contextMap[t] = value
                                 BuildParameters(
                                     key = t,
-                                    value = EnvUtils.parseEnv(u, contextMap),
+                                    value = value,
                                     valueType = BuildFormPropertyType.STRING,
                                     readOnly = true
                                 )
@@ -595,15 +598,16 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
             projectId = projectId, buildId = buildId, taskId = result.elementId,
             buildStatus = buildStatus, errorType = errorType, errorCode = result.errorCode,
-            errorMsg = result.message
+            errorMsg = result.message, taskVersion = result.elementVersion
         )
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
             pipelineTaskService.updateTaskStatusInfo(
-                transactionContext = null,
-                projectId = projectId,
-                buildId = buildId,
-                taskId = updateTaskStatusInfo.taskId,
-                taskStatus = updateTaskStatusInfo.buildStatus
+                updateTaskInfo = UpdateTaskInfo(
+                    projectId = projectId,
+                    buildId = buildId,
+                    taskId = updateTaskStatusInfo.taskId,
+                    taskStatus = updateTaskStatusInfo.buildStatus
+                )
             )
             if (!updateTaskStatusInfo.message.isNullOrBlank()) {
                 buildLogPrinter.addLine(
@@ -621,7 +625,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             completeTask = CompleteTask(
                 projectId = projectId, buildId = buildId, taskId = result.taskId,
                 userId = buildInfo.startUser, buildStatus = buildStatus,
-                errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
+                errorType = errorType, errorCode = result.errorCode, errorMsg = result.message,
+                platformCode = result.platformCode, platformErrorCode = result.platformErrorCode
             )
         )
 

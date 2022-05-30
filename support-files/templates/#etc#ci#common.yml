@@ -20,7 +20,7 @@ spring:
             spring:
               rabbitmq:
                 virtual-host: __BK_CI_RABBITMQ_VHOST__
-                username: __BK_CI_RABBITMQ_VHOST__
+                username: __BK_CI_RABBITMQ_USER__
                 password: __BK_CI_RABBITMQ_PASSWORD__
                 addresses: __BK_CI_RABBITMQ_ADDR__
 #        extend-pulsar:
@@ -141,12 +141,6 @@ codecc:
 codeccGateway:
   gateway: __BK_CODECC_PRIVATE_URL__
   gatewayWeb: __BK_CODECC_PRIVATE_URL__
-  api:
-   createTask: /ms/task/api/service/task/
-   updateTask: /ms/task/api/service/task/
-   checkTaskExists: /ms/task/api/service/task/exists/
-   deleteTask: /ms/task/api/service/task/
-   codeCheckReport: /ms/api/
 alert:
   users: ''
 codeoa:

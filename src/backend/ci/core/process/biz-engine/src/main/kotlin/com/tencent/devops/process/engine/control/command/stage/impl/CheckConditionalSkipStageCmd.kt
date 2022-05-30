@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.DispatchQueueControl
@@ -44,7 +43,6 @@ import org.springframework.stereotype.Service
  */
 @Service
 class CheckConditionalSkipStageCmd constructor(
-    private val buildLogPrinter: BuildLogPrinter,
     private val pipelineContextService: PipelineContextService,
     private val dispatchQueueControl: DispatchQueueControl
 ) : StageCmd {
@@ -87,6 +85,7 @@ class CheckConditionalSkipStageCmd constructor(
             val conditions = controlOption.customVariables ?: emptyList()
             val contextMap = pipelineContextService.buildContext(
                 projectId = stage.projectId,
+                pipelineId = stage.pipelineId,
                 buildId = stage.buildId,
                 stageId = stage.stageId,
                 containerId = null,

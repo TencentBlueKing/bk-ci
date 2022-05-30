@@ -89,9 +89,12 @@ class SendNotify @Autowired constructor(
     private fun sendNotifyV2(action: BaseAction, build: BuildHistory) {
         // 获取需要进行替换的variables
         val finishData = action.data.context.finishData!!
-        val projectId = finishData.projectId
-        val variables = client.get(ServiceVarResource::class)
-            .getContextVar(projectId = projectId, buildId = build.id, contextName = null).data
+        val variables = client.get(ServiceVarResource::class).getContextVar(
+            projectId = finishData.projectId,
+            pipelineId = finishData.pipelineId,
+            buildId = build.id,
+            contextName = null
+        ).data
         val notices = YamlUtil.getObjectMapper().readValue(
             finishData.normalizedYaml, ScriptBuildYaml::class.java
         ).notices

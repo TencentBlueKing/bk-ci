@@ -1,0 +1,39 @@
+spring:
+  cloud:
+    consul:
+      discovery:
+        tags: __BK_REPO_CONSUL_TAG__
+  data:
+    mongodb:
+      uri: __BK_REPO_MONGODB_URI__
+      transaction:
+        enabled: false
+  redis:
+    host: __BK_REPO_REDIS_HOST__
+    password: __BK_REPO_REDIS_ADMIN_PASSWORD__
+    port: __BK_REPO_REDIS_PORT__
+
+logging:
+  config: classpath:logback-config.xml
+  path: __BK_REPO_LOGS_DIR__
+
+storage:
+  type: __BK_REPO_STORAGE_TYPE__
+  filesystem:
+    path: __BK_REPO_FILE_PATH__
+  innercos:
+    secretId: __BK_REPO_COS_SECRET_ID__
+    secretKey: __BK_REPO_COS_SECRET_KEY__
+    region: __BK_REPO_COS_REGION__
+    bucket: __BK_REPO_COS_BUCKET__
+    cache:
+      enabled: __BK_REPO_CACHE_ENABLE__
+      path: __BK_REPO_CACHE_MOUNT_PATH__/cached
+      expireDays: __BK_REPO_CACHE_EXPIRE_DAY__
+      loadCacheFirst: true
+    upload:
+      location: __BK_REPO_CACHE_MOUNT_PATH__/temp
+
+security:
+  auth:
+    enabled: true

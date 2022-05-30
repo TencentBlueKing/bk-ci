@@ -12,5 +12,5 @@ public interface WeChatNotifyMessageTemplateRepository  extends
     *
     * @param templateId
     */
-   WeChatNotifyMessageTemplateEntity findByTemplateId(String templateId);
+   WeChatNotifyMessageTemplateEntity findFirstByTemplateId(String templateId);
 }

@@ -99,4 +99,9 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
         buildHostType: String,
         buildHostOs: String
     ): Result<List<AtomDevLanguageEnvVar>?>
+
+    fun addAtomDockingPlatforms(
+        atomCode: String,
+        platformCodes: Set<String>
+    ): Result<Boolean>
 }

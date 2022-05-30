@@ -53,7 +53,7 @@ import javax.servlet.http.HttpServletRequest
 open class PlatformAuthHandler(private val authenticationManager: AuthenticationManager) : HttpAuthHandler {
 
     override fun extractAuthCredentials(request: HttpServletRequest): HttpAuthCredentials {
-        val authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION).orEmpty()
+        val authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION).orEmpty().trim()
         return if (authorizationHeader.startsWith(PLATFORM_AUTH_PREFIX)) {
             try {
                 val encodedCredentials = authorizationHeader.removePrefix(PLATFORM_AUTH_PREFIX)
@@ -69,10 +69,10 @@ open class PlatformAuthHandler(private val authenticationManager: Authentication
 
     override fun onAuthenticate(request: HttpServletRequest, authCredentials: HttpAuthCredentials): String {
         require(authCredentials is PlatformAuthCredentials)
-        val accessKey = authCredentials.accessKey
-        val secretKey = authCredentials.secretKey
+        val (accessKey, secretKey) = authCredentials
         val appId = authenticationManager.checkPlatformAccount(accessKey, secretKey)
-        val userId = request.getHeader(AUTH_HEADER_UID)?.apply { checkUserId(this) } ?: ANONYMOUS_USER
+        val userId = request.getHeader(AUTH_HEADER_UID).orEmpty().trim()
+            .takeIf { it.isNotEmpty() }?.apply { checkUserId(this) } ?: ANONYMOUS_USER
         request.setAttribute(PLATFORM_KEY, appId)
         request.setAttribute(USER_KEY, userId)
         return userId

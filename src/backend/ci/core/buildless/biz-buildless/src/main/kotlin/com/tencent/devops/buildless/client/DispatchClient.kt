@@ -59,6 +59,16 @@ class DispatchClient @Autowired constructor(
 
     fun refreshStatus(containerRunningsCount: Int) {
         val dockerIp = CommonUtils.getHostIp()
+
+        // 节点状态默认正常
+        var enable = true
+
+        // 容器为0时 节点可能异常，告警然后设置enable=false
+        if (containerRunningsCount <= 0) {
+            enable = false
+            logger.warn("Node: $dockerIp no running containers in containerPool.")
+        }
+
         val dockerIpInfoVO = DockerIpInfoVO(
             id = 0L,
             dockerIp = dockerIp,
@@ -69,7 +79,7 @@ class DispatchClient @Autowired constructor(
             averageMemLoad = SystemInfoUtil.getAverageMemLoad(),
             averageDiskLoad = SystemInfoUtil.getAverageDiskLoad(),
             averageDiskIOLoad = SystemInfoUtil.getAverageDiskIOLoad(),
-            enable = true,
+            enable = enable,
             grayEnv = isGary(),
             specialOn = null,
             createTime = null,

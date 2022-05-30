@@ -31,9 +31,9 @@
 
 package com.tencent.bkrepo.maven.pojo
 
-open class MavenGAVC(
-    open val groupId: String,
-    open val artifactId: String,
-    open val version: String,
-    open val classifier: String?
+data class MavenGAVC(
+    val groupId: String,
+    val artifactId: String,
+    val version: String,
+    val classifier: String?
 )
