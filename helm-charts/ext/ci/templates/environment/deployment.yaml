@@ -106,13 +106,13 @@ spec:
               mountPath: /data/bkee/ci/
             - mountPath: /data/workspace/environment/jvm
               name: log-volume
-              subPathExpr: jvm/$(POD_NAME)
+              subPathExpr: bkci/jvm/$(POD_NAME)
       volumes:
       - name: mypvc
         nfs:
           path: /4c1q3vbj/{{ .Values.cfsPath }}/environment
           server: 9.136.137.6
       - hostPath:
-          path: /data/bkci
+          path: /data
         name: log-volume
 {{- end -}}
