@@ -121,7 +121,7 @@ spec:
               mountPath: {{ .Values.persistence.mountPath }}
             - mountPath: /data/workspace/dispatch/jvm
               name: log-volume
-              subPathExpr: jvm/$(POD_NAME)
+              subPathExpr: bkci/jvm/$(POD_NAME)
       volumes:
         - name: storage
           {{- if .Values.persistence.enabled }}
@@ -131,6 +131,6 @@ spec:
           emptyDir: {}
           {{- end }}
         - hostPath:
-            path: /data/bkci
+            path: /data
           name: log-volume
 {{- end -}}
