@@ -316,6 +316,54 @@ class ProjectLocalService @Autowired constructor(
         return ProjectUtils.packagingBean(userProjectRecord!!, setOf())
     }
 
+    fun getOrCreateRdsProject(userId: String, productCode: String, projectName: String): ProjectVO {
+        val projectCode = "RDS_$productCode"
+        var userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
+        if (userProjectRecord != null) {
+            return ProjectUtils.packagingBean(userProjectRecord, setOf())
+        }
+
+        val projectCreateInfo = ProjectCreateInfo(
+            projectName = projectName,
+            englishName = projectCode,
+            projectType = ProjectTypeEnum.SUPPORT_PRODUCT.index,
+            description = "RDS project for $userId",
+            bgId = 0L,
+            bgName = "",
+            deptId = 0L,
+            deptName = "",
+            centerId = 0L,
+            centerName = "",
+            secrecy = false,
+            kind = 0
+        )
+
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val createExt = ProjectCreateExtInfo(
+                needValidate = false,
+                needAuth = false
+            )
+            projectService.create(
+                userId = userId,
+                projectCreateInfo = projectCreateInfo,
+                accessToken = null,
+                createExt = createExt,
+                projectId = projectCode,
+                channel = ProjectChannelCode.BS
+            )
+            success = true
+        } catch (e: Exception) {
+            logger.warn("Fail to create the project ($projectCreateInfo)", e)
+            throw e
+        } finally {
+            jmxApi.execute(PROJECT_CREATE, System.currentTimeMillis() - startEpoch, success)
+        }
+        userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
+        return ProjectUtils.packagingBean(userProjectRecord!!, setOf())
+    }
+
     fun getProjectByGroup(userId: String, bgName: String?, deptName: String?, centerName: String?): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
