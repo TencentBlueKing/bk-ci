@@ -36,6 +36,8 @@ import com.tencent.devops.common.api.constant.HTTP_405
 import com.tencent.devops.common.api.constant.HTTP_422
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.prometheus.BkTimedAspect
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.exception.GitApiException
@@ -47,6 +49,9 @@ import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Tags
+import io.micrometer.core.instrument.Timer
 import com.tencent.devops.scm.pojo.TapdWorkItem
 import okhttp3.MediaType
 import okhttp3.Request
@@ -357,11 +362,24 @@ open class GitApi {
     }
 
     private fun <T> callMethod(operation: String, request: Request, classOfT: Class<T>): T {
-        return OkhttpUtils.doRedirectHttp(request) { response ->
-            if (!response.isSuccessful) {
-                handleApiException(operation, response.code(), response.body()?.string() ?: "")
+        val sample = Timer.start(SpringContextUtil.getBean(MeterRegistry::class.java))
+        var exceptionClass = BkTimedAspect.DEFAULT_EXCEPTION_TAG_VALUE
+        try {
+            return OkhttpUtils.doRedirectHttp(request) { response ->
+                if (!response.isSuccessful) {
+                    handleApiException(operation, response.code(), response.body()?.string() ?: "")
+                }
+                JsonUtil.getObjectMapper().readValue(response.body()!!.string(), classOfT)
             }
-            JsonUtil.getObjectMapper().readValue(response.body()!!.string(), classOfT)
+        } catch (err: Exception) {
+            exceptionClass = err.javaClass.simpleName
+            throw err
+        } finally {
+            val tags = Tags.of(
+                "operation", operation
+            )
+            SpringContextUtil.getBean(BkTimedAspect::class.java)
+                .record("bk_method_time", tags, "工蜂接口耗时度量", sample, exceptionClass)
         }
     }
 
