@@ -289,25 +289,6 @@ class StreamPipelineService @Autowired constructor(
                 pipelineId = pipeline.pipelineId,
                 userId = userId
             )
-        } else {
-            // 编辑流水线model
-            processClient.edit(
-                userId = userId,
-                projectId = projectCode,
-                pipelineId = pipeline.pipelineId,
-                pipeline = modelAndSetting.model,
-                channelCode = channelCode,
-                updateLastModifyUser = updateLastModifyUser
-            )
-            // 已有的流水线需要更新下Stream这里的状态
-            logger.info("update gitPipeline pipeline: $pipeline")
-            gitPipelineResourceDao.updatePipeline(
-                dslContext = dslContext,
-                gitProjectId = gitProjectId,
-                pipelineId = pipeline.pipelineId,
-                displayName = pipeline.displayName,
-                version = ymlVersion
-            )
         }
         processClient.saveSetting(
             userId = userId,
