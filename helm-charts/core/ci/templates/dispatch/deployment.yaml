@@ -102,6 +102,15 @@ spec:
             timeoutSeconds: 10
             failureThreshold: 5
             successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /management/health/readinessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
           volumeMounts:
           - mountPath: /data/workspace/dispatch/jvm
             name: log-volume
