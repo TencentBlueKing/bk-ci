@@ -471,21 +471,16 @@ class RepositoryService @Autowired constructor(
     ): Long {
         if (!repository.isLegal()) {
             logger.warn("The repository($repository) is illegal")
-            val validateResult: Result<String?> = MessageCodeUtil.generateResponseDataObject(
-                RepositoryMessageCode.REPO_PATH_WRONG_PARM,
-                arrayOf(repository.getStartPrefix())
-            )
-            throw OperationException(
-                validateResult.message!!
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.REPO_PATH_WRONG_PARM,
+                params = arrayOf(repository.getStartPrefix())
             )
         }
 
         if (hasAliasName(projectId, null, repository.aliasName)) {
-            throw OperationException(
-                MessageCodeUtil.generateResponseDataObject<String?>(
-                    RepositoryMessageCode.REPO_NAME_EXIST,
-                    arrayOf(repository.aliasName)
-                ).message!!
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.REPO_NAME_EXIST,
+                params = arrayOf(repository.aliasName)
             )
         }
 
