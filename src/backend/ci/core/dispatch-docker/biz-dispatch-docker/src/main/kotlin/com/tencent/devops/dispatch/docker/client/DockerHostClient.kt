@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
@@ -64,6 +65,7 @@ import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -88,7 +90,8 @@ class DockerHostClient @Autowired constructor(
     private val defaultImageConfig: DefaultImageConfig,
     private val dockerHostProxyService: DockerHostProxyService,
     private val dockerHostQpcService: DockerHostQpcService,
-    private val redisUtils: RedisUtils
+    private val redisUtils: RedisUtils,
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     companion object {
@@ -508,6 +511,15 @@ class DockerHostClient @Autowired constructor(
         if (retryTime < RETRY_BUILD_TIME) {
             LOG.warn("[${dockerHostBuildInfo.projectId}|${dockerHostBuildInfo.pipelineId}|${dockerHostBuildInfo.buildId}" +
                     "|$retryTime] Start build Docker VM in $dockerIp failed, retry startBuild. errorMessage: $errorMessage")
+
+            buildLogPrinter.addYellowLine(
+                buildId = dockerHostBuildInfo.buildId,
+                message = "Start build Docker VM in $dockerIp failed, retry startBuild.",
+                tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
+                jobId = dockerHostBuildInfo.containerHashId,
+                executeCount = 1
+            )
+
             val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
             val retryTimeLocal = retryTime + 1
             // 过滤重试前异常IP, 并重新获取可用ip
