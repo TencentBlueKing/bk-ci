@@ -36,7 +36,7 @@ class ShortUrlCleanJob(
             var endId = startId + batchCount
             do {
                 val shortUrls = shortUrlDao.getByIdRange(dslContext, startId, endId)
-                val deleteIdList = shortUrls.filter { it.expiredTime.isBefore(expiredTime)}.map { it.id }
+                val deleteIdList = shortUrls.filter { it.expiredTime.isBefore(expiredTime) }.map { it.id }
                 if (deleteIdList.isNotEmpty()) {
                     deletedCount += shortUrlDao.delete(dslContext, deleteIdList)
                 }
