@@ -16,7 +16,7 @@
         "@blueking/log": "2.0.4",
         "@icon-cool/bk-icon-devops": "^0.2.1",
         "axios": "^0.27.2",
-        "bk-magic-vue": "2.3.0",
+        "bk-magic-vue": "2.4.9",
         "bkui-pipeline": "~0.1.22",
         "clipboard": "^1.7.1",
         "moment": "^2.29.2",
