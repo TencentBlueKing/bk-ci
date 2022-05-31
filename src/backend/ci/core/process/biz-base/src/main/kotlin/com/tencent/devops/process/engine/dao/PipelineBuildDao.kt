@@ -871,14 +871,24 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         buildId: String,
-        stageStatus: List<BuildStageStatus>
+        stageStatus: List<BuildStageStatus>,
+        oldBuildStatus: BuildStatus? = null,
+        newBuildStatus: BuildStatus? = null
     ): Int {
-        return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.update(this)
+        with(T_PIPELINE_BUILD_HISTORY) {
+            val update = dslContext.update(this)
                 .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
-                .where(BUILD_ID.eq(buildId))
-                .and(PROJECT_ID.eq(projectId))
-                .execute()
+            newBuildStatus?.let { update.set(STATUS, newBuildStatus.ordinal) }
+            return if (oldBuildStatus == null) {
+                update.where(BUILD_ID.eq(buildId))
+                    .and(PROJECT_ID.eq(projectId))
+                    .execute()
+            } else {
+                update.where(BUILD_ID.eq(buildId))
+                    .and(PROJECT_ID.eq(projectId))
+                    .and(STATUS.eq(oldBuildStatus.ordinal))
+                    .execute()
+            }
         }
     }
 
