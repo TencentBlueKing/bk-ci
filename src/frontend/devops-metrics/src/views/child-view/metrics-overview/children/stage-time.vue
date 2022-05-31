@@ -20,13 +20,6 @@ const props = defineProps(sharedProps);
 const isLoading = ref(false);
 const stageList = ref<Array<IStage>>([]);
 
-// const bgColorMap = [
-
-// ];
-// const borderColorMap = [
-
-// ];
-
 const getDataFromApi = () => {
   isLoading.value = true;
   http

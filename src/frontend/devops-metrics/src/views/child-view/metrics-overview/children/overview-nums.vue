@@ -8,6 +8,9 @@ import {
   sharedProps,
 } from '../common/props-type';
 import http from '@/http/api';
+import {
+  InfoLine,
+} from 'bkui-vue/lib/icon';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 dayjs.extend(duration);
@@ -108,7 +111,12 @@ onMounted(init);
           </h5>
           <span class="card-desc">
             Success rate
-            <i class="bk-icon icon-info"></i>
+            <bk-popover placement="top">
+              <info-line />
+              <template #content>
+                Success: 98 /  No. of total runs: 101
+              </template>
+            </bk-popover>
           </span>
         </section>
         <section class="card-detail">
@@ -122,7 +130,12 @@ onMounted(init);
           </h5>
           <span class="card-desc">
             Average time
-            <i class="bk-icon icon-info"></i>
+            <bk-popover placement="top">
+              <info-line />
+              <template #content>
+                Total time: 8h 59m / No. of total runs : 98
+              </template>
+            </bk-popover>
           </span>
         </section>
       </section>
@@ -139,14 +152,24 @@ onMounted(init);
           />
           <span class="card-desc">
             Code Quality
-            <i class="bk-icon icon-info"></i>
+            <bk-popover placement="top">
+              <info-line />
+              <template #content>
+                Code quality star based on Tencent Open Source Governance indicator system
+              </template>
+            </bk-popover>
           </span>
         </section>
         <section class="card-detail">
           <h5 class="card-num">{{ data.resolvedDefectNum }}</h5>
           <span class="card-desc">
             Reslved Code Defects
-            <i class="bk-icon icon-info"></i>
+            <bk-popover placement="top">
+              <info-line />
+              <template #content>
+                Resolved Code Defects
+              </template>
+            </bk-popover>
           </span>
         </section>
       </section>
@@ -160,7 +183,12 @@ onMounted(init);
           </h5>
           <span class="card-desc">
             Interception rate
-            <i class="bk-icon icon-info"></i>
+            <bk-popover placement="top">
+              <info-line />
+              <template #content>
+                Intercepted: 50 / No. of total runs: 100
+              </template>
+            </bk-popover>
           </span>
         </section>
       </section>
@@ -179,7 +207,12 @@ onMounted(init);
           </h5>
           <span class="card-desc">
             Saving Time
-            <i class="bk-icon icon-info"></i>
+            <bk-popover placement="top">
+              <info-line />
+              <template #content>
+                Time saved after using Turbo
+              </template>
+            </bk-popover>
           </span>
         </section>
       </section>

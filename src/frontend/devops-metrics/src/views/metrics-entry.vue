@@ -12,7 +12,7 @@ const navList = [
   },
   {
     name: 'Plugin trend',
-    router: 'PluginFailAnalysis',
+    router: 'PluginRunAnalysis',
     icon: 'metrics-plugin-trend',
   },
 ];

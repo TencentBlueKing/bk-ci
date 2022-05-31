@@ -68,6 +68,7 @@ const clearStatus = () => {
     />
     <bk-date-picker
       class="mr16 w240"
+      type="daterange"
       @change="handleTimeChange"
     />
     <bk-button @click="clearStatus">Reset</bk-button>

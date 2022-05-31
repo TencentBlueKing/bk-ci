@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import MetricsHeader from '@/components/metrics-header';
+import AddPlugin from '../common/add-plugin.vue';
 import AnalysisFilter from './children/analysis-filter.vue';
 import AnalysisLines from './children/analysis-lines.vue';
 import AnalysisTable from './children/analysis-table.vue';
@@ -25,7 +26,7 @@ const handleFilterChange = (newStatus) => {
 </script>
 
 <template>
-  <metrics-header title="Plugin trend">
+  <metrics-header>
     <span>Plugin trend</span>
     <add-plugin></add-plugin>
   </metrics-header>
@@ -43,7 +44,3 @@ const handleFilterChange = (newStatus) => {
     />
   </main>
 </template>
-
-<style lang="scss">
-
-</style>

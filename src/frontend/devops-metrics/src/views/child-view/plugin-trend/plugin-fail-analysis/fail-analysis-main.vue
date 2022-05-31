@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import MetricsHeader from '@/components/metrics-header';
+import AddPlugin from '../common/add-plugin.vue';
 import AnalysisFilter from './children/analysis-filter.vue';
 import AnalysisDoughnut from './children/analysis-doughnut.vue';
 import AnalysisTable from './children/analysis-table.vue';
