@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
@@ -158,6 +159,7 @@ class GitService @Autowired constructor(
 
     private val executorService = Executors.newFixedThreadPool(2)
 
+    @BkTimed(extraTags = ["operation", "获取项目"])
     fun getProject(accessToken: String, userId: String): List<Project> {
 
         logger.info("Start to get the projects by user $userId with token $accessToken")
@@ -206,6 +208,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "获取项目"])
     fun getProjectList(
         accessToken: String,
         userId: String,
@@ -261,6 +264,7 @@ class GitService @Autowired constructor(
         return res
     }
 
+    @BkTimed(extraTags = ["operation", "拉分支"])
     fun getBranch(
         accessToken: String,
         userId: String,
@@ -318,6 +322,7 @@ class GitService @Autowired constructor(
         return res
     }
 
+    @BkTimed(extraTags = ["operation", "拉标签"])
     fun getTag(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): List<GitTag> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
@@ -362,6 +367,7 @@ class GitService @Autowired constructor(
         return res
     }
 
+    @BkTimed(extraTags = ["operation", "refresh_token"])
     fun refreshToken(userId: String, accessToken: GitToken): GitToken {
         logger.info("Start to refresh the token of user $userId")
         val startEpoch = System.currentTimeMillis()
@@ -386,6 +392,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "refresh_token"])
     fun refreshProjectToken(projectId: String, refreshToken: String): GitToken {
         logger.info("Start to refresh the token of projectId $projectId")
         val startEpoch = System.currentTimeMillis()
@@ -418,11 +425,13 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "AUTHORIZE"])
     fun getAuthUrl(authParamJsonStr: String): String {
         return "${gitConfig.gitUrl}/oauth/authorize?" +
                 "client_id=$clientId&redirect_uri=$callbackUrl&response_type=code&state=$authParamJsonStr"
     }
 
+    @BkTimed(extraTags = ["operation", "TOKEN"])
     fun getToken(userId: String, code: String): GitToken {
         logger.info("Start to get the token of user $userId by code $code")
         val startEpoch = System.currentTimeMillis()
@@ -450,6 +459,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "TOKEN"])
     fun getToken(gitProjectId: String): GitToken {
         logger.info("Start to get the token for git project($gitProjectId)")
         val startEpoch = System.currentTimeMillis()
@@ -481,6 +491,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "USER"])
     fun getUserInfoByToken(
         token: String,
         useAccessToken: Boolean = true
@@ -515,6 +526,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "获取项目中成员信息"])
     fun checkUserGitAuth(
         userId: String,
         gitProjectId: String,
@@ -551,6 +563,7 @@ class GitService @Autowired constructor(
         return false
     }
 
+    @BkTimed(extraTags = ["operation", "GIT_CI_USER"])
     fun getGitCIUserId(rtxId: String, gitProjectId: String): String? {
         try {
             val token = getToken(gitProjectId)
@@ -573,6 +586,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "GIT_CI_FILE_CONTENT"])
     fun getGitCIFileContent(
         gitProjectId: Long,
         filePath: String,
@@ -605,6 +619,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "GIT_CI_MRCHANGES"])
     fun getGitCIMrChanges(gitProjectId: Long, mergeRequestId: Long, token: String): GitMrChangeInfo {
         logger.info("[$gitProjectId|$mergeRequestId] Start to get the git mrRequest changes")
         val startEpoch = System.currentTimeMillis()
@@ -631,6 +646,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "git_ci_mrInfo"])
     fun getGitCIMrInfo(gitProjectId: Long, mergeRequestId: Long, token: String): GitCIMrInfo {
         logger.info("[$gitProjectId|$mergeRequestId] Start to get the git mrRequest info")
         val startEpoch = System.currentTimeMillis()
@@ -657,6 +673,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "git_ci_File_Commits"])
     fun getFileCommits(gitProjectId: Long, filePath: String, branch: String, token: String): List<GitCIFileCommit> {
         logger.info("[$gitProjectId|$filePath|$branch] Start to get the git file commits")
         val startEpoch = System.currentTimeMillis()
@@ -684,6 +701,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "gitCI拉提交记录"])
     fun getCommits(
         gitProjectId: Long,
         filePath: String?,
@@ -751,6 +769,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "git_ci_create_File"])
     fun gitCodeCreateFile(
         gitProjectId: String,
         token: String,
@@ -777,6 +796,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "git_ci_commit_ref"])
     fun getCommitRefs(gitProjectId: Long, commitId: String, type: String, token: String): List<GitCICommitRef> {
         logger.info("[$gitProjectId|$commitId|$type] Start to get the git commit ref")
         val startEpoch = System.currentTimeMillis()
@@ -803,6 +823,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "git_ci_file_tree"])
     fun getGitCIFileTree(
         gitProjectId: Long,
         path: String,
@@ -851,6 +872,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "RedirectUrl"])
     fun getRedirectUrl(authParamJsonStr: String): String {
         logger.info("getRedirectUrl authParamJsonStr is: $authParamJsonStr")
         val authParamDecodeJsonStr = URLDecoder.decode(authParamJsonStr, "UTF-8")
@@ -870,6 +892,7 @@ class GitService @Autowired constructor(
     }
 
     @Suppress("ALL")
+    @BkTimed(extraTags = ["operation", "GIT_FILE_CONTENT"])
     fun getGitFileContent(
         repoUrl: String? = null,
         repoName: String,
@@ -915,6 +938,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "git_lab_file_content"])
     fun getGitlabFileContent(
         repoUrl: String?,
         repoName: String,
@@ -960,6 +984,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "git_create_repository"])
     fun createGitCodeRepository(
         userId: String,
         token: String,
@@ -1029,6 +1054,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "init_repository_info"])
     fun initRepositoryInfo(
         userId: String,
         nameSpaceName: String,
@@ -1114,6 +1140,7 @@ class GitService @Autowired constructor(
         return Result(true)
     }
 
+    @BkTimed(extraTags = ["operation", "add_project_member"])
     fun addGitProjectMember(
         userIdList: List<String>,
         repoName: String,
@@ -1169,6 +1196,7 @@ class GitService @Autowired constructor(
         return Result(true)
     }
 
+    @BkTimed(extraTags = ["operation", "delete_project_member"])
     fun deleteGitProjectMember(
         userIdList: List<String>,
         repoName: String,
@@ -1227,6 +1255,7 @@ class GitService @Autowired constructor(
         return Result(true)
     }
 
+    @BkTimed(extraTags = ["operation", "get_project_member_info"])
     fun getGitProjectMemberInfo(
         memberId: Int,
         repoName: String,
@@ -1255,6 +1284,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "delete_project_member_info"])
     fun deleteGitProject(repoName: String, token: String, tokenType: TokenTypeEnum): Result<Boolean> {
         logger.info("deleteGitProject repoName is:$repoName,tokenType is:$tokenType")
         val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
@@ -1283,6 +1313,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "get_user_info"])
     fun getGitUserInfo(userId: String, token: String, tokenType: TokenTypeEnum): Result<GitUserInfo?> {
         logger.info("getGitUserInfo userId is:$userId,tokenType is:$tokenType")
         val url = StringBuilder("${gitConfig.gitApiUrl}/users/$userId")
@@ -1306,6 +1337,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "git_project_info"])
     fun getGitProjectInfo(id: String, token: String, tokenType: TokenTypeEnum): Result<GitProjectInfo?> {
         logger.info("getGitUserInfo id is:$id,tokenType is:$tokenType")
         val encodeId = URLEncoder.encode(id, "utf-8") // 如果id为NAMESPACE_PATH则需要encode
@@ -1327,6 +1359,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "git_repository_tree_info"])
     fun getGitRepositoryTreeInfo(
         userId: String,
         repoName: String,
@@ -1372,6 +1405,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "git_ci_project_info"])
     fun getGitCIProjectInfo(
         gitProjectId: String,
         token: String,
@@ -1397,6 +1431,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "update_project_info"])
     fun updateGitProjectInfo(
         projectName: String,
         updateGitProjectInfo: UpdateGitProjectInfo,
@@ -1435,6 +1470,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "move_project_group"])
     fun moveProjectToGroup(
         groupCode: String,
         repoName: String,
@@ -1490,6 +1526,7 @@ class GitService @Autowired constructor(
     }
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
+    @BkTimed(extraTags = ["operation", "mr_info"])
     fun getMrInfo(
         id: String,
         mrId: Long,
@@ -1522,6 +1559,7 @@ class GitService @Autowired constructor(
     }
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
+    @BkTimed(extraTags = ["operation", "mr_review_info"])
     fun getMrReviewInfo(
         id: String,
         mrId: Long,
@@ -1551,6 +1589,7 @@ class GitService @Autowired constructor(
     }
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
+    @BkTimed(extraTags = ["operation", "mr_change_info"])
     fun getMrChangeInfo(
         id: String,
         mrId: Long,
@@ -1589,6 +1628,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "download_git_repo_file"])
     fun downloadGitRepoFile(
         repoName: String,
         sha: String?,
@@ -1606,6 +1646,7 @@ class GitService @Autowired constructor(
         OkhttpUtils.downloadFile(url.toString(), response)
     }
 
+    @BkTimed(extraTags = ["operation", "add_commit_check"])
     fun addCommitCheck(request: CommitCheckRequest) {
         val startEpoch = System.currentTimeMillis()
         try {
@@ -1626,6 +1667,7 @@ class GitService @Autowired constructor(
     }
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
+    @BkTimed(extraTags = ["operation", "repo_members"])
     fun getRepoMembers(repoName: String, tokenType: TokenTypeEnum, token: String): List<GitMember> {
         val url = StringBuilder(
             "${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/members"
@@ -1656,6 +1698,7 @@ class GitService @Autowired constructor(
         return result
     }
 
+    @BkTimed(extraTags = ["operation", "CI获取项目中成员信息"])
     fun getRepoMemberInfo(
         token: String,
         userId: String,
@@ -1690,6 +1733,7 @@ class GitService @Autowired constructor(
     }
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
+    @BkTimed(extraTags = ["operation", "获取项目中全部成员信息"])
     fun getRepoAllMembers(repoName: String, tokenType: TokenTypeEnum, token: String): List<GitMember> {
         val url = StringBuilder(
             "${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/members/all"
@@ -1720,6 +1764,7 @@ class GitService @Autowired constructor(
         return result
     }
 
+    @BkTimed(extraTags = ["operation", "repo_recent_commit_info"])
     fun getRepoRecentCommitInfo(
         repoName: String,
         sha: String,
@@ -1752,6 +1797,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "project_group_info"])
     fun getProjectGroupInfo(
         id: String,
         includeSubgroups: Boolean?,
@@ -1808,6 +1854,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "clear_token"])
     fun clearToken(token: String): Boolean {
         logger.info("Start to clear the token: $token")
         val startEpoch = System.currentTimeMillis()
@@ -1828,6 +1875,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "创建标签"])
     fun createGitTag(
         repoName: String,
         tagName: String,
@@ -1954,6 +2002,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "members"])
     fun getMembers(
         token: String,
         gitProjectId: String,
@@ -1992,6 +2041,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "GIT_CI_USER"])
     fun getGitUserId(
         rtxUserId: String,
         gitProjectId: String,
@@ -2018,6 +2068,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "获取项目中全部成员信息"])
     fun getProjectMembersAll(
         gitProjectId: String,
         page: Int,
@@ -2061,6 +2112,7 @@ class GitService @Autowired constructor(
         return sb.toString()
     }
 
+    @BkTimed(extraTags = ["operation", "git_file_info"])
     fun getGitFileInfo(
         gitProjectId: String,
         filePath: String?,
@@ -2118,6 +2170,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "add_mr_commit"])
     fun addMrComment(
         token: String,
         gitProjectId: String,
@@ -2153,6 +2206,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "git_project_list"])
     fun getGitCodeProjectList(
         accessToken: String,
         page: Int?,
@@ -2194,6 +2248,7 @@ class GitService @Autowired constructor(
         return result
     }
 
+    @BkTimed(extraTags = ["operation", "git_create_file"])
     fun gitCreateFile(
         gitProjectId: String,
         token: String,

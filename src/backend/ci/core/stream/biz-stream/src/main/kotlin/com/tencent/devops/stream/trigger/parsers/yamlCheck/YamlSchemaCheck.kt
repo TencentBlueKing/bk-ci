@@ -53,6 +53,7 @@ import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
+import java.util.concurrent.ConcurrentHashMap
 
 @Component
 class YamlSchemaCheck @Autowired constructor() {
@@ -68,14 +69,10 @@ class YamlSchemaCheck @Autowired constructor() {
     }
 
     private val logger = LoggerFactory.getLogger(YamlSchemaCheck::class.java)
-
-    private val yaml = Yaml()
-
     private val schemaFactory = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7))
         .objectMapper(YamlUtil.getObjectMapper())
         .build()
-
-    private val schemaMap = mutableMapOf<String, JsonSchema>()
+    private val schemaMap = ConcurrentHashMap<String, JsonSchema>()
 
     // 给来自前端的接口用，直接扔出去就好
     fun check(originYaml: String, templateType: TemplateType?, isCiFile: Boolean) {
@@ -90,7 +87,7 @@ class YamlSchemaCheck @Autowired constructor() {
 
     private fun checkYamlSchema(originYaml: String, templateType: TemplateType? = null, isCiFile: Boolean) {
         val loadYaml = try {
-            YamlUtil.toYaml(yaml.load(originYaml))
+            YamlUtil.toYaml(Yaml().load(originYaml))
         } catch (ignored: Throwable) {
             throw YamlFormatException("There may be a problem with your yaml syntax ${ignored.message}")
         }
