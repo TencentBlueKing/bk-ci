@@ -198,6 +198,7 @@ func (s *sdk) launchServer() error {
 	if err == nil {
 		ctrlPath = absPath
 	}
+	ctrlPath = dcUtil.QuoteSpacePath(ctrlPath)
 	blog.Infof("sdk: got exe file full path: %s", ctrlPath)
 
 	sudo := ""
