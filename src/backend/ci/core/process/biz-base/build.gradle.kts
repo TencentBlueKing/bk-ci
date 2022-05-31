@@ -35,7 +35,6 @@ dependencies {
     api(project(":core:dispatch:api-dispatch")) // Dispatch配额实现在dispatch，考虑移除
     api(project(":core:project:api-project")) // 依赖读取项目VO
     api(project(":core:process:api-process"))
-    api(project(":core:plugin:codecc-plugin:common-codecc")) // MarketBuildUtils依赖了CodeCC，考虑移除
     api(project(":core:notify:api-notify")) // 消息通知API，考虑移除
     api(project(":core:process:model-process"))
     api("org.springframework.boot:spring-boot-starter-jooq")

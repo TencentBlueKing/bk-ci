@@ -84,16 +84,28 @@ class DockerHostZoneTaskService @Autowired constructor(
 
     fun create(userId: String, specialDockerHostVOs: List<SpecialDockerHostVO>): Boolean {
         logger.info("$userId create specialDockerHost: $specialDockerHostVOs")
-
         try {
             specialDockerHostVOs.forEach { specialDockerHostVO ->
-                pipelineDockerHostDao.insertHost(
+                val history = pipelineDockerHostDao.getHost(
                     dslContext = dslContext,
-                    projectId = specialDockerHostVO.projectId,
-                    hostIp = specialDockerHostVO.hostIp,
-                    remark = specialDockerHostVO.remark
+                    projectId = specialDockerHostVO.projectId
                 )
-
+                if (history == null) {
+                    pipelineDockerHostDao.insertHost(
+                        dslContext = dslContext,
+                        projectId = specialDockerHostVO.projectId,
+                        hostIp = specialDockerHostVO.hostIp,
+                        remark = specialDockerHostVO.remark
+                    )
+                } else {
+                    logger.info("userId:$userId had created specialDockerHost: $specialDockerHostVOs")
+                    pipelineDockerHostDao.updateHost(
+                        dslContext = dslContext,
+                        projectId = specialDockerHostVO.projectId,
+                        hostIp = specialDockerHostVO.hostIp,
+                        remark = specialDockerHostVO.remark
+                    )
+                }
                 if (specialDockerHostVO.nfsShare != null && specialDockerHostVO.nfsShare!!) {
                     redisUtils.getSpecialProjectListKey().let {
                         val projectIdList = it?.split(",") ?: emptyList()
