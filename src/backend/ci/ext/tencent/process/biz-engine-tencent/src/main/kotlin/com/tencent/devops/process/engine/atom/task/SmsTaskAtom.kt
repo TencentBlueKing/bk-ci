@@ -60,11 +60,21 @@ class SmsTaskAtom @Autowired constructor(
         return JsonUtil.mapTo(task.taskParams, SendSmsNotifyElement::class.java)
     }
 
-    override fun execute(task: PipelineBuildTask, param: SendSmsNotifyElement, runVariables: Map<String, String>): AtomResponse {
+    override fun execute(
+        task: PipelineBuildTask,
+        param: SendSmsNotifyElement,
+        runVariables: Map<String, String>
+    ): AtomResponse {
         val buildId = task.buildId
         val taskId = task.taskId
         if (param.receivers.isEmpty()) {
-            buildLogPrinter.addRedLine(buildId, "The receivers is not init of build", taskId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = "The receivers is not init of build",
+                tag = taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -78,15 +88,24 @@ class SmsTaskAtom @Autowired constructor(
         var bodyStr = parseVariable(param.body, runVariables)
         // 启动短信的查看详情,短信必须是短连接
         if (sendDetailFlag) {
-            val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=${runVariables[PROJECT_NAME]}&pipelineId=${runVariables[PIPELINE_ID]}&buildId=$buildId"
-            val shortUrl = client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 180)).data!!
+            val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html" +
+                "?flag=buildArchive&projectId=${runVariables[PROJECT_NAME]}" +
+                "&pipelineId=${runVariables[PIPELINE_ID]}&buildId=$buildId"
+            val shortUrl = client.get(ServiceShortUrlResource::class)
+                .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 7)).data!!
             bodyStr = "$bodyStr\n\n 查看详情：$shortUrl"
         }
         val message = SmsNotifyMessage().apply {
             body = bodyStr
         }
         val receiversStr = parseVariable(param.receivers.joinToString(","), runVariables)
-        buildLogPrinter.addLine(buildId, "send SMS message (${message.body}) to $receiversStr", taskId, task.containerHashId, task.executeCount ?: 1)
+        buildLogPrinter.addLine(
+            buildId = buildId,
+            message = "send SMS message (${message.body}) to $receiversStr",
+            tag = taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
 
         message.addAllReceivers(receiversStr.split(",").toSet())
         client.get(ServiceNotifyResource::class).sendSmsNotify(message)
