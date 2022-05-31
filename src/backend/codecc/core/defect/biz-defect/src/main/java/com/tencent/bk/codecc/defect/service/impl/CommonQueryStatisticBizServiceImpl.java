@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.analysisresult.BaseLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.CommonLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -65,7 +65,7 @@ public class CommonQueryStatisticBizServiceImpl implements IQueryStatisticBizSer
         if (isLast) {
             statisticEntity = commonStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
         } else {
-            statisticEntity = commonStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+            statisticEntity = commonStatisticRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
         }
 
         CommonLastAnalysisResultVO lastAnalysisResultVO = new CommonLastAnalysisResultVO();
@@ -106,7 +106,7 @@ public class CommonQueryStatisticBizServiceImpl implements IQueryStatisticBizSer
     private void setDefectChange(CommonLastAnalysisResultVO lastAnalysisResultVO, long taskId, String toolName,
                                  String buildId) {
         ToolBuildStackEntity toolBuildStackEntity =
-                toolBuildStackRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+                toolBuildStackRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
 
         if (toolBuildStackEntity == null) {
             return;
@@ -118,7 +118,7 @@ public class CommonQueryStatisticBizServiceImpl implements IQueryStatisticBizSer
         } else {
             String preBuildId = toolBuildStackEntity.getBaseBuildId();
             CommonStatisticEntity preStatisticEntity =
-                    commonStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, preBuildId);
+                    commonStatisticRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, preBuildId);
 
             if (preStatisticEntity != null && preStatisticEntity.getExistCount() != null) {
                 Integer defectChange = lastAnalysisResultVO.getExistCount() - preStatisticEntity.getExistCount();

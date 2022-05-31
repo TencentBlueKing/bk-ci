@@ -54,7 +54,6 @@ import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
-import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
@@ -89,7 +88,6 @@ class StreamYamlBuild @Autowired constructor(
     private val deleteEventService: DeleteEventService,
     private val streamTriggerCache: StreamTriggerCache,
     private val repoTriggerEventService: RepoTriggerEventService,
-    private val streamGitConfig: StreamGitConfig,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val modelCreate: ModelCreate
 ) {
@@ -318,7 +316,7 @@ class StreamYamlBuild @Autowired constructor(
         logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, modelAndSetting: $modelAndSetting")
 
         // 判断是否更新最后修改人
-        val changeSet = action.data.context.changeSet?.toSet()
+        val changeSet = action.getChangeSet()
         val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
 
         return streamYamlBaseBuild.startBuild(
@@ -354,7 +352,7 @@ class StreamYamlBuild @Autowired constructor(
 
         // 判断是否更新最后修改人
         val pipeline = action.data.context.pipeline!!
-        val changeSet = action.data.context.changeSet?.toSet()
+        val changeSet = action.getChangeSet()
         val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
 
         streamYamlBaseBuild.savePipeline(
@@ -384,8 +382,7 @@ class StreamYamlBuild @Autowired constructor(
             yaml = yaml,
             streamGitProjectInfo = streamGitProjectInfo,
             webhookParams = webhookParams,
-            yamlTransferData = yamlTransferData,
-            streamUrl = streamGitConfig.streamUrl
+            yamlTransferData = yamlTransferData
         )
 
         val modelCreateEvent = ModelCreateEvent(
@@ -404,7 +401,7 @@ class StreamYamlBuild @Autowired constructor(
                 requestEventId = action.data.context.requestEventId!!,
                 objectKind = action.metaData.streamObjectKind
             ),
-            changeSet = action.data.context.changeSet?.toSet(),
+            changeSet = action.getChangeSet(),
             jobTemplateAcrossInfo = getJobTemplateAcrossInfo(yamlTransferData, action)
         )
 

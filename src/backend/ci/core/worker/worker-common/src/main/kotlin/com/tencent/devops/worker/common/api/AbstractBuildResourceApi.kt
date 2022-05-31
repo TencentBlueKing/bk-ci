@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
+import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -45,7 +46,6 @@ import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.ArchiveUtils
-import io.undertow.util.StatusCodes
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
@@ -53,7 +53,6 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpMethod
 import java.io.File
 import java.net.ConnectException
 import java.net.HttpRetryException
@@ -119,7 +118,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             }
         } catch (re: SocketTimeoutException) {
             if (re.message == "connect timed out" ||
-                (request.method() == HttpMethod.GET.name && re.message == "timeout")
+                (request.method() == "GET" && re.message == "timeout")
             ) {
                 logger.warn("SocketTimeoutException(${re.message})|request($request), try to retry $retryCount")
                 if (retryCount <= 0) {
@@ -192,7 +191,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             readTimeoutInSec = readTimeoutInSec,
             writeTimeoutInSec = writeTimeoutInSec
         ).use { response ->
-            if (response.code() == StatusCodes.NOT_FOUND) {
+            if (response.code() == HTTP_404) {
                 throw RemoteServiceException("file does not exist")
             }
             if (!response.isSuccessful) {

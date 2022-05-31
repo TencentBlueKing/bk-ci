@@ -64,5 +64,5 @@ public interface PlatformInfoRepository extends MongoRepository<PlatformInfoEnti
      * @param ip
      * @return
      */
-    PlatformInfoEntity findByToolNameAndIp(String toolName, String ip);
+    PlatformInfoEntity findFirstByToolNameAndIp(String toolName, String ip);
 }

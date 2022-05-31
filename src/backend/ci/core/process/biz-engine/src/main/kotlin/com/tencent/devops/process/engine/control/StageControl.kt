@@ -32,6 +32,7 @@ import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
@@ -81,6 +82,7 @@ class StageControl @Autowired constructor(
             }
         )
 
+    @BkTimed
     fun handle(event: PipelineBuildStageEvent) {
         val watcher = Watcher(id = "ENGINE|StageControl|${event.traceId}|${event.buildId}|Stage#${event.stageId}")
         with(event) {

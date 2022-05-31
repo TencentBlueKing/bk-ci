@@ -117,6 +117,7 @@ class TaskDaemon(
             taskId = buildTask.taskId!!,
             elementId = buildTask.taskId!!,
             containerId = buildVariables.containerHashId,
+            elementVersion = buildTask.elementVersion,
             success = isSuccess,
             buildResult = buildResult,
             message = errorMessage,

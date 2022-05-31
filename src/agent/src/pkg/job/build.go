@@ -39,12 +39,12 @@ import (
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/httputil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
-	"github.com/astaxie/beego/logs"
 )
 
 const buildIntervalInSeconds = 5
@@ -86,7 +86,7 @@ func DoPollAndBuild() {
 		time.Sleep(buildIntervalInSeconds * time.Second)
 		agentStatus, err := getAgentStatus()
 		if err != nil {
-			logs.Warning("get agent status err: ", err.Error())
+			logs.Warn("get agent status err: ", err.Error())
 			continue
 		}
 		if agentStatus != config.AgentStatusImportOk {

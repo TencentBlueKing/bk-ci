@@ -41,6 +41,7 @@ export default new Store<RootState>({
             showProjectList: false,
             showNav: true
         },
+        showNotice: false,
         currentNotice: {}
     }
 })

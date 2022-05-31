@@ -134,7 +134,7 @@ class StreamRequestService @Autowired constructor(
                             StreamBuildHistory(
                                 displayName = pipeline.displayName,
                                 pipelineId = pipeline.pipelineId,
-                                gitRequestEvent = StreamGitRequestEventReq(realEvent),
+                                gitRequestEvent = StreamGitRequestEventReq(realEvent, conf.homepage),
                                 buildHistory = history,
                                 reason = TriggerReason.TRIGGER_SUCCESS.name,
                                 reasonDetail = null
@@ -174,7 +174,7 @@ class StreamRequestService @Autowired constructor(
                     StreamBuildHistory(
                         displayName = pipeline?.displayName,
                         pipelineId = pipeline?.pipelineId,
-                        gitRequestEvent = StreamGitRequestEventReq(event),
+                        gitRequestEvent = StreamGitRequestEventReq(event, conf.homepage),
                         buildHistory = null,
                         reason = it.reason,
                         reasonDetail = it.reasonDetail
@@ -201,5 +201,17 @@ class StreamRequestService @Autowired constructor(
             }
         }
         return null
+    }
+
+    fun getRequestBuildTriggers(projectId: Long, page: Int?, pageSize: Int?): List<String> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
+        val requestEventBuildList = gitRequestEventBuildDao.getTriggerUserByGitProjectID(
+            dslContext = dslContext,
+            gitProjectId = projectId,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull
+        )
+        return requestEventBuildList.map { it.value1() }
     }
 }

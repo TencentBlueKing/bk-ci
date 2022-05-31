@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,128 +10,108 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 package com.tencent.bkrepo.helm.listener
 
-import com.tencent.bkrepo.helm.exception.HelmException
+import com.tencent.bkrepo.helm.config.HelmProperties
 import com.tencent.bkrepo.helm.listener.event.ChartDeleteEvent
+import com.tencent.bkrepo.helm.listener.event.ChartUploadEvent
 import com.tencent.bkrepo.helm.listener.event.ChartVersionDeleteEvent
-import com.tencent.bkrepo.helm.model.metadata.HelmChartMetadata
-import com.tencent.bkrepo.helm.model.metadata.HelmIndexYamlMetadata
-import com.tencent.bkrepo.helm.pojo.chart.ChartVersionDeleteRequest
+import com.tencent.bkrepo.helm.listener.operation.ChartDeleteOperation
+import com.tencent.bkrepo.helm.listener.operation.ChartPackageDeleteOperation
+import com.tencent.bkrepo.helm.listener.operation.ChartUploadOperation
+import com.tencent.bkrepo.helm.pojo.chart.ChartUploadRequest
+import com.tencent.bkrepo.helm.service.impl.AbstractChartService
+import com.tencent.bkrepo.helm.utils.HelmMetadataUtils
 import com.tencent.bkrepo.helm.utils.HelmUtils
-import com.tencent.bkrepo.repository.api.NodeClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
-import java.util.SortedSet
 
 @Component
-class ChartEventListener(nodeClient: NodeClient) : AbstractEventListener(nodeClient) {
+class ChartEventListener(
+    private val helmProperties: HelmProperties
+) : AbstractChartService() {
 
     /**
      * 删除chart版本，更新index.yaml文件
      */
-    @Synchronized
     @EventListener(ChartVersionDeleteEvent::class)
     fun handle(event: ChartVersionDeleteEvent) {
         // 如果index.yaml文件不存在，说明还没有初始化该文件，return
         // 如果index.yaml文件存在，则进行更新
         with(event.request) {
-            try {
-                if (!exist(projectId, repoName, HelmUtils.getIndexYamlFullPath())) {
-                    logger.warn("Index yaml file is not initialized in repo [$projectId/$repoName], return.")
-                    return
-                }
-                val originalIndexYamlMetadata = freshIndexYamlForDelete(this)
-                uploadIndexYamlMetadata(originalIndexYamlMetadata)
-                logger.info(
-                    "User [$operator] fresh index.yaml for delete chart [$name], version [$version] " +
-                            "in repo [$projectId/$repoName] success!"
-                )
-            } catch (exception: TypeCastException) {
-                logger.error(
-                    "User [$operator] fresh index.yaml for delete chart [$name], version [$version] " +
-                            "in repo [$projectId/$repoName] failed, message: $exception"
-                )
-                throw exception
+            logger.info("handling chart version delete event for [$name@$version] in repo [$projectId/$repoName]")
+            if (!exist(projectId, repoName, HelmUtils.getIndexCacheYamlFullPath())) {
+                logger.warn("Index yaml file is not initialized in repo [$projectId/$repoName], return.")
+                return
             }
-        }
-    }
-
-    private fun freshIndexYamlForDelete(request: ChartVersionDeleteRequest): HelmIndexYamlMetadata {
-        with(request) {
-            val originalIndexYamlMetadata = getOriginalIndexYaml()
-            originalIndexYamlMetadata.entries.let {
-                val chartMetadataSet =
-                    it[name] ?: throw HelmException(
-                        "index.yaml file for chart [$name] not found in repo [$projectId/$repoName]."
-                    )
-                if (chartMetadataSet.size == 1 && (version == chartMetadataSet.first().version)) {
-                    it.remove(name)
-                } else {
-                    updateIndexYaml(version, chartMetadataSet)
-                }
-            }
-            return originalIndexYamlMetadata
-        }
-    }
-
-    private fun updateIndexYaml(version: String, chartMetadataSet: SortedSet<HelmChartMetadata>) {
-        run stop@{
-            chartMetadataSet.forEachIndexed { _, helmChartMetadata ->
-                if (version == helmChartMetadata.version) {
-                    chartMetadataSet.remove(helmChartMetadata)
-                    return@stop
-                }
-            }
+            val task = ChartDeleteOperation(event.request, this@ChartEventListener)
+            threadPoolExecutor.submit(task)
         }
     }
 
     /**
-     * 删除chart版本，更新index.yaml文件
+     * 删除chart的package，更新index.yaml文件
      */
-    @Synchronized
     @EventListener(ChartDeleteEvent::class)
     fun handle(event: ChartDeleteEvent) {
-        with(event.request) {
-            try {
-                if (!exist(projectId, repoName, HelmUtils.getIndexYamlFullPath())) {
-                    logger.warn("Index yaml file is not initialized in repo [$projectId/$repoName], return.")
-                    return
-                }
-                val originalIndexYamlMetadata = getOriginalIndexYaml()
-                originalIndexYamlMetadata.entries.remove(name)
-                uploadIndexYamlMetadata(originalIndexYamlMetadata)
+        with(event.requestPackage) {
+            logger.info("Handling package delete event for [$name] in repo [$projectId/$repoName]")
+            if (!exist(projectId, repoName, HelmUtils.getIndexCacheYamlFullPath())) {
                 logger.info(
-                    "User [$operator] fresh index.yaml for delete chart [$name] " +
-                            "in repo [$projectId/$repoName] success!"
+                    "Index yaml file is not initialized in repo [$projectId/$repoName], refresh index.yaml interrupted."
                 )
-            } catch (exception: TypeCastException) {
-                logger.error(
-                    "User [$operator] fresh index.yaml for delete chart [$name] " +
-                            "in repo [$projectId/$repoName] failed, message: $exception"
-                )
-                throw exception
+                return
+            }
+            val task = ChartPackageDeleteOperation(event.requestPackage, this@ChartEventListener)
+            threadPoolExecutor.submit(task)
+        }
+    }
+
+    /**
+     * Chart文件上传成功后，进行后续操作，如创建package/packageVersion
+     */
+    @EventListener(ChartUploadEvent::class)
+    fun handle(event: ChartUploadEvent) {
+        handleChartUploadEvent(event.uploadRequest)
+    }
+
+    /**
+     * 当chart新上传成功后，更新index.yaml
+     */
+    private fun handleChartUploadEvent(uploadRequest: ChartUploadRequest) {
+        with(uploadRequest) {
+            logger.info("Handling package upload event for [$name] in repo [$projectId/$repoName]")
+            metadataMap?.let {
+                val helmChartMetadata = HelmMetadataUtils.convertToObject(metadataMap!!)
+                val nodeDetail = nodeClient.getNodeDetail(projectId, repoName, fullPath).data
+                nodeDetail?.let {
+                    logger.info("Creating upload event request....")
+                    val task = ChartUploadOperation(
+                        uploadRequest,
+                        helmChartMetadata,
+                        helmProperties.domain,
+                        nodeDetail,
+                        this@ChartEventListener
+                    )
+                    threadPoolExecutor.submit(task)
+                }
             }
         }
     }

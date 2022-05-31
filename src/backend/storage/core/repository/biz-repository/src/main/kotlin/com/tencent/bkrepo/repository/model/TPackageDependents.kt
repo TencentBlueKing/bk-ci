@@ -31,14 +31,14 @@
 
 package com.tencent.bkrepo.repository.model
 
-import com.tencent.bkrepo.common.mongo.dao.sharding.ShardingDocument
 import org.springframework.data.mongodb.core.index.CompoundIndex
 import org.springframework.data.mongodb.core.index.CompoundIndexes
+import org.springframework.data.mongodb.core.mapping.Document
 
 /**
  * 文件摘要引用
  */
-@ShardingDocument("package_dependents")
+@Document("package_dependents")
 @CompoundIndexes(
     CompoundIndex(
         name = "package_dependents_idx",

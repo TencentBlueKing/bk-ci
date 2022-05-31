@@ -51,7 +51,7 @@ public interface CCNDefectRepository extends MongoRepository<CCNDefectEntity, St
      * @param entityId
      * @return
      */
-    CCNDefectEntity findByEntityId(String entityId);
+    CCNDefectEntity findFirstByEntityId(String entityId);
 
 
     /**
