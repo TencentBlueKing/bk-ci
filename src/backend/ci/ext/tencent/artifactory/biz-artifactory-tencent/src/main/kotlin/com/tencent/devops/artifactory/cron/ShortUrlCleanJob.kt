@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 class ShortUrlCleanJob(
     private val dslContext: DSLContext,
     private val shortUrlDao: ShortUrlDao,
-    private val redisOperation: RedisOperation,
+    private val redisOperation: RedisOperation
 ) {
 
     @Scheduled(cron = "0 15 0 * * ? ")
