@@ -258,7 +258,7 @@ const actions = {
             }
             const queryStr = Object.keys(query).filter(key => query[key]).map(key => `${key}=${query[key]}`).join('&')
             const res = await vue.$ajax.get(`/repository/api/user/${type}/getProject?${queryStr}`)
-            const projectIndex = res.findIndex(project => project.httpUrl === state.templateCodeLib?.url)
+            const projectIndex = res?.findIndex(project => project.httpUrl === state.templateCodeLib?.url)
             if (projectIndex < 0 && state.templateCodeLib?.url) {
                 res.push({
                     nameWithNameSpace: state.templateCodeLib?.aliasName,
