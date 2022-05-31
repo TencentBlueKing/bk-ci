@@ -19,6 +19,13 @@
             }
         },
 
+        computed: {
+            columnWidth () {
+                const tabSectionDom = document.getElementsByClassName('bk-tab-section')[0]
+                return tabSectionDom.clientWidth / 5
+            }
+        },
+
         methods: {
             operationFormatter (row, column, cellValue, index) {
                 const opeMap = {
