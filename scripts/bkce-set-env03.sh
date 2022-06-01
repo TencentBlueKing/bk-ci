@@ -29,6 +29,18 @@ set_env03 (){
     fi
   done
 }
+
+set_env03_en (){
+  for kv in "$@"; do
+    echo "SET_ENV03_EN: $ci_env_03 中已赋值，重新覆盖生效 $kv"
+    [[ "$kv" =~ ^[A-Z0-9_]+=$ ]] && echo -e "\033[31;1m注意：\033[m$kv 赋值为空，请检查蓝鲸是否安装正确
+，或人工修改env文件后重试。"
+    # 如果已经有相同的行，则也不覆盖，防止赋值为空时不断追加。
+    grep -qxF "$kv" "$ci_env_03" 2>/dev/null || echo "$kv" >> "$ci_env_03"
+    eval "$kv"  # 立即生效
+  done
+}
+
 random_pass (){
   base64 /dev/urandom | head -c ${1:-16}
 }
@@ -55,7 +67,7 @@ set_env03 BK_HTTP_SCHEMA=http \
   BK_DOMAIN=$BK_DOMAIN \
   BK_PAAS_PUBLIC_URL=$BK_PAAS_PUBLIC_URL \
   BK_CI_AUTH_PROVIDER=bk_login_v3 \
-  BK_CI_FQDN=devops.\$BK_DOMAIN \
+  BK_CI_FQDN=$(echo ${BK_PAAS_PUBLIC_ADDR}|sed "s#paas#devops#g;s#:80##g") \
   BK_HOME=$BK_HOME \
   BK_CI_PUBLIC_URL=http://\$BK_CI_FQDN \
   BK_SSM_HOST=bkssm.service.consul \
@@ -85,9 +97,12 @@ set_env03 BK_CI_MYSQL_ADDR=${BK_MYSQL_IP}:3306 BK_CI_MYSQL_USER=bk_ci BK_CI_MYSQ
 # 复用redis, 读取密码, 刷新03env.
 set_env03 BK_CI_REDIS_HOST=$BK_REDIS_IP BK_CI_REDIS_PASSWORD=$BK_PAAS_REDIS_PASSWORD
 
+set_env03_en BK_CI_AUTH_PROVIDER=bk_login_v3 \
+  BK_CI_FQDN=$(echo ${BK_PAAS_PUBLIC_ADDR}|sed "s#paas#devops#g;s#:80##g")
+
 if grep -w repo $CTRL_DIR/install.config|grep -v ^\# ; then
-  set_env03 BK_REPO_GATEWAY_IP=$BK_REPO_GATEWAY_IP \
-  BK_REPO_HOST=$BK_REPO_HOST
+  set_env03_en BK_REPO_GATEWAY_IP=$BK_REPO_GATEWAY_IP \
+  BK_REPO_HOST=$(echo ${BK_PAAS_PUBLIC_ADDR}|sed "s#paas#repo#g;s#:80##g")
 fi
 
 echo "合并env."
