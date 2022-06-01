@@ -35,6 +35,7 @@ import com.tencent.bkrepo.auth.pojo.token.Token
 import org.springframework.data.mongodb.core.index.CompoundIndex
 import org.springframework.data.mongodb.core.index.CompoundIndexes
 import org.springframework.data.mongodb.core.mapping.Document
+import java.time.LocalDateTime
 
 /**
  * 用户
@@ -56,5 +57,10 @@ data class TUser(
     val tokens: List<Token> = emptyList(),
     val roles: List<String> = emptyList(),
     val asstUsers: List<String> = emptyList(),
-    val group: Boolean = false
+    val group: Boolean = false,
+    val email: String? = null,
+    val phone: String? = null,
+    var accounts: List<String>? = emptyList(),
+    val createdDate: LocalDateTime? = LocalDateTime.now(),
+    val lastModifiedDate: LocalDateTime? = LocalDateTime.now()
 )

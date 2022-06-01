@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.type
 
 enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
     DOCKER_VM(".docker.vm"),
+    KUBERNETES(".kubernetes"),
     DOCKER_VM_DEMOTE(".docker.vm.demote"),
     PCG(".pcg.sumeru"),
     DEVCLOUD(".devcloud.public"),

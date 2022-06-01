@@ -50,5 +50,9 @@ data class CreateUserRequest(
     @ApiModelProperty("关联用户")
     val asstUsers: List<String> = emptyList(),
     @ApiModelProperty("群组账号")
-    val group: Boolean = false
+    val group: Boolean = false,
+    @ApiModelProperty("邮箱")
+    val email: String? = null,
+    @ApiModelProperty("联系电话")
+    val phone: String? = null
 )

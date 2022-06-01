@@ -149,7 +149,6 @@ import com.tencent.devops.common.util.List2StrUtil;
 import com.tencent.devops.common.util.ListSortUtil;
 import com.tencent.devops.common.util.OkhttpUtils;
 import com.tencent.devops.common.web.aop.annotation.OperationHistory;
-import jersey.repackaged.com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
@@ -160,7 +159,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
@@ -317,9 +316,9 @@ public class TaskServiceImpl implements TaskService {
                         return null;
                     }
 
-                    ToolMetaEntity toolMeta = toolMetaRepository.findByName(toolName);
+                    ToolMetaEntity toolMeta = toolMetaRepository.findFirstByName(toolName);
                     String toolType = toolMeta.getType();
-                    return baseDataRepository.findByParamCode(toolType);
+                    return baseDataRepository.findFirstByParamCode(toolType);
                 }
             });
 
@@ -671,7 +670,7 @@ public class TaskServiceImpl implements TaskService {
             throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{String.valueOf(taskId)},
                     null);
         }
-        TaskInfoEntity taskEntity = taskRepository.findByTaskId(Long.valueOf(taskId));
+        TaskInfoEntity taskEntity = taskRepository.findFirstByTaskId(Long.valueOf(taskId));
 
         if (taskEntity == null) {
             log.error("can not find task by taskId: {}", taskId);
@@ -719,7 +718,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskDetailVO getTaskInfoById(Long taskId) {
-        TaskInfoEntity taskEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskEntity = taskRepository.findFirstByTaskId(taskId);
         if (taskEntity == null) {
             log.error("can not find task by taskId: {}", taskId);
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{String.valueOf(taskId)}, null);
@@ -743,7 +742,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskDetailVO getTaskInfoWithoutToolsByTaskId(Long taskId) {
-        TaskInfoEntity taskEntity = taskRepository.findTaskInfoWithoutToolsByTaskId(taskId);
+        TaskInfoEntity taskEntity = taskRepository.findTaskInfoWithoutToolsFirstByTaskId(taskId);
         if (taskEntity == null) {
             log.error("can not find task by taskId: {}", taskId);
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{String.valueOf(taskId)}, null);
@@ -763,7 +762,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskDetailVO getTaskInfoByStreamName(String streamName) {
-        TaskInfoEntity taskEntity = taskRepository.findByNameEn(streamName);
+        TaskInfoEntity taskEntity = taskRepository.findFirstByNameEn(streamName);
 
         if (taskEntity == null) {
             log.error("can not find task by streamName: {}", streamName);
@@ -896,7 +895,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         // 任务是否注册过
-        TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByTaskId(taskId);
         if (Objects.isNull(taskInfoEntity)) {
             log.error("can not find task info");
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{String.valueOf(taskId)}, null);
@@ -936,7 +935,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskOverviewVO getTaskOverview(Long taskId, String buildNum) {
-        TaskInfoEntity taskEntity = taskRepository.findToolListByTaskId(taskId);
+        TaskInfoEntity taskEntity = taskRepository.findToolListFirstByTaskId(taskId);
         if (taskEntity == null) {
             log.error("can not find task by taskId: {}", taskId);
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{String.valueOf(taskId)}, null);
@@ -1091,7 +1090,7 @@ public class TaskServiceImpl implements TaskService {
             return getTaskOverview(taskId, buildNum);
         }
 
-        TaskInfoEntity taskEntity = taskRepository.findToolListByTaskId(taskId);
+        TaskInfoEntity taskEntity = taskRepository.findToolListFirstByTaskId(taskId);
         if (taskEntity == null) {
             log.error("can not find task by taskId: {}", taskId);
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{String.valueOf(taskId)}, null);
@@ -1200,7 +1199,7 @@ public class TaskServiceImpl implements TaskService {
      * @return boolean
      */
     private Boolean doStartTask(Long taskId, String userName, boolean checkPermission) {
-        TaskInfoEntity taskEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskEntity = taskRepository.findFirstByTaskId(taskId);
         if (Objects.isNull(taskEntity)) {
             log.error("taskInfo not exists! task id is: {}", taskId);
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{String.valueOf(taskId)}, null);
@@ -1272,7 +1271,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @OperationHistory(funcId = FUNC_TASK_SWITCH, operType = DISABLE_ACTION)
     public Boolean stopTask(Long taskId, String disabledReason, String userName) {
-        TaskInfoEntity taskEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskEntity = taskRepository.findFirstByTaskId(taskId);
         if (Objects.isNull(taskEntity)) {
             log.error("taskInfo not exists! task id is: {}", taskId);
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{String.valueOf(taskId)}, null);
@@ -1296,7 +1295,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @OperationHistory(funcId = FUNC_TASK_SWITCH, operType = DISABLE_ACTION)
     public Boolean stopTask(String pipelineId, String disabledReason, String userName) {
-        TaskInfoEntity taskEntity = taskRepository.findByPipelineId(pipelineId);
+        TaskInfoEntity taskEntity = taskRepository.findFirstByPipelineId(pipelineId);
         if (Objects.isNull(taskEntity)) {
             log.error("taskInfo not exists! pipeline id is: {}", pipelineId);
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{String.valueOf(pipelineId)},
@@ -1315,7 +1314,7 @@ public class TaskServiceImpl implements TaskService {
      */
     @Override
     public Boolean stopTaskByAdmin(Long taskId, String disabledReason, String userName) {
-        TaskInfoEntity taskEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskEntity = taskRepository.findFirstByTaskId(taskId);
         if (Objects.isNull(taskEntity)) {
             log.error("taskInfo not exists! task id is: {}", taskId);
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{String.valueOf(taskId)}, null);
@@ -1442,7 +1441,7 @@ public class TaskServiceImpl implements TaskService {
      */
     @Override
     public TaskCodeLibraryVO getCodeLibrary(Long taskId) {
-        TaskInfoEntity taskEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskEntity = taskRepository.findFirstByTaskId(taskId);
         if (Objects.isNull(taskEntity)) {
             log.error("taskInfo not exists! task id is: {}", taskId);
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{String.valueOf(taskId)}, null);
@@ -1521,7 +1520,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Boolean checkTaskExists(long taskId) {
-        return taskRepository.findByTaskId(taskId) != null;
+        return taskRepository.findFirstByTaskId(taskId) != null;
     }
 
 
@@ -1535,7 +1534,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @OperationHistory(funcId = FUNC_CODE_REPOSITORY, operType = MODIFY_INFO)
     public Boolean updateCodeLibrary(Long taskId, String userName, TaskDetailVO taskDetailVO) {
-        TaskInfoEntity taskEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskEntity = taskRepository.findFirstByTaskId(taskId);
         if (Objects.isNull(taskEntity)) {
             log.error("taskInfo not exists! task id is: {}", taskId);
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{String.valueOf(taskId)}, null);
@@ -1637,7 +1636,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @OperationHistory(funcId = FUNC_TRIGGER_ANALYSIS, operType = TRIGGER_ANALYSIS)
     public Boolean manualExecuteTask(long taskId, String isFirstTrigger, String userName) {
-        TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByTaskId(taskId);
         List<ToolConfigInfoEntity> toolConfigInfoEntityList = taskInfoEntity.getToolConfigInfoList();
         if (CollectionUtils.isEmpty(toolConfigInfoEntityList)) {
             log.info("tool list is empty! task id: {}", taskId);
@@ -1662,7 +1661,7 @@ public class TaskServiceImpl implements TaskService {
             clocToolConfig.setFollowStatus(FOLLOW_STATUS.NOT_FOLLOW_UP_0.value());
             clocToolConfig.setLastFollowStatus(FOLLOW_STATUS.NOT_FOLLOW_UP_0.value());
             toolConfigInfoEntityList.add(clocToolConfig);
-            List<ToolConfigInfoEntity> tools = toolRepository.save(toolConfigInfoEntityList);
+            List<ToolConfigInfoEntity> tools = toolRepository.saveAll(toolConfigInfoEntityList);
             taskInfoEntity.setToolConfigInfoList(tools);
             taskRepository.save(taskInfoEntity);
         } else if (clocList.get(0).getFollowStatus() == FOLLOW_STATUS.WITHDRAW.value()) {
@@ -1732,7 +1731,7 @@ public class TaskServiceImpl implements TaskService {
      */
     @Override
     public PipelineTaskVO getTaskInfoByPipelineId(String pipelineId, String user) {
-        TaskInfoEntity taskInfoEntity = taskRepository.findByPipelineId(pipelineId);
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByPipelineId(pipelineId);
         if (taskInfoEntity == null) {
             log.error("can not find task by pipeline id: {}", pipelineId);
             throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"pipeline id"}, null);
@@ -1802,7 +1801,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskStatusVO getTaskStatus(Long taskId) {
-        TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByTaskId(taskId);
         if (null == taskInfoEntity) {
             return null;
         }
@@ -1821,7 +1820,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskInfoEntity getTaskById(Long taskId) {
-        return taskRepository.findByTaskId(taskId);
+        return taskRepository.findFirstByTaskId(taskId);
     }
 
     @Override
@@ -1899,7 +1898,7 @@ public class TaskServiceImpl implements TaskService {
     @OperationHistory(funcId = FUNC_SCAN_SCHEDULE, operType = MODIFY_INFO)
     public Boolean updateScanConfiguration(Long taskId, String user, ScanConfigurationVO scanConfigurationVO) {
         // 更新定时分析配置
-        TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByTaskId(taskId);
         if (scanConfigurationVO.getTimeAnalysisConfig() != null && BsTaskCreateFrom.BS_CODECC.value().equals(taskInfoEntity.getCreateFrom())) {
             TimeAnalysisConfigVO timeAnalysisConfigVO = scanConfigurationVO.getTimeAnalysisConfig();
             if (timeAnalysisConfigVO != null) {
@@ -1953,7 +1952,7 @@ public class TaskServiceImpl implements TaskService {
     public Boolean authorTransferForApi(Long taskId, List<ScanConfigurationVO.TransferAuthorPair> transferAuthorPairs,
                                         String userId) {
         log.info("api author transfer function, user id: {}, task id: {}", userId, taskId);
-        TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByTaskId(taskId);
         ScanConfigurationVO scanConfigurationVO = new ScanConfigurationVO();
         scanConfigurationVO.setTransferAuthorList(transferAuthorPairs);
         authorTransfer(taskId, scanConfigurationVO, taskInfoEntity);
@@ -2386,7 +2385,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public void updateReportInfo(Long taskId, NotifyCustomVO notifyCustomVO) {
-        TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByTaskId(taskId);
         NotifyCustomEntity previousNofityEntity = taskInfoEntity.getNotifyCustomInfo();
         log.info("update report info from build, task id: {}, before: {}", taskId, previousNofityEntity);
 
@@ -2419,7 +2418,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Boolean updateTopUserInfo(Long taskId, String user, Boolean topFlag) {
-        TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByTaskId(taskId);
         if (null == taskInfoEntity) {
             return false;
         }
@@ -2585,7 +2584,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public Boolean refreshTaskOrgInfo(Long taskId) {
         boolean result = false;
-        TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByTaskId(taskId);
         if (taskInfoEntity == null) {
             log.error("refreshTaskOrgInfo infoEntity is not found: {}", taskId);
             return false;
@@ -2623,7 +2622,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public void updateTaskOwnerAndMember(TaskOwnerAndMemberVO taskOwnerAndMemberVO, Long taskId) {
-        TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByTaskId(taskId);
         if (null == taskInfoEntity) {
             return;
         }
@@ -2634,11 +2633,11 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public List<Long> getBkPluginTaskIds() {
-        Map<String, Object> params = Maps.newHashMap();
+        Map<String, Object> params = new HashMap<>();
         params.put("status", Status.ENABLE.value());
         params.put("project_id", "CUSTOMPROJ_TEG_CUSTOMIZED");
 
-        Map<String, Object> nParams = Maps.newHashMap();
+        Map<String, Object> nParams = new HashMap<>();
         nParams.put("gongfeng_project_id", null);
         List<TaskInfoEntity> openSourceTaskList = taskDao.queryTaskInfoByCustomParam(params, nParams);
 
@@ -2666,7 +2665,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public List<MetadataVO> listTaskToolDimension(Long taskId) {
-        TaskInfoEntity taskInfo = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskInfo = taskRepository.findFirstByTaskId(taskId);
         Map<String, MetadataVO> resultMap = new HashMap<>();
         taskInfo.getToolConfigInfoList().forEach(it -> {
             try {
@@ -2723,21 +2722,21 @@ public class TaskServiceImpl implements TaskService {
         }
 
         //修改task获取逻辑
-        TaskInfoEntity taskInfoEntity = taskRepository.findByGongfengProjectIdAndStatusAndProjectIdRegex(
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByGongfengProjectIdAndStatusAndProjectIdRegex(
                 gongfengModel.getId(), TaskConstants.TaskStatus.ENABLE.value(), "^(CODE_)");
         if (null == taskInfoEntity || taskInfoEntity.getTaskId() == 0L) {
-            CustomProjEntity customProjEntity = customProjRepository.findByGongfengProjectIdAndCustomProjSource(
+            CustomProjEntity customProjEntity = customProjRepository.findFirstByGongfengProjectIdAndCustomProjSource(
                     gongfengModel.getId(), "TEG_CUSTOMIZED");
             if (null != customProjEntity && StringUtils.isNotBlank(customProjEntity.getPipelineId())) {
-                taskInfoEntity = taskRepository.findByPipelineId(customProjEntity.getPipelineId());
+                taskInfoEntity = taskRepository.findFirstByPipelineId(customProjEntity.getPipelineId());
             }
             if (null == taskInfoEntity || taskInfoEntity.getTaskId() == 0L || !TaskConstants.TaskStatus.ENABLE.value()
                     .equals(taskInfoEntity.getStatus())) {
                 customProjEntity = customProjRepository
-                        .findByGongfengProjectIdAndCustomProjSource(
+                        .findFirstByGongfengProjectIdAndCustomProjSource(
                                 gongfengModel.getId(), "bkdevops-plugins");
                 if (null != customProjEntity && StringUtils.isNotBlank(customProjEntity.getPipelineId())) {
-                    taskInfoEntity = taskRepository.findByPipelineId(customProjEntity.getPipelineId());
+                    taskInfoEntity = taskRepository.findFirstByPipelineId(customProjEntity.getPipelineId());
                 }
             }
         }
@@ -2827,7 +2826,7 @@ public class TaskServiceImpl implements TaskService {
                 log.error("Failed to obtain task data: {}", date, e);
             }
         }
-        taskStatisticRepository.save(taskCountData);
+        taskStatisticRepository.saveAll(taskCountData);
         return true;
     }
 
@@ -2870,7 +2869,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public TaskDetailVO getTaskInfoWithoutToolsByStreamName(String nameEn) {
 
-        TaskInfoEntity taskEntity = taskRepository.findByNameEn(nameEn);
+        TaskInfoEntity taskEntity = taskRepository.findFirstByNameEn(nameEn);
         if (taskEntity == null) {
             log.error("can not find task by streamName: {}", nameEn);
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{nameEn}, null);
@@ -2943,7 +2942,7 @@ public class TaskServiceImpl implements TaskService {
      */
     @Override
     public TaskCodeLibraryVO getRepoInfo(Long taskId) {
-        TaskInfoEntity taskEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskEntity = taskRepository.findFirstByTaskId(taskId);
         if (Objects.isNull(taskEntity)) {
             log.error("taskInfo not exists! task id is: {}", taskId);
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS,
@@ -2984,7 +2983,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public boolean addWhitePath(long taskId, List<String> pathList) {
-        TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByTaskId(taskId);
         boolean flag = isListEqualsExpectOrder(pathList, taskInfoEntity.getWhitePaths());
 
         if (!flag && taskDao.upsertPathOfTask(taskId, pathList)) {
@@ -3025,7 +3024,7 @@ public class TaskServiceImpl implements TaskService {
         } else {
             log.info("gongfeng task create from open source: {}", taskInfoEntity.getTaskId());
             GongfengPublicProjEntity publicProjEntity
-                    = gongfengPublicProjRepository.findById(taskInfoEntity.getGongfengProjectId());
+                    = gongfengPublicProjRepository.findFirstById(taskInfoEntity.getGongfengProjectId());
 
             // 如果存在于开源表中，是定时触发任务，否则代表任务不合法
             if (publicProjEntity != null) {
@@ -3085,7 +3084,7 @@ public class TaskServiceImpl implements TaskService {
 
     private TaskInfoEntity getTaskFromPublic(int id, boolean isFindCustom) {
         log.info("execute opensource trigger pipeline by repoId $id");
-        GongfengPublicProjEntity proj = gongfengPublicProjRepository.findById(id);
+        GongfengPublicProjEntity proj = gongfengPublicProjRepository.findFirstById(id);
         if (proj == null) {
             if (!isFindCustom) {
                 return getTaskFromCustom(id, true);
@@ -3094,7 +3093,7 @@ public class TaskServiceImpl implements TaskService {
             }
         }
 
-        TaskInfoEntity taskInfoEntity = taskRepository.findByGongfengProjectIdAndStatusAndProjectIdRegex(
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByGongfengProjectIdAndStatusAndProjectIdRegex(
                 proj.getId(),
                 TaskConstants.TaskStatus.ENABLE.value(),
                 "^(CODE_)"
@@ -3109,13 +3108,13 @@ public class TaskServiceImpl implements TaskService {
 
     private TaskInfoEntity getTaskFromCustom(int id, boolean isFindPublic) {
         log.info("get custom task to trigger pipeline by repoId $id");
-        CustomProjEntity proj = customProjRepository.findByGongfengProjectIdAndCustomProjSource(
+        CustomProjEntity proj = customProjRepository.findFirstByGongfengProjectIdAndCustomProjSource(
                 id,
                 "bkdevops-plugins"
         );
 
         if (proj == null) {
-            proj = customProjRepository.findByGongfengProjectIdAndCustomProjSource(
+            proj = customProjRepository.findFirstByGongfengProjectIdAndCustomProjSource(
                     id,
                     "codecc"
             );
@@ -3130,7 +3129,7 @@ public class TaskServiceImpl implements TaskService {
             }
         }
 
-        TaskInfoEntity taskInfoEntity = taskRepository.findByTaskIdAndStatus(
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByTaskIdAndStatus(
                 proj.getTaskId(),
                 TaskConstants.TaskStatus.ENABLE.value()
         );

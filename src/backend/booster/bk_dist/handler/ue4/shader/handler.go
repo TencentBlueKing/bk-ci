@@ -179,6 +179,11 @@ func (u *UE4Shader) PreExecute(command []string) (*dcSDK.BKDistCommand, error) {
 	}, nil
 }
 
+// NeedRemoteResource check whether this command need remote resource
+func (u *UE4Shader) NeedRemoteResource(command []string) bool {
+	return true
+}
+
 // RemoteRetryTimes will return the remote retry times
 func (u *UE4Shader) RemoteRetryTimes() int {
 	return 1

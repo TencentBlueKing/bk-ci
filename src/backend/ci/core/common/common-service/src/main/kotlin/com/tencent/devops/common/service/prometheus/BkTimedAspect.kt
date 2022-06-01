@@ -71,6 +71,27 @@ class BkTimedAspect(
         }
     }
 
+    fun record(
+        metricName: String,
+        tags: Iterable<Tag>,
+        description: String? = null,
+        sample: Timer.Sample,
+        exceptionClass: String
+    ) {
+        try {
+            sample.stop(
+                Timer.builder(metricName)
+                    .description(description)
+                    .tags(EXCEPTION_TAG, exceptionClass)
+                    .tags(tags)
+                    .tag(APPLICATION_TAG, applicationName ?: "")
+                    .register(registry)
+            )
+        } catch (ignore: Exception) {
+            logger.warn("record failed", ignore)
+        }
+    }
+
     @Throws(Throwable::class)
     private fun processWithTimer(
         pjp: ProceedingJoinPoint,

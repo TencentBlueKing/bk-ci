@@ -35,6 +35,13 @@ pluginManagement {
             maven(url = "https://mirrors.tencent.com/nexus/repository/maven-public")
             maven(url = "https://mirrors.tencent.com/nexus/repository/gradle-plugins/")
         } else { // GitHub Action 环境
+            maven {
+                name = "MavenSnapshot"
+                url = java.net.URI("https://oss.sonatype.org/content/repositories/snapshots/")
+                mavenContent {
+                    snapshotsOnly()
+                }
+            }
             mavenCentral()
             gradlePluginPortal()
         }
@@ -203,6 +210,10 @@ include(":core:dispatch-docker:biz-dispatch-docker")
 include(":core:dispatch-docker:biz-dispatch-docker-sample")
 include(":core:dispatch-docker:boot-dispatch-docker")
 include(":core:dispatch-docker:model-dispatch-docker")
+include(":core:dispatch-kubernetes:api-dispatch-kubernetes")
+include(":core:dispatch-kubernetes:biz-dispatch-kubernetes")
+include(":core:dispatch-kubernetes:boot-dispatch-kubernetes")
+include(":core:dispatch-kubernetes:model-dispatch-kubernetes")
 
 include(":core:plugin")
 include(":core:plugin:api-plugin")
@@ -214,7 +225,6 @@ include(":core:plugin:codecc-plugin")
 include(":core:plugin:codecc-plugin:common-codecc")
 include(":core:plugin:codecc-plugin:api-codecc")
 include(":core:plugin:codecc-plugin:biz-codecc")
-include(":core:plugin:codecc-plugin:worker-plugin-codecc")
 
 include(":core:worker")
 include(":core:worker:worker-agent")

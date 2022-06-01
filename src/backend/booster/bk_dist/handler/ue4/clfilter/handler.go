@@ -112,6 +112,11 @@ func (cf *TaskCLFilter) PreExecute(command []string) (*dcSDK.BKDistCommand, erro
 	return cf.preExecute(command)
 }
 
+// NeedRemoteResource check whether this command need remote resource
+func (cf *TaskCLFilter) NeedRemoteResource(command []string) bool {
+	return true
+}
+
 // RemoteRetryTimes will return the remote retry times
 func (cf *TaskCLFilter) RemoteRetryTimes() int {
 	return 0

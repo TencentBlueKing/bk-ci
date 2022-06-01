@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.matrix.SampleDispatchInfo
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.service.BuildVariableService
@@ -102,6 +103,10 @@ class DispatchTypeParserImpl @Autowired constructor(
             dispatchType.imageRDType = imageRepoInfo.rdType.name
         } else {
             dispatchType.credentialProject = projectId
+
+            if (dispatchType is KubernetesDispatchType) {
+                dispatchType.dockerBuildVersion = dispatchType.value
+            }
         }
     }
 

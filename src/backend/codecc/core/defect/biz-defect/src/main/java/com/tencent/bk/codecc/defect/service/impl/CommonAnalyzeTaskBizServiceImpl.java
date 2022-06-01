@@ -50,7 +50,7 @@ import java.util.Comparator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -166,7 +166,7 @@ public class CommonAnalyzeTaskBizServiceImpl extends AbstractAnalyzeTaskBizServi
         statisticEntity.setTime(System.currentTimeMillis());
         statisticEntity.setBuildId(buildId);
 
-        BuildEntity buildEntity = buildRepository.findByBuildId(buildId);
+        BuildEntity buildEntity = buildRepository.findFirstByBuildId(buildId);
         statisticDao.getAndClearDefectStatistic(statisticEntity, buildEntity.getBuildNo());
 
         statisticEntity = commonStatisticRepository.save(statisticEntity);
@@ -459,7 +459,7 @@ public class CommonAnalyzeTaskBizServiceImpl extends AbstractAnalyzeTaskBizServi
                 buildDefectEntity.setDefectId(defectEntity.getId());
                 buildDefectEntities.add(buildDefectEntity);
             }
-            buildDefectRepository.save(buildDefectEntities);
+            buildDefectRepository.saveAll(buildDefectEntities);
         }
     }
 

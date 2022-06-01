@@ -40,10 +40,14 @@ import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
 import com.tencent.bkrepo.common.artifact.api.ArtifactPathVariable
 import com.tencent.bkrepo.common.artifact.api.DefaultArtifactInfo.Companion.DEFAULT_MAPPING_URI
 import com.tencent.bkrepo.common.artifact.message.ArtifactMessageCode
+import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.bkrepo.common.query.model.QueryModel
 import com.tencent.bkrepo.common.security.manager.PermissionManager
 import com.tencent.bkrepo.common.security.permission.Permission
+import com.tencent.bkrepo.common.security.permission.Principal
+import com.tencent.bkrepo.common.security.permission.PrincipalType
 import com.tencent.bkrepo.common.service.util.ResponseBuilder
+import com.tencent.bkrepo.repository.pojo.node.NodeDeleteResult
 import com.tencent.bkrepo.repository.pojo.node.NodeDeletedPoint
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
@@ -59,11 +63,14 @@ import com.tencent.bkrepo.repository.pojo.node.service.NodeUpdateRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeMoveCopyRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeRenameRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeUpdateRequest
+import com.tencent.bkrepo.repository.pojo.software.ProjectPackageOverview
 import com.tencent.bkrepo.repository.service.node.NodeSearchService
 import com.tencent.bkrepo.repository.service.node.NodeService
 import com.tencent.bkrepo.repository.util.PipelineRepoUtils
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -72,6 +79,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDateTime
 
 @Api("节点用户接口")
 @RestController
@@ -121,7 +129,7 @@ class UserNodeController(
     fun deleteNode(
         @RequestAttribute userId: String,
         @ArtifactPathVariable artifactInfo: ArtifactInfo
-    ): Response<Void> {
+    ): Response<NodeDeleteResult> {
         with(artifactInfo) {
             val deleteRequest = NodeDeleteRequest(
                 projectId = projectId,
@@ -129,9 +137,21 @@ class UserNodeController(
                 fullPath = getArtifactFullPath(),
                 operator = userId
             )
-            nodeService.deleteNode(deleteRequest)
-            return ResponseBuilder.success()
+            return ResponseBuilder.success(nodeService.deleteNode(deleteRequest))
         }
+    }
+
+    @ApiOperation("清理创建时间早于{date}的文件节点")
+    @Permission(type = ResourceType.NODE, action = PermissionAction.DELETE)
+    @DeleteMapping("/clean/$DEFAULT_MAPPING_URI")
+    fun deleteNodeCreatedBeforeDate(
+        @RequestAttribute userId: String,
+        @ArtifactPathVariable artifactInfo: ArtifactInfo,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) date: LocalDateTime
+    ): Response<NodeDeleteResult> {
+        return ResponseBuilder.success(
+            nodeService.deleteBeforeDate(artifactInfo.projectId, artifactInfo.repoName, date, userId)
+        )
     }
 
     @ApiOperation("更新节点")
@@ -266,6 +286,18 @@ class UserNodeController(
         return ResponseBuilder.success(nodePage)
     }
 
+    @ApiOperation("按sha256分页查询节点")
+    @Principal(PrincipalType.ADMIN)
+    @GetMapping("/page", params = ["sha256"])
+    fun listPageNodeBySha256(
+        @RequestParam("sha256", required = true) sha256: String,
+        nodeListOption: NodeListOption
+    ): Response<Page<NodeInfo>> {
+        return nodeService
+            .listNodePageBySha256(sha256, nodeListOption)
+            .let { ResponseBuilder.success(it) }
+    }
+
     @ApiOperation("查询节点删除点")
     @Permission(type = ResourceType.NODE, action = PermissionAction.READ)
     @GetMapping("/list-deleted/$DEFAULT_MAPPING_URI")
@@ -296,15 +328,45 @@ class UserNodeController(
         return ResponseBuilder.success(nodeSearchService.search(queryModel))
     }
 
+    @ApiOperation("仓库 包数量 总览")
+    @GetMapping("/search/overview")
+    fun nodeGlobalSearchOverview(
+        @RequestAttribute userId: String,
+        @RequestParam projectId: String,
+        @ApiParam(value = "文件名", required = true)
+        @RequestParam name: String,
+        @ApiParam(value = "仓库名 多个仓库以 `,` 分隔", required = false, example = "report,log")
+        @RequestParam exRepo: String?
+    ): Response<List<ProjectPackageOverview>> {
+        return ResponseBuilder.success(
+            nodeSearchService.nodeOverview(
+                userId,
+                projectId,
+                name,
+                exRepo
+            )
+        )
+    }
+
     /**
      * 校验跨仓库操作权限
      */
     private fun checkCrossRepoPermission(request: UserNodeMoveCopyRequest) {
         with(request) {
-            permissionManager.checkNodePermission(PermissionAction.WRITE, srcProjectId, srcRepoName, srcFullPath)
+            permissionManager.checkNodePermission(
+                action = PermissionAction.WRITE,
+                projectId = srcProjectId,
+                repoName = srcRepoName,
+                path = PathUtils.normalizeFullPath(srcFullPath)
+            )
             val toProjectId = request.destProjectId ?: srcProjectId
             val toRepoName = request.destRepoName ?: srcRepoName
-            permissionManager.checkNodePermission(PermissionAction.WRITE, toProjectId, toRepoName, destFullPath)
+            permissionManager.checkNodePermission(
+                action = PermissionAction.WRITE,
+                projectId = toProjectId,
+                repoName = toRepoName,
+                path = PathUtils.normalizeFullPath(destFullPath)
+            )
         }
     }
 }

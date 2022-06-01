@@ -125,6 +125,8 @@ type ControllerConfig struct {
 	NoWait             bool
 	UseLocalCPUPercent int
 	DisableFileLock    bool
+	AutoResourceMgr    bool
+	ResIdleSecsForFree int
 }
 
 // Target return the server ip and port of controller

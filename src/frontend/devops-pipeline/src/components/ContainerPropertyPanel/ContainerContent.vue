@@ -62,9 +62,16 @@
 
                 <bk-input v-else @change="changeThirdImage" :value="buildResource" :disabled="!editable" class="bk-image" :placeholder="$t('editPage.thirdImageHolder')" v-validate.initial="'required'" name="buildResource"></bk-input>
             </form-field>
-
-            <form-field :label="$t('editPage.assignResource')" v-if="buildResourceType !== 'MACOS' && !isPublicResourceType && containerModalId && !showImagePublicTypeList.includes(buildResourceType)" :required="true" :is-error="errors.has('buildResource')" :error-msg="errors.first('buildResource')" :desc="buildResourceType === 'THIRD_PARTY_AGENT_ENV' ? this.$t('editPage.thirdSlaveTips') : ''">
-                <container-env-node :disabled="!editable"
+            <form-field
+                :label="$t('editPage.assignResource')"
+                v-if="buildResourceType !== 'MACOS' && !isPublicResourceType && containerModalId && !showImagePublicTypeList.includes(buildResourceType)"
+                :is-error="errors.has('buildResource')"
+                :error-msg="errors.first('buildResource')"
+                :desc="buildResourceType === 'THIRD_PARTY_AGENT_ENV' ? this.$t('editPage.thirdSlaveTips') : ''"
+            >
+                <container-env-node
+                    :required="true"
+                    :disabled="!editable"
                     :os="container.baseOS"
                     :container-id="containerModalId"
                     :build-resource-type="buildResourceType"

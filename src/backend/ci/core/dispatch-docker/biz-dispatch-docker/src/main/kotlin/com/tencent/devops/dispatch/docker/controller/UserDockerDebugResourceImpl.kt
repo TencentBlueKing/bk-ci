@@ -35,6 +35,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.user.UserDockerDebugResource
@@ -51,7 +52,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import javax.ws.rs.core.Response
 
 @RestResource
@@ -66,14 +66,12 @@ class UserDockerDebugResourceImpl @Autowired constructor(
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val dockerHostUtils: DockerHostUtils,
     private val extDebugService: ExtDebugService,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val bkTag: BkTag
 ) : UserDockerDebugResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserDockerDebugResourceImpl::class.java)
     }
-
-    @Value("\${spring.cloud.consul.discovery.tags:prod}")
-    private val consulTag: String = "prod"
 
     override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<String>? {
         // checkPermission(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
@@ -91,8 +89,10 @@ class UserDockerDebugResourceImpl @Autowired constructor(
                 pipelineId = debugStartParam.pipelineId,
                 containerId = historyPair.second
             )
-            logger.info("${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
-                    "Container Exist|wsUrl=$wsUrl")
+            logger.info(
+                "${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
+                        "Container Exist|wsUrl=$wsUrl"
+            )
             return Result(wsUrl)
         }
 
@@ -124,12 +124,14 @@ class UserDockerDebugResourceImpl @Autowired constructor(
                 debugStartParam = debugStartParam,
                 startupMessage = buildHistory.startupMessage
             )
-            return Result(dockerHostDebugService.getWsUrl(
-                dockerIp = buildHistory.dockerIp,
-                projectId = debugStartParam.projectId,
-                pipelineId = debugStartParam.pipelineId,
-                containerId = containerId
-            ))
+            return Result(
+                dockerHostDebugService.getWsUrl(
+                    dockerIp = buildHistory.dockerIp,
+                    projectId = debugStartParam.projectId,
+                    pipelineId = debugStartParam.pipelineId,
+                    containerId = containerId
+                )
+            )
         } else {
             // 没有构建历史的情况下debug，先确认是否来自其他构建集群
             val debugUrl = extDebugService.startDebug(
@@ -139,10 +141,10 @@ class UserDockerDebugResourceImpl @Autowired constructor(
                 buildId = debugStartParam.buildId,
                 vmSeqId = debugStartParam.vmSeqId
             ) ?: throw ErrorCodeException(
-                    errorCode = "2103503",
-                    defaultMessage = "Can not found debug container.",
-                    params = arrayOf(debugStartParam.pipelineId)
-                )
+                errorCode = "2103503",
+                defaultMessage = "Can not found debug container.",
+                params = arrayOf(debugStartParam.pipelineId)
+            )
 
             return Result(debugUrl)
         }
@@ -161,13 +163,15 @@ class UserDockerDebugResourceImpl @Autowired constructor(
         if (pipelineDockerDebug != null) {
             return dockerHostDebugService.deleteDebug(pipelineId, vmSeqId)
         } else {
-            return Result(extDebugService.stopDebug(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                vmSeqId = vmSeqId,
-                containerName ?: ""
-            ))
+            return Result(
+                extDebugService.stopDebug(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    vmSeqId = vmSeqId,
+                    containerName ?: ""
+                )
+            )
         }
     }
 
@@ -189,6 +193,7 @@ class UserDockerDebugResourceImpl @Autowired constructor(
     private fun checkPermission(userId: String, projectId: String, pipelineId: String, vmSeqId: String) {
         checkParam(userId, projectId, pipelineId, vmSeqId)
 
+        val consulTag = bkTag.getLocalTag()
         if (!consulTag.contains("stream") && !consulTag.contains("gitci")) {
             validPipelinePermission(
                 userId = userId,

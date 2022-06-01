@@ -1,2 +1,4 @@
 service.name: nuget
 server.port: 25809
+nuget:
+  domain: ${cluster.self.url}/nuget
