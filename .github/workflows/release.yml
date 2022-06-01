@@ -76,13 +76,11 @@ jobs:
         working-directory: src/backend/ci
         run: |
           ./gradlew clean test build :core:worker:worker-agent:shadowJar \
-          -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/" \
           -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root
 
       - name: Gradle Build Turbo Service
         working-directory: src/backend/turbo
         run: |
-          ./gradlew clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
           # copy jar to ci release dir
           cp -vf release/boot-turbo.jar ${{ github.workspace }}/src/backend/ci/release/
           # copy turbo service config template to ci templates dir
