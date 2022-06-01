@@ -36,6 +36,7 @@ import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
 import com.tencent.devops.dispatch.docker.service.debug.DebugServiceEnum
 import com.tencent.devops.dispatch.docker.service.debug.impl.DockerHostDebugServiceImpl
 import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
+import com.tencent.devops.common.service.BkTag
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,7 +47,8 @@ class UserDockerDebugResourceImpl @Autowired constructor(
     private val dockerHostDebugService: DockerHostDebugServiceImpl,
     private val pipelineDockerDebugDao: PipelineDockerDebugDao,
     private val extDebugService: ExtDebugService,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val bkTag: BkTag
 ) : UserDockerDebugResource {
 
     override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<String>? {

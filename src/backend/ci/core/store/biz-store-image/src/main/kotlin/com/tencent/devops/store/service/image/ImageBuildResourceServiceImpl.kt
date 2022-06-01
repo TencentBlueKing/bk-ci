@@ -62,6 +62,7 @@ class ImageBuildResourceServiceImpl @Autowired constructor(
         if (buildType.name == BuildType.DOCKER.name ||
             buildType.name == BuildType.IDC.name ||
             buildType.name == BuildType.PUBLIC_DEVCLOUD.name ||
+            buildType.name == BuildType.KUBERNETES.name) ||
             buildType.name == BuildType.PUBLIC_BCS.name) {
             val record = businessConfigDao.get(
                 dslContext = dslContext,
