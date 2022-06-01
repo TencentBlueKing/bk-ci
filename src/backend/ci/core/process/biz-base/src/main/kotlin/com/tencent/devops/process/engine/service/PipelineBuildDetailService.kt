@@ -156,6 +156,7 @@ class PipelineBuildDetailService @Autowired constructor(
             pipelineId = buildInfo.pipelineId,
             pipelineName = model.name,
             userId = record.startUser ?: "",
+            triggerUser = buildInfo.triggerUser,
             trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
             startTime = record.startTime?.timestampmilli() ?: LocalDateTime.now().timestampmilli(),
             endTime = record.endTime?.timestampmilli(),
@@ -214,7 +215,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
                 // #3138 状态实时刷新
                 val refreshFlag = status.isRunning() && container.elements[0].status.isNullOrBlank() &&
-                    container.containPostTaskFlag != true
+                        container.containPostTaskFlag != true
                 if (status == BuildStatus.PREPARE_ENV || refreshFlag) {
                     ContainerUtils.clearQueueContainerName(container)
                     container.status = buildStatus.name

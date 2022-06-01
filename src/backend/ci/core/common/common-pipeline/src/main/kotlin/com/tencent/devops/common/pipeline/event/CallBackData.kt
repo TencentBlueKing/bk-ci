@@ -111,6 +111,7 @@ data class BuildEvent(
     val pipelineId: String,
     val pipelineName: String,
     val userId: String,
+    val triggerUser: String,
     val status: String,
     val startTime: Long = 0,
     val endTime: Long = 0,
