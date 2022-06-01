@@ -2,6 +2,7 @@
 .idea
 .vscode
 .gradle
+.settings
 bin/
 docs/node_modules
 docs/_book
