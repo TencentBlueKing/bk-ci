@@ -35,6 +35,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.user.UserDockerHostResource
@@ -52,7 +53,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import javax.ws.rs.core.Response
 
 @RestResource
@@ -66,14 +66,12 @@ class UserDockerHostResourceImpl @Autowired constructor(
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val dockerHostUtils: DockerHostUtils,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val bkTag: BkTag
 ) : UserDockerHostResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserDockerHostResourceImpl::class.java)
     }
-
-    @Value("\${spring.cloud.consul.discovery.tags:prod}")
-    private val consulTag: String = "prod"
 
     override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<Boolean>? {
         checkPermission(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
@@ -82,8 +80,10 @@ class UserDockerHostResourceImpl @Autowired constructor(
         // 查询是否已经有启动调试容器了，如果有，直接返回成功
         val result = dockerHostDebugService.getDebugStatus(debugStartParam.pipelineId, debugStartParam.vmSeqId)
         if (result.status == 0) {
-            logger.info("${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
-                "Container Exist|ContainerId=${result.data?.containerId}")
+            logger.info(
+                "${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
+                        "Container Exist|ContainerId=${result.data?.containerId}"
+            )
             return Result(true)
         }
 
@@ -128,8 +128,10 @@ class UserDockerHostResourceImpl @Autowired constructor(
                         imageType = ""
                     )
 
-                    logger.info("${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
-                        "Container running|ContainerId=${dockerBuildHistory.containerId}")
+                    logger.info(
+                        "${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
+                                "Container running|ContainerId=${dockerBuildHistory.containerId}"
+                    )
                     return Result(true)
                 }
             }
@@ -214,6 +216,8 @@ class UserDockerHostResourceImpl @Autowired constructor(
 
     private fun checkPermission(userId: String, projectId: String, pipelineId: String, vmSeqId: String) {
         checkParam(userId, projectId, pipelineId, vmSeqId)
+
+        val consulTag = bkTag.getLocalTag()
 
         if (!consulTag.contains("stream") && !consulTag.contains("gitci")) {
             validPipelinePermission(
