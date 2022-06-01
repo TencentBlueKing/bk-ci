@@ -55,8 +55,10 @@ object Tools {
         maxConcurrency: Int,
         prefetchCount: Int = 1
     ): SimpleMessageListenerContainer {
-        logger.info("createMQListener|queue=${queue.name}|listener=${buildListener::class.java.name}|concurrency=" +
-            "$concurrency|max=$maxConcurrency|trigger=$consecutiveActiveTrigger|jnterval=$startConsumerMinInterval")
+        logger.info(
+            "createMQListener|queue=${queue.name}|listener=${buildListener::class.java.name}|concurrency=" +
+                    "$concurrency|max=$maxConcurrency|trigger=$consecutiveActiveTrigger|jnterval=$startConsumerMinInterval"
+        )
         val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
         adapter.setMessageConverter(messageConverter)
         return createSimpleMessageListenerContainerByAdapter(
