@@ -83,6 +83,15 @@ $ helm uninstall bkci
 | `serviceMonitor.enabled` | 是否开启蓝鲸监控 | `false` |
 | `serviceMonitor.turbo.enabled` | turbo是否开启蓝鲸监控 | `false` |
 
+## 初始化配置
+|参数|描述|默认值|
+|---|---|---|
+| `init.sql.enabled` | 是否初始化数据库 | `true` |
+| `init.iam.enabled` | 是否初始化权限中心 | `true` |
+| `init.turbo.enabled` | 是否初始化编译加速 | `true` |
+| `init.bkrepo.enabled` | 是否初始化制品库 | `true` |
+| `init.defaultImage.enabled` | 是否初始化构建镜像 | `true` |
+
 ## ingress 配置
 
 |参数|描述|默认值 |
