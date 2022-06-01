@@ -30,13 +30,13 @@ package com.tencent.devops.process.api.app
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.service.ServiceGitForAppResource
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.pipeline.AppModelDetail
 import com.tencent.devops.process.service.app.AppBuildService
+import com.tencent.devops.stream.api.service.ServiceGitForAppResource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
@@ -45,7 +45,8 @@ import org.springframework.beans.factory.annotation.Value
 class AppPipelineBuildTencentResourceImpl @Autowired constructor(
     private val appBuildService: AppBuildService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val client: Client
+    private val client: Client,
+    private val bkTag: BkTag
 ) : AppPipelineBuildTencentResource {
 
     @Value("\${gitCI.tag:#{null}}")
@@ -86,7 +87,7 @@ class AppPipelineBuildTencentResourceImpl @Autowired constructor(
         val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
         val data = appBuildService.getBuildDetail(userId, projectId, pipelineId, buildIdReal, channelCode)
         if (channelCode == ChannelCode.GIT) {
-            ConsulContent.invokeByTag(gitCI) {
+            bkTag.invokeByTag(gitCI) {
                 try {
                     client.get(ServiceGitForAppResource::class)
                         .getGitCIPipeline(projectId, pipelineId).data?.displayName
