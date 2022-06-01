@@ -29,8 +29,8 @@ package com.tencent.devops.openapi.aspect
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.openapi.IgnoreProjectId
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import org.aspectj.lang.JoinPoint
@@ -41,6 +41,7 @@ import org.aspectj.lang.annotation.Pointcut
 
 import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Aspect
@@ -56,8 +57,11 @@ class ApiAspect(
         private val logger = LoggerFactory.getLogger(ApiAspect::class.java)
     }
 
+    @Value("\${openapi:verify:project: #{null}}")
+    val verifyProjectFlag: Boolean = false
+
     @Pointcut("execution(public * com.tencent.devops.openapi.resources.apigw.*(..))")
-    fun myMethod() {}
+    fun openApi() {}
 
     /**
      * 前置增强：目标方法执行之前执行
@@ -71,7 +75,7 @@ class ApiAspect(
 //                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
 //                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..)) || @annotation(Path)"
 //    ) // 所有controller包下面的所有方法的所有参数
-    @Before("myMethod()")
+    @Before("openApi()")
     @Suppress("ComplexMethod")
     fun beforeMethod(jp: JoinPoint) {
         if (!apiGatewayUtil.isAuth()) {
@@ -115,10 +119,14 @@ class ApiAspect(
         if (projectId.isNullOrEmpty()) {
             logger.info("${jp.signature.name} miss projectId")
             val ignoreProjectId = (jp.signature as MethodSignature).method.getAnnotation(IgnoreProjectId::class.java)
+            // 设置开关 若打开，则直接报错。否则只打日志标记
             if (ignoreProjectId == null || !ignoreProjectId.ignore) {
-                throw PermissionForbiddenException(
-                    message = "interface miss projectId and miss @IgnoreProjectId"
-                )
+                logger.warn("${(jp.signature as MethodSignature)} miss projectId and miss @IgnoreProjectId")
+                if (verifyProjectFlag) {
+                    throw PermissionForbiddenException(
+                        message = "interface miss projectId and miss @IgnoreProjectId"
+                    )
+                }
             }
         }
 
@@ -150,7 +158,7 @@ class ApiAspect(
 //                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
 //                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..))"
 //    ) // 所有controller包下面的所有方法的所有参数
-    @After("myMethod()")
+    @After("openApi()")
     fun afterMethod() {
         logger.info("openAPI after method")
         // 删除线程ThreadLocal数据,防止线程池复用。导致流量指向被污染
