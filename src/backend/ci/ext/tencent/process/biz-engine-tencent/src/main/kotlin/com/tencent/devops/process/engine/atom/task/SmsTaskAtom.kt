@@ -92,7 +92,7 @@ class SmsTaskAtom @Autowired constructor(
                 "?flag=buildArchive&projectId=${runVariables[PROJECT_NAME]}" +
                 "&pipelineId=${runVariables[PIPELINE_ID]}&buildId=$buildId"
             val shortUrl = client.get(ServiceShortUrlResource::class)
-                .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 7)).data!!
+                .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
             bodyStr = "$bodyStr\n\n 查看详情：$shortUrl"
         }
         val message = SmsNotifyMessage().apply {
