@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.dispatch.docker.pojo.DebugResponse
 import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -59,7 +60,7 @@ interface UserDockerDebugResource {
         userId: String,
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         debugStartParam: DebugStartParam
-    ): Result<String>?
+    ): Result<DebugResponse>?
 
     @ApiOperation("终止调试容器")
     @POST
