@@ -61,7 +61,8 @@ class ApiAspect(
     val verifyProjectFlag: Boolean = false
 
     @Pointcut("execution(public * com.tencent.devops.openapi.resources.apigw.*(..))")
-    fun openApi() {}
+    fun openApi() {
+    }
 
     /**
      * 前置增强：目标方法执行之前执行
@@ -75,7 +76,7 @@ class ApiAspect(
 //                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
 //                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..)) || @annotation(Path)"
 //    ) // 所有controller包下面的所有方法的所有参数
-    @Before("openApi()")
+    @Before("execution(public * com.tencent.devops.openapi.resources.apigw.*(..))")
     @Suppress("ComplexMethod")
     fun beforeMethod(jp: JoinPoint) {
         if (!apiGatewayUtil.isAuth()) {
