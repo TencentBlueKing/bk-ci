@@ -585,8 +585,47 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val buildNum = buildEndPipelineMetricsData.buildNum // 构建序号
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         val startUser = buildEndPipelineMetricsData.startUser // 启动用户
+        val errorTypes = mutableSetOf<Int>()
         errorInfos.forEach { errorInfo ->
             val errorType = errorInfo.errorType
+            val errorCode = errorInfo.errorCode
+            val errorMsg = errorInfo.errorMsg
+            errorTypes.add(errorType)
+            // 插入流水线失败详情数据
+            val savePipelineFailDetailDataPO = SavePipelineFailDetailDataPO(
+                id = client.get(ServiceAllocIdResource::class)
+                    .generateSegmentId("PIPELINE_FAIL_DETAIL_DATA").data ?: 0,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineName = pipelineName,
+                buildId = buildId,
+                buildNum = buildNum,
+                repoUrl = buildEndPipelineMetricsData.repoUrl,
+                branch = buildEndPipelineMetricsData.branch,
+                startUser = startUser,
+                startTime = buildEndPipelineMetricsData.startTime?.let { DateTimeUtil.stringToLocalDateTime(it) },
+                endTime = buildEndPipelineMetricsData.endTime?.let { DateTimeUtil.stringToLocalDateTime(it) },
+                errorType = errorType,
+                errorCode = errorCode,
+                errorMsg = errorMsg,
+                statisticsTime = statisticsTime,
+                creator = startUser,
+                modifier = startUser,
+                createTime = currentTime,
+                updateTime = currentTime
+            )
+            metricsDataReportDao.savePipelineFailDetailData(dslContext, savePipelineFailDetailDataPO)
+            // 添加错误信息
+            addErrorCodeInfo(
+                saveErrorCodeInfoPOs = saveErrorCodeInfoPOs,
+                errorType = errorType,
+                errorCode = errorCode,
+                errorMsg = errorMsg,
+                startUser = startUser,
+                currentTime = currentTime
+            )
+        }
+        errorTypes.forEach { errorType ->
             // 插入流水线失败汇总数据
             val pipelineFailSummaryDataRecord = metricsDataQueryDao.getPipelineFailSummaryData(
                 dslContext = dslContext,
@@ -621,39 +660,6 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 )
                 metricsDataReportDao.updatePipelineFailSummaryData(dslContext, updatePipelineFailSummaryDataPO)
             }
-            // 插入流水线失败详情数据
-            val savePipelineFailDetailDataPO = SavePipelineFailDetailDataPO(
-                id = client.get(ServiceAllocIdResource::class)
-                    .generateSegmentId("PIPELINE_FAIL_DETAIL_DATA").data ?: 0,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                pipelineName = pipelineName,
-                buildId = buildId,
-                buildNum = buildNum,
-                repoUrl = buildEndPipelineMetricsData.repoUrl,
-                branch = buildEndPipelineMetricsData.branch,
-                startUser = startUser,
-                startTime = buildEndPipelineMetricsData.startTime?.let { DateTimeUtil.stringToLocalDateTime(it) },
-                endTime = buildEndPipelineMetricsData.endTime?.let { DateTimeUtil.stringToLocalDateTime(it) },
-                errorType = errorType,
-                errorCode = errorInfo.errorCode,
-                errorMsg = errorInfo.errorMsg,
-                statisticsTime = statisticsTime,
-                creator = startUser,
-                modifier = startUser,
-                createTime = currentTime,
-                updateTime = currentTime
-            )
-            metricsDataReportDao.savePipelineFailDetailData(dslContext, savePipelineFailDetailDataPO)
-            // 添加错误信息
-            addErrorCodeInfo(
-                saveErrorCodeInfoPOs = saveErrorCodeInfoPOs,
-                errorType = errorType,
-                errorCode = errorInfo.errorCode,
-                errorMsg = errorInfo.errorMsg,
-                startUser = startUser,
-                currentTime = currentTime
-            )
         }
     }
 
