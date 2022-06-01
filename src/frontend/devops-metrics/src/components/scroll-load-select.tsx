@@ -86,6 +86,7 @@ export default defineComponent({
       pageData.value.keyword = '';
       pageData.value.page = 1;
       isLoadEnd.value = false;
+      list.value = []
       getList();
     };
 
