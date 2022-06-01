@@ -62,7 +62,6 @@
 
                 <bk-input v-else @change="changeThirdImage" :value="buildResource" :disabled="!editable" class="bk-image" :placeholder="$t('editPage.thirdImageHolder')" v-validate.initial="'required'" name="buildResource"></bk-input>
             </form-field>
-
             <form-field
                 :label="$t('editPage.assignResource')"
                 v-if="buildResourceType !== 'MACOS' && !isPublicResourceType && containerModalId && !showImagePublicTypeList.includes(buildResourceType)"
@@ -112,7 +111,7 @@
                 </form-field>
             </template>
 
-            <form-field :label="$t('editPage.imageTicket')" v-if="(buildResourceType === 'DOCKER' || buildResourceType === 'KUBERNETES') && buildImageType === 'THIRD'">
+            <form-field :label="$t('editPage.imageTicket')" v-if="showImagePublicTypeList.includes(buildResourceType) && buildImageType === 'THIRD'">
                 <select-input v-bind="imageCredentialOption" :disabled="!editable" name="credentialId" :value="buildImageCreId" :handle-change="changeBuildResource"></select-input>
             </form-field>
 
@@ -277,7 +276,7 @@
         },
         data () {
             return {
-                showImagePublicTypeList: ['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD', 'KUBERNETES'],
+                showImagePublicTypeList: ['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD', 'KUBERNETES', 'PUBLIC_BCS'],
                 showImageSelector: false,
                 isVersionLoading: false,
                 isLoadingMac: false,
