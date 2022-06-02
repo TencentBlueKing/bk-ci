@@ -197,7 +197,6 @@ class CallBackControl @Autowired constructor(
             stageId = event.stageId,
             taskId = event.taskId
         )
-
         sendToCallBack(CallBackData(event = callBackEvent, data = buildEvent), list)
     }
 
