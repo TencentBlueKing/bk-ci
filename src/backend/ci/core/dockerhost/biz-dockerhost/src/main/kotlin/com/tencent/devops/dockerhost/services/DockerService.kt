@@ -222,7 +222,8 @@ class DockerService @Autowired constructor(
                 customBuildEnv = customBuildEnv,
                 buildType = buildType,
                 qpcUniquePath = qpcUniquePath,
-                dockerResource = dockerResource
+                dockerResource = dockerResource,
+                specialProjectList = specialProjectList
             )
 
             containerPullImageHandler.setNextHandler(
@@ -231,14 +232,6 @@ class DockerService @Autowired constructor(
 
             return containerHandlerContext.containerId!!
         }
-/*        val containerId = dockerHostBuildService.createContainer(dockerHostBuildInfo)
-        dockerHostBuildService.log(
-            buildId = dockerHostBuildInfo.buildId,
-            message = "构建环境启动成功，等待Agent启动...",
-            tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
-            containerHashId = dockerHostBuildInfo.containerHashId
-        )
-        return containerId*/
     }
 
     fun getDockerHostLoad(): DockerHostLoad {

@@ -37,11 +37,7 @@ import com.tencent.devops.quality.dao.QualityNotifyGroupDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.context.annotation.Configuration
 
-@Configuration
-@ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
 class StreamQualityPermissionServiceImpl @Autowired constructor(
     private val client: Client,
     private val tokenCheckService: ClientTokenService,

@@ -23,7 +23,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwPermissionMoveResourceV3 {
 
-    @ApiOperation("获取项目下pipelineId+自增id")
+    @ApiOperation("获取项目下pipelineId+自增id", tags = ["v3_app_pipeline_id_info", "v3_user_pipeline_id_info"])
     @GET
     @Path("/projects/{projectId}/pipelineIds/list")
     fun getProjectPipelineIds(
@@ -38,7 +38,7 @@ interface ApigwPermissionMoveResourceV3 {
         projectId: String
     ): Result<List<PipelineIdInfo>>
 
-    @ApiOperation("关联iam项目")
+    @ApiOperation("关联iam项目", tags = ["v3_app_relation_iam", "v3_user_relation_iam"])
     @PUT
     @Path("/projects/{projectId}/relationProject")
     fun relationProject(

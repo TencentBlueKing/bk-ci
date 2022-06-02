@@ -106,6 +106,15 @@ class PipelineBuildSummaryDao {
         }
     }
 
+    fun getBuildNo(dslContext: DSLContext, projectId: String, pipelineId: String): Int? {
+        return with(T_PIPELINE_BUILD_SUMMARY) {
+            dslContext.select(BUILD_NO)
+                .from(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .fetchOne(0, Int::class.java)
+        }
+    }
+
     fun updateBuildNum(
         dslContext: DSLContext,
         projectId: String,
@@ -153,10 +162,10 @@ class PipelineBuildSummaryDao {
         projectId: String,
         channelCode: ChannelCode,
         pipelineIds: Collection<String>? = null,
-        viewId: String?,
-        favorPipelines: List<String>,
-        authPipelines: List<String>,
-        pipelineFilterParamList: List<PipelineFilterParam>?,
+        viewId: String? = null,
+        favorPipelines: List<String> = emptyList(),
+        authPipelines: List<String> = emptyList(),
+        pipelineFilterParamList: List<PipelineFilterParam>? = null,
         permissionFlag: Boolean? = null
     ): Long {
         val conditions = generatePipelineFilterCondition(

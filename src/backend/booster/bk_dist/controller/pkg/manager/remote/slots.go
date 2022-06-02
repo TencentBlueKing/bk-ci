@@ -16,6 +16,7 @@ import (
 
 	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
 	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 type lockWorkerMessage struct {
@@ -45,29 +46,22 @@ func newResource(hl []*dcProtocol.Host, usageLimit map[dcSDK.JobUsage]int) *reso
 		})
 		total += h.Jobs
 	}
-	if total == 0 {
-		wl = append(wl, &worker{
-			host:          &dcProtocol.Host{},
-			totalSlots:    1,
-			occupiedSlots: 0,
-		})
-		total = 1
-	}
 
 	usageMap := make(map[dcSDK.JobUsage]*usageWorkerSet, 10)
-	for k, v := range usageLimit {
-		if v <= 0 {
-			v = total
-		}
-		usageMap[k] = &usageWorkerSet{
-			limit:    v,
-			occupied: 0,
-		}
+	// do not use usageLimit, we only need JobUsageRemoteExe, and it is always 0 by now
+	usageMap[dcSDK.JobUsageRemoteExe] = &usageWorkerSet{
+		limit:    total,
+		occupied: 0,
 	}
 	usageMap[dcSDK.JobUsageDefault] = &usageWorkerSet{
 		limit:    total,
 		occupied: 0,
 	}
+
+	for _, v := range usageMap {
+		blog.Infof("remote slot: usage map:%v after new resource", *v)
+	}
+	blog.Infof("remote slot: total slots:%d after new resource", total)
 
 	return &resource{
 		totalSlots:    total,
@@ -99,6 +93,53 @@ type resource struct {
 
 	// to save waiting requests
 	waitingList *list.List
+}
+
+// reset with []*dcProtocol.Host
+// add new hosts and disable released hosts
+func (wr *resource) Reset(hl []*dcProtocol.Host) ([]*dcProtocol.Host, error) {
+	blog.Infof("remote slot: ready reset with %d host", len(hl))
+
+	wr.workerLock.Lock()
+	defer wr.workerLock.Unlock()
+
+	wl := make([]*worker, 0, len(hl))
+	total := 0
+	for _, h := range hl {
+		if h.Jobs <= 0 {
+			continue
+		}
+
+		wl = append(wl, &worker{
+			host:          h,
+			totalSlots:    h.Jobs,
+			occupiedSlots: 0,
+		})
+		total += h.Jobs
+	}
+
+	usageMap := make(map[dcSDK.JobUsage]*usageWorkerSet, 10)
+	// do not use usageLimit, we only need JobUsageRemoteExe, and it is always 0 by now
+	usageMap[dcSDK.JobUsageRemoteExe] = &usageWorkerSet{
+		limit:    total,
+		occupied: 0,
+	}
+	usageMap[dcSDK.JobUsageDefault] = &usageWorkerSet{
+		limit:    total,
+		occupied: 0,
+	}
+
+	for _, v := range usageMap {
+		blog.Infof("remote slot: usage map:%v after reset with new resource", *v)
+	}
+	blog.Infof("remote slot: total slots:%d after reset with new resource", total)
+
+	wr.totalSlots = total
+	wr.occupiedSlots = 0
+	wr.usageMap = usageMap
+	wr.worker = wl
+
+	return hl, nil
 }
 
 // brings handler up and begin to handle requests
@@ -150,18 +191,100 @@ func (wr *resource) Unlock(usage dcSDK.JobUsage, host *dcProtocol.Host) {
 	}
 }
 
+func (wr *resource) TotalSlots() int {
+	return wr.totalSlots
+}
+
 func (wr *resource) disableWorker(host *dcProtocol.Host) {
+	if host == nil {
+		return
+	}
+
 	wr.workerLock.Lock()
 	defer wr.workerLock.Unlock()
 
+	invalidjobs := 0
 	for _, w := range wr.worker {
 		if !host.Equal(w.host) {
 			continue
 		}
 
+		if w.disabled {
+			blog.Infof("remote slot: host:%v disabled before,do nothing now", *host)
+			break
+		}
+
 		w.disabled = true
+		invalidjobs = w.totalSlots
+		break
+	}
+
+	// !!! wr.totalSlots and v.limit may be <= 0 !!!
+	if invalidjobs > 0 {
+		wr.totalSlots -= invalidjobs
+		for _, v := range wr.usageMap {
+			v.limit = wr.totalSlots
+			blog.Infof("remote slot: usage map:%v after disable host:%v", *v, *host)
+		}
+	}
+
+	blog.Infof("remote slot: total slot:%d after disable host:%v", wr.totalSlots, *host)
+	return
+}
+
+func (wr *resource) disableAllWorker() {
+	blog.Infof("remote slot: ready disable all host")
+
+	wr.workerLock.Lock()
+	defer wr.workerLock.Unlock()
+
+	for _, w := range wr.worker {
+		if w.disabled {
+			continue
+		}
+
+		w.disabled = true
+	}
+
+	wr.totalSlots = 0
+	for _, v := range wr.usageMap {
+		v.limit = 0
+		blog.Infof("remote slot: usage map:%v after disable all host", *v)
+	}
+
+	blog.Infof("remote slot: total slot:%d after disable all host", wr.totalSlots)
+	return
+}
+
+func (wr *resource) addWorker(host *dcProtocol.Host) {
+	if host == nil || host.Jobs <= 0 {
 		return
 	}
+
+	wr.workerLock.Lock()
+	defer wr.workerLock.Unlock()
+
+	for _, w := range wr.worker {
+		if host.Equal(w.host) {
+			blog.Infof("remote slot: host(%s) existed when add", w.host.Server)
+			return
+		}
+	}
+
+	wr.worker = append(wr.worker, &worker{
+		host:          host,
+		totalSlots:    host.Jobs,
+		occupiedSlots: 0,
+	})
+	wr.totalSlots += host.Jobs
+
+	for _, v := range wr.usageMap {
+		v.limit = wr.totalSlots
+		blog.Infof("remote slot: usage map:%v after add host:%v", *v, *host)
+	}
+
+	blog.Infof("remote slot: total slot:%d after add host:%v", wr.totalSlots, *host)
+	return
 }
 
 func (wr *resource) getWorkerWithMostFreeSlots() *worker {
@@ -239,7 +362,7 @@ func (wr *resource) isIdle(set *usageWorkerSet) bool {
 		return false
 	}
 
-	if set.occupied < set.limit {
+	if set.occupied < set.limit || set.limit <= 0 {
 		return true
 	}
 
@@ -249,17 +372,21 @@ func (wr *resource) isIdle(set *usageWorkerSet) bool {
 func (wr *resource) getSlot(msg lockWorkerMessage) {
 	satisfied := false
 	usage := msg.jobUsage
-	if wr.occupiedSlots < wr.totalSlots {
+	if wr.occupiedSlots < wr.totalSlots || wr.totalSlots <= 0 {
 		set := wr.getUsageSet(usage)
 		if wr.isIdle(set) {
 			set.occupied++
 			wr.occupiedSlots++
+			blog.Infof("remote slot: total slots:%d occupied slots:%d, remote slot available",
+				wr.totalSlots, wr.occupiedSlots)
 			msg.result <- wr.occupyWorkerSlots()
 			satisfied = true
 		}
 	}
 
 	if !satisfied {
+		blog.Infof("remote slot: total slots:%d occupied slots:%d, remote slot not available",
+			wr.totalSlots, wr.occupiedSlots)
 		wr.waitingList.PushBack(usage)
 		wr.waitingList.PushBack(msg.result)
 	}

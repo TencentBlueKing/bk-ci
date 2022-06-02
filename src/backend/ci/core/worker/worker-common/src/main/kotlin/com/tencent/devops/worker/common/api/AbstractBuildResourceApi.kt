@@ -33,10 +33,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
+import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.worker.common.CommonEnv
+import com.tencent.devops.worker.common.ErrorMsgLogUtil
 import com.tencent.devops.worker.common.LOG_DEBUG_FLAG
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.env.AgentEnv
@@ -44,7 +46,6 @@ import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.ArchiveUtils
-import io.undertow.util.StatusCodes
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
@@ -52,7 +53,6 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpMethod
 import java.io.File
 import java.net.ConnectException
 import java.net.HttpRetryException
@@ -97,27 +97,45 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             if (retryCodes.contains(response.code())) { // 网关502,503，可重试
                 true
             } else {
+                ErrorMsgLogUtil.resetErrorMsg() // #5806 成功时将异常信息清理掉
                 return response
             }
         } catch (e: UnknownHostException) { // DNS问题导致请求未到达目标，可重试
             logger.warn("UnknownHostException|request($request),error is :$e, try to retry $retryCount")
-            true
+            if (retryCount <= 0) {
+                ErrorMsgLogUtil.appendErrorMsg("构建机DNS解析问题(Agent DNS Error)：$e")
+                false
+            } else {
+                true
+            }
         } catch (e: ConnectException) {
             logger.warn("ConnectException|request($request),error is :$e, try to retry $retryCount")
-            true
+            if (retryCount <= 0) {
+                ErrorMsgLogUtil.appendErrorMsg("构建机网络连接问题(Agent Network Connect Failed)：$e")
+                false
+            } else {
+                true
+            }
         } catch (re: SocketTimeoutException) {
             if (re.message == "connect timed out" ||
-                (request.method() == HttpMethod.GET.name && re.message == "timeout")
+                (request.method() == "GET" && re.message == "timeout")
             ) {
                 logger.warn("SocketTimeoutException(${re.message})|request($request), try to retry $retryCount")
-                true
+                if (retryCount <= 0) {
+                    ErrorMsgLogUtil.appendErrorMsg("构建机网络超时问题(Agent Network Timeout)：$re")
+                    false
+                } else {
+                    true
+                }
             } else { // 对于因为服务器的超时，不一定能幂等重试的，抛出原来的异常，外层业务自行决定是否重试
                 logger.error("Fail to request($request),error is :$re", re)
+                ErrorMsgLogUtil.appendErrorMsg("构建机网络超时问题(Agent Network Timeout)：$re")
                 throw re
             }
-        } catch (ignore: Exception) {
-            logger.error("Fail to request($request),error is :$ignore", ignore)
-            throw ClientException("Fail to request($request),error is:${ignore.message}")
+        } catch (error: Exception) {
+            logger.error("Fail to request($request),error is :$error", error)
+            ErrorMsgLogUtil.appendErrorMsg("构建机网络未知异常(Agent Network Unknown)：$error")
+            throw ClientException("Fail to request($request),error is:${error.message}")
         }
 
         if (retryFlag && retryCount > 0) {
@@ -163,47 +181,52 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         destPath: File,
         connectTimeoutInSec: Long? = null,
         readTimeoutInSec: Long? = null,
-        writeTimeoutInSec: Long? = null
+        writeTimeoutInSec: Long? = null,
+        retryCount: Int = DEFAULT_RETRY_TIME
     ) {
+
         requestForResponse(
             request = request,
             connectTimeoutInSec = connectTimeoutInSec,
             readTimeoutInSec = readTimeoutInSec,
             writeTimeoutInSec = writeTimeoutInSec
         ).use { response ->
-            download(response, destPath)
-        }
-    }
-
-    private fun download(response: Response, destPath: File, retryCount: Int = DEFAULT_RETRY_TIME) {
-        if (response.code() == StatusCodes.NOT_FOUND) {
-            throw RemoteServiceException("文件不存在")
-        }
-        if (!response.isSuccessful) {
-            LoggerService.addNormalLine(response.body()!!.string())
-            throw RemoteServiceException("获取文件失败")
-        }
-        val dest = destPath.toPath()
-        if (Files.notExists(dest.parent)) Files.createDirectories(dest.parent)
-        LoggerService.addNormalLine("${LOG_DEBUG_FLAG}save file >>>> ${destPath.canonicalPath}")
-        val body = response.body() ?: return
-        val contentLength = body.contentLength()
-        if (contentLength != -1L) {
-            LoggerService.addNormalLine("download ${dest.fileName} " +
-                ArchiveUtils.humanReadableByteCountBin(contentLength))
-        }
-
-        // body copy时可能会出现readTimeout，即便http请求已正常响应
-        try {
-            body.byteStream().use { bs ->
-                Files.copy(bs, dest, StandardCopyOption.REPLACE_EXISTING)
+            if (response.code() == HTTP_404) {
+                throw RemoteServiceException("file does not exist")
             }
-        } catch (e: SocketTimeoutException) {
-            logger.warn("Failed to copy download body, try to retry.")
-            if (retryCount > 0) {
-                download(response, destPath, retryCount - 1)
-            } else {
-                throw HttpRetryException("Failed to copy download body, try to retry $DEFAULT_RETRY_TIME", 999)
+            if (!response.isSuccessful) {
+                LoggerService.addNormalLine(response.body()!!.string())
+                throw RemoteServiceException("Failed to get file")
+            }
+            val dest = destPath.toPath()
+            if (Files.notExists(dest.parent)) Files.createDirectories(dest.parent)
+            LoggerService.addNormalLine("${LOG_DEBUG_FLAG}save file >>>> ${destPath.canonicalPath}")
+            val body = response.body() ?: return
+            val contentLength = body.contentLength()
+            if (contentLength != -1L) {
+                LoggerService.addNormalLine("download ${dest.fileName} " +
+                        ArchiveUtils.humanReadableByteCountBin(contentLength))
+            }
+
+            // body copy时可能会出现readTimeout，即便http请求已正常响应
+            try {
+                body.byteStream().use { bs ->
+                    Files.copy(bs, dest, StandardCopyOption.REPLACE_EXISTING)
+                }
+            } catch (e: Exception) {
+                logger.warn("Failed to copy download body, try to retry.")
+                if (retryCount > 0) {
+                    download(
+                        request = request,
+                        destPath = destPath,
+                        connectTimeoutInSec = connectTimeoutInSec,
+                        readTimeoutInSec = readTimeoutInSec,
+                        writeTimeoutInSec = writeTimeoutInSec,
+                        retryCount = retryCount - 1
+                    )
+                } else {
+                    throw HttpRetryException("Failed to copy download body, try to retry $DEFAULT_RETRY_TIME", 999)
+                }
             }
         }
     }

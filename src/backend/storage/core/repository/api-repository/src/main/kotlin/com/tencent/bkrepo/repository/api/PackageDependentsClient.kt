@@ -50,6 +50,9 @@ interface PackageDependentsClient {
     @PostMapping("/add")
     fun addDependents(@RequestBody relation: PackageDependentsRelation): Response<Void>
 
+    @PostMapping("/reduce")
+    fun reduceDependents(@RequestBody relation: PackageDependentsRelation): Response<Void>
+
     @GetMapping("/query")
     fun queryDependents(
         @RequestParam projectId: String,

@@ -93,6 +93,15 @@ type RemoteMgr interface {
 
 	// send files to remote worker
 	SendFiles(req *RemoteTaskSendFileRequest) ([]string, error)
+
+	// get total remote worker slots
+	TotalSlots() int
+
+	// inc remote jobs
+	IncRemoteJobs()
+
+	// dec remote jobs
+	DecRemoteJobs()
 }
 
 // LocalMgr describe a manager for handling all actions with local execution for work
@@ -107,11 +116,19 @@ type LocalMgr interface {
 	UnlockSlots(usage dcSDK.JobUsage, weight int32)
 
 	// do task execution
-	ExecuteTask(req *LocalTaskExecuteRequest, globalWork *Work) (*LocalTaskExecuteResult, error)
+	ExecuteTask(req *LocalTaskExecuteRequest,
+		globalWork *Work,
+		withlocalresource bool) (*LocalTaskExecuteResult, error)
 
 	// get caches in pump mode
 	GetPumpCache() (*analyser.FileCache, *analyser.RootCache)
+
+	// get local slots info
+	Slots() (int, int)
 }
+
+// CB4ResChanged call back function when remote resource changed
+type CB4ResChanged func() error
 
 // ResourceMgr describe a manager for handling all actions with resource and server for work
 type ResourceMgr interface {
@@ -134,10 +151,16 @@ type ResourceMgr interface {
 	GetHosts() []*dcProtocol.Host
 
 	// apply resource
-	Apply(req *v2.ParamApply) (*v2.RespTaskInfo, error)
+	Apply(req *v2.ParamApply, force bool) (*v2.RespTaskInfo, error)
 
 	// release resource
 	Release(req *v2.ParamRelease) error
+
+	// register call back function
+	RegisterCallback(f CB4ResChanged) error
+
+	// check whether apply finished
+	IsApplyFinished() bool
 }
 
 // BasicMgr describe a manager for handling all actions with work basic issues

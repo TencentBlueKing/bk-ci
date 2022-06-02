@@ -145,7 +145,20 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
         val model = pipelineModelAndSetting.model
         modelCheckPlugin.clearUpModel(model)
-
+        if (model.srcTemplateId.isNullOrBlank()) {
+            val validateRet = client.get(ServiceTemplateResource::class)
+                .validateModelComponentVisibleDept(
+                    userId = userId,
+                    model = model,
+                    projectCode = projectId
+                )
+            if (validateRet.isNotOk()) {
+                throw ErrorCodeException(
+                    errorCode = validateRet.status.toString(),
+                    defaultMessage = validateRet.message
+                )
+            }
+        }
         val newPipelineId = createPipeline(
             userId = userId,
             projectId = projectId,
@@ -545,7 +558,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         model: Model,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        checkTemplate: Boolean = true
+        checkTemplate: Boolean = true,
+        updateLastModifyUser: Boolean? = true
     ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
             throw ErrorCodeException(
@@ -617,7 +631,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 signPipelineId = pipelineId,
                 userId = userId,
                 channelCode = channelCode,
-                create = false
+                create = false,
+                updateLastModifyUser = updateLastModifyUser
             )
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)
@@ -791,7 +806,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 channelCode = channelCode ?: ChannelCode.BS
             )
-            modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, existModel, param)
+            modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, null, param)
 
             watcher.start("s_r_pipeline_del")
             val deletePipelineResult = pipelineRepositoryService.deletePipeline(

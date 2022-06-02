@@ -24,9 +24,10 @@
                                 name="name"
                                 class="codelib-credential-selector"
                                 :placeholder="$t('codelib.codelibUrlPlaceholder')"
+                                :remote-method="handleSearchCodeLib"
                             >
-                                <bk-option v-for="(option, index) in oAuth.project"
-                                    :key="index"
+                                <bk-option v-for="option in oAuth.project"
+                                    :key="option.httpUrl"
                                     :id="option.httpUrl"
                                     :name="option.httpUrl">
                                 </bk-option>
@@ -246,7 +247,7 @@
                 )
             },
             title () {
-                return `${this.$t('codelib.link')}${this.codelibConfig.label || ''}${this.$t('codelib.codelib')}`
+                return `${this.$t('codelib.link')}${this.$t(`codelib.${this.codelibConfig.label}`) || ''}${this.$t('codelib.codelib')}`
             },
             isGit () {
                 return isGit(this.codelibTypeName)
@@ -336,15 +337,15 @@
             },
             urlPlaceholder () {
                 return (
-                    this.placeholders['url'][this.codelibConfig.label]
-                    || this.placeholders['url'][this.codelib.authType]
+                    this.placeholders.url[this.codelibConfig.label]
+                    || this.placeholders.url[this.codelib.authType]
                 )
             },
             credentialPlaceholder () {
                 return this.placeholders.cred[this.codelibConfig.label]
             },
             portPlaceholder () {
-                return this.placeholders['port'][this.codelibConfig.label]
+                return this.placeholders.port[this.codelibConfig.label]
             }
         },
 
@@ -463,6 +464,15 @@
                 } finally {
                     this.$nextTick(() => (this.loading = false))
                 }
+            },
+
+            handleSearchCodeLib (search) {
+                const { projectId, codelibTypeConstants } = this
+                this.checkOAuth({
+                    projectId,
+                    type: codelibTypeConstants,
+                    search
+                })
             },
 
             async openValidate () {

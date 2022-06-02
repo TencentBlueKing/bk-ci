@@ -182,7 +182,10 @@ interface BuildJobResource {
         vmSeqId: String,
         @ApiParam(value = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String
+        vmName: String,
+        @ApiParam(value = "执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int? = null
     ): Result<HeartBeatInfo>
 
     @ApiOperation("job异常上报并停止构建") // #5046 增加启动时异常上报，并停止构建，如果网络通的话
@@ -206,4 +209,19 @@ interface BuildJobResource {
         @ApiParam(value = "执行结果", required = true)
         errorInfo: ErrorInfo
     ): Result<Boolean>
+
+    @ApiOperation("获取当前构建的构建详情页")
+    @GET
+    @Path("/detail_url")
+    fun getBuildDetailUrl(
+        @ApiParam("projectId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("pipelineId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String
+    ): Result<String>
 }

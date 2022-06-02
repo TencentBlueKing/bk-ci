@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.SimpleResult
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
@@ -46,8 +47,10 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatu
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,31 +68,29 @@ class ThirdPartyAgentService @Autowired constructor(
 ) {
 
     fun queueBuild(
-        projectId: String,
-        agentId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: String,
+        agent: ThirdPartyAgent,
         thirdPartyAgentWorkspace: String,
-        pipelineName: String,
-        buildNo: Int,
-        taskName: String
+        event: PipelineAgentStartupEvent
     ) {
-        val count = thirdPartyAgentBuildDao.add(
-            dslContext = dslContext,
-            projectId = projectId,
-            agentId = agentId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            thirdPartyAgentWorkspace = thirdPartyAgentWorkspace,
-            pipelineName = pipelineName,
-            buildNum = buildNo,
-            taskName = taskName
-        )
-        if (count != 1) {
-            logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|$agentId|$count)")
-            throw OperationException("Fail to add the third party agent build")
+        with(event) {
+            val count = thirdPartyAgentBuildDao.add(
+                dslContext = dslContext,
+                projectId = projectId,
+                agentId = agent.agentId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                thirdPartyAgentWorkspace = thirdPartyAgentWorkspace,
+                pipelineName = pipelineName,
+                buildNum = buildNo,
+                taskName = taskName,
+                agentIp = agent.ip,
+                nodeId = HashUtil.decodeIdToLong(agent.nodeId ?: "")
+            )
+            if (count != 1) {
+                logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}|$count)")
+                throw OperationException("Fail to add the third party agent build")
+            }
         }
     }
 
@@ -113,11 +114,7 @@ class ThirdPartyAgentService @Autowired constructor(
         return thirdPartyAgentBuildDao.getRunningAndQueueBuilds(dslContext, agentId).size
     }
 
-    fun startBuild(
-        projectId: String,
-        agentId: String,
-        secretKey: String
-    ): AgentResult<ThirdPartyBuildInfo?> {
+    fun startBuild(projectId: String, agentId: String, secretKey: String): AgentResult<ThirdPartyBuildInfo?> {
         // Get the queue status build by buildId and agentId
         logger.debug("Start the third party agent($agentId) of project($projectId)")
         try {
@@ -160,13 +157,11 @@ class ThirdPartyAgentService @Autowired constructor(
             val redisLock = ThirdPartyAgentLock(redisOperation, projectId, agentId)
             try {
                 redisLock.lock()
-                val buildRecords =
-                    thirdPartyAgentBuildDao.getQueueBuilds(dslContext, agentId)
-                if (buildRecords.isEmpty()) {
+                val build = thirdPartyAgentBuildDao.fetchOneQueueBuild(dslContext, agentId) ?: run {
                     logger.debug("There is not build by agent($agentId) in queue")
                     return AgentResult(AgentStatus.IMPORT_OK, null)
                 }
-                val build = buildRecords[0]
+
                 logger.info("Start the build(${build.buildId}) of agent($agentId) and seq(${build.vmSeqId})")
                 thirdPartyAgentBuildDao.updateStatus(dslContext, build.id, PipelineTaskStatus.RUNNING)
 
@@ -175,7 +170,7 @@ class ThirdPartyAgentService @Autowired constructor(
                         .agentTaskStarted(projectId, build.pipelineId, build.buildId, build.vmSeqId, build.agentId)
                 } catch (e: RemoteServiceException) {
                     logger.warn("notify agent task[$projectId|${build.buildId}|${build.vmSeqId}|$agentId]" +
-                        " clained failed, cause: ${e.message}")
+                        " claim failed, cause: ${e.message}")
                 }
 
                 return AgentResult(
@@ -214,12 +209,7 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
-    fun finishUpgrade(
-        projectId: String,
-        agentId: String,
-        secretKey: String,
-        success: Boolean
-    ): AgentResult<Boolean> {
+    fun finishUpgrade(projectId: String, agentId: String, secretKey: String, success: Boolean): AgentResult<Boolean> {
         logger.info("The agent($agentId) of project($projectId) finish upgrading with result $success")
         try {
             val agentResult = try {
@@ -233,21 +223,13 @@ class ThirdPartyAgentService @Autowired constructor(
                 return AgentResult(AgentStatus.DELETE, false)
             }
 
-            if (agentResult.isNotOk()) {
-                logger.warn("Fail to get the third party agent($agentId) because of ${agentResult.message}")
-                throw NotFoundException("Fail to get the agent")
-            }
-
             if (agentResult.data == null) {
                 logger.warn("Get the null third party agent($agentId)")
                 throw NotFoundException("Fail to get the agent")
             }
 
             if (agentResult.data!!.secretKey != secretKey) {
-                logger.warn(
-                    "The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} " +
-                        "of project($projectId) and agent($agentId)"
-                )
+                logger.warn("The secretKey($secretKey) is not match of project($projectId) and agent($agentId)")
                 throw NotFoundException("Fail to get the agent")
             }
             thirdPartyAgentBuildRedisUtils.thirdPartyAgentUpgradingDone(projectId, agentId)
@@ -258,11 +240,7 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
-    fun finishBuild(
-        buildId: String,
-        vmSeqId: String?,
-        success: Boolean
-    ) {
+    fun finishBuild(buildId: String, vmSeqId: String?, success: Boolean) {
         if (vmSeqId.isNullOrBlank()) {
             val records = thirdPartyAgentBuildDao.list(dslContext, buildId)
             if (records.isEmpty()) {
@@ -272,19 +250,17 @@ class ThirdPartyAgentService @Autowired constructor(
                 finishBuild(it, success)
             }
         } else {
-            val record =
-                thirdPartyAgentBuildDao.get(dslContext, buildId, vmSeqId!!) ?: return
+            val record = thirdPartyAgentBuildDao.get(dslContext, buildId, vmSeqId) ?: return
             finishBuild(record, success)
         }
     }
 
     fun listAgentBuilds(agentId: String, page: Int?, pageSize: Int?): Page<AgentBuildInfo> {
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 100
-        val sqlLimit =
-            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
-        val offset = sqlLimit?.offset ?: 0
-        val limit = sqlLimit?.limit ?: 100
+        val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
+        val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
+        val offset = sqlLimit.offset
+        val limit = sqlLimit.limit
 
         val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuilds(dslContext, agentId)
         val agentBuilds = thirdPartyAgentBuildDao.listAgentBuilds(dslContext, agentId, offset, limit).map {
@@ -306,10 +282,7 @@ class ThirdPartyAgentService @Autowired constructor(
         return Page(pageNotNull, pageSizeNotNull, agentBuildCount, agentBuilds)
     }
 
-    private fun finishBuild(
-        record: TDispatchThirdpartyAgentBuildRecord,
-        success: Boolean
-    ) {
+    private fun finishBuild(record: TDispatchThirdpartyAgentBuildRecord, success: Boolean) {
         logger.info(
             "Finish the third party agent(${record.agentId}) build(${record.buildId}) " +
                 "of seq(${record.vmSeqId}) and status(${record.status})"
@@ -325,7 +298,13 @@ class ThirdPartyAgentService @Autowired constructor(
             logger.warn("Get the null third party agent(${record.agentId})")
             throw RemoteServiceException("Fail to get the third party agent")
         }
-        thirdPartyAgentBuildRedisUtils.deleteThirdPartyBuild(agentResult.data!!.secretKey, record.agentId, record.buildId, record.vmSeqId)
+
+        thirdPartyAgentBuildRedisUtils.deleteThirdPartyBuild(
+            secretKey = agentResult.data!!.secretKey,
+            agentId = record.agentId,
+            buildId = record.buildId,
+            vmSeqId = record.vmSeqId
+        )
         thirdPartyAgentBuildDao.updateStatus(
             dslContext, record.id,
             if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE
@@ -347,13 +326,12 @@ class ThirdPartyAgentService @Autowired constructor(
             throw NotFoundException("Fail to get the agent")
         }
 
-        // FIXME 构建机停止问题因goAgent传pipelineId为空串问题导致接口报错404，
-        // pipelineId是无意义的字段，先解决报错问题。后续需要新增一个没有pipelineId参数的接口
         client.get(ServiceBuildResource::class).workerBuildFinish(
             projectId = projectId,
             pipelineId = if (buildInfo.pipelineId.isNullOrBlank()) "dummyPipelineId" else buildInfo.pipelineId!!,
             buildId = buildInfo.buildId,
             vmSeqId = buildInfo.vmSeqId,
+            nodeHashId = agentResult.data!!.nodeId,
             simpleResult = SimpleResult(success = buildInfo.success, message = buildInfo.message)
         )
     }

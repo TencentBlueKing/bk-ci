@@ -32,11 +32,15 @@ data class MatrixConfig(
         // 将额外添加的参数在匹配的组合内进行追加
         val caseToAdd = mutableListOf<MutableMap<String, String>>()
         include?.forEach { includeCase ->
+            // 如果strategy为空，直接添加include
+            if (strategyCase.isEmpty()) {
+                caseToAdd.add(includeCase.toMutableMap())
+                return@forEach
+            }
             // 筛选出所有与矩阵匹配的key
             val matchKey = includeCase.keys.filter { keyList.contains(it) }
             // 如果没有匹配的key则直接丢弃
             if (matchKey.isEmpty()) return@forEach
-
             combinations.forEach { case ->
                 if (keyValueMatch(case, includeCase, matchKey)) {
                     // 将全匹配的额外参数直接追加到匹配的组合

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.utils
 
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 
@@ -54,5 +55,37 @@ object ContainerUtils {
 
     fun isVMBuildContainerEnable(container: VMBuildContainer): Boolean {
         return container.jobControlOption == null || container.jobControlOption!!.enable
+    }
+
+    private const val mutexPrefix = "互斥中(Mutex waiting)"
+
+    fun clearMutexContainerName(container: Container) {
+        if (container.name.startsWith(mutexPrefix)) {
+            container.name = container.name.substring(mutexPrefix.length)
+        }
+    }
+
+    fun setMutexWaitName(container: Container) {
+        if (container.name.startsWith(mutexPrefix)) {
+            return
+        }
+
+        container.name = "$mutexPrefix${container.name}"
+    }
+
+    private const val queuePrefix = "排队中(Queuing)"
+
+    fun clearQueueContainerName(container: Container) {
+        if (container.name.startsWith(queuePrefix)) {
+            container.name = container.name.substring(queuePrefix.length)
+        }
+    }
+
+    fun setQueuingWaitName(container: Container) {
+        if (container.name.startsWith(queuePrefix)) {
+            return
+        }
+
+        container.name = "$queuePrefix${container.name}"
     }
 }

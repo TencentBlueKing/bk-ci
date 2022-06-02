@@ -31,24 +31,21 @@ import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.utils.CommonUtils
 import com.tencent.devops.buildless.utils.SystemInfoUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.docker.api.service.ServiceDockerHostResource
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
 class DispatchClient @Autowired constructor(
     private val client: Client,
-    private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig,
+    private val bkTag: BkTag
 ) {
-
-    @Value("\${spring.cloud.consul.discovery.tags:prod}")
-    private val consulTag: String = "prod"
-
     fun updateContainerId(buildLessTask: BuildLessTask, containerId: String) {
         client.get(ServiceDockerHostResource::class).updateContainerId(
             buildId = buildLessTask.buildId,
@@ -59,6 +56,16 @@ class DispatchClient @Autowired constructor(
 
     fun refreshStatus(containerRunningsCount: Int) {
         val dockerIp = CommonUtils.getHostIp()
+
+        // 节点状态默认正常
+        var enable = true
+
+        // 容器为0时 节点可能异常，告警然后设置enable=false
+        if (containerRunningsCount <= 0) {
+            enable = false
+            logger.warn("Node: $dockerIp no running containers in containerPool.")
+        }
+
         val dockerIpInfoVO = DockerIpInfoVO(
             id = 0L,
             dockerIp = dockerIp,
@@ -69,8 +76,8 @@ class DispatchClient @Autowired constructor(
             averageMemLoad = SystemInfoUtil.getAverageMemLoad(),
             averageDiskLoad = SystemInfoUtil.getAverageDiskLoad(),
             averageDiskIOLoad = SystemInfoUtil.getAverageDiskIOLoad(),
-            enable = true,
-            grayEnv = isGary(),
+            enable = enable,
+            grayEnv = isGray(),
             specialOn = null,
             createTime = null,
             clusterType = DockerHostClusterType.BUILD_LESS
@@ -86,8 +93,8 @@ class DispatchClient @Autowired constructor(
         }
     }
 
-    fun isGary(): Boolean {
-        return consulTag.contains("gray")
+    fun isGray(): Boolean {
+        return bkTag.getLocalTag().contains("gray")
     }
 
     companion object {

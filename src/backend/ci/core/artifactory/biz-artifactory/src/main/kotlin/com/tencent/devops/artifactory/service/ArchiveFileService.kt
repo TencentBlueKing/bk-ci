@@ -60,7 +60,8 @@ interface ArchiveFileService {
         fileName: String? = null,
         fileType: FileTypeEnum? = null,
         props: Map<String, String?>? = null,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        logo: Boolean? = false
     ): String
 
     /**
@@ -74,7 +75,8 @@ interface ArchiveFileService {
         filePath: String? = null,
         fileType: FileTypeEnum? = null,
         props: Map<String, String?>? = null,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        logo: Boolean? = false
     ): String
 
     /**
@@ -223,4 +225,17 @@ interface ArchiveFileService {
         userId: String,
         filePath: String
     )
+
+    /**
+     * 查询自定义仓库文件
+     */
+    fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        filePath: String,
+        includeFolder: Boolean?,
+        deep: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Page<FileInfo>
 }

@@ -1,0 +1,5 @@
+server:
+  port: __BK_REPO_OCI_PORT__
+
+oci:
+  domain: __BK_REPO_OCI_HOST__

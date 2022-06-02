@@ -33,7 +33,7 @@ import java.net.SocketTimeoutException
 object HttpRetryUtils {
 
     @Throws(HttpRetryException::class, SocketTimeoutException::class)
-    fun <T> retry(retryTime: Int = 100, retryPeriodMills: Long = 500, action: () -> T): T {
+    fun <T> retry(retryTime: Int = 5, retryPeriodMills: Long = 500, action: () -> T): T {
         return try {
             action()
         } catch (re: SocketTimeoutException) {

@@ -29,6 +29,7 @@ package com.tencent.devops.ticket.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_CI_TASK_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
@@ -75,6 +76,40 @@ interface BuildCredentialResource {
         @ApiParam("Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         @BkField(required = true)
+        publicKey: String,
+        @ApiParam(value = "插件ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_CI_TASK_ID)
+        taskId: String?,
+        @ApiParam(value = "插件ID(旧版本的，为了兼容旧版本插件不用更新sdk来使用)", required = true)
+        @HeaderParam("X-DEVOPS-TASK-ID")
+        oldTaskId: String?
+    ): Result<CredentialInfo?>
+
+    @ApiOperation("构建机获取跨项目凭据")
+    @Path("/{credentialId}/across/")
+    @GET
+    fun getAcrossProject(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @ApiParam(value = "构建环境ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
+        vmSeqId: String,
+        @ApiParam(value = "构建机名称", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
+        vmName: String,
+        @ApiParam("凭据ID", required = true)
+        @PathParam("credentialId")
+        credentialId: String,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("targetProjectId")
+        targetProjectId: String,
+        @ApiParam("Base64编码的加密公钥", required = true)
+        @QueryParam("publicKey")
+        @BkField(required = true)
         publicKey: String
     ): Result<CredentialInfo?>
 
@@ -94,6 +129,12 @@ interface BuildCredentialResource {
         @ApiParam(value = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
+        @ApiParam(value = "插件ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_CI_TASK_ID)
+        taskId: String?,
+        @ApiParam(value = "插件ID(旧版本的，为了兼容旧版本插件不用更新sdk来使用)", required = true)
+        @HeaderParam("X-DEVOPS-TASK-ID")
+        oldTaskId: String?,
         @ApiParam("凭据ID", required = true)
         @PathParam("credentialId")
         credentialId: String

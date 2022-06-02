@@ -45,12 +45,12 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.pojo.BuildTask
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.utils.PIPELINE_ATOM_CODE
@@ -85,10 +85,11 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.BatScriptUtil
-import com.tencent.devops.worker.common.utils.CredentialUtils
+import com.tencent.devops.worker.common.utils.CredentialUtils.parseCredentialValue
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
+import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
@@ -121,9 +122,13 @@ open class MarketAtomTask : ITask() {
         val atomVersion = taskParams["version"] as String
         val data = taskParams["data"] ?: "{}"
         val map = JsonUtil.toMutableMap(data)
+        // 该插件执行的工作空间绝对路径
+        val workspacePath = workspace.absolutePath
+        // 输出参数的用户命名空间：防止重名窘况
+        val namespace: String? = map["namespace"] as String?
         logger.info(
             "${buildTask.buildId}|RUN_ATOM|taskName=$taskName|ver=$atomVersion|code=$atomCode" +
-                "|workspace=${workspace.absolutePath}"
+                "|workspace=$workspacePath"
         )
 
         // 获取插件基本信息
@@ -138,7 +143,7 @@ open class MarketAtomTask : ITask() {
 
         // val atomWorkspace = File("${workspace.absolutePath}/${atomCode}_${buildTask.taskId}_data")
         val atomTmpSpace = Files.createTempDirectory("${atomCode}_${buildTask.taskId}_data").toFile()
-
+        buildTask.elementVersion = atomData.version
         if (!atomTmpSpace.exists() && !atomTmpSpace.mkdirs()) {
             atomEnvResult.data ?: throw TaskExecuteException(
                 errorMsg = "create directory fail! please check ${atomTmpSpace.absolutePath}",
@@ -149,103 +154,30 @@ open class MarketAtomTask : ITask() {
 
         cleanOutput(atomTmpSpace)
 
-        val variablesMap = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
-        var runtimeVariables = if (buildTask.buildVariable != null) {
-            variablesMap.plus(buildTask.buildVariable!!)
-        } else {
-            variablesMap
-        }
+        // 将Job传入的流水线变量先进行凭据替换
+        // 插件接收的流水线参数 = Job级别参数 + Task调度时参数 + 本插件上下文 + 编译机环境参数
+        val acrossInfo by lazy { TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId) }
+        var variables = buildVariables.variables.map {
+            it.key to it.value.parseCredentialValue(
+                context = buildTask.buildVariable,
+                acrossProjectId = acrossInfo?.targetProjectId
+            )
+        }.toMap().plus(buildTask.buildVariable ?: emptyMap())
 
-        // 解析输出字段模板
+        // 解析输入输出字段模板
         val props = JsonUtil.toMutableMap(atomData.props!!)
+        val inputTemplate = props["input"]?.let { it as Map<String, Map<String, Any>> } ?: mutableMapOf()
+        val outputTemplate = props["output"]?.let { props["output"] as Map<String, Map<String, Any>> } ?: mutableMapOf()
 
-        // 解析输入参数
-
-        val inputTemplate =
-            if (props["input"] != null) {
-                props["input"] as Map<String, Map<String, Any>>
-            } else {
-                mutableMapOf()
-            }
-
-        val systemVariables = mapOf(WORKSPACE_ENV to workspace.absolutePath)
-
-        val atomParams = mutableMapOf<String, String>()
-        try {
-            val inputMap = map["input"] as Map<String, Any>?
-            inputMap?.forEach { (name, value) ->
-                var valueStr = JsonUtil.toJson(value)
-                valueStr = ReplacementUtils.replace(valueStr, object : ReplacementUtils.KeyReplacement {
-                    override fun getReplacement(key: String): String? {
-                        return CredentialUtils.getCredentialContextValue(key)
-                    }
-                })
-                // 修复插件input环境变量替换问题 #5682
-                atomParams[name] = EnvUtils.parseEnv(
-                    command = valueStr,
-                    data = buildVariables.variables,
-                    contextMap = if (buildTask.containerType == VMBuildContainer.classType) {
-                        // 只有构建环境下运行的插件才有workspace变量
-                        contextMap(buildTask).plus(
-                            mapOf(
-                                WORKSPACE_CONTEXT to workspace.absolutePath,
-                                CI_TOKEN_CONTEXT to (buildVariables.variables[CI_TOKEN_CONTEXT] ?: ""),
-                                JOB_OS_CONTEXT to AgentEnv.getOS().name
-                            )
-                        ).plus(systemVariables)
-                    } else {
-                        emptyMap()
-                    }
-                )
-            }
-        } catch (e: Throwable) {
-            logger.error("plugin input illegal! ", e)
-            throw TaskExecuteException(
-                errorMsg = "plugin input illegal",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
+        // 解析并打印插件执行传入的所有参数
+        val inputParams = map["input"]?.let { input ->
+            parseInputParams(
+                inputMap = input as Map<String, Any>,
+                variables = variables.plus(getContainerVariables(buildTask, buildVariables, workspacePath)),
+                acrossInfo = acrossInfo
             )
-        }
-
-        val bkWorkspacePath =
-            if (buildTask.containerType != VMBuildContainer.classType) {
-                // 无构建环境下运行的插件的workspace取临时文件的路径
-                atomTmpSpace.absolutePath
-            } else {
-                workspace.absolutePath
-            }
-        runtimeVariables = runtimeVariables.plus(Pair("bkWorkspace", Paths.get(bkWorkspacePath).normalize().toString()))
-        val atomStatus = atomData.atomStatus
-        val testVersionFlag = if (AtomStatusEnum.TESTING.name == atomStatus) {
-            "Y"
-        } else {
-            "N"
-        }
-        runtimeVariables = runtimeVariables.plus(Pair("testVersionFlag", testVersionFlag)) // 设置是否是测试版本的标识
-        buildTask.stepId?.let { runtimeVariables = runtimeVariables.plus(Pair(PIPELINE_STEP_ID, it)) }
-        // 设置插件名称和任务名称变量
-        runtimeVariables = runtimeVariables.plus(
-            mapOf(
-                PIPELINE_ATOM_NAME to atomData.atomName,
-                PIPELINE_ATOM_CODE to atomData.atomCode,
-                PIPELINE_ATOM_VERSION to atomData.version,
-                PIPELINE_TASK_NAME to taskName
-            )
-        )
-        val variables = runtimeVariables.plus(atomParams)
-        logger.info("atomCode is:$atomCode ,variables is:$variables")
-
-        val outputTemplate =
-            if (props["output"] != null) {
-                props["output"] as Map<String, Map<String, Any>>
-            } else {
-                mutableMapOf()
-            }
-
-        // 输出参数的用户命名空间：防止重名窘况
-        val namespace: String? = map["namespace"] as String?
-
-        printInput(atomData, atomParams, inputTemplate)
+        } ?: emptyMap()
+        printInput(atomData, inputParams, inputTemplate)
 
         if (atomData.target?.isBlank() == true) {
             throw TaskExecuteException(
@@ -255,27 +187,37 @@ open class MarketAtomTask : ITask() {
             )
         }
 
-        // 查询插件的敏感信息
-        val atomSensitiveConfResult = atomApi.getAtomSensitiveConf(atomCode)
-        logger.info("atomCode is:$atomCode ,atomSensitiveConfResult is:$atomSensitiveConfResult")
-        val atomSensitiveConfList = atomSensitiveConfResult.data
-        val atomSensitiveConfMap = mutableMapOf<String, String>()
-        atomSensitiveConfList?.forEach {
-            atomSensitiveConfMap[it.fieldName] = it.fieldValue
+        // 插件SDK输入 = 所有变量 + 预置变量 + 敏感信息 + 处理后的插件参数
+        // 增加插件名称和任务名称变量，设置是否是测试版本的标识
+        val bkWorkspacePath = if (buildTask.containerType != VMBuildContainer.classType) {
+            // 无构建环境下运行的插件的workspace取临时文件的路径
+            atomTmpSpace.absolutePath
+        } else {
+            workspacePath
         }
-        val atomSensitiveDataMap = mapOf("bkSensitiveConfInfo" to atomSensitiveConfMap)
-        writeInputFile(atomTmpSpace, variables.plus(atomSensitiveDataMap))
+        variables = variables.plus(
+            mapOf(
+                "bkWorkspace" to Paths.get(bkWorkspacePath).normalize().toString(),
+                "testVersionFlag" to if (AtomStatusEnum.TESTING.name == atomData.atomStatus) "Y" else "N",
+                PIPELINE_ATOM_NAME to atomData.atomName,
+                PIPELINE_ATOM_CODE to atomData.atomCode,
+                PIPELINE_ATOM_VERSION to atomData.version,
+                PIPELINE_TASK_NAME to taskName
+            )
+        )
+        buildTask.stepId?.let { variables = variables.plus(PIPELINE_STEP_ID to it) }
 
+        writeInputFile(atomTmpSpace, variables.plus(inputParams).plus(getAtomSensitiveConfMap(atomCode)))
         writeSdkEnv(atomTmpSpace, buildTask, buildVariables)
         writeParamEnv(atomCode, atomTmpSpace, workspace, buildTask, buildVariables)
 
-        val javaFile = getJavaFile()
-        val environment = runtimeVariables.plus(
+        // 环境变量 = 所有插件变量 + Worker端执行插件依赖的预置变量
+        val runtimeVariables = variables.plus(
             mapOf(
                 DIR_ENV to atomTmpSpace.absolutePath,
                 INPUT_ENV to inputFile,
                 OUTPUT_ENV to outputFile,
-                JAVA_PATH_ENV to javaFile.absolutePath
+                JAVA_PATH_ENV to getJavaFile().absolutePath
             )
         )
 
@@ -307,7 +249,7 @@ open class MarketAtomTask : ITask() {
             val buildEnvs = buildVariables.buildEnvs
             if (!preCmd.isNullOrBlank()) {
                 val preCmds = mutableListOf<String>()
-                if (preCmd.contains(Regex("^\\s*\\[[\\w\\s\\S\\W]*\\]\\s*$"))) {
+                if (preCmd.contains(Regex("^\\s*\\[[\\w\\s\\S\\W]*]\\s*$"))) {
                     preCmds.addAll(JsonUtil.to(preCmd))
                 } else {
                     preCmds.add(preCmd)
@@ -317,9 +259,8 @@ open class MarketAtomTask : ITask() {
                     buildVariables = buildVariables,
                     atomTmpSpace = atomTmpSpace,
                     workspace = workspace,
-                    environment = environment,
+                    runtimeVariables = runtimeVariables,
                     buildEnvs = buildEnvs,
-                    systemEnvVariables = systemVariables,
                     buildTask = buildTask
                 )
             }
@@ -351,10 +292,11 @@ open class MarketAtomTask : ITask() {
                         BatScriptUtil.execute(
                             buildId = buildVariables.buildId,
                             script = "\r\n$atomTarget\r\n",
-                            runtimeVariables = environment,
+                            runtimeVariables = runtimeVariables,
                             dir = atomTmpSpace,
                             workspace = workspace,
                             errorMessage = errorMessage,
+                            jobId = buildVariables.jobId,
                             stepId = buildTask.stepId
                         )
                     }
@@ -365,9 +307,9 @@ open class MarketAtomTask : ITask() {
                             dir = atomTmpSpace,
                             workspace = workspace,
                             buildEnvs = buildEnvs,
-                            runtimeVariables = environment,
-                            systemEnvVariables = systemEnvVariables,
+                            runtimeVariables = runtimeVariables,
                             errorMessage = errorMessage,
+                            jobId = buildVariables.jobId,
                             stepId = buildTask.stepId
                         )
                     }
@@ -405,25 +347,63 @@ open class MarketAtomTask : ITask() {
         }
     }
 
+    private fun parseInputParams(
+        inputMap: Map<String, Any>,
+        variables: Map<String, String>,
+        acrossInfo: BuildTemplateAcrossInfo?
+    ): Map<String, String> {
+        val atomParams = mutableMapOf<String, String>()
+        try {
+            inputMap.forEach { (name, value) ->
+                // 修复插件input环境变量替换问题 #5682
+                atomParams[name] = EnvUtils.parseEnv(
+                    command = JsonUtil.toJson(value),
+                    data = variables
+                ).parseCredentialValue(null, acrossInfo?.targetProjectId)
+            }
+        } catch (e: Throwable) {
+            logger.error("plugin input illegal! ", e)
+            throw TaskExecuteException(
+                errorMsg = "plugin input illegal",
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
+            )
+        }
+        return atomParams
+    }
+
+    private fun getAtomSensitiveConfMap(atomCode: String): Map<String, MutableMap<String, String>> {
+        // 查询插件的敏感信息
+        val atomSensitiveConfResult = atomApi.getAtomSensitiveConf(atomCode)
+        logger.info("atomCode is:$atomCode ,atomSensitiveConfResult is:$atomSensitiveConfResult")
+        val atomSensitiveConfList = atomSensitiveConfResult.data
+        val atomSensitiveConfMap = mutableMapOf<String, String>()
+        atomSensitiveConfList?.forEach {
+            atomSensitiveConfMap[it.fieldName] = it.fieldValue
+        }
+        return mapOf("bkSensitiveConfInfo" to atomSensitiveConfMap)
+    }
+
     private fun runPreCmds(
         preCmds: List<String>,
         buildVariables: BuildVariables,
         atomTmpSpace: File,
         workspace: File,
-        environment: Map<String, String>,
+        runtimeVariables: Map<String, String>,
         buildEnvs: List<com.tencent.devops.store.pojo.app.BuildEnv>,
-        systemEnvVariables: Map<String, String>,
         buildTask: BuildTask
     ) {
         val preCmdErrorMessage = "Fail to run the plugin demand command"
         when (AgentEnv.getOS()) {
             OSType.WINDOWS -> {
                 if (preCmds.isNotEmpty()) {
-                    val preCommand = preCmds.joinToString { "\r\n${it}\r\n" }
+                    val preCommand = preCmds.joinToString(
+                        separator = "\r\n"
+                    ) { "\r\n$it" }
                     BatScriptUtil.execute(
                         buildId = buildVariables.buildId,
                         script = preCommand,
-                        runtimeVariables = environment,
+                        runtimeVariables = runtimeVariables,
                         dir = atomTmpSpace,
                         workspace = workspace,
                         errorMessage = preCmdErrorMessage,
@@ -433,15 +413,16 @@ open class MarketAtomTask : ITask() {
             }
             OSType.LINUX, OSType.MAC_OS -> {
                 if (preCmds.isNotEmpty()) {
-                    val preCommand = preCmds.joinToString { "\n${it}\n" }
+                    val preCommand = preCmds.joinToString(
+                        separator = "\n"
+                    ) { "\n$it" }
                     ShellUtil.execute(
                         buildId = buildVariables.buildId,
                         script = preCommand,
                         dir = atomTmpSpace,
                         workspace = workspace,
                         buildEnvs = buildEnvs,
-                        runtimeVariables = environment,
-                        systemEnvVariables = systemEnvVariables,
+                        runtimeVariables = runtimeVariables,
                         errorMessage = preCmdErrorMessage,
                         stepId = buildTask.stepId
                     )
@@ -454,7 +435,7 @@ open class MarketAtomTask : ITask() {
 
     private fun printInput(
         atomData: AtomEnv,
-        atomParams: MutableMap<String, String>,
+        atomParams: Map<String, String>,
         inputTemplate: Map<String, Map<String, Any>>
     ) {
         LoggerService.addFoldStartLine("[Plugin info]")
@@ -515,7 +496,8 @@ open class MarketAtomTask : ITask() {
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
                     gateway = AgentEnv.getGateway(),
-                    fileGateway = getFileGateway(buildVariables.containerType)
+                    fileGateway = getFileGateway(buildVariables.containerType),
+                    taskId = buildTask.taskId ?: ""
                 )
             }
             BuildType.WORKER -> {
@@ -527,7 +509,8 @@ open class MarketAtomTask : ITask() {
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
                     gateway = AgentEnv.getGateway(),
-                    fileGateway = getFileGateway(buildVariables.containerType)
+                    fileGateway = getFileGateway(buildVariables.containerType),
+                    taskId = buildTask.taskId ?: ""
                 )
             }
         }
@@ -584,7 +567,8 @@ open class MarketAtomTask : ITask() {
         val gateway: String,
         val buildId: String,
         val vmSeqId: String,
-        val fileGateway: String
+        val fileGateway: String,
+        val taskId: String
     )
 
     private fun writeInputFile(
@@ -611,6 +595,16 @@ open class MarketAtomTask : ITask() {
         val monitorData = atomResult?.monitorData
         if (monitorData != null) {
             addMonitorData(monitorData)
+        }
+        // 添加插件对接平台错误码信息
+        val platformCode = atomResult?.platformCode
+        if (!platformCode.isNullOrBlank()) {
+            addPlatformCode(platformCode)
+            atomApi.addAtomDockingPlatforms(atomCode, setOf(platformCode))
+        }
+        val platformErrorCode = atomResult?.platformErrorCode
+        if (platformErrorCode != null) {
+            addPlatformErrorCode(platformErrorCode)
         }
         deletePluginFile(atomTmpSpace)
         val success: Boolean
@@ -670,10 +664,17 @@ open class MarketAtomTask : ITask() {
                     )
                 }
 
-                // 如果定义了插件上下文标识ID，才做outputs输出，即使没有jobId也以containerId前缀输出
-                buildTask.stepId?.let {
-                    val jobPrefix = "jobs.${buildVariables.jobId ?: buildVariables.containerId}"
-                    env["$jobPrefix.steps.${buildTask.stepId}.outputs.$key"] = env[key] ?: ""
+                // #4518 如果定义了插件上下文标识ID，进行上下文outputs输出
+                // 即使没有jobId也以containerId前缀输出
+                val value = env[key] ?: ""
+                if (!buildTask.stepId.isNullOrBlank() &&
+                    !buildVariables.jobId.isNullOrBlank() &&
+                    !key.startsWith("variables.")
+                ) {
+                    val contextKey = "jobs.${buildVariables.jobId}.steps.${buildTask.stepId}.outputs.$key"
+                    env[contextKey] = value
+                    // TODO 待定：是否进行原变量名输出，暂时保留
+                    // env.remove(key)
                 }
 
                 TaskUtil.removeTaskId()
@@ -683,10 +684,10 @@ open class MarketAtomTask : ITask() {
                     if (sensitiveFlag) {
                         LoggerService.addNormalLine("output(sensitive): $key=******")
                     } else {
-                        LoggerService.addNormalLine("output(normal): $key=${env[key]}")
+                        LoggerService.addNormalLine("output(normal): $key=$value")
                     }
                 } else {
-                    LoggerService.addWarnLine("output(except): $key=${env[key]}")
+                    LoggerService.addWarnLine("output(except): $key=$value")
                 }
             }
 
@@ -713,7 +714,12 @@ open class MarketAtomTask : ITask() {
                     it.key to value
                 }?.toMap()
                 if (qualityMap != null) {
-                    qualityGatewayResourceApi.saveScriptHisMetadata(atomCode, qualityMap)
+                    qualityGatewayResourceApi.saveScriptHisMetadata(
+                        atomCode,
+                        buildTask.taskId ?: "",
+                        buildTask.elementName ?: "",
+                        qualityMap
+                    )
                 }
             } else {
                 if (atomResult.qualityData != null && atomResult.qualityData.isNotEmpty()) {
@@ -935,13 +941,32 @@ open class MarketAtomTask : ITask() {
 
     private fun getJavaFile() = File(System.getProperty("java.home"), "/bin/java")
 
-    private fun contextMap(buildTask: BuildTask): Map<String, String> {
-        val stepId = buildTask.stepId ?: return mapOf()
-        return mapOf(
-            "steps.$stepId.name" to (buildTask.elementName ?: ""),
-            "steps.$stepId.id" to stepId,
-            "steps.$stepId.status" to BuildStatus.RUNNING.name
-        )
+    private fun getContainerVariables(
+        buildTask: BuildTask,
+        buildVariables: BuildVariables,
+        workspacePath: String
+    ): Map<String, String> {
+        val context = mutableMapOf<String, String>()
+        // 只将本插件的状态改为RUNNING，其他插件上下文保持引擎传入
+        buildTask.stepId?.let { stepId ->
+            context["step.status"] = BuildStatus.RUNNING.name
+            context["steps.$stepId.status"] = BuildStatus.RUNNING.name
+        }
+        // 将token加入上下文
+        buildVariables.variables[CI_TOKEN_CONTEXT]?.let { context[CI_TOKEN_CONTEXT] = it }
+
+        // 如果为有编译环境则追加WORKSPACE，无编译环境不添加
+        if (buildTask.containerType == VMBuildContainer.classType) {
+            // 只有构建环境下运行的插件才有workspace变量
+            context.putAll(
+                mapOf(
+                    WORKSPACE_ENV to workspacePath,
+                    WORKSPACE_CONTEXT to workspacePath,
+                    JOB_OS_CONTEXT to AgentEnv.getOS().name
+                )
+            )
+        }
+        return context
     }
 
     companion object {

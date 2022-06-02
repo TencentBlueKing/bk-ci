@@ -37,13 +37,13 @@ spring:
       username: __BK_CI_MYSQL_USER__
       password: __BK_CI_MYSQL_PASSWORD__
     misc:
-      pkgRegex: "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment)"     
+      pkgRegex: "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment)"
     # 数据源配置（勿随便变更配置项的顺序）
     dataSourceConfigs:
       - index: 0
         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
         username: __BK_CI_MYSQL_USER__
-        password: __BK_CI_MYSQL_PASSWORD__       
+        password: __BK_CI_MYSQL_PASSWORD__
 
 server:
   port: __BK_CI_ASSEMBLY_API_PORT__
@@ -83,11 +83,6 @@ dispatch:
   jobQuota:
     systemAlertReceiver:
     enable: false
-
-codecc:
-  path: __BK_CODECC_DATA_DIR__/tools
-  covFile: build_dev.py
-  toolFile: build_tool_dev.py
 
 #### environment
 

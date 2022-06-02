@@ -76,7 +76,7 @@ import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
-import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
+import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
@@ -125,7 +125,8 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode,
         create: Boolean,
         useTemplateSettings: Boolean? = false,
-        templateId: String? = null
+        templateId: String? = null,
+        updateLastModifyUser: Boolean? = true
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -166,7 +167,8 @@ class PipelineRepositoryService constructor(
                 buildNo = buildNo,
                 modelTasks = modelTasks,
                 channelCode = channelCode,
-                maxPipelineResNum = pipelineSetting?.maxPipelineResNum
+                maxPipelineResNum = pipelineSetting?.maxPipelineResNum,
+                updateLastModifyUser = updateLastModifyUser
             )
         } else {
             create(
@@ -256,11 +258,11 @@ class PipelineRepositoryService constructor(
             )
         }
         val c = (
-            stage.containers.getOrNull(0) ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
-                defaultMessage = "第一阶段的环境不能为空"
-            )
-            ) as TriggerContainer
+                stage.containers.getOrNull(0) ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
+                    defaultMessage = "第一阶段的环境不能为空"
+                )
+                ) as TriggerContainer
 
         // #4518 各个容器ID的初始化
         c.id = containerSeqId.get().toString()
@@ -428,14 +430,11 @@ class PipelineRepositoryService constructor(
 
     private fun matrixYamlCheck(option: MatrixControlOption?) {
         if (option == null) throw DependNotFoundException("matrix option not found")
-        if (option.strategyStr.isNullOrBlank()) {
-            throw DependNotFoundException("Matrix Yaml is blank")
-        }
-        if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX) {
+        if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
             throw InvalidParamException(
-                "构建矩阵并发数(${option.maxConcurrency}) 超过 $PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX /" +
-                    "matrix maxConcurrency(${option.maxConcurrency}) " +
-                    "is larger than $PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX"
+                "构建矩阵并发数(${option.maxConcurrency}) 超过 $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
+                        "matrix maxConcurrency(${option.maxConcurrency}) " +
+                        "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )
         }
         MatrixContextUtils.schemaCheck(
@@ -586,25 +585,42 @@ class PipelineRepositoryService constructor(
         buildNo: BuildNo?,
         modelTasks: Set<PipelineModelTask>,
         channelCode: ChannelCode,
-        maxPipelineResNum: Int? = null
+        maxPipelineResNum: Int? = null,
+        updateLastModifyUser: Boolean? = true
     ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
         var version = 0
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            version = pipelineInfoDao.update(
-                dslContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                updateVersion = true,
-                pipelineName = null,
-                pipelineDesc = null,
-                manualStartup = canManualStartup,
-                canElementSkip = canElementSkip,
-                taskCount = taskCount,
-                latestVersion = model.latestVersion
-            )
+            version = if (updateLastModifyUser != null && updateLastModifyUser == false) {
+                pipelineInfoDao.update(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = null,
+                    updateVersion = true,
+                    pipelineName = null,
+                    pipelineDesc = null,
+                    manualStartup = canManualStartup,
+                    canElementSkip = canElementSkip,
+                    taskCount = taskCount,
+                    latestVersion = model.latestVersion
+                )
+            } else {
+                pipelineInfoDao.update(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    updateVersion = true,
+                    pipelineName = null,
+                    pipelineDesc = null,
+                    manualStartup = canManualStartup,
+                    canElementSkip = canElementSkip,
+                    taskCount = taskCount,
+                    latestVersion = model.latestVersion
+                )
+            }
             if (version == 0) {
                 // 传过来的latestVersion已经不是最新
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST)
@@ -715,6 +731,17 @@ class PipelineRepositoryService constructor(
         )
     }
 
+    /**
+     * 批量获取model
+     */
+    fun listModel(projectId: String, pipelineIds: Collection<String>): Map<String, Model?> {
+        return pipelineResDao.listModelString(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds
+        ).map { it.key to str2model(it.value, it.key) }.toMap()
+    }
+
     fun getModel(projectId: String, pipelineId: String, version: Int? = null): Model? {
         var modelString: String?
         if (version == null) { // 取最新版，直接从旧版本表读
@@ -736,12 +763,17 @@ class PipelineRepositoryService constructor(
                 ) ?: return null
             }
         }
-        return try {
-            JsonUtil.to(modelString, Model::class.java)
-        } catch (ignored: Exception) {
-            logger.error("get process($pipelineId) model fail", ignored)
-            null
-        }
+        return str2model(modelString, pipelineId)
+    }
+
+    private fun str2model(
+        modelString: String,
+        pipelineId: String
+    ) = try {
+        JsonUtil.to(modelString, Model::class.java)
+    } catch (exception: Exception) {
+        logger.warn("get process($pipelineId) model fail", exception)
+        null
     }
 
     fun deletePipeline(
@@ -971,12 +1003,14 @@ class PipelineRepositoryService constructor(
                 maxQueueSize = t.maxQueueSize,
                 maxPipelineResNum = t.maxPipelineResNum,
                 maxConRunningQueueSize = t.maxConRunningQueueSize,
-                buildNumRule = t.buildNumRule
+                buildNumRule = t.buildNumRule,
+                concurrencyCancelInProgress = t.concurrencyCancelInProgress,
+                concurrencyGroup = t.concurrencyGroup
             )
         } else null
     }
 
-    fun saveSetting(userId: String, setting: PipelineSetting, version: Int) {
+    fun saveSetting(userId: String, setting: PipelineSetting, version: Int, updateLastModifyUser: Boolean? = true) {
         setting.checkParam()
 
         if (isPipelineExist(
@@ -1006,7 +1040,8 @@ class PipelineRepositoryService constructor(
                 userId = userId,
                 updateVersion = false,
                 pipelineName = setting.pipelineName,
-                pipelineDesc = setting.desc
+                pipelineDesc = setting.desc,
+                updateLastModifyUser = updateLastModifyUser
             )
             if (version > 0) { // #671 兼容无版本要求的修改入口，比如改名，或者只读流水线的修改操作, version=0
                 if (old?.maxPipelineResNum != null) {
@@ -1113,11 +1148,19 @@ class PipelineRepositoryService constructor(
             pipelineModelTaskDao.batchSave(transactionContext, tasks)
         }
 
+        val version = pipelineInfoDao.getPipelineVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            channelCode = channelCode
+        )
         pipelineEventDispatcher.dispatch(
             PipelineRestoreEvent(
                 source = "restore_pipeline",
                 projectId = projectId,
                 pipelineId = pipelineId,
+                version = version,
                 userId = userId
             )
         )

@@ -101,7 +101,7 @@
                 const buildNo = hasBuildNo(stages)
                     ? [
                         {
-                            name: 'BuildNo',
+                            name: 'BK_CI_BUILD_NO',
                             desc: this.$t('buildNum')
                         }
                     ]

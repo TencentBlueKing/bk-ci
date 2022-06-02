@@ -70,10 +70,10 @@ data class CodeP4WebHookTriggerInput(
     val repositoryType: RepositoryType? = null,
     @ApiModelProperty("新版的git代码库名")
     val repositoryName: String? = null,
-    @ApiModelProperty("includePaths", required = false)
+    @ApiModelProperty("用于包含的路径", required = false)
     val includePaths: String?,
-    @ApiModelProperty("excludePaths", required = false)
+    @ApiModelProperty("用于排除的路径", required = false)
     val excludePaths: String?,
-    @ApiModelProperty("eventType", required = false)
+    @ApiModelProperty("事件类型", required = false)
     val eventType: CodeEventType?
 )

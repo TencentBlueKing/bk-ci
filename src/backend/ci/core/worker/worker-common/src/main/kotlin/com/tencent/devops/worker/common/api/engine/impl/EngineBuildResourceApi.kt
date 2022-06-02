@@ -44,8 +44,8 @@ import okhttp3.RequestBody
 @ApiPriority(priority = 1)
 open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKApi {
 
-    override fun getRequestUrl(path: String, retryCount: Int): String {
-        return "/ms/process/$path?retryCount=$retryCount"
+    override fun getRequestUrl(path: String, retryCount: Int, executeCount: Int): String {
+        return "/ms/process/$path?retryCount=$retryCount&executeCount=$executeCount"
     }
 
     override fun setStarted(retryCount: Int): Result<BuildVariables> {
@@ -98,8 +98,8 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return workerEnd(retryCount)
     }
 
-    override fun heartbeat(): Result<HeartBeatInfo> {
-        val path = getRequestUrl(path = "api/build/worker/heartbeat/v1")
+    override fun heartbeat(executeCount: Int): Result<HeartBeatInfo> {
+        val path = getRequestUrl(path = "api/build/worker/heartbeat/v1", executeCount = executeCount)
         val request = buildPost(path)
         val errorMessage = "心跳失败"
         val responseContent = request(
@@ -148,17 +148,21 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return emptyMap()
     }
 
-    override fun getBuildDetailUrl(): String {
-        val path = getRequestUrl(path = "api/build/builds/detail_url")
+    override fun getBuildDetailUrl(): Result<String> {
+        val path = getRequestUrl(path = "api/build/worker/detail_url")
         val request = buildGet(path)
         val errorMessage = "构建超时结束请求失败"
-        val responseContent = request(
-            request = request,
-            connectTimeoutInSec = 5L,
-            errorMessage = errorMessage,
-            readTimeoutInSec = 30L,
-            writeTimeoutInSec = 30L
-        )
+        val responseContent = try {
+            request(
+                request = request,
+                connectTimeoutInSec = 5L,
+                errorMessage = errorMessage,
+                readTimeoutInSec = 30L,
+                writeTimeoutInSec = 30L
+            )
+        } catch (ignore: Throwable) {
+            return Result("")
+        }
         return objectMapper.readValue(responseContent)
     }
 

@@ -1,8 +1,8 @@
 package com.tencent.bk.codecc.task.dao.mongotemplate;
 
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.task.model.PlatformInfoEntity;
 import org.apache.commons.lang.StringUtils;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -10,7 +10,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -34,11 +33,11 @@ public class PlatformInfoDao
      */
     public List<PlatformInfoEntity> queryEntity(String toolName, String platformIp)
     {
-        BasicDBObject fieldsObj = new BasicDBObject();
+        Document fieldsObj = new Document();
         fieldsObj.put("tool_name", true);
         fieldsObj.put("ip", true);
         fieldsObj.put("port", true);
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        Query query = new BasicQuery(new Document(), fieldsObj);
 
         if (StringUtils.isNotEmpty(toolName))
         {

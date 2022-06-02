@@ -13,6 +13,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
@@ -160,6 +161,11 @@ func (w *Work) GetRecorder(key string) (*recorder.Recorder, error) {
 	return r, nil
 }
 
+// Config return config
+func (w *Work) Config() *config.ServerConfig {
+	return w.conf
+}
+
 // NewInitWorkInfo get a new work info by id
 func NewInitWorkInfo(id string) *WorkInfo {
 	info := &WorkInfo{
@@ -184,6 +190,9 @@ type WorkInfo struct {
 	lastHeartbeat time.Time
 
 	commonStatus *WorkCommonStatus
+
+	// to record prepared remote task number
+	preparedRemoteTasks int32
 }
 
 // SetSettings update work settings
@@ -379,6 +388,21 @@ func (wi *WorkInfo) IsWorking() bool {
 // SetStats update the work stats
 func (wi *WorkInfo) SetStats(stats *WorkStats) {
 	wi.success = stats.Success
+}
+
+// IncPrepared to inc preared remote task number
+func (wi *WorkInfo) IncPrepared() {
+	atomic.AddInt32(&wi.preparedRemoteTasks, 1)
+}
+
+// DecPrepared to inc preared remote task number
+func (wi *WorkInfo) DecPrepared() {
+	atomic.AddInt32(&wi.preparedRemoteTasks, -1)
+}
+
+// GetPrepared to get preared remote task number
+func (wi *WorkInfo) GetPrepared() int32 {
+	return atomic.LoadInt32(&wi.preparedRemoteTasks)
 }
 
 // WorkCommonStatus describe the work status and actions timestamp

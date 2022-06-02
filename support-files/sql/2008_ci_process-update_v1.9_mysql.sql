@@ -12,20 +12,20 @@ BEGIN
     SET AUTOCOMMIT = 0;
     SELECT DATABASE() INTO db;
 
-	IF EXISTS(SELECT 1
-                      FROM information_schema.COLUMNS
-                      WHERE TABLE_SCHEMA = db
-                        AND TABLE_NAME = 'T_TEMPLATE'
-                        AND COLUMN_NAME = 'CREATED_TIME') THEN
-        ALTER table T_TEMPLATE  MODIFY CREATED_TIME datetime(3) DEFAULT NULL COMMENT '创建时间';
-    END IF;
-	
 	IF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
-                        AND TABLE_NAME = 'T_TEMPLATE'
-                        AND COLUMN_NAME = 'UPDATE_TIME') THEN
-        ALTER table T_TEMPLATE add column `UPDATE_TIME` datetime(3) DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间';
+                        AND TABLE_NAME = 'T_PIPELINE_BUILD_TASK'
+                        AND COLUMN_NAME = 'PLATFORM_CODE') THEN
+        alter table T_PIPELINE_BUILD_TASK add column `PLATFORM_CODE` varchar(64) DEFAULT NULL COMMENT '对接平台代码';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_BUILD_TASK'
+                        AND COLUMN_NAME = 'PLATFORM_ERROR_CODE') THEN
+        alter table T_PIPELINE_BUILD_TASK add column `PLATFORM_ERROR_CODE` int(11) DEFAULT NULL COMMENT '对接平台错误码';
     END IF;
 
     COMMIT;

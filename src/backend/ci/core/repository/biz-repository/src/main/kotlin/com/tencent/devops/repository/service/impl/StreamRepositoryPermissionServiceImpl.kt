@@ -36,11 +36,7 @@ import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.service.RepositoryPermissionService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.context.annotation.Configuration
 
-@Configuration
-@ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
 class StreamRepositoryPermissionServiceImpl @Autowired constructor(
     private val client: Client,
     val dslContext: DSLContext,

@@ -29,11 +29,14 @@ package com.tencent.devops.openapi.resources.apigw.v3.environment
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvWithPermission
+import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
@@ -46,6 +49,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwEnvironmentResourceV3Impl @Autowired constructor(
     private val client: Client
 ) : ApigwEnvironmentResourceV3 {
+
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listUsableServerNodes(
         appCode: String?,
         apigwType: String?,
@@ -56,6 +61,69 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceNodeResource::class).listUsableServerNodes(userId, projectId)
     }
 
+    @BkTimed(extraTags = ["operate", "createEnvironment"])
+    override fun createEnv(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        environment: EnvCreateInfo
+    ): Result<EnvironmentId> {
+        logger.info("createEnv userId[$userId] project[$projectId]")
+        return client.get(ServiceEnvironmentResource::class).create(userId, projectId, environment)
+    }
+
+    override fun deleteEnv(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        envHashId: String
+    ): Result<Boolean> {
+        logger.info("deleteEnv userId[$userId] project[$projectId]")
+        return client.get(ServiceEnvironmentResource::class).delete(userId, projectId, envHashId)
+    }
+
+    @BkTimed(extraTags = ["operate", "createNode"])
+    override fun envAddNodes(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        nodeHashIds: List<String>
+    ): Result<Boolean> {
+        logger.info("EnvAddNodes userId[$userId] project[$projectId] envHashId[$envHashId] nodeHashIds[$nodeHashIds]")
+        return client.get(ServiceEnvironmentResource::class).addNodes(userId, projectId, envHashId, nodeHashIds)
+    }
+
+    override fun envDeleteNodes(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        nodeHashIds: List<String>
+    ): Result<Boolean> {
+        logger.info(
+            "envDeleteNodes userId[$userId] project[$projectId] " +
+                "envHashId[$envHashId] nodeHashIds[$nodeHashIds]"
+        )
+        return client.get(ServiceEnvironmentResource::class).deleteNodes(userId, projectId, envHashId, nodeHashIds)
+    }
+
+    override fun deleteNodes(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        nodeHashIds: List<String>
+    ): Result<Boolean> {
+        logger.info("deleteNodes userId[$userId] project[$projectId]")
+        return client.get(ServiceNodeResource::class).deleteNodes(userId, projectId, nodeHashIds)
+    }
+
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun listUsableServerEnvs(
         appCode: String?,
         apigwType: String?,
@@ -66,6 +134,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceEnvironmentResource::class).listUsableServerEnvs(userId, projectId)
     }
 
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun listEnvRawByEnvNames(
         appCode: String?,
         apigwType: String?,
@@ -77,6 +146,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceEnvironmentResource::class).listRawByEnvNames(userId, projectId, envNames)
     }
 
+    @BkTimed(extraTags = ["operate", "getEnv"])
     override fun listEnvRawByEnvHashIds(
         appCode: String?,
         apigwType: String?,
@@ -88,6 +158,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceEnvironmentResource::class).listRawByEnvHashIds(userId, projectId, envHashIds)
     }
 
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listNodeRawByNodeHashIds(
         appCode: String?,
         apigwType: String?,
@@ -99,6 +170,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceNodeResource::class).listRawByHashIds(userId, projectId, nodeHashIds)
     }
 
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listNodeRawByEnvHashIds(
         appCode: String?,
         apigwType: String?,
@@ -131,7 +203,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
     ): Result<List<AgentPipelineRef>> {
         logger.info(
             "listPipelineRef, userId: $userId, projectId: $projectId, nodeHashId: $nodeHashId," +
-                    " sortBy: $sortBy, sortDirection: $sortDirection"
+                " sortBy: $sortBy, sortDirection: $sortDirection"
         )
         return client.get(ServiceThirdPartyAgentResource::class).listPipelineRef(
             userId, projectId, nodeHashId,
@@ -147,7 +219,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
     ): Result<Boolean> {
         logger.info(
             "setShareEnv , userId:$userId , projectId:$projectId , " +
-                    "envHashId:$envHashId , sharedProjects:$sharedProjects"
+                "envHashId:$envHashId , sharedProjects:$sharedProjects"
         )
         return client.get(ServiceEnvironmentResource::class).setShareEnv(userId, projectId, envHashId, sharedProjects)
     }

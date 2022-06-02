@@ -1,0 +1,29 @@
+# ..ci/templates/covParseData.yml
+
+parameters:
+  - name: id
+    type: string
+    default: ""
+  - name: codeLanguage
+    type: string
+    default: golang
+
+steps:
+  - name: 覆盖率-后置信息处理
+    id: ${{ parameters.id }}
+    uses: covParseData@5.*
+    with:
+      codeLanguage: ${{ parameters.codeLanguage }}
+      codePath: ${{ ci.workspace }}
+      covProduct: ""
+      covRobotId: ""
+      fileFromType: local
+      filePath: ${{ ci.workspace }}/coverprofile.cov
+      fileTypeGoLang: out
+      localPreMr: false
+      multiGitFlagSwitch: false
+      needMerge: 1
+      needReport: need
+      needRobot: false
+      testFromType: local
+      testType: unit_test

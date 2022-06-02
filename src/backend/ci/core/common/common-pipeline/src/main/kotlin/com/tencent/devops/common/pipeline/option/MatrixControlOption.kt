@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
@@ -41,6 +42,7 @@ import java.util.regex.Pattern
 /**
  *  构建矩阵配置项
  */
+@ApiModel("构建矩阵配置项模型")
 data class MatrixControlOption(
     @ApiModelProperty("分裂策略（支持变量、Json、参数映射表）", required = true)
     val strategyStr: String? = null, // Map<String, List<String>>
@@ -77,8 +79,8 @@ data class MatrixControlOption(
             logger.warn("convert Strategy from Yaml error. try parse with JSON. Error message: ${ignore.message}")
             convertStrategyJson(buildContext)
         }
-        matrixConfig.include!!.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext)))
-        matrixConfig.exclude!!.addAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext)))
+        matrixConfig.include!!.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext), buildContext))
+        matrixConfig.exclude!!.addAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext), buildContext))
         return matrixConfig
     }
 
@@ -93,15 +95,25 @@ data class MatrixControlOption(
         }
         result.putAll(matrixConfig.strategy ?: emptyMap())
         with(matrixConfig.include ?: mutableListOf()) {
-            this.addAll(convertCase(includeCaseStr))
-            if (this.size > 0) {
-                result["include"] = this
+            try {
+                this.addAll(convertCase(includeCaseStr))
+                if (this.size > 0) {
+                    result["include"] = this
+                }
+            } catch (e: Exception) {
+                logger.warn("this because of formJSON:${e.message}")
+                result["include"] = includeCaseStr ?: return@with
             }
         }
         with(matrixConfig.exclude ?: mutableListOf()) {
-            this.addAll(convertCase(excludeCaseStr))
-            if (this.size > 0) {
-                result["exclude"] = this
+            try {
+                this.addAll(convertCase(excludeCaseStr))
+                if (this.size > 0) {
+                    result["include"] = this
+                }
+            } catch (e: Exception) {
+                logger.warn("this because of formJSON:${e.message}")
+                result["exclude"] = excludeCaseStr ?: return@with
             }
         }
         return result
@@ -111,32 +123,22 @@ data class MatrixControlOption(
      * 根据[strategyStr]生成对应的矩阵参数表
      */
     private fun convertStrategyYaml(buildContext: Map<String, String>): MatrixConfig {
-        val contextStr = EnvUtils.parseEnv(strategyStr, buildContext)
-        return try {
-            // 兼容在strategy里塞入json格式的情况
-            val matrixConfig = JsonUtil.to(contextStr, MatrixConfig::class.java)
-            MatrixConfig(
-                strategy = matrixConfig.strategy ?: emptyMap(),
-                include = matrixConfig.include ?: mutableListOf(),
-                exclude = matrixConfig.exclude ?: mutableListOf()
-            )
-        } catch (ignore: Exception) {
-            MatrixConfig(
-                strategy = YamlUtil.to<Map<String, List<String>>>(contextStr),
-                include = mutableListOf(), exclude = mutableListOf()
+        if (strategyStr.isNullOrBlank()) {
+            return MatrixConfig(
+                emptyMap(), mutableListOf(), mutableListOf()
             )
         }
+        val contextStr = EnvUtils.parseEnv(strategyStr, buildContext)
+        return MatrixConfig(
+            strategy = JsonUtil.anyTo(YamlUtil.to<Map<String, List<String>>>(contextStr),
+                object : TypeReference<Map<String, List<String>>?>() {}),
+            include = mutableListOf(), exclude = mutableListOf()
+        )
     }
 
-    /**
-     * 根据[strategyStr]生成对应的矩阵参数表
-     */
-    private fun convertStrategyJson(buildContext: Map<String, String>): MatrixConfig {
-        // 替换上下文 要考虑带fromJSON()的写法
-        val contextStr = ReplacementUtils.replace(
-            command = strategyStr ?: return MatrixConfig(
-                emptyMap(), mutableListOf(), mutableListOf()
-            ),
+    private fun replaceJsonPattern(command: String, buildContext: Map<String, String>): String {
+        return ReplacementUtils.replace(
+            command = command,
             replacement = object : ReplacementUtils.KeyReplacement {
                 override fun getReplacement(key: String): String? {
                     // 匹配fromJSON()
@@ -148,25 +150,72 @@ data class MatrixControlOption(
                 }
             }
         )
-        val matrixMap = JsonUtil.to<Map<String, Any>>(contextStr)
-        return MatrixConfig(
-            strategy = JsonUtil.anyTo(matrixMap.filter { it.key != "include" && it.key != "exclude" }.toMap(),
-                object : TypeReference<Map<String, List<String>>?>() {}),
-            include = JsonUtil.anyTo(matrixMap["include"],
-                object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf(),
-            exclude = JsonUtil.anyTo(matrixMap["exclude"],
-                object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf()
-        )
+    }
+
+    /**
+     * 根据[strategyStr]生成对应的矩阵参数表
+     */
+    private fun convertStrategyJson(buildContext: Map<String, String>): MatrixConfig {
+        // 替换上下文 要考虑带fromJSON()的写法
+        if (strategyStr.isNullOrBlank()) {
+            return MatrixConfig(
+                emptyMap(), mutableListOf(), mutableListOf()
+            )
+        }
+        try {
+            val contextStr = replaceJsonPattern(
+                command = strategyStr,
+                buildContext = buildContext
+            )
+            // 适用于matrix中是包含了key的map类型JSON，这种情况必包含strategy，可能包含include和exclude
+            val matrixMap = JsonUtil.to<Map<String, List<Any>?>>(contextStr)
+            return MatrixConfig(
+                strategy = JsonUtil.anyTo(matrixMap.filter { it.key != "include" && it.key != "exclude" }.toMap(),
+                    object : TypeReference<Map<String, List<String>>?>() {}),
+                include = JsonUtil.anyTo(matrixMap["include"],
+                    object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf(),
+                exclude = JsonUtil.anyTo(matrixMap["exclude"],
+                    object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf()
+            )
+        } catch (ignore: Exception) {
+            // 适用于不包含key的list类型JSON,这种情况只会是strategy
+            val str = YamlUtil.to<Map<String, Any>>(strategyStr)
+            return MatrixConfig(
+                strategy = str.map {
+                    it.key to when (it.value) {
+                        is String -> JsonUtil.to<List<String>>(
+                            replaceJsonPattern(
+                                command = it.value as String,
+                                buildContext = buildContext
+                            )
+                        )
+                        is List<*> -> it.value as List<String>
+                        else -> throw Exception("strategyStr must be fromJSON String or List")
+                    }
+                }.toMap(),
+                include = mutableListOf(),
+                exclude = mutableListOf()
+            )
+        }
     }
 
     /**
      * 传入[includeCaseStr]或[excludeCaseStr]的获得组合数组
      */
-    private fun convertCase(str: String?): List<Map<String, String>> {
-        if (str.isNullOrBlank()) {
+    private fun convertCase(caseStr: String?, buildContext: Map<String, String>? = null): List<Map<String, String>> {
+        if (caseStr.isNullOrBlank()) {
             return emptyList()
         }
-        val includeCaseList = YamlUtil.to<List<Map<String, Any>>>(str)
+        val includeCaseList = try {
+            YamlUtil.to<List<Map<String, Any>>>(caseStr)
+        } catch (e: Exception) {
+            // 这种情况应该只出现于fromJSON
+            val contextStr = replaceJsonPattern(
+                command = caseStr,
+                buildContext = buildContext ?: throw Exception("empty buildContext")
+            )
+            JsonUtil.to(contextStr)
+        }
         return includeCaseList.map { map ->
             map.map {
                 it.key to it.value.toString()

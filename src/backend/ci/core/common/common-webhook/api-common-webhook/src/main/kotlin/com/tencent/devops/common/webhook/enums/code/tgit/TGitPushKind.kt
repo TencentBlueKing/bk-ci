@@ -74,3 +74,9 @@ enum class TGitPushActionKind(val value: String) {
     CHERRY_PICK("cherry-pick"),
     REVERT("revert")
 }
+
+enum class TGitPushActionType(val value: String) {
+    NEW_BRANCH("new-branch"),
+    NEW_BRANCH_AND_PUSH_FILE("new-branch-and-push-file"),
+    PUSH_FILE("push-file");
+}

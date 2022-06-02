@@ -46,14 +46,16 @@ class ServiceFileResourceImpl @Autowired constructor(private val archiveFileServ
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
         projectCode: String?,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        logo: Boolean?
     ): Result<String?> {
         val url = archiveFileService.uploadFile(
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
             projectId = projectCode,
-            fileChannelType = fileChannelType
+            fileChannelType = fileChannelType,
+            logo = logo
         )
         return Result(url)
     }

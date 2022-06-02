@@ -89,7 +89,9 @@
                         this.active = 'overview'
                     }
                 }).catch((err) => {
-                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                    if (err.code !== 2300017) {
+                        this.$bkMessage({ theme: 'error', message: err.message || err })
+                    }
                 }).finally(() => {
                     this.isloading = false
                 })

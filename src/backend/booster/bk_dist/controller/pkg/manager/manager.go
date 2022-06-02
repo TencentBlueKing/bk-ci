@@ -12,8 +12,10 @@ package manager
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
@@ -56,6 +58,9 @@ type mgr struct {
 	globalWork *types.Work
 
 	hasWorkUnregisted bool
+
+	localResourceTaskMutex sync.Mutex
+	localResourceTaskNum   int32
 }
 
 // Run brings up the manager handler
@@ -365,7 +370,11 @@ func (m *mgr) ExecuteLocalTask(
 	dcSDK.StatsTimeNow(&req.Stats.EnterTime)
 	defer dcSDK.StatsTimeNow(&req.Stats.LeaveTime)
 	work.Basic().UpdateJobStats(req.Stats)
-	result, err := work.Local().ExecuteTask(req, globalWork)
+	withlocalresource := m.checkRunWithLocalResource(work)
+	if withlocalresource {
+		defer m.decLocalResourceTask()
+	}
+	result, err := work.Local().ExecuteTask(req, globalWork, withlocalresource)
 	if err != nil {
 		if result == nil {
 			result = &types.LocalTaskExecuteResult{Result: &dcSDK.LocalTaskResult{
@@ -595,14 +604,19 @@ func (m *mgr) checkNet() {
 }
 
 func (m *mgr) setCommonConfig(config *types.CommonConfig) error {
-	blog.Debugf("mgr: try to set common config: %+v", *config)
+	blog.Infof("mgr: try to set common config: %+v", *config)
 
 	if err := m.saveCommonConfig(config); err != nil {
+		blog.Infof("mgr: failed to save common config with error: %v", err)
 		return err
 	}
+	blog.Infof("mgr: finished save common config")
 
 	// update workers with this config
-	_ = m.setWorkerConfig(config)
+	if err := m.setWorkerConfig(config); err != nil {
+		blog.Infof("mgr: failed to set worker config with error: %v", err)
+		return err
+	}
 
 	return nil
 }
@@ -707,23 +721,38 @@ func (m *mgr) getCommonSetting(projectID, scene string, batchMode bool) []*types
 }
 
 func (m *mgr) setWorkerConfig(config *types.CommonConfig) error {
-	blog.Debugf("mgr: ready set worker config with config:%+v", *config)
+	blog.Infof("mgr: ready set worker config")
 
-	work := m.worksPool.find(config.WorkerKey.ProjectID, config.WorkerKey.Scene, config.WorkerKey.BatchMode)
-	if work == nil {
-		blog.Infof("mgr: work no existed with batch mode(%v) for project(%s) scene(%s)",
-			config.WorkerKey.BatchMode, config.WorkerKey.ProjectID, config.WorkerKey.Scene)
-		return nil
+	works := []*types.Work{}
+	for _, work := range m.worksPool.all() {
+		info := work.Basic().Info()
+		if info.ProjectID() == config.WorkerKey.ProjectID &&
+			info.Scene() == config.WorkerKey.Scene &&
+			info.IsBatchMode() == config.WorkerKey.BatchMode {
+			works = append(works, work)
+			blog.Infof("mgr: ready set config to worker:%s", work.ID())
+		}
 	}
+	blog.Infof("mgr: got total %d workers", len(works))
 
 	if config.Configkey == dcSDK.CommonConfigKeyToolChain {
 		sdkToolChain, ok := config.Config.(dcSDK.OneToolChain)
 		if ok {
+			blog.Infof("mgr: got tool chain:%+v", sdkToolChain)
 			toolchain := sdkToolChain2Types(&sdkToolChain)
-			work.Lock()
-			defer work.Unlock()
-			_ = work.Basic().SetToolChain(toolchain)
+			for _, work := range works {
+				work.Lock()
+				blog.Infof("mgr: ready set tool chain(%s) to worker(%s)", toolchain.ToolKey, work.ID())
+				_ = work.Basic().SetToolChain(toolchain)
+				work.Unlock()
+			}
+		} else {
+			blog.Warnf("mgr: failed cast to toolchain with config:%+v", *config)
+			return fmt.Errorf("failed cast to toolchain with config:%+v", *config)
 		}
+	} else {
+		blog.Warnf("mgr: got unknown common config key:%s", config.Configkey)
+		return fmt.Errorf("unknown common config key:%s", config.Configkey)
 	}
 
 	return nil
@@ -749,4 +778,70 @@ func sdkToolChain2Types(sdkToolChain *dcSDK.OneToolChain) *types.ToolChain {
 		Files:                  TypeFiles,
 		Timestamp:              time.Now().Local().UnixNano(),
 	}
+}
+
+func (m *mgr) checkRunWithLocalResource(work *types.Work) bool {
+	if m.conf.UseLocalCPUPercent <= 0 || m.conf.UseLocalCPUPercent > 100 {
+		return false
+	}
+
+	m.localResourceTaskMutex.Lock()
+	defer m.localResourceTaskMutex.Unlock()
+
+	// check current running local resource tasks
+	maxidlenum := runtime.NumCPU() - 2
+	allowidlenum := maxidlenum * m.conf.UseLocalCPUPercent / 100
+	runninglocalresourcetask := atomic.LoadInt32(&m.localResourceTaskNum)
+	if runninglocalresourcetask >= int32(allowidlenum) {
+		blog.Infof("mgr localresource check: running local resource task: %d,"+
+			"max allow idle num:%d for work: %s",
+			runninglocalresourcetask, allowidlenum, work.Basic().Info().WorkID())
+		return false
+	}
+
+	// check prepared remote tasks
+	prepared := work.Basic().Info().GetPrepared()
+	remotetotal := work.Remote().TotalSlots()
+	blog.Infof("mgr localresource check: prepared task: %d,total remote slots:%d for work: %s",
+		prepared, remotetotal, work.Basic().Info().WorkID())
+	if prepared < int32(remotetotal) {
+		return false
+	}
+
+	// check local idle cpu
+	reservedidlenum := maxidlenum - allowidlenum
+	occupied := 0
+	for _, work := range m.worksPool.all() {
+		_, occupy := work.Local().Slots()
+		if occupy > 0 {
+			occupied += occupy
+		}
+	}
+	if m.globalWork != nil {
+		_, occupy := m.globalWork.Local().Slots()
+		if occupy > 0 {
+			occupied += occupy
+		}
+	}
+	curidlenum := maxidlenum - occupied
+	blog.Infof("mgr localresource check: local cpu percent %d,reserved cpu num %d,"+
+		"current idle cpu num %d",
+		m.conf.UseLocalCPUPercent, reservedidlenum, curidlenum)
+	if curidlenum <= reservedidlenum {
+		return false
+	}
+
+	blog.Infof("mgr localresource check: execute with local resource, "+
+		"local resource task:%d,prepared task:%d,total remote slots:%d,"+
+		"local cpu:%d,reserved cpu num:%d,current idle cpu num:%d for work(%s)",
+		runninglocalresourcetask, prepared, remotetotal,
+		m.conf.UseLocalCPUPercent, reservedidlenum, curidlenum,
+		work.Basic().Info().WorkID())
+
+	atomic.AddInt32(&m.localResourceTaskNum, 1)
+	return true
+}
+
+func (m *mgr) decLocalResourceTask() {
+	atomic.AddInt32(&m.localResourceTaskNum, -1)
 }

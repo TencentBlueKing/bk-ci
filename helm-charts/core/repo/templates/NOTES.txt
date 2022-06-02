@@ -1,0 +1,59 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+{{- $username := .Values.common.username | toString }}
+{{- $password := .Values.common.password | toString }}
+
+验证步骤:
+
+1. 配置{{ .Values.gateway.host }}域名解析(如果域名可以被DNS正确解析，您可以跳过此步骤)
+    {{ if .Values.ingress.enabled }}
+    - 添加映射记录到/etc/hosts, <IngressIP>为您的Ingress外部ip
+
+        echo "<IngressIP>  {{ .Values.gateway.host }}" >> /etc/hosts
+        {{- if .Values.docker.enabled }}
+        echo "<IngressIP>  docker.{{ .Values.gateway.host }}" >> /etc/hosts
+        {{- end }}
+        {{- if .Values.helm.enabled }}
+        echo "<IngressIP>  helm.{{ .Values.gateway.host }}" >> /etc/hosts
+        {{- end }}
+
+    {{- else if contains "NodePort" .Values.gateway.service.type }}
+    - 添加映射记录到/etc/hosts
+
+        export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "common.names.fullname" . }}-gateway)
+        export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+        
+        echo "$NODE_IP  {{ .Values.gateway.host }}" >> /etc/hosts
+        {{- if .Values.docker.enabled }}
+        echo "$NODE_IP  docker.{{ .Values.gateway.host }}" >> /etc/hosts
+        {{- end }}
+        {{- if .Values.helm.enabled }}
+        echo "$NODE_IP  helm.{{ .Values.gateway.host }}" >> /etc/hosts
+        {{- end }}
+    {{- else if contains "ClusterIP" .Values.gateway.service.type }}
+    - 通过port-forward暴露repo-gateway
+
+        kubectl port-forward --namespace {{ .Release.Namespace }} service/{{ include "common.names.fullname" . }}-gateway 80:80
+    
+    - 添加映射记录到/etc/hosts
+
+        echo "127.0.0.1  {{ .Values.gateway.host }}" >> /etc/hosts
+        {{- if .Values.docker.enabled }}
+        echo "127.0.0.1  docker.{{ .Values.gateway.host }}" >> /etc/hosts
+        {{- end }}
+        {{- if .Values.helm.enabled }}
+        echo "127.0.0.1  helm.{{ .Values.gateway.host }}" >> /etc/hosts
+        {{- end }}
+    {{- end }}
+
+2. 访问http://{{ .Values.gateway.host }}/ui/ 验证服务能否正常访问
+
+    **TIP** 如果使用NodePort或port-forward方式访问，通过http://<NodeIp>:{{ .Values.gateway.service.nodePort }}/方式访问文件服务
+    
+    初始用户名/密码: {{ $username }}/{{ $password }}
+    初始项目: blueking
+
+3. 更多说明请参考页面操作指引以及API文档
+

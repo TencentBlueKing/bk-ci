@@ -32,7 +32,6 @@ import com.github.dockerjava.api.exception.NotModifiedException
 import com.github.dockerjava.api.model.AccessMode
 import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.Binds
-import com.github.dockerjava.api.model.Container
 import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.core.DefaultDockerClientConfig
@@ -52,11 +51,17 @@ import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_IP
 import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_PORT
 import com.tencent.devops.buildless.utils.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.buildless.utils.ENV_KEY_GATEWAY
+import com.tencent.devops.buildless.utils.ENV_KEY_PROJECT_ID
 import com.tencent.devops.buildless.utils.RandomUtil
 import com.tencent.devops.buildless.utils.RedisUtils
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.gray.Gray
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.io.File
+import java.nio.file.FileSystems
+import java.nio.file.Files
 import java.text.SimpleDateFormat
 import java.util.TimeZone
 import kotlin.streams.toList
@@ -67,11 +72,11 @@ import kotlin.streams.toList
 
 @Service
 class BuildLessContainerService(
+    private val gray: Gray,
     private val redisUtils: RedisUtils,
     private val commonConfig: CommonConfig,
     private val buildLessConfig: BuildLessConfig
 ) {
-
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
         .withDockerConfig(buildLessConfig.dockerConfig)
         .withApiVersion(buildLessConfig.apiVersion)
@@ -96,16 +101,19 @@ class BuildLessContainerService(
         val volumeLogs = Volume(buildLessConfig.volumeLogs)
         val volumeWs = Volume(buildLessConfig.volumeWorkspace)
 
-        val gateway = buildLessConfig.gateway
         val containerName = "$BUILDLESS_POOL_PREFIX-${RandomUtil.randomString()}"
 
         val hostWorkspace = buildLessConfig.hostPathWorkspace + "/$containerName"
+
+        val linkPath = createSymbolicLink(hostWorkspace)
+
         val binds = Binds(
             Bind(buildLessConfig.hostPathApps, volumeApps, AccessMode.ro),
             Bind(buildLessConfig.hostPathInit, volumeInit, AccessMode.ro),
             Bind(buildLessConfig.hostPathSleep, volumeSleep, AccessMode.ro),
             Bind(buildLessConfig.hostPathLogs + "/$containerName", volumeLogs),
-            Bind(hostWorkspace, volumeWs)
+            Bind(hostWorkspace, volumeWs),
+            Bind(linkPath, Volume(linkPath))
         )
 
         try {
@@ -115,15 +123,22 @@ class BuildLessContainerService(
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
                 .withEnv(
                     listOf(
-                        "$ENV_KEY_GATEWAY=$gateway",
+                        "$ENV_KEY_GATEWAY=${buildLessConfig.gateway}",
                         "TERM=xterm-256color",
+                        "$ENV_KEY_PROJECT_ID=${
+                            if (gray.isGray()) {
+                                "grayproject"
+                            } else {
+                                ""
+                            }
+                        }",
                         "$ENV_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
                         "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
                         "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
                         "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
                         "$ENV_JOB_BUILD_TYPE=BUILD_LESS",
                         "$ENV_CONTAINER_NAME=$containerName",
-                        "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$hostWorkspace"
+                        "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$linkPath"
                     )
                 )
                 .withHostConfig(
@@ -226,20 +241,41 @@ class BuildLessContainerService(
         return containerInfo.size
     }
 
-    fun getDockerRunTimeoutContainers(): MutableList<Container> {
+    fun getDockerRunTimeoutContainers(): MutableList<String> {
         val containerInfo = httpDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
-        val timeoutContainerList = mutableListOf<Container>()
+        val timeoutContainerList = mutableListOf<String>()
         for (container in containerInfo) {
             val startTime = httpDockerCli.inspectContainerCmd(container.id).exec().state.startedAt
             // 是否已运行超过12小时
-            if (checkStartTime(startTime)) {
-                timeoutContainerList.add(container)
-                // logger.info("Clear 12h timeout container, containerId: ${container.id}")
-                // httpDockerCli.stopContainerCmd(container.id).withTimeout(15).exec()
+            val buildLessPoolInfo = redisUtils.getBuildLessPoolContainer(container.id)
+            if (checkStartTime(startTime) &&
+                (buildLessPoolInfo == null || buildLessPoolInfo.status == ContainerStatus.IDLE)) {
+                timeoutContainerList.add(container.id)
             }
         }
 
         return timeoutContainerList
+    }
+
+    fun createSymbolicLink(hostWorkspace: String): String {
+        val hostWorkspaceFile = File(hostWorkspace)
+        if (!hostWorkspaceFile.exists()) {
+            hostWorkspaceFile.mkdirs() // 新建的流水线的工作空间路径为空则新建目录
+        }
+        val shaContent = ShaUtils.sha1(hostWorkspace.toByteArray())
+        val linkFilePathDir = buildLessConfig.hostPathLinkDir
+        val linkFileDir = File(linkFilePathDir)
+        if (!linkFileDir.exists()) {
+            linkFileDir.mkdirs()
+        }
+        val linkPath = "$linkFilePathDir/$shaContent"
+        logger.info("hostWorkspace:$hostWorkspace linkPath is: $linkPath")
+        val link = FileSystems.getDefault().getPath(linkPath)
+        if (!link.toFile().exists()) {
+            val target = FileSystems.getDefault().getPath(hostWorkspace)
+            Files.createSymbolicLink(link, target) // 为真实工作空间地址创建软链
+        }
+        return linkPath
     }
 
     private fun checkStartTime(utcTime: String?): Boolean {

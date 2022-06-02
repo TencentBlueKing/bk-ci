@@ -35,12 +35,14 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
@@ -169,44 +171,48 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorCode = atomResponse.errorCode,
                 errorMsg = atomResponse.errorMsg
             )
-            val updateTaskStatusInfos = pipelineBuildDetailService.taskEnd(
-                projectId = task.projectId,
-                buildId = task.buildId,
-                taskId = task.taskId,
-                buildStatus = atomResponse.buildStatus,
-                errorType = atomResponse.errorType,
-                errorCode = atomResponse.errorCode,
-                errorMsg = atomResponse.errorMsg
-            )
-            updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
-                pipelineTaskService.updateTaskStatusInfo(
-                    transactionContext = null,
+            // 系统控制类插件不涉及到Detail编排状态修改
+            if (EnvControlTaskType.parse(task.taskType) == null) {
+                val updateTaskStatusInfos = pipelineBuildDetailService.taskEnd(
                     projectId = task.projectId,
                     buildId = task.buildId,
-                    taskId = updateTaskStatusInfo.taskId,
-                    taskStatus = updateTaskStatusInfo.buildStatus
+                    taskId = task.taskId,
+                    buildStatus = atomResponse.buildStatus,
+                    errorType = atomResponse.errorType,
+                    errorCode = atomResponse.errorCode,
+                    errorMsg = atomResponse.errorMsg
                 )
-                if (!updateTaskStatusInfo.message.isNullOrBlank()) {
-                    buildLogPrinter.addLine(
-                        buildId = task.buildId,
-                        message = updateTaskStatusInfo.message!!,
-                        tag = updateTaskStatusInfo.taskId,
-                        jobId = updateTaskStatusInfo.containerHashId,
-                        executeCount = updateTaskStatusInfo.executeCount
+                updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
+                    pipelineTaskService.updateTaskStatusInfo(
+                        updateTaskInfo = UpdateTaskInfo(
+                            projectId = task.projectId,
+                            buildId = task.buildId,
+                            taskId = updateTaskStatusInfo.taskId,
+                            taskStatus = updateTaskStatusInfo.buildStatus
+                        )
                     )
+                    if (!updateTaskStatusInfo.message.isNullOrBlank()) {
+                        buildLogPrinter.addLine(
+                            buildId = task.buildId,
+                            message = updateTaskStatusInfo.message!!,
+                            tag = updateTaskStatusInfo.taskId,
+                            jobId = updateTaskStatusInfo.containerHashId,
+                            executeCount = updateTaskStatusInfo.executeCount
+                        )
+                    }
                 }
-            }
-            measureService?.postTaskData(
-                task = task,
-                startTime = task.startTime?.timestampmilli() ?: startTime,
-                status = atomResponse.buildStatus,
-                type = task.taskType,
-                errorType = atomResponse.errorType?.name,
-                errorCode = atomResponse.errorCode,
-                errorMsg = atomResponse.errorMsg
-            )
-            if (atomResponse.buildStatus.isFailure()) {
-                jmxElements.fail(task.taskType)
+                measureService?.postTaskData(
+                    task = task,
+                    startTime = task.startTime?.timestampmilli() ?: startTime,
+                    status = atomResponse.buildStatus,
+                    type = task.taskType,
+                    errorType = atomResponse.errorType?.name,
+                    errorCode = atomResponse.errorCode,
+                    errorMsg = atomResponse.errorMsg
+                )
+                if (atomResponse.buildStatus.isFailure()) {
+                    jmxElements.fail(task.taskType)
+                }
             }
         } catch (ignored: Throwable) {
             logger.warn("Fail to post the task($task): ${ignored.message}")

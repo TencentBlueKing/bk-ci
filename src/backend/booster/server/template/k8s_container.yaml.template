@@ -33,8 +33,8 @@ spec:
         volumeMounts: __crm_volume_mounts__
         resources:
           requests:
-            memory: "__crm_mem__Mi"
-            cpu: "__crm_cpu__m"
+            memory: "__crm_request_mem__Mi"
+            cpu: "__crm_request_cpu__m"
           limits:
             memory: "__crm_mem__Mi"
             cpu: "__crm_cpu__m"

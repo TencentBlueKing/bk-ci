@@ -37,18 +37,19 @@ import io.swagger.annotations.ApiModelProperty
 @Suppress("ReturnCount")
 @ApiModel("流水线模型-普通任务容器")
 data class NormalContainer(
-    @ApiModelProperty("构建容器序号id", required = false, hidden = true)
+    @ApiModelProperty("构建容器序号id", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var id: String? = null,
     @ApiModelProperty("容器名称", required = true)
     override var name: String = "",
     @ApiModelProperty("任务集合", required = true)
     override var elements: List<Element> = listOf(),
-    @ApiModelProperty("容器状态", required = false, hidden = true)
+    @ApiModelProperty("容器状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var status: String? = null,
-    @ApiModelProperty("系统运行时间", required = false, hidden = true)
+    @ApiModelProperty("系统运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var startEpoch: Long? = null,
+    @ApiModelProperty("系统耗时（开机时间）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var systemElapsed: Long? = null,
-    @ApiModelProperty("原子运行时间", required = false, hidden = true)
+    @ApiModelProperty("插件执行耗时", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var elementElapsed: Long? = null,
     @ApiModelProperty("允许可跳过", required = false)
     @Deprecated(message = "do not use", replaceWith = ReplaceWith("JobControlOption.runCondition"))
@@ -56,11 +57,15 @@ data class NormalContainer(
     @ApiModelProperty("触发条件", required = false)
     @Deprecated(message = "do not use", replaceWith = ReplaceWith("@see JobControlOption.customVariables"))
     val conditions: List<NameAndValue>? = null,
-    @ApiModelProperty("是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储", required = false, hidden = true)
+    @ApiModelProperty(
+        "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
+        required = false,
+        accessMode = ApiModelProperty.AccessMode.READ_ONLY
+    )
     override var canRetry: Boolean? = null,
-    @ApiModelProperty("构建容器顺序ID（同id值）", required = false, hidden = true)
+    @ApiModelProperty("构建容器顺序ID（同id值）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var containerId: String? = null,
-    @ApiModelProperty("容器唯一ID", required = false, hidden = true)
+    @ApiModelProperty("容器唯一ID", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var containerHashId: String? = null,
     @ApiModelProperty("无构建环境-等待运行环境启动的排队最长时间(分钟)", required = false)
     @Deprecated(message = "do not use")
@@ -72,15 +77,15 @@ data class NormalContainer(
     var jobControlOption: JobControlOption? = null, // 为了兼容旧数据，所以定义为可空以及var
     @ApiModelProperty("互斥组", required = false)
     var mutexGroup: MutexGroup? = null, // 为了兼容旧数据，所以定义为可空以及var
-    @ApiModelProperty("构建环境启动状态", required = false, hidden = true)
+    @ApiModelProperty("构建环境启动状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var startVMStatus: String? = null,
-    @ApiModelProperty("容器运行次数", required = false, hidden = true)
+    @ApiModelProperty("容器运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var executeCount: Int? = 0,
     @ApiModelProperty("用户自定义ID", required = false, hidden = false)
     override val jobId: String? = null,
-    @ApiModelProperty("是否包含post任务标识", required = false, hidden = true)
+    @ApiModelProperty("是否包含post任务标识", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var containPostTaskFlag: Boolean? = null,
-    @ApiModelProperty("是否为构建矩阵", required = false, hidden = true)
+    @ApiModelProperty("是否为构建矩阵", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var matrixGroupFlag: Boolean? = false,
     @ApiModelProperty("构建矩阵配置项", required = false)
     var matrixControlOption: MatrixControlOption? = null,
@@ -113,5 +118,9 @@ data class NormalContainer(
 
     override fun fetchGroupContainers(): List<Container>? {
         return groupContainers?.toList()
+    }
+
+    override fun fetchMatrixContext(): Map<String, String>? {
+        return matrixContext
     }
 }

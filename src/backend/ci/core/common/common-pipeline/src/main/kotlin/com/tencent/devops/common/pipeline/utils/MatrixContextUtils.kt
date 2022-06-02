@@ -42,65 +42,85 @@ object MatrixContextUtils {
 
     private const val schemaJson = """
 {
-  "type": "object",
-  "required": [],
-  "properties": {
-    "include": {
-      "description": "值格式为：List,用于给 matrix 的指定组合增加额外的属性,或者新增1个或多个组合,每个元素为一个 Object",
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [],
-        "additionalProperties": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "integer"
-            }
-          ]
-        }
-      }
-    },
-    "exclude": {
-      "description": "值格式为：List,用于排除 matrix  中的一些组合,每个元素为一个 Object",
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [],
-        "additionalProperties": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "integer"
-            }
-          ]
-        }
-      }
-    },
-    "strategy": {
-      "description": "值格式为：Object,定义的每个选项都有键和值，键将作为 matrix 上下文中的属性",
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": {
+    "type": "object",
+    "required": [],
+    "properties": {
+        "include": {
+            "description": "值格式为：List,用于给 matrix 的指定组合增加额外的属性,或者新增1个或多个组合,每个元素为一个 Object,或是一个'$'{{fromJSON(xxx)}}上下文",
             "oneOf": [
-              {
-                "type": "array"
-              }
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [],
+                        "additionalProperties": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "type": "string",
+                    "pattern": "$strategyJsonPattern"
+                }
             ]
-          }
         },
-        {
-          "type": "string",
-          "pattern": "$strategyJsonPattern"
+        "exclude": {
+            "description": "值格式为：List,用于排除 matrix  中的一些组合,每个元素为一个 Object,或是一个'$'{{fromJSON(xxx)}}上下文",
+            "oneOf": [
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [],
+                        "additionalProperties": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "type": "string",
+                    "pattern": "$strategyJsonPattern"
+                }
+            ]
+        },
+        "strategy": {
+            "description": "值格式为：Object,,或是一个'$'{{fromJSON(xxx)}}上下文,定义的每个选项都有键和值，键将作为 matrix 上下文中的属性",
+            "oneOf": [
+                {
+                    "type": "object",
+                    "additionalProperties": {
+                        "anyOf": [
+                            {
+                                "type": "array"
+                            },
+                            {
+                                "type": "string",
+                                "pattern": "$strategyJsonPattern"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "type": "string",
+                    "pattern": "$strategyJsonPattern"
+                }
+            ]
         }
-      ]
     }
-  }
 }
     """
 

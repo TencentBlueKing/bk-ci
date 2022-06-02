@@ -33,12 +33,12 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel
 data class ProjectCreateUserInfo(
-    @ApiModelProperty("操作用户")
+    @ApiModelProperty("操作人")
     val createUserId: String,
-    @ApiModelProperty("角色名称")
+    @ApiModelProperty("待分配的角色名称")
     val roleName: String?,
     @ApiModelProperty("角色Id")
     val roleId: Int?,
-    @ApiModelProperty("多目标用户id")
+    @ApiModelProperty("目标用户")
     val userIds: List<String>? = emptyList()
 )

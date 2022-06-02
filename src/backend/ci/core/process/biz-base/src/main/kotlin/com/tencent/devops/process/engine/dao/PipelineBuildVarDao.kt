@@ -81,7 +81,7 @@ class PipelineBuildVarDao @Autowired constructor() {
                 baseStep.set(VAR_TYPE, valueType)
             }
             return baseStep.set(VALUE, value.toString())
-                .where(BUILD_ID.eq(buildId).and(KEY.eq(name)).and(READ_ONLY.notEqual(true))
+                .where(BUILD_ID.eq(buildId).and(KEY.eq(name)).and(READ_ONLY.isNull.or(READ_ONLY.eq(false)))
                     .and(PROJECT_ID.eq(projectId)))
                 .execute()
         }

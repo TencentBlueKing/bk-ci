@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
@@ -52,7 +53,9 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
+import com.tencent.devops.dispatch.docker.pojo.Credential
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.docker.pojo.Pool
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
@@ -62,6 +65,7 @@ import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -86,7 +90,8 @@ class DockerHostClient @Autowired constructor(
     private val defaultImageConfig: DefaultImageConfig,
     private val dockerHostProxyService: DockerHostProxyService,
     private val dockerHostQpcService: DockerHostQpcService,
-    private val redisUtils: RedisUtils
+    private val redisUtils: RedisUtils,
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     companion object {
@@ -101,23 +106,6 @@ class DockerHostClient @Autowired constructor(
         poolNo: Int,
         driftIpInfo: String
     ) {
-        pipelineDockerBuildDao.startBuild(
-            dslContext = dslContext,
-            projectId = dispatchMessage.projectId,
-            pipelineId = dispatchMessage.pipelineId,
-            buildId = dispatchMessage.buildId,
-            vmSeqId = dispatchMessage.vmSeqId.toInt(),
-            secretKey = dispatchMessage.secretKey,
-            status = PipelineTaskStatus.RUNNING,
-            zone = if (null == dispatchMessage.zone) {
-                Zone.SHENZHEN.name
-            } else {
-                dispatchMessage.zone!!.name
-            },
-            dockerIp = dockerIp,
-            poolNo = poolNo
-        )
-
         val dispatchType = dispatchMessage.dispatchType as DockerDispatchType
         val dockerImage = if (dispatchType.imageType == ImageType.THIRD) {
             dispatchType.dockerBuildVersion
@@ -157,6 +145,29 @@ class DockerHostClient @Autowired constructor(
             }
         }
 
+        pipelineDockerBuildDao.saveBuildHistory(
+            dslContext = dslContext,
+            projectId = dispatchMessage.projectId,
+            pipelineId = dispatchMessage.pipelineId,
+            buildId = dispatchMessage.buildId,
+            vmSeqId = dispatchMessage.vmSeqId.toInt(),
+            secretKey = dispatchMessage.secretKey,
+            status = PipelineTaskStatus.RUNNING,
+            zone = if (null == dispatchMessage.zone) {
+                Zone.SHENZHEN.name
+            } else {
+                dispatchMessage.zone!!.name
+            },
+            dockerIp = dockerIp,
+            poolNo = poolNo,
+            startupMessage = JsonUtil.toJson(Pool(
+                container = dockerImage,
+                credential = Credential(userName, password),
+                env = null,
+                imageType = dispatchType.imageType?.type
+            ))
+        )
+
         val requestBody = DockerHostBuildInfo(
             projectId = dispatchMessage.projectId,
             agentId = dispatchMessage.id,
@@ -167,7 +178,6 @@ class DockerHostClient @Autowired constructor(
             status = PipelineTaskStatus.RUNNING.status,
             imageName = dockerImage!!,
             containerId = "",
-            wsInHost = true,
             poolNo = poolNo,
             registryUser = userName ?: "",
             registryPwd = password ?: "",
@@ -181,7 +191,8 @@ class DockerHostClient @Autowired constructor(
             containerHashId = dispatchMessage.containerHashId,
             customBuildEnv = dispatchMessage.customBuildEnv,
             dockerResource = getDockerResource(dispatchType),
-            qpcUniquePath = getQpcUniquePath(dispatchMessage)
+            qpcUniquePath = getQpcUniquePath(dispatchMessage),
+            specialProjectList = getSpecialProjectList()
         )
 
         pipelineDockerTaskSimpleDao.createOrUpdate(
@@ -202,7 +213,7 @@ class DockerHostClient @Autowired constructor(
     ) {
         val secretKey = ApiUtil.randomSecretKey()
 
-        val id = pipelineDockerBuildDao.startBuild(
+        val id = pipelineDockerBuildDao.saveBuildHistory(
             dslContext = dslContext,
             projectId = event.projectId,
             pipelineId = event.pipelineId,
@@ -260,7 +271,6 @@ class DockerHostClient @Autowired constructor(
             status = PipelineTaskStatus.RUNNING.status,
             imageName = dockerImage,
             containerId = "",
-            wsInHost = true,
             poolNo = 0,
             registryUser = defaultImageConfig.agentLessRegistryUserName ?: "",
             registryPwd = defaultImageConfig.agentLessRegistryPassword ?: "",
@@ -312,16 +322,17 @@ class DockerHostClient @Autowired constructor(
         vmSeqId: Int,
         containerId: String,
         dockerIp: String,
+        poolNo: Int,
         clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
     ) {
-        if (clusterType == DockerHostClusterType.AGENT_LESS && projectId == "test-sawyer2") {
+        if (clusterType == DockerHostClusterType.AGENT_LESS) {
             client.get(ServiceBuildlessResource::class).endBuild(
                 BuildLessEndInfo(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
                     vmSeqId = vmSeqId,
-                    poolNo = 0,
+                    poolNo = poolNo,
                     containerId = containerId
                 )
             )
@@ -339,8 +350,7 @@ class DockerHostClient @Autowired constructor(
             status = 0,
             imageName = "",
             containerId = containerId,
-            wsInHost = true,
-            poolNo = 0,
+            poolNo = poolNo,
             registryUser = "",
             registryPwd = "",
             imageType = "",
@@ -501,6 +511,15 @@ class DockerHostClient @Autowired constructor(
         if (retryTime < RETRY_BUILD_TIME) {
             LOG.warn("[${dockerHostBuildInfo.projectId}|${dockerHostBuildInfo.pipelineId}|${dockerHostBuildInfo.buildId}" +
                     "|$retryTime] Start build Docker VM in $dockerIp failed, retry startBuild. errorMessage: $errorMessage")
+
+            buildLogPrinter.addYellowLine(
+                buildId = dockerHostBuildInfo.buildId,
+                message = "Start build Docker VM in $dockerIp failed, retry startBuild.",
+                tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
+                jobId = dockerHostBuildInfo.containerHashId,
+                executeCount = 1
+            )
+
             val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
             val retryTimeLocal = retryTime + 1
             // 过滤重试前异常IP, 并重新获取可用ip
@@ -540,6 +559,10 @@ class DockerHostClient @Autowired constructor(
         } else {
             null
         }
+    }
+
+    fun getSpecialProjectList(): String? {
+        return redisUtils.getSpecialProjectListKey()
     }
 
     private fun getDockerResource(dockerDispatchType: DockerDispatchType): DockerResourceOptionsVO {

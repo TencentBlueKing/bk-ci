@@ -27,9 +27,9 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.control.ControlUtils
+import com.tencent.devops.process.engine.control.DispatchQueueControl
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
@@ -43,8 +43,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class CheckConditionalSkipStageCmd constructor(
-    private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineContextService: PipelineContextService
+    private val pipelineContextService: PipelineContextService,
+    private val dispatchQueueControl: DispatchQueueControl
 ) : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
@@ -55,12 +55,15 @@ class CheckConditionalSkipStageCmd constructor(
     }
 
     override fun execute(commandContext: StageContext) {
+        val stage = commandContext.stage
         // 仅在初次进入Stage时进行跳过和依赖判断
         if (checkIfSkip(commandContext)) {
             commandContext.buildStatus = BuildStatus.SKIP
-            commandContext.latestSummary = "s(${commandContext.stage.stageId}) skipped"
+            commandContext.latestSummary = "s(${stage.stageId}) skipped"
             commandContext.cmdFlowState = CmdFlowState.FINALLY
         }
+        // 初次进入时清理构建机启动队列
+        dispatchQueueControl.flushDispatchQueue(stage.buildId, stage.stageId)
     }
 
     /**
@@ -82,8 +85,11 @@ class CheckConditionalSkipStageCmd constructor(
             val conditions = controlOption.customVariables ?: emptyList()
             val contextMap = pipelineContextService.buildContext(
                 projectId = stage.projectId,
+                pipelineId = stage.pipelineId,
                 buildId = stage.buildId,
+                stageId = stage.stageId,
                 containerId = null,
+                taskId = null,
                 variables = variables
             )
             skip = ControlUtils.checkStageSkipCondition(
@@ -91,9 +97,8 @@ class CheckConditionalSkipStageCmd constructor(
                 variables = variables.plus(contextMap),
                 buildId = stage.buildId,
                 runCondition = controlOption.runCondition,
-                customCondition = controlOption.customCondition,
-                buildLogPrinter = buildLogPrinter
-            )
+                customCondition = controlOption.customCondition
+            ) // #6366 增加日志明确展示跳过的原因  stage 没有相关可展示的地方，暂时不加
         }
         if (skip) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_CONDITION_SKIP|${event.stageId}|$controlOption")

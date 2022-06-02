@@ -27,17 +27,28 @@
 
 package com.tencent.devops.repository.service.scm
 
+import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.scm.code.svn.ISvnService
+import com.tencent.devops.scm.exception.ScmException
+import com.tencent.devops.scm.jmx.JMX
 import com.tencent.devops.scm.pojo.SvnFileInfo
+import com.tencent.devops.scm.pojo.SvnRevisionInfo
 import com.tencent.devops.scm.pojo.enums.SvnFileType
+import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import org.tmatesoft.svn.core.SVNDirEntry
-import org.tmatesoft.svn.core.SVNProperties
 import org.tmatesoft.svn.core.SVNURL
+import org.tmatesoft.svn.core.SVNProperties
+import org.tmatesoft.svn.core.SVNDirEntry
+import org.tmatesoft.svn.core.SVNAuthenticationException
+import org.tmatesoft.svn.core.SVNException
+import org.tmatesoft.svn.core.SVNLogEntry
 import org.tmatesoft.svn.core.auth.BasicAuthenticationManager
 import org.tmatesoft.svn.core.auth.SVNPasswordAuthentication
 import org.tmatesoft.svn.core.auth.SVNSSHAuthentication
+import org.tmatesoft.svn.core.io.SVNRepository
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory
 import java.io.ByteArrayOutputStream
 
@@ -141,6 +152,131 @@ class SvnService : ISvnService {
             throw e
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the directories")
+        }
+    }
+
+    override fun getSvnRevisionList(
+        url: String,
+        username: String,
+        privateKey: String,
+        passphrase: String?,
+        branchName: String?,
+        currentVersion: String?
+    ): Pair<Long, List<SvnRevisionInfo>> {
+        val branch = branchName ?: "trunk"
+        var success = false
+        val svnBean = JMX.getSvnBean()
+        try {
+            svnBean.latestRevision()
+            val repository = getRepository(
+                url = url,
+                username = username,
+                privateKey = privateKey,
+                passphrase = passphrase
+            )
+            val revision = getLatestRevision(
+                branchName = branch,
+                repository = repository
+            )
+            val result = getRevisionInfoList(repository, getCurrentRevision(currentVersion, revision), revision, branch)
+            success = true
+            return Pair(revision, result)
+        } catch (e: SVNAuthenticationException) {
+            if ((!e.message.isNullOrBlank()) && e.message!!.contains("timeout")) {
+                svnBean.latestRevisionTimeout()
+            }
+            throw e
+        } catch (e: SVNException) {
+            if ((!e.message.isNullOrBlank()) && e.message!!.contains("There was a problem while connecting")) {
+                svnBean.latestRevisionTimeout()
+            }
+            throw e
+        } finally {
+            if (!success) {
+                svnBean.latestRevisionFail()
+            }
+        }
+    }
+
+    private fun getRepository(
+        url: String,
+        username: String,
+        privateKey: String,
+        passphrase: String?
+    ): SVNRepository {
+
+        try {
+            return SvnUtils.getRepository(url, username, privateKey, passphrase)
+        } catch (e: SVNException) {
+            logger.error("工程($url)本地仓库创建失败", e)
+            throw ScmException(
+                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
+                scmType = ScmType.CODE_SVN.name
+            )
+        }
+    }
+
+    private fun getLatestRevision(
+        branchName: String,
+        repository: SVNRepository
+    ): Long {
+        try {
+            val info: SVNDirEntry? = repository.info(branchName, -1)
+            return info?.revision ?: repository.latestRevision // 如果因为路径错误导致找不到的话，使用整个仓库的最新版本号
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to check the svn latest revision", ignored)
+            throw ScmException(
+                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR),
+                scmType = ScmType.CODE_SVN.name
+            )
+        }
+    }
+
+    /**
+     * 如果currentRevision为null，则使用最新的revision
+     */
+    private fun getCurrentRevision(
+        svnRevision: String?,
+        revision: Long
+    ): Long {
+        if (svnRevision == null) {
+            return revision
+        }
+        return svnRevision.toLong()
+    }
+
+    private fun getRevisionInfoList(
+        svnRepository: SVNRepository,
+        currentVersion: Long,
+        revision: Long,
+        branchName: String
+    ): List<SvnRevisionInfo> {
+        try {
+            val collection = svnRepository.log(arrayOf(""), null, currentVersion, revision, true, true)
+            val result = mutableListOf<SvnRevisionInfo>()
+            if (!collection.isEmpty()) {
+                for (aCollection in collection) {
+                    val logEntry = aCollection as SVNLogEntry
+                    if (currentVersion != revision && currentVersion == logEntry.revision) {
+                        logger.info("this revision is builded, ignoer this one")
+                        continue
+                    }
+                    val revisionInfo = SvnRevisionInfo(
+                        revision = logEntry.revision.toString(),
+                        branchName = branchName,
+                        authorName = logEntry.author,
+                        commitTime = logEntry.date.time,
+                        paths = logEntry.changedPaths.values.map { it.path }
+                    )
+                    result.add(revisionInfo)
+                }
+            }
+            return result
+        } catch (e: SVNException) {
+            throw ScmException(
+                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
+                scmType = ScmType.CODE_SVN.name
+            )
         }
     }
 }

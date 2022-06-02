@@ -173,7 +173,7 @@ class PipelineLabelPipelineDao {
 
     fun listPipelineLabelRels(
         dslContext: DSLContext,
-        pipelineIds: List<String>,
+        pipelineIds: Collection<String>,
         projectId: String
     ): Result<TPipelineLabelPipelineRecord>? {
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {

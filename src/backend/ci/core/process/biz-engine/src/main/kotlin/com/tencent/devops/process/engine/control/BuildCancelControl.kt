@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
@@ -82,7 +83,6 @@ class BuildCancelControl @Autowired constructor(
 
     companion object {
         private val LOG = LoggerFactory.getLogger(BuildCancelControl::class.java)
-        private const val BUILD_CANCEL_TIME_OUT = 5L
     }
 
     fun handle(event: PipelineBuildCancelEvent) {
@@ -114,14 +114,17 @@ class BuildCancelControl @Autowired constructor(
         val model = pipelineBuildDetailService.getBuildModel(projectId = event.projectId, buildId = buildId)
         return if (model != null) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|CANCEL|status=${event.status}")
-            // 往redis中设置取消构建标识以防止重复提交
-            setBuildCancelActionRedisFlag(buildId)
+            if (event.actionType != ActionType.TERMINATE) {
+                // 往redis中设置取消构建标识以防止重复提交
+                setBuildCancelActionRedisFlag(buildId)
+            }
             cancelAllPendingTask(event = event, model = model)
             // 修改detail model
             pipelineBuildDetailService.buildCancel(
                 projectId = event.projectId,
                 buildId = event.buildId,
-                buildStatus = event.status
+                buildStatus = event.status,
+                cancelUser = event.userId
             )
 
             val pendingStage = pipelineStageService.getPendingStage(event.projectId, buildId)
@@ -144,7 +147,11 @@ class BuildCancelControl @Autowired constructor(
     }
 
     private fun setBuildCancelActionRedisFlag(buildId: String) =
-        redisOperation.set(BuildUtils.getCancelActionBuildKey(buildId), "true", BUILD_CANCEL_TIME_OUT)
+        redisOperation.set(
+            key = BuildUtils.getCancelActionBuildKey(buildId),
+            value = System.currentTimeMillis().toString(),
+            expiredInSecond = Timeout.transMinuteTimeoutToSec(Timeout.MAX_MINUTES)
+        )
 
     private fun sendBuildFinishEvent(event: PipelineBuildCancelEvent) {
         pipelineMQEventDispatcher.dispatch(
@@ -181,8 +188,12 @@ class BuildCancelControl @Autowired constructor(
         val variables: Map<String, String> by lazy { buildVariableService.getAllVariable(projectId, buildId) }
         val executeCount: Int by lazy { buildVariableService.getBuildExecuteCount(projectId, buildId) }
         val stages = model.stages
-        stages.forEachIndexed forEach@{ index, stage ->
-            if (stage.finally && index > 1) {
+        stages.forEachIndexed nextStage@{ index, stage ->
+            if (stage.status == null) { // 未启动的忽略
+                return@nextStage
+            }
+
+            if (event.actionType != ActionType.TERMINATE && stage.finally && index > 1) {
                 // 当前stage为finallyStage且它前一个stage也已经运行过了或者还未运行业务逻辑，则finallyStage也能取消
                 val preStageStatus = BuildStatus.parse(stages[index - 1].status)
                 val preStageNoExecuteBusFlag = !preStageStatus.isFinish() && preStageStatus != BuildStatus.UNEXEC
@@ -190,18 +201,20 @@ class BuildCancelControl @Autowired constructor(
                 if (getStageExecuteBusFlag(stages[0]) &&
                     (preStageNoExecuteBusFlag || !getStageExecuteBusFlag(stages[1]))
                 ) {
-                    return@forEach
+                    return@nextStage
                 }
             }
-            val stageStatus = BuildStatus.parse(stage.status)
-            stage.containers.forEach C@{ container ->
+
+            stage.containers.forEach nextC@{ container ->
+                if (container.status == null) { // 未启动的忽略
+                    return@nextC
+                }
                 val stageId = stage.id ?: ""
                 cancelContainerPendingTask(
                     stageId = stageId,
                     event = event,
                     variables = variables,
                     container = container,
-                    stageStatus = stageStatus,
                     executeCount = executeCount
                 )
                 container.fetchGroupContainers()?.forEach { c ->
@@ -210,7 +223,6 @@ class BuildCancelControl @Autowired constructor(
                         stageId = stageId,
                         variables = variables,
                         container = c,
-                        stageStatus = stageStatus,
                         executeCount = executeCount
                     )
                 }
@@ -223,7 +235,6 @@ class BuildCancelControl @Autowired constructor(
         variables: Map<String, String>,
         stageId: String,
         container: Container,
-        stageStatus: BuildStatus,
         executeCount: Int
     ) {
         val projectId = event.projectId
@@ -243,9 +254,10 @@ class BuildCancelControl @Autowired constructor(
             containerIdLock.lock()
             // 调整Container状态位
             val containerBuildStatus = BuildStatus.parse(container.status)
-            // 取消构建,当前运行的stage及当前stage下的job不能马上置为取消状态
-            if ((!containerBuildStatus.isFinish() && stageStatus != BuildStatus.RUNNING &&
-                    containerBuildStatus != BuildStatus.RUNNING) ||
+            // 取消构建,如果actionType不为TERMINATE那么当前运行的stage及当前stage下的job不能马上置为取消状态
+            if (
+                event.actionType == ActionType.TERMINATE ||
+                (!containerBuildStatus.isFinish() && containerBuildStatus != BuildStatus.RUNNING) ||
                 containerBuildStatus == BuildStatus.PREPARE_ENV ||
                 dependOnControl.dependOnJobStatus(pipelineContainer) != BuildStatus.SUCCEED
             ) {
@@ -361,7 +373,8 @@ class BuildCancelControl @Autowired constructor(
                 buildId = buildId,
                 stageId = stageId,
                 containerId = container.id!!,
-                mutexGroup = mutexGroup
+                mutexGroup = mutexGroup,
+                executeCount = container.executeCount
             )
         }
     }

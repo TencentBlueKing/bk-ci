@@ -65,7 +65,9 @@ class ThirdPartyAgentBuildDao {
         thirdPartyAgentWorkspace: String,
         pipelineName: String,
         buildNum: Int,
-        taskName: String
+        taskName: String,
+        agentIp: String,
+        nodeId: Long
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val now = LocalDateTime.now()
@@ -81,6 +83,8 @@ class ThirdPartyAgentBuildDao {
                     .set(WORKSPACE, thirdPartyAgentWorkspace)
                     .set(UPDATED_TIME, now)
                     .set(STATUS, PipelineTaskStatus.QUEUE.status)
+                    .set(AGENT_IP, agentIp)
+                    .set(NODE_ID, nodeId)
                     .where(ID.eq(preRecord.id)).execute()
             }
             return dslContext.insertInto(
@@ -96,7 +100,9 @@ class ThirdPartyAgentBuildDao {
                 WORKSPACE,
                 PIPELINE_NAME,
                 BUILD_NUM,
-                TASK_NAME
+                TASK_NAME,
+                AGENT_IP,
+                NODE_ID
             ).values(
                 projectId,
                 agentId,
@@ -109,7 +115,9 @@ class ThirdPartyAgentBuildDao {
                 thirdPartyAgentWorkspace,
                 pipelineName,
                 buildNum,
-                taskName
+                taskName,
+                agentIp,
+                nodeId
             ).execute()
         }
     }
@@ -159,11 +167,7 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    fun updateStatus(
-        dslContext: DSLContext,
-        id: Long,
-        status: PipelineTaskStatus
-    ): Int {
+    fun updateStatus(dslContext: DSLContext, id: Long, status: PipelineTaskStatus): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.update(this)
                 .set(STATUS, status.status)
@@ -173,16 +177,14 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    fun getQueueBuilds(
-        dslContext: DSLContext,
-        agentId: String
-    ): Result<TDispatchThirdpartyAgentBuildRecord> {
+    fun fetchOneQueueBuild(dslContext: DSLContext, agentId: String): TDispatchThirdpartyAgentBuildRecord? {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .orderBy(UPDATED_TIME.asc())
-                .fetch()
+                .limit(1)
+                .fetchAny()
         }
     }
 
@@ -194,18 +196,6 @@ class ThirdPartyAgentBuildDao {
             return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
                 .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
-                .fetch()
-        }
-    }
-
-    fun getRunningBuilds(
-        dslContext: DSLContext,
-        agentId: String
-    ): List<TDispatchThirdpartyAgentBuildRecord> {
-        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
-                .where(AGENT_ID.eq(agentId))
-                .and(STATUS.eq(PipelineTaskStatus.RUNNING.status))
                 .fetch()
         }
     }

@@ -27,13 +27,14 @@
 
 package com.tencent.devops.misc.config
 
+import com.tencent.devops.common.db.config.DBBaseConfiguration
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultConfiguration
+import org.jooq.impl.DefaultExecuteListenerProvider
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.InjectionPoint
-import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -51,7 +52,7 @@ import javax.sql.DataSource
  * Powered By Tencent
  */
 @Configuration
-@Import(DataSourceConfig::class)
+@Import(DataSourceConfig::class, DBBaseConfiguration::class)
 class JooqConfiguration {
 
     @Value("\${spring.datasource.misc.pkgRegex:}")
@@ -67,7 +68,7 @@ class JooqConfiguration {
     fun dslContext(
         configurationMap: Map<String?, DefaultConfiguration?>,
         injectionPoint: InjectionPoint
-    ): DSLContext {
+    ): DSLContext? {
         val annotatedElement: AnnotatedElement = injectionPoint.annotatedElement
         if (Constructor::class.java.isAssignableFrom(annotatedElement::class.java)) {
             val declaringClass: Class<*> = (annotatedElement as Constructor<*>).declaringClass
@@ -75,9 +76,12 @@ class JooqConfiguration {
             val matchResult = pkgRegex.toRegex().find(packageName)
             if (matchResult != null) {
                 val configuration = configurationMap["${matchResult.groupValues[1]}JooqConfiguration"]
-                    ?: throw NoSuchBeanDefinitionException("no ${matchResult.groupValues[1]}JooqConfiguration")
-                LOG.info("dslContext_init|${matchResult.groupValues[1]}JooqConfiguration|${declaringClass.name}")
-                return DSL.using(configuration)
+                return if (configuration != null) {
+                    LOG.info("dslContext_init|${matchResult.groupValues[1]}JooqConfiguration|${declaringClass.name}")
+                    DSL.using(configuration)
+                } else {
+                    null
+                }
             }
         }
         return DSL.using(configurationMap["defaultJooqConfiguration"]!!)
@@ -86,96 +90,92 @@ class JooqConfiguration {
     @Bean
     fun processJooqConfiguration(
         @Qualifier("shardingDataSource")
-        processDataSource: DataSource
+        shardingDataSource: DataSource,
+        @Qualifier("bkJooqExecuteListenerProvider")
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
-        val configuration = DefaultConfiguration()
-        configuration.set(SQLDialect.MYSQL)
-        configuration.set(processDataSource)
-        configuration.settings().isRenderSchema = false
-        return configuration
+        return generateDefaultConfiguration(shardingDataSource, bkJooqExecuteListenerProvider)
     }
 
     @Bean
     fun projectJooqConfiguration(
         @Qualifier("projectDataSource")
-        projectDataSource: DataSource
+        projectDataSource: DataSource,
+        @Qualifier("bkJooqExecuteListenerProvider")
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
-        val configuration = DefaultConfiguration()
-        configuration.set(SQLDialect.MYSQL)
-        configuration.set(projectDataSource)
-        configuration.settings().isRenderSchema = false
-        return configuration
+        return generateDefaultConfiguration(projectDataSource, bkJooqExecuteListenerProvider)
     }
 
     @Bean
     fun repositoryJooqConfiguration(
         @Qualifier("repositoryDataSource")
-        repositoryDataSource: DataSource
+        repositoryDataSource: DataSource,
+        @Qualifier("bkJooqExecuteListenerProvider")
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
-        val configuration = DefaultConfiguration()
-        configuration.set(SQLDialect.MYSQL)
-        configuration.set(repositoryDataSource)
-        configuration.settings().isRenderSchema = false
-        return configuration
+        return generateDefaultConfiguration(repositoryDataSource, bkJooqExecuteListenerProvider)
     }
 
     @Bean
     fun dispatchJooqConfiguration(
         @Qualifier("dispatchDataSource")
-        dispatchDataSource: DataSource
+        dispatchDataSource: DataSource,
+        @Qualifier("bkJooqExecuteListenerProvider")
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
-        val configuration = DefaultConfiguration()
-        configuration.set(SQLDialect.MYSQL)
-        configuration.set(dispatchDataSource)
-        configuration.settings().isRenderSchema = false
-        return configuration
+        return generateDefaultConfiguration(dispatchDataSource, bkJooqExecuteListenerProvider)
     }
 
     @Bean
     fun pluginJooqConfiguration(
         @Qualifier("pluginDataSource")
-        pluginDataSource: DataSource
+        pluginDataSource: DataSource,
+        @Qualifier("bkJooqExecuteListenerProvider")
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
-        val configuration = DefaultConfiguration()
-        configuration.set(SQLDialect.MYSQL)
-        configuration.set(pluginDataSource)
-        configuration.settings().isRenderSchema = false
-        return configuration
+        return generateDefaultConfiguration(pluginDataSource, bkJooqExecuteListenerProvider)
     }
 
     @Bean
     fun qualityJooqConfiguration(
         @Qualifier("qualityDataSource")
-        qualityDataSource: DataSource
+        qualityDataSource: DataSource,
+        @Qualifier("bkJooqExecuteListenerProvider")
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
-        val configuration = DefaultConfiguration()
-        configuration.set(SQLDialect.MYSQL)
-        configuration.set(qualityDataSource)
-        configuration.settings().isRenderSchema = false
-        return configuration
+        return generateDefaultConfiguration(qualityDataSource, bkJooqExecuteListenerProvider)
     }
 
     @Bean
     fun artifactoryJooqConfiguration(
         @Qualifier("artifactoryDataSource")
-        artifactoryDataSource: DataSource
+        artifactoryDataSource: DataSource,
+        @Qualifier("bkJooqExecuteListenerProvider")
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
-        val configuration = DefaultConfiguration()
-        configuration.set(SQLDialect.MYSQL)
-        configuration.set(artifactoryDataSource)
-        configuration.settings().isRenderSchema = false
-        return configuration
+        return generateDefaultConfiguration(artifactoryDataSource, bkJooqExecuteListenerProvider)
     }
 
     @Bean
     fun environmentJooqConfiguration(
         @Qualifier("environmentDataSource")
-        environmentDataSource: DataSource
+        environmentDataSource: DataSource,
+        @Qualifier("bkJooqExecuteListenerProvider")
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+    ): DefaultConfiguration {
+        return generateDefaultConfiguration(environmentDataSource, bkJooqExecuteListenerProvider)
+    }
+
+    private fun generateDefaultConfiguration(
+        dataSource: DataSource,
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
         val configuration = DefaultConfiguration()
         configuration.set(SQLDialect.MYSQL)
-        configuration.set(environmentDataSource)
+        configuration.set(dataSource)
         configuration.settings().isRenderSchema = false
+        configuration.set(bkJooqExecuteListenerProvider)
         return configuration
     }
 }

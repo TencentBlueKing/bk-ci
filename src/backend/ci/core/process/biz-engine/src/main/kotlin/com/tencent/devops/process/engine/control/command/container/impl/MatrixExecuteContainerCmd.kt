@@ -40,8 +40,8 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCont
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
-import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import kotlin.math.max
@@ -172,7 +172,7 @@ class MatrixExecuteContainerCmd(
         if (fastKill) newActionType = ActionType.TERMINATE
         val maxConcurrency = min(
             matrixOption.maxConcurrency ?: PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT,
-            PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
+            PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
         )
         if (newActionType.isEnd()) {
             buildLogPrinter.addLine(
@@ -201,19 +201,28 @@ class MatrixExecuteContainerCmd(
             )
         }
 
-        // 实时刷新数据库状态
-        matrixOption.finishCount = finishContainerNum
-        matrixOption.totalCount = groupContainers.size
+        // 实时刷新数据库状态, 无变化则不需要刷数据库
+        var dataChange = false
+        if (matrixOption.finishCount != finishContainerNum) {
+            matrixOption.finishCount = finishContainerNum
+            dataChange = true
+        }
+        if (matrixOption.totalCount != groupContainers.size) {
+            matrixOption.totalCount = groupContainers.size
+            dataChange = true
+        }
 
-        pipelineContainerService.updateMatrixGroupStatus(
-            projectId = parentContainer.projectId,
-            buildId = parentContainer.buildId,
-            stageId = parentContainer.stageId,
-            buildStatus = commandContext.buildStatus,
-            matrixGroupId = parentContainer.containerId,
-            controlOption = parentContainer.controlOption!!.copy(matrixControlOption = matrixOption),
-            modelContainer = null
-        )
+        if (dataChange) {
+            pipelineContainerService.updateMatrixGroupStatus(
+                projectId = parentContainer.projectId,
+                buildId = parentContainer.buildId,
+                stageId = parentContainer.stageId,
+                buildStatus = commandContext.buildStatus,
+                matrixGroupId = parentContainer.containerId,
+                controlOption = parentContainer.controlOption!!.copy(matrixControlOption = matrixOption),
+                modelContainer = null
+            )
+        }
 
         // 如果有运行态,否则返回失败，如无失败，则返回取消，最后成功
         return running ?: fail ?: cancel ?: BuildStatus.SUCCEED

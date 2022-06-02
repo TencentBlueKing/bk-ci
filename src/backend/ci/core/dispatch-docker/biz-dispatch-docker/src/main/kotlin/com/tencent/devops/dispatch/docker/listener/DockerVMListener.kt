@@ -179,7 +179,7 @@ class DockerVMListener @Autowired constructor(
             )
 
             if (!result) {
-                pipelineDockerBuildDao.startBuild(
+                pipelineDockerBuildDao.saveBuildHistory(
                     dslContext = dslContext,
                     projectId = dispatchMessage.projectId,
                     pipelineId = dispatchMessage.pipelineId,

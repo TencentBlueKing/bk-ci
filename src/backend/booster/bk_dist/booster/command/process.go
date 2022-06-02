@@ -205,6 +205,16 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 		waitResourceSeconds = c.Int(FlagResourceTimeoutSecs)
 	}
 
+	useLocalCPUPercent := 0
+	if c.IsSet(FlagLocalIdleCPUPercent) {
+		useLocalCPUPercent = c.Int(FlagLocalIdleCPUPercent)
+	}
+
+	resIdleSecsForFree := 120
+	if c.IsSet(FlagResIdleSecsForFree) {
+		resIdleSecsForFree = c.Int(FlagResIdleSecsForFree)
+	}
+
 	// generate a new booster.
 	cmdConfig := dcType.BoosterConfig{
 		Type:      dcType.GetBoosterType(bt),
@@ -285,13 +295,17 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 				}
 				return 0
 			}(),
-			TotalSlots: c.Int(FlagMaxLocalTotalJobs),
-			PreSlots:   c.Int(FlagMaxLocalPreJobs),
-			ExeSlots:   c.Int(FlagMaxLocalExeJobs),
-			PostSlots:  c.Int(FlagMaxLocalPostJobs),
-			Sudo:       c.Bool(FlagSudoController),
-			NoWait:     c.Bool(FlagControllerNoWait),
-			RemainTime: remaintime,
+			TotalSlots:         c.Int(FlagMaxLocalTotalJobs),
+			PreSlots:           c.Int(FlagMaxLocalPreJobs),
+			ExeSlots:           c.Int(FlagMaxLocalExeJobs),
+			PostSlots:          c.Int(FlagMaxLocalPostJobs),
+			Sudo:               c.Bool(FlagSudoController),
+			NoWait:             c.Bool(FlagControllerNoWait),
+			RemainTime:         remaintime,
+			UseLocalCPUPercent: useLocalCPUPercent,
+			DisableFileLock:    c.Bool(FlagDisableFileLock),
+			AutoResourceMgr:    c.Bool(FlagAutoResourceMgr),
+			ResIdleSecsForFree: resIdleSecsForFree,
 		},
 	}
 

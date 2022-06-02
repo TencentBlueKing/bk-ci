@@ -222,6 +222,7 @@ class OpAtomServiceImpl @Autowired constructor(
             },
             recommendFlag = atomFeature?.recommendFlag,
             yamlFlag = atomFeature?.yamlFlag,
+            certificationFlag = atomFeature?.certificationFlag,
             publisher = atomRecord.publisher,
             visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(atomRecord.visibilityLevel as Int),
             privateReason = atomRecord.privateReason
@@ -274,7 +275,7 @@ class OpAtomServiceImpl @Autowired constructor(
                     atomId = atomId,
                     atomCode = atomCode,
                     version = atom.version,
-                    atomStatus = atom.atomStatus,
+                    atomStatus = atomStatus,
                     releaseType = releaseType,
                     repositoryHashId = atom.repositoryHashId,
                     branch = atom.branch

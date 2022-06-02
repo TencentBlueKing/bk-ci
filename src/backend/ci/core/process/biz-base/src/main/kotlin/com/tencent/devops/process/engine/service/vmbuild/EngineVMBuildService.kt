@@ -44,9 +44,12 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCas
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
@@ -57,11 +60,14 @@ import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
@@ -69,15 +75,13 @@ import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelineTaskPauseService
-import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.util.TaskUtils
+import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
-import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
@@ -85,9 +89,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 
-@Suppress("LongMethod", "LongParameterList", "ReturnCount", "TooManyFunctions")
+@Suppress("LongMethod", "LongParameterList", "ReturnCount", "TooManyFunctions", "MagicNumber")
 @Service
 class EngineVMBuildService @Autowired(required = false) constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -112,6 +117,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     companion object {
         private val LOG = LoggerFactory.getLogger(EngineVMBuildService::class.java)
         const val ENV_CONTEXT_KEY_PREFIX = "envs."
+        // 任务结束上报Key
+        private fun completeTaskKey(buildId: String, vmSeqId: String) = "build:$buildId:job:$vmSeqId:ending_task"
     }
 
     /**
@@ -150,11 +157,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             ?: throw NotFoundException("Fail to find build: buildId($buildId)")
         Preconditions.checkNotNull(buildInfo, NotFoundException("Pipeline build ($buildId) is not exist"))
-        LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
+        LOG.info("ENGINE|$buildId|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
         // var表中获取环境变量，并对老版本变量进行兼容
         val variables = buildVariableService.getAllVariable(projectId, buildId)
-
-        val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId)
+        val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
         val model = containerBuildDetailService.getBuildModel(projectId, buildId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
         var vmId = 1
@@ -195,6 +201,20 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                     name = env.key, version = env.value, os = c.baseOS.name.toLowerCase()
                                 ).data?.let { self -> envList.add(self) }
                             }
+
+                            // 设置Job环境变量customBuildEnv到variablesWithType和variables中
+                            // TODO 此处应收敛到variablesWithType或variables的其中一个
+                            c.customBuildEnv?.map { (t, u) ->
+                                val value = EnvUtils.parseEnv(u, contextMap)
+                                contextMap[t] = value
+                                BuildParameters(
+                                    key = t,
+                                    value = value,
+                                    valueType = BuildFormPropertyType.STRING,
+                                    readOnly = true
+                                )
+                            }?.let { self -> variablesWithType.addAll(self) }
+
                             Triple(envList, contextMap, timeoutMills)
                         }
                         is NormalContainer -> {
@@ -215,7 +235,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         vmSeqId = vmSeqId,
                         buildStatus = BuildStatus.SUCCEED
                     )
-
+                    // #5109 启动时先清空任务结束上报Key
+                    redisOperation.delete(key = completeTaskKey(buildId = buildId, vmSeqId = vmSeqId))
                     return BuildVariables(
                         buildId = buildId,
                         vmSeqId = vmSeqId,
@@ -235,7 +256,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 vmId++
             }
         }
-        LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START|j($vmSeqId)|$vmName|Not Found VMContainer")
+        LOG.info("ENGINE|$buildId|BUILD_VM_START|j($vmSeqId)|$vmName|Not Found VMContainer")
         throw NotFoundException("Fail to find the vm build container: j($vmSeqId) vmName($vmName)")
     }
 
@@ -254,6 +275,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 "$ENV_CONTEXT_KEY_PREFIX${it.key}" to EnvUtils.parseEnv(it.value, context)
             }.toMap())
         }
+
         if (matrixContext?.isNotEmpty() == true) context.putAll(matrixContext)
     }
 
@@ -278,7 +300,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             }
         }
 
-        LOG.info("ENGINE|$buildId|Agent|SETUP_VM_STATUS|j($vmSeqId)|${startUpVMTask?.taskId}|status=$buildStatus")
+        LOG.info("ENGINE|$buildId|SETUP_VM_STATUS|j($vmSeqId)|${startUpVMTask?.taskId}|status=$buildStatus")
         if (startUpVMTask == null) {
             return false
         }
@@ -363,7 +385,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             containerIdLock.lock()
             val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             if (buildInfo == null || buildInfo.status.isFinish()) {
-                LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId|$vmName|buildInfo ${buildInfo?.status}")
+                LOG.info("ENGINE|$buildId|BC_END|$projectId|j($vmSeqId|$vmName|buildInfo ${buildInfo?.status}")
                 return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
             val container = pipelineContainerService.getContainer(
@@ -373,7 +395,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 containerId = vmSeqId
             )
             if (container == null || container.status.isFinish()) {
-                LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId)|container ${container?.status}")
+                LOG.info("ENGINE|$buildId|BC_END|$projectId|j($vmSeqId)|container ${container?.status}")
                 return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
 
@@ -394,14 +416,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     }
 
     private fun claim(task: PipelineBuildTask, buildId: String, userId: String, vmSeqId: String): BuildTask {
-        LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_ING|j($vmSeqId)|[${task.taskId}-${task.taskName}]")
+        LOG.info("ENGINE|$buildId|BC_ING|${task.projectId}|j($vmSeqId)|[${task.taskId}-${task.taskName}]")
         return when {
             task.status == BuildStatus.QUEUE -> { // 初始化状态，表明任务还未准备好
-                LOG.info("ENGINE|$buildId|taskId=${task.taskId}|name=${task.taskName}|NOT_READY, WAIT!")
+                LOG.info("ENGINE|$buildId|BC_QUEUE|${task.projectId}|j($vmSeqId)|${task.taskId}|${task.taskName}")
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
             }
             task.taskAtom.isNotBlank() -> { // 排除非构建机的插件任务 继续等待直到它完成
-                LOG.info("ENGINE|$buildId|taskId=${task.taskId}|taskAtom=${task.taskAtom}|NOT VM TASK, SKIP!")
+                LOG.info("ENGINE|$buildId|BC_NOT_VM|${task.projectId}|j($vmSeqId)|${task.taskId}|${task.taskName}")
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
             }
             task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) -> { // 全部完成了
@@ -411,7 +433,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             pipelineTaskService.isNeedPause(taskId = task.taskId, buildId = task.buildId, taskRecord = task) -> {
                 // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
                 pipelineTaskService.executePause(taskId = task.taskId, buildId = task.buildId, taskRecord = task)
-                LOG.info("ENGINE|$buildId|taskId=${task.taskId}|taskAtom=${task.taskAtom} cfg pause, shutdown agent")
+                LOG.info("ENGINE|$buildId|BC_PAUSE|${task.projectId}|j($vmSeqId)|${task.taskId}|${task.taskAtom}")
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStatusBroadCastEvent(
                         source = "TaskPause-${task.containerId}-${task.buildId}",
@@ -425,6 +447,17 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     )
                 )
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+            } // #5109 如果因平台异常原因导致上一个任务还处于运行中，结束处理不及时 ，需要等待
+            task.status.isRunning() && task.taskId == redisOperation.get(completeTaskKey(buildId, vmSeqId)) -> {
+                LOG.info("ENGINE|$buildId|BC_RUNNING|${task.projectId}|j($vmSeqId)|${task.taskId}|${task.status}")
+                buildLogPrinter.addYellowLine(
+                    buildId = buildId,
+                    message = "正在处理当前上报的任务, 请稍等。。。(Waiting please)",
+                    tag = task.taskId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
+                )
+                BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
             }
             else -> {
                 val allVariable = buildVariableService.getAllVariable(task.projectId, buildId)
@@ -494,18 +527,46 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         vmName: String,
         result: BuildTaskResult
     ) {
+        val tCompleteTaskKey = completeTaskKey(buildId, vmSeqId)
+        // #5109 提前做重复请求检测, 当弱网络或平台故障降级处理之前的请求较慢时，key仍然存在，需要拒绝客户端的重试产生的请求
+        if (redisOperation.get(key = tCompleteTaskKey) == result.taskId) {
+            LOG.warn("ENGINE|$buildId|BCT_DUPLICATE|$projectId|job#$vmSeqId|${result.taskId}")
+            return
+        }
+        // #5109 不需要Job级别的Redis锁保护的数据, 仅查询用
+        val buildTask = pipelineTaskService.getBuildTask(projectId, buildId, result.taskId)
+        val taskStatus = buildTask?.status
+        if (taskStatus == null) {
+            // 当上报的任务不存在，则直接返回
+            LOG.warn("ENGINE|$buildId|BCT_INVALID_TASK|$projectId|$vmName|${result.taskId}|")
+            return
+        }
+
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId) ?: run {
+            LOG.warn("ENGINE|BCT_NULL_BUILD|$buildId|$vmName|buildInfo is null")
+            return // 数据为空是平台异常，正常情况不应该出现
+        }
+        // #5109 提前判断，防止异常数据流入，后续各类Redis锁定出现无必要的额外开启。
+        if (taskStatus.isFinish() || buildInfo.isFinish()) {
+            LOG.warn("ENGINE|BCT_END|$buildId|$projectId|j($vmSeqId)|${result.taskId}|$taskStatus|${buildInfo.status}")
+            return
+        }
+
         val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {
             // 加锁防止和引擎并发改task状态的情况
             containerIdLock.lock()
+            // 锁定先 长过期保证降级
+            redisOperation.set(tCompleteTaskKey, result.taskId, expiredInSecond = TimeUnit.HOURS.toSeconds(5))
             executeCompleteTaskBus(
                 projectId = projectId,
                 buildId = buildId,
                 result = result,
-                vmName = vmName,
+                buildInfo = buildInfo,
                 vmSeqId = vmSeqId
             )
         } finally {
+            redisOperation.delete(key = tCompleteTaskKey)
             redisOperation.delete(SensitiveApiUtil.getRunningAtomCodeKey(buildId = buildId, vmSeqId = vmSeqId))
             containerIdLock.unlock()
         }
@@ -515,54 +576,38 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         projectId: String,
         buildId: String,
         result: BuildTaskResult,
-        vmName: String,
+        buildInfo: BuildInfo,
         vmSeqId: String
     ) {
-        val buildTask = pipelineTaskService.getBuildTask(projectId, buildId, result.taskId)
-        val taskStatus = buildTask?.status
-        if (taskStatus == null) {
-            // 当上报的任务不存在，则直接返回
-            LOG.warn("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|${result.taskId}|invalid")
-            return
-        }
-
-        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId) ?: run {
-            LOG.warn("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|buildInfo is null")
-            return // 数据为空是平台异常，正常情况不应该出现
-        }
-
         // 只要buildResult不为空，都写入到环境变量里面
         if (result.buildResult.isNotEmpty()) {
-            LOG.info("ENGINE|$buildId| Add the build result size(${result.buildResult.size}) to var")
+            LOG.info("ENGINE|$buildId|BCT_ADD_VAR|$projectId| vars=${result.buildResult.size}")
             try {
                 buildVariableService.batchUpdateVariable(
-                    projectId = buildInfo.projectId,
+                    projectId = projectId,
                     pipelineId = buildInfo.pipelineId, buildId = buildId, variables = result.buildResult
                 )
+                LOG.info("ENGINE|$buildId|BCT_ADD_VAR_DONE|$projectId")
                 writeRemark(result.buildResult, projectId, buildInfo.pipelineId, buildId, buildInfo.startUser)
             } catch (ignored: Exception) { // 防止因为变量字符过长而失败。
-                LOG.warn("ENGINE|$buildId| save var fail: ${ignored.message}", ignored)
+                LOG.warn("ENGINE|$buildId|BCT_ADD_VAR_FAIL|$projectId| save var fail: ${ignored.message}", ignored)
             }
-        }
-        if (taskStatus.isFinish()) {
-            // 当上报的任务状态已经结束，则直接返回
-            LOG.warn("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|${result.taskId}|finish")
-            return
         }
         val errorType = ErrorType.getErrorType(result.errorType)
         val buildStatus = getCompleteTaskBuildStatus(result, buildId, buildInfo)
         val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
-            projectId = buildInfo.projectId, buildId = buildId, taskId = result.elementId,
+            projectId = projectId, buildId = buildId, taskId = result.elementId,
             buildStatus = buildStatus, errorType = errorType, errorCode = result.errorCode,
-            errorMsg = result.message
+            errorMsg = result.message, taskVersion = result.elementVersion
         )
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
             pipelineTaskService.updateTaskStatusInfo(
-                transactionContext = null,
-                projectId = projectId,
-                buildId = buildId,
-                taskId = updateTaskStatusInfo.taskId,
-                taskStatus = updateTaskStatusInfo.buildStatus
+                updateTaskInfo = UpdateTaskInfo(
+                    projectId = projectId,
+                    buildId = buildId,
+                    taskId = updateTaskStatusInfo.taskId,
+                    taskStatus = updateTaskStatusInfo.buildStatus
+                )
             )
             if (!updateTaskStatusInfo.message.isNullOrBlank()) {
                 buildLogPrinter.addLine(
@@ -580,7 +625,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             completeTask = CompleteTask(
                 projectId = projectId, buildId = buildId, taskId = result.taskId,
                 userId = buildInfo.startUser, buildStatus = buildStatus,
-                errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
+                errorType = errorType, errorCode = result.errorCode, errorMsg = result.message,
+                platformCode = result.platformCode, platformErrorCode = result.platformErrorCode
             )
         )
 
@@ -613,7 +659,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         sendElementData(projectId = projectId, buildId = buildId, result = result)
 
         LOG.info(
-            "ENGINE|$buildId|Agent|END_TASK|j($vmSeqId)|${result.taskId}|$buildStatus|" +
+            "ENGINE|$buildId|BCT_DONE|$projectId|j($vmSeqId)|${result.taskId}|$buildStatus|" +
                 "type=$errorType|code=${result.errorCode}|msg=${result.message}]"
         )
         buildLogPrinter.stopLog(buildId = buildId, tag = result.elementId, jobId = result.containerId ?: "")
@@ -640,15 +686,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 ) -> {
                     BuildStatus.RETRY
                 }
-                result.errorCode == ErrorCode.USER_TASK_OUTTIME_LIMIT -> {
-                    BuildStatus.EXEC_TIMEOUT
-                }
                 else -> { // 记录错误插件信息
                     pipelineTaskService.createFailTaskVar(
                         buildId = buildId, projectId = buildInfo.projectId,
                         pipelineId = buildInfo.pipelineId, taskId = result.taskId
                     )
-                    BuildStatus.FAILED
+                    if (result.errorCode == ErrorCode.USER_TASK_OUTTIME_LIMIT) BuildStatus.EXEC_TIMEOUT
+                    else BuildStatus.FAILED
                 }
             }
         }
@@ -665,7 +709,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 .firstOrNull { it.taskId == VMUtils.genEndPointTaskId(it.taskSeq) }
 
             return if (task == null || task.status.isFinish()) {
-                LOG.warn("ENGINE|$buildId|Agent|$vmName|END_JOB|j($vmSeqId)|Task[${task?.taskName}] ${task?.status}")
+                LOG.warn("ENGINE|$buildId|BE_END|$projectId|$vmName|j($vmSeqId)|[${task?.taskName}] ${task?.status}")
                 false
             } else {
                 pipelineRuntimeService.completeClaimBuildTask(
@@ -678,23 +722,30 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     ),
                     endBuild = true
                 )
-                LOG.info("ENGINE|$buildId|Agent|END_JOB|${task.stageId}|j($vmSeqId)|${task.taskId}|${task.taskName}")
+                LOG.info("ENGINE|$buildId|BE_DONE|${task.stageId}|j($vmSeqId)|${task.taskId}|${task.taskName}")
                 buildExtService.endBuild(task)
                 true
             }
         } finally {
+            redisOperation.delete(key = completeTaskKey(buildId = buildId, vmSeqId = vmSeqId))
             containerIdLock.unlock()
         }
     }
 
     fun heartbeat(buildId: String, vmSeqId: String, vmName: String): Boolean {
-        LOG.info("ENGINE|$buildId|Agent|HEART_BEAT|j($vmSeqId)|$vmName")
+        LOG.info("ENGINE|$buildId|HEART_BEAT|j($vmSeqId)|$vmName")
         buildingHeartBeatUtils.addHeartBeat(buildId = buildId, vmSeqId = vmSeqId, time = System.currentTimeMillis())
         return true
     }
 
-    fun heartbeatV1(projectId: String, buildId: String, vmSeqId: String, vmName: String): HeartBeatInfo {
-        LOG.info("ENGINE|$projectId|$buildId|Agent|HEART_BEAT|j($vmSeqId)|$vmName")
+    fun heartbeatV1(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        executeCount: Int? = null
+    ): HeartBeatInfo {
+        LOG.info("ENGINE|$projectId|$buildId|HEART_BEAT|j($vmSeqId)|$vmName|$executeCount")
         buildingHeartBeatUtils.addHeartBeat(buildId = buildId, vmSeqId = vmSeqId, time = System.currentTimeMillis())
         var cancelTaskIds: MutableSet<String>? = null
         val key = TaskUtils.getCancelTaskIdRedisKey(buildId, vmSeqId)
@@ -738,7 +789,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 monitorDataMap = result.monitorData ?: emptyMap()
             )
         } catch (ignored: Throwable) {
-            LOG.warn("ENGINE|$buildId|Agent|MEASURE|j(${result.containerId})|${result.taskId}|error=$ignored")
+            LOG.warn("ENGINE|$buildId|MEASURE|j(${result.containerId})|${result.taskId}|error=$ignored")
         }
     }
 
@@ -749,6 +800,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         task?.run {
             errorType?.also { // #5046 增加错误信息
                 val errMsg = "Error: Process completed with exit code $errorCode: $errorMsg. " +
+                    (errorCode?.let {
+                        "\n${MessageCodeUtil.getCodeLanMessage(messageCode = errorCode.toString())}\n"
+                    }
+                        ?: "") +
                     when (errorType) {
                         ErrorType.USER -> "Please check your input or service."
                         ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."
@@ -785,6 +840,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 errorMsg = errorInfo.errorMsg
             )
         } finally {
+            redisOperation.delete(key = completeTaskKey(buildId = buildId, vmSeqId = vmSeqId))
             redisOperation.delete(SensitiveApiUtil.getRunningAtomCodeKey(buildId = buildId, vmSeqId = vmSeqId))
             containerIdLock.unlock()
         }
@@ -803,10 +859,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 LOG.info("writeRemark by setEnv $projectId|$pipelineId|$buildId|$remark")
                 pipelineRuntimeService.updateBuildRemark(projectId, pipelineId, buildId, remark)
                 pipelineEventDispatcher.dispatch(
-                        PipelineBuildWebSocketPushEvent(
-                                source = "writeRemark", projectId = projectId, pipelineId = pipelineId,
-                                userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
-                        )
+                    PipelineBuildWebSocketPushEvent(
+                        source = "writeRemark", projectId = projectId, pipelineId = pipelineId,
+                        userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
+                    )
                 )
             }
         }

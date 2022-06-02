@@ -112,7 +112,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         pipeline: Model,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        updateLastModifyUser: Boolean?
     ): Result<Boolean> {
         checkParams(userId, projectId)
         pipelineInfoFacadeService.editPipeline(
@@ -121,7 +122,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             model = pipeline,
             channelCode = channelCode,
-            checkPermission = ChannelCode.isNeedAuth(channelCode)
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
+            updateLastModifyUser = updateLastModifyUser
         )
         return Result(true)
     }
@@ -251,6 +253,23 @@ class ServicePipelineResourceImpl @Autowired constructor(
         ))
     }
 
+    override fun getSettingWithPermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode,
+        checkPermission: Boolean
+    ): Result<PipelineSetting> {
+        checkParams(userId, projectId)
+        return Result(data = pipelineSettingFacadeService.userGetSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = channelCode,
+            checkPermission = checkPermission
+        ))
+    }
+
     override fun getBatch(
         userId: String,
         projectId: String,
@@ -271,11 +290,17 @@ class ServicePipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        updateLastModifyUser: Boolean?,
         setting: PipelineSetting
     ): Result<Boolean> {
         checkProjectId(projectId)
         checkPipelineId(pipelineId)
-        pipelineSettingFacadeService.saveSetting(userId = userId, setting = setting, checkPermission = true)
+        pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            setting = setting,
+            checkPermission = true,
+            updateLastModifyUser = updateLastModifyUser
+        )
         return Result(true)
     }
 

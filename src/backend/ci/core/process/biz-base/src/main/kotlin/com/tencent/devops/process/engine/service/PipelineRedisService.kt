@@ -28,20 +28,20 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.common.Timeout
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class PipelineRedisService @Autowired constructor(
     val redisOperation: RedisOperation
 ) {
     fun getBuildRestartValue(buildId: String): String? {
-        return redisOperation.get("$RESTART_KEY$buildId") ?: null
+        return redisOperation.get("$RESTART_KEY$buildId")
     }
 
     fun setBuildRestartValue(buildId: String) {
-        return redisOperation.set("$RESTART_KEY$buildId", "run", TimeUnit.MINUTES.toSeconds(900))
+        redisOperation.set("$RESTART_KEY$buildId", "run", Timeout.transMinuteTimeoutToSec(Timeout.DEFAULT_TIMEOUT_MIN))
     }
 
     fun deleteRestartBuild(buildId: String) {

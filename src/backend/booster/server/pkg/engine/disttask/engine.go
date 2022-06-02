@@ -10,6 +10,7 @@
 package disttask
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -345,21 +346,10 @@ func (de *disttaskEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 	task.InheritSetting.ExtraProjectSetting = project.Extra
 	task.InheritSetting.ExtraWorkerSetting = worker.Extra
 
-	// resource manager
-	cpuPerInstance, memPerInstance := de.getResource(tb.Client.QueueName)
-	task.Operator.ClusterID = de.getClusterID(tb.Client.QueueName)
 	task.Operator.AppName = task.ID
 	task.Operator.Namespace = EngineName
 	task.Operator.Image = worker.Image
-	// if ban resources, then request and least instance is 0
-	if !task.InheritSetting.BanAllBooster {
-		task.Operator.RequestInstance = (int(task.InheritSetting.RequestCPU) + int(cpuPerInstance) - 1) /
-			int(cpuPerInstance)
-		task.Operator.LeastInstance = (int(task.InheritSetting.LeastCPU) + int(cpuPerInstance) - 1) /
-			int(cpuPerInstance)
-	}
-	task.Operator.RequestCPUPerUnit = cpuPerInstance
-	task.Operator.RequestMemPerUnit = memPerInstance
+	de.setTaskIstResource(task, tb.Client.QueueName)
 	task.Operator.RequestProcessPerUnit = ev.ProcessPerUnit
 
 	if err = de.updateTask(task); err != nil {
@@ -368,6 +358,22 @@ func (de *disttaskEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 	}
 	blog.Infof("engine(%s) success to create task(%s)", EngineName, tb.ID)
 	return nil
+}
+
+func (de *disttaskEngine) setTaskIstResource(task *distTask, queueName string) {
+	// resource manager
+	cpuPerInstance, memPerInstance := de.getResource(queueName)
+	task.Operator.ClusterID = de.getClusterID(queueName)
+	// if ban resources, then request and least instance is 0
+	if !task.InheritSetting.BanAllBooster {
+		task.Operator.RequestInstance = (int(task.InheritSetting.RequestCPU) + int(cpuPerInstance) - 1) /
+			int(cpuPerInstance)
+		task.Operator.LeastInstance = (int(task.InheritSetting.LeastCPU) + int(cpuPerInstance) - 1) /
+			int(cpuPerInstance)
+	}
+
+	task.Operator.RequestCPUPerUnit = cpuPerInstance
+	task.Operator.RequestMemPerUnit = memPerInstance
 }
 
 func (de *disttaskEngine) getClusterID(queueName string) string {
@@ -382,13 +388,20 @@ func (de *disttaskEngine) getClusterID(queueName string) string {
 }
 
 func (de *disttaskEngine) getResource(queueName string) (float64, float64) {
+	istKey := config.InstanceType{
+		Platform: getPlatform(queueName),
+		Group:    getQueueNamePure(queueName),
+	}
 	switch getQueueNameHeader(queueName) {
 	case queueNameHeaderK8SDefault, queueNameHeaderK8SWin:
-		return de.conf.K8SCRMCPUPerInstance, de.conf.K8SCRMMemPerInstance
+		ist := de.k8sCrmMgr.GetInstanceType(istKey.Platform, istKey.Group)
+		return ist.CPUPerInstance, ist.MemPerInstance
 	case queueNameHeaderVMMac:
-		return de.conf.VMCRMCPUPerInstance, de.conf.VMCRMMemPerInstance
+		ist := de.dcMacMgr.GetInstanceType(istKey.Platform, istKey.Group)
+		return ist.CPUPerInstance, ist.MemPerInstance
 	default:
-		return de.conf.CRMCPUPerInstance, de.conf.CRMMemPerInstance
+		ist := de.crmMgr.GetInstanceType(istKey.Platform, istKey.Group)
+		return ist.CPUPerInstance, ist.MemPerInstance
 	}
 }
 
@@ -567,6 +580,8 @@ func (de *disttaskEngine) launchCRMTask(task *distTask, tb *engine.TaskBasic, qu
 		return err
 	}
 
+	de.setTaskIstResource(task, queueName)
+
 	err = crmMgr.Launch(tb.ID, pureQueueName, func(availableInstance int) (int, error) {
 		if availableInstance < task.Operator.LeastInstance {
 			return 0, engine.ErrorNoEnoughResources
@@ -725,10 +740,8 @@ func (de *disttaskEngine) launchCRMDone(task *distTask) (bool, error) {
 
 	task.Workers = workerList
 	task.Stats.WorkerCount = len(task.Workers)
-
 	task.Stats.CPUTotal = float64(task.Stats.WorkerCount) * task.Operator.RequestCPUPerUnit
 	task.Stats.MemTotal = float64(task.Stats.WorkerCount) * task.Operator.RequestMemPerUnit
-
 	if err = de.updateTask(task); err != nil {
 		blog.Errorf("engine(%s) try checking service info, update crm task(%s) failed: %v",
 			EngineName, task.ID, err)
@@ -829,7 +842,10 @@ func (de *disttaskEngine) releaseDirectTask(task *distTask) error {
 
 func (de *disttaskEngine) releaseCRMTask(task *distTask) error {
 	crmMgr := de.getCrMgr(task.InheritSetting.QueueName)
-
+	if crmMgr == nil {
+		blog.Errorf("engine(%s) try releasing crm task, release task(%s) failed: crmMgr is null", EngineName, task.ID)
+		return errors.New("crmMgr is null")
+	}
 	blog.Infof("engine(%s) try to release crm task(%s)", EngineName, task.ID)
 	if err := crmMgr.Release(task.ID); err != nil && err != crm.ErrorResourceNoExist {
 		blog.Errorf("engine(%s) try releasing crm task, release task(%s) failed: %v", EngineName, task.ID, err)

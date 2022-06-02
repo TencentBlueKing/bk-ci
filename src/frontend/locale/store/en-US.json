@@ -56,7 +56,13 @@
     "点击查看YAML片段": "Click to view YAML fragment",
     "YAML片段": "YAML fragment",
     "YAMLV1": "YAML V1 fragment",
-    "YAMLV2": "YAML V2 fragment",
+    "YAMLV2": "YAML fragment",
+    "输出参数": "Output parameter",
+    "指标说明": "Indicators Description",
+    "指标中文名": "Indicators Chinese name",
+    "说明：": "Usage: ",
+    "说明文案": "reference by expression ${{ steps.<step-id>.outputs.<output-var-name> }}",
+    "触发器说明文案": "Accessed through the expression ${{ variable name }}",
     "点击申请成为协作者": "Click Apply to become a collaborator",
     "推荐使用": "Recommended Use",
     "YAML可用": "YAML is available",
@@ -604,5 +610,6 @@
     "hisUpgradeTips": "Please be cautious and correct compatibility issues based on the latest version of the corresponding major version. It is not recommended to add/delete input parameters in this scenario to avoid abnormal execution of the pipeline using the specified major version.latest after release.",
     "分支": "Branch",
     "历史大版本问题修复": "Historical major version problem fix",
-    "当历史大版本下发现 bug 时，使用此方式进行 fix。不建议在此场景下新增/删除入参。": "When a bug is found in a major historical version, use this method to fix it. It is not recommended to add/delete input parameters in this scenario."
+    "当历史大版本下发现 bug 时，使用此方式进行 fix。不建议在此场景下新增/删除入参。": "When a bug is found in a major historical version, use this method to fix it. It is not recommended to add/delete input parameters in this scenario.",
+    "镜像Tag": "Image Tag"
 }
