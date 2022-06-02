@@ -172,7 +172,7 @@ class StreamYamlBuild @Autowired constructor(
                 null
             }
         } catch (e: Throwable) {
-            logger.warn("Fail to start the git ci build(${action.format()})", e)
+            logger.warn("Fail to start the stream build(${action.format()})", e)
             val (block, message, reason) = when (e) {
                 is JsonProcessingException, is ParamBlankException, is CustomException -> {
                     Triple(
