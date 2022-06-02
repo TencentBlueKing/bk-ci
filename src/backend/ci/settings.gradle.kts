@@ -85,6 +85,12 @@ include(":core:common:common-dispatch-sdk")
 include(":core:common:common-webhook:api-common-webhook")
 include(":core:common:common-webhook:biz-common-webhook")
 
+include(":core:common:common-third-sdk")
+include(":core:common:common-third-sdk:common-sdk-util")
+include("core:common:common-third-sdk:common-tapd-sdk")
+include("core:common:common-third-sdk:common-github-sdk")
+include("core:common:common-third-sdk:common-tgit-sdk")
+
 include(":core:project")
 include(":core:project:api-project")
 include(":core:project:api-project-sample")
