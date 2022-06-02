@@ -34,10 +34,8 @@ import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import org.aspectj.lang.JoinPoint
-import org.aspectj.lang.annotation.After
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before
-import org.aspectj.lang.annotation.Pointcut
 
 import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
@@ -58,11 +56,7 @@ class ApiAspect(
     }
 
     @Value("\${openapi:verify:project: #{null}}")
-    val verifyProjectFlag: Boolean = false
-
-    @Pointcut("execution(public * com.tencent.devops.openapi.resources.apigw.*(..))")
-    fun openApi() {
-    }
+    val verifyProjectFlag: String = "false"
 
     /**
      * 前置增强：目标方法执行之前执行
@@ -76,7 +70,7 @@ class ApiAspect(
 //                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
 //                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..)) || @annotation(Path)"
 //    ) // 所有controller包下面的所有方法的所有参数
-    @Before("execution(public * com.tencent.devops.openapi.resources.apigw.*(..))")
+    @Before("execution(* com.tencent.devops.openapi.resources.apigw..*.*(..))")
     @Suppress("ComplexMethod")
     fun beforeMethod(jp: JoinPoint) {
         if (!apiGatewayUtil.isAuth()) {
@@ -123,7 +117,7 @@ class ApiAspect(
             // 设置开关 若打开，则直接报错。否则只打日志标记
             if (ignoreProjectId == null || !ignoreProjectId.ignore) {
                 logger.warn("${(jp.signature as MethodSignature)} miss projectId and miss @IgnoreProjectId")
-                if (verifyProjectFlag) {
+                if (verifyProjectFlag.contains("true")) {
                     throw PermissionForbiddenException(
                         message = "interface miss projectId and miss @IgnoreProjectId"
                     )
@@ -159,7 +153,7 @@ class ApiAspect(
 //                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
 //                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..))"
 //    ) // 所有controller包下面的所有方法的所有参数
-    @After("openApi()")
+    @Before("execution(* com.tencent.devops.openapi.resources.apigw..*.*(..))")
     fun afterMethod() {
         logger.info("openAPI after method")
         // 删除线程ThreadLocal数据,防止线程池复用。导致流量指向被污染
