@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import DoubleYAreaLine, { IData as IRunTimeData } from '@/components/charts/double-y-area-line';
-import Bar, { IData as IRunFailData } from '@/components/charts/bar';
+import DoubleYAreaLine, { IData as IRunTimeDate } from '@/components/charts/double-y-area-line';
+import Bar, { IData } from '@/components/charts/bar';
 import {
   ref,
   watch,
@@ -10,11 +10,17 @@ import {
   sharedProps,
 } from '../common/props-type';
 import http from '@/http/api';
+import { useRouter } from 'vue-router';
+
+interface IRunFailData extends IData {
+  errorType: string | number
+}
+
 // 状态
 const props = defineProps(sharedProps);
 const isLoading = ref(false);
 const runTimeTrend = ref<{
-  data: Array<IRunTimeData>,
+  data: Array<IRunTimeDate>,
   labels: Array<string>
 }>({
   data: [
@@ -41,6 +47,28 @@ const runFailTrend = ref<{
   labels: [],
 });
 const barColorList = ['#FF5656', '#FF9700', '#FFD695', '#A73AFF'];
+const router = useRouter()
+
+const handleRunTimePointClick = ([{ datasetIndex, index }]) => {
+  if (datasetIndex === 1) {
+    router.push({
+      name: 'FailAnalysis',
+      query: {
+        time: runTimeTrend.value.labels[index]
+      }
+    })
+  }
+}
+
+const handleRunFailPointClick = ([{ datasetIndex, index }]) => {
+  router.push({
+    name: 'FailAnalysis',
+    query: {
+      errorType: runFailTrend.value.data[datasetIndex].errorType,
+      time: runFailTrend.value.labels[index]
+    }
+  })
+}
 
 const init = () => {
   isLoading.value = true;
@@ -54,8 +82,8 @@ const init = () => {
       runFailData,
     ]) => {
       pipelineTrendInfo.forEach((runTime) => {
-        runTimeTrend.value.data[0].list.push(runTime.totalAvgCostTime);
-        runTimeTrend.value.data[1].list.push(runTime.failAvgCostTime);
+        runTimeTrend.value.data[0].list.push(runTime.totalExecuteCount);
+        runTimeTrend.value.data[1].list.push(runTime.failedExecuteCount);
         runTimeTrend.value.labels.push(runTime.statisticsTime);
       });
 
@@ -63,6 +91,7 @@ const init = () => {
         runFailTrend.value.data.push({
           list: runFail.failInfos.map(failInfo => failInfo.errorCount),
           label: runFail.name,
+          errorType: runFail.errorType,
           backgroundColor: barColorList[index],
         });
         runFailTrend.value.labels = runFail.failInfos.map(failInfo => failInfo.statisticsTime);
@@ -91,6 +120,7 @@ onBeforeMount(init);
         :data="runTimeTrend.data"
         :labels="runTimeTrend.labels"
         :titles="['Total runs', 'Failed runs']"
+        @point-click="handleRunTimePointClick"
       />
     </section>
     <section class="run-trend-card overview-card">
@@ -99,6 +129,7 @@ onBeforeMount(init);
         :data="runFailTrend.data"
         :labels="runFailTrend.labels"
         title="Run times"
+        @point-click="handleRunFailPointClick"
       />
     </section>
   </bk-loading>

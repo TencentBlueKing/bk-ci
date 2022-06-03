@@ -3,18 +3,47 @@ import {
   ref,
   onMounted,
   watch,
+  h,
 } from 'vue';
 import http from '@/http/api';
 import {
   sharedProps,
 } from '../common/props-type';
+import {
+  useRouter
+} from 'vue-router';
 
 const props = defineProps(sharedProps);
 const isLoading = ref(false);
+const router = useRouter()
 const columns = [
   {
     label: 'Pipeline',
     field: 'pipelineName',
+    render (cell, row) {
+      return h(
+        'span',
+        {
+          style: {
+            cursor: 'pointer',
+            color: '#3a84ff',
+          },
+          onClick () {
+            router.push({
+              name: 'PluginRunAnalysis',
+              query: {
+                pipelineId: row.pipelineId,
+              },
+            });
+          },
+        },
+        [
+          cell,
+          ' #',
+          row.buildNum
+        ]
+      );
+    },
   },
   {
     label: 'Branch',
@@ -47,6 +76,10 @@ const pagination = ref({
   count: 0,
   limit: 20,
 });
+
+const goToPipelineDetail = (row) => {
+  console.log(row, arguments);
+}
 
 const handlePageChange = (current) => {
   pagination.value.current = current;
@@ -98,7 +131,8 @@ onMounted(getData);
       :data="tableData"
       :pagination="pagination"
       @page-value-change="handlePageChange"
-      @page-limit-change="handlePageLimitChange">
+      @page-limit-change="handlePageLimitChange"
+    >
     </bk-table>
   </bk-loading>
 </template>

@@ -7,9 +7,13 @@ import AnalysisTable from './children/analysis-table.vue';
 import {
   ref,
 } from 'vue';
+import {
+  useRoute,
+} from 'vue-router';
 
+const route = useRoute();
 const status = ref({
-  pipelineIds: [],
+  pipelineIds: <any[]>[route.query.pipelineId].filter(v => v),
   pipelineLabelIds: [],
   startTime: '',
   endTime: '',

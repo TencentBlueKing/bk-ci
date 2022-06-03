@@ -8,6 +8,9 @@ import http from '@/http/api';
 import {
   sharedProps,
 } from '../common/props-type';
+import {
+  useRouter,
+} from 'vue-router';
 
 const props = defineProps(sharedProps);
 const isLoading = ref(false);
@@ -18,6 +21,7 @@ const pagination = ref({
   count: 0,
   limit: 20,
 });
+const router = useRouter()
 
 const handlePageChange = (current) => {
   pagination.value.current = current;
@@ -28,6 +32,15 @@ const handlePageLimitChange = (limit) => {
   pagination.value.limit = limit;
   getData();
 };
+
+const handleRowClick = (e, row) => {
+  router.push({
+    name: 'PluginFailAnalysis',
+    query: {
+      pipelineId: row.pipelineId,
+    },
+  })
+}
 
 const getData = () => {
   isLoading.value = true;
@@ -67,14 +80,15 @@ onMounted(getData);
     class="overview-card mt20"
     :loading="isLoading"
   >
-    <h3 class="g-card-title">Details</h3>
+    <h3 class="g-card-title">Plugin stat</h3>
     <bk-table
       class="analysis-table"
       :columns="columns"
       :data="tableData"
       :pagination="pagination"
       @page-value-change="handlePageChange"
-      @page-limit-change="handlePageLimitChange">
+      @page-limit-change="handlePageLimitChange"
+      @row-click="handleRowClick">
     </bk-table>
   </bk-loading>
 </template>

@@ -6,13 +6,17 @@ import ErrorTable from './children/error-table.vue';
 import {
   ref,
 } from 'vue';
+import {
+  useRoute,
+} from 'vue-router';
 
+const route = useRoute();
 const status = ref({
   pipelineIds: [],
   pipelineLabelIds: [],
-  startTime: '',
-  endTime: '',
-  errorTypes: [],
+  startTime: <string>route.query.time || '',
+  endTime: <string>route.query.time || '',
+  errorTypes: <any[]>[route.query.errorType].filter(v => v),
 });
 
 const handleFilterChange = (newStatus) => {

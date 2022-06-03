@@ -3,6 +3,7 @@ import {
   ref,
   onMounted,
   watch,
+  h,
 } from 'vue';
 import {
   sharedProps,
@@ -22,11 +23,16 @@ interface IShowTime {
 }
 
 interface IData {
+  successExecuteCount: number,
+  totalExecuteCount: number,
+  totalCostTime: IShowTime,
   totalSuccessRate: number,
   totalAvgCostTime: IShowTime,
   resolvedDefectNum: number,
   repoCodeccAvgScore: number,
   qualityInterceptionRate: number,
+  interceptionCount: number,
+  totalQualityExecuteCount: number,
   turboSaveTime: IShowTime
 }
 
@@ -34,6 +40,11 @@ interface IData {
 const props = defineProps(sharedProps);
 const isLoading = ref(false);
 const data = ref<IData>({
+  successExecuteCount: 0,
+  totalExecuteCount: 0,
+  totalCostTime: {
+    s: 0,
+  },
   totalSuccessRate: 0,
   totalAvgCostTime: {
     s: 0,
@@ -41,6 +52,8 @@ const data = ref<IData>({
   resolvedDefectNum: 0,
   repoCodeccAvgScore: 0,
   qualityInterceptionRate: 0,
+  interceptionCount: 0,
+  totalQualityExecuteCount: 0,
   turboSaveTime: {
     s: 0,
   },
@@ -77,17 +90,30 @@ const init = () => {
         turboInfo,
       },
     ]) => {
+      data.value.successExecuteCount = pipelineSumInfoDO.successExecuteCount;
+      data.value.totalExecuteCount = pipelineSumInfoDO.totalExecuteCount;
+      data.value.totalCostTime = timeFormatter(pipelineSumInfoDO.totalCostTime);
       data.value.totalSuccessRate = pipelineSumInfoDO.totalSuccessRate;
       data.value.totalAvgCostTime = timeFormatter(pipelineSumInfoDO.totalAvgCostTime);
       data.value.resolvedDefectNum = codeCheckInfo.resolvedDefectNum;
       data.value.repoCodeccAvgScore = codeCheckInfo.repoCodeccAvgScore;
       data.value.qualityInterceptionRate = qualityInfo.qualityInterceptionRate;
       data.value.turboSaveTime = timeFormatter(turboInfo.turboSaveTime);
+      data.value.interceptionCount = qualityInfo.interceptionCount
+      data.value.totalQualityExecuteCount = qualityInfo.totalExecuteCount
     })
     .finally(() => {
       isLoading.value = false;
     });
 };
+
+const RenderEmptyNodeIfNone = ({ data }, { slots }) => {
+  if ([0, undefined, null].includes(data)) {
+    return h('span', { class: 'card-num' }, '--');
+  } else {
+    return slots.default();
+  }
+}
 
 // 触发
 watch(
@@ -107,33 +133,42 @@ onMounted(init);
       <section class="card-num-group">
         <section class="card-detail">
           <h5 class="card-num">
-            {{ data.totalSuccessRate }}<span class="card-num-sub">%</span>
+            <render-empty-node-if-none :data="data.totalSuccessRate">
+              {{ data.totalSuccessRate }}<span class="card-num-sub">%</span>
+            </render-empty-node-if-none>
           </h5>
           <span class="card-desc">
             Success rate
             <bk-popover placement="top">
               <info-line />
               <template #content>
-                Success: 98 /  No. of total runs: 101
+                Success: {{ data.successExecuteCount || '--' }} /  No. of total runs: {{ data.totalExecuteCount || '--' }}
               </template>
             </bk-popover>
           </span>
         </section>
         <section class="card-detail">
           <h5 class="card-num">
-            {{ data.totalAvgCostTime.h }}<!--
-            --><span v-if="data.totalAvgCostTime.h" class="card-num-sub">h</span><!--
-            -->{{ data.totalAvgCostTime.m }}<!--
-            --><span v-if="data.totalAvgCostTime.m" class="card-num-sub">m</span><!--
-            -->{{ data.totalAvgCostTime.s }}<!--
-            --><span v-if="data.totalAvgCostTime.s" class="card-num-sub">s</span>
+            <render-empty-node-if-none :data="data.totalAvgCostTime.s">
+              {{ data.totalAvgCostTime.h }}<!--
+              --><span v-if="data.totalAvgCostTime.h" class="card-num-sub">h</span><!--
+              -->{{ data.totalAvgCostTime.m }}<!--
+              --><span v-if="data.totalAvgCostTime.m" class="card-num-sub">m</span><!--
+              -->{{ data.totalAvgCostTime.s }}<!--
+              --><span v-if="data.totalAvgCostTime.s" class="card-num-sub">s</span>
+            </render-empty-node-if-none>
           </h5>
           <span class="card-desc">
             Average time
             <bk-popover placement="top">
               <info-line />
               <template #content>
-                Total time: 8h 59m / No. of total runs : 98
+                Total time: {{ data.totalCostTime.h }}<!--
+                --><span v-if="data.totalCostTime.h" class="card-num-sub">h</span><!--
+                -->{{ data.totalCostTime.m }}<!--
+                --><span v-if="data.totalCostTime.m" class="card-num-sub">m</span><!--
+                -->{{ data.totalCostTime.s || '--' }}<!--
+                --><span v-if="data.totalCostTime.s" class="card-num-sub">s</span> / No. of total runs : {{ data.totalExecuteCount || '--' }}
               </template>
             </bk-popover>
           </span>
@@ -144,12 +179,14 @@ onMounted(init);
       <h3 class="g-card-title">Code check</h3>
       <section class="card-num-group">
         <section class="card-detail">
-          <bk-rate
-            :editable="false"
-            :model-value="data.repoCodeccAvgScore"
-            size="large"
-            class="card-num"
-          />
+          <render-empty-node-if-none :data="data.repoCodeccAvgScore">
+            <bk-rate
+              :editable="false"
+              :model-value="data.repoCodeccAvgScore"
+              size="large"
+              class="card-num"
+            />
+          </render-empty-node-if-none>
           <span class="card-desc">
             Code Quality
             <bk-popover placement="top">
@@ -161,7 +198,11 @@ onMounted(init);
           </span>
         </section>
         <section class="card-detail">
-          <h5 class="card-num">{{ data.resolvedDefectNum }}</h5>
+          <h5 class="card-num">
+            <render-empty-node-if-none :data="data.resolvedDefectNum">
+              {{ data.resolvedDefectNum }}
+            </render-empty-node-if-none>
+          </h5>
           <span class="card-desc">
             Reslved Code Defects
             <bk-popover placement="top">
@@ -175,18 +216,20 @@ onMounted(init);
       </section>
     </section>
     <section class="w1 gap-line">
-      <h3 class="g-card-title">Gate</h3>
+      <h3 class="g-card-title">Quality Gate</h3>
       <section class="card-num-group">
         <section class="card-detail">
           <h5 class="card-num">
-            {{ data.qualityInterceptionRate }}<span class="card-num-sub">%</span>
+            <render-empty-node-if-none :data="data.qualityInterceptionRate">
+              {{ data.qualityInterceptionRate }}<span class="card-num-sub">%</span>
+            </render-empty-node-if-none>
           </h5>
           <span class="card-desc">
             Interception rate
             <bk-popover placement="top">
               <info-line />
               <template #content>
-                Intercepted: 50 / No. of total runs: 100
+                Intercepted: {{ data.interceptionCount || '--' }} / No. of total runs: {{ data.totalQualityExecuteCount || '--' }}
               </template>
             </bk-popover>
           </span>
@@ -198,12 +241,14 @@ onMounted(init);
       <section class="card-num-group">
         <section class="card-detail">
           <h5 class="card-num">
-            {{ data.turboSaveTime.h }}<!--
-            --><span v-if="data.turboSaveTime.h" class="card-num-sub">h</span><!--
-            -->{{ data.turboSaveTime.m }}<!--
-            --><span v-if="data.turboSaveTime.m" class="card-num-sub">m</span><!--
-            -->{{ data.turboSaveTime.s }}<!--
-            --><span class="card-num-sub">s</span>
+            <render-empty-node-if-none :data="data.turboSaveTime.s">
+              {{ data.turboSaveTime.h }}<!--
+              --><span v-if="data.turboSaveTime.h" class="card-num-sub">h</span><!--
+              -->{{ data.turboSaveTime.m }}<!--
+              --><span v-if="data.turboSaveTime.m" class="card-num-sub">m</span><!--
+              -->{{ data.turboSaveTime.s }}<!--
+              --><span class="card-num-sub">s</span>
+            </render-empty-node-if-none>
           </h5>
           <span class="card-desc">
             Saving Time
