@@ -30,14 +30,14 @@ package com.tencent.devops.repository.resources.tapd
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.sdk.tapd.request.StatusMapRequest
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.tapd.ServiceTapdWorkflowResource
+import com.tencent.devops.repository.api.tapd.ServiceTapdResource
 import com.tencent.devops.repository.tapd.service.ITapdWorkflowService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceTapdWorkflowResourceImpl @Autowired constructor(
+class ServiceTapdResourceImpl @Autowired constructor(
     private val tapdWorkflowService: ITapdWorkflowService
-) : ServiceTapdWorkflowResource {
+) : ServiceTapdResource {
 
     override fun getWorkflowStatusMap(request: StatusMapRequest): Result<Map<String, String>> {
         return Result(tapdWorkflowService.getWorkflowStatusMap(request = request).data!!)
