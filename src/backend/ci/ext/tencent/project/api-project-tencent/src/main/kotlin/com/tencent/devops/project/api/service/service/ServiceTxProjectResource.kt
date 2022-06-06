@@ -227,8 +227,8 @@ interface ServiceTxProjectResource {
     @Path("/rds/getOrCreate")
     @ApiOperation("查询用户项目")
     fun getOrCreateRdsProject(
-        @ApiParam("用户ID", required = true)
-        @PathParam("userId")
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam("产品唯一标识", required = true)
         @QueryParam("productCode")
