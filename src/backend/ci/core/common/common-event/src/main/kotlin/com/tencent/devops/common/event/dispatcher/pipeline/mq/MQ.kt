@@ -265,4 +265,9 @@ object MQ {
 
     // 流水线webhook commit记录
     const val EXCHANGE_PIPELINE_BUILD_COMMIT_FINISH_FANOUT = "e.engine.pipeline.build.commits.finish.fanout"
+
+    // 质量红线每日数据上报队列
+    const val EXCHANGE_QUALITY_DAILY_FANOUT = "e.quality.daily.exchange.fanout"
+    const val ROUTE_QUALITY_DAILY_FANOUT = "r.quality.daily.exchange.fanout"
+    const val QUEUE_QUALITY_DAILY_EVENT = "q.quality.daily.exchange.queue"
 }
