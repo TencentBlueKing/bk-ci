@@ -32,7 +32,6 @@ import com.dd.plist.NSDictionary
 import com.dd.plist.NSString
 import com.dd.plist.PropertyListParser
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.sign.Constants.KEYSTORE_CATEGORY_PROVISION
@@ -56,7 +55,6 @@ import java.io.File
 import java.net.InetAddress
 import java.nio.charset.StandardCharsets
 import java.time.Instant
-import java.util.Base64
 
 @Suppress("NestedBlockDepth")
 @Service
