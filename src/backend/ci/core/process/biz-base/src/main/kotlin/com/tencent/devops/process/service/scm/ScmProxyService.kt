@@ -287,6 +287,27 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     search = search
                 )
             }
+            is GithubRepository -> {
+                val token = getGithubAccessToken(repo.userName)
+                return client.get(ServiceGithubResource::class).listBranches(
+                    projectName = repo.projectName,
+                    accessToken = token
+                )
+            }
+            is CodeTGitRepository -> {
+                val credInfo = getCredential(projectId, repo)
+                return client.get(ServiceScmResource::class).listBranches(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = ScmType.CODE_TGIT,
+                    privateKey = null,
+                    passPhrase = null,
+                    token = credInfo.privateKey,
+                    region = null,
+                    userName = credInfo.username,
+                    search = search
+                )
+            }
             else -> {
                 throw IllegalArgumentException("Unknown repo($repo)")
             }
@@ -337,6 +358,24 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     projectName = repo.projectName,
                     url = repo.url,
                     type = ScmType.CODE_GITLAB,
+                    token = credInfo.privateKey,
+                    userName = credInfo.username,
+                    search = search
+                )
+            }
+            is GithubRepository -> {
+                val token = getGithubAccessToken(repo.userName)
+                return client.get(ServiceGithubResource::class).listTags(
+                    projectName = repo.projectName,
+                    accessToken = token
+                )
+            }
+            is CodeTGitRepository -> {
+                val credInfo = getCredential(projectId, repo)
+                return client.get(ServiceScmResource::class).listTags(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = ScmType.CODE_GIT,
                     token = credInfo.privateKey,
                     userName = credInfo.username,
                     search = search
