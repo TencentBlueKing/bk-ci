@@ -436,7 +436,6 @@
                         this.toggleCodelibDialog(false)
                         this.hasValidate = false
                         this.saving = true
-                        this.codelib.url = ''
                         this.$bkMessage({
                             message: repositoryHashId
                                 ? this.$t('codelib.successfullyEdited')
