@@ -28,15 +28,17 @@
 package com.tencent.devops.repository.tapd.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
 
+@ConstructorBinding
 @ConfigurationProperties(prefix = "tapd")
 data class TapdProperties(
-    val serverUrl: String,
-    val apiUrl: String,
-    val clientId: String,
-    val clientSecret: String,
+    val serverUrl: String = "",
+    val apiUrl: String = "",
+    val clientId: String = "",
+    val clientSecret: String = "",
     // tapd回调地址
-    val callbackUrl: String,
+    val callbackUrl: String = "",
     // tapd授权后跳转页面
-    val redirectUrl: String
+    val redirectUrl: String = ""
 )
