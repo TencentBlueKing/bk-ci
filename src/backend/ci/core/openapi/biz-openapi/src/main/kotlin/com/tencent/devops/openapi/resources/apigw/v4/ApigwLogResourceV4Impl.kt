@@ -39,7 +39,6 @@ import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwLogResourceV4
-import com.tencent.devops.openapi.resources.apigw.v3.ApigwLogResourceV3Impl
 import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import javax.ws.rs.core.MediaType
