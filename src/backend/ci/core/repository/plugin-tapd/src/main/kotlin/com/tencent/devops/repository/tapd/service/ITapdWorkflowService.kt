@@ -25,38 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.tapd.config
+package com.tencent.devops.repository.tapd.service
 
-import com.tencent.devops.common.sdk.tapd.AutoRetryTapdClient
-import com.tencent.devops.common.sdk.tapd.DefaultTapdClient
-import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.common.sdk.tapd.TapdResult
+import com.tencent.devops.common.sdk.tapd.request.StatusMapRequest
 
-@Configuration
-@EnableConfigurationProperties(TapdProperties::class)
-class TapdConfig {
+interface ITapdWorkflowService {
 
-    @Bean
-    fun defaultTapdClient(properties: TapdProperties) {
-        return with(properties) {
-            DefaultTapdClient(
-                serverUrl = serverUrl,
-                apiUrl = apiUrl,
-                clientId = clientId,
-                clientSecret
-            )
-        }
-    }
-
-    fun autoRetryTapdClient(properties: TapdProperties) {
-        return with(properties) {
-            AutoRetryTapdClient(
-                serverUrl = serverUrl,
-                apiUrl = apiUrl,
-                clientId = clientId,
-                clientSecret
-            )
-        }
-    }
+    fun getWorkflowStatusMap(request: StatusMapRequest): TapdResult<Map<String, String>>
 }

@@ -25,38 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.tapd.config
+package com.tencent.devops.repository.api.tapd
 
-import com.tencent.devops.common.sdk.tapd.AutoRetryTapdClient
-import com.tencent.devops.common.sdk.tapd.DefaultTapdClient
-import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.sdk.tapd.request.StatusMapRequest
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Configuration
-@EnableConfigurationProperties(TapdProperties::class)
-class TapdConfig {
+@Api(tags = ["USER_TAPD_WORKFLOW"], description = "tapd 工作流")
+@Path("/user/tapd/workflow")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceTapdWorkflowResource {
 
-    @Bean
-    fun defaultTapdClient(properties: TapdProperties) {
-        return with(properties) {
-            DefaultTapdClient(
-                serverUrl = serverUrl,
-                apiUrl = apiUrl,
-                clientId = clientId,
-                clientSecret
-            )
-        }
-    }
-
-    fun autoRetryTapdClient(properties: TapdProperties) {
-        return with(properties) {
-            AutoRetryTapdClient(
-                serverUrl = serverUrl,
-                apiUrl = apiUrl,
-                clientId = clientId,
-                clientSecret
-            )
-        }
-    }
+    @ApiOperation("获取工作流状态中英文名对应关系")
+    @GET
+    @Path("/getWorkflowStatusMap")
+    fun getWorkflowStatusMap(request: StatusMapRequest): Result<Map<String, String>>
 }
