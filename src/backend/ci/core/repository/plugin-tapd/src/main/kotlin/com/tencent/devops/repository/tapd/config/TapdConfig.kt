@@ -38,7 +38,7 @@ import org.springframework.context.annotation.Configuration
 class TapdConfig {
 
     @Bean
-    fun defaultTapdClient(properties: TapdProperties) {
+    fun defaultTapdClient(properties: TapdProperties): DefaultTapdClient {
         return with(properties) {
             DefaultTapdClient(
                 serverUrl = serverUrl,
@@ -49,7 +49,8 @@ class TapdConfig {
         }
     }
 
-    fun autoRetryTapdClient(properties: TapdProperties) {
+    @Bean
+    fun autoRetryTapdClient(properties: TapdProperties): AutoRetryTapdClient {
         return with(properties) {
             AutoRetryTapdClient(
                 serverUrl = serverUrl,
