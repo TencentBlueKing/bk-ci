@@ -38,7 +38,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_TAPD"], description = "tapd服务接口")
-@Path("/user/tapd")
+@Path("/service/tapd")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceTapdResource {
