@@ -71,6 +71,9 @@ class ImageHistoryDataService @Autowired constructor(
             ImageAgentTypeEnum.PUBLIC_DEVCLOUD -> {
                 "devcloud/$value"
             }
+            ImageAgentTypeEnum.KUBERNETES -> {
+                throw Exception("not support !")
+            }
             ImageAgentTypeEnum.PUBLIC_BCS -> {
                 throw Exception("not support !")
             }

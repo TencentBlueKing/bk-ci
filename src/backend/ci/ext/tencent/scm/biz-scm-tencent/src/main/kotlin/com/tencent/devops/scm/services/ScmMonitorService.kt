@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.monitoring.api.service.StatusReportResource
 import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
@@ -51,21 +52,18 @@ import com.tencent.devops.scm.constant.ScmMessageCode.ERROR_GIT_UNAUTHORIZED
 import com.tencent.devops.scm.constant.ScmMessageCode.ERROR_GIT_UNPROCESSABLE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
 @Service
 class ScmMonitorService @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val bkTag: BkTag
 ) {
     companion object {
         private val executorService = Executors.newFixedThreadPool(5)
         private val logger = LoggerFactory.getLogger(ScmMonitorService::class.java)
     }
-
-    @Value("\${spring.cloud.consul.discovery.tags:prod}")
-    private val consulTag: String = "prod"
 
     fun reportCommitCheck(
         requestTime: Long,
@@ -90,7 +88,8 @@ class ScmMonitorService @Autowired constructor(
                             statusMessage = statusMessage,
                             errorType = errorType,
                             errorCode = errorCode,
-                            errorMsg = MessageCodeUtil.getCodeMessage(messageCode = errorCode, params = null) ?: statusMessage,
+                            errorMsg = MessageCodeUtil.getCodeMessage(messageCode = errorCode, params = null)
+                                ?: statusMessage,
                             projectName = projectName,
                             commitId = commitId,
                             block = block,
@@ -101,14 +100,14 @@ class ScmMonitorService @Autowired constructor(
             } catch (e: Throwable) {
                 logger.error(
                     "report git commit check error, " +
-                        "requestTime:$requestTime, " +
-                        "responseTime:$responseTime, " +
-                        "statusCode:$statusCode, " +
-                        "statusMessage:$statusMessage, " +
-                        "projectName:$projectName, " +
-                        "commitId:$commitId, " +
-                        "block:$block, " +
-                        "targetUrl:$targetUrl",
+                            "requestTime:$requestTime, " +
+                            "responseTime:$responseTime, " +
+                            "statusCode:$statusCode, " +
+                            "statusMessage:$statusMessage, " +
+                            "projectName:$projectName, " +
+                            "commitId:$commitId, " +
+                            "block:$block, " +
+                            "targetUrl:$targetUrl",
                     e
                 )
             }
@@ -129,6 +128,7 @@ class ScmMonitorService @Autowired constructor(
     }
 
     private fun getChannelCode(): ChannelCode {
+        val consulTag = bkTag.getLocalTag()
         return when {
             consulTag.contains("stream") -> {
                 ChannelCode.GIT
