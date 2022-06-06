@@ -403,11 +403,10 @@ open class GitApi {
                     .tag(BkTimedAspect.APPLICATION_TAG, applicationName ?: "")
                     .register(registry)
             )
-        } catch (err: BeansException){
+        } catch (err: BeansException) {
             logger.error("registry get failed")
             throw err
-        }
-        catch (ignore: Exception) {
+        } catch (ignore: Exception) {
             logger.warn("record failed", ignore)
         }
     }
