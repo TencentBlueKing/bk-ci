@@ -38,8 +38,10 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_TAPD"], description = "tapd服务接口")
@@ -60,10 +62,20 @@ interface ServiceTapdResource {
     @ApiOperation("tapd回调url")
     @GET
     @Path("/callbackUrl")
-    fun callbackUrl(code: String, state: String, resource: String): String
+    fun callbackUrl(
+        @ApiParam(value = "code")
+        @QueryParam("code")
+        code: String,
+        @ApiParam(value = "state")
+        @QueryParam("state")
+        state: String,
+        @ApiParam(value = "resource")
+        @QueryParam("resource")
+        resource: String
+    ): String
 
     @ApiOperation("获取工作流状态中英文名对应关系")
-    @GET
+    @POST
     @Path("/getWorkflowStatusMap")
     fun getWorkflowStatusMap(request: StatusMapRequest): TapdResult<Map<String, String>>
 }
