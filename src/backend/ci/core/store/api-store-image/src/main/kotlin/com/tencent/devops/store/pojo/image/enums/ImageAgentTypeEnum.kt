@@ -42,10 +42,6 @@ enum class ImageAgentTypeEnum(val type: Int) {
                 return DOCKER
             }
 
-            if (name.toLowerCase() == PUBLIC_BCS.name.toLowerCase()) {
-                return DOCKER
-            }
-
             values().forEach { enumObj ->
                 if (enumObj.name.equals(name, ignoreCase = true)) {
                     return enumObj
