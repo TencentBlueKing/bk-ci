@@ -25,10 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:store:api-store"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":ext:tencent:monitoring:api-monitoring-tencent"))
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:repository:plugin-tapd"))
+package com.tencent.devops.scm.resources
+
+import com.tencent.devops.common.sdk.tapd.TapdResult
+import com.tencent.devops.common.sdk.tapd.request.StatusMapRequest
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.tapd.service.ITapdWorkflowService
+import com.tencent.devops.repository.tapd.service.TapdOauthService
+import com.tencent.devops.scm.api.ServiceTapdResource
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceTapdResourceImpl @Autowired constructor(
+    private val tapdOauthService: TapdOauthService,
+    private val tapdWorkflowService: ITapdWorkflowService
+) : ServiceTapdResource {
+
+    override fun appInstallUrl(userId: String): String {
+        return tapdOauthService.appInstallUrl(userId = userId)
+    }
+
+    override fun callbackUrl(code: String, state: String, resource: String): String {
+        return tapdOauthService.callbackUrl(code, state, resource)
+    }
+
+    override fun getWorkflowStatusMap(request: StatusMapRequest): TapdResult<Map<String, String>> {
+        return tapdWorkflowService.getWorkflowStatusMap(request = request)
+    }
 }

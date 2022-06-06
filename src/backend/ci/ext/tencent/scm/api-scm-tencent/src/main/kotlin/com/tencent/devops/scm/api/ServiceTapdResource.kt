@@ -25,10 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:store:api-store"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":ext:tencent:monitoring:api-monitoring-tencent"))
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:repository:plugin-tapd"))
+package com.tencent.devops.scm.api
+
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.sdk.tapd.TapdResult
+import com.tencent.devops.common.sdk.tapd.request.StatusMapRequest
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["SERVICE_TAPD"], description = "tapd服务接口")
+@Path("/service/tapd")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceTapdResource {
+
+    @ApiOperation("tapd安装应用url")
+    @GET
+    @Path("/appInstallUrl")
+    fun appInstallUrl(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): String
+
+    @ApiOperation("tapd回调url")
+    @GET
+    @Path("/callbackUrl")
+    fun callbackUrl(code: String, state: String, resource: String): String
+
+    @ApiOperation("获取工作流状态中英文名对应关系")
+    @GET
+    @Path("/getWorkflowStatusMap")
+    fun getWorkflowStatusMap(request: StatusMapRequest): TapdResult<Map<String, String>>
 }
