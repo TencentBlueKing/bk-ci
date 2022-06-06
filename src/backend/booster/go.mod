@@ -4,7 +4,7 @@ go 1.13
 
 replace (
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
-	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
+	golang.org/x/crypto => golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	k8s.io/client-go => k8s.io/client-go v0.19.2
 )

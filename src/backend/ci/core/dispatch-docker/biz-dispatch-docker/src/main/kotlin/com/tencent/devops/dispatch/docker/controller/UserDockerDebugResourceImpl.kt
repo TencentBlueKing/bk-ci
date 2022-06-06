@@ -29,29 +29,28 @@ package com.tencent.devops.dispatch.docker.controller
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.user.UserDockerDebugResource
-import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
+import com.tencent.devops.dispatch.docker.pojo.DebugResponse
 import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerRoutingType
+import com.tencent.devops.dispatch.docker.service.DockerRoutingService
 import com.tencent.devops.dispatch.docker.service.debug.DebugServiceEnum
-import com.tencent.devops.dispatch.docker.service.debug.impl.DockerHostDebugServiceImpl
 import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.stream.Collectors
 
 @RestResource
 class UserDockerDebugResourceImpl @Autowired constructor(
-    private val dockerHostDebugService: DockerHostDebugServiceImpl,
-    private val pipelineDockerDebugDao: PipelineDockerDebugDao,
-    private val extDebugService: ExtDebugService,
-    private val dslContext: DSLContext
+    private val dockerRoutingService: DockerRoutingService,
+    private val extDebugService: ExtDebugService
 ) : UserDockerDebugResource {
 
-    override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<String>? {
+    override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<DebugResponse>? {
         logger.info("[$userId]| start debug, debugStartParam: $debugStartParam")
-        // dispatchType不在枚举工厂类内时默认委ext debug服务
+        // dispatchType不在枚举工厂类内时默认为ext debug服务
         if (!DebugServiceEnum
                 .values().toList()
                 .stream().map { it.name }.collect(Collectors.toList()).contains(debugStartParam.dispatchType)) {
@@ -67,16 +66,30 @@ class UserDockerDebugResourceImpl @Autowired constructor(
                 params = arrayOf(debugStartParam.pipelineId)
             )
 
-            return Result(debugUrl)
+            return Result(
+                DebugResponse(
+                    websocketUrl = debugUrl,
+                    containerName = null,
+                    dispatchType = BuildType.PUBLIC_DEVCLOUD.name
+                )
+            )
         }
 
-        return Result(DebugServiceEnum.valueOf(debugStartParam.dispatchType).instance().startDebug(
+        val formatDispatchType = formatDispatchType(debugStartParam.projectId)
+        val debugUrl = DebugServiceEnum.valueOf(formatDispatchType.name).instance().startDebug(
             userId = userId,
             projectId = debugStartParam.projectId,
             pipelineId = debugStartParam.pipelineId,
             vmSeqId = debugStartParam.vmSeqId,
             buildId = debugStartParam.buildId
-        ))
+        )
+        return Result(
+            DebugResponse(
+            websocketUrl = debugUrl,
+            containerName = null,
+            dispatchType = formatDispatchType.name
+        )
+        )
     }
 
     override fun stopDebug(
@@ -101,13 +114,25 @@ class UserDockerDebugResourceImpl @Autowired constructor(
             return Result(result)
         }
 
-        return Result(DebugServiceEnum.valueOf(dispatchType!!).instance().stopDebug(
+        val formatDispatchType = formatDispatchType(projectId)
+        return Result(DebugServiceEnum.valueOf(formatDispatchType.name!!).instance().stopDebug(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             vmSeqId = vmSeqId,
             containerName = containerName ?: ""
         ))
+    }
+
+    /**
+     * BCS和VM构建类型在前端统一表现为VM类型，通过白名单控制BCS构建类型路由
+     */
+    private fun formatDispatchType(projectId: String): BuildType {
+        return when (dockerRoutingService.getDockerRoutingType(projectId)) {
+            DockerRoutingType.VM -> BuildType.DOCKER
+            DockerRoutingType.BCS -> BuildType.PUBLIC_BCS
+            else -> BuildType.DOCKER
+        }
     }
 
     companion object {

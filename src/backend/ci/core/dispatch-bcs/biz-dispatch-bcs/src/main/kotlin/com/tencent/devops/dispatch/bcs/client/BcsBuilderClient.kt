@@ -307,15 +307,21 @@ class BcsBuilderClient @Autowired constructor(
                         "获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code()}"
                     )
                 }
-                return objectMapper.readValue(responseContent)
+
+                val bcsResult: BcsResult<String> = objectMapper.readValue(responseContent)
+                if (bcsResult.result == null || !bcsResult.result!!) {
+                    throw RuntimeException(bcsResult.message)
+                }
+
+                return bcsResult
             }
         } catch (e: Exception) {
             logger.error("[$projectId]|[$pipelineId] builderName: $builderName getWebsocketUrl failed.", e)
             throw BuildFailureException(
-                errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
-                errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                errorMessage = "获取构建机详情接口超时, url: $url"
+                errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
+                errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
+                formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
+                errorMessage = "获取登录调试链接接口超时, url: $url, ${e.message}"
             )
         }
     }

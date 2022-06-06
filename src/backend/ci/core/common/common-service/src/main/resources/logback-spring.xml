@@ -4,22 +4,29 @@
     <springProperty name="app_name" source="spring.application.name"/>
 
     <include resource="logback/appender.xml"/>
-    <springProfile name="test, dev">
+
+    <!-- 测试环境 -->
+    <springProfile name="test | dev">
         <root level="INFO">
             <appender-ref ref="app-log"/>
             <appender-ref ref="error-log"/>
         </root>
         <logger name="com.tencent" level="DEBUG" />
     </springProfile>
-    <springProfile name="default, prod">
+
+    <!-- 本地环境 或者 kubernetes环境 -->
+    <springProfile name="local | kubernetes">
+        <root level="INFO">
+            <appender-ref ref="console"/>
+        </root>
+        <logger name="com.tencent" level="DEBUG" />
+    </springProfile>
+
+    <!-- 其他环境 -->
+    <springProfile name="!test &amp; !dev &amp; !local &amp; !kubernetes">
         <root level="INFO">
             <appender-ref ref="app-log"/>
             <appender-ref ref="error-log"/>
-        </root>
-    </springProfile>
-    <springProfile name="local">
-        <root level="INFO">
-            <appender-ref ref="console"/>
         </root>
     </springProfile>
 </configuration>

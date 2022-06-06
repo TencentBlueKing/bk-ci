@@ -1,0 +1,92 @@
+# 初始化制品库
+{{ if .Values.init.bkrepo }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-init-bkrepo
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: init-bkrepo
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-3"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: init-bkrepo
+    spec:
+      containers:
+        - name: init-bkrepo
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          workingDir: /data/workspace/support-files/file/
+          command:
+            - "/bin/bash"
+            - "-c"
+            - |
+              # 创建制品库
+              REPO_QUERY_PROJECT_PATH="{{ .Values.config.bkRepoApiUrl }}/repository/api/project/list"
+              REPO_QUERY_GENERIC_PATH="{{ .Values.config.bkRepoApiUrl }}/repository/api/repo/info/"
+              REPO_CREATE_PROJECT_PATH="{{ .Values.config.bkRepoApiUrl }}/api/repository/api/project"
+              REPO_CREATE_GENERIC_PATH="{{ .Values.config.bkRepoApiUrl }}/repository/api/repo/create"
+              REPO_INIT_GENERIC_METADATA_PATH="{{ .Values.config.bkRepoApiUrl }}/generic/"
+              create_repo_project_name_init_plugintransfer_project_generic (){
+                  for i in bk-store
+                  do
+                      ret=0
+                      echo "CI project is $i -------------------------------------------------->"
+                      # 蓝盾bk-store项目存在，Repo项目及项目的处理逻辑
+                      if [[ ! -z $(curl -s -XGET "$REPO_QUERY_PROJECT_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }}|grep displayName|awk -F\" '{print $(NF-1)}'|grep $i) ]] ; then
+                          echo "$ret. Repo project $i exist , ${ret}st check success"
+                          for j in plugin static
+                          do
+                              ((ret++))
+                              if [[ ! -z $(curl -s -XGET "$REPO_QUERY_GENERIC_PATH"/$i/$j/generic -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }}|grep projectId) ]] ; then
+                                  echo "$ret. Repo project $i $j generic exist , ${ret}st check success"
+                              else
+                                  echo "$ret. Repo project $i $j generic not exist , 1st create it now ......"
+                                  curl -X POST "$REPO_CREATE_GENERIC_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "Content-Type: application/json" -d '{"projectId": "'$i'", "name": "'$j'", "type":"GENERIC", "category":"LOCAL", "public":true, "configuration": {"type":"local"}, "description":"storage for devops ci '$j'"}'
+                                  if [[ ! -z $(curl -s -XGET "$REPO_QUERY_GENERIC_PATH"/$i/$j/generic -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }}|grep projectId) ]] ; then
+                                      echo "$ret. Repo project $i $j generic ${ret}st create success"
+                                  else
+                                      echo "$ret. Repo project $i $j generic ${ret}st create failed"
+                                  fi
+                              
+                              fi
+                          done
+
+                      # 蓝盾bk-store项目不存在，Repo项目及仓库的处理逻辑
+                      else
+                          echo "$ret. Repo project $i not exist , ${ret}nd create $i project now ......"
+                          curl -X POST "$REPO_CREATE_PROJECT_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "Content-Type: application/json" -d '{"name": "'$i'", "displayName": "'$i'", "description": "'$i'"}'
+                          if [[ ! -z $(curl -s -XGET "$REPO_QUERY_PROJECT_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }}|grep displayName|awk -F\" '{print $(NF-1)}'|grep $i) ]] ; then
+                              echo "$ret. Repo project $i create success , ${ret}nd check success"
+
+                              for j in plugin static
+                              do  
+                                  ((ret++))
+                                  curl -X POST "$REPO_CREATE_GENERIC_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "Content-Type: application/json" -d '{"projectId": "'$i'", "name": "'$j'", "type":"GENERIC", "category":"LOCAL", "public":true, "configuration": {"type":"local"}, "description":"storage for devops ci '$j'"}'
+                                  if [[ ! -z $(curl -s -XGET "$REPO_QUERY_GENERIC_PATH"/$i/$j/generic -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }}|grep projectId) ]] ; then
+                                      echo "$ret. Repo project $i $j generic ${ret}nd create success"
+                                  else
+                                      echo "$ret. Repo project $i $j generic ${ret}nd create failed"
+                                  fi
+                              done
+                          else
+                              echo "$ret. Repo project $i create failed , exit now" && exit 7 
+                          fi
+                      fi
+                      echo -e ""
+                  done
+              }
+              create_repo_project_name_init_plugintransfer_project_generic || return $?
+
+              # 迁移图片到制品库
+              for k in $(find ./png -maxdepth 1 -type f)
+              do
+                  curl -s -X PUT $REPO_INIT_GENERIC_METADATA_PATH/bk-store/static/file/$k -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H \"X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}\" -H \"X-BKREPO-OVERWRITE: true\" --upload-file ${k}
+                  echo -e ""
+              done
+      restartPolicy: Never
+{{- end -}}
