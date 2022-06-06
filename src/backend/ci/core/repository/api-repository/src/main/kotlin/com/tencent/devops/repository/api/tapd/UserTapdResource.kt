@@ -25,22 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources.tapd
+package com.tencent.devops.repository.api.tapd
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.tapd.UserTapdOauthResource
-import com.tencent.devops.repository.tapd.service.ITapdOauthService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
 
-@RestResource
-class UserTapdOauthResourceImpl @Autowired constructor(
-    val tapdService: ITapdOauthService
-) : UserTapdOauthResource {
+@Api(tags = ["USER_TAPD_AUTH"], description = "tapd用户接口")
+@Path("/user/tapd")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserTapdResource {
 
-    override fun appInstall(userId: String): Response {
-        val uri = UriBuilder.fromUri(tapdService.appInstallUrl(userId = userId)).build()
-        return Response.temporaryRedirect(uri).build()
-    }
+    @ApiOperation("安装tapd应用")
+    @GET
+    @Path("/appInstall")
+    fun appInstall(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Response
 }

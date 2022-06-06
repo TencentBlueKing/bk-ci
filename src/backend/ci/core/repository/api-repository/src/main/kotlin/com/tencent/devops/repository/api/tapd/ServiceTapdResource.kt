@@ -37,11 +37,11 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_TAPD_WORKFLOW"], description = "tapd 工作流")
-@Path("/user/tapd/workflow")
+@Api(tags = ["SERVICE_TAPD"], description = "tapd服务接口")
+@Path("/service/tapd")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceTapdWorkflowResource {
+interface ServiceTapdResource {
 
     @ApiOperation("获取工作流状态中英文名对应关系")
     @GET
