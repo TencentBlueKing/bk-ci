@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,20 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:ticket:api-ticket"))
-    api(project(":core:process:api-process"))
-    api(project(":core:common:common-scm"))
-    api(project(":core:repository:api-repository"))
-    api(project(":core:repository:model-repository"))
-    api(project(":core:repository:plugin-tapd"))
-    api(project(":core:common:common-db"))
-    api(project(":core:auth:api-auth"))
+package com.tencent.devops.common.sdk.github
 
-    api("com.google.code.gson:gson")
-    api("org.eclipse.jgit:org.eclipse.jgit")
+import com.tencent.devops.common.sdk.github.request.GetBranchRequest
+import com.tencent.devops.common.sdk.github.request.ListBranchesRequest
+import org.junit.Ignore
+import org.junit.Test
+
+@Ignore
+class GithubApiTest {
+
+    private val client = DefaultGithubClient(
+        serverUrl = "https://github.com/",
+        apiUrl = "https://api.github.com/"
+    )
+
+    @Test
+    fun listBranches() {
+        val request = ListBranchesRequest(
+            owner = "Tencent",
+            repo = "bk-ci"
+        )
+        val response = client.execute(
+            oauthToken = "d501d306428d8d34656c726a0c8980c08f343534232",
+            request = request
+        )
+        println(response)
+    }
+
+    @Test
+    fun getBranch() {
+        val request = GetBranchRequest(
+            owner = "Tencent",
+            repo = "bk-ci",
+            branch = "master"
+        )
+        val response = client.execute(
+            oauthToken = "d501d306428d8d34656c726a0c8980c08f343534232",
+            request = request
+        )
+        println(response)
+    }
 }

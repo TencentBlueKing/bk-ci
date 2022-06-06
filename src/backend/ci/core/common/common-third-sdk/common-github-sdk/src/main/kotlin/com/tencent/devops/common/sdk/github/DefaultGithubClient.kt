@@ -25,44 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.api
+package com.tencent.devops.common.sdk.github
 
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
+import com.tencent.devops.common.sdk.util.SdkHttpUtil
+import okhttp3.Credentials
+import org.slf4j.LoggerFactory
 
-@Api(tags = ["EXTERNAL_REPO"], description = "外部-仓库资源")
-@Path("/external/repo/")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ExternalRepoResource {
+open class DefaultGithubClient(
+    // github服务域名
+    open val serverUrl: String,
+    // github接口地址
+    open val apiUrl: String
+) : GithubClient {
+    companion object {
+        private val logger = LoggerFactory.getLogger(DefaultGithubClient::class.java)
+    }
 
-    @ApiOperation("根据用户ID列举Git上面的工程")
-    @GET
-    @Path("/git/callback")
-    fun gitCallback(
-        @ApiParam(value = "code")
-        @QueryParam("code")
-        code: String,
-        @ApiParam(value = "state")
-        @QueryParam("state")
-        state: String
-    ): Response
+    override fun <T> execute(oauthToken: String, request: GithubRequest<T>): T {
+        val headers = mutableMapOf(
+            "Authorization" to "token  $oauthToken",
+            "Accept" to "application/vnd.github.v3+json"
+        )
+        return SdkHttpUtil.execute(
+            apiUrl = apiUrl,
+            systemHeaders = headers,
+            request = request
+        )
+    }
 
-
-    @ApiOperation("tapd回调重定向url")
-    @GET
-    @Path("/tapd/callback")
-    fun tapdCallback(
-        code: String,
-        state: String,
-        resource: String
-    ): Response
+    override fun <T> execute(username: String, token: String, request: GithubRequest<T>): T {
+        val headers = mutableMapOf(
+            "Authorization" to Credentials.basic(username, token),
+            "Accept" to "application/vnd.github.v3+json"
+        )
+        return SdkHttpUtil.execute(
+            apiUrl = apiUrl,
+            systemHeaders = headers,
+            request = request
+        )
+    }
 }

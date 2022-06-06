@@ -25,44 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.api
+package com.tencent.devops.common.sdk.util
 
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
+import org.slf4j.LoggerFactory
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
-@Api(tags = ["EXTERNAL_REPO"], description = "外部-仓库资源")
-@Path("/external/repo/")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ExternalRepoResource {
+class SdkRetryHelper(
+    // 最大重试次数
+    private val maxAttempts: Int = 3,
+    // 重试等待时间(ms),默认睡眠500ms
+    private val retryWaitTime: Long = 500
+) {
 
-    @ApiOperation("根据用户ID列举Git上面的工程")
-    @GET
-    @Path("/git/callback")
-    fun gitCallback(
-        @ApiParam(value = "code")
-        @QueryParam("code")
-        code: String,
-        @ApiParam(value = "state")
-        @QueryParam("state")
-        state: String
-    ): Response
+    companion object {
+        private val logger = LoggerFactory.getLogger(SdkRetryHelper::class.java)
+    }
 
-
-    @ApiOperation("tapd回调重定向url")
-    @GET
-    @Path("/tapd/callback")
-    fun tapdCallback(
-        code: String,
-        state: String,
-        resource: String
-    ): Response
+    fun <T> execute(action: () -> T): T {
+        var attempt = 1
+        while (attempt <= maxAttempts) {
+            try {
+                return action()
+            } catch (e: UnknownHostException) {
+                logger.error(e.message)
+            } catch (e: ConnectException) {
+                logger.error(e.message)
+            } catch (e: SocketTimeoutException) {
+                if (e.message == "connect timed out" || e.message == "timeout") {
+                    logger.error(e.message)
+                } else {
+                    throw e
+                }
+            }
+            logger.info("Attempting $attempt|Waiting ${retryWaitTime}ms before trying again")
+            Thread.sleep(retryWaitTime)
+            attempt++
+        }
+        return action()
+    }
 }

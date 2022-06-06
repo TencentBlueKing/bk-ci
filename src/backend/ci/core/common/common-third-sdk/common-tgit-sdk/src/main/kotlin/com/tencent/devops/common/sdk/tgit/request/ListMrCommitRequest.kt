@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,20 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:ticket:api-ticket"))
-    api(project(":core:process:api-process"))
-    api(project(":core:common:common-scm"))
-    api(project(":core:repository:api-repository"))
-    api(project(":core:repository:model-repository"))
-    api(project(":core:repository:plugin-tapd"))
-    api(project(":core:common:common-db"))
-    api(project(":core:auth:api-auth"))
+package com.tencent.devops.common.sdk.tgit.request
 
-    api("com.google.code.gson:gson")
-    api("org.eclipse.jgit:org.eclipse.jgit")
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.sdk.enums.HttpMethod
+import com.tencent.devops.common.sdk.tgit.TGitRequest
+import com.tencent.devops.common.sdk.tgit.response.MrCommitResponse
+
+/**
+ * 获取合并请求中的提交
+ */
+data class ListMrCommitRequest(
+    // 项目 ID 或 项目全路径 project_full_path
+    @JsonIgnore
+    val id: String,
+    // 合并请求的ID
+    @JsonIgnore
+    val mergeRequestId: String,
+    @JsonProperty("scroll_object_id")
+    val scrollObjectId: String? = null,
+    @JsonProperty("use_scroll_page")
+    val useScrollPage: Boolean? = null,
+    val page: Int = 1
+) : TGitRequest<List<MrCommitResponse>>() {
+
+    override fun getHttpMethod() = HttpMethod.GET
+
+    override fun getApiPath() = "/api/v3/projects/$id/merge_request/$mergeRequestId/commits"
 }
