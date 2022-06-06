@@ -25,38 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.tapd.config
+package com.tencent.devops.repository.resources.tapd
 
-import com.tencent.devops.common.sdk.tapd.AutoRetryTapdClient
-import com.tencent.devops.common.sdk.tapd.DefaultTapdClient
-import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.sdk.tapd.request.StatusMapRequest
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.tapd.ServiceTapdWorkflowResource
+import com.tencent.devops.repository.tapd.service.ITapdWorkflowService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Configuration
-@EnableConfigurationProperties(TapdProperties::class)
-class TapdConfig {
+@RestResource
+class ServiceTapdWorkflowResourceImpl @Autowired constructor(
+    private val tapdWorkflowService: ITapdWorkflowService
+) : ServiceTapdWorkflowResource {
 
-    @Bean
-    fun defaultTapdClient(properties: TapdProperties) {
-        return with(properties) {
-            DefaultTapdClient(
-                serverUrl = serverUrl,
-                apiUrl = apiUrl,
-                clientId = clientId,
-                clientSecret
-            )
-        }
-    }
-
-    fun autoRetryTapdClient(properties: TapdProperties) {
-        return with(properties) {
-            AutoRetryTapdClient(
-                serverUrl = serverUrl,
-                apiUrl = apiUrl,
-                clientId = clientId,
-                clientSecret
-            )
-        }
+    override fun getWorkflowStatusMap(request: StatusMapRequest): Result<Map<String, String>> {
+        return Result(tapdWorkflowService.getWorkflowStatusMap(request = request).data!!)
     }
 }
