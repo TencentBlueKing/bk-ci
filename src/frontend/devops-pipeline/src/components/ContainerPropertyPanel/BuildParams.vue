@@ -83,8 +83,8 @@
                                             <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isFileParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :click-unfold="true" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
                                             <vuex-textarea v-if="isTextareaParam(param.type)" :click-unfold="true" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
                                             <request-selector v-if="isCodelibParam(param.type)" :popover-min-width="250" :url="getCodeUrl(param.scmType)" v-bind="codelibOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
-                                            <request-selector v-if="isBuildResourceParam(param.type)" :popover-min-width="250" :url="getBuildResourceUrl(param.containerType)" param-id="name" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
-                                            <request-selector v-if="isSubPipelineParam(param.type)" :popover-min-width="250" v-bind="subPipelineOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
+                                            <request-selector v-if="isBuildResourceParam(param.type)" :popover-min-width="250" :url="getBuildResourceUrl(param.containerType)" param-id="name" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" :replace-key="param.replaceKey" :search-url="param.searchUrl"></request-selector>
+                                            <request-selector v-if="isSubPipelineParam(param.type)" :popover-min-width="250" v-bind="subPipelineOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" :replace-key="param.replaceKey" :search-url="param.searchUrl"></request-selector>
                                         </bk-form-item>
                                     </div>
 
@@ -93,7 +93,7 @@
                                     </bk-form-item>
 
                                     <bk-form-item label-width="auto" v-if="isSvnParam(param.type)" :label="$t('editPage.svnParams')" :is-error="errors.has(`param-${param.id}.repoHashId`)" :error-msg="errors.first(`param-${param.id}.repoHashId`)">
-                                        <request-selector v-bind="getRepoOption('CODE_SVN')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="'required'"></request-selector>
+                                        <request-selector v-bind="getRepoOption('CODE_SVN')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="'required'" :replace-key="param.replaceKey" :search-url="param.searchUrl"></request-selector>
                                     </bk-form-item>
 
                                     <bk-form-item label-width="auto" v-if="isSvnParam(param.type)" :label="$t('editPage.relativePath')" :is-error="errors.has(`param-${param.id}.relativePath`)" :error-msg="errors.first(`param-${param.id}.relativePath`)">
@@ -101,7 +101,7 @@
                                     </bk-form-item>
 
                                     <bk-form-item label-width="auto" v-if="isGitParam(param.type)" :label="$t('editPage.gitRepo')" :is-error="errors.has(`param-${param.id}.repoHashId`)" :error-msg="errors.first(`param-${param.id}.repoHashId`)">
-                                        <request-selector v-bind="getRepoOption('CODE_GIT')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="'required'"></request-selector>
+                                        <request-selector v-bind="getRepoOption('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="'required'" replace-key="{keyword}" :search-url="getSearchUrl()"></request-selector>
                                     </bk-form-item>
 
                                     <bk-form-item label-width="auto" v-if="isCodelibParam(param.type)" :label="$t('editPage.codelibParams')" :is-error="errors.has(`param-${param.id}.scmType`)" :error-msg="errors.first(`param-${param.id}.scmType`)">
@@ -155,7 +155,7 @@
     import validMixins from '../validMixins'
     import draggable from 'vuedraggable'
     import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { STORE_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
+    import { STORE_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, PROCESS_API_URL_PREFIX } from '@/store/constants'
     import {
         isTextareaParam,
         isStringParam,
@@ -506,6 +506,10 @@
             getCodeUrl (type) {
                 type = type || 'CODE_GIT'
                 return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`
+            },
+
+            getSearchUrl () {
+                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/repository/${this.$route.params.projectId}/hashId?repositoryType=CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT&permission=LIST&aliasName={keyword}&page=1&pageSize=200`
             },
 
             handleChange (params) {
