@@ -230,9 +230,9 @@ interface ServiceTxProjectResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("产品唯一标识", required = true)
-        @QueryParam("productCode")
-        productCode: String,
+        @ApiParam("蓝盾项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         @ApiParam("蓝盾项目名称", required = true)
         @QueryParam("projectName")
         projectName: String

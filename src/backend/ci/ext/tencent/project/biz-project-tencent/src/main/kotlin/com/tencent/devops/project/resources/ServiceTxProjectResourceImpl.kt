@@ -206,10 +206,10 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
     override fun getOrCreateRdsProject(
         userId: String,
-        productCode: String,
+        projectId: String,
         projectName: String
     ): Result<ProjectVO?> {
-        return Result(projectLocalService.getOrCreateRdsProject(userId, productCode, projectName))
+        return Result(projectLocalService.getOrCreateRdsProject(userId, projectId, projectName))
     }
 
     override fun create(
