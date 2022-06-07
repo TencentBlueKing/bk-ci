@@ -2,7 +2,6 @@ import { deepMerge } from '@/common/util';
 import successInterceptor from './success-interceptor';
 import errorInterceptor from './error-interceptor';
 import RequestError from './request-error';
-import { useRoute } from 'vue-router'
 
 interface IFetchConfig extends RequestInit {
   responseType?: 'json' | 'text' | 'arrayBuffer' | 'blob' | 'formData',
@@ -30,7 +29,7 @@ const allMethods = [...methodsWithoutData, ...methodsWithData];
 
 // 拼装发送请求配置
 const getFetchConfig = (method: string, payload: any, config: IFetchConfig) => {
-  const route = useRoute()
+  const execResult = /\/metrics\/([^\/]+)/.exec(location.href);
   // 合并配置
   let fetchConfig: IFetchConfig = deepMerge(
     {
@@ -39,7 +38,7 @@ const getFetchConfig = (method: string, payload: any, config: IFetchConfig) => {
       cache: 'default',
       credentials: 'include',
       headers: {
-        'X-DEVOPS-PROJECT-ID': route?.params?.projectId,
+        'X-DEVOPS-PROJECT-ID': execResult?.[1] || '',
       },
       redirect: 'follow',
       referrerPolicy: 'no-referrer-when-downgrade',
