@@ -38,8 +38,8 @@ import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record21
-import org.jooq.SelectOnConditionStep
+import org.jooq.Record13
+import org.jooq.SelectJoinStep
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -92,10 +92,9 @@ class MarketAtomEnvInfoDao {
         atomStatusList: List<Byte>?
     ): Record? {
         val tAtom = TAtom.T_ATOM
-        val tAtomEnvInfo = TAtomEnvInfo.T_ATOM_ENV_INFO
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         return if (atomDefaultFlag) {
-            getAtomEnvInfoBaseStep(dslContext, tAtom, tAtomEnvInfo)
+            getAtomEnvInfoBaseStep(dslContext, tAtom)
                 .where(queryDefaultAtomCondition(
                     tAtom = tAtom,
                     atomCode = atomCode,
@@ -103,7 +102,7 @@ class MarketAtomEnvInfoDao {
                     atomStatusList = atomStatusList
                 )).orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne()
         } else {
-            getAtomEnvInfoBaseStep(dslContext, tAtom, tAtomEnvInfo)
+            getAtomEnvInfoBaseStep(dslContext, tAtom)
                 .join(tStoreProjectRel)
                 .on(tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE))
                 .where(queryNormalAtomCondition(
@@ -119,9 +118,8 @@ class MarketAtomEnvInfoDao {
 
     private fun getAtomEnvInfoBaseStep(
         dslContext: DSLContext,
-        tAtom: TAtom,
-        tAtomEnvInfo: TAtomEnvInfo
-    ): SelectOnConditionStep<Record21<String, String, Byte, String, String, String, Boolean, String, String, Boolean, String, LocalDateTime, LocalDateTime, String, String, String, String, String, String, String, String>> {
+        tAtom: TAtom
+    ): SelectJoinStep<Record13<String, String, Byte, String, String, String, Boolean, String, String, Boolean, String, LocalDateTime, LocalDateTime>> {
         return dslContext.select(
             tAtom.ID,
             tAtom.ATOM_CODE,
@@ -135,18 +133,8 @@ class MarketAtomEnvInfoDao {
             tAtom.BUILD_LESS_RUN_FLAG,
             tAtom.JOB_TYPE,
             tAtom.CREATE_TIME,
-            tAtom.UPDATE_TIME,
-            tAtomEnvInfo.PKG_PATH,
-            tAtomEnvInfo.LANGUAGE,
-            tAtomEnvInfo.MIN_VERSION,
-            tAtomEnvInfo.TARGET,
-            tAtomEnvInfo.SHA_CONTENT,
-            tAtomEnvInfo.PRE_CMD,
-            tAtomEnvInfo.POST_ENTRY_PARAM,
-            tAtomEnvInfo.POST_CONDITION
+            tAtom.UPDATE_TIME
         ).from(tAtom)
-            .join(tAtomEnvInfo)
-            .on(tAtom.ID.eq(tAtomEnvInfo.ATOM_ID))
     }
 
     private fun getBaseQueryCondition(

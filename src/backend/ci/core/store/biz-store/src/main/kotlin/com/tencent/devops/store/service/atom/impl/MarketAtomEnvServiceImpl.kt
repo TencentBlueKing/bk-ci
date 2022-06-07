@@ -258,7 +258,9 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         projectCode: String,
         atomCode: String,
         version: String,
-        atomStatus: Byte?
+        atomStatus: Byte?,
+        osName: String?,
+        osArch: String?
     ): Result<AtomEnv?> {
         logger.info("getMarketAtomEnvInfo $projectCode,$atomCode,$version,$atomStatus")
         // 判断插件查看的权限
