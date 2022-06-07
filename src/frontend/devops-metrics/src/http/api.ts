@@ -39,7 +39,10 @@ export default {
     return fetch.post(`${METRICS_API}/pipeline/fail/infos/details?page=${page}&pageSize=${pageSize}`, params);
   },
   getProjectPluginList(params) {
-    return fetch.get(`${METRICS_API}/atom/display/get`, params);
+    return fetch.get(`${METRICS_API}/project/info/atom/list`, params);
+  },
+  getProjectShowPluginList() {
+    return fetch.get(`${METRICS_API}/atom/display/get`);
   },
   getProjectOptionPluginList(params) {
     return fetch.get(`${METRICS_API}/atom/display/optional/get`, params);

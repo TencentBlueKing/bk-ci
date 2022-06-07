@@ -30,7 +30,7 @@ const columns = [
   },
   {
     label: 'Error Type',
-    field: 'errorType',
+    field: 'errorTypeName',
   },
   {
     label: 'Error Code',

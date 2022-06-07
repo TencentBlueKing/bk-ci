@@ -30,7 +30,7 @@ const handleToggleShow = () => {
 const getPluginList = () => {
   isLoading.value = true;
   Promise.all([
-    http.getProjectPluginList(),
+    http.getProjectShowPluginList(),
     http.getProjectOptionPluginList({ keyword: searchStr.value }),
   ])
     .then(([
