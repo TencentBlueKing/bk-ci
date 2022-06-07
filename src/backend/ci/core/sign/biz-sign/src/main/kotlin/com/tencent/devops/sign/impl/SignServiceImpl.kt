@@ -34,6 +34,7 @@ import com.dd.plist.PropertyListParser
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.script.CommandLineUtils
+import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaInfoPlist
@@ -48,7 +49,6 @@ import com.tencent.devops.sign.service.SignService
 import com.tencent.devops.sign.utils.SignUtils
 import com.tencent.devops.sign.utils.SignUtils.APP_INFO_PLIST_FILENAME
 import com.tencent.devops.sign.utils.SignUtils.MAIN_APP_FILENAME
-import com.tencent.devops.common.util.HttpRetryUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -58,7 +58,7 @@ import java.io.InputStream
 import java.util.regex.Pattern
 
 @Service
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongMethod")
 class SignServiceImpl @Autowired constructor(
     private val fileService: FileService,
     private val signInfoService: SignInfoService,
@@ -154,8 +154,8 @@ class SignServiceImpl @Autowired constructor(
                         properties = properties
                     )
                 }
-            } catch (e: Exception) {
-                logger.error("archive | retry failed with message: ${e.message}")
+            } catch (ignore: Exception) {
+                logger.error("archive | retry failed: ", ignore)
                 false
             }
             if (!archiveResult) {
@@ -218,7 +218,9 @@ class SignServiceImpl @Autowired constructor(
                 projectId = ipaSignInfo.projectId,
                 mobileProvisionId = ipaSignInfo.mobileProvisionId!!
             )
-            mobileProvisionMap[MAIN_APP_FILENAME] = parseMobileProvision(mpFile)
+            mobileProvisionMap[MAIN_APP_FILENAME] = parseMobileProvision(
+                mpFile, ipaSignInfo.keychainAccessGroupList
+            )
         }
         ipaSignInfo.appexSignInfo?.forEach {
             val mpFile = mobileProvisionService.downloadMobileProvision(
@@ -226,7 +228,9 @@ class SignServiceImpl @Autowired constructor(
                 projectId = ipaSignInfo.projectId,
                 mobileProvisionId = it.mobileProvisionId
             )
-            mobileProvisionMap[it.appexName] = parseMobileProvision(mpFile)
+            mobileProvisionMap[it.appexName] = parseMobileProvision(
+                mpFile, ipaSignInfo.keychainAccessGroupList
+            )
         }
         return mobileProvisionMap
     }
@@ -239,13 +243,18 @@ class SignServiceImpl @Autowired constructor(
             mobileProvisionDir = mobileProvisionDir,
             ipaSignInfo = ipaSignInfo
         )
-        return if (wildcardMobileProvision == null) null else parseMobileProvision(wildcardMobileProvision)
+        return wildcardMobileProvision?.let {
+            parseMobileProvision(it, ipaSignInfo.keychainAccessGroupList)
+        }
     }
 
     /*
     * 通用逻辑-解析描述文件的内容
     * */
-    private fun parseMobileProvision(mobileProvisionFile: File): MobileProvisionInfo {
+    private fun parseMobileProvision(
+        mobileProvisionFile: File,
+        keyChainGroupsList: List<String>?
+    ): MobileProvisionInfo {
         val plistFile = File("${mobileProvisionFile.canonicalPath}.plist")
         val entitlementFile = File("${mobileProvisionFile.canonicalPath}.entitlement.plist")
         // 描述文件转为plist文件
@@ -281,7 +290,7 @@ class SignServiceImpl @Autowired constructor(
         val bundleIdString = (entitlementDict.objectForKey("application-identifier") as NSString).toString()
         val bundleId = bundleIdString.substring(bundleIdString.indexOf(".") + 1)
         // 统一处理entitlement文件
-        mobileProvisionService.handleEntitlement(entitlementFile)
+        mobileProvisionService.handleEntitlement(entitlementFile, keyChainGroupsList)
         return MobileProvisionInfo(
             mobileProvisionFile = mobileProvisionFile,
             plistFile = plistFile,
@@ -321,7 +330,7 @@ class SignServiceImpl @Autowired constructor(
             appName = MAIN_APP_FILENAME,
             replaceBundleId = ipaSignInfo.replaceBundleId ?: true,
             universalLinks = ipaSignInfo.universalLinks,
-            keychainAccessGroups = ipaSignInfo.keychainAccessGroups,
+            securityApplicationGroupList = ipaSignInfo.keychainAccessGroups,
             replaceKeyList = ipaSignInfo.replaceKeyList,
             codeSignPath = getCodeSignFile(ipaSignInfo.codeSignVersion),
             codesignExternalStr = ipaSignInfo.codesignExternalStr
@@ -445,7 +454,7 @@ class SignServiceImpl @Autowired constructor(
                 .flatMap { it.toList() }
                 .map { it as NSString }
                 .map { it.toString() }
-                .maxBy { it.length } ?: ""
+                .maxByOrNull { it.length } ?: ""
         } catch (ignore: Throwable) {
             ""
         }
