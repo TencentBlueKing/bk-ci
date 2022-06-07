@@ -231,6 +231,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             } else {
                 null
             }
+            existUpdateAtomFailSummaryDataPO?.let { updateAtomFailSummaryDataPOs.add(it) }
         }
         if (atomFailSummaryDataRecord != null || existUpdateAtomFailSummaryDataPO != null) {
             // 由于插件的构建数据是遍历model完成才进行db操作处理，故集合中的数据代表是最新的统计数据
@@ -356,6 +357,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             } else {
                 null
             }
+            existUpdateAtomOverviewDataPO?.let { updateAtomOverviewDataPOs.add(it) }
         }
         if (atomOverviewDataRecord != null || existUpdateAtomOverviewDataPO != null) {
             // 由于插件的构建数据是遍历model完成才进行db操作处理，故集合中的数据代表是最新的统计数据
