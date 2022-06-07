@@ -213,7 +213,6 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                 }.toList()
                 l
             }
-            // TODO: 这里问下怎么加bcs
             BuildType.PUBLIC_DEVCLOUD, BuildType.GIT_CI -> {
                 val publicImageList = client.get(ServiceDevCloudImageResource::class)
                     .listDevCloudImages(userId = userId, projectId = projectCode, public = true).data // 公共镜像
