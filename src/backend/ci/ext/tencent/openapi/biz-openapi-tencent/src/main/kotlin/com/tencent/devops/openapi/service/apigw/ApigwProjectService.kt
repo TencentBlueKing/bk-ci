@@ -29,8 +29,8 @@ package com.tencent.devops.openapi.service.apigw
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.consul.ConsulConstants
-import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
@@ -47,7 +47,8 @@ import org.springframework.stereotype.Service
 @Service
 class ApigwProjectService(
     private val client: Client,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val bkTag: BkTag
 ) {
 
     companion object {
@@ -62,8 +63,10 @@ class ApigwProjectService(
         centerName: String?,
         interfaceName: String? = "ApigwProjectService"
     ): List<ProjectVO>? {
-        logger.info("$interfaceName:getListByOrganizationId:Input(" +
-            "$userId,$organizationType,$organizationId,$deptName,$centerName)")
+        logger.info(
+            "$interfaceName:getListByOrganizationId:Input(" +
+                    "$userId,$organizationType,$organizationId,$deptName,$centerName)"
+        )
         return client.get(ServiceTxProjectResource::class).getProjectByName(
             userId = userId,
             organizationType = organizationType,
@@ -121,8 +124,10 @@ class ApigwProjectService(
         organizationId: Long,
         projectCode: String
     ): List<BKAuthProjectRolesResources>? {
-        logger.info("createPipelinePermission:organizationType[" +
-            "$organizationType],organizationId[$organizationId],projectCode[$projectCode]")
+        logger.info(
+            "createPipelinePermission:organizationType[" +
+                    "$organizationType],organizationId[$organizationId],projectCode[$projectCode]"
+        )
         return client.get(ServiceTxProjectResource::class).getProjectRoles(
             projectCode = projectCode
         ).data
@@ -133,7 +138,7 @@ class ApigwProjectService(
     ) {
         val projectRouteTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectCode)
         if (!projectRouteTag.isNullOrBlank()) {
-            ConsulContent.setConsulContent(projectRouteTag)
+            bkTag.setGatewayTag(projectRouteTag)
         }
     }
 }

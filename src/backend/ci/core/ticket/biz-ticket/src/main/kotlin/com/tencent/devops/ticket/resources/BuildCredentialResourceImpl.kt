@@ -33,6 +33,7 @@ import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.ticket.api.BuildCredentialResource
+import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.service.CredentialService
 import org.springframework.beans.factory.annotation.Autowired
@@ -140,5 +141,22 @@ class BuildCredentialResourceImpl @Autowired constructor(
             taskId = taskId ?: oldTaskId,
             credentialId = credentialId
         ))
+    }
+
+    override fun create(userId: String, projectId: String, credential: CredentialCreate): Result<Boolean> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (credential.credentialId.isBlank()) {
+            throw ParamBlankException("Invalid credentialId")
+        }
+        if (credential.v1.isBlank()) {
+            throw ParamBlankException("Invalid credential")
+        }
+        credentialService.userCreate(userId, projectId, credential, null)
+        return Result(true)
     }
 }

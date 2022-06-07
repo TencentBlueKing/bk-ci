@@ -23,15 +23,6 @@ spring:
                 username: __BK_CI_RABBITMQ_USER__
                 password: __BK_CI_RABBITMQ_PASSWORD__
                 addresses: __BK_CI_RABBITMQ_ADDR__
-#        extend-pulsar:
-#          type: pulsar
-#          environment:
-#            spring:
-#              pulsar:
-#                serviceUrl: __BK_CI_PULSAR_URL__
-#                tokenAuthValue: __BK_CI_PULSAR_TOKEN__
-#                tenant: __BK_CI_PULSAR_TENANT__
-#                namespace: __BK_CI_PULSAR_NAMESPACE__
       default-binder: extend-rabbit
 # redis config
   redis:
