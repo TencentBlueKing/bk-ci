@@ -55,15 +55,12 @@ class BcsTaskClient @Autowired constructor(
         private val logger = LoggerFactory.getLogger(BcsBuilderClient::class.java)
     }
 
-    @Value("\${bcs.apiUrl}")
-    val bcsApiUrl: String = ""
-
     fun getTasksStatus(
         userId: String,
         taskId: String,
         retryFlag: Int = 3
     ): BcsResult<BcsTaskStatusResp> {
-        val url = "$bcsApiUrl/api/v1/devops/taskstatus/$taskId"
+        val url = "/api/v1/devops/taskstatus/$taskId"
         val request = clientCommon.baseRequest(userId, url).get().build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
@@ -131,7 +128,7 @@ class BcsTaskClient @Autowired constructor(
         }
         // 请求成功但是任务失败
         if (status != null && status.isFailed()) {
-            return Pair(status, taskResponse!!.data?.message)
+            return Pair(status, taskResponse.data?.message)
         }
 
         return Pair(status, null)

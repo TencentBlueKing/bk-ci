@@ -65,9 +65,6 @@ class BcsBuilderClient @Autowired constructor(
         private val logger = LoggerFactory.getLogger(BcsBuilderClient::class.java)
     }
 
-    @Value("\${bcs.apiUrl}")
-    val bcsApiUrl: String = ""
-
     fun getBuilderDetail(
         buildId: String,
         vmSeqId: String,
@@ -75,7 +72,7 @@ class BcsBuilderClient @Autowired constructor(
         name: String,
         retryTime: Int = 3
     ): BcsResult<BcsBuilderStatus> {
-        val url = "$bcsApiUrl/api/v1/devops/builder/$name"
+        val url = "/api/v1/devops/builder/$name"
         logger.info("[$buildId]|[$vmSeqId] request url: $url")
         val request = clientCommon.baseRequest(userId, url).get().build()
         try {
@@ -124,7 +121,7 @@ class BcsBuilderClient @Autowired constructor(
         name: String,
         param: BcsOperateBuilderParams
     ): String {
-        val url = "$bcsApiUrl/api/v1/devops/builder/$name"
+        val url = "/api/v1/devops/builder/$name"
         val body = ObjectMapper().writeValueAsString(param)
         val (request, action) = when (param) {
             is BcsDeleteBuilderParams -> Pair(
@@ -192,7 +189,7 @@ class BcsBuilderClient @Autowired constructor(
         userId: String,
         bcsBuilder: BcsBuilder
     ): String {
-        val url = "$bcsApiUrl/api/v1/devops/builder/${bcsBuilder.name}"
+        val url = "/api/v1/devops/builder/${bcsBuilder.name}"
         val body = ObjectMapper().writeValueAsString(bcsBuilder)
         logger.info("[$buildId]|[$vmSeqId] request url: $url")
         logger.info("[$buildId]|[$vmSeqId] request body: $body")
@@ -287,7 +284,7 @@ class BcsBuilderClient @Autowired constructor(
         staffName: String,
         builderName: String
     ): BcsResult<String> {
-        val url = bcsApiUrl + "/api/v1/devops/builder/" + builderName + "/terminal"
+        val url = "/api/v1/devops/builder/$builderName/terminal"
         logger.info("request url: $url, staffName: $staffName")
 
         val request = clientCommon.baseRequest(staffName, url)
@@ -331,7 +328,7 @@ class BcsBuilderClient @Autowired constructor(
         builderName: String,
         bcsBuildImageReq: BcsBuildImageReq
     ): String {
-        val url = bcsApiUrl + "/api/v1/devops/builder/" + builderName + "/images"
+        val url = "/api/v1/devops/builder/$builderName/images"
         logger.info("Build and push image, request url: $url, staffName: $userId")
 
         val request = clientCommon.baseRequest(userId, url)

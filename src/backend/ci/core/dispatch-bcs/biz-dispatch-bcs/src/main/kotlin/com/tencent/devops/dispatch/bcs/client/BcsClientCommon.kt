@@ -27,30 +27,35 @@
 
 package com.tencent.devops.dispatch.bcs.client
 
+import com.tencent.devops.common.service.config.CommonConfig
 import okhttp3.Headers
 import okhttp3.Request
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.net.URLEncoder
 
 @Component
-class BcsClientCommon {
+class BcsClientCommon @Autowired constructor(
+    private val commonConfig: CommonConfig
+) {
 
     companion object {
         private const val BCS_TOKEN_KEY = "BK-Devops-Token"
     }
 
+    @Value("\${bcs.apiUrl}")
+    val bcsApiUrl: String = ""
+
     @Value("\${bcs.token}")
     val bcsToken: String = ""
 
-    @Value("\${devopsGateway.idcProxy:#{null}}")
-    val idcProxy: String? = null
-
     fun baseRequest(userId: String, url: String, headers: Map<String, String>? = null): Request.Builder {
-        return Request.Builder().url(url(url)).headers(headers(headers))
+        return Request.Builder().url(url(bcsApiUrl + url)).headers(headers(headers))
     }
 
-    fun url(realUrl: String) = "$idcProxy/proxy-devnet?url=${URLEncoder.encode(realUrl, "UTF-8")}"
+    fun url(realUrl: String) = "${commonConfig.devopsIdcProxyGateway}/proxy-devnet?" +
+        "url=${URLEncoder.encode(realUrl, "UTF-8")}"
 
     fun headers(otherHeaders: Map<String, String>? = null): Headers {
         val result = mutableMapOf<String, String>()
