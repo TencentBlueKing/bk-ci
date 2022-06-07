@@ -56,7 +56,6 @@ interface ExternalRepoResource {
         state: String
     ): Response
 
-
     @ApiOperation("tapd回调重定向url")
     @GET
     @Path("/tapd/callback")

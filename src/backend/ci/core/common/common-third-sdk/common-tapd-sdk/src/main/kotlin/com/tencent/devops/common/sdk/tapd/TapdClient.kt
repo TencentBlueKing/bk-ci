@@ -17,6 +17,6 @@ interface TapdClient {
         redirectUri: String,
         scope: String,
         authBy: TapdAuthType = TapdAuthType.WORKSPACE,
-        state: String,
+        state: String
     ): String
 }

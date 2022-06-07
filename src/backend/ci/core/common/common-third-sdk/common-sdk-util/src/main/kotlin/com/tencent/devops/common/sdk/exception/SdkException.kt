@@ -32,7 +32,6 @@ class SdkException : RuntimeException {
 
     constructor(errMsg: String) : super(errMsg)
 
-
     constructor(errCode: Int, errMsg: String) : this(errMsg) {
         this.errCode = errCode
     }

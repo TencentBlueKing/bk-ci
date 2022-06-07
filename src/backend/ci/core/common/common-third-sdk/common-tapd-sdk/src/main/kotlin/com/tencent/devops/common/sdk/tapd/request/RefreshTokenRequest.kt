@@ -39,7 +39,7 @@ data class RefreshTokenRequest(
     @JsonProperty("grant_type")
     val grantType: String = "refresh_token",
     @JsonProperty("refresh_token")
-    val refreshToken: String,
+    val refreshToken: String
 ) : TapdRequest<OauthTokenResponse>() {
     override fun getHttpMethod() = HttpMethod.POST
 
