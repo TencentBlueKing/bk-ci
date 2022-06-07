@@ -44,6 +44,7 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
@@ -69,7 +70,8 @@ class StreamYamlTrigger @Autowired constructor(
     private val yamlTemplateService: YamlTemplateService,
     private val streamBasicSettingService: StreamBasicSettingService,
     private val yamlBuild: StreamYamlBuild,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val streamYamlBaseBuild: StreamYamlBaseBuild
 ) {
 
     companion object {
@@ -86,9 +88,19 @@ class StreamYamlTrigger @Autowired constructor(
         action: BaseAction
     ): Boolean {
         logger.info("|${action.data.context.requestEventId}|triggerBuild|action|${action.format()}")
-
-        val pipeline = action.data.context.pipeline!!
-
+        var pipeline = action.data.context.pipeline!!
+        // 提前创建新流水线，保证git提交后 stream上能看到
+        if (pipeline.pipelineId.isBlank()) {
+            pipeline = StreamTriggerPipeline(
+                gitProjectId = action.data.getGitProjectId(),
+                pipelineId = "",
+                filePath = pipeline.filePath,
+                displayName = pipeline.filePath,
+                enabled = true,
+                creator = action.data.getUserId()
+            )
+            streamYamlBaseBuild.createNewPipeLine(pipeline = pipeline, action = action)
+        }
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
         val gitProjectInfo = action.api.getGitProjectInfo(
             action.getGitCred(),
@@ -281,5 +293,15 @@ class StreamYamlTrigger @Autowired constructor(
                         .contains(action.data.context.pipeline!!.filePath) &&
                     action.data.context.repoTrigger == null
                 )
+    }
+
+    // 看是否使用stream 开启人的id
+    private fun getOauthUser(userId: String, isEnableUser: Boolean, gitProjectId: Long): String {
+        return if (isEnableUser) {
+            val setting = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
+            setting.enableUserId
+        } else {
+            userId
+        }
     }
 }
