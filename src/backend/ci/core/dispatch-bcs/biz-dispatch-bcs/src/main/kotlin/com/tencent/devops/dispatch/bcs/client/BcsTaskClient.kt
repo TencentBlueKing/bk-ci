@@ -41,7 +41,6 @@ import com.tencent.devops.dispatch.bcs.pojo.bcs.isSuccess
 import com.tencent.devops.dispatch.bcs.pojo.bcs.resp.BcsTaskStatusResp
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.net.SocketTimeoutException
 
