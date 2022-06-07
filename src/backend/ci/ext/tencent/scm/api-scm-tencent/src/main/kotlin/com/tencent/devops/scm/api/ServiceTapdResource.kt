@@ -57,7 +57,7 @@ interface ServiceTapdResource {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
-    ): String
+    ): Result<String>
 
     @ApiOperation("tapd回调url")
     @GET
@@ -72,7 +72,7 @@ interface ServiceTapdResource {
         @ApiParam(value = "resource")
         @QueryParam("resource")
         resource: String
-    ): String
+    ): Result<String>
 
     @ApiOperation("获取工作流状态中英文名对应关系")
     @POST

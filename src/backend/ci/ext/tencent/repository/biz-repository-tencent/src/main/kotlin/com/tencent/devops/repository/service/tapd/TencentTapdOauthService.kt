@@ -13,7 +13,7 @@ class TencentTapdOauthService(
 ) : ITapdOauthService {
 
     override fun appInstallUrl(userId: String): String {
-        return client.getScm(ServiceTapdResource::class).appInstallUrl(userId = userId)
+        return client.getScm(ServiceTapdResource::class).appInstallUrl(userId = userId).data!!
     }
 
     override fun callbackUrl(code: String, state: String, resource: String): String {
@@ -21,6 +21,6 @@ class TencentTapdOauthService(
             code = code,
             state = state,
             resource = resource
-        )
+        ).data!!
     }
 }
