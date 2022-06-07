@@ -34,6 +34,9 @@ object MQ {
     const val ROUTE_PIPELINE_UPDATE = "r.engine.pipeline.update"
     const val QUEUE_PIPELINE_UPDATE = "q.engine.pipeline.update"
 
+    const val ROUTE_PIPELINE_RENAME = "r.engine.pipeline.rename"
+    const val QUEUE_PIPELINE_RENAME = "q.engine.pipeline.rename"
+
     const val ROUTE_PIPELINE_CREATE = "r.engine.pipeline.create"
     const val QUEUE_PIPELINE_CREATE = "q.engine.pipeline.create"
 
