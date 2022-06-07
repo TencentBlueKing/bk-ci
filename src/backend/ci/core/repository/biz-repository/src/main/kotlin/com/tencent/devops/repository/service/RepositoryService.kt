@@ -444,7 +444,8 @@ class RepositoryService @Autowired constructor(
     private fun generateFinalTokenType(tokenType: TokenTypeEnum, repoProjectName: String): TokenTypeEnum {
         // 兼容历史插件的代码库不在公共group下的情况，历史插件的代码库信息更新要用用户的token更新
         var finalTokenType = tokenType
-        if (!repoProjectName.startsWith(devopsGroupName)) {
+        if (!repoProjectName.startsWith(devopsGroupName) && !repoProjectName
+                .contains("bkdevops-extension-service", true)) {
             finalTokenType = TokenTypeEnum.OAUTH
         }
         return finalTokenType
@@ -470,21 +471,16 @@ class RepositoryService @Autowired constructor(
     ): Long {
         if (!repository.isLegal()) {
             logger.warn("The repository($repository) is illegal")
-            val validateResult: Result<String?> = MessageCodeUtil.generateResponseDataObject(
-                RepositoryMessageCode.REPO_PATH_WRONG_PARM,
-                arrayOf(repository.getStartPrefix())
-            )
-            throw OperationException(
-                validateResult.message!!
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.REPO_PATH_WRONG_PARM,
+                params = arrayOf(repository.getStartPrefix())
             )
         }
 
         if (hasAliasName(projectId, null, repository.aliasName)) {
-            throw OperationException(
-                MessageCodeUtil.generateResponseDataObject<String?>(
-                    RepositoryMessageCode.REPO_NAME_EXIST,
-                    arrayOf(repository.aliasName)
-                ).message!!
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.REPO_NAME_EXIST,
+                params = arrayOf(repository.aliasName)
             )
         }
 
@@ -663,7 +659,11 @@ class RepositoryService @Autowired constructor(
                     aliasName = repository.aliasName,
                     url = repository.url,
                     credentialId = record.credentialId,
-                    region = CodeSvnRegion.valueOf(record.region),
+                    region = if (record.region.isNullOrBlank()) {
+                        CodeSvnRegion.TC
+                    } else {
+                        CodeSvnRegion.valueOf(record.region)
+                    },
                     projectName = record.projectName,
                     userName = record.userName,
                     projectId = repository.projectId,
@@ -851,7 +851,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeSvnDao.edit(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        region = repository.region,
+                        region = repository.region ?: CodeSvnRegion.TC,
                         projectName = repository.projectName,
                         userName = repository.userName,
                         credentialId = repository.credentialId,

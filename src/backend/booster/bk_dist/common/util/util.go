@@ -361,3 +361,34 @@ func ProcessExistTimeoutAndKill(target string, timeout time.Duration) bool {
 
 	return false
 }
+
+func hasSpace(s string) bool {
+	if s == "" {
+		return false
+	}
+
+	for _, v := range s {
+		if v == ' ' {
+			return true
+		}
+	}
+
+	return false
+}
+
+// QuoteSpacePath quote path if include space
+func QuoteSpacePath(s string) string {
+	if s == "" {
+		return ""
+	}
+
+	if !hasSpace(s) {
+		return s
+	}
+
+	if s[0] == '"' || s[0] == '\'' {
+		return s
+	}
+
+	return "\"" + s + "\""
+}

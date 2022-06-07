@@ -73,7 +73,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageImpl;
@@ -428,7 +428,7 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
         defectVOs = defectVOs.subList(subListBeginIdx, subListEndIdx > total ? total : subListEndIdx);
 
         //封装分页类
-        Pageable pageable = new PageRequest(pageNum, pageSize, new Sort(sortType, sortField));
+        Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by(sortType, sortField));
         return new PageImpl<>(defectVOs, pageable, total);
     }
 

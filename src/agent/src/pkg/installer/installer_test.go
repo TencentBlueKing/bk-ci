@@ -29,7 +29,6 @@ package installer
 
 import (
 	"testing"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/installer"
 )
 
 func Test_DoInstallAgent_01(t *testing.T) {

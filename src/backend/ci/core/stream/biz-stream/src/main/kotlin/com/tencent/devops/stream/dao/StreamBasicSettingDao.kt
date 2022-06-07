@@ -36,6 +36,8 @@ import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.StreamCIInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record1
+import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -447,6 +449,31 @@ class StreamBasicSettingDao {
     ): TGitBasicSettingRecord? {
         return with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode)).fetchAny()
+        }
+    }
+
+    fun getSettingByEnableUserId(
+        dslContext: DSLContext,
+        enableUserId: String,
+        limit: Int
+    ): Result<Record1<Long>> {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            return dslContext.select(ID).from(this)
+                .where(ENABLE_USER_ID.eq(enableUserId))
+                .limit(limit)
+                .fetch()
+        }
+    }
+
+    fun updateEnableUserIdByIds(
+        dslContext: DSLContext,
+        newUserId: String,
+        idList: List<Long>
+    ): Int {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            return dslContext.update(this)
+                .set(ENABLE_USER_ID, newUserId)
+                .where(ID.`in`(idList)).execute()
         }
     }
 }

@@ -62,6 +62,8 @@ type ExtraString struct {
 
 // NewBooster get a new booster instance
 func NewBooster(config dcType.BoosterConfig) (*Booster, error) {
+	blog.Infof("booster: new booster with config:%+v", config)
+
 	ensureConfig(&config)
 
 	cli := httpclient.NewHTTPClient()
@@ -457,7 +459,10 @@ func (b *Booster) runWithApply(pCtx context.Context) (int, error) {
 
 		case e := <-event:
 			if err = b.parseEvent(e); err != nil {
-				return b.runDegradeWorks(ctx)
+				// TODO (tomtian) : do not degrade when failed to apply resource
+				// return b.runDegradeWorks(ctx)
+				blog.Infof("booster: failed to apply resource for work(%s) with error:%v", b.workID, err)
+				return b.runWorks(ctx, nil, nil)
 			}
 			return b.runWorks(ctx, nil, nil)
 		}
@@ -1231,6 +1236,7 @@ func (b *Booster) setToolChainWithJSON(tools *dcSDK.Toolchain) error {
 			Data: data,
 		}
 
+		blog.Infof("booster: set tool chain with WorkerKey:%+v", commonconfig.WorkerKey)
 		err := b.controller.SetConfig(&commonconfig)
 		if err != nil {
 			blog.Warnf("booster: failed to set config [%+v] with error:%v", commonconfig, err)

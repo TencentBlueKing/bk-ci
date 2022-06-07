@@ -88,7 +88,7 @@ public class CommonConfigCheckerPkgBizServiceImpl implements IBizService<ConfigC
                 }
             });
 
-            defectRepository.save(needUpdateDefectList);
+            defectRepository.saveAll(needUpdateDefectList);
         }
         return new Result(CommonMessageCode.SUCCESS);
     }

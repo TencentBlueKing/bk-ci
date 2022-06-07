@@ -62,7 +62,8 @@ class PipelineRetryFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        taskId: String? = null
+        taskId: String? = null,
+        skipFailedTask: Boolean? = false
     ): Boolean {
         logger.info("runningBuildTaskRetry $userId|$projectId|$pipelineId|$buildId|$taskId}")
         if (taskId.isNullOrEmpty()) {
@@ -92,7 +93,7 @@ class PipelineRetryFacadeService @Autowired constructor(
         // 校验当前job的关机事件是否有完成
         checkStopTask(projectId, buildId, containerInfo!!)
         // 刷新当前job的开关机以及job状态， container状态， detail数据
-        refreshTaskAndJob(userId, projectId, buildId, taskId, containerInfo)
+        refreshTaskAndJob(userId, projectId, buildId, taskId, containerInfo, skipFailedTask)
         // 发送container Refreash事件，重新开始task对应的调度
         sendContainerEvent(taskInfo, userId)
         buildLogPrinter.addYellowLine(
@@ -144,13 +145,19 @@ class PipelineRetryFacadeService @Autowired constructor(
         projectId: String,
         buildId: String,
         taskId: String,
-        containerInfo: PipelineBuildContainer
+        containerInfo: PipelineBuildContainer,
+        skipFailedTask: Boolean? = false
     ) {
         val taskRecords = pipelineTaskService.listContainerBuildTasks(projectId, buildId, containerInfo.containerId)
         // 待重试task所属job对应的startVm，stopVm，endTask，对应task状态重置为Queue
         val startAndEndTask = mutableListOf<PipelineBuildTask>()
         taskRecords.forEach { task ->
             if (task.taskId == taskId) {
+                // issues_6831: 若设置了手动跳过 且重试时选择了跳过当前插件则不刷新当前失败的插件,直接把task内状态改为SKIP
+                if (task.additionalOptions?.manualSkip == true && skipFailedTask!!) {
+                    pipelineTaskService.updateTaskStatus(task = task, userId = userId, buildStatus = BuildStatus.SKIP)
+                    return@forEach
+                }
                 startAndEndTask.add(task)
             } else if (task.taskName.startsWith(VMUtils.getCleanVmLabel()) &&
                 task.taskId.startsWith(VMUtils.getStopVmLabel())) {
