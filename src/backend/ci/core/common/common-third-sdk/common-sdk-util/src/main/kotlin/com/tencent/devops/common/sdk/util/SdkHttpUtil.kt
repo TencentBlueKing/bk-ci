@@ -108,6 +108,9 @@ object SdkHttpUtil {
 
 
         val finalUrl = "${apiUrl.removeSuffix("/")}/${request.getApiPath().removePrefix("/")}"
+        logger.info(
+            "request $finalUrl by headers(${SdkJsonUtil.toJson(headers)}), params:${SdkJsonUtil.toJson(params)}"
+        )
         val httpRequest = when (request.getHttpMethod()) {
             HttpMethod.GET ->
                 buildGet(url = finalUrl, headers = headers, params = params)
