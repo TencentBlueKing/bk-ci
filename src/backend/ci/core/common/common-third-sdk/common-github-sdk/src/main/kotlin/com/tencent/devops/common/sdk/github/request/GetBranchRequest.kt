@@ -38,7 +38,7 @@ data class GetBranchRequest(
     @JsonIgnore
     val repo: String,
     @JsonIgnore
-    val branch: String,
+    val branch: String
 ) : GithubRequest<BranchResponse>() {
     override fun getHttpMethod() = HttpMethod.GET
 

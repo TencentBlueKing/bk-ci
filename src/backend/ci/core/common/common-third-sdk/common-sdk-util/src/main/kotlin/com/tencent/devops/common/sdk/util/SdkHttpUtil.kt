@@ -106,7 +106,6 @@ object SdkHttpUtil {
         params.putAll(requestParams)
         params.putAll(request.getUdfParams())
 
-
         val finalUrl = "${apiUrl.removeSuffix("/")}/${request.getApiPath().removePrefix("/")}"
         logger.info(
             "request $finalUrl by " +

@@ -41,5 +41,5 @@ data class OauthTokenResponse(
     val refreshToken: String?,
     val scope: String,
     val resource: OauthTokenResource,
-    val now: String,
+    val now: String
 )

@@ -49,7 +49,7 @@ open class DefaultTapdClient(
             url = "$url&show_installed=$showInstalled"
         }
         if (state != null) {
-            url = "$url&state=$state"
+            url = "$url&state=${URLEncoder.encode(state, "UTF-8")}"
         }
         return url
     }
