@@ -109,6 +109,15 @@ object CommandLineUtils {
         }
 
         val errorStream = object : LogOutputStream() {
+
+            override fun processBuffer() {
+                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
+                privateStringField.isAccessible = true
+                val buffer = privateStringField.get(this) as ByteArrayOutputStream
+                processLine(buffer.toString(charset))
+                buffer.reset()
+            }
+
             override fun processLine(line: String?, level: Int) {
                 if (line == null) {
                     return

@@ -253,15 +253,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     private fun inQueue(agent: ThirdPartyAgent, event: PipelineAgentStartupEvent, agentId: String, workspace: String?) {
 
         thirdPartyAgentBuildService.queueBuild(
-            projectId = event.projectId,
-            agentId = agentId,
-            pipelineId = event.pipelineId,
-            buildId = event.buildId,
-            vmSeqId = event.vmSeqId,
+            agent = agent,
             thirdPartyAgentWorkspace = workspace ?: "",
-            pipelineName = event.pipelineName,
-            buildNo = event.buildNo,
-            taskName = event.taskName
+            event = event
         )
 
         thirdPartyAgentBuildRedisUtils.setThirdPartyBuild(

@@ -23,7 +23,7 @@ import com.tencent.devops.common.constant.CommonMessageCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.bson.types.ObjectId;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -55,7 +55,7 @@ public class CCNDefectOperateBizServiceImpl extends AbstractDefectOperateBizServ
         }
         //如果comment_id为空，则表示是重新新建的评论系列
         if(StringUtils.isBlank(commentId)){
-            CCNDefectEntity ccnDefectEntity = ccnDefectRepository.findByEntityId(defectId);
+            CCNDefectEntity ccnDefectEntity = ccnDefectRepository.findFirstByEntityId(defectId);
             CodeCommentEntity codeCommentEntity = new CodeCommentEntity();
             SingleCommentEntity singleCommentEntity = new SingleCommentEntity();
             BeanUtils.copyProperties(singleCommentVO, singleCommentEntity);
