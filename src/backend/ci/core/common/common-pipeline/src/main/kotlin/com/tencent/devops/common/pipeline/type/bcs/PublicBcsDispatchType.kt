@@ -19,9 +19,17 @@ data class PublicBcsDispatchType(
     override var imageVersion: String? = "",
     // 商店镜像名称
     override var imageName: String? = ""
-) : StoreDispatchType(if (image.isNullOrBlank())
-    imageCode else image, DispatchRouteKeySuffix.BCS, imageType, credentialId, credentialProject, imageCode,
-    imageVersion, imageName) {
+) : StoreDispatchType(
+    dockerBuildVersion = if (image.isNullOrBlank())
+        imageCode else image,
+    routeKeySuffix = DispatchRouteKeySuffix.BCS,
+    imageType = imageType,
+    credentialId = credentialId,
+    credentialProject = credentialProject,
+    imageCode = imageCode,
+    imageVersion = imageVersion,
+    imageName = imageName
+) {
     override fun cleanDataBeforeSave() {
         this.image = this.image?.trim()
         this.credentialId = this.credentialId?.trim()
