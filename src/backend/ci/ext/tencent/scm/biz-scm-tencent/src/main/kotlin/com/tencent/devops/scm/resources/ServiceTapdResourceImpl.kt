@@ -27,6 +27,7 @@
 
 package com.tencent.devops.scm.resources
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.sdk.tapd.TapdResult
 import com.tencent.devops.common.sdk.tapd.request.StatusMapRequest
 import com.tencent.devops.common.web.RestResource
@@ -41,12 +42,12 @@ class ServiceTapdResourceImpl @Autowired constructor(
     private val tapdWorkflowService: ITapdWorkflowService
 ) : ServiceTapdResource {
 
-    override fun appInstallUrl(userId: String): String {
-        return tapdOauthService.appInstallUrl(userId = userId)
+    override fun appInstallUrl(userId: String): Result<String> {
+        return Result(tapdOauthService.appInstallUrl(userId = userId))
     }
 
-    override fun callbackUrl(code: String, state: String, resource: String): String {
-        return tapdOauthService.callbackUrl(code, state, resource)
+    override fun callbackUrl(code: String, state: String, resource: String): Result<String> {
+        return Result(tapdOauthService.callbackUrl(code, state, resource))
     }
 
     override fun getWorkflowStatusMap(request: StatusMapRequest): TapdResult<Map<String, String>> {
