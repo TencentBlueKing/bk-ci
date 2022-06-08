@@ -711,12 +711,17 @@ class QualityRuleCheckService @Autowired constructor(
                         updateTime = time
                     )
                 } else {
+                    val result = if (rule.operation == RuleOperation.AUDIT && null != rule.auditUserList) {
+                        RuleInterceptResult.WAIT.name
+                    } else {
+                        RuleInterceptResult.FAIL.name
+                    }
                     historyService.serviceCreate(
                         projectId = projectId,
                         ruleId = ruleId,
                         pipelineId = pipelineId,
                         buildId = buildId,
-                        result = RuleInterceptResult.FAIL.name,
+                        result = result,
                         interceptList = interceptList,
                         createTime = time,
                         updateTime = time

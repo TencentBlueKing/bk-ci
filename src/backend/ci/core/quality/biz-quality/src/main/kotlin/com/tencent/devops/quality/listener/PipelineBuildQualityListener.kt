@@ -27,12 +27,16 @@
 
 package com.tencent.devops.quality.listener
 
+import com.tencent.devops.common.api.enums.BuildReviewType
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewBroadCastEvent
 import com.tencent.devops.quality.constant.MQ as QualityMQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
+import com.tencent.devops.quality.dao.HistoryDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -47,7 +51,8 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineBuildQualityListener @Autowired constructor(
     private val dslContext: DSLContext,
-    private val qualityRuleBuildHisDao: QualityRuleBuildHisDao
+    private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
+    private val qualityHistoryDao: HistoryDao
 ) {
 
     companion object {
@@ -143,6 +148,38 @@ class PipelineBuildQualityListener @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.warn("pipelineTimeoutListener error: ${e.message}")
+        }
+    }
+
+    /**
+     * 蓝盾流水线质量红线人工审核广播事件
+     */
+    @RabbitListener(
+        bindings = [(QueueBinding(
+            value = Queue(value = QualityMQ.QUEUE_PIPELINE_BUILD_QUALITY_REVIEW, durable = "true"),
+            exchange = Exchange(
+                value = MQ.EXCHANGE_PIPELINE_BUILD_QUALITY_REVIEW_FANOUT,
+                durable = "true",
+                delayed = "true",
+                type = ExchangeTypes.FANOUT
+            )
+        ))]
+    )
+    fun listenPipelineQualityReviewBroadCastEvent(event: PipelineBuildQualityReviewBroadCastEvent) {
+        try {
+            logger.info("QUALITY|qualityReviewListener reviewEvent: $event")
+            val action = if (event.reviewType == BuildReviewType.QUALITY_TASK_REVIEW_PASS)
+                RuleInterceptResult.INTERCEPT_PASS else RuleInterceptResult.INTERCEPT
+            val ruleIds = event.ruleIds.map { HashUtil.decodeIdToLong(it) }.toSet()
+            qualityHistoryDao.batchUpdateHistoryResult(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                result = action,
+                ruleIds = ruleIds
+            )
+        } catch (e: Exception) {
+            logger.error("quality review error: ${e.message}")
         }
     }
 }

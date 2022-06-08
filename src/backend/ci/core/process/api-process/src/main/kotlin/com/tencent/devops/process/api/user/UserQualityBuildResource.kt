@@ -70,6 +70,8 @@ interface UserQualityBuildResource {
         elementId: String,
         @ApiParam("动作", required = true)
         @PathParam("action")
-        action: ManualReviewAction
+        action: ManualReviewAction,
+        @ApiParam("红线ID", required = true)
+        ruleIds: List<String>
     ): Result<Boolean>
 }
