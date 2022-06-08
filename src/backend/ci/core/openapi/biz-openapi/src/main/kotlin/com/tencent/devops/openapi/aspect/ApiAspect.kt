@@ -55,7 +55,7 @@ class ApiAspect(
         private val logger = LoggerFactory.getLogger(ApiAspect::class.java)
     }
 
-    @Value("\${openapi:verify:project: #{null}}")
+    @Value("\${openapi.verify.project: #{null}}")
     val verifyProjectFlag: String = "false"
 
     /**
