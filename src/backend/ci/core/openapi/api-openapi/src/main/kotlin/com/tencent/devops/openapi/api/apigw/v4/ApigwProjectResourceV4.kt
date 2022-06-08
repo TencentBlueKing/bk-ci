@@ -78,7 +78,7 @@ interface ApigwProjectResourceV4 {
     ): Result<Boolean>
 
     @PUT
-    @Path("/{projectId}/project")
+    @Path("/{projectId}")
     @ApiOperation("修改项目", tags = ["v4_user_project_edit", "v4_app_project_edit"])
     fun update(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -101,7 +101,7 @@ interface ApigwProjectResourceV4 {
     ): Result<Boolean>
 
     @GET
-    @Path("/{projectId}/project")
+    @Path("/{projectId}")
     @ApiOperation("获取项目信息", tags = ["v4_user_project_get", "v4_app_project_get"])
     fun get(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
