@@ -62,6 +62,9 @@ class MarketAtomEnvInfoDao {
                 PRE_CMD,
                 POST_ENTRY_PARAM,
                 POST_CONDITION,
+                OS_NAME,
+                OS_ARCH,
+                DEFAULT_FLAG,
                 CREATOR,
                 MODIFIER
             )
@@ -77,6 +80,9 @@ class MarketAtomEnvInfoDao {
                     atomEnvRequest.preCmd,
                     atomEnvRequest.atomPostInfo?.postEntryParam,
                     atomEnvRequest.atomPostInfo?.postCondition,
+                    atomEnvRequest.osName,
+                    atomEnvRequest.osArch,
+                    atomEnvRequest.defaultFlag,
                     atomEnvRequest.userId,
                     atomEnvRequest.userId
                 ).execute()
