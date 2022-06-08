@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.web.RestResource
@@ -205,6 +206,21 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             buildId = buildId,
             tag = tag,
             executeCount = executeCount
+        )
+    }
+
+    override fun getLogLastLineNum(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<QueryLogLineNum> {
+        logger.info("downloadLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId]")
+        return client.get(ServiceLogResource::class).getLogLastLineNum(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
         )
     }
 

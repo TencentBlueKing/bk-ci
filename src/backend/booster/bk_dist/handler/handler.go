@@ -58,6 +58,9 @@ type Handler interface {
 	// LocalExecute will execute this command by handler
 	LocalExecute(command []string) (int, error)
 
+	// NeedRemoteResource check whether this command need remote resource
+	NeedRemoteResource(command []string) bool
+
 	// RemoteRetryTimes will return the remote retry times
 	RemoteRetryTimes() int
 

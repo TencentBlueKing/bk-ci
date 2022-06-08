@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.docker.service
 
+import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
 import org.springframework.stereotype.Service
 
 @Service

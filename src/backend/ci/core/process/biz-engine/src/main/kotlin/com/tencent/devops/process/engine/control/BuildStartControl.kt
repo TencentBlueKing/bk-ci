@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
@@ -326,6 +327,7 @@ class BuildStartControl @Autowired constructor(
                         buildStatus = BuildStatus.SUCCEED
                     )
                     it.status = BuildStatus.SUCCEED.name
+                    buildLogPrinter.stopLog(buildInfo.buildId, taskId, jobId = JOB_ID, executeCount)
                     return@lit
                 }
             }
@@ -343,6 +345,7 @@ class BuildStartControl @Autowired constructor(
         stage.status = BuildStatus.SUCCEED.name
         stage.elapsed = max(0, System.currentTimeMillis() - buildInfo.queueTime)
         container.status = BuildStatus.SUCCEED.name
+        container.startEpoch = now.timestampmilli()
         container.systemElapsed = stage.elapsed // 修复可能导致负数的情况
         container.elementElapsed = 0
         container.executeCount = executeCount

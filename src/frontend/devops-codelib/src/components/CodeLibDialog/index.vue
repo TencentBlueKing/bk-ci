@@ -390,6 +390,11 @@
                     this.hasValidate = true
                     this.saving = false
                 }
+            },
+            isShow (val) {
+                if (!val) {
+                    this.setTemplateCodelib()
+                }
             }
         },
 
@@ -401,7 +406,8 @@
                 'updateCodelib',
                 'gitOAuth',
                 'checkOAuth',
-                'checkTGitOAuth'
+                'checkTGitOAuth',
+                'setTemplateCodelib'
             ]),
             async submitCodelib () {
                 const {
@@ -430,7 +436,6 @@
                         this.toggleCodelibDialog(false)
                         this.hasValidate = false
                         this.saving = true
-                        this.codelib.url = ''
                         this.$bkMessage({
                             message: repositoryHashId
                                 ? this.$t('codelib.successfullyEdited')

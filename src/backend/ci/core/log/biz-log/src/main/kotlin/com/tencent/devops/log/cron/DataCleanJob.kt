@@ -52,6 +52,7 @@ class DataCleanJob @Autowired constructor(
     storageProperties: StorageProperties,
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
+    private val storageProperties: StorageProperties,
     private val indexDao: IndexDao,
     private val logStatusDao: LogStatusDao,
     private val logTagDao: LogTagDao

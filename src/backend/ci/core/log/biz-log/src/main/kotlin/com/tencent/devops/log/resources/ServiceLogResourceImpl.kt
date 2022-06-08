@@ -28,6 +28,7 @@
 package com.tencent.devops.log.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
@@ -168,6 +169,20 @@ class ServiceLogResourceImpl @Autowired constructor(
             buildId = buildId,
             tag = tag,
             executeCount = executeCount
+        )
+    }
+
+    override fun getLogLastLineNum(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<QueryLogLineNum> {
+        return buildLogQueryService.getLastLineNum(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
         )
     }
 }

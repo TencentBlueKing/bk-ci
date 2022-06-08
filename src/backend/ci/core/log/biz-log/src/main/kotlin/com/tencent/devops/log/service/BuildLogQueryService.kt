@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.PageQueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogStatus
@@ -47,6 +48,7 @@ import javax.ws.rs.core.Response
 class BuildLogQueryService @Autowired constructor(
     private val logService: LogService,
     private val logStatusService: LogStatusService,
+    private val indexService: IndexService,
     private val logStorageBean: LogStorageBean,
     private val logPermissionService: LogPermissionService
 ) {
@@ -253,6 +255,24 @@ class BuildLogQueryService @Autowired constructor(
                 buildId = buildId,
                 tag = tag,
                 executeCount = executeCount ?: 1
+            )
+        )
+    }
+
+    fun getLastLineNum(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<QueryLogLineNum> {
+        validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
+        val lastLineNum = indexService.getLastLineNum(buildId)
+        val finished = logStatusService.isFinish(buildId, null, null, null, null)
+        return Result(
+            QueryLogLineNum(
+                buildId = buildId,
+                finished = finished,
+                lastLineNum = lastLineNum
             )
         )
     }
