@@ -48,6 +48,7 @@ import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.pojo.AllPathPair
+import com.tencent.devops.stream.pojo.StreamCreateFileInfo
 import com.tencent.devops.stream.pojo.StreamGitPipelineDir
 import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
@@ -321,12 +322,12 @@ class StreamPipelineService @Autowired constructor(
         )
     }
 
-    fun createNewPipeLine(gitProjectId: String, filePath: String, userId: String) {
+    fun createNewPipeLine(gitProjectId: String, file: StreamCreateFileInfo, userId: String) {
         val pipeline = StreamTriggerPipeline(
             gitProjectId = gitProjectId,
             pipelineId = "",
-            filePath = filePath,
-            displayName = filePath,
+            filePath = file.filePath,
+            displayName = file.filePath,
             enabled = true,
             creator = userId
         )
@@ -354,6 +355,11 @@ class StreamPipelineService @Autowired constructor(
                     updateLastModifyUser = true
                 )
             }
+            gitPipelineResourceDao.updatePipelineLastBranch(
+                dslContext = dslContext,
+                pipelineId = realPipeline.pipelineId,
+                branch = file.branch
+            )
         }
     }
 
@@ -402,6 +408,11 @@ class StreamPipelineService @Autowired constructor(
         val conf = streamBasicSettingService.getStreamConf(gitProjectId) ?: return emptyMap()
         var branch: String? = null
         val result = mutableMapOf<String, String>()
+        val idToLastUpdateBranch = gitPipelineResourceDao.getLastUpdateBranchByIds(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            pipelineIds = pipelineIds
+        ).associate { it.value1() to it.value2() }
         val pipelineBuild = gitRequestEventBuildDao.getPipelinesLastBuild(dslContext, gitProjectId, pipelineIds)
             ?.associate { it.pipelineId to it.branch }
         // 获取没有构建记录的流水线的未构建成功的分支
@@ -419,6 +430,10 @@ class StreamPipelineService @Autowired constructor(
             }
             if (!pipelineNoBuild?.get(pipelineId).isNullOrBlank()) {
                 result[pipelineId] = pipelineNoBuild?.get(pipelineId).toString()
+                return@forEach
+            }
+            if (!idToLastUpdateBranch[pipelineId].isNullOrBlank()) {
+                result[pipelineId] = idToLastUpdateBranch[pipelineId].toString()
                 return@forEach
             }
             // 构建记录和未构建记录都没得，就去拿默认分支

@@ -100,6 +100,11 @@ class StreamYamlTrigger @Autowired constructor(
                 creator = action.data.getUserId()
             )
             streamYamlBaseBuild.createNewPipeLine(pipeline = pipeline, action = action)
+        } else if (needUpdateLastBuildBranch(action)) {
+            action.updateLastBranch(
+                pipelineId = pipeline.pipelineId,
+                branch = action.data.eventCommon.branch
+            )
         }
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
         val gitProjectInfo = action.api.getGitProjectInfo(
@@ -196,6 +201,13 @@ class StreamYamlTrigger @Autowired constructor(
             )
         }
         return true
+    }
+
+    private fun needUpdateLastBuildBranch(action: BaseAction): Boolean {
+        val isNoChange = action.getChangeSet().isNullOrEmpty()
+        val changeSet = action.getChangeSet()!!.toSet()
+        val triggerYamlFilepath = action.data.context.pipeline!!.filePath
+        return !isNoChange && changeSet.contains(triggerYamlFilepath)
     }
 
     @Throws(StreamTriggerBaseException::class, ErrorCodeException::class)

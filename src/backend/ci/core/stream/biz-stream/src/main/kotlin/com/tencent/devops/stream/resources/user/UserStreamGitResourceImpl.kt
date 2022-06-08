@@ -149,7 +149,7 @@ class UserStreamGitResourceImpl @Autowired constructor(
             streamCreateFile = newFile
         )
         if (createNewFileIsSuccess) {
-             streamPipelineService.createNewPipeLine(gitProjectId, newFile.filePath, userId)
+             streamPipelineService.createNewPipeLine(gitProjectId, newFile, userId)
         }
         return Result(
             createNewFileIsSuccess
