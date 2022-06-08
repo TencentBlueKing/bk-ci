@@ -43,7 +43,7 @@
                         @selected="handleUpdateVersion"
                         :disabled="!editable || showPanelType === 'PAUSE'"
                     >
-                        <bk-option v-for="v in atomVersionList" :key="v.versionName" :id="v.versionValue" :name="v.versionName"></bk-option>
+                        <bk-option v-for="v in computedAtomVersionList" :key="v.versionName" :id="v.versionValue" :name="v.versionName"></bk-option>
                     </bk-select>
                 </form-field>
             </div>
@@ -57,7 +57,7 @@
                     <p>{{ $t('editPage.noAtomVersion') }}</p>
                 </div>
 
-                <!-- <div class="quality-setting-tips" v-if="showSetRuleTips">
+                <div class="quality-setting-tips" v-if="showSetRuleTips">
                     <div class="quality-setting-desc">
                         {{ $t('details.quality.canSet') }}
                         <span class="quality-rule-link" @click="toSetRule()">{{ $t('details.quality.settingNow') }}
@@ -66,7 +66,7 @@
                     </div>
                     <div class="refresh-btn" v-if="isSetted && !refreshLoading" @click="refresh()">{{ $t('details.quality.reflashSetting') }}</div>
                     <i class="devops-icon icon-circle-2-1 executing-job" v-if="isSetted && refreshLoading"></i>
-                </div> -->
+                </div>
                 <qualitygate-tips v-if="showRuleList" :relative-rule-list="renderRelativeRuleList"></qualitygate-tips>
 
                 <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable && !isRemoteAtom }">
@@ -309,7 +309,7 @@
                     atomCode,
                     version
                 })
-
+                console.log(atomMap, atomModal)
                 switch (true) {
                     case !isObject(atom) && !isObject(atomModal):
                         return null
@@ -336,7 +336,27 @@
                 return this.getRelativeRule(this.templateRuleList)
             },
             hasVersionList () {
-                return Array.isArray(this.atomVersionList) && this.atomVersionList.length > 0
+                return Array.isArray(this.computedAtomVersionList) && this.computedAtomVersionList.length > 0
+            },
+            computedAtomVersionList () {
+                try {
+                    if (typeof this.element.version === 'string') {
+                        const versionValid = this.atomVersionList.find(v => v.versionValue === this.element.version)
+                        if (typeof versionValid === 'undefined') {
+                            return [
+                                ...this.atomVersionList,
+                                {
+                                    versionValue: this.element.version,
+                                    versionName: this.element.version.replace('.*', '.latest')
+                                }
+                            ]
+                        }
+                    }
+                    return this.atomVersionList
+                } catch (error) {
+                    console.log(error)
+                    return this.atomVersionList
+                }
             },
             htmlTemplateVersion () {
                 return (this.atom.atomModal && this.atom.atomModal.htmlTemplateVersion) || this.atom.htmlTemplateVersion

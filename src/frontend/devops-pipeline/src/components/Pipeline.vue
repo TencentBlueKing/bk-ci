@@ -13,7 +13,7 @@
                 <bk-pipeline
                     :key="pipeline.name"
                     :pipeline="pipeline"
-                    :user-name="$userInfo.username"
+                    :user-name="userName"
                     :editable="pipelineEditable"
                     :can-skip-element="canSkipElement"
                     :is-preview="isPreview"
@@ -45,7 +45,7 @@
             </section>
         </bk-dialog>
         <template v-if="container">
-            <atom-selector :container="container" :element="element" v-bind="editingElementPos" :fresh-atom-list="freshAtomList" />
+            <atom-selector :container="container" :element="element" v-bind="editingElementPos" />
         </template>
         <template v-if="editingElementPos">
             <template v-if="typeof editingElementPos.elementIndex !== 'undefined'">
@@ -144,7 +144,6 @@
                 'getStage'
             ]),
             ...mapState('atom', [
-                'fetchingAtomList',
                 'isPropertyPanelVisible',
                 'editingElementPos',
                 'isStagePopupShow',
@@ -153,6 +152,9 @@
                 'isAddParallelStage',
                 'showStageReviewPanel'
             ]),
+            userName () {
+                return this.$userInfo && this.$userInfo.username ? this.$userInfo.username : ''
+            },
             routeParams () {
                 return this.$route.params
             },
@@ -241,10 +243,6 @@
                 'addStage',
                 'setPipeline',
                 'setPipelineEditing',
-                'fetchAtoms',
-                'clearStoreAtom',
-                'setStoreSearch',
-                'addStoreAtom',
                 'toggleStageReviewPanel'
             ]),
             handleAddStage ({ stageIndex, isParallel, isFinally }) {
@@ -272,16 +270,7 @@
                     editingElementPos: args
                 })
             },
-            freshAtomList (searchKey) {
-                if (this.fetchingAtomList) return
-                const projectCode = this.$route.params.projectId
-                this.fetchAtoms({
-                    projectCode
-                })
-                this.clearStoreAtom()
-                this.setStoreSearch(searchKey)
-                this.addStoreAtom()
-            },
+            
             getStageByIndex (stageIndex) {
                 const { getStage, pipeline } = this
                 return getStage(pipeline.stages, stageIndex)

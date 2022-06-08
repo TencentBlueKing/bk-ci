@@ -265,7 +265,7 @@
                     category: '',
                     agentTypeScope: []
                 },
-                docsLink: `${DOCS_URL_PREFIX}/store/ci-images/image-build`,
+                docsLink: `${DOCS_URL_PREFIX}/Services/Store/docker-build.md`,
                 ticketList: [],
                 classifys: [],
                 labelList: [],

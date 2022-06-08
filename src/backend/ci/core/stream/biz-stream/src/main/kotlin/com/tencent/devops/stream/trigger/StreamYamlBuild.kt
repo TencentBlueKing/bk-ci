@@ -172,7 +172,7 @@ class StreamYamlBuild @Autowired constructor(
                 null
             }
         } catch (e: Throwable) {
-            logger.warn("Fail to start the git ci build(${action.format()})", e)
+            logger.warn("Fail to start the stream build(${action.format()})", e)
             val (block, message, reason) = when (e) {
                 is JsonProcessingException, is ParamBlankException, is CustomException -> {
                     Triple(
@@ -316,7 +316,7 @@ class StreamYamlBuild @Autowired constructor(
         logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, modelAndSetting: $modelAndSetting")
 
         // 判断是否更新最后修改人
-        val changeSet = action.data.context.changeSet?.toSet()
+        val changeSet = action.getChangeSet()
         val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
 
         return streamYamlBaseBuild.startBuild(
@@ -352,7 +352,7 @@ class StreamYamlBuild @Autowired constructor(
 
         // 判断是否更新最后修改人
         val pipeline = action.data.context.pipeline!!
-        val changeSet = action.data.context.changeSet?.toSet()
+        val changeSet = action.getChangeSet()
         val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
 
         streamYamlBaseBuild.savePipeline(
@@ -401,7 +401,7 @@ class StreamYamlBuild @Autowired constructor(
                 requestEventId = action.data.context.requestEventId!!,
                 objectKind = action.metaData.streamObjectKind
             ),
-            changeSet = action.data.context.changeSet?.toSet(),
+            changeSet = action.getChangeSet(),
             jobTemplateAcrossInfo = getJobTemplateAcrossInfo(yamlTransferData, action)
         )
 

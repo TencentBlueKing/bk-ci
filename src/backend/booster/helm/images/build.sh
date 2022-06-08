@@ -144,7 +144,7 @@ if [[ $ALL -eq 1 || $SERVER -eq 1 ]] ; then
     rm -rf tmp/*
     cp -rf server/* tmp/
     cp -rf $ROOT_DIR/build/buildbooster/bk-buildbooster-server tmp/bk-tbs-server
-    docker build -f tmp/Dockerfile -t $REGISTRY/bktbs/service/bktbs-server:$VERSION tmp --no-cache --network=host
+    docker build -f tmp/Dockerfile -t $REGISTRY/bktbs-server:$VERSION tmp --no-cache --network=host
 fi
 
 # 构建gateway镜像
@@ -153,7 +153,7 @@ if [[ $ALL -eq 1 || $GATEWAY -eq 1 ]] ; then
     rm -rf tmp/*
     cp -rf gateway/* tmp/
     cp -rf $ROOT_DIR/build/buildbooster/bk-buildbooster-gateway tmp/bk-tbs-gateway
-    docker build -f tmp/Dockerfile -t $REGISTRY/bktbs/service/bktbs-gateway:$VERSION tmp --no-cache --network=host
+    docker build -f tmp/Dockerfile -t $REGISTRY/bktbs-gateway:$VERSION tmp --no-cache --network=host
 fi
 
 # 构建dashboard镜像
@@ -162,7 +162,7 @@ if [[ $ALL -eq 1 || $DASHBOARD -eq 1 ]] ; then
     rm -rf tmp/*
     cp -rf dashboard/* tmp/
     cp -rf $ROOT_DIR/build/buildbooster/bk-buildbooster-dashboard tmp/bk-tbs-dashboard
-    docker build -f tmp/Dockerfile -t $REGISTRY/bktbs/service/bktbs-dashboard:$VERSION tmp --no-cache --network=host
+    docker build -f tmp/Dockerfile -t $REGISTRY/bktbs-dashboard:$VERSION tmp --no-cache --network=host
 fi
 
 # 构建downloader镜像
@@ -179,17 +179,17 @@ if [[ $ALL -eq 1 || $DOWNLOADER -eq 1 ]] ; then
     cp -rf $ROOT_DIR/bk_dist/install/* tmp/linux-turbo-client/
     chmod +x tmp/linux-turbo-client/* tmp/linux-turbo-client/launcher/*
     cd tmp && tar -zcf linux-turbo-client.tgz linux-turbo-client && cd -
-    docker build -f tmp/Dockerfile -t $REGISTRY/bktbs/service/bktbs-downloader:$VERSION tmp --no-cache --network=host
+    docker build -f tmp/Dockerfile -t $REGISTRY/bktbs-downloader:$VERSION tmp --no-cache --network=host
 fi
 
 # 构建worker镜像
-if [[ $ALL -eq 1 || $WORKER -eq 1 ]] ; then
+if [[ $WORKER -eq 1 ]] ; then
     log "构建worker镜像..."
     rm -rf tmp/*
     mkdir -p tmp/worker
     cp -rf worker/* tmp/worker
     cp -rf $ROOT_DIR/build/bkdist/bk-dist-worker tmp/worker
-    docker build -f tmp/worker/Dockerfile -t $REGISTRY/bktbs/worker/bktbs-worker-tlinux2.4-gcc4.8.5:$VERSION tmp/worker --no-cache --network=host
+    docker build -f tmp/worker/Dockerfile -t $REGISTRY/bktbs-worker-tlinux2.4-gcc4.8.5:$VERSION tmp/worker --no-cache --network=host
 fi
 
 echo "BUILD SUCCESSFUL!"
@@ -197,22 +197,22 @@ echo "BUILD SUCCESSFUL!"
 if [[ $PUSH -eq 1 ]]; then
     log "推送镜像到docker远程仓库"
     if [[ $ALL -eq 1 || $SERVER -eq 1 ]] ; then
-        docker push $REGISTRY/bktbs/service/bktbs-server:$VERSION
+        docker push $REGISTRY/bktbs-server:$VERSION
     fi
 
     if [[ $ALL -eq 1 || $GATEWAY -eq 1 ]] ; then
-        docker push $REGISTRY/bktbs/service/bktbs-gateway:$VERSION
+        docker push $REGISTRY/bktbs-gateway:$VERSION
     fi
 
     if [[ $ALL -eq 1 || $DASHBOARD -eq 1 ]] ; then
-        docker push $REGISTRY/bktbs/service/bktbs-dashboard:$VERSION
+        docker push $REGISTRY/bktbs-dashboard:$VERSION
     fi
 
     if [[ $ALL -eq 1 || $DOWNLOADER -eq 1 ]] ; then
-        docker push $REGISTRY/bktbs/service/bktbs-downloader:$VERSION
+        docker push $REGISTRY/bktbs-downloader:$VERSION
     fi
 
-    if [[ $ALL -eq 1 || $WORKER -eq 1 ]] ; then
-        docker push $REGISTRY/bktbs/worker/bktbs-worker-tlinux2.4-gcc4.8.5:$VERSION
+    if [[ $WORKER -eq 1 ]] ; then
+        docker push $REGISTRY/bktbs-worker-tlinux2.4-gcc4.8.5:$VERSION
     fi
 fi

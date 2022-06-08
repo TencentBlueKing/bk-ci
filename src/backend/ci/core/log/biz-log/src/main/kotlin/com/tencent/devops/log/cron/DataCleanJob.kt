@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.dao.IndexDao
 import com.tencent.devops.log.dao.LogStatusDao
 import com.tencent.devops.log.dao.LogTagDao
@@ -49,12 +50,13 @@ import java.util.concurrent.TimeUnit
 class DataCleanJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
+    private val storageProperties: StorageProperties,
     private val indexDao: IndexDao,
     private val logStatusDao: LogStatusDao,
     private val logTagDao: LogTagDao
 ) {
 
-    private var expireBuildInDay = 30 * 3 // 三个月
+    private var expireBuildInDay = storageProperties.deleteInDay ?: Int.MAX_VALUE
 
     @Scheduled(cron = "0 0 3 * * ?")
     fun cleanBuilds() {

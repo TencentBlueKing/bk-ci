@@ -232,6 +232,75 @@ class TGitPushActionGit(
         )
     }
 
+    override fun getChangeSet(): Set<String>? {
+        // 使用null和empty的区别来判断是否调用过获取函数
+        if (this.data.context.changeSet != null) {
+            return this.data.context.changeSet
+        }
+
+        val gitEvent = event()
+        if (gitEvent.create_and_update != null) {
+            return getSpecialChangeSet(gitEvent)
+        }
+        val changeSet = mutableSetOf<String>()
+
+        // git push -f 使用反向进行三点比较可以比较出rebase的真实提交
+        val from = if (gitEvent.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
+            gitEvent.after
+        } else {
+            gitEvent.before
+        }
+
+        val to = if (gitEvent.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
+            gitEvent.before
+        } else {
+            gitEvent.after
+        }
+
+        for (i in 1..10) {
+            val result = apiService.getCommitChangeList(
+                cred = getGitCred(),
+                gitProjectId = data.eventCommon.gitProjectId,
+                from = from,
+                to = to,
+                straight = false,
+                page = i,
+                pageSize = 100,
+                retry = ApiRequestRetryInfo(true)
+            )
+            changeSet.addAll(
+                result.map {
+                    if (it.deletedFile) {
+                        it.oldPath
+                    } else if (it.renameFile) {
+                        it.oldPath
+                        it.newPath
+                    } else {
+                        it.newPath
+                    }
+                }
+            )
+            if (result.size < 100) {
+                break
+            }
+        }
+
+        this.data.context.changeSet = changeSet
+        return this.data.context.changeSet
+    }
+
+    private fun getSpecialChangeSet(gitEvent: GitPushEvent): Set<String> {
+        // 为 false 时表示为纯创建分支
+        if (gitEvent.create_and_update == false) return mutableSetOf()
+        val changeSet = mutableSetOf<String>()
+        gitEvent.commits?.forEach {
+            changeSet.addAll(it.removed.orEmpty())
+            changeSet.addAll(it.modified.orEmpty())
+            changeSet.addAll(it.added.orEmpty())
+        }
+        return changeSet
+    }
+
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         val branch = TGitActionCommon.getTriggerBranch(data.eventCommon.branch)
 
@@ -254,8 +323,7 @@ class TGitPushActionGit(
         }
 
         // 判断是否注册删除任务
-        val changeSet = getCommitChangeSet(event())
-        data.context.changeSet = changeSet.toList()
+        val changeSet = getChangeSet()
         val isDelete = if (isDefaultBranch) {
             // 只有更改了delete相关流水线才做更新
             PathMatchUtils.isIncludePathMatch(listOf(data.context.pipeline!!.filePath), changeSet) &&
@@ -429,67 +497,6 @@ class TGitPushActionGit(
             }
         }
         return true
-    }
-
-    private fun getSpecialChangeSet(gitEvent: GitPushEvent): Set<String> {
-        // 为 false 时表示为纯创建分支
-        if (gitEvent.create_and_update == false) return emptySet()
-        val changeSet = mutableSetOf<String>()
-        gitEvent.commits?.forEach {
-            changeSet.addAll(it.removed.orEmpty())
-            changeSet.addAll(it.modified.orEmpty())
-            changeSet.addAll(it.added.orEmpty())
-        }
-        return changeSet
-    }
-
-    private fun getCommitChangeSet(gitEvent: GitPushEvent): Set<String> {
-        if (gitEvent.create_and_update != null) {
-            return getSpecialChangeSet(gitEvent)
-        }
-        val changeSet = mutableSetOf<String>()
-
-        // git push -f 使用反向进行三点比较可以比较出rebase的真实提交
-        val from = if (gitEvent.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
-            gitEvent.after
-        } else {
-            gitEvent.before
-        }
-
-        val to = if (gitEvent.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
-            gitEvent.before
-        } else {
-            gitEvent.after
-        }
-
-        for (i in 1..10) {
-            val result = apiService.getCommitChangeList(
-                cred = getGitCred(),
-                gitProjectId = data.eventCommon.gitProjectId,
-                from = from,
-                to = to,
-                straight = false,
-                page = i,
-                pageSize = 100,
-                retry = ApiRequestRetryInfo(true)
-            )
-            changeSet.addAll(
-                result.map {
-                    if (it.deletedFile) {
-                        it.oldPath
-                    } else if (it.renameFile) {
-                        it.oldPath
-                        it.newPath
-                    } else {
-                        it.newPath
-                    }
-                }
-            )
-            if (result.size < 100) {
-                break
-            }
-        }
-        return changeSet
     }
 
     // 判断是否注册默认分支的删除任务
