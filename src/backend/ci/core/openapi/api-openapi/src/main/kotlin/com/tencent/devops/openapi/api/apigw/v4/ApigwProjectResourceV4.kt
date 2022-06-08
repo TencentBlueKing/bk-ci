@@ -51,7 +51,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_PROJECT_V4"], description = "OPENAPI-项目资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/project")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
