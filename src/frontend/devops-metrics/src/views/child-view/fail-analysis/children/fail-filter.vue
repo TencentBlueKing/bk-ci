@@ -42,7 +42,7 @@ const clearStatus = () => {
       placeholder="Error type"
       :multiple="true"
       :api-method="http.getErrorTypeList"
-      :select-value="status.pipelineLabelIds"
+      :select-value="status.errorTypes"
       @change="(errorTypes) => handleChange({ errorTypes })"
     />
     <scroll-load-select
@@ -58,6 +58,7 @@ const clearStatus = () => {
     <bk-date-picker
       class="mr16 w240"
       type="daterange"
+      :value="[status.startTime, status.endTime]"
       @change="handleTimeChange"
     />
     <bk-button @click="clearStatus">Reset</bk-button>
