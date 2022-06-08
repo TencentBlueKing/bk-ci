@@ -329,7 +329,8 @@ class StreamPipelineService @Autowired constructor(
             filePath = file.filePath,
             displayName = file.filePath,
             enabled = true,
-            creator = userId
+            creator = userId,
+            lastUpdateBranch = file.branch
         )
         // pipelineId可能为blank所以使用filePath为key
         val triggerLock = StreamTriggerLock(
@@ -355,11 +356,6 @@ class StreamPipelineService @Autowired constructor(
                     updateLastModifyUser = true
                 )
             }
-            gitPipelineResourceDao.updatePipelineLastBranch(
-                dslContext = dslContext,
-                pipelineId = realPipeline.pipelineId,
-                branch = file.branch
-            )
         }
     }
 

@@ -183,8 +183,6 @@ class StreamYamlBaseBuild @Autowired constructor(
                     updateLastModifyUser = true
                 )
             }
-            // 更新默认流水线分支
-            action.updateLastBranch(realPipeline.pipelineId, action.data.eventCommon.branch)
         }
     }
 

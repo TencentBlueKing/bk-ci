@@ -62,7 +62,8 @@ class GitPipelineResourceDao {
                 VERSION,
                 CREATE_TIME,
                 UPDATE_TIME,
-                DIRECTORY
+                DIRECTORY,
+                LAST_UPDATE_BRANCH
             ).values(
                 pipeline.pipelineId,
                 gitProjectId,
@@ -74,7 +75,8 @@ class GitPipelineResourceDao {
                 version,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
-                pipeline.filePath.let { it.substring(0, it.indexOfLast { c -> c == '/' } + 1) }
+                pipeline.filePath.let { it.substring(0, it.indexOfLast { c -> c == '/' } + 1) },
+                pipeline.lastUpdateBranch
             ).execute()
         }
     }
@@ -124,6 +126,7 @@ class GitPipelineResourceDao {
                 .set(LAST_UPDATE_BRANCH, branch)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
         }
     }
 
