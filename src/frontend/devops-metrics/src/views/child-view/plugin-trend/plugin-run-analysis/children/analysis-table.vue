@@ -51,7 +51,7 @@ const getData = () => {
       pagination.value.limit,
     )
     .then((data) => {
-      Object.entries(data.headerInfo).forEach(([label, field]) => {
+      Object.entries(data.headerInfo).forEach(([field, label]) => {
         columns.value.push({
           label,
           field,

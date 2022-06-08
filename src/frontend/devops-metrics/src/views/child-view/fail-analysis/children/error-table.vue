@@ -20,7 +20,7 @@ const columns = [
   {
     label: 'Pipeline',
     field: 'pipelineName',
-    render (cell, row) {
+    render ({ cell, row }) {
       return h(
         'span',
         {
