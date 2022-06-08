@@ -30,7 +30,6 @@ package com.tencent.devops.stream.resources.user
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.stream.api.user.UserStreamGitResource
@@ -62,8 +61,7 @@ class UserStreamGitResourceImpl @Autowired constructor(
     private val streamProjectService: StreamProjectService,
     private val streamGitTransferService: StreamGitTransferService,
     private val streamRequestService: StreamRequestService,
-    private val streamPipelineService: StreamPipelineService,
-    private val redisOperation: RedisOperation
+    private val streamPipelineService: StreamPipelineService
 ) : UserStreamGitResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserStreamGitResourceImpl::class.java)
@@ -149,7 +147,7 @@ class UserStreamGitResourceImpl @Autowired constructor(
             streamCreateFile = newFile
         )
         if (createNewFileIsSuccess) {
-             streamPipelineService.createNewPipeLine(gitProjectId, newFile, userId)
+            streamPipelineService.createNewPipeLine(gitProjectId, newFile, userId)
         }
         return Result(
             createNewFileIsSuccess
