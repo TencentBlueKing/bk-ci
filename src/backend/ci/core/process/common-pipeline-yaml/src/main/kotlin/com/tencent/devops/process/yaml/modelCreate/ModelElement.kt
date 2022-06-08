@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.yaml.modelCreate
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
