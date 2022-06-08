@@ -62,6 +62,11 @@ class BuildTypeEnumModifier : EnumModifier {
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
+            enumName = BuildType.PUBLIC_BCS.name,
+            additionalValues = arrayOf("公共：Docker on Bcs", listOf(OS.LINUX), true, true, false)
+        )
+        EnumUtil.addEnum(
+            enumType = BuildType::class.java,
             enumName = BuildType.THIRD_PARTY_AGENT_ID.name,
             additionalValues = arrayOf("私有：单构建机", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true)
         )
