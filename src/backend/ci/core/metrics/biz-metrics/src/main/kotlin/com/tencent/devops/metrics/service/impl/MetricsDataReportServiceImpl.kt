@@ -383,9 +383,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 originFailExecuteCount + 1
             }
             val currentSuccessRate = currentSuccessExecuteCount.toBigDecimal()
-                .div(currentTotalExecuteCount.toBigDecimal())
-            val formatSuccessRate = String.format("%.2f", currentSuccessRate.multiply(100.toBigDecimal()))
-                .toBigDecimal()
+                .divide(currentTotalExecuteCount.toBigDecimal(), 4, BigDecimal.ROUND_HALF_UP)
+            val formatSuccessRate = currentSuccessRate.multiply(100.toBigDecimal())
             // 更新已存在的插件统计记录数据
             if (existUpdateAtomOverviewDataPO != null) {
                 existUpdateAtomOverviewDataPO.successRate = formatSuccessRate
