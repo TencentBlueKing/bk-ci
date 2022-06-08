@@ -41,7 +41,7 @@ import org.springframework.stereotype.Service
 import java.lang.Exception
 import java.util.concurrent.TimeUnit
 
-@Suppress("ALL")
+@Suppress("NestedBlockDepth")
 @Service
 class IndexService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -54,18 +54,25 @@ class IndexService @Autowired constructor(
         private const val LOG_INDEX_LOCK = "log:build:enable:lock:key"
         private const val LOG_LINE_NUM = "log:build:line:num:"
         private const val LOG_LINE_NUM_LOCK = "log:build:line:num:distribute:lock"
+        private const val INDEX_CACHE_MAX_SIZE = 100000L
+        private const val INDEX_CACHE_EXPIRE_MINUTES = 30L
+        private const val INDEX_LOCK_EXPIRE_SECONDS = 10L
         fun getLineNumRedisKey(buildId: String) = LOG_LINE_NUM + buildId
     }
 
     private val indexCache = Caffeine.newBuilder()
-        .maximumSize(100000)
-        .expireAfterAccess(30, TimeUnit.MINUTES)
+        .maximumSize(INDEX_CACHE_MAX_SIZE)
+        .expireAfterAccess(INDEX_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
         .build<String/*BuildId*/, String/*IndexName*/> { buildId ->
             dslContext.transactionResult { configuration ->
                 val context = DSL.using(configuration)
                 var indexName = indexDao.getIndexName(context, buildId)
                 if (indexName.isNullOrBlank()) {
-                    val redisLock = RedisLock(redisOperation, "$LOG_INDEX_LOCK:$buildId", 10)
+                    val redisLock = RedisLock(
+                        redisOperation = redisOperation,
+                        lockKey = "$LOG_INDEX_LOCK:$buildId",
+                        expiredTimeInSeconds = INDEX_LOCK_EXPIRE_SECONDS
+                    )
                     redisLock.lock()
                     try {
                         indexName = indexDao.getIndexName(context, buildId)
@@ -86,7 +93,9 @@ class IndexService @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             indexDao.create(context, buildId, indexName, true)
-            redisOperation.set(getLineNumRedisKey(buildId), 1.toString(), TimeUnit.DAYS.toSeconds(2))
+            redisOperation.set(
+                getLineNumRedisKey(buildId), 1.toString(), TimeUnit.DAYS.toSeconds(2)
+            )
         }
         logger.info("[$buildId|$indexName] Create new index in db and cache")
         return indexName
@@ -104,7 +113,11 @@ class IndexService @Autowired constructor(
         var lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
         // val startLineNum = indexDaoV2.updateLastLineNum(dslContext, buildId, size)
         if (lineNum == null) {
-            val redisLock = RedisLock(redisOperation, "$LOG_LINE_NUM_LOCK:$buildId", 10)
+            val redisLock = RedisLock(
+                redisOperation = redisOperation,
+                lockKey = "$LOG_LINE_NUM_LOCK:$buildId",
+                expiredTimeInSeconds = INDEX_LOCK_EXPIRE_SECONDS
+            )
             try {
                 redisLock.lock()
                 lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
@@ -116,7 +129,9 @@ class IndexService @Autowired constructor(
                         return null
                     }
                     lineNum = build.lastLineNum + size.toLong()
-                    redisOperation.set(getLineNumRedisKey(buildId), lineNum.toString(), TimeUnit.DAYS.toSeconds(2))
+                    redisOperation.set(
+                        getLineNumRedisKey(buildId), lineNum.toString(), TimeUnit.DAYS.toSeconds(2)
+                    )
                 }
             } finally {
                 redisLock.unlock()
@@ -138,8 +153,8 @@ class IndexService @Autowired constructor(
         }
         val latestLineNum = try {
             lineNum.toLong()
-        } catch (e: Exception) {
-            logger.warn("[$buildId|$lineNum] Fail to convert line num to long", e)
+        } catch (ignore: Exception) {
+            logger.warn("[$buildId|$lineNum] Fail to convert line num to long", ignore)
             return
         }
         val updateCount = indexDao.updateLastLineNum(dslContext, buildId, latestLineNum)

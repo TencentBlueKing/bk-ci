@@ -54,7 +54,7 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import kotlin.math.ceil
 
-@Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions", "ReturnCount")
 class LogServiceLuceneImpl constructor(
     private val indexMaxSize: Int,
     private val luceneClient: LuceneClient,
@@ -161,14 +161,7 @@ class LogServiceLuceneImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        val queryLogs = QueryLogs(buildId, getLogStatus(
-            buildId = buildId,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        ))
-
+        val queryLogs = QueryLogs(buildId, getLogStatus(buildId, tag, subTag, jobId, executeCount))
         try {
             val logs = luceneClient.fetchLogs(
                 buildId = buildId,
@@ -292,8 +285,8 @@ class LogServiceLuceneImpl constructor(
             queryLogs.startLineNo = result.logs.lastOrNull()?.lineNo ?: 0
             queryLogs.endLineNo = result.logs.firstOrNull()?.lineNo ?: 0
             queryLogs.logs = result.logs
-        } catch (e: Exception) {
-            logger.error("Query end logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query end logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
         }
         return queryLogs
@@ -323,8 +316,8 @@ class LogServiceLuceneImpl constructor(
                 size = size ?: Constants.NORMAL_MAX_LINES
             )
             queryLogs.logs = result.logs
-        } catch (e: Exception) {
-            logger.error("Query bottom logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query bottom logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
         }
         return queryLogs
@@ -393,13 +386,7 @@ class LogServiceLuceneImpl constructor(
         page: Int,
         pageSize: Int
     ): QueryLogs {
-        val queryLogs = QueryLogs(buildId, getLogStatus(
-            buildId = buildId,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        ))
+        val queryLogs = QueryLogs(buildId, getLogStatus(buildId, tag, subTag, jobId, executeCount))
 
         try {
             val logs = luceneClient.fetchAllLogsInPage(
@@ -415,8 +402,8 @@ class LogServiceLuceneImpl constructor(
             )
             queryLogs.logs.addAll(logs)
             if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
-        } catch (e: Exception) {
-            logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
         }
@@ -498,7 +485,7 @@ class LogServiceLuceneImpl constructor(
             executeCount = executeCount
         )
 
-        val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag!!)
+        val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag)
         val queryLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
 
         try {
@@ -524,8 +511,8 @@ class LogServiceLuceneImpl constructor(
             queryLogs.logs.addAll(logs)
             if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
             queryLogs.hasMore = size > logs.size
-        } catch (e: Exception) {
-            logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
             queryLogs.hasMore = false
@@ -563,7 +550,7 @@ class LogServiceLuceneImpl constructor(
             )
         }
 
-        val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag!!)
+        val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag)
         val moreLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
 
         try {
@@ -583,8 +570,8 @@ class LogServiceLuceneImpl constructor(
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
             moreLogs.logs.addAll(logs)
             moreLogs.hasMore = moreLogs.logs.size >= Constants.SCROLL_MAX_LINES * Constants.SCROLL_MAX_TIMES
-        } catch (e: Exception) {
-            logger.error("Query after logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query after logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             moreLogs.status = LogStatus.FAIL.status
             moreLogs.finished = true
             moreLogs.hasMore = false
@@ -652,8 +639,8 @@ class LogServiceLuceneImpl constructor(
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
             queryLogs.logs.addAll(logs)
             queryLogs.hasMore = queryLogs.logs.size >= logSize
-        } catch (e: Exception) {
-            logger.error("Query before logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query before logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
             queryLogs.hasMore = false
