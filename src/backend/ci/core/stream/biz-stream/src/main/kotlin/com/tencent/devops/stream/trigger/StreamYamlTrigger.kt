@@ -44,6 +44,7 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
@@ -274,12 +275,6 @@ class StreamYamlTrigger @Autowired constructor(
     private fun needChangePipelineDisplayName(
         action: BaseAction
     ): Boolean {
-        return action.data.context.pipeline!!.pipelineId.isBlank() ||
-            (
-                !action.getChangeSet().isNullOrEmpty() &&
-                    action.getChangeSet()!!.toSet()
-                        .contains(action.data.context.pipeline!!.filePath) &&
-                    action.data.context.repoTrigger == null
-                )
+        return action.data.context.pipeline!!.pipelineId.isBlank() || action is GitBaseAction
     }
 }
