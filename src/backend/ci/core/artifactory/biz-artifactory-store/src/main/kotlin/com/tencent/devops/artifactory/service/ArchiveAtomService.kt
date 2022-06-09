@@ -43,6 +43,7 @@ interface ArchiveAtomService {
         userId: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
+        atomId: String,
         archiveAtomRequest: ArchiveAtomRequest
     ): Result<ArchiveAtomResponse?>
 

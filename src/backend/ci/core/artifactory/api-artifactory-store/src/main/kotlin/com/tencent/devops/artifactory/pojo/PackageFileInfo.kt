@@ -27,14 +27,17 @@
 
 package com.tencent.devops.artifactory.pojo
 
-import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("插件市场-归档插件包响应报文体")
-data class ArchiveAtomResponse(
-    @ApiModelProperty("插件环境信息", required = true)
-    val atomEnvRequests: List<AtomEnvRequest>,
-    @ApiModelProperty("task.json参数", required = true)
-    val taskDataMap: Map<String, Any>
+@ApiModel("插件市场-重新归档插件包请求报文体")
+data class PackageFileInfo(
+    @ApiModelProperty("包文件名", required = true)
+    val packageFileName: String,
+    @ApiModelProperty("包文件路径", required = true)
+    val packageFilePath: String,
+    @ApiModelProperty("包文件大小", required = true)
+    val packageFileSize: Long,
+    @ApiModelProperty("sha摘要值", required = true)
+    val shaContent: String
 )

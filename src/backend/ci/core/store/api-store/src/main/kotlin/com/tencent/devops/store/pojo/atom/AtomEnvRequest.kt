@@ -49,5 +49,13 @@ data class AtomEnvRequest(
     @ApiModelProperty("插件执行前置命令", required = false)
     val preCmd: String?,
     @ApiModelProperty("插件post信息", required = false)
-    val atomPostInfo: AtomPostInfo? = null
+    val atomPostInfo: AtomPostInfo? = null,
+    @ApiModelProperty("支持的操作系统名称", required = false)
+    val osName: String? = null,
+    @ApiModelProperty("支持的操作系统架构", required = false)
+    val osArch: String? = null,
+    @ApiModelProperty("插件运行时版本", required = false)
+    val runtimeVersion: String? = null,
+    @ApiModelProperty("是否为默认环境信息", required = false)
+    val defaultFlag: Boolean? = false
 )

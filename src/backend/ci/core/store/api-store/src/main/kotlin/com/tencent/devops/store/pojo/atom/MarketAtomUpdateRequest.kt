@@ -67,10 +67,6 @@ data class MarketAtomUpdateRequest(
     val publisher: String,
     @ApiModelProperty("插件标签列表", required = false)
     val labelIdList: ArrayList<String>?,
-    @ApiModelProperty("插件包名", required = true)
-    val pkgName: String = "",
-    @ApiModelProperty("可执行包sha摘要内容", required = true)
-    val packageShaContent: String = "",
     @ApiModelProperty(value = "前端UI渲染方式", required = true)
     val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL,
     @ApiModelProperty(value = "插件字段校验确认标识", required = false)

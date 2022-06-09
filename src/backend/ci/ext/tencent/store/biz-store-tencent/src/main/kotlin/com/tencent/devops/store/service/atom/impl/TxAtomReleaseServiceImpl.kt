@@ -435,10 +435,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val atomVersion = atomRecord.version
         val repoId = atomRecord.repositoryHashId
         val branch = if (atomRecord.branch.isNullOrBlank()) MASTER else atomRecord.branch
-        val atomPackageSourceType =
-            if (repoId.isBlank()) AtomPackageSourceTypeEnum.UPLOAD else AtomPackageSourceTypeEnum.REPO
         val getAtomConfResult = getAtomConfig(
-            atomPackageSourceType = atomPackageSourceType,
             projectCode = projectCode,
             atomCode = atomCode,
             atomVersion = atomVersion,
@@ -465,7 +462,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             taskDataMap = taskDataMap,
             fieldCheckConfirmFlag = atomRebuildRequest.fieldCheckConfirmFlag
         )
-        val atomEnvRequest = getAtomConfResult.atomEnvRequest ?: return MessageCodeUtil.generateResponseDataObject(
+        val atomEnvRequests = getAtomConfResult.atomEnvRequests ?: return MessageCodeUtil.generateResponseDataObject(
             StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, arrayOf(KEY_EXECUTION)
         )
         // 解析quality.json
@@ -501,7 +498,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap)
             marketAtomDao.updateMarketAtomProps(context, atomId, props, userId)
-            marketAtomEnvInfoDao.updateMarketAtomEnvInfo(context, atomId, atomEnvRequest)
+            atomEnvRequests.forEach { atomEnvRequest ->
+                marketAtomEnvInfoDao.updateMarketAtomEnvInfo(context, atomId, atomEnvRequest)
+            }
             // 执行构建流水线
             runPipeline(context = context, atomId = atomId, userId = userId, branch = branch)
         }
