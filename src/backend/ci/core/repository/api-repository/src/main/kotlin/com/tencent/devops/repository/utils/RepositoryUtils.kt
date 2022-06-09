@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.utils
+package com.tencent.devops.repository.utils
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.repository.pojo.CodeGitRepository
