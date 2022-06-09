@@ -25,31 +25,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service
+package com.tencent.devops.dispatch.bcs.client
 
-interface ExtDebugService {
-    fun startDebug(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String?,
-        vmSeqId: String
-    ): String?
+import com.tencent.devops.common.service.config.CommonConfig
+import okhttp3.Headers
+import okhttp3.Request
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+import java.net.URLEncoder
 
-    fun getWebsocketUrl(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String?,
-        vmSeqId: String,
-        containerId: String
-    ): String?
+@Component
+class BcsClientCommon @Autowired constructor(
+    private val commonConfig: CommonConfig
+) {
 
-    fun stopDebug(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        vmSeqId: String,
-        containerName: String
-    ): Boolean
+    companion object {
+        private const val BCS_TOKEN_KEY = "BK-Devops-Token"
+    }
+
+    @Value("\${bcs.apiUrl}")
+    val bcsApiUrl: String = ""
+
+    @Value("\${bcs.token}")
+    val bcsToken: String = ""
+
+    fun baseRequest(userId: String, url: String, headers: Map<String, String>? = null): Request.Builder {
+        return Request.Builder().url(url(bcsApiUrl + url)).headers(headers(headers))
+    }
+
+    fun url(realUrl: String) = "${commonConfig.devopsIdcProxyGateway}/proxy-devnet?" +
+        "url=${URLEncoder.encode(realUrl, "UTF-8")}"
+
+    fun headers(otherHeaders: Map<String, String>? = null): Headers {
+        val result = mutableMapOf<String, String>()
+
+        val bcsHeaders = mapOf(BCS_TOKEN_KEY to bcsToken)
+        result.putAll(bcsHeaders)
+
+        if (!otherHeaders.isNullOrEmpty()) {
+            result.putAll(otherHeaders)
+        }
+
+        return Headers.of(result)
+    }
 }

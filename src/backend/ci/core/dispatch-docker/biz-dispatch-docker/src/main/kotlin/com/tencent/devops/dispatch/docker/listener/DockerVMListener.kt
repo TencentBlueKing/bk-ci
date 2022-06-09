@@ -29,24 +29,37 @@ package com.tencent.devops.dispatch.docker.listener
 
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
+import com.tencent.devops.common.pipeline.type.bcs.PublicBcsDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.dispatch.docker.client.DockerHostClient
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.docker.config.DefaultImageConfig
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
+import com.tencent.devops.dispatch.docker.pojo.Credential
+import com.tencent.devops.dispatch.docker.pojo.Pool
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerRoutingType
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
+import com.tencent.devops.dispatch.docker.service.DockerRoutingService
+import com.tencent.devops.dispatch.docker.utils.CommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
+import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,7 +67,10 @@ import org.springframework.stereotype.Service
 
 @Service@Suppress("ALL")
 class DockerVMListener @Autowired constructor(
+    private val client: Client,
+    private val dslContext: DSLContext,
     private val buildLogPrinter: BuildLogPrinter,
+    private val defaultImageConfig: DefaultImageConfig,
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostClient: DockerHostClient,
     private val dockerHostUtils: DockerHostUtils,
@@ -62,7 +78,8 @@ class DockerVMListener @Autowired constructor(
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
-    private val dslContext: DSLContext
+    private val dockerRoutingService: DockerRoutingService,
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : BuildListener {
 
     companion object {
@@ -87,21 +104,127 @@ class DockerVMListener @Autowired constructor(
 
     override fun onStartup(dispatchMessage: DispatchMessage) {
         logger.info("On startup - ($dispatchMessage)")
-        startup(dispatchMessage)
+        parseRoutingStartup(dispatchMessage)
     }
 
     override fun onStartupDemote(dispatchMessage: DispatchMessage) {
         logger.info("On startup demote - ($dispatchMessage)")
-        startup(dispatchMessage)
+        parseRoutingStartup(dispatchMessage, true)
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
         logger.info("On shutdown - ($event)")
 
-        dockerHostBuildService.finishDockerBuild(event)
+        val dockerRoutingType = dockerRoutingService.getDockerRoutingType(event.projectId)
+        if (dockerRoutingType == DockerRoutingType.BCS) {
+            pipelineEventDispatcher.dispatch(event.copy(routeKeySuffix = DispatchRouteKeySuffix.BCS.routeKeySuffix))
+        } else {
+            dockerHostBuildService.finishDockerBuild(event)
+        }
     }
 
-    private fun startup(dispatchMessage: DispatchMessage) {
+    private fun parseRoutingStartup(dispatchMessage: DispatchMessage, demoteFlag: Boolean = false) {
+        val dispatchType = dispatchMessage.dispatchType as DockerDispatchType
+        val dockerImage = if (dispatchType.imageType == ImageType.THIRD) {
+            dispatchType.dockerBuildVersion
+        } else {
+            when (dispatchType.dockerBuildVersion) {
+                DockerVersion.TLINUX1_2.value -> {
+                    defaultImageConfig.getTLinux1_2CompleteUri()
+                }
+                DockerVersion.TLINUX2_2.value -> {
+                    defaultImageConfig.getTLinux2_2CompleteUri()
+                }
+                else -> {
+                    defaultImageConfig.getCompleteUriByImageName(dispatchType.dockerBuildVersion)
+                }
+            }
+        }
+        logger.info(
+            "${dispatchMessage.buildId}|startBuild|${dispatchMessage.id}|$dockerImage" +
+                "|${dispatchType.imageCode}|${dispatchType.imageVersion}|${dispatchType.credentialId}" +
+                "|${dispatchType.credentialProject}"
+        )
+        var userName = dispatchType.imageRepositoryUserName
+        var password = dispatchType.imageRepositoryPassword
+        if (dispatchType.imageType == ImageType.THIRD) {
+            if (!dispatchType.credentialId.isNullOrBlank()) {
+                val projectId = if (dispatchType.credentialProject.isNullOrBlank()) {
+                    dispatchMessage.projectId
+                } else {
+                    dispatchType.credentialProject!!
+                }
+                val ticketsMap = CommonUtils.getCredential(
+                    client = client,
+                    projectId = projectId,
+                    credentialId = dispatchType.credentialId!!,
+                    type = CredentialType.USERNAME_PASSWORD
+                )
+                userName = ticketsMap["v1"] as String
+                password = ticketsMap["v2"] as String
+            }
+        }
+
+        val containerPool = Pool(
+            container = dockerImage,
+            credential = Credential(userName, password),
+            env = null,
+            imageType = dispatchType.imageType?.type
+        )
+
+        val dockerRoutingType = dockerRoutingService.getDockerRoutingType(dispatchMessage.projectId)
+        if (dockerRoutingType == DockerRoutingType.BCS) {
+            startBcsDocker(dispatchMessage, containerPool, demoteFlag)
+        } else {
+            startup(dispatchMessage, containerPool)
+        }
+    }
+
+    private fun startBcsDocker(
+        dispatchMessage: DispatchMessage,
+        containerPool: Pool,
+        demoteFlag: Boolean = false
+    ) {
+        with(dispatchMessage) {
+            pipelineEventDispatcher.dispatch(
+                PipelineAgentStartupEvent(
+                    source = "vmStartupTaskAtom",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    pipelineName = "",
+                    userId = userId,
+                    buildId = buildId,
+                    buildNo = 0,
+                    vmSeqId = containerId,
+                    taskName = "",
+                    os = "",
+                    vmNames = vmNames,
+                    startTime = System.currentTimeMillis(),
+                    channelCode = channelCode,
+                    dispatchType = PublicBcsDispatchType(
+                        image = JsonUtil.toJson(containerPool),
+                        imageType = ImageType.THIRD,
+                        performanceConfigId = "0"
+                    ),
+                    zone = zone,
+                    atoms = atoms,
+                    executeCount = executeCount,
+                    routeKeySuffix = if (!demoteFlag) DispatchRouteKeySuffix.BCS.routeKeySuffix
+                    else ".bcs.public.demote",
+                    stageId = stageId,
+                    containerId = containerId,
+                    containerHashId = containerHashId,
+                    containerType = containerType,
+                    customBuildEnv = customBuildEnv
+                )
+            )
+        }
+    }
+
+    private fun startup(
+        dispatchMessage: DispatchMessage,
+        containerPool: Pool
+    ) {
         val dockerDispatch = dispatchMessage.dispatchType as DockerDispatchType
         buildLogPrinter.addLine(
             buildId = dispatchMessage.buildId,
@@ -157,7 +280,8 @@ class DockerVMListener @Autowired constructor(
                 dockerIp = dockerPair.first,
                 dockerHostPort = dockerPair.second,
                 poolNo = poolNo,
-                driftIpInfo = driftIpInfo
+                driftIpInfo = driftIpInfo,
+                containerPool = containerPool
             )
         } catch (e: Exception) {
             val errMsgTriple = if (e is DockerServiceException) {
