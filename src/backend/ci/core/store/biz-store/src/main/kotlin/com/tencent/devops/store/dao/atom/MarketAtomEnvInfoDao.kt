@@ -47,45 +47,49 @@ import java.time.LocalDateTime
 @Repository
 class MarketAtomEnvInfoDao {
 
-    fun addMarketAtomEnvInfo(dslContext: DSLContext, atomId: String, atomEnvRequest: AtomEnvRequest) {
+    fun addMarketAtomEnvInfo(dslContext: DSLContext, atomId: String, atomEnvRequests: List<AtomEnvRequest>) {
         with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
-            dslContext.insertInto(
-                this,
-                ID,
-                ATOM_ID,
-                PKG_NAME,
-                PKG_PATH,
-                LANGUAGE,
-                MIN_VERSION,
-                TARGET,
-                SHA_CONTENT,
-                PRE_CMD,
-                POST_ENTRY_PARAM,
-                POST_CONDITION,
-                OS_NAME,
-                OS_ARCH,
-                DEFAULT_FLAG,
-                CREATOR,
-                MODIFIER
-            )
-                .values(
-                    UUIDUtil.generate(),
-                    atomId,
-                    atomEnvRequest.pkgName,
-                    atomEnvRequest.pkgPath,
-                    atomEnvRequest.language,
-                    atomEnvRequest.minVersion,
-                    atomEnvRequest.target,
-                    atomEnvRequest.shaContent,
-                    atomEnvRequest.preCmd,
-                    atomEnvRequest.atomPostInfo?.postEntryParam,
-                    atomEnvRequest.atomPostInfo?.postCondition,
-                    atomEnvRequest.osName,
-                    atomEnvRequest.osArch,
-                    atomEnvRequest.defaultFlag,
-                    atomEnvRequest.userId,
-                    atomEnvRequest.userId
-                ).execute()
+            atomEnvRequests.forEach { atomEnvRequest ->
+                dslContext.insertInto(
+                    this,
+                    ID,
+                    ATOM_ID,
+                    PKG_NAME,
+                    PKG_PATH,
+                    LANGUAGE,
+                    MIN_VERSION,
+                    TARGET,
+                    SHA_CONTENT,
+                    PRE_CMD,
+                    POST_ENTRY_PARAM,
+                    POST_CONDITION,
+                    OS_NAME,
+                    OS_ARCH,
+                    RUNTIME_VERSION,
+                    DEFAULT_FLAG,
+                    CREATOR,
+                    MODIFIER
+                )
+                    .values(
+                        UUIDUtil.generate(),
+                        atomId,
+                        atomEnvRequest.pkgName,
+                        atomEnvRequest.pkgPath,
+                        atomEnvRequest.language,
+                        atomEnvRequest.minVersion,
+                        atomEnvRequest.target,
+                        atomEnvRequest.shaContent,
+                        atomEnvRequest.preCmd,
+                        atomEnvRequest.atomPostInfo?.postEntryParam,
+                        atomEnvRequest.atomPostInfo?.postCondition,
+                        atomEnvRequest.osName,
+                        atomEnvRequest.osArch,
+                        atomEnvRequest.runtimeVersion,
+                        atomEnvRequest.defaultFlag,
+                        atomEnvRequest.userId,
+                        atomEnvRequest.userId
+                    ).execute()
+            }
         }
     }
 
@@ -214,12 +218,18 @@ class MarketAtomEnvInfoDao {
             if (!atomEnvRequest.pkgName.isNullOrEmpty()) {
                 baseStep.set(PKG_NAME, atomEnvRequest.pkgName)
             }
+            if (!atomEnvRequest.runtimeVersion.isNullOrEmpty()) {
+                baseStep.set(RUNTIME_VERSION, atomEnvRequest.runtimeVersion)
+            }
+            if (atomEnvRequest.defaultFlag != null) {
+                baseStep.set(DEFAULT_FLAG, atomEnvRequest.defaultFlag)
+            }
             val atomPostInfo = atomEnvRequest.atomPostInfo
             baseStep.set(POST_ENTRY_PARAM, atomPostInfo?.postEntryParam)
             baseStep.set(POST_CONDITION, atomPostInfo?.postCondition)
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, atomEnvRequest.userId)
-                .where(ATOM_ID.eq(atomId))
+                .where(ATOM_ID.eq(atomId).and(OS_NAME.eq(atomEnvRequest.osName)).and(OS_ARCH.eq(atomEnvRequest.osArch)))
                 .execute()
         }
     }

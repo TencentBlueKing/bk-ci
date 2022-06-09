@@ -54,6 +54,8 @@ data class AtomEnvRequest(
     val osName: String? = null,
     @ApiModelProperty("支持的操作系统架构", required = false)
     val osArch: String? = null,
+    @ApiModelProperty("插件运行时版本", required = false)
+    val runtimeVersion: String? = null,
     @ApiModelProperty("是否为默认环境信息", required = false)
     val defaultFlag: Boolean? = false
 )
