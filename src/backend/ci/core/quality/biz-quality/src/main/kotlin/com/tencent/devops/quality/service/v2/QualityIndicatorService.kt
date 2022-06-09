@@ -173,9 +173,14 @@ class QualityIndicatorService @Autowired constructor(
             type = null,
             enNameSet = enNameSet,
             projectId = tempProjectId
-        )?.associateBy { it.enName }
+        )
+        val prodIndicator = if (indicatorRecords?.associateBy { it.tag }?.containsKey("IN_READY_RUNNING") == true) {
+            indicatorRecords?.filter { it.tag == "IN_READY_RUNNING" }.associateBy { it.enName }
+        } else {
+            indicatorRecords?.associateBy { it.enName }
+        }
         val allIndicatorRecords = enNameSet.map {
-            indicatorRecords?.get(it) ?: throw OperationException("indicator id $it is not exist")
+            prodIndicator?.get(it) ?: throw OperationException("indicator id $it is not exist")
         }
         return serviceListIndicatorRecord(allIndicatorRecords)
     }
