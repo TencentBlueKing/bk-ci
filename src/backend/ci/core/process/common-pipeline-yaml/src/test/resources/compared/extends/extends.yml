@@ -64,6 +64,8 @@ stages:
       retry-times: 0
       env: null
       run: null
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: null
       id: null
@@ -76,6 +78,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"root_step_1\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     if-modify: null
     timeout-minutes: 480
@@ -110,6 +114,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"root_stage_id_1, root_job_id_2\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     if-modify: null
     timeout-minutes: null
@@ -143,6 +149,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"res_repoA_job_id_1\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     if-modify: null
     timeout-minutes: null
@@ -175,6 +183,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"res_repoB_job_id_2\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     if-modify: null
     timeout-minutes: null
@@ -207,6 +217,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"res_repoB_job_id_3 username RES_REPOB_JOB3\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     if-modify: null
     timeout-minutes: null
@@ -239,6 +251,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"res_repoA_job_id_3\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     if-modify: null
     timeout-minutes: null
@@ -271,6 +285,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"res_repoA_job_id_2 username RES_JOB!\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: null
       id: null
@@ -283,6 +299,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"res_repoA_job_id_2 jobname JOBNAME again!\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     if-modify: null
     timeout-minutes: null
@@ -344,6 +362,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"res_repoA_stage_id_1_job_id_1 username RES_STAGE\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     if-modify: null
     timeout-minutes: null
@@ -376,6 +396,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"res_repoA_stage_id_1_job_id_2 stagename STAGENAME\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: null
       id: null
@@ -389,6 +411,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"res_repoA_step_id_4 username RES_REPOA_STAGE1_JOB2_STEP3!\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     if-modify: null
     timeout-minutes: null
@@ -441,6 +465,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"res_repoA_stage_id_2_job_id_1 username RES_PEPOA_STAGE1\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     if-modify: null
     timeout-minutes: null
@@ -473,6 +499,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"res_repoA_stage_id_2_job_id_2 stagename STAGENAME\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: null
       id: null
@@ -486,6 +514,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"res_repoA_step_id_4 username RES_REPOA_STAGE2_JOB2_STEP3!\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     if-modify: null
     timeout-minutes: null
@@ -526,6 +556,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"res_repoB_stage_id_1_job_id_1 username RES_PEPOA_STAGE1\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     if-modify: null
     timeout-minutes: null
@@ -566,6 +598,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"res_repoB_stage_id_2_job_id_1 username RES_PEPOB_STAGE2\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     if-modify: null
     timeout-minutes: null
