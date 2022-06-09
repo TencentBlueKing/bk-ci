@@ -32,25 +32,24 @@
 package com.tencent.bkrepo.auth.config
 
 import com.tencent.bkrepo.auth.repository.AccountRepository
-import com.tencent.bkrepo.auth.repository.ClusterRepository
+import com.tencent.bkrepo.auth.repository.OauthTokenRepository
 import com.tencent.bkrepo.auth.repository.PermissionRepository
 import com.tencent.bkrepo.auth.repository.RoleRepository
 import com.tencent.bkrepo.auth.repository.UserRepository
 import com.tencent.bkrepo.auth.service.AccountService
-import com.tencent.bkrepo.auth.service.ClusterService
 import com.tencent.bkrepo.auth.service.PermissionService
 import com.tencent.bkrepo.auth.service.RoleService
 import com.tencent.bkrepo.auth.service.UserService
 import com.tencent.bkrepo.auth.service.bkauth.BkAuthPermissionServiceImpl
+import com.tencent.bkrepo.auth.service.bkauth.BkAuthPipelineService
 import com.tencent.bkrepo.auth.service.bkauth.BkAuthProjectService
-import com.tencent.bkrepo.auth.service.bkauth.BkAuthService
 import com.tencent.bkrepo.auth.service.bkiam.BkiamPermissionServiceImpl
 import com.tencent.bkrepo.auth.service.bkiam.BkiamService
 import com.tencent.bkrepo.auth.service.local.AccountServiceImpl
-import com.tencent.bkrepo.auth.service.local.ClusterServiceImpl
 import com.tencent.bkrepo.auth.service.local.PermissionServiceImpl
 import com.tencent.bkrepo.auth.service.local.RoleServiceImpl
 import com.tencent.bkrepo.auth.service.local.UserServiceImpl
+import com.tencent.bkrepo.repository.api.ProjectClient
 import com.tencent.bkrepo.repository.api.RepositoryClient
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -69,15 +68,10 @@ class AuthServiceConfig {
     @ConditionalOnMissingBean(AccountService::class)
     fun accountService(
         accountRepository: AccountRepository,
+        oauthTokenRepository: OauthTokenRepository,
+        userService: UserService,
         mongoTemplate: MongoTemplate
-    ) = AccountServiceImpl(accountRepository, mongoTemplate)
-
-    @Bean
-    @ConditionalOnMissingBean(ClusterService::class)
-    fun clusterService(
-        clusterRepository: ClusterRepository,
-        mongoTemplate: MongoTemplate
-    ) = ClusterServiceImpl(clusterRepository, mongoTemplate)
+    ) = AccountServiceImpl(accountRepository, oauthTokenRepository, userService, mongoTemplate)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["realm"], havingValue = "local", matchIfMissing = true)
@@ -86,7 +80,8 @@ class AuthServiceConfig {
         roleRepository: RoleRepository,
         permissionRepository: PermissionRepository,
         mongoTemplate: MongoTemplate,
-        repositoryClient: RepositoryClient
+        repositoryClient: RepositoryClient,
+        projectClient: ProjectClient
     ): PermissionService {
         logger.debug("init PermissionServiceImpl")
         return PermissionServiceImpl(
@@ -94,7 +89,8 @@ class AuthServiceConfig {
             roleRepository,
             permissionRepository,
             mongoTemplate,
-            repositoryClient
+            repositoryClient,
+            projectClient
         )
     }
 
@@ -106,6 +102,7 @@ class AuthServiceConfig {
         permissionRepository: PermissionRepository,
         mongoTemplate: MongoTemplate,
         repositoryClient: RepositoryClient,
+        projectClient: ProjectClient,
         bkiamService: BkiamService
     ): PermissionService {
         logger.debug("init BkiamPermissionServiceImpl")
@@ -115,6 +112,7 @@ class AuthServiceConfig {
             permissionRepository,
             mongoTemplate,
             repositoryClient,
+            projectClient,
             bkiamService
         )
     }
@@ -127,8 +125,9 @@ class AuthServiceConfig {
         permissionRepository: PermissionRepository,
         mongoTemplate: MongoTemplate,
         repositoryClient: RepositoryClient,
+        projectClient: ProjectClient,
         bkAuthConfig: BkAuthConfig,
-        bkAuthService: BkAuthService,
+        bkAuthPipelineService: BkAuthPipelineService,
         bkAuthProjectService: BkAuthProjectService
     ): PermissionService {
         logger.debug("init BkAuthPermissionServiceImpl")
@@ -138,15 +137,21 @@ class AuthServiceConfig {
             permissionRepository,
             mongoTemplate,
             repositoryClient,
+            projectClient,
             bkAuthConfig,
-            bkAuthService,
+            bkAuthPipelineService,
             bkAuthProjectService
         )
     }
 
     @Bean
     @ConditionalOnMissingBean(RoleService::class)
-    fun roleService(roleRepository: RoleRepository) = RoleServiceImpl(roleRepository)
+    fun roleService(
+        roleRepository: RoleRepository,
+        userService: UserService,
+        userRepository: UserRepository,
+        mongoTemplate: MongoTemplate
+    ) = RoleServiceImpl(roleRepository, userService, userRepository, mongoTemplate)
 
     @Bean
     @ConditionalOnMissingBean(UserService::class)

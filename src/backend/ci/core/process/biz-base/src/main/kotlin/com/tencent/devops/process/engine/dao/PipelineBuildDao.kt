@@ -51,6 +51,7 @@ import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import javax.ws.rs.core.Response
+import org.jooq.Record2
 
 @Suppress("ALL")
 @Repository
@@ -80,7 +81,8 @@ class PipelineBuildDao {
         webhookType: String?,
         webhookInfo: String?,
         buildMsg: String?,
-        buildNumAlias: String? = null
+        buildNumAlias: String? = null,
+        concurrencyGroup: String? = null
     ) {
         try {
             with(T_PIPELINE_BUILD_HISTORY) {
@@ -106,7 +108,8 @@ class PipelineBuildDao {
                     WEBHOOK_TYPE,
                     WEBHOOK_INFO,
                     BUILD_MSG,
-                    BUILD_NUM_ALIAS
+                    BUILD_NUM_ALIAS,
+                    CONCURRENCY_GROUP
                 ).values(
                     buildId,
                     buildNum,
@@ -128,7 +131,8 @@ class PipelineBuildDao {
                     webhookType,
                     webhookInfo,
                     buildMsg,
-                    buildNumAlias
+                    buildNumAlias,
+                    concurrencyGroup
                 ).execute()
             }
         } catch (t: Throwable) {
@@ -161,6 +165,21 @@ class PipelineBuildDao {
                 where.and(STATUS.`in`(statusIntSet))
             }
             where.fetch()
+        }
+    }
+
+    fun getBuildTasksByConcurrencyGroup(
+        dslContext: DSLContext,
+        projectId: String,
+        concurrencyGroup: String,
+        statusSet: List<BuildStatus>
+    ): List<Record2<String, String>> {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(STATUS.`in`(statusSet.map { it.ordinal }))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+                .fetch()
         }
     }
 
@@ -497,7 +516,8 @@ class PipelineBuildDao {
                     JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
                 },
                 retryFlag = t.isRetry,
-                executeTime = t.executeTime ?: 0
+                executeTime = t.executeTime ?: 0,
+                concurrencyGroup = t.concurrencyGroup
             )
         }
     }
@@ -851,29 +871,24 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         buildId: String,
-        stageStatus: List<BuildStageStatus>
+        stageStatus: List<BuildStageStatus>,
+        oldBuildStatus: BuildStatus? = null,
+        newBuildStatus: BuildStatus? = null
     ): Int {
-        return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.update(this)
-                .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
-                .where(BUILD_ID.eq(buildId))
-                .and(PROJECT_ID.eq(projectId))
-                .execute()
-        }
-    }
-
-    fun updateBuildParameters(
-        dslContext: DSLContext,
-        projectId: String,
-        buildId: String,
-        buildParameters: List<BuildParameters>
-    ) {
         with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.update(this)
-                .set(BUILD_PARAMETERS, JsonUtil.toJson(buildParameters, formatted = false))
-                .where(BUILD_ID.eq(buildId))
-                .and(PROJECT_ID.eq(projectId))
-                .execute()
+            val update = dslContext.update(this)
+                .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
+            newBuildStatus?.let { update.set(STATUS, newBuildStatus.ordinal) }
+            return if (oldBuildStatus == null) {
+                update.where(BUILD_ID.eq(buildId))
+                    .and(PROJECT_ID.eq(projectId))
+                    .execute()
+            } else {
+                update.where(BUILD_ID.eq(buildId))
+                    .and(PROJECT_ID.eq(projectId))
+                    .and(STATUS.eq(oldBuildStatus.ordinal))
+                    .execute()
+            }
         }
     }
 

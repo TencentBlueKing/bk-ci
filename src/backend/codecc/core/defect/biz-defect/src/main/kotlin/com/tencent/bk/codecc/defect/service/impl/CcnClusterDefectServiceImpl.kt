@@ -87,7 +87,7 @@ class CcnClusterDefectServiceImpl @Autowired constructor(
         val ccnClusterResultVO = CcnClusterResultVO()
         ccnClusterResultVO.type = ComConstants.ToolType.CCN.name
         val ccnClusterStatisticEntity =
-                ccnClusterStatisticRepository.findByTaskIdAndBuildId(taskId, buildId)
+                ccnClusterStatisticRepository.findFirstByTaskIdAndBuildId(taskId, buildId)
                         ?: return ccnClusterResultVO
         BeanUtils.copyProperties(ccnClusterResultVO, ccnClusterStatisticEntity)
         ccnClusterResultVO.type = ComConstants.ToolType.CCN.name

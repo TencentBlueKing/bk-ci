@@ -36,12 +36,12 @@ type ThirdPartyAgentStartInfo struct {
 }
 
 type ThirdPartyBuildInfo struct {
-	ProjectId  string `json:"projectId"`
-	BuildId    string `json:"buildId"`
-	VmSeqId    string `json:"vmSeqId"`
-	Workspace  string `json:"workspace"`
-	PipelineId string `json:"pipelineId"`
-	ToDelTmpFiles []string // #5806 增加异常时清理脚本文件列表
+	ProjectId     string   `json:"projectId"`
+	BuildId       string   `json:"buildId"`
+	VmSeqId       string   `json:"vmSeqId"`
+	Workspace     string   `json:"workspace"`
+	PipelineId    string   `json:"pipelineId"`
+	ToDelTmpFiles []string `json:"-"` // #5806 增加异常时清理脚本文件列表, 不序列化
 }
 
 type ThirdPartyBuildWithStatus struct {
@@ -75,6 +75,12 @@ type AgentHeartbeatResponse struct {
 	Envs              map[string]string `json:"envs"`
 	Gateway           string            `json:"gateway"`
 	FileGateway       string            `json:"fileGateway"`
+	Props             AgentProps        `json:"props"`
+}
+
+type AgentProps struct {
+	IgnoreLocalIps string `json:"ignoreLocalIps"`
+	KeepLogsHours  int    `json:"keepLogsHours"`
 }
 
 func NewPipelineResponse(seqId string, status string, response string) *PipelineResponse {

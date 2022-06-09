@@ -39,14 +39,18 @@ allprojects {
     version = "1.0.0-SNAPSHOT"
 
     apply(plugin = "com.tencent.devops.boot")
+    apply(plugin = "jacoco")
     dependencyManagement {
         dependencies {
             dependency("com.github.zafarkhaja:java-semver:0.9.0")
             dependency("org.apache.skywalking:apm-toolkit-logback-1.x:6.6.0")
             dependency("org.apache.skywalking:apm-toolkit-trace:6.6.0")
             dependency("net.javacrumbs.shedlock:shedlock-spring:4.12.0")
+            dependency("org.springframework.cloud:spring-cloud-stream:3.0.11.RELEASE")
             dependency("net.javacrumbs.shedlock:shedlock-provider-mongo:4.12.0")
             dependency("com.google.code.gson:gson:2.8.6")
+            dependency("org.eclipse.jgit:org.eclipse.jgit.http.server:5.11.0.202103091610-r")
+            dependency("org.eclipse.jgit:org.eclipse.jgit:5.11.0.202103091610-r")
         }
     }
     configurations.all {
@@ -54,6 +58,21 @@ allprojects {
         exclude(group = "org.slf4j", module = "slf4j-log4j12")
         exclude(group = "commons-logging", module = "commons-logging")
     }
+
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions {
+            freeCompilerArgs = listOf("-java-parameters")
+        }
+    }
+
+    tasks.withType<JacocoReport> {
+        reports {
+            xml.isEnabled = true
+            html.isEnabled = true
+        }
+        dependsOn(tasks.getByName("test"))
+    }
 }
 
-apply(from = rootProject.file("gradle/publish.gradle.kts"))
+apply(from = rootProject.file("gradle/publish-api.gradle.kts"))
+apply(from = rootProject.file("gradle/publish-all.gradle.kts"))

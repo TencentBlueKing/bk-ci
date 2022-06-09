@@ -36,6 +36,7 @@ import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_PASS_STAGE
 import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.control.DispatchQueueControl
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
@@ -60,7 +61,8 @@ class UpdateStateForStageCmdFinally(
     private val pipelineContainerService: PipelineContainerService,
     private val stageBuildDetailService: StageBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val dispatchQueueControl: DispatchQueueControl
 ) : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
@@ -118,6 +120,9 @@ class UpdateStateForStageCmdFinally(
         needCheckQuality: Boolean
     ) {
 
+        // #6440 stage结束时清理构建机启动队列
+        dispatchQueueControl.flushDispatchQueue(stage.buildId, stage.stageId)
+
         // #5019 在结束阶段做stage准出判断，如果不需要红线检查则直接跳过
         if (needCheckQuality && qualityCheckOutAndBreak(stage, commandContext, event)) return
 
@@ -138,6 +143,7 @@ class UpdateStateForStageCmdFinally(
 
                 return finishBuild(commandContext = commandContext)
             }
+            event.actionType = ActionType.START // final 需要执行
         } else {
             nextStage = pipelineStageService.getNextStage(
                 projectId = event.projectId,
@@ -317,17 +323,8 @@ class UpdateStateForStageCmdFinally(
      * 发送指定[stageId]的Stage启动事件
      */
     private fun PipelineBuildStageEvent.sendNextStage(source: String, stageId: String) {
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildStageEvent(
-                source = source,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                buildId = buildId,
-                stageId = stageId,
-                actionType = ActionType.START
-            )
-        )
+        // #5108 修正因为END被改写成START，导致取消变成继续往下执行。
+        pipelineEventDispatcher.dispatch(this.copy(source = source, stageId = stageId))
     }
 
     /**

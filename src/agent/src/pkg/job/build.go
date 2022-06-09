@@ -39,12 +39,12 @@ import (
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/httputil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
-	"github.com/astaxie/beego/logs"
 )
 
 const buildIntervalInSeconds = 5
@@ -54,11 +54,13 @@ func AgentStartup() (agentStatus string, err error) {
 	result, err := api.AgentStartup()
 	return parseAgentStatusResult(result, err)
 }
+
 // getAgentStatus 获取构建机状态
 func getAgentStatus() (agentStatus string, err error) {
 	result, err := api.GetAgentStatus()
 	return parseAgentStatusResult(result, err)
 }
+
 // parseAgentStatusResult 解析状态信息
 func parseAgentStatusResult(result *httputil.DevopsResult, resultErr error) (agentStatus string, err error) {
 	if resultErr != nil {
@@ -77,13 +79,14 @@ func parseAgentStatusResult(result *httputil.DevopsResult, resultErr error) (age
 	}
 	return agentStatus, nil
 }
+
 // DoPollAndBuild 获取构建，如果达到最大并发或者是处于升级中，则不执行
 func DoPollAndBuild() {
 	for {
 		time.Sleep(buildIntervalInSeconds * time.Second)
 		agentStatus, err := getAgentStatus()
 		if err != nil {
-			logs.Warning("get agent status err: ", err.Error())
+			logs.Warn("get agent status err: ", err.Error())
 			continue
 		}
 		if agentStatus != config.AgentStatusImportOk {
@@ -93,7 +96,7 @@ func DoPollAndBuild() {
 
 		if config.GAgentConfig.ParallelTaskCount != 0 &&
 			GBuildManager.GetInstanceCount() >= config.GAgentConfig.ParallelTaskCount {
-			logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, " +
+			logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, "+
 				"ParallelTaskCount config: %d, instance count: %d",
 				config.GAgentConfig.ParallelTaskCount, GBuildManager.GetInstanceCount()))
 			continue
@@ -121,6 +124,7 @@ func DoPollAndBuild() {
 		}
 	}
 }
+
 // getBuild 从服务器认领要构建的信息
 func getBuild() (*api.ThirdPartyBuildInfo, error) {
 	logs.Info("get build")
@@ -146,6 +150,7 @@ func getBuild() (*api.ThirdPartyBuildInfo, error) {
 
 	return buildInfo, nil
 }
+
 // runBuild 启动构建
 func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 
@@ -162,8 +167,8 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 			if err != nil || !strings.HasPrefix(upgradeWorkerFileVersion, "v") {
 				// #5806 宽松判断合法的版本v开头
 				errorMsg := fmt.Sprintf(
-					"\n尝试恢复 [%s] 执行文件失败，请到 [%s] 目录下执行 install.sh 或解压 agent.zip 还原安装目录" +
-					"\nRestore %s failed, `run install.sh` or `unzip agent.zip` in %s.",
+					"\n尝试恢复 [%s] 执行文件失败，请到 [%s] 目录下执行 install.sh 或解压 agent.zip 还原安装目录"+
+						"\nRestore %s failed, `run install.sh` or `unzip agent.zip` in %s.",
 					agentJarPath, workDir, agentJarPath, workDir)
 				logs.Error(errorMsg)
 				workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errorMsg})
@@ -174,8 +179,8 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 			}
 		} else {
 			errorMsg := fmt.Sprintf(
-				"\n%s执行文件丢失，请到%s目录下执行 install.sh 或者重新解压 agent.zip 还原安装目录" +
-				"\nMissing %s, `run install.sh` or `unzip agent.zip` in %s.",
+				"\n%s执行文件丢失，请到%s目录下执行 install.sh 或者重新解压 agent.zip 还原安装目录"+
+					"\nMissing %s, `run install.sh` or `unzip agent.zip` in %s.",
 				agentJarPath, workDir, agentJarPath, workDir)
 			logs.Error(errorMsg)
 			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errorMsg})
@@ -202,7 +207,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		}
 	}
 	// #5806 定义临时目录
-	tmpDir, tmpMkErr := systemutil.GetBuildTmpDir()
+	tmpDir, tmpMkErr := systemutil.MkBuildTmpDir()
 	if tmpMkErr != nil {
 		errMsg := fmt.Sprintf("创建临时目录失败(create tmp directory failed): %s", tmpMkErr.Error())
 		logs.Error(errMsg)
@@ -214,7 +219,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		agentLogPrefix := fmt.Sprintf("%s_%s_agent", buildInfo.BuildId, buildInfo.VmSeqId)
 		args := []string{
 			"-Djava.io.tmpdir=" + tmpDir,
-			"-Ddevops.agent.error.file=" + systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId),
+			"-Ddevops.agent.error.file=" + systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId),
 			"-Dbuild.type=AGENT",
 			"-DAGENT_LOG_PREFIX=" + agentLogPrefix,
 			"-Xmx2g", // #5806 兼容性问题，必须独立一行
@@ -271,7 +276,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 		systemutil.GetWorkDir(), buildInfo.ProjectId, buildInfo.BuildId, buildInfo.VmSeqId)
 
 	buildInfo.ToDelTmpFiles = []string{
-		scriptFile, prepareScriptFile, systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId)}
+		scriptFile, prepareScriptFile, systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)}
 
 	logs.Info("start agent script: ", scriptFile)
 	agentLogPrefix := fmt.Sprintf("%s_%s_agent", buildInfo.BuildId, buildInfo.VmSeqId)
@@ -282,12 +287,16 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 			"-Ddevops.agent.error.file=%s "+
 			"-Dbuild.type=AGENT -DAGENT_LOG_PREFIX=%s -Xmx2g -Djava.io.tmpdir=%s -jar %s %s",
 			config.GetJava(), scriptFile, prepareScriptFile,
-			systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId),
+			systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId),
 			agentLogPrefix, tmpDir, config.BuildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
 	}
 	scriptContent := strings.Join(lines, "\n")
 
-	err := ioutil.WriteFile(scriptFile, []byte(scriptContent), 0777)
+	err := ioutil.WriteFile(scriptFile, []byte(scriptContent), os.ModePerm)
+	defer func() {
+		_ = systemutil.Chmod(scriptFile, os.ModePerm)
+		_ = systemutil.Chmod(prepareScriptFile, os.ModePerm)
+	}()
 	if err != nil {
 		return "", err
 	} else {
@@ -296,7 +305,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 			"exec " + getCurrentShell() + " -l " + scriptFile,
 		}
 		prepareScriptContent := strings.Join(newLines, "\n")
-		err := ioutil.WriteFile(prepareScriptFile, []byte(prepareScriptContent), 0777)
+		err := ioutil.WriteFile(prepareScriptFile, []byte(prepareScriptContent), os.ModePerm)
 		if err != nil {
 			return "", err
 		} else {

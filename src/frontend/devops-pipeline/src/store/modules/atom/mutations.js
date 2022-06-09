@@ -39,9 +39,7 @@ import {
     DELETE_STAGE,
     UPDATE_STAGE,
     ADD_STAGE,
-    CONTAINER_TYPE_SELECTION_VISIBLE,
-    SET_INSERT_STAGE_INDEX,
-    SET_INSERT_STAGE_ISFINALLY,
+    SET_INSERT_STAGE_STATE,
     UPDATE_ATOM,
     SET_PIPELINE_EDITING,
     SET_PIPELINE,
@@ -56,7 +54,7 @@ import {
     UPDATE_ATOM_OUTPUT,
     UPDATE_ATOM_OUTPUT_NAMESPACE,
     FETCHING_ATOM_LIST,
-    SET_STORE_DATA,
+    SET_REQUEST_ATOM_DATA,
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     FETCHING_ATOM_VERSION,
@@ -66,7 +64,13 @@ import {
     SET_DEFAULT_STAGE_TAG,
     TOGGLE_STAGE_REVIEW_PANEL,
     SET_IMPORTED_JSON,
-    SET_EDIT_FROM
+    SET_ATOMS_CLASSIFY,
+    SET_EDIT_FROM,
+    FETCHING_ATOM_MORE_LOADING,
+    SET_COMMEND_ATOM_COUNT,
+    SET_ATOM_PAGE_OVER,
+    CLEAR_ATOM_DATA,
+    SET_COMMEND_ATOM_PAGE_OVER
 } from './constants'
 import {
     getAtomModalKey,
@@ -143,22 +147,15 @@ export default {
         return state
     },
     [SET_PIPELINE_EDITING]: (state, editing) => {
-        if (state.pipeline) Vue.set(state.pipeline, 'editing', editing)
+        if (state.pipeline && state.pipeline.editing !== editing) {
+            Vue.set(state.pipeline, 'editing', editing)
+        }
         return state
     },
     [SET_CONTAINER_DETAIL]: (state, { containerTypeList, containerModalMap }) => {
         Object.assign(state, {
             containerTypeList,
             containerModalMap
-        })
-        return state
-    },
-    [SET_ATOMS]: (state, { atomCodeList, atomClassifyCodeList, atomMap, atomClassifyMap }) => {
-        Object.assign(state, {
-            atomCodeList,
-            atomClassifyCodeList,
-            atomMap,
-            atomClassifyMap
         })
         return state
     },
@@ -194,15 +191,7 @@ export default {
         })
         return state
     },
-    [CONTAINER_TYPE_SELECTION_VISIBLE]: (state, payload) => {
-        Object.assign(state, payload)
-        return state
-    },
-    [SET_INSERT_STAGE_INDEX]: (state, payload) => {
-        Object.assign(state, payload)
-        return state
-    },
-    [SET_INSERT_STAGE_ISFINALLY]: (state, payload) => {
+    [SET_INSERT_STAGE_STATE]: (state, payload) => {
         Object.assign(state, payload)
         return state
     },
@@ -241,6 +230,7 @@ export default {
         } else {
             const diffRes = diffAtomVersions(preVerEle, preVerAtomModal.props, atomModal.props, isChangeAtom)
             atomVersionChangedKeys = diffRes.atomVersionChangedKeys
+            console.log(atomModal)
             atom = {
                 id: `e-${hashID(32)}`,
                 '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
@@ -257,7 +247,12 @@ export default {
         this.atomVersionChangedCleanId = setTimeout(() => {
             state.atomVersionChangedKeys = []
         }, 5000)
-        container.elements.splice(atomIndex, 1, atom)
+        container.elements.splice(atomIndex, 1, {
+            ...atom,
+            os: atomModal.os,
+            buildLessRunFlag: atomModal.buildLessRunFlag,
+            logoUrl: atomModal.logoUrl
+        })
     },
     [UPDATE_ATOM]: (state, { atom, newParam }) => {
         for (const key in newParam) {
@@ -336,7 +331,8 @@ export default {
     },
     [INSERT_ATOM]: (state, { elements, insertIndex }) => {
         elements.splice(insertIndex, 0, {
-            data: {}
+            data: {},
+            isError: true
         })
     },
     [DELETE_ATOM]: (state, { elements, atomIndex }) => {
@@ -380,9 +376,6 @@ export default {
         Vue.set(state, 'showAtomSelectorPopup', show)
         return state
     },
-    [SET_STORE_DATA]: (state, data) => {
-        Vue.set(state, 'storeAtomData', data)
-    },
     [SET_STORE_LOADING]: (state, data) => {
         state.storeAtomData.loading = data
     },
@@ -391,5 +384,50 @@ export default {
     },
     [SET_IMPORTED_JSON]: (state, importedPipelineJson) => {
         state.importedPipelineJson = importedPipelineJson
+    },
+    [SET_ATOMS_CLASSIFY]: (state, { atomClassifyMap, atomClassifyCodeList }) => {
+        Object.assign(state, {
+            atomClassifyCodeList,
+            atomClassifyMap
+        })
+        return state
+    },
+    [FETCHING_ATOM_MORE_LOADING]: (state, fetching) => {
+        Vue.set(state, 'fetchingAtomMoreLoading', fetching)
+        return state
+    },
+    [SET_ATOMS]: (state, { atomCodeList, atomMap, atomList }) => {
+        Object.assign(state, {
+            atomCodeList,
+            atomMap,
+            atomList
+        })
+        return state
+    },
+    [SET_REQUEST_ATOM_DATA]: (state, requestAtomData) => {
+        Object.assign(state, {
+            requestAtomData
+        })
+        return state
+    },
+    [SET_COMMEND_ATOM_COUNT]: (state, commendAtomCount) => {
+        Vue.set(state, 'commendAtomCount', commendAtomCount)
+        return state
+    },
+    [SET_ATOM_PAGE_OVER]: (state, isAtomPageOver) => {
+        Vue.set(state, 'isAtomPageOver', isAtomPageOver)
+        return isAtomPageOver
+    },
+    [CLEAR_ATOM_DATA]: (state) => {
+        state.atomList = []
+        state.atomMap = {}
+        state.atomCodeList = []
+        state.fetchingAtomList = true
+        state.isCommendAtomPageOver = false
+        return state
+    },
+    [SET_COMMEND_ATOM_PAGE_OVER]: (state, payload) => {
+        state.isCommendAtomPageOver = payload
+        return state
     }
 }

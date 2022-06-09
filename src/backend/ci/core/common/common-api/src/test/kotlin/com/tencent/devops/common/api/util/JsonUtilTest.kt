@@ -32,6 +32,9 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.annotation.SkipLogField
 import org.junit.Assert
 import org.junit.Test
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 /**
  * @version 1.0
@@ -173,6 +176,25 @@ class JsonUtilTest {
         Assert.assertNotNull(haveNoSkipLogFieldsMap["key"])
     }
 
+    @Test
+    fun dataTime() {
+        val localDate = LocalDate.now()
+        val localTime = LocalTime.now()
+        val localDateTime = LocalDateTime.now()
+        val dateAndTime = DateAndTime(localDate, localTime, localDateTime, emptyList())
+
+        val jsonStr = JsonUtil.toJson(dateAndTime)
+        val deserializeObj = JsonUtil.to(jsonStr, DateAndTime::class.java)
+        Assert.assertEquals(dateAndTime, deserializeObj)
+
+        val map = JsonUtil.toMap(dateAndTime)
+        val mapToObj = JsonUtil.mapTo(map, DateAndTime::class.java)
+        Assert.assertEquals(dateAndTime, mapToObj)
+
+        val skipEmptyMap = JsonUtil.toMutableMapSkipEmpty(dateAndTime)
+        Assert.assertNull(skipEmptyMap["emptyList"])
+    }
+
     data class NameAndValue(
         val key: String,
         @SkipLogField
@@ -192,5 +214,12 @@ class JsonUtilTest {
         val isSecrecy: Boolean?, // 错误的字段示例命名，会导致反序列化的空值
         @get:JsonProperty("is_exact_resource")
         val exactResource: Int = 1
+    )
+
+    data class DateAndTime(
+        val localDate: LocalDate,
+        val localTime: LocalTime,
+        val localDateTime: LocalDateTime,
+        val emptyList: List<String>
     )
 }

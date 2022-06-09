@@ -146,7 +146,8 @@
                     showCodelibDialog: true,
                     projectId: this.projectId,
                     credentialTypes,
-                    authType
+                    authType,
+                    codelib
                 }
                 this.toggleCodelibDialog(CodelibDialog)
             },

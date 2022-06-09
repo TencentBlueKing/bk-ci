@@ -49,5 +49,9 @@ data class Role(
     @ApiModelProperty("仓库名称")
     val repoName: String? = null,
     @ApiModelProperty("管理员")
-    val admin: Boolean = false
+    val admin: Boolean = false,
+    @ApiModelProperty("绑定的用户")
+    val users: List<String> = listOf(),
+    @ApiModelProperty("描述信息")
+    val description: String? = null
 )

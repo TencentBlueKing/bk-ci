@@ -32,33 +32,65 @@
 package com.tencent.bkrepo.common.storage.innercos.client
 
 import com.tencent.bkrepo.common.storage.credentials.InnerCosCredentials
-import com.tencent.bkrepo.common.storage.innercos.cl5.CL5Info
-import com.tencent.bkrepo.common.storage.innercos.endpoint.CL5EndpointResolver
 import com.tencent.bkrepo.common.storage.innercos.endpoint.DefaultEndpointResolver
+import com.tencent.bkrepo.common.storage.innercos.endpoint.EndpointBuilder
 import com.tencent.bkrepo.common.storage.innercos.endpoint.EndpointResolver
-import com.tencent.bkrepo.common.storage.innercos.endpoint.RegionEndpointBuilder
+import com.tencent.bkrepo.common.storage.innercos.endpoint.InnerCosEndpointBuilder
+import com.tencent.bkrepo.common.storage.innercos.endpoint.PolarisEndpointResolver
+import com.tencent.bkrepo.common.storage.innercos.endpoint.PublicCosEndpointBuilder
 import com.tencent.bkrepo.common.storage.innercos.http.HttpProtocol
 import org.springframework.util.unit.DataSize
 import java.time.Duration
 
+/**
+ * cos 客户端配置
+ */
 class ClientConfig(private val credentials: InnerCosCredentials) {
+    /**
+     * 分片上传最大分片数量
+     */
     val maxUploadParts: Int = MAX_PARTS
+
+    /**
+     * 签名过期时间
+     */
     val signExpired: Duration = Duration.ofDays(1)
+
+    /**
+     * http协议
+     */
     val httpProtocol: HttpProtocol = HttpProtocol.HTTP
 
+    /**
+     * 分片上传阈值，大于此值将采用分片上传
+     */
     val multipartUploadThreshold: Long = DataSize.ofMegabytes(MULTIPART_THRESHOLD_SIZE).toBytes()
+
+    /**
+     * 分片最小数量
+     */
     val minimumUploadPartSize: Long = DataSize.ofMegabytes(MIN_PART_SIZE).toBytes()
 
+    /**
+     * cos访问域名构造器
+     */
+    val endpointBuilder = createEndpointBuilder()
+
+    /**
+     * cos访问域名解析器
+     */
     val endpointResolver = createEndpointResolver()
-    val endpointBuilder = RegionEndpointBuilder()
 
     private fun createEndpointResolver(): EndpointResolver {
         return if (credentials.modId != null && credentials.cmdId != null) {
-            val cl5Info = CL5Info(credentials.modId!!, credentials.cmdId!!, credentials.timeout)
-            CL5EndpointResolver(cl5Info)
+            PolarisEndpointResolver(credentials.modId!!, credentials.cmdId!!)
         } else {
             DefaultEndpointResolver()
         }
+    }
+
+    private fun createEndpointBuilder(): EndpointBuilder {
+        return if (credentials.public) PublicCosEndpointBuilder() else InnerCosEndpointBuilder()
     }
 
     companion object {

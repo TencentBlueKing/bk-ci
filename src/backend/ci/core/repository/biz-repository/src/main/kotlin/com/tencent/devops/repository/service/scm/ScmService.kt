@@ -36,14 +36,14 @@ import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.P4Config
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
-import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
-import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitDiff
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -96,7 +96,9 @@ class ScmService @Autowired constructor(
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String?
+        search: String?,
+        page: Int,
+        pageSize: Int
     ): List<String> {
         logger.info("[$projectName|$url|$type|$userName] Start to list branches")
         val startEpoch = System.currentTimeMillis()
@@ -112,7 +114,7 @@ class ScmService @Autowired constructor(
                 region = region,
                 userName = userName
             )
-                .getBranches(search = search)
+                .getBranches(search = search, page = page, pageSize = pageSize)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list branches")
         }
@@ -539,6 +541,28 @@ class ScmService @Autowired constructor(
             userName = null
         )
             .getMrReviewInfo(mrId = mrId)
+    }
+
+    override fun getMrCommitList(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long,
+        page: Int,
+        size: Int
+    ): List<GitCommit> {
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null
+        ).getMrCommitList(mrId = mrId, page = page, size = size)
     }
 
     companion object {

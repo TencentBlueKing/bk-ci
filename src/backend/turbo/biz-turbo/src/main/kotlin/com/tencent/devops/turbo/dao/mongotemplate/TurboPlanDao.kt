@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Suppress("MaxLineLength")
@@ -252,5 +253,42 @@ class TurboPlanDao @Autowired constructor(
         update.set("updated_by", codeccAdmin)
         update.set("updated_date", LocalDateTime.now())
         mongoTemplate.updateFirst(query, update, TTurboPlanEntity::class.java)
+    }
+
+    /**
+     * 根据项目id和创建时间获取加速方案列表
+     */
+    fun getTurboPlanByProjectIdAndCreatedDate(projectId: String, startTime: LocalDate?, endTime: LocalDate?, pageable: Pageable): Page<TTurboPlanEntity> {
+        val query = turboPlanParameter(projectId, startTime, endTime)
+        //先算总数
+        val totalCount = mongoTemplate.count(query, TTurboPlanEntity::class.java)
+        query.with(pageable)
+        // 分页排序
+        val pageSize = pageable.pageSize
+        val pageNumber = pageable.pageNumber
+        val queryResults = mongoTemplate.find(query, TTurboPlanEntity::class.java, "t_turbo_plan_entity")
+
+        // 计算总页数
+        var totalPageNum = 0
+        if (totalCount > 0) {
+            totalPageNum = (totalCount.toInt() + pageSize - 1) / pageSize
+        }
+
+        return Page(totalCount, pageNumber + 1, pageSize, totalPageNum, queryResults)
+    }
+
+    /**
+     * 公共方法,获取加速方案列表所需参数
+     */
+    private fun turboPlanParameter(projectId: String, startTime: LocalDate?, endTime: LocalDate?): Query {
+        val query = Query()
+        query.addCriteria(Criteria.where("project_id").`is`(projectId))
+        if(null != startTime) {
+            query.addCriteria(Criteria.where("created_date").gte(startTime))
+        }
+        if (null != endTime) {
+            query.addCriteria(Criteria.where("created_date").lte(endTime))
+        }
+        return query
     }
 }

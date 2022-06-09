@@ -78,4 +78,26 @@ class UserReportResourceImpl @Autowired constructor(
         }
         return Result(decorateResult)
     }
+
+    override fun getStream(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<List<Report>> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (pipelineId.isBlank()) {
+            throw ParamBlankException("Invalid pipelineId")
+        }
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        val result = reportService.listNoApiHost(userId, projectId, pipelineId, buildId)
+        return Result(result)
+    }
 }

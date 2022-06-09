@@ -332,13 +332,14 @@ class PipelineBuildFacadeService(
             }
 
             // 运行中的task重试走全新的处理逻辑
-            if (!buildInfo.status.isFinish()) {
+            if (!buildInfo.status.isFinish() && buildInfo.status != BuildStatus.STAGE_SUCCESS) {
                 if (pipelineRetryFacadeService.runningBuildTaskRetry(
                         userId = userId,
                         projectId = projectId,
                         pipelineId = pipelineId,
                         buildId = buildId,
-                        taskId = taskId
+                        taskId = taskId,
+                        skipFailedTask = skipFailedTask
                     )) {
                     return buildId
                 }
@@ -426,7 +427,8 @@ class PipelineBuildFacadeService(
                 // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数，并清理VAR表内容
                 try {
                     buildInfo.buildParameters?.forEach { param -> paramMap[param.key] = param }
-                    // TODO 代码库 WEB_HOOK 类型的触发暂时不做清理，增加 HOOK 参数保存逻辑后统一清理
+                    // TODO #6090 代码库 WEB_HOOK 类型的触发暂时不做清理，增加 HOOK 参数保存逻辑后变成统一清理（去掉if条件）
+                    // TODO 将 webhook 触发时保存的参数重新加入 paramMap
                     if (startType == StartType.WEB_HOOK) {
                         buildVariableService.deleteBuildVars(projectId, pipelineId, buildId)
                     }
@@ -607,6 +609,72 @@ class PipelineBuildFacadeService(
         }
     }
 
+    /**
+     * 代码库回调钩子触发
+     */
+    fun webhookTriggerPipelineBuild(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        parameters: Map<String, Any> = emptyMap(),
+        checkPermission: Boolean = true
+    ): String? {
+
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EXECUTE,
+                message = "用户（$userId) 无权限启动流水线($pipelineId)"
+            )
+        }
+        val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+            ?: return null
+        val startEpoch = System.currentTimeMillis()
+        try {
+
+            val model = getModel(projectId, pipelineId, readyToBuildPipelineInfo.version)
+
+            /**
+             * 验证流水线参数构建启动参数
+             */
+            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+
+            // TODO #6090 将webhook参数持久化存储
+            val startParams = mutableListOf<BuildParameters>()
+            for (it in parameters) {
+                startParams.add(BuildParameters(it.key, it.value))
+            }
+            val paramsKeyList = startParams.map { it.key }
+            triggerContainer.params.forEach {
+                if (paramsKeyList.contains(it.id)) {
+                    return@forEach
+                }
+                startParams.add(BuildParameters(key = it.id, value = it.defaultValue, readOnly = it.readOnly))
+            }
+
+            val pipelineParamMap = mutableMapOf<String, BuildParameters>()
+            startParams.forEach { (key, value, valueType, readOnly) ->
+                pipelineParamMap[key] = BuildParameters(key, value, valueType, readOnly)
+            }
+
+            return pipelineBuildService.startPipeline(
+                userId = userId,
+                pipeline = readyToBuildPipelineInfo,
+                startType = StartType.WEB_HOOK,
+                pipelineParamMap = pipelineParamMap,
+                channelCode = readyToBuildPipelineInfo.channelCode,
+                isMobile = false,
+                model = model,
+                signPipelineVersion = null,
+                frequencyLimit = false
+            )
+        } finally {
+            logger.info("Webhook| It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline($pipelineId)")
+        }
+    }
+
     fun buildManualShutdown(
         userId: String,
         projectId: String,
@@ -709,12 +777,15 @@ class PipelineBuildFacadeService(
             }
         }
         logger.info("[$buildId]|buildManualReview|taskId=$elementId|userId=$userId|params=$params")
-        pipelineRuntimeService.manualDealBuildTask(
-            projectId = projectId,
-            buildId = buildId,
+
+        pipelineRuntimeService.manualDealReview(
             taskId = elementId,
             userId = userId,
-            params = params
+            params = params.apply {
+                this.projectId = projectId
+                this.pipelineId = pipelineId
+                this.buildId = buildId
+            }
         )
         if (params.status == ManualReviewAction.ABORT) {
             buildDetailService.updateBuildCancelUser(projectId, buildId, userId)
@@ -784,12 +855,17 @@ class PipelineBuildFacadeService(
                 params = arrayOf(stageId)
             )
         }
-
+        val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
         val runLock = PipelineBuildRunLock(redisOperation, pipelineId)
         try {
             runLock.lock()
             val interceptResult = pipelineInterceptorChain.filter(
-                InterceptData(pipelineInfo, null, StartType.MANUAL)
+                InterceptData(
+                    pipelineInfo = pipelineInfo,
+                    model = null,
+                    startType = StartType.MANUAL,
+                    setting = setting
+                )
             )
 
             if (interceptResult.isNotOk()) {
@@ -944,8 +1020,16 @@ class PipelineBuildFacadeService(
                                 params = arrayOf(userId)
                             )
                         }
-                        val reviewParam =
-                            ReviewParam(projectId, pipelineId, buildId, reviewUser, null, el.desc, "", el.params)
+                        val reviewParam = ReviewParam(
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                buildId = buildId,
+                                reviewUsers = reviewUser,
+                                status = null,
+                                desc = el.desc,
+                                suggest = "",
+                                params = el.params
+                            )
                         logger.info("reviewParam : $reviewParam")
                         return reviewParam
                     }
@@ -990,11 +1074,6 @@ class PipelineBuildFacadeService(
                     buildId = buildId,
                     userId = buildInfo.startUser,
                     buildStatus = BuildStatus.FAILED
-                )
-                buildDetailService.updateBuildCancelUser(
-                    projectId = projectId,
-                    buildId = buildId,
-                    cancelUserId = buildInfo.startUser
                 )
                 logger.info("$pipelineId|CANCEL_PIPELINE_BUILD|buildId=$buildId|user=${buildInfo.startUser}")
             } catch (t: Throwable) {
@@ -1682,7 +1761,7 @@ class PipelineBuildFacadeService(
                 logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: $status")
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "Run cancelled by $userId",
+                    message = "Cancelled by $userId",
                     tag = taskId,
                     jobId = containerId,
                     executeCount = executeCount
@@ -1690,11 +1769,12 @@ class PipelineBuildFacadeService(
             }
 
             if (tasks.isEmpty()) {
+                val jobId = "0"
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "Run cancelled by $userId",
-                    tag = "",
-                    jobId = "",
+                    message = "Cancelled by $userId",
+                    tag = VMUtils.genStartVMTaskId(jobId),
+                    jobId = jobId,
                     executeCount = 1
                 )
             }
@@ -1707,11 +1787,6 @@ class PipelineBuildFacadeService(
                     userId = userId,
                     buildStatus = BuildStatus.CANCELED,
                     terminateFlag = terminateFlag
-                )
-                buildDetailService.updateBuildCancelUser(
-                    projectId = projectId,
-                    buildId = buildId,
-                    cancelUserId = userId
                 )
                 logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
             } catch (t: Throwable) {

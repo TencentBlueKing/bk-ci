@@ -92,6 +92,7 @@ class PipelineBuildService(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
+        private val CONTEXT_PREFIX = "variables."
     }
 
     fun startPipeline(
@@ -142,9 +143,15 @@ class PipelineBuildService(
                     handlePostFlag = handlePostFlag
                 )
             }
+            val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
 
             val interceptResult = pipelineInterceptorChain.filter(
-                InterceptData(pipelineInfo = pipeline, model = model, startType = startType)
+                InterceptData(
+                    pipelineInfo = pipeline,
+                    model = model,
+                    startType = startType,
+                    setting = setting
+                )
             )
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
@@ -178,8 +185,15 @@ class PipelineBuildService(
             // 解析出定义的流水线变量
             val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
             val originStartParams = ArrayList<BuildParameters>(realStartParamKeys.size + 4)
-            realStartParamKeys.forEach { key -> pipelineParamMap[key]?.let { param -> originStartParams.add(param) } }
-
+            // 将用户定义的变量增加上下文前缀的版本，与原变量相互独立
+            val originStartContexts = ArrayList<BuildParameters>(realStartParamKeys.size)
+            realStartParamKeys.forEach { key ->
+                pipelineParamMap[key]?.let { param ->
+                    originStartParams.add(param)
+                    originStartContexts.add(param.copy(value = "$CONTEXT_PREFIX${param.value}"))
+                }
+            }
+            pipelineParamMap.putAll(originStartContexts.associateBy { it.key })
             pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
                 key = PIPELINE_BUILD_MSG,
                 value = BuildMsgUtils.getBuildMsg(startValues?.get(PIPELINE_BUILD_MSG), startType, channelCode),
@@ -215,7 +229,8 @@ class PipelineBuildService(
                 originStartParams = originStartParams,
                 pipelineParamMap = pipelineParamMap,
                 buildNo = buildNo,
-                buildNumRule = pipelineSetting.buildNumRule
+                buildNumRule = pipelineSetting.buildNumRule,
+                setting = setting
             )
         } finally {
             if (acquire) {

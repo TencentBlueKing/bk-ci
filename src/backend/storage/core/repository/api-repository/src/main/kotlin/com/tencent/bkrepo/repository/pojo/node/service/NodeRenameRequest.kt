@@ -51,5 +51,4 @@ data class NodeRenameRequest(
     val newFullPath: String,
     @ApiModelProperty("操作用户", required = true)
     override val operator: String
-
 ) : NodeRequest, ServiceRequest

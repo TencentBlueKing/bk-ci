@@ -24,9 +24,10 @@
                                 name="name"
                                 class="codelib-credential-selector"
                                 :placeholder="$t('codelib.codelibUrlPlaceholder')"
+                                :remote-method="handleSearchCodeLib"
                             >
-                                <bk-option v-for="(option, index) in oAuth.project"
-                                    :key="index"
+                                <bk-option v-for="option in oAuth.project"
+                                    :key="option.httpUrl"
                                     :id="option.httpUrl"
                                     :name="option.httpUrl">
                                 </bk-option>
@@ -336,15 +337,15 @@
             },
             urlPlaceholder () {
                 return (
-                    this.placeholders['url'][this.codelibConfig.label]
-                    || this.placeholders['url'][this.codelib.authType]
+                    this.placeholders.url[this.codelibConfig.label]
+                    || this.placeholders.url[this.codelib.authType]
                 )
             },
             credentialPlaceholder () {
                 return this.placeholders.cred[this.codelibConfig.label]
             },
             portPlaceholder () {
-                return this.placeholders['port'][this.codelibConfig.label]
+                return this.placeholders.port[this.codelibConfig.label]
             }
         },
 
@@ -389,6 +390,11 @@
                     this.hasValidate = true
                     this.saving = false
                 }
+            },
+            isShow (val) {
+                if (!val) {
+                    this.setTemplateCodelib()
+                }
             }
         },
 
@@ -400,7 +406,8 @@
                 'updateCodelib',
                 'gitOAuth',
                 'checkOAuth',
-                'checkTGitOAuth'
+                'checkTGitOAuth',
+                'setTemplateCodelib'
             ]),
             async submitCodelib () {
                 const {
@@ -429,7 +436,6 @@
                         this.toggleCodelibDialog(false)
                         this.hasValidate = false
                         this.saving = true
-                        this.codelib.url = ''
                         this.$bkMessage({
                             message: repositoryHashId
                                 ? this.$t('codelib.successfullyEdited')
@@ -464,6 +470,15 @@
                 } finally {
                     this.$nextTick(() => (this.loading = false))
                 }
+            },
+
+            handleSearchCodeLib (search) {
+                const { projectId, codelibTypeConstants } = this
+                this.checkOAuth({
+                    projectId,
+                    type: codelibTypeConstants,
+                    search
+                })
             },
 
             async openValidate () {
