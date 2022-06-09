@@ -134,6 +134,15 @@ class BuildVariableService @Autowired constructor(
         )
     }
 
+    fun deleteBuildVars(projectId: String, pipelineId: String, buildId: String) {
+        pipelineBuildVarDao.deleteBuildVars(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
+    }
+
     fun deletePipelineBuildVar(projectId: String, pipelineId: String) {
         pipelineBuildVarDao.deletePipelineBuildVar(
             dslContext = commonDslContext,

@@ -950,7 +950,7 @@ class PipelineRuntimeService @Autowired constructor(
                         buildStatus = startBuildStatus,
                         cancelUser = ""
                     )
-                    val buildNum = buildVariableService.getVariable(projectId, buildId, PIPELINE_BUILD_NUM)
+                    val buildNum = buildHistoryRecord.buildNum
                     pipelineParamMap[PIPELINE_BUILD_NUM] = BuildParameters(
                         key = PIPELINE_BUILD_NUM, value = buildNum.toString(), readOnly = true
                     )

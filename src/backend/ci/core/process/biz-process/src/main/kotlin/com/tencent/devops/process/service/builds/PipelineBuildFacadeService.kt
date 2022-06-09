@@ -102,7 +102,6 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
-import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -373,7 +372,11 @@ class PipelineBuildFacadeService(
             )
 
             val paramMap = HashMap<String, BuildParameters>(100, 1F)
-
+            // #2821 构建重试均要传递触发插件ID，否则当有多个事件触发插件时，rebuild后触发器的标记不对
+            buildVariableService.getVariable(projectId, buildId, PIPELINE_START_TASK_ID)?.let { startTaskId ->
+                paramMap[PIPELINE_START_TASK_ID] = BuildParameters(PIPELINE_START_TASK_ID, startTaskId)
+            }
+            val startType = StartType.toStartType(buildInfo.trigger)
             if (!taskId.isNullOrBlank()) {
                 // stage/job/task级重试
                 run {
@@ -420,9 +423,13 @@ class PipelineBuildFacadeService(
                     }
                 }
             } else {
-                // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数
+                // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数，并清理VAR表内容
                 try {
                     buildInfo.buildParameters?.forEach { param -> paramMap[param.key] = param }
+                    // TODO 代码库 WEB_HOOK 类型的触发暂时不做清理，增加 HOOK 参数保存逻辑后统一清理
+                    if (startType == StartType.WEB_HOOK) {
+                        buildVariableService.deleteBuildVars(projectId, pipelineId, buildId)
+                    }
                 } catch (ignored: Exception) {
                     logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
                 }
@@ -438,13 +445,7 @@ class PipelineBuildFacadeService(
                 "ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
                     "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
             )
-            val startType = StartType.toStartType(
-                buildVariableService.getVariable(projectId, buildId, PIPELINE_START_TYPE) ?: ""
-            )
-            // #2821 完整构建重试,传递触发插件ID，否则当有多个事件触发插件时,rebuild后触发器的标记不对
-            buildVariableService.getVariable(projectId, buildId, PIPELINE_START_TASK_ID)?.let { startTaskId ->
-                paramMap[PIPELINE_START_TASK_ID] = BuildParameters(PIPELINE_START_TASK_ID, startTaskId)
-            }
+
             paramMap[PIPELINE_RETRY_COUNT] = BuildParameters(PIPELINE_RETRY_COUNT, retryCount)
             paramMap[PIPELINE_RETRY_BUILD_ID] = BuildParameters(PIPELINE_RETRY_BUILD_ID, buildId, readOnly = true)
 

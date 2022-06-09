@@ -219,6 +219,13 @@ class PipelineBuildVarDao @Autowired constructor() {
         }
     }
 
+    fun deleteBuildVars(dslContext: DSLContext, projectId: String, pipelineId: String, buildId: String) {
+        return with(T_PIPELINE_BUILD_VAR) {
+            dslContext.delete(this).where(PROJECT_ID.eq(projectId)).and(BUILD_ID.eq(buildId))
+                .and(PIPELINE_ID.eq(pipelineId)).execute()
+        }
+    }
+
     fun deletePipelineBuildVar(dslContext: DSLContext, projectId: String, pipelineId: String) {
         return with(T_PIPELINE_BUILD_VAR) {
             dslContext.delete(this).where(PROJECT_ID.eq(projectId))
