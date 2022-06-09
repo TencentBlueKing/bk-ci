@@ -81,6 +81,7 @@ object YamlObjects {
                 transValue<Map<String, Any?>>(fromPath, "env", step["env"])
             },
             run = step["run"]?.toString(),
+            shell = step["shell"]?.toString(),
             checkout = step["checkout"]?.toString(),
             yamlMetaData = if (step["yamlMetaData"] == null) {
                 MetaData(templateInfo = repo)
