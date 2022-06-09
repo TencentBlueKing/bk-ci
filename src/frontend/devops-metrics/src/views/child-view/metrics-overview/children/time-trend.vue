@@ -51,8 +51,12 @@ const getData = () => {
 };
 
 watch(
-  () => props.status,
-  getData,
+  () => props.status, () => {
+    timeTrend.value.data[0].list = []
+    timeTrend.value.data[1].list = []
+    timeTrend.value.labels = []
+    getData()
+  }
 );
 onBeforeMount(getData);
 </script>

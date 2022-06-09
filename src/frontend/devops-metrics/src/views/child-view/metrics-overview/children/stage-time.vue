@@ -49,8 +49,10 @@ const getDataFromApi = () => {
 };
 
 watch(
-  () => props.status,
-  getDataFromApi,
+  () => props.status, () => {
+    stageList.value = []
+    getDataFromApi()
+  }
 );
 onBeforeMount(getDataFromApi);
 </script>

@@ -33,8 +33,11 @@ const getData = () => {
 };
 
 watch(
-  () => props.status,
-  getData,
+  () => props.status, () =>{
+    data.value.list = []
+    data.value.labels = []
+    getData()
+  }
 );
 onMounted(getData);
 </script>

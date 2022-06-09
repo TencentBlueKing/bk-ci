@@ -38,8 +38,8 @@ const clearStatus = () => {
     />
     <scroll-load-select
       class="mr8 w240"
-      id-key="errorCode"
-      name-key="errorMsg"
+      id-key="errorType"
+      name-key="errorName"
       placeholder="Error type"
       :multiple="true"
       :api-method="http.getErrorTypeList"

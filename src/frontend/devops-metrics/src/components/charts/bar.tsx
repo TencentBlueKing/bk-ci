@@ -11,7 +11,8 @@ import BKChart from '@blueking/bkcharts';
 export interface IData {
   label: string,
   list: Array<string | number>,
-  backgroundColor?: string
+  backgroundColor?: string,
+  borderColor?: string
 }
 
 export default defineComponent({
@@ -40,6 +41,7 @@ export default defineComponent({
           datasets: data.map(item => ({
             label: item.label,
             backgroundColor: item.backgroundColor || 'rgba(43, 124, 255,0.3)',
+            borderColor: item.borderColor || 'rgba(43, 124, 255,0.3)',
             borderSkipped: 'bottom',
             borderWidth: 1,
             data: [...item.list],

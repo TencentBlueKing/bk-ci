@@ -39,8 +39,8 @@ const getPluginList = () => {
     ]) => {
       originProjectPluginList = [...pluginList.atomBaseInfos];
       projectPluginList.value = [...pluginList.atomBaseInfos];
-      originProjectOptionPluginList = [...optionPluginList.atomBaseInfos];
-      projectOptionPluginList.value = [...optionPluginList.atomBaseInfos];
+      originProjectOptionPluginList = [...optionPluginList.records];
+      projectOptionPluginList.value = [...optionPluginList.records];
     })
     .finally(() => {
       isLoading.value = false;

@@ -58,8 +58,13 @@ const getData = () => {
 };
 
 watch(
-  () => props.status,
-  getData,
+  () => props.status, () => {
+    analysisData.value.rateTrend.data = []
+    analysisData.value.rateTrend.labels = []
+    analysisData.value.timeTrend.data = []
+    analysisData.value.timeTrend.labels = []
+    getData();
+  }
 );
 onMounted(getData);
 </script>
