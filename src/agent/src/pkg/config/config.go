@@ -271,7 +271,7 @@ func LoadAgentConfig() error {
 
 	ignoreLocalIps := strings.TrimSpace(conf.Section("").Key(KeyIgnoreLocalIps).String())
 	if len(ignoreLocalIps) == 0 {
-		ignoreLocalIps = "127.0.0.1,192.168.10.255" // 临时代码，上线更新即移除
+		ignoreLocalIps = "127.0.0.1"
 	}
 
 	logsKeepHours, err := conf.Section("").Key(KeyLogsKeepHours).Int()
