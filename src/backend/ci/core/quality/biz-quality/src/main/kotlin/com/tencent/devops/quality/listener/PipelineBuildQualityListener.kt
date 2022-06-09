@@ -38,6 +38,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCas
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.quality.dao.HistoryDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
+import com.tencent.devops.quality.dao.v2.QualityRuleReviewerDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -52,7 +53,8 @@ import org.springframework.stereotype.Service
 class PipelineBuildQualityListener @Autowired constructor(
     private val dslContext: DSLContext,
     private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
-    private val qualityHistoryDao: HistoryDao
+    private val qualityHistoryDao: HistoryDao,
+    private val qualityRuleReviewerDao: QualityRuleReviewerDao
 ) {
 
     companion object {
@@ -171,13 +173,25 @@ class PipelineBuildQualityListener @Autowired constructor(
             val action = if (event.reviewType == BuildReviewType.QUALITY_TASK_REVIEW_PASS)
                 RuleInterceptResult.INTERCEPT_PASS else RuleInterceptResult.INTERCEPT
             val ruleIds = event.ruleIds.map { HashUtil.decodeIdToLong(it) }.toSet()
-            qualityHistoryDao.batchUpdateHistoryResult(
+            val count = qualityHistoryDao.batchUpdateHistoryResult(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 buildId = event.buildId,
                 result = action,
                 ruleIds = ruleIds
             )
+            logger.info("QUALITY|[${event.buildId}]history result update count: $count")
+
+            // 保存蓝盾红线审核人信息
+            qualityRuleReviewerDao.batchCreate(
+                dslContext = dslContext,
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                ruleIds = ruleIds,
+                reviewer = event.userId
+            )
+            logger.info("QUALITY|[${event.buildId}]save reviewer info done.")
         } catch (e: Exception) {
             logger.error("quality review error: ${e.message}")
         }

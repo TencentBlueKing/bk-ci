@@ -201,7 +201,7 @@ class PipelineBuildQualityService(
                 )
             )
         } catch (e: Exception) {
-            logger.error("")
+            logger.error("[$buildId]|qualityReview error|taskId=$elementId|userId=$userId|action=$action")
         }
 
         logger.info("[$buildId]|buildManualReview|taskId=$elementId|userId=$userId|action=$action")
