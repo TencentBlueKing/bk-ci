@@ -520,16 +520,17 @@ class AtomDao : AtomBaseDao() {
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
+        queryProjectAtomFlag: Boolean,
         fitOsFlag: Boolean?,
         queryFitAgentBuildLessAtomFlag: Boolean?,
         page: Int?,
         pageSize: Int?
     ): Result<out Record>? {
-        val ta = TAtom.T_ATOM.`as`("ta")
-        val tc = TClassify.T_CLASSIFY.`as`("tc")
-        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tspr")
-        val taf = TAtomFeature.T_ATOM_FEATURE.`as`("taf")
-        val tst = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tsst")
+        val ta = TAtom.T_ATOM
+        val tc = TClassify.T_CLASSIFY
+        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
+        val taf = TAtomFeature.T_ATOM_FEATURE
+        val tst = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
         val defaultAtomCondition = queryDefaultAtomCondition(
             ta = ta,
             taf = taf,
@@ -553,7 +554,7 @@ class AtomDao : AtomBaseDao() {
                 serviceScope = serviceScope,
                 jobType = jobType,
                 os = os,
-                projectCode = projectCode,
+                projectCode = if (queryProjectAtomFlag) projectCode else null,
                 category = category,
                 classifyId = classifyId,
                 recommendFlag = recommendFlag,
@@ -564,7 +565,7 @@ class AtomDao : AtomBaseDao() {
         val queryNormalAtomStep = getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
         var queryInitTestAtomStep: SelectOnConditionStep<Record>? = null
         var initTestAtomCondition: MutableList<Condition>? = null
-        if (!projectCode.isNullOrBlank()) {
+        if (!projectCode.isNullOrBlank() && (queryProjectAtomFlag || !keyword.isNullOrBlank())) {
             queryInitTestAtomStep = getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
             initTestAtomCondition =
                 queryTestAtomCondition(
@@ -685,12 +686,13 @@ class AtomDao : AtomBaseDao() {
         recommendFlag: Boolean?,
         keyword: String?,
         fitOsFlag: Boolean?,
+        queryProjectAtomFlag: Boolean,
         queryFitAgentBuildLessAtomFlag: Boolean?
     ): Long {
-        val ta = TAtom.T_ATOM.`as`("ta")
-        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tspr")
-        val taf = TAtomFeature.T_ATOM_FEATURE.`as`("taf")
-        val tsst = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tsst")
+        val ta = TAtom.T_ATOM
+        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
+        val taf = TAtomFeature.T_ATOM_FEATURE
+        val tsst = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
         val defaultAtomCondition = queryDefaultAtomCondition(
             ta = ta,
             taf = taf,
@@ -713,7 +715,7 @@ class AtomDao : AtomBaseDao() {
             serviceScope = serviceScope,
             jobType = jobType,
             os = os,
-            projectCode = projectCode,
+            projectCode = if (queryProjectAtomFlag) projectCode else null,
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
@@ -724,7 +726,7 @@ class AtomDao : AtomBaseDao() {
         val queryNormalAtomStep = getPipelineAtomCountBaseStep(dslContext, ta, taf, tsst)
         var queryInitTestAtomStep: SelectOnConditionStep<Record1<Int>>? = null
         var initTestAtomCondition: MutableList<Condition>? = null
-        if (!projectCode.isNullOrBlank()) {
+        if (!projectCode.isNullOrBlank() && (queryProjectAtomFlag || !keyword.isNullOrBlank())) {
             queryInitTestAtomStep = getPipelineAtomCountBaseStep(dslContext, ta, taf, tsst)
             initTestAtomCondition = queryTestAtomCondition(
                 ta = ta,
