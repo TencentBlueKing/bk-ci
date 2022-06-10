@@ -190,7 +190,7 @@ class PipelineBuildService(
             realStartParamKeys.forEach { key ->
                 pipelineParamMap[key]?.let { param ->
                     originStartParams.add(param)
-                    originStartContexts.add(param.copy(value = "$CONTEXT_PREFIX${param.value}"))
+                    originStartContexts.add(param.copy(key = "$CONTEXT_PREFIX${param.key}"))
                 }
             }
             pipelineParamMap.putAll(originStartContexts.associateBy { it.key })
