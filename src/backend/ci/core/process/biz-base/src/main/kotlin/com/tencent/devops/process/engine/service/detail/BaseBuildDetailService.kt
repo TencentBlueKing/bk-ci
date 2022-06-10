@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service.detail
 
 import com.google.common.base.Preconditions
 import com.tencent.devops.common.api.constant.BUILD_CANCELED
+import com.tencent.devops.common.api.constant.BUILD_COMPLETED
 import com.tencent.devops.common.api.constant.BUILD_FAILED
 import com.tencent.devops.common.api.constant.BUILD_REVIEWING
 import com.tencent.devops.common.api.constant.BUILD_RUNNING
@@ -153,6 +154,8 @@ open class BaseBuildDetailService constructor(
             BUILD_FAILED
         } else if (buildStatus.isCancel()) {
             BUILD_CANCELED
+        } else if (buildStatus.isSuccess()) {
+            BUILD_COMPLETED
         } else {
             BUILD_RUNNING
         }

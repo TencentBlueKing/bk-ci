@@ -33,6 +33,7 @@ enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
     DOCKER_VM_DEMOTE(".docker.vm.demote"),
     PCG(".pcg.sumeru"),
     DEVCLOUD(".devcloud.public"),
+    BCS(".bcs.public"),
     IDC(".idc.public"),
     GITCI(".gitci.public"),
     STREAM(".stream.docker"),

@@ -42,7 +42,7 @@ import (
 
 func DoAgentHeartbeat() {
 	for {
-		agentHeartbeat()
+		_ = agentHeartbeat()
 		time.Sleep(10 * time.Second)
 	}
 }
@@ -85,8 +85,19 @@ func agentHeartbeat() error {
 		config.GAgentConfig.FileGateway = heartbeatResponse.FileGateway
 		configChanged = true
 	}
+
+	if heartbeatResponse.Props.KeepLogsHours > 0 {
+		config.GAgentConfig.LogsKeepHours = heartbeatResponse.Props.KeepLogsHours
+		configChanged = true
+	}
+
+	if len(heartbeatResponse.Props.IgnoreLocalIps) > 0 {
+		config.GAgentConfig.IgnoreLocalIps = heartbeatResponse.Props.IgnoreLocalIps
+		configChanged = true
+	}
+
 	if configChanged {
-		config.GAgentConfig.SaveConfig()
+		_ = config.GAgentConfig.SaveConfig()
 	}
 
 	// agent环境变量

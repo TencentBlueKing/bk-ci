@@ -57,6 +57,7 @@ import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
+import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -274,12 +275,6 @@ class StreamYamlTrigger @Autowired constructor(
     private fun needChangePipelineDisplayName(
         action: BaseAction
     ): Boolean {
-        return action.data.context.pipeline!!.pipelineId.isBlank() ||
-            (
-                !action.getChangeSet().isNullOrEmpty() &&
-                    action.getChangeSet()!!.toSet()
-                        .contains(action.data.context.pipeline!!.filePath) &&
-                    action.data.context.repoTrigger == null
-                )
+        return action.data.context.pipeline!!.pipelineId.isBlank() || action is GitBaseAction
     }
 }

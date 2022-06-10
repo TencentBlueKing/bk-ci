@@ -32,7 +32,6 @@ import com.dd.plist.NSDictionary
 import com.dd.plist.NSString
 import com.dd.plist.PropertyListParser
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.sign.Constants.KEYSTORE_CATEGORY_PROVISION
@@ -41,6 +40,8 @@ import com.tencent.devops.sign.Constants.KEYSTORE_HTTP_HEADER_IP
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.MobileProvisionService
+import com.tencent.devops.sign.service.MobileProvisionService.Companion.KEYCHAIN_ACCESS_GROUPS_KEY
+import com.tencent.devops.sign.service.MobileProvisionService.Companion.TEAM_IDENTIFIER_KEY
 import com.tencent.devops.sign.utils.EncryptUtil
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
@@ -54,15 +55,12 @@ import java.io.File
 import java.net.InetAddress
 import java.nio.charset.StandardCharsets
 import java.time.Instant
-import java.util.Base64
 
+@Suppress("NestedBlockDepth")
 @Service
 class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvisionService {
     @Value("\${keystore.url:}")
     private val keyStoreUrl = ""
-
-    @Value("\${keystore.certListUrl:}")
-    private val keyStoreCertListUrl = "/api/auth/getCertList?appId=%s"
 
     @Value("\${keystore.certUrl:}")
     private val keyStoreCertUrl = "/api/auth/getCert?id=%s&category=%s"
@@ -88,17 +86,9 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
     @Value("\${keystore.wildcardMobileProvision2.provisionId:}")
     private var keyStoreProvisionId2: String = ""
 
-    private val TEAM_IDENTIFIER_KEY = "com.apple.developer.team-identifier"
-
-    private val KEYCHAIN_ACCESS_GROUPS_KEY = "keychain-access-groups"
-
     companion object {
         private val logger = LoggerFactory.getLogger(KeyStoreMobileProvisionServiceImpl::class.java)
-        private val pairKey = DHUtil.initKey()
-        private val privateKey = pairKey.privateKey
-        private val publicKey = String(Base64.getEncoder().encode(pairKey.publicKey))
         private var token: String? = null
-        private val teamIdentifier = "com.apple.developer.team-identifier"
     }
 
     override fun downloadMobileProvision(mobileProvisionDir: File, projectId: String, mobileProvisionId: String): File {
@@ -129,7 +119,7 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
         return mobileProvisionFile
     }
 
-    override fun handleEntitlement(entitlementFile: File) {
+    override fun handleEntitlement(entitlementFile: File, keyChainGroupsList: List<String>?) {
         val rootDict = PropertyListParser.parse(entitlementFile) as NSDictionary
 
         // 处理keychain-access-groups中无用的com.apple.token
@@ -151,14 +141,15 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
                 defaultMessage = "未找到配置keystore.keyChainGroups，请检查"
             )
         }
-        val keyChainGroupsList = keyChainGroups.split(";")
+        val keyChainAccessGroupsList = keyChainGroups.split(";")
+            .plus(keyChainGroupsList ?: emptyList())
         // 解析entitlement文件
         try {
             // entitlement
             if (rootDict.containsKey(TEAM_IDENTIFIER_KEY) && rootDict.containsKey(KEYCHAIN_ACCESS_GROUPS_KEY)) {
                 val teamId = (rootDict.objectForKey(TEAM_IDENTIFIER_KEY) as NSString).toString()
-                if (!teamId.isNullOrBlank() && keyChainGroupsList.isNotEmpty()) {
-                    keyChainGroupsList.forEach {
+                if (teamId.isNotBlank() && keyChainAccessGroupsList.isNotEmpty()) {
+                    keyChainAccessGroupsList.forEach {
                         if (it.isNotBlank()) {
                             val insertKeyChainGroupCMD =
                                 "plutil -insert keychain-access-groups.0 -string" +
@@ -171,8 +162,8 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
                     }
                 }
             }
-        } catch (e: Exception) {
-            logger.error("插入entitlement文件(${entitlementFile.canonicalPath})的keychain-access-groups失败。")
+        } catch (ignore: Exception) {
+            logger.error("插入entitlement文件(${entitlementFile.canonicalPath})的keychain-access-groups失败。", ignore)
             throw ErrorCodeException(
                 errorCode = SignMessageCode.ERROR_INSERT_KEYCHAIN_GROUPS,
                 defaultMessage = "entitlement插入keychain失败"
@@ -198,7 +189,7 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
         return downloadMobileProvision(
             mobileProvisionDir = mobileProvisionDir,
             projectId = ipaSignInfo.projectId,
-            mobileProvisionId = wildcardMobileProvisionId!!
+            mobileProvisionId = wildcardMobileProvisionId
         )
     }
 

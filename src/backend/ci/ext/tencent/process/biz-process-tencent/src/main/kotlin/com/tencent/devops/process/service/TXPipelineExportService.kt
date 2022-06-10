@@ -773,7 +773,8 @@ class TXPipelineExportService @Autowired constructor(
                                 pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                                 exportFile = exportFile
                             ),
-                            checkout = null
+                            checkout = null,
+                            shell = null
                         )
                     )
                 }
@@ -804,7 +805,8 @@ class TXPipelineExportService @Autowired constructor(
                                 pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                                 exportFile = exportFile
                             ),
-                            checkout = null
+                            checkout = null,
+                            shell = null
                         )
                     )
                 }
@@ -878,7 +880,8 @@ class TXPipelineExportService @Autowired constructor(
                             retryTimes = retryTimes,
                             env = null,
                             run = null,
-                            checkout = null
+                            checkout = null,
+                            shell = null
                         )
                     )
                 }
@@ -914,7 +917,8 @@ class TXPipelineExportService @Autowired constructor(
                             retryTimes = retryTimes,
                             env = null,
                             run = null,
-                            checkout = null
+                            checkout = null,
+                            shell = null
                         )
                     )
                 }
@@ -932,7 +936,8 @@ class TXPipelineExportService @Autowired constructor(
                             retryTimes = null,
                             env = null,
                             run = null,
-                            checkout = null
+                            checkout = null,
+                            shell = null
                         )
                     )
                 }
@@ -954,7 +959,8 @@ class TXPipelineExportService @Autowired constructor(
                             retryTimes = null,
                             env = null,
                             run = null,
-                            checkout = null
+                            checkout = null,
+                            shell = null
                         )
                     )
                 }
@@ -1393,7 +1399,8 @@ class TXPipelineExportService @Autowired constructor(
                     retryTimes = retryTimes,
                     env = null,
                     run = null,
-                    checkout = url
+                    checkout = url,
+                    shell = null
                 )
             )
             return true

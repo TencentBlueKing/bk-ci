@@ -233,6 +233,20 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentService.queryNetMetrix(userId, projectId, nodeHashId, timeRange))
     }
 
+    override fun saveAgentProps(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        props: Map<String, Any>
+    ): Result<Boolean> {
+        thirdPartyAgentService.saveAgentProps(userId, projectId, nodeHashId, props)
+        return Result(true)
+    }
+
+    override fun getAgentProps(userId: String, projectId: String, nodeHashId: String): Result<Map<String, Any>> {
+        return Result(data = thirdPartyAgentService.getAgentProps(projectId, nodeHashId))
+    }
+
     private fun checkUserId(userId: String) {
         if (userId.isBlank()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("userId"))

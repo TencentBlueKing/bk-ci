@@ -215,6 +215,12 @@ include(":core:dispatch-kubernetes:biz-dispatch-kubernetes")
 include(":core:dispatch-kubernetes:boot-dispatch-kubernetes")
 include(":core:dispatch-kubernetes:model-dispatch-kubernetes")
 
+include(":core:dispatch-bcs")
+include(":core:dispatch-bcs:api-dispatch-bcs")
+include(":core:dispatch-bcs:biz-dispatch-bcs")
+include(":core:dispatch-bcs:boot-dispatch-bcs")
+include(":core:dispatch-bcs:model-dispatch-bcs")
+
 include(":core:plugin")
 include(":core:plugin:api-plugin")
 include(":core:plugin:biz-plugin")
@@ -469,6 +475,9 @@ include(":ext:tencent:buildless:boot-buildless-tencent")
 include(":ext:tencent:dispatch-docker")
 include(":ext:tencent:dispatch-docker:biz-dispatch-docker-tencent")
 include(":ext:tencent:dispatch-docker:boot-dispatch-docker-tencent")
+
+include(":ext:tencent:dispatch-bcs")
+include(":ext:tencent:dispatch-bcs:boot-dispatch-bcs-tencent")
 
 include(":ext:tencent:sign")
 include(":ext:tencent:sign:api-sign-tencent")
