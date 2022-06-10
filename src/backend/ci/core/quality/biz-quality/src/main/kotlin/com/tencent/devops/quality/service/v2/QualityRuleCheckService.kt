@@ -870,7 +870,7 @@ class QualityRuleCheckService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            result = RuleInterceptResult.FAIL.name
+            result = RuleInterceptResult.WAIT.name
         )
         val ruleIdList = interceptList.map { it.ruleId }
 
