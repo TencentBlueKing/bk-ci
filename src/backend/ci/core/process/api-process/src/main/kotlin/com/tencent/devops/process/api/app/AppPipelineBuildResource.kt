@@ -162,7 +162,10 @@ interface AppPipelineBuildResource {
         elementId: String,
         @ApiParam("动作", required = true)
         @PathParam("action")
-        action: ManualReviewAction
+        action: ManualReviewAction,
+        @ApiParam("红线ID", required = true)
+        @QueryParam("ruleIds")
+        ruleIds: List<String>
     ): Result<Boolean>
 
     @ApiOperation("人工审核")

@@ -188,18 +188,20 @@ class PipelineBuildQualityService(
         }
 
         try {
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildQualityReviewBroadCastEvent(
-                    source = "pipeline_quality_review",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    buildId = buildId,
-                    reviewType = if (action == ManualReviewAction.PROCESS)
-                        BuildReviewType.QUALITY_TASK_REVIEW_PASS else BuildReviewType.QUALITY_TASK_REVIEW_ABORT,
-                    ruleIds = ruleIds
+            if (!ruleIds.isNullOrEmpty()) {
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildQualityReviewBroadCastEvent(
+                        source = "pipeline_quality_review",
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        userId = userId,
+                        buildId = buildId,
+                        reviewType = if (action == ManualReviewAction.PROCESS)
+                            BuildReviewType.QUALITY_TASK_REVIEW_PASS else BuildReviewType.QUALITY_TASK_REVIEW_ABORT,
+                        ruleIds = ruleIds
+                    )
                 )
-            )
+            }
         } catch (e: Exception) {
             logger.error("[$buildId]|qualityReview error|taskId=$elementId|userId=$userId|action=$action")
         }
