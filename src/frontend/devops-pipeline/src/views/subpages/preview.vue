@@ -142,6 +142,7 @@
         },
         async created () {
             await this.init()
+            bus.$off('start-execute', this.getExecuteParams)
             bus.$on('start-execute', this.getExecuteParams)
         },
         beforeDestroy () {
@@ -151,7 +152,9 @@
             this.$store.commit('pipelines/updateCurAtomPrams', null)
             this.setPipeline()
             this.setPipelineEditing(false)
-
+            bus.$off('start-execute', this.getExecuteParams)
+        },
+        destroyed () {
             bus.$off('start-execute', this.getExecuteParams)
         },
         methods: {
