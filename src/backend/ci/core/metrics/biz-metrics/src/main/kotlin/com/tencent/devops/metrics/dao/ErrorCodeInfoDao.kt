@@ -30,11 +30,7 @@ package com.tencent.devops.metrics.dao
 import com.tencent.devops.model.metrics.tables.TErrorCodeInfo
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.qo.QueryErrorCodeInfoQO
-import com.tencent.devops.model.metrics.tables.TErrorTypeDict
-import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record2
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -45,19 +41,14 @@ class ErrorCodeInfoDao {
         queryCondition: QueryErrorCodeInfoQO
     ): List<ErrorCodeInfoDO> {
         with(TErrorCodeInfo.T_ERROR_CODE_INFO) {
-            val conditions = mutableListOf<Condition>()
-            if (!queryCondition.keyword.isNullOrBlank()) {
-                conditions.add(ERROR_CODE.like("%${queryCondition.keyword}%"))
+            val step = dslContext.select(ERROR_TYPE, ERROR_CODE, ERROR_MSG).from(this)
+            val conditionStep = if (!queryCondition.errorTypes.isNullOrEmpty()) {
+                step.where(ERROR_TYPE.`in`(queryCondition.errorTypes))
+                    .groupBy(ERROR_CODE)
+            } else {
+                step.groupBy(ERROR_CODE)
             }
-            if (!queryCondition.errorTypes.isNullOrEmpty()) {
-                conditions.add(ERROR_TYPE.`in`(queryCondition.errorTypes))
-            }
-            return dslContext.select(ERROR_TYPE, ERROR_CODE, ERROR_MSG)
-                .from(this)
-                .where(conditions)
-                .groupBy(ERROR_CODE)
-                .offset((queryCondition.page - 1) * queryCondition.pageSize)
-                .limit(queryCondition.pageSize)
+            return conditionStep.limit((queryCondition.page - 1) * queryCondition.pageSize, queryCondition.pageSize)
                 .fetchInto(ErrorCodeInfoDO::class.java)
         }
     }
@@ -66,27 +57,16 @@ class ErrorCodeInfoDao {
         dslContext: DSLContext,
         queryCondition: QueryErrorCodeInfoQO
     ): Long {
-        val conditions = mutableListOf<Condition>()
         with(TErrorCodeInfo.T_ERROR_CODE_INFO) {
-            if (!queryCondition.keyword.isNullOrBlank()) {
-                conditions.add(ERROR_CODE.like("%${queryCondition.keyword}%"))
+            val step = dslContext.select(ERROR_CODE).from(this)
+            val conditionStep =
+                if (!queryCondition.errorTypes.isNullOrEmpty()) {
+                step.where(ERROR_TYPE.`in`(queryCondition.errorTypes))
+                    .groupBy(ERROR_CODE)
+            } else {
+                step.groupBy(ERROR_CODE)
             }
-            if (!queryCondition.errorTypes.isNullOrEmpty()) {
-                conditions.add(ERROR_TYPE.`in`(queryCondition.errorTypes))
-            }
-            return dslContext.select(ERROR_CODE)
-                .from(this)
-                .where(conditions)
-                .groupBy(ERROR_CODE)
-                .execute().toLong()
-        }
-    }
-
-    fun getErrorTypeDict(dslContext: DSLContext): Result<Record2<Int, String>> {
-        with(TErrorTypeDict.T_ERROR_TYPE_DICT) {
-            return dslContext.select(ERROR_TYPE, NAME)
-                .from(this)
-                .fetch()
+            return conditionStep.execute().toLong()
         }
     }
 }

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.metrics.pojo.qo
 
-import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
+import com.tencent.devops.metrics.pojo.`do`.BaseQueryReqDO
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -36,7 +36,7 @@ data class QueryAtomStatisticsQO(
     @ApiModelProperty("项目ID")
     val projectId: String,
     @ApiModelProperty("查询条件请求信息")
-    val baseQueryReq: BaseQueryReqVO,
+    val baseQueryReq: BaseQueryReqDO,
     @ApiModelProperty("错误类型")
     val errorTypes: List<Int>?,
     @ApiModelProperty("插件代码")

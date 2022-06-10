@@ -12,15 +12,15 @@ data class ThirdPlatformDatePO(
     @ApiModelProperty("项目ID")
     val projectId: String,
     @ApiModelProperty("codecc检查代码库平均分")
-    val repoCodeccAvgScore: BigDecimal?,
+    val repoCodeccAvgScore: BigDecimal,
     @ApiModelProperty("已解决缺陷数")
-    val resolvedDefectNum: Int?,
+    val resolvedDefectNum: Int,
     @ApiModelProperty("使用质量红线的流水线执行被拦截次数")
-    val qualityPipelineInterceptionNum: Int?,
+    val qualityPipelineInterceptionNum: Int,
     @ApiModelProperty("使用质量红线的流水线执行总次数")
-    val qualityPipelineExecuteNum: Int?,
+    val qualityPipelineExecuteNum: Int,
     @ApiModelProperty("编译加速节省时间，单位：秒")
-    val turboSaveTime: Long?,
+    val turboSaveTime: Long,
     @ApiModelProperty("统计时间")
     val statisticsTime: LocalDateTime,
     @ApiModelProperty("创建者")

@@ -27,15 +27,15 @@
 
 package com.tencent.devops.metrics.service.impl
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.utils.SnowFlakeUtils
 import com.tencent.devops.metrics.dao.AtomDisplayConfigDao
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.service.AtomDisplayConfigManageService
 import com.tencent.devops.metrics.pojo.dto.AtomDisplayConfigDTO
 import com.tencent.devops.metrics.pojo.po.AtomDisplayConfigPO
 import com.tencent.devops.metrics.pojo.vo.AtomDisplayConfigVO
-import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,19 +45,18 @@ import java.time.LocalDateTime
 @Service
 class AtomDisplayConfigServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val client: Client,
     private val atomDisplayConfigDao: AtomDisplayConfigDao
 ) : AtomDisplayConfigManageService {
 
     override fun addAtomDisplayConfig(atomDisplayConfigDTO: AtomDisplayConfigDTO): Boolean {
+        logger.info("atomDisplayConfigDTO： $atomDisplayConfigDTO")
         val atomBaseInfos = atomDisplayConfigDTO.atomBaseInfos
         val atomDisplayConfigPOS = mutableListOf<AtomDisplayConfigPO>()
         atomBaseInfos.forEach { atomBaseInfo ->
             val currentTime = LocalDateTime.now()
             atomDisplayConfigPOS.add(
                 AtomDisplayConfigPO(
-                    id = client.get(ServiceAllocIdResource::class)
-                        .generateSegmentId("ATOM_DISPLAY_CONFIG_DATA").data?: 0,
+                    id = SnowFlakeUtils.getId(SystemModuleEnum.METRICS.code),
                     projectId = atomDisplayConfigDTO.projectId,
                     userId = atomDisplayConfigDTO.userId,
                     atomCode = atomBaseInfo.atomCode,
@@ -72,6 +71,7 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
     }
 
     override fun deleteAtomDisplayConfig(projectId: String, userId: String, atomCodes: List<String>): Boolean {
+        logger.info("atomDisplayConfigDTO： $atomCodes")
         return atomDisplayConfigDao.batchDeleteAtomDisplayConfig(
             dslContext,
             projectId,
@@ -106,7 +106,7 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
         ).map { it.atomCode }
         return Page(
             page = page?: 1,
-            pageSize = pageSize?: 10,
+            pageSize = pageSize?: 1000,
             count = atomDisplayConfigDao.getOptionalAtomDisplayConfigCount(
                 dslContext,
                 projectId,
@@ -120,8 +120,8 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
                 userId,
                 atomCodes,
                 keyword,
-                page?: 1,
-                pageSize?: 10
+//                page?: 1,
+//                pageSize?: 1000
             )
         )
     }

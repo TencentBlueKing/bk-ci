@@ -31,14 +31,15 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
+import com.tencent.devops.metrics.constant.Constants.BK_ERROR_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
 import com.tencent.devops.metrics.constant.Constants.BK_QUERY_COUNT_MAX
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
 import com.tencent.devops.metrics.constant.MetricsMessageCode
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.DATE_FORMATTER
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getBetweenDate
-import com.tencent.devops.metrics.dao.ErrorCodeInfoDao
 import com.tencent.devops.metrics.dao.PipelineFailDao
+import com.tencent.devops.metrics.pojo.`do`.BaseQueryReqDO
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineBuildInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineFailDetailInfoDO
@@ -48,7 +49,6 @@ import com.tencent.devops.metrics.pojo.dto.QueryPipelineFailDTO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineFailTrendInfoDTO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineFailQO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
-import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineFailTrendInfoVO
 import com.tencent.devops.metrics.service.PipelineFailManageService
 import org.jooq.DSLContext
@@ -56,39 +56,42 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
+import java.util.stream.Stream
+
 
 @Service
 class PipelineFailServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineFailDao: PipelineFailDao,
-    private val errorCodeInfoDao: ErrorCodeInfoDao
+    private val pipelineFailDao: PipelineFailDao
 ): PipelineFailManageService {
 
     override fun queryPipelineFailTrendInfo(
         queryPipelineFailTrendDTO: QueryPipelineFailTrendInfoDTO
     ): List<PipelineFailTrendInfoVO> {
+        logger.info("queryPipelineFailTrendInfoDTO: $queryPipelineFailTrendDTO")
         val startTime = queryPipelineFailTrendDTO.baseQueryReq.startTime
         val endTime = queryPipelineFailTrendDTO.baseQueryReq.endTime
         val typeInfos = pipelineFailDao.queryPipelineFailErrorTypeInfo(
-            dslContext = dslContext,
-            queryPipelineFailTrendQo = QueryPipelineOverviewQO(
+            dslContext,
+            QueryPipelineOverviewQO(
                 projectId = queryPipelineFailTrendDTO.projectId,
                 baseQueryReq = queryPipelineFailTrendDTO.baseQueryReq
             )
         )
-        val errorDict = mutableMapOf<Int, String>()
-        errorCodeInfoDao.getErrorTypeDict(dslContext).map { errorDict.put(it.value1(), it.value2()) }
         logger.info("queryPipelineFailTrendInfo:$typeInfos")
-        val failTrendInfos = typeInfos.map { typeInfo ->
+        val failTrendInfos = typeInfos.map { failTrendInfo ->
             val result = pipelineFailDao.queryPipelineFailTrendInfo(
-                dslContext = dslContext,
-                queryPipelineFailTrendQo = QueryPipelineOverviewQO(
+                dslContext,
+                QueryPipelineOverviewQO(
                     projectId = queryPipelineFailTrendDTO.projectId,
                     baseQueryReq = queryPipelineFailTrendDTO.baseQueryReq
                 ),
-                errorType = typeInfo
+                failTrendInfo.value1()
             )
+            logger.info("queryPipelineFailTrendInfo:$result")
             val failStatisticsInfoMap = mutableMapOf<String, PipelineFailStatisticsInfoDO>()
                 result.map { failStatisticsInfo ->
                     val statisticsTime = failStatisticsInfo[BK_STATISTICS_TIME] as LocalDateTime
@@ -113,8 +116,8 @@ class PipelineFailServiceImpl @Autowired constructor(
             }
             logger.info("queryPipelineFailTrendInfo failStatisticsInfos:$failStatisticsInfos")
             PipelineFailTrendInfoVO(
-                errorType = typeInfo,
-                name = errorDict[typeInfo],
+                errorType = failTrendInfo.value1(),
+                name = failTrendInfo.value2()?: "",
                 failInfos = failStatisticsInfos
             )
         }
@@ -123,27 +126,25 @@ class PipelineFailServiceImpl @Autowired constructor(
 
     override fun queryPipelineFailSumInfo(queryPipelineFailDTO: QueryPipelineFailDTO): List<PipelineFailInfoDO> {
         logger.info("queryPipelineFailTrendInfoDTO: $queryPipelineFailDTO")
-        val errorDict = mutableMapOf<Int, String>()
-        errorCodeInfoDao.getErrorTypeDict(dslContext).map { errorDict.put(it.value1(), it.value2()) }
         val result = pipelineFailDao.queryPipelineFailSumInfo(
             dslContext,
             QueryPipelineFailQO(
-                projectId = queryPipelineFailDTO.projectId,
-                baseQueryReq = BaseQueryReqVO(
-                    pipelineIds = queryPipelineFailDTO.pipelineIds,
-                    pipelineLabelIds = queryPipelineFailDTO.pipelineLabelIds,
-                    startTime = queryPipelineFailDTO.startTime,
-                    endTime = queryPipelineFailDTO.endTime
+                queryPipelineFailDTO.projectId,
+                BaseQueryReqDO(
+                    queryPipelineFailDTO.pipelineIds,
+                    queryPipelineFailDTO.pipelineLabelIds,
+                    queryPipelineFailDTO.startTime,
+                    queryPipelineFailDTO.endTime
                 ),
                 queryPipelineFailDTO.errorTypes
             )
         )
+        logger.info("queryPipelineFailSumInfo: $result")
         return result.map {
-            val errorType = it[BK_ERROR_TYPE] as Int
             PipelineFailInfoDO(
-                errorType = errorType,
-                name = errorDict[errorType],
-                errorCount = (it[BK_ERROR_COUNT_SUM] as BigDecimal).toLong()
+                errorType = it[BK_ERROR_TYPE] as Int,
+                name = it[BK_ERROR_NAME]?.toString(),
+                errorCount = (it[BK_ERROR_COUNT_SUM] as BigDecimal).toInt()
             )
         }
 
@@ -153,16 +154,16 @@ class PipelineFailServiceImpl @Autowired constructor(
         logger.info("queryPipelineFailTrendInfoDTO: $queryPipelineFailDTO")
         // 查询符合查询条件的记录数
         val queryPipelineFailDetailCount = pipelineFailDao.queryPipelineFailDetailCount(
-            dslContext = dslContext,
-            queryPipelineFailQo = QueryPipelineFailQO(
-                projectId = queryPipelineFailDTO.projectId,
-                baseQueryReq = BaseQueryReqVO(
-                    pipelineIds = queryPipelineFailDTO.pipelineIds,
-                    pipelineLabelIds = queryPipelineFailDTO.pipelineLabelIds,
-                    startTime = queryPipelineFailDTO.startTime,
-                    endTime = queryPipelineFailDTO.endTime
+            dslContext,
+            QueryPipelineFailQO(
+                queryPipelineFailDTO.projectId,
+                BaseQueryReqDO(
+                    queryPipelineFailDTO.pipelineIds,
+                    queryPipelineFailDTO.pipelineLabelIds,
+                    queryPipelineFailDTO.startTime,
+                    queryPipelineFailDTO.endTime
                 ),
-                errorTypes = queryPipelineFailDTO.errorTypes
+                queryPipelineFailDTO.errorTypes
             )
         )
         if (queryPipelineFailDetailCount > BK_QUERY_COUNT_MAX) {
@@ -171,45 +172,43 @@ class PipelineFailServiceImpl @Autowired constructor(
             )
         }
         val result = pipelineFailDao.queryPipelineFailDetailInfo(
-            dslContext = dslContext,
-            queryPipelineFailQo = QueryPipelineFailQO(
-                projectId = queryPipelineFailDTO.projectId,
-                baseQueryReq = BaseQueryReqVO(
-                    pipelineIds = queryPipelineFailDTO.pipelineIds,
-                    pipelineLabelIds = queryPipelineFailDTO.pipelineLabelIds,
-                    startTime = queryPipelineFailDTO.startTime,
-                    endTime = queryPipelineFailDTO.endTime
+            dslContext,
+            QueryPipelineFailQO(
+                queryPipelineFailDTO.projectId,
+                BaseQueryReqDO(
+                    queryPipelineFailDTO.pipelineIds,
+                    queryPipelineFailDTO.pipelineLabelIds,
+                    queryPipelineFailDTO.startTime,
+                    queryPipelineFailDTO.endTime
                 ),
-                errorTypes = queryPipelineFailDTO.errorTypes,
-                    page = queryPipelineFailDTO.page,
-                    pageSize = queryPipelineFailDTO.pageSize
+                queryPipelineFailDTO.errorTypes,
+                    queryPipelineFailDTO.page,
+                    queryPipelineFailDTO.pageSize
             )
         ).map {
             PipelineFailDetailInfoDO(
-                pipelineBuildInfo =
-                    PipelineBuildInfoDO(
-                        projectId = it.projectId,
-                        pipelineId = it.pipelineId,
-                        pipelineName = it.pipelineName,
-                        buildId = it.buildId,
-                        buildNum = it.buildNum,
-                        branch = it.branch
-                    ),
+                PipelineBuildInfoDO(
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    pipelineName = it.pipelineName,
+                    buildId = it.buildId,
+                    buildNum = it.buildNum,
+                    branch = it.branch
+                ),
                 startUser = it.startUser,
                 startTime = it.startTime,
                 endTime = it.endTime,
-                errorInfo =
-                    ErrorCodeInfoDO(
-                        errorType = it.errorType,
-                        errorTypeName = it.errorTypeName,
-                        errorCode = it.errorCode!!,
-                        errorMsg = it.errorMsg
-                    )
+                errorInfo = ErrorCodeInfoDO(
+                    errorType = it.errorType,
+                    errorTypeName = it.errorTypeName,
+                    errorCode = it.errorCode,
+                    errorMsg = it.errorMsg
+                )
             )
         }
         return Page(
-            page = queryPipelineFailDTO.page,
-            pageSize = queryPipelineFailDTO.pageSize,
+            queryPipelineFailDTO.page,
+            queryPipelineFailDTO.pageSize,
             count = queryPipelineFailDetailCount,
             records = result
         )

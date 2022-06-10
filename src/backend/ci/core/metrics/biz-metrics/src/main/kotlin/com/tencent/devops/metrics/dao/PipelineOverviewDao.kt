@@ -37,16 +37,15 @@ import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
-import com.tencent.devops.metrics.constant.Constants.DEFAULT_LIMIT_NUM
 import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record1
 import org.jooq.Record3
 import org.jooq.Record5
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -54,39 +53,13 @@ import java.time.LocalDateTime
 @Repository
 class PipelineOverviewDao {
 
-    fun getPipelineIdByTotalExecuteCount(
-        dslContext: DSLContext,
-        queryPipelineOverview: QueryPipelineOverviewQO
-    ): List<String> {
-        with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
-            val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            val step = dslContext.select(PIPELINE_ID).from(this)
-            val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo, null)
-            val pipelineLabelIds = queryPipelineOverview.baseQueryReq.pipelineLabelIds
-            val conditionStep =
-                if (!pipelineLabelIds.isNullOrEmpty()) {
-                    step.join(tProjectPipelineLabelInfo)
-                        .on(PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                        .where(conditions)
-                } else {
-                    step.where(conditions)
-                }
-            return conditionStep.orderBy(TOTAL_EXECUTE_COUNT.desc()).limit(DEFAULT_LIMIT_NUM).fetchInto(String::class.java)
-        }
-    }
-
     fun queryPipelineSumInfo(
         dslContext: DSLContext,
         queryPipelineOverview: QueryPipelineOverviewQO
     ): Record3<BigDecimal, BigDecimal, BigDecimal>? {
         with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            var pipelineIds = queryPipelineOverview.baseQueryReq.pipelineIds
-            if (pipelineIds.isNullOrEmpty()) {
-                pipelineIds =
-                    getPipelineIdByTotalExecuteCount(dslContext, queryPipelineOverview)
-            }
-            val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo, pipelineIds)
+            val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo)
             val step = dslContext.select(
                 sum<Long>(TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_EXECUTE_COUNT_SUM),
                 sum<Long>(SUCCESS_EXECUTE_COUNT).`as`(BK_SUCCESS_EXECUTE_COUNT_SUM),
@@ -100,6 +73,7 @@ class PipelineOverviewDao {
             } else {
                 step.where(conditions)
             }
+            logger.info("PipelineOverviewDao queryPipelineSumInfo: $conditionStep")
             return conditionStep.fetchOne()
         }
     }
@@ -109,12 +83,8 @@ class PipelineOverviewDao {
         queryPipelineOverview: QueryPipelineOverviewQO
     ): Result<Record5<LocalDateTime, BigDecimal, BigDecimal, BigDecimal, BigDecimal>>? {
         with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
-            var pipelineIds = queryPipelineOverview.baseQueryReq.pipelineIds
-            if (pipelineIds.isNullOrEmpty()) {
-                pipelineIds = getPipelineIdByTotalExecuteCount(dslContext, queryPipelineOverview)
-            }
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo, pipelineIds)
+            val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo)
             val step = dslContext.select(
                 STATISTICS_TIME.`as`(BK_STATISTICS_TIME),
                 sum<Long>(TOTAL_EXECUTE_COUNT) .`as`(BK_TOTAL_EXECUTE_COUNT),
@@ -130,16 +100,17 @@ class PipelineOverviewDao {
             } else {
                 step.where(conditions)
             }
+            logger.info("PipelineOverviewDao queryPipelineTrendInfo: $conditionStep")
             return conditionStep.groupBy(this.STATISTICS_TIME).fetch()
         }
     }
 
     private fun TPipelineOverviewData.getConditions(
         queryCondition: QueryPipelineOverviewQO,
-        tProjectPipelineLabelInfo:  TProjectPipelineLabelInfo,
-        pipelineIds: List<String>?
+        tProjectPipelineLabelInfo:  TProjectPipelineLabelInfo
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
+        val pipelineIds = queryCondition.baseQueryReq.pipelineIds
         val pipelineLabelIds = queryCondition.baseQueryReq.pipelineLabelIds
         conditions.add(this.PROJECT_ID.eq(queryCondition.projectId))
         if (!pipelineIds.isNullOrEmpty()) {
@@ -154,5 +125,9 @@ class PipelineOverviewDao {
             DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime!!)!!.atStartOfDay()
         conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
         return conditions
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineOverviewDao::class.java)
     }
 }

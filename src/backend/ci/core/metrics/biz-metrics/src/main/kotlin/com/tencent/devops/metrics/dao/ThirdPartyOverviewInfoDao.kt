@@ -28,7 +28,6 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.service.utils.JooqUtils.sum
 import com.tencent.devops.metrics.constant.Constants.BK_QUALITY_PIPELINE_EXECUTE_NUM
 import com.tencent.devops.metrics.constant.Constants.BK_QUALITY_PIPELINE_INTERCEPTION_NUM
 import com.tencent.devops.metrics.constant.Constants.BK_REPO_CODECC_AVG_SCORE
@@ -52,11 +51,16 @@ class ThirdPartyOverviewInfoDao {
             val startTimeDateTime = DateTimeUtil.stringToLocalDate(thirdPartyOverviewInfoQO.startTime)!!.atStartOfDay()
             val endTimeDateTime = DateTimeUtil.stringToLocalDate(thirdPartyOverviewInfoQO.endTime)!!.atStartOfDay()
             return dslContext.select(
-                sum<BigDecimal>(REPO_CODECC_AVG_SCORE).`as`(BK_REPO_CODECC_AVG_SCORE),
-                sum<Int>(RESOLVED_DEFECT_NUM).`as`(BK_RESOLVED_DEFECT_NUM),
-                sum<Int>(QUALITY_PIPELINE_INTERCEPTION_NUM).`as`(BK_QUALITY_PIPELINE_INTERCEPTION_NUM),
-                sum<Int>(QUALITY_PIPELINE_EXECUTE_NUM).`as`(BK_QUALITY_PIPELINE_EXECUTE_NUM),
-                sum<Long>(TURBO_SAVE_TIME).`as`(BK_TURBO_SAVE_TIME)
+                DSL.field("sum(${REPO_CODECC_AVG_SCORE.name})", BigDecimal::class.java)
+                    .`as`(BK_REPO_CODECC_AVG_SCORE),
+                DSL.field("sum(${RESOLVED_DEFECT_NUM.name})", BigDecimal::class.java)
+                    .`as`(BK_RESOLVED_DEFECT_NUM),
+                DSL.field("sum(${QUALITY_PIPELINE_INTERCEPTION_NUM.name})", BigDecimal::class.java)
+                    .`as`(BK_QUALITY_PIPELINE_INTERCEPTION_NUM),
+                DSL.field("sum(${QUALITY_PIPELINE_EXECUTE_NUM.name})", BigDecimal::class.java)
+                    .`as`(BK_QUALITY_PIPELINE_EXECUTE_NUM),
+                DSL.field("sum(${TURBO_SAVE_TIME.name})", BigDecimal::class.java)
+                    .`as`(BK_TURBO_SAVE_TIME)
             ).from(this)
                 .where(PROJECT_ID.eq(thirdPartyOverviewInfoQO.projectId))
                 .and(STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))

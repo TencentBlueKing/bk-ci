@@ -31,18 +31,12 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 
 object QueryParamCheckUtil {
-
-    fun getIntervalTime(
-        fromDate: LocalDateTime,
-        toDate: LocalDateTime
-    ) = ChronoUnit.DAYS.between(fromDate, toDate)
 
     val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     fun getStartDateTime(): String {
@@ -91,15 +85,15 @@ object QueryParamCheckUtil {
         val endDate = DateTimeUtil.stringToLocalDate(endTime)
         val firstDate = LocalDate.now().minusDays(1)
         val secondDate = firstDate.minusMonths(6)
-        if (startDate!!.isBefore(secondDate)) {
-            throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
-            )
-        }
-        if (endDate!!.isAfter(firstDate)) {
-            throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
-            )
-        }
+//        if (startDate!!.isBefore(secondDate)) {
+//            throw ErrorCodeException(
+//                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
+//            )
+//        }
+//        if (endDate!!.isAfter(firstDate)) {
+//            throw ErrorCodeException(
+//                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
+//            )
+//        }
     }
 }

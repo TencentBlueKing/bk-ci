@@ -31,8 +31,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.vo.AtomDisplayConfigVO
 import io.swagger.annotations.Api
@@ -115,7 +113,7 @@ interface UserAtomDisplayConfigResource {
         @QueryParam("page")
         page: Int?,
         @ApiParam("每页大小", required = true, defaultValue = "10")
-        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+//        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<AtomBaseInfoDO>>

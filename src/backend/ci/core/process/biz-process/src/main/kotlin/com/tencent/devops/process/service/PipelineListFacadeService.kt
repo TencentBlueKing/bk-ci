@@ -1392,13 +1392,13 @@ class PipelineListFacadeService @Autowired constructor(
         )
     }
 
-    fun searchByProjectIdAndName(
+    fun paginationGetIdAndName(
         projectId: String,
         keyword: String?,
         page: Int,
-        pageSize: Int,
-        channelCodes: List<ChannelCode>?
+        pageSize: Int
     ): Page<PipelineIdAndName> {
+        logger.info("paginationGetIdAndName |$projectId|$keyword| $page| $pageSize")
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val pipelineRecords =
             pipelineInfoDao.searchByProjectId(
@@ -1407,12 +1407,10 @@ class PipelineListFacadeService @Autowired constructor(
                 projectCode = projectId,
                 limit = sqlLimit.limit,
                 offset = sqlLimit.offset,
-                channelCodes = channelCodes
             )
         val pipelineInfos = mutableListOf<PipelineIdAndName>()
         pipelineRecords?.map {
-            pipelineInfos.add(
-                PipelineIdAndName(it.pipelineId, it.pipelineName, ChannelCode.getChannel(it.channel)))
+            pipelineInfos.add(PipelineIdAndName(it.pipelineId, it.pipelineName))
         }
         val count = pipelineInfoDao.countByProjectIds(
             dslContext = dslContext,
@@ -1424,22 +1422,6 @@ class PipelineListFacadeService @Autowired constructor(
             pageSize = pageSize,
             count = count.toLong(),
             records = pipelineInfos
-        )
-    }
-
-    fun searchByPipeline(
-        projectId: String,
-        pipelineId: String
-    ): PipelineIdAndName? {
-        val pipelineRecords = pipelineInfoDao.getPipelineId(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
-        ) ?: return null
-        return PipelineIdAndName(
-            pipelineId = pipelineRecords.pipelineId,
-            pipelineName = pipelineRecords.pipelineName,
-            channelCode = ChannelCode.getChannel(pipelineRecords.channel)
         )
     }
 

@@ -49,9 +49,9 @@ class UserAtomDisplayConfigResourceImpl @Autowired constructor(
         return Result(
             atomDisplayConfigManageService.addAtomDisplayConfig(
                 AtomDisplayConfigDTO(
-                    projectId = projectId,
-                    userId = userId,
-                    atomBaseInfos = atomDisplayConfig.atomBaseInfos
+                    projectId,
+                    userId,
+                    atomDisplayConfig.atomBaseInfos
                 )
             )
         )
@@ -64,9 +64,9 @@ class UserAtomDisplayConfigResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         return Result(
             atomDisplayConfigManageService.deleteAtomDisplayConfig(
-                    projectId = projectId,
-                    userId = userId,
-                    atomCodes = atomCodes
+                    projectId,
+                    userId,
+                    atomCodes
             )
         )
     }
@@ -78,9 +78,9 @@ class UserAtomDisplayConfigResourceImpl @Autowired constructor(
     ): Result<AtomDisplayConfigVO> {
         return Result(
             atomDisplayConfigManageService.getAtomDisplayConfig(
-                projectId = projectId,
-                userId = userId,
-                keyword = keyword
+                projectId,
+                userId,
+                keyword
             )
         )
     }
@@ -94,11 +94,11 @@ class UserAtomDisplayConfigResourceImpl @Autowired constructor(
     ): Result<Page<AtomBaseInfoDO>> {
         return Result(
             atomDisplayConfigManageService.getOptionalAtomDisplayConfig(
-                projectId = projectId,
-                userId = userId,
-                keyword = keyword,
-                page = page,
-                pageSize = pageSize
+                projectId,
+                userId,
+                keyword,
+                page,
+                pageSize
             )
         )
     }

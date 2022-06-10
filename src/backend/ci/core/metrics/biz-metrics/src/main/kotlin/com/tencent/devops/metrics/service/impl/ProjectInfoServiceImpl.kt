@@ -91,29 +91,29 @@ class ProjectInfoServiceImpl @Autowired constructor(
     }
 
     override fun queryProjectPipelineLabels(
-        queryProjectPipelineLabelDTO: QueryProjectPipelineLabelDTO
+        queryPipelineLabelDTO: QueryProjectPipelineLabelDTO
     ): Page<PipelineLabelInfo> {
         return Page(
-            page = queryProjectPipelineLabelDTO.page,
-            pageSize = queryProjectPipelineLabelDTO.pageSize,
+            page = queryPipelineLabelDTO.page,
+            pageSize = queryPipelineLabelDTO.pageSize,
             count = projectInfoDao.queryProjectPipelineLabelsCount(
                 dslContext,
                 QueryProjectInfoQO(
-                    projectId = queryProjectPipelineLabelDTO.projectId,
-                    pipelineIds = queryProjectPipelineLabelDTO.pipelineIds,
-                    keyword = queryProjectPipelineLabelDTO.keyword,
-                    page = queryProjectPipelineLabelDTO.page,
-                    pageSize = queryProjectPipelineLabelDTO.pageSize
+                    projectId = queryPipelineLabelDTO.projectId,
+                    pipelineIds = queryPipelineLabelDTO.pipelineIds,
+                    keyword = queryPipelineLabelDTO.keyword,
+                    page = queryPipelineLabelDTO.page,
+                    pageSize = queryPipelineLabelDTO.pageSize
                 )
             ),
             records = projectInfoDao.queryProjectPipelineLabels(
                 dslContext,
                 QueryProjectInfoQO(
-                    projectId = queryProjectPipelineLabelDTO.projectId,
-                    pipelineIds = queryProjectPipelineLabelDTO.pipelineIds,
-                    keyword = queryProjectPipelineLabelDTO.keyword,
-                    page = queryProjectPipelineLabelDTO.page,
-                    pageSize = queryProjectPipelineLabelDTO.pageSize
+                    projectId = queryPipelineLabelDTO.projectId,
+                    pipelineIds = queryPipelineLabelDTO.pipelineIds,
+                    keyword = queryPipelineLabelDTO.keyword,
+                    page = queryPipelineLabelDTO.page,
+                    pageSize = queryPipelineLabelDTO.pageSize
                 )
             )
         )
@@ -169,6 +169,20 @@ class ProjectInfoServiceImpl @Autowired constructor(
             totalPages = result?.totalPages?: totalPages
         } while (page <= totalPages)
         return createCount
+    }
+
+    /**
+     * 获取当天的最晚时间戳
+     *
+     * @return 当天的最晚时间戳
+     */
+    final fun getTodayStartTime(): Long {
+        //设置时区
+        val calendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT+8"))
+        calendar.set(Calendar.HOUR_OF_DAY, 24)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        return calendar.timeInMillis
     }
 
     companion object {

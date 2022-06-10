@@ -53,7 +53,6 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                 QueryErrorCodeInfoQO(
                     queryErrorCodeInfoDTO.errorTypes,
                     queryErrorCodeInfoDTO.page,
-                    queryErrorCodeInfoDTO.keyword,
                     queryErrorCodeInfoDTO.pageSize
                 )
             ),
@@ -62,7 +61,6 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                     QueryErrorCodeInfoQO(
                         queryErrorCodeInfoDTO.errorTypes,
                         queryErrorCodeInfoDTO.page,
-                        queryErrorCodeInfoDTO.keyword,
                         queryErrorCodeInfoDTO.pageSize
                     )
                 )
