@@ -33,7 +33,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
 
 @Event(MQ.EXCHANGE_PIPELINE_BUILD_QUALITY_REVIEW_FANOUT)
-data class PipelineBuildQualityReviewBroadCastEvent (
+data class PipelineBuildQualityReviewBroadCastEvent(
     override val source: String,
     override val projectId: String,
     override val pipelineId: String,
@@ -43,4 +43,4 @@ data class PipelineBuildQualityReviewBroadCastEvent (
     val buildId: String,
     val reviewType: BuildReviewType,
     val ruleIds: List<String>
-): IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
