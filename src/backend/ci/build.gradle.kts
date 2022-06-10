@@ -28,6 +28,7 @@ allprojects {
             dependency("com.networknt:json-schema-validator:${Versions.YamlSchema}")
             dependency("org.apache.commons:commons-exec:${Versions.CommonExec}")
             dependency("org.apache.commons:commons-text:${Versions.CommonText}")
+            dependency("com.vdurmont:emoji-java:${Versions.EmojiJava}")
             dependency("org.apache.lucene:lucene-core:${Versions.Lucene}")
             dependency("org.apache.commons:commons-csv:${Versions.CommonCsv}")
             dependency("org.hashids:hashids:${Versions.HashIds}")

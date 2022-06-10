@@ -17,6 +17,7 @@ object Versions {
     const val JsonLib = "2.4"
     const val CronUtils = "9.1.6"
     const val Thumbnailator = "0.4.8"
+    const val EmojiJava = "5.1.1"
     const val CommonCsv = "1.8"
     const val CommonCollections4 = "4.4"
     const val MockitoKt = "1.6.0"

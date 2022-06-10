@@ -27,7 +27,11 @@
 
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
+import com.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.common.api.util.EmojiUtil
+import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.Variable
+import com.tencent.devops.common.ci.v2.YamlTransferData
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
@@ -39,48 +43,50 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.BK_CI_RUN
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
-import com.tencent.devops.process.yaml.modelCreate.ModelCommon
-import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
-import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
-import com.tencent.devops.process.yaml.v2.models.Variable
-import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import com.tencent.devops.stream.common.CommonVariables
-import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.pojo.StreamGitProjectCache
+import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
+import com.tencent.devops.stream.v2.common.CommonVariables
 
 @Suppress("ComplexMethod")
 object ModelParameters {
-    private const val VARIABLE_PREFIX = "variables."
+
+    private const val PUSH_OPTIONS_PREFIX = "ci.variable::"
 
     fun createPipelineParams(
-        action: BaseAction,
         yaml: ScriptBuildYaml,
         streamGitProjectInfo: StreamGitProjectCache,
+        event: GitRequestEvent,
+        v2GitUrl: String?,
+        originEvent: GitEvent?,
         webhookParams: Map<String, String> = mapOf(),
         yamlTransferData: YamlTransferData? = null
     ): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
 
-        val event = action.data.eventCommon
         val startParams = mutableMapOf<String, String>()
-        val parsedCommitMsg = EmojiUtil.removeAllEmoji(event.commit.commitMsg ?: "")
+        val parsedCommitMsg = EmojiUtil.removeAllEmoji(event.commitMsg ?: "")
 
         // 通用参数
         startParams[CommonVariables.CI_PIPELINE_NAME] = yaml.name ?: ""
+        startParams[CommonVariables.CI_BUILD_URL] = v2GitUrl ?: ""
         startParams[BK_CI_RUN] = "true"
-        startParams[CommonVariables.CI_ACTOR] = if (action.metaData.streamObjectKind == StreamObjectKind.SCHEDULE) {
+        startParams[CommonVariables.CI_ACTOR] = if (event.objectKind == TGitObjectKind.SCHEDULE.value) {
             "system"
         } else {
             event.userId
         }
         startParams[CommonVariables.CI_BRANCH] = event.branch
         startParams[PIPELINE_GIT_COMMIT_MESSAGE] = parsedCommitMsg
-        startParams[PIPELINE_GIT_SHA] = event.commit.commitId
-        if (event.commit.commitId.isNotBlank() && event.commit.commitId.length >= 8) {
-            startParams[PIPELINE_GIT_SHA_SHORT] = event.commit.commitId.substring(0, 8)
+        startParams[PIPELINE_GIT_SHA] = event.commitId
+        if (event.commitId.isNotBlank() && event.commitId.length >= 8) {
+            startParams[PIPELINE_GIT_SHA_SHORT] = event.commitId.substring(0, 8)
         }
 
         // 模板替换关键字
@@ -91,31 +97,37 @@ object ModelParameters {
         // 替换BuildMessage为了展示commit信息
         startParams[PIPELINE_BUILD_MSG] = parsedCommitMsg
 
-        // git事件触发的action直接使用webhook参数即可
-        if (action.needAddWebhookParams()) {
-            startParams.putAll(webhookParams)
-        } else {
-            // stream独有事件的单独判断
-            startParams[PIPELINE_GIT_EVENT] = if (action.metaData.streamObjectKind == StreamObjectKind.SCHEDULE) {
-                startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.commit.commitAuthorName ?: ""
-                StreamObjectKind.SCHEDULE.value
-            } else {
-                startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.userId
-                StreamObjectKind.MANUAL.value
+        when (originEvent) {
+            is GitEvent -> {
+                startParams.putAll(webhookParams)
             }
-            startParams[PIPELINE_GIT_REPO_URL] = streamGitProjectInfo.gitHttpUrl
-            val gitProjectName = GitUtils.getProjectName(streamGitProjectInfo.gitHttpUrl)
-            startParams[PIPELINE_GIT_REPO] = gitProjectName
-            val (group, name) = GitUtils.getRepoGroupAndName(gitProjectName)
-            startParams[PIPELINE_GIT_REPO_NAME] = name
-            startParams[PIPELINE_GIT_REPO_GROUP] = group
+            else -> {
+                startParams[PIPELINE_GIT_EVENT] = if (event.objectKind == TGitObjectKind.SCHEDULE.value) {
+                    startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.commitAuthorName ?: ""
+                    TGitObjectKind.SCHEDULE.value
+                } else {
+                    startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.userId
+                    TGitObjectKind.MANUAL.value
+                }
+                startParams[PIPELINE_GIT_REPO_URL] = streamGitProjectInfo.gitHttpUrl
+                val gitProjectName = GitUtils.getProjectName(streamGitProjectInfo.gitHttpUrl)
+                startParams[PIPELINE_GIT_REPO] = gitProjectName
+                val (group, name) = GitUtils.getRepoGroupAndName(gitProjectName)
+                startParams[PIPELINE_GIT_REPO_NAME] = name
+                startParams[PIPELINE_GIT_REPO_GROUP] = group
+            }
         }
 
         // 用户自定义变量
-        val buildFormProperties = getBuildFormPropertyFromYmlVariable(
-            variables = action.getUserVariables(yaml.variables) ?: yaml.variables,
-            startParams = startParams
-        )
+        val buildFormProperties = if (originEvent is GitPushEvent) {
+            getBuildFormPropertyFromYmlVariable(
+                // 根据 push options 参数改变variables的值
+                variables = replaceVariablesByPushOptions(yaml.variables, originEvent.push_options),
+                startParams = startParams
+            )
+        } else {
+            getBuildFormPropertyFromYmlVariable(yaml.variables, startParams)
+        }
 
         startParams.forEach {
             result.add(
@@ -151,7 +163,7 @@ object ModelParameters {
         variables.forEach { (key, variable) ->
             buildFormProperties.add(
                 BuildFormProperty(
-                    id = VARIABLE_PREFIX + key,
+                    id = StreamYamlBuild.VARIABLE_PREFIX + key,
                     required = false,
                     type = BuildFormPropertyType.STRING,
                     defaultValue = ModelCommon.formatVariablesValue(variable.value, startParams) ?: "",
@@ -168,5 +180,32 @@ object ModelParameters {
             )
         }
         return buildFormProperties
+    }
+
+    // git push -o ci.variable::<name>="<value>" -o ci.variable::<name>="<value>"
+    private fun replaceVariablesByPushOptions(
+        variables: Map<String, Variable>?,
+        pushOptions: Map<String, String>?
+    ): Map<String, Variable>? {
+        if (variables.isNullOrEmpty() || pushOptions.isNullOrEmpty()) {
+            return variables
+        }
+        val variablesOptionsKeys = pushOptions.keys.filter { it.startsWith(PUSH_OPTIONS_PREFIX) }
+            .map { it.removePrefix(PUSH_OPTIONS_PREFIX) }
+
+        val result = variables.toMutableMap()
+        variables.forEach { (key, value) ->
+            // 不替换只读变量
+            if (value.readonly != null && value.readonly == true) {
+                return@forEach
+            }
+            if (key in variablesOptionsKeys) {
+                result[key] = Variable(
+                    value = pushOptions["$PUSH_OPTIONS_PREFIX$key"],
+                    readonly = value.readonly
+                )
+            }
+        }
+        return result
     }
 }
