@@ -39,8 +39,8 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.dao.PipelineStageTagDao
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
-import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
@@ -49,7 +49,7 @@ import java.util.concurrent.TimeUnit
 
 @Service
 class MetricsServiceImpl constructor(
-    private val pipelineInfoService: PipelineInfoService,
+    private val pipelineInfoDao: PipelineInfoDao,
     private val measureEventDispatcher: MeasureEventDispatcher,
     private val dslContext: DSLContext,
     private val pipelineStageTagDao: PipelineStageTagDao
@@ -77,7 +77,12 @@ class MetricsServiceImpl constructor(
         val projectId = buildInfo.projectId
         val pipelineId = buildInfo.pipelineId
         val buildId = buildInfo.buildId
-        val pipelineName = pipelineInfoService.getPipelineName(projectId, pipelineId)
+        val pipelineName = pipelineInfoDao.getPipelineInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            delete = null
+        )?.pipelineName
         val webhookInfo = buildInfo.webhookInfo
         val stageMetricsDatas = mutableListOf<BuildEndStageMetricsData>()
         model.stages.forEach nextStage@{ stage ->
