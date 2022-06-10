@@ -12,6 +12,7 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.DevCloudDebugResponse
+import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody

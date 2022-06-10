@@ -90,4 +90,6 @@ abstract class TGitActionGit(
             reportData = reportData
         )
     }
+
+    override fun updateLastBranch(pipelineId: String, branch: String) {}
 }
