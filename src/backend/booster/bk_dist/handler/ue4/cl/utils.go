@@ -179,28 +179,35 @@ func readUtf8(filename string) (string, error) {
 }
 
 // return compile options and source files
-func readResponse(f string) (string, error) {
-	if !dcFile.Stat(f).Exist() {
-		return "", fmt.Errorf("%s dose not exist", f)
+func readResponse(f, dir string) (string, error) {
+	newf := f
+	if !dcFile.Stat(newf).Exist() {
+		// try with dir
+		tempf, _ := filepath.Abs(filepath.Join(dir, newf))
+		if !dcFile.Stat(tempf).Exist() {
+			return "", fmt.Errorf("%s or %s dose not exist", newf, tempf)
+		} else {
+			newf = tempf
+		}
 	}
 
-	charset, err := checkResponseFileCharset(f)
+	charset, err := checkResponseFileCharset(newf)
 	if err != nil {
 		return "", err
 	}
 
 	data := ""
 	if charset == "UTF-16LE" {
-		data, err = readBom(f)
+		data, err = readBom(newf)
 	} else {
-		data, err = readUtf8(f)
+		data, err = readUtf8(newf)
 	}
 	if err != nil {
 		return "", err
 	}
 
 	if data == "" {
-		return "", fmt.Errorf("%s is empty", f)
+		return "", fmt.Errorf("%s is empty", newf)
 	}
 
 	return data, nil
@@ -248,7 +255,7 @@ func replaceWithNextExclude(s string, old byte, new string, nextExcludes []byte)
 }
 
 // ensure compiler exist in args.
-func ensureCompiler(args []string) (string, []string, bool, error) {
+func ensureCompiler(args []string, workdir string) (string, []string, bool, error) {
 	responseFile := ""
 	if len(args) == 0 {
 		blog.Warnf("cl: ensure compiler got empty arg")
@@ -271,7 +278,7 @@ func ensureCompiler(args []string) (string, []string, bool, error) {
 			data := ""
 			if responseFile != "" {
 				var err error
-				data, err = readResponse(responseFile)
+				data, err = readResponse(responseFile, workdir)
 				if err != nil {
 					blog.Infof("cl: failed to read response file:%s,err:%v", responseFile, err)
 					return responseFile, nil, showinclude, err
@@ -747,7 +754,7 @@ func getPreloadConfig(configPath string) (*dcSDK.PreloadConfig, error) {
 	return &pConfig, nil
 }
 
-func saveResultFile(rf *dcSDK.FileDesc) error {
+func saveResultFile(rf *dcSDK.FileDesc, dir string) error {
 	fp := rf.FilePath
 	data := rf.Buffer
 	blog.Debugf("cl: ready save file [%s]", fp)
@@ -758,8 +765,17 @@ func saveResultFile(rf *dcSDK.FileDesc) error {
 
 	f, err := os.Create(fp)
 	if err != nil {
-		blog.Errorf("cl: create file %s error: [%s]", fp, err.Error())
-		return err
+		if !filepath.IsAbs(fp) && dir != "" {
+			newfp, _ := filepath.Abs(filepath.Join(dir, fp))
+			f, err = os.Create(newfp)
+			if err != nil {
+				blog.Errorf("cl: create file %s or %s error: [%s]", fp, newfp, err.Error())
+				return err
+			}
+		} else {
+			blog.Errorf("cl: create file %s error: [%s]", fp, err.Error())
+			return err
+		}
 	}
 	defer func() {
 		_ = f.Close()
