@@ -166,8 +166,8 @@ interface ExternalCodeccRepoResource {
 
     @ApiOperation("通过凭证Id获取文件内容")
     @GET
-    @Path("/{projectId}/getFileContentByTicketId")
-    fun getFileContentByTicketId(
+    @Path("/{projectId}/getFileContentByUrl")
+    fun getFileContentByUrl(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
