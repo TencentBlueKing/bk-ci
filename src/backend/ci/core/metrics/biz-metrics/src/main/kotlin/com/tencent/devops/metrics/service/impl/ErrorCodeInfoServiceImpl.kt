@@ -27,43 +27,46 @@
 
 package com.tencent.devops.metrics.service.impl
 
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.metrics.dao.AtomDisplayConfigDao
-import com.tencent.devops.metrics.service.AtomDisplayConfigManageService
-import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import com.tencent.devops.metrics.pojo.dto.SaveAtomDisplayConfigDTO
-import com.tencent.devops.metrics.pojo.po.SaveAtomDisplayConfigPO
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.metrics.dao.ErrorCodeInfoDao
+import com.tencent.devops.metrics.service.ErrorCodeInfoManageService
+import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
+import com.tencent.devops.metrics.pojo.dto.QueryErrorCodeInfoDTO
+import com.tencent.devops.metrics.pojo.qo.QueryErrorCodeInfoQO
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
-class DbAtomDisplayConfigServiceImpl @Autowired constructor(
+class ErrorCodeInfoServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val atomDisplayConfigDao: AtomDisplayConfigDao,
-    private val client: Client
-) : AtomDisplayConfigManageService {
-
-    override fun saveAtomDisplayConfig(saveAtomDisplayConfigDTO: SaveAtomDisplayConfigDTO): Boolean {
-        val atomBaseInfos = saveAtomDisplayConfigDTO.atomBaseInfos
-        val saveAtomDisplayConfigPOs = mutableListOf<SaveAtomDisplayConfigPO>()
-        atomBaseInfos.forEach { atomBaseInfo ->
-            val currentTime = LocalDateTime.now()
-            val id = client.get(ServiceAllocIdResource::class).generateSegmentId("ATOM_DISPLAY_CONFIG").data ?: 0
-            saveAtomDisplayConfigPOs.add(
-                SaveAtomDisplayConfigPO(
-                    id = id,
-                    projectId = saveAtomDisplayConfigDTO.projectId,
-                    userId = saveAtomDisplayConfigDTO.userId,
-                    atomCode = atomBaseInfo.atomCode,
-                    atomName = atomBaseInfo.atomName,
-                    createTime = currentTime,
-                    updateTime = currentTime
+    private val errorCodeInfoDao: ErrorCodeInfoDao
+): ErrorCodeInfoManageService {
+    override fun getErrorCodeInfo(queryErrorCodeInfoDTO: QueryErrorCodeInfoDTO): Page<ErrorCodeInfoDO> {
+        logger.info("queryErrorCodeInfoDTO: $queryErrorCodeInfoDTO")
+        return Page(
+            page = queryErrorCodeInfoDTO.page,
+            pageSize = queryErrorCodeInfoDTO.pageSize,
+            count = errorCodeInfoDao.getErrorCodeInfoCount(
+                dslContext,
+                QueryErrorCodeInfoQO(
+                    queryErrorCodeInfoDTO.errorTypes,
+                    queryErrorCodeInfoDTO.page,
+                    queryErrorCodeInfoDTO.pageSize
+                )
+            ),
+            records = errorCodeInfoDao.getErrorCodeInfo(
+                    dslContext,
+                    QueryErrorCodeInfoQO(
+                        queryErrorCodeInfoDTO.errorTypes,
+                        queryErrorCodeInfoDTO.page,
+                        queryErrorCodeInfoDTO.pageSize
+                    )
                 )
             )
-        }
-        atomDisplayConfigDao.batchSaveAtomDisplayConfig(dslContext, saveAtomDisplayConfigPOs)
-        return true
+    }
+    companion object {
+        private val logger = LoggerFactory.getLogger(ErrorCodeInfoServiceImpl::class.java)
     }
 }

@@ -25,18 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.pojo.dto
+package com.tencent.devops.metrics.service
 
-import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.metrics.pojo.`do`.AtomExecutionStatisticsInfoDO
+import com.tencent.devops.metrics.pojo.dto.QueryAtomStatisticsInfoDTO
+import com.tencent.devops.metrics.pojo.vo.AtomTrendInfoVO
+import com.tencent.devops.metrics.pojo.vo.ListPageVO
 
-@ApiModel("保存项目下展示插件配置传输对象")
-data class SaveAtomDisplayConfigDTO(
-    @ApiModelProperty("项目ID")
-    val projectId: String,
-    @ApiModelProperty("userId")
-    val userId: String,
-    @ApiModelProperty("插件基本信息列表")
-    val atomBaseInfos: List<AtomBaseInfoDO>
-)
+interface AtomStatisticsManageService {
+
+    /**
+     * 查询插件趋势信息
+     * @param queryAtomTrendInfoDTO 插件统计信息查询传输对象
+     * @return 插件趋势信息视图
+     */
+    fun queryAtomTrendInfo(
+        queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO
+    ): AtomTrendInfoVO
+
+    /**
+     * 查询插件执行统计信息
+     * @param queryAtomTrendInfoDTO 插件统计信息查询传输对象
+     * @return 插件执行统计信息
+     */
+    fun queryAtomExecuteStatisticsInfo(
+        queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO
+    ): ListPageVO<AtomExecutionStatisticsInfoDO>
+}

@@ -29,35 +29,92 @@ package com.tencent.devops.metrics.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.metrics.pojo.vo.SaveAtomDisplayConfigVO
+import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
+import com.tencent.devops.metrics.pojo.vo.AtomDisplayConfigVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_ATOM_DISPLAY_CONFIG"], description = "插件-展示配置")
-@Path("/user/atom/display/config")
+@Api(tags = ["USER_ATOM_DISPLAY_CONFIG"], description = "插件-展示")
+@Path("/user/atom/display")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserAtomDisplayConfigResource {
 
-    @ApiOperation("保存项目下需要展示的插件的配置")
-    @Path("/save")
+    @ApiOperation("新增项目下需要展示的插件配置")
+    @Path("/add")
     @POST
-    fun saveAtomDisplayConfig(
+    fun addAtomDisplayConfig(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("保存项目下展示插件配置报文", required = true)
-        saveAtomDisplayConfigVO: SaveAtomDisplayConfigVO
+        @ApiParam("项目下展示插件配置报文", required = true)
+        atomDisplayConfig: AtomDisplayConfigVO
     ): Result<Boolean>
+
+    @ApiOperation("删除项目下需要展示的插件配置")
+    @Path("/delete")
+    @DELETE
+    fun deleteAtomDisplayConfig(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("要删除的插件配置插件Code列表", required = true)
+        @QueryParam("atomCodes")
+        atomCodes: List<String>
+    ): Result<Boolean>
+
+    @ApiOperation("获取项目下需要展示的插件")
+    @Path("/get")
+    @GET
+    fun getAtomDisplayConfig(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("keyword", required = false)
+        @QueryParam("atomCode")
+        keyword: String?
+    ): Result<AtomDisplayConfigVO>
+
+    @ApiOperation("获取项目下可供选择展示的插件")
+    @Path("/optional/get")
+    @GET
+    fun getOptionalAtomDisplayConfig(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("keyword", required = false)
+        @QueryParam("keyword")
+        keyword: String?,
+        @ApiParam("页码", required = true, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页大小", required = true, defaultValue = "10")
+//        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<AtomBaseInfoDO>>
 }

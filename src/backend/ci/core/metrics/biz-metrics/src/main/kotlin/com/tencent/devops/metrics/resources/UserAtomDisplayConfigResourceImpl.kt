@@ -27,31 +27,78 @@
 
 package com.tencent.devops.metrics.resources
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.metrics.service.AtomDisplayConfigManageService
 import com.tencent.devops.metrics.api.UserAtomDisplayConfigResource
-import com.tencent.devops.metrics.pojo.dto.SaveAtomDisplayConfigDTO
-import com.tencent.devops.metrics.pojo.vo.SaveAtomDisplayConfigVO
+import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
+import com.tencent.devops.metrics.service.AtomDisplayConfigManageService
+import com.tencent.devops.metrics.pojo.dto.AtomDisplayConfigDTO
+import com.tencent.devops.metrics.pojo.vo.AtomDisplayConfigVO
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserAtomDisplayConfigResourceImpl @Autowired constructor(
     private val atomDisplayConfigManageService: AtomDisplayConfigManageService
 ) : UserAtomDisplayConfigResource {
-
-    override fun saveAtomDisplayConfig(
+    override fun addAtomDisplayConfig(
         projectId: String,
         userId: String,
-        saveAtomDisplayConfigVO: SaveAtomDisplayConfigVO
+        atomDisplayConfig: AtomDisplayConfigVO
     ): Result<Boolean> {
         return Result(
-            atomDisplayConfigManageService.saveAtomDisplayConfig(
-                SaveAtomDisplayConfigDTO(
-                    projectId = projectId,
-                    userId = userId,
-                    atomBaseInfos = saveAtomDisplayConfigVO.atomBaseInfos
+            atomDisplayConfigManageService.addAtomDisplayConfig(
+                AtomDisplayConfigDTO(
+                    projectId,
+                    userId,
+                    atomDisplayConfig.atomBaseInfos
                 )
+            )
+        )
+    }
+
+    override fun deleteAtomDisplayConfig(
+        projectId: String,
+        userId: String,
+        atomCodes: List<String>
+    ): Result<Boolean> {
+        return Result(
+            atomDisplayConfigManageService.deleteAtomDisplayConfig(
+                    projectId,
+                    userId,
+                    atomCodes
+            )
+        )
+    }
+
+    override fun getAtomDisplayConfig(
+        projectId: String,
+        userId: String,
+        keyword: String?
+    ): Result<AtomDisplayConfigVO> {
+        return Result(
+            atomDisplayConfigManageService.getAtomDisplayConfig(
+                projectId,
+                userId,
+                keyword
+            )
+        )
+    }
+
+    override fun getOptionalAtomDisplayConfig(
+        projectId: String,
+        userId: String,
+        keyword: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AtomBaseInfoDO>> {
+        return Result(
+            atomDisplayConfigManageService.getOptionalAtomDisplayConfig(
+                projectId,
+                userId,
+                keyword,
+                page,
+                pageSize
             )
         )
     }

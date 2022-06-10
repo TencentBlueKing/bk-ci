@@ -25,14 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.pojo.vo
+package com.tencent.devops.metrics.pojo.`do`
 
-import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("保存项目下展示插件配置报文")
-data class SaveAtomDisplayConfigVO(
-    @ApiModelProperty("插件基本信息列表")
-    val atomBaseInfos: List<AtomBaseInfoDO>
+@ApiModel("质量红线度量信息")
+data class QualityInfoDO(
+    @ApiModelProperty("质量红线拦截比例")
+    val qualityInterceptionRate: Double?,
+    @ApiModelProperty("使用质量红线的流水线执行被拦截次数")
+    val interceptionCount: Int?,
+    @ApiModelProperty("使用质量红线的流水线执行总次数")
+    val totalExecuteCount: Int?
 )

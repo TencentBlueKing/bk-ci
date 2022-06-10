@@ -25,26 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.pojo.po
+package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
 
-@ApiModel("保存项目下展示插件配置")
-data class SaveAtomDisplayConfigPO(
-    @ApiModelProperty("主键ID")
-    val id: Long,
-    @ApiModelProperty("项目ID")
-    val projectId: String,
-    @ApiModelProperty("userId")
-    val userId: String,
-    @ApiModelProperty("插件标识")
-    val atomCode: String,
-    @ApiModelProperty("插件名称")
-    val atomName: String,
-    @ApiModelProperty("创建时间")
-    val createTime: LocalDateTime,
-    @ApiModelProperty("更新时间")
-    val updateTime: LocalDateTime
+@ApiModel("流水线汇总信息")
+data class PipelineSumInfoDO(
+    @ApiModelProperty("流水线总执行成功率")
+    val totalSuccessRate: Double,
+    @ApiModelProperty("流水线总平均执行耗时")
+    val totalAvgCostTime: Double,
+    @ApiModelProperty("流水线成功执行次数")
+    val successExecuteCount: Long,
+    @ApiModelProperty("流水线总执行次数")
+    val totalExecuteCount: Long,
+    @ApiModelProperty("流水线总执行耗时")
+    val totalCostTime: Double
 )
