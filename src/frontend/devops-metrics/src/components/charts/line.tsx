@@ -18,6 +18,8 @@ export default defineComponent({
   props: {
     data: Array as PropType<Array<IData>>,
     labels: Array,
+    title: String,
+    type: String,
   },
 
   setup(props) {
@@ -31,7 +33,7 @@ export default defineComponent({
     };
     const draw = () => {
       destoryChart();
-      const { data, labels } = props;
+      const { data, labels, title, type } = props;
       chart = new BKChart(canvasRef.value, {
         type: 'line',
         data: {
@@ -57,6 +59,17 @@ export default defineComponent({
               intersect: false,
               enableItemActive: true,
               singleInRange: true,
+              callbacks: {
+                title (data) {
+                  return data[0].label
+                },
+                label (item) {
+                  if (type === 'rate') {
+                    return item.dataset.label + ': ' + item.raw + '%'
+                  }
+                  return item.dataset.label + ': ' + item.raw + 'min'
+                }
+            }
             },
             legend: {
               position: 'bottom',
@@ -93,6 +106,12 @@ export default defineComponent({
               grid: {
                 drawTicks: false,
                 borderDash: [5, 5],
+              },
+              title: {
+                display: true,
+                text: title,
+                align: 'start',
+                color: '#979BA5',
               },
               ticks: {
                 padding: 10,

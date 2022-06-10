@@ -19,6 +19,7 @@ interface IStage {
 const props = defineProps(sharedProps);
 const isLoading = ref(false);
 const stageList = ref<Array<IStage>>([]);
+const barColorList = ['255, 86, 86', '255,151,0', '43,124,255', '12,227,144', '255,209,93', '205,92,92', '167,58,255', '218,165,32'];
 
 const getDataFromApi = () => {
   isLoading.value = true;
@@ -31,12 +32,12 @@ const getDataFromApi = () => {
           data: [],
           labels: [],
         };
-        stageData?.pipelineStageAvgCostTimeInfos?.forEach((timeInfo) => {
+        stageData?.pipelineStageAvgCostTimeInfos?.forEach((timeInfo, index) => {
           stage.data.push({
             list: timeInfo.stageAvgCostTimeInfos.map(pipelineTimeInfo => pipelineTimeInfo.avgCostTime),
             label: timeInfo.pipelineName,
-            backgroundColor: 'rgba(255, 86, 86,0.3)',
-            borderColor: 'rgba(255, 86, 86, 1)',
+            backgroundColor: `rgba(${barColorList[index]}, 0.3)` || 'rgba(255, 86, 86,0.3)',
+            borderColor: `rgba(${barColorList[index]}, 1)` ||  'rgba(255, 86, 86, 1)',
           });
           stage.labels = timeInfo.stageAvgCostTimeInfos.map(pipelineTimeInfo => pipelineTimeInfo.statisticsTime);
         });

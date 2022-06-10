@@ -57,10 +57,16 @@ const getData = () => {
           field,
         });
       });
-      tableData.value = data.records?.map(record => ({
-        ...record,
-        ...record.atomBaseInfo,
-      }));
+      tableData.value = data.records?.map(record => {
+        if (!record.classifyCode) {
+          record.classifyCode = '--'
+        }
+        return {
+          ...record,
+          ...record.atomBaseInfo,
+          ...record.atomFailInfos,
+        }
+      });
       pagination.value.count = data.count;
     })
     .finally(() => {
@@ -97,5 +103,8 @@ onMounted(getData);
 .analysis-table {
   margin-top: .15rem;
   margin-bottom: .08rem;
+  ::v-deep .bk-table-body {
+    cursor: pointer;
+  }
 }
 </style>
