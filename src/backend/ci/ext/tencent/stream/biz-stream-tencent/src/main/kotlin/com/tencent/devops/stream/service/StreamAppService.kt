@@ -46,7 +46,8 @@ class StreamAppService @Autowired constructor(
     private val streamScmService: StreamScmService,
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val oauthService: StreamOauthService
+    private val oauthService: StreamOauthService,
+    private val streamProjectService: StreamProjectService
 ) {
 
     fun getGitCIProjectList(
@@ -55,6 +56,19 @@ class StreamAppService @Autowired constructor(
         pageSize: Int,
         searchName: String?
     ): Pagination<AppProjectVO> {
+        if (searchName.isNullOrEmpty()) {
+            val cacheList = streamProjectService.cacheProjectList(userId).filter { it.enabledCi == true }.map {
+                AppProjectVO(
+                    projectCode = it.projectCode ?: ("git_" + it.id),
+                    // 使用 pathWithPathSpace唯一标识App 中项目名称
+                    projectName = it.pathWithNamespace ?: "",
+                    logoUrl = it.avatarUrl,
+                    projectSource = ProjectSourceEnum.GIT_CI.id
+                )
+            }
+            val hasNext = cacheList.size >= pageSize * page
+            return Pagination(hasNext, cacheList.subList((page - 1) * pageSize, page * pageSize))
+        }
         val token = oauthService.getAndCheckOauthToken(userId).accessToken
         val projectIdMap = streamScmService.getProjectList(
             accessToken = token,
