@@ -51,5 +51,7 @@ data class WebhookInfo(
     // mr id
     val mrId: String?,
     // mr iid
-    val mrIid: String?
+    val mrIid: String?,
+    // mr url
+    val mrUrl: String?
 )
