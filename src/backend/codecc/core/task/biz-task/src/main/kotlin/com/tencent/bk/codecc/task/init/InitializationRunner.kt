@@ -117,7 +117,7 @@ class InitializationRunner @Autowired constructor(
         // 响应码、操作记录国际化
         val responseCodeMap = initResponseCode.getGlobalMessageMap()
         for (key in responseCodeMap.keys) {
-            redisTemplate.opsForValue().set(key, responseCodeMap[key])
+            redisTemplate.opsForValue().set(key, responseCodeMap[key] ?: "")
         }
 
         // 规则包国际化
@@ -191,7 +191,7 @@ class InitializationRunner @Autowired constructor(
         // 判断是否需要缓存createFrom
         val newestTaskId = redisTemplate.opsForValue().get(RedisKeyConstants.CODECC_TASK_ID)
         val newestTaskCreateFrom = redisTemplate.opsForHash<String, String>()
-            .get(PREFIX_TASK_INFO + (newestTaskId.toLong() - 1), KEY_CREATE_FROM)
+            .get(PREFIX_TASK_INFO + (newestTaskId!!.toLong() - 1), KEY_CREATE_FROM)
         // 判断是否需要缓存bg映射
         val maxTaskInfoEntity =
             taskRepository.findFirstByCreateFromOrderByTaskIdDesc(ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value())
@@ -200,7 +200,7 @@ class InitializationRunner @Autowired constructor(
         if (StringUtils.isNotEmpty(newestTaskCreateFrom) && !latestBgMapping.isNullOrBlank()) {
             return
         }
-        var pageable: Pageable = PageRequest(0, 1000)
+        var pageable: Pageable = PageRequest.of(0, 1000)
         var pageTasks: List<TaskInfoEntity>
         do {
             val taskInfoEntityPage = taskRepository.findTasksByPage(pageable)

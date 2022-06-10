@@ -25,14 +25,14 @@ public class StatFastIncrementConsumer extends AbstractFastIncrementConsumer {
         String buildId = analyzeConfigInfoVO.getBuildId();
 
         ToolBuildStackEntity toolBuildStackEntity = toolBuildStackRepository
-                .findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+                .findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
 
         // 因为代码没有变更，默认代码统计不变，所以直接取上一个分析的代码统计
         String baseBuildId;
         if (toolBuildStackEntity == null) {
             log.info("last success stat task build is null, taskId {} | buildId | {} | toolName {}", taskId, buildId,
                     toolName);
-            ToolBuildInfoEntity toolBuildINfoEntity = toolBuildInfoRepository.findByTaskIdAndToolName(taskId, toolName);
+            ToolBuildInfoEntity toolBuildINfoEntity = toolBuildInfoRepository.findFirstByTaskIdAndToolName(taskId, toolName);
             baseBuildId =
                     toolBuildINfoEntity != null && StringUtils.isNotEmpty(toolBuildINfoEntity.getDefectBaseBuildId())
                             ? toolBuildINfoEntity.getDefectBaseBuildId() : "";
@@ -50,7 +50,7 @@ public class StatFastIncrementConsumer extends AbstractFastIncrementConsumer {
             statStatisticEntity.setBuildId(buildId);
         });
 
-        statStatisticRepository.save(lastStatStatisticEntityList);
+        statStatisticRepository.saveAll(lastStatStatisticEntityList);
 
         // 更新告警快照基准构建ID
         toolBuildInfoDao.updateDefectBaseBuildId(taskId, toolName, buildId);

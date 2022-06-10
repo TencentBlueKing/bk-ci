@@ -54,7 +54,7 @@ public class StatDefectCommitConsumer extends AbstractDefectCommitConsumer {
 
         // 判断增量还是全量
         ToolBuildStackEntity toolBuildStackEntity = toolBuildStackRepository
-                .findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+                .findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
         boolean isFullScan = toolBuildStackEntity == null || toolBuildStackEntity.isFullScan();
 
         // 获取统计类工具自定义参数
@@ -92,7 +92,7 @@ public class StatDefectCommitConsumer extends AbstractDefectCommitConsumer {
         }
 
         // 保存本次信息
-        statDefectRepository.save(defectEntityList);
+        statDefectRepository.saveAll(defectEntityList);
 
         statisticCommit(defectEntityList, commitDefectVO, customToolInfo.getCustomToolDimension(), isFullScan);
     }
@@ -144,7 +144,7 @@ public class StatDefectCommitConsumer extends AbstractDefectCommitConsumer {
                         statStatisticEntity.setBuildId(buildId);
                         statStatisticEntity.setEntityId(ObjectId.get().toString());
                     });
-                    statStatisticRepository.save(lastEntityList);
+                    statStatisticRepository.saveAll(lastEntityList);
                 }
             } else {
                 // 遍历按维度划分的List数据
@@ -201,7 +201,7 @@ public class StatDefectCommitConsumer extends AbstractDefectCommitConsumer {
 
                     // 第一次构建
                     if (lastEntity == null) {
-                        statStatisticRepository.save(statisticEntityList);
+                        statStatisticRepository.saveAll(statisticEntityList);
                         toolBuildInfoDao.updateDefectBaseBuildId(taskId, toolName, buildId);
                         return;
                     }
@@ -233,7 +233,7 @@ public class StatDefectCommitConsumer extends AbstractDefectCommitConsumer {
                         }
                     });
                 }
-                statStatisticRepository.save(statisticEntityList);
+                statStatisticRepository.saveAll(statisticEntityList);
             }
         } finally {
             lock.unlock();

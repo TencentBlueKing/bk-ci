@@ -317,4 +317,21 @@ class TXStreamBasicSettingService @Autowired constructor(
             else -> TODO("对接其他Git平台时需要补充")
         }
     }
+
+    fun updateEnableUserIdByNewUser(
+        oldUserId: String,
+        newUserId: String,
+        limitNumber: Int
+    ): Int {
+        val idList = streamBasicSettingDao.getSettingByEnableUserId(
+            dslContext = dslContext,
+            enableUserId = oldUserId,
+            limit = limitNumber
+        ).map { it.value1() }
+        return streamBasicSettingDao.updateEnableUserIdByIds(
+            dslContext = dslContext,
+            newUserId = newUserId,
+            idList = idList
+        )
+    }
 }

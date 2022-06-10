@@ -37,6 +37,9 @@ type ServerConfig struct {
 	NoWait             bool `json:"no_wait" value:"false" usage:"if true, controller will quit immediately when no more running task"`
 	UseLocalCPUPercent int  `json:"use_local_cpu_percent" value:"0" usage:"how many local idle cpu will be used to execute tasks(0~100)"`
 	DisableFileLock    bool `json:"disable_file_lock" value:"false" usage:"if true, controller will launch without file lock"`
+
+	AutoResourceMgr    bool `json:"auto_resource_mgr" value:"false" usage:"if true, controller will auto free and apply resource while work running"`
+	ResIdleSecsForFree int  `json:"res_idle_secs_for_free" value:"120" usage:"controller free resource while detect resource has been idle over this"`
 }
 
 // CertConfig  configuration of Cert

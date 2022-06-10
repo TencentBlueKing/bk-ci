@@ -1,0 +1,38 @@
+# dispatchMacos hpa
+{{ if .Values.dispatchMacos.enabled -}}
+{{ if .Values.dispatchMacos.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-dispatch-macos
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/name: dispatch-macos
+    app.kubernetes.io/component: microservice
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  scaleTargetRef:
+    apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+    kind: Deployment
+    name: {{ include "bkci.names.fullname" . }}-dispatch-macos
+  minReplicas: {{ .Values.dispatchMacos.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.dispatchMacos.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.dispatchMacos.autoscaling.targetCPU }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.dispatchMacos.autoscaling.targetCPU }}
+    {{- end }}
+    {{- if .Values.dispatchMacos.autoscaling.targetMemory }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.dispatchMacos.autoscaling.targetMemory  }}
+    {{- end }}
+{{- end }}
+{{- end -}}

@@ -95,6 +95,7 @@ class NoticeDao {
                         .set(UPDATE_DATE, Timestamp(currentTimestamp).toLocalDateTime())
                         .set(NOTICE_CONTENT, noticeRequest.noticeContent)
                         .set(REDIRECT_URL, noticeRequest.redirectUrl)
+                        .set(SERVICE_NAME, noticeRequest.noticeService?.joinToString(","))
                         .set(NOTICE_TYPE, noticeRequest.noticeType.toByte())
                         .where(ID.eq(id))
                         .execute()
@@ -106,14 +107,16 @@ class NoticeDao {
                         INVALID_DATE,
                         NOTICE_CONTENT,
                         REDIRECT_URL,
-                        NOTICE_TYPE
+                        NOTICE_TYPE,
+                        SERVICE_NAME
                 ).values(
                         noticeRequest.noticeTitle,
                         effectDate,
                         invalidDate,
                         noticeRequest.noticeContent,
                         noticeRequest.redirectUrl,
-                        noticeRequest.noticeType.toByte()
+                        noticeRequest.noticeType.toByte(),
+                    noticeRequest.noticeService?.joinToString(",")
                 ).execute()
             }
         }

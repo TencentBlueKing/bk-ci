@@ -169,6 +169,8 @@ func (h *ShaderTool) initsettings() error {
 		return err
 	}
 
+	blog.Infof("ShaderTool: loaded setting:%+v", *h.settings)
+
 	for k, v := range h.settings.Env {
 		blog.Infof("ShaderTool: set env %s=%s", k, v)
 		os.Setenv(k, v)

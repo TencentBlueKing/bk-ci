@@ -12,9 +12,8 @@
 
 package com.tencent.bk.codecc.apiquery.task.dao.mongotemplate;
 
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.apiquery.task.model.UserLogInfoModel;
-import com.tencent.devops.common.util.DateTimeUtils;
+import org.bson.Document;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,6 +24,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.SortOperation;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Repository;
 
@@ -82,12 +82,11 @@ public class UserLogInfoDao {
      * @return int
      */
     public Integer findUserLogInCountByDaily(long[] startTimeAndEndTime) {
-        BasicDBObject basicDBObject = new BasicDBObject();
-        basicDBObject.put("login_date", new BasicDBObject("$gte", new Date(startTimeAndEndTime[0]))
+        Document document = new Document();
+        document.put("login_date", new Document("$gte", new Date(startTimeAndEndTime[0]))
                 .append("$lte", new Date(startTimeAndEndTime[1])));
-
-        List distinct = mongoTemplate.getCollection("t_user_log_info").distinct("user_name", basicDBObject);
-
+        List distinct = mongoTemplate.findDistinct(new BasicQuery(document),
+                "user_name", "t_user_log_info", Object.class);
         return distinct.size();
     }
 }

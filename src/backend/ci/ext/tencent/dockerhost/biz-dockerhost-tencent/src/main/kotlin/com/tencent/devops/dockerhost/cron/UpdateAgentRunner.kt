@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dockerhost.cron
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dockerhost.config.DockerHostConfig
@@ -59,6 +60,11 @@ class UpdateAgentRunner @Autowired constructor(
                 val headerMap = mutableMapOf<String, String>()
                 if (gray.isGray()) {
                     headerMap["X-DEVOPS-PROJECT-ID"] = "grayproject"
+                }
+                if (dockerHostConfig.gatewayHeaderTag != null) {
+                    logger.info("Now is ${dockerHostConfig.gatewayHeaderTag} environment, update agent request with " +
+                            "the AUTH_HEADER_GATEWAY_TAG header.")
+                    headerMap[AUTH_HEADER_GATEWAY_TAG] = dockerHostConfig.gatewayHeaderTag!!
                 }
 
                 Thread.sleep(getRandom().toLong() * 60 * 1000) // 随机打散请求时间，防止同一时间请求网关，网关流量太大

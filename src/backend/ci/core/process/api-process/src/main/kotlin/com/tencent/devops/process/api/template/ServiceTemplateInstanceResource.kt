@@ -104,6 +104,29 @@ interface ServiceTemplateInstanceResource {
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet
 
+    @ApiOperation("批量更新流水线模板实例")
+    @PUT
+    @Path("/projects/{projectId}/templates/{templateId}/updateTemplate")
+    fun updateTemplate(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @ApiParam("版本名", required = true)
+        @QueryParam("versionName")
+        versionName: String,
+        @ApiParam("是否应用模板设置")
+        @QueryParam("useTemplateSettings")
+        useTemplateSettings: Boolean,
+        @ApiParam("模板实例", required = true)
+        instances: List<TemplateInstanceUpdate>
+    ): TemplateOperationRet
+
     @ApiOperation("通过流水线ID获取流水线启动参数")
     @POST
     @Path("/projects/{projectId}/templates/{templateId}/pipelines")

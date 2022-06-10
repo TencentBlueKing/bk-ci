@@ -39,7 +39,7 @@ import java.io.File
 
 interface ICommand {
 
-    @Suppress("LongParameterList")
+    @Suppress("ALL")
     fun execute(
         buildId: String,
         script: String,

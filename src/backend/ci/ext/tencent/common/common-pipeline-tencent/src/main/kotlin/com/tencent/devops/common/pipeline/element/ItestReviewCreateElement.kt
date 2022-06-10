@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Deprecated("作废，由其他团队负责")
 @ApiModel("ITest-创建审核单", description = ItestReviewCreateElement.classType)
 data class ItestReviewCreateElement(
     @ApiModelProperty("任务名称", required = true)

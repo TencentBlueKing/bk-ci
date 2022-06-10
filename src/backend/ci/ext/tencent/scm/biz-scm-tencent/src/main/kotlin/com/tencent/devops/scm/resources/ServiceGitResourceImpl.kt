@@ -67,6 +67,7 @@ import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.services.GitService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletResponse
@@ -707,6 +708,22 @@ class ServiceGitResourceImpl @Autowired constructor(
                 gitCreateFile = gitCreateFile,
                 tokenType = tokenType
             )
+        )
+    }
+
+    override fun getTapdWorkItems(
+        accessToken: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        type: String,
+        iid: Long
+    ): Result<List<TapdWorkItem>> {
+        return gitService.getTapdWorkItems(
+            accessToken = accessToken,
+            tokenType = tokenType,
+            gitProjectId = gitProjectId,
+            type = type,
+            iid = iid
         )
     }
 }

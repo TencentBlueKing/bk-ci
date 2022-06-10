@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
@@ -148,7 +149,7 @@ class BuildStartControl @Autowired constructor(
         )
 
         buildLogPrinter.stopLog(buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount)
-        startPipelineCount(this)
+        startPipelineCount()
     }
 
     private fun PipelineBuildStartEvent.pickUpReadyBuild(executeCount: Int): BuildInfo? {
@@ -343,6 +344,7 @@ class BuildStartControl @Autowired constructor(
         stage.status = BuildStatus.SUCCEED.name
         stage.elapsed = max(0, System.currentTimeMillis() - buildInfo.queueTime)
         container.status = BuildStatus.SUCCEED.name
+        container.startEpoch = now.timestampmilli()
         container.systemElapsed = stage.elapsed // 修复可能导致负数的情况
         container.elementElapsed = 0
         container.executeCount = executeCount
@@ -549,11 +551,9 @@ class BuildStartControl @Autowired constructor(
         return firstValidStage
     }
 
-    private fun startPipelineCount(event: PipelineBuildStartEvent) {
+    private fun startPipelineCount() {
         Counter
             .builder("start_pipeline_count")
-            .tag("projectId", event.projectId)
-            .tag("pipelineId", event.pipelineId)
             .register(meterRegistry)
             .increment()
     }

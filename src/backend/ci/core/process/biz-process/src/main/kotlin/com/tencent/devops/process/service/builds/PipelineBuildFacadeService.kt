@@ -341,7 +341,8 @@ class PipelineBuildFacadeService(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         buildId = buildId,
-                        taskId = taskId
+                        taskId = taskId,
+                        skipFailedTask = skipFailedTask
                     )) {
                     return buildId
                 }

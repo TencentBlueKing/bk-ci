@@ -33,6 +33,7 @@ dependencies {
     api(project(":ext:tencent:process:api-process-tencent"))
     api(project(":ext:tencent:store:biz-store-tencent"))
     api(project(":ext:tencent:project:api-project-tencent"))
+    api(project(":ext:tencent:artifactory:api-artifactory-store-tencent"))
     api(project(":core:store:biz-store"))
     api(project(":ext:tencent:environment:api-environment-tencent"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))

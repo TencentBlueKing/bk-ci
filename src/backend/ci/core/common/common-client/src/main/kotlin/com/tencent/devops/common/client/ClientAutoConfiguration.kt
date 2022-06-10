@@ -30,14 +30,16 @@ package com.tencent.devops.common.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.client.consul.ConsulFilter
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.ServiceAutoConfiguration
 import com.tencent.devops.common.service.config.CommonConfig
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 import org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration
-import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.PropertySource
@@ -53,8 +55,14 @@ import org.springframework.core.Ordered
 @AutoConfigureAfter(ServiceAutoConfiguration::class, LoadBalancerAutoConfiguration::class)
 class ClientAutoConfiguration {
 
+    @Value("\${spring.cloud.consul.discovery.tags:prod}")
+    private val consulTag: String = "prod"
+
     @Bean
     fun commonConfig() = CommonConfig()
+
+    @Bean
+    fun bkTag() = BkTag(consulTag)
 
     @Bean
     fun clientErrorDecoder(objectMapper: ObjectMapper) = ClientErrorDecoder(objectMapper)
@@ -64,13 +72,14 @@ class ClientAutoConfiguration {
     fun client(
         clientErrorDecoder: ClientErrorDecoder,
         commonConfig: CommonConfig,
+        bkTag: BkTag,
         objectMapper: ObjectMapper,
-        @Autowired(required = false) consulDiscoveryClient: ConsulDiscoveryClient?
-    ) = Client(consulDiscoveryClient, clientErrorDecoder, commonConfig, objectMapper)
+        @Autowired(required = false) compositeDiscoveryClient: CompositeDiscoveryClient?
+    ) = Client(compositeDiscoveryClient, clientErrorDecoder, commonConfig, bkTag, objectMapper)
 
     @Bean
-    fun consulFilter() = ConsulFilter()
+    fun consulFilter(bkTag: BkTag) = ConsulFilter(bkTag)
 
     @Bean
-    fun clientTokenService(redisOperation: RedisOperation) = ClientTokenService(redisOperation)
+    fun clientTokenService(redisOperation: RedisOperation, bkTag: BkTag) = ClientTokenService(redisOperation, bkTag)
 }

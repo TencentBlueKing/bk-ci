@@ -12,14 +12,8 @@
 
 package com.tencent.devops.common.web;
 
-import org.apache.xmlrpc.XmlRpcException;
-import org.apache.xmlrpc.client.XmlRpcClient;
-import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.MalformedURLException;
-import java.net.URL;
 
 /**
  * Rpc调度工具
@@ -42,30 +36,9 @@ public class RpcClient<T>
      * @param params
      * @return
      */
-    public T doRequest(String serverURL, String methodName, Object[] params)
-    {
+    public T doRequest(String serverURL, String methodName, Object[] params) {
+        //@TODO
         T response = null;
-        XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
-        XmlRpcClient client = new XmlRpcClient();
-        client.setConfig(config);
-        config.setConnectionTimeout(GENERAL_TIMEOUT);
-        config.setReplyTimeout(GENERAL_TIMEOUT * 3);
-        try
-        {
-            config.setServerURL(new URL(serverURL));
-            Object res = client.execute(methodName, params);
-
-            if (res == null)
-            {
-                logger.error("rpc response is null! serverURL:{}, methodName:{}, params:{}", serverURL, methodName, params);
-                return response;
-            }
-            response = (T) res;
-        }
-        catch (MalformedURLException | XmlRpcException e)
-        {
-            logger.error("rpc request throw exception! serverURL:{}, methodName:{}, params:{}", serverURL, methodName, params, e);
-        }
 
         return response;
     }

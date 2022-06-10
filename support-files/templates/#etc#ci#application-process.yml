@@ -31,6 +31,7 @@ template:
   maxSyncInstanceNum: 10
   maxSaveVersionNum: 300
   maxSaveVersionRecordNum: 2
+  maxUpdateInstanceNum: 100
   
 
 build:

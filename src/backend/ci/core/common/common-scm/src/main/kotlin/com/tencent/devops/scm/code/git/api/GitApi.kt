@@ -36,6 +36,8 @@ import com.tencent.devops.common.api.constant.HTTP_405
 import com.tencent.devops.common.api.constant.HTTP_422
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.prometheus.BkTimedAspect
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.exception.GitApiException
@@ -47,6 +49,10 @@ import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Tags
+import io.micrometer.core.instrument.Timer
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -79,6 +85,7 @@ open class GitApi {
         private const val OPERATION_GET_CHANGE_FILE_LIST = "查询变更文件列表"
         private const val OPERATION_GET_MR_COMMIT_LIST = "获取合并请求中的提交"
         private const val OPERATION_PROJECT_USER_INFO = "获取项目中成员信息"
+        private const val OPERATION_TAPD_WORKITEMS = "查看绑定的TAPD单"
     }
 
     fun listBranches(
@@ -355,11 +362,24 @@ open class GitApi {
     }
 
     private fun <T> callMethod(operation: String, request: Request, classOfT: Class<T>): T {
-        return OkhttpUtils.doRedirectHttp(request) { response ->
-            if (!response.isSuccessful) {
-                handleApiException(operation, response.code(), response.body()?.string() ?: "")
+        val sample = Timer.start(SpringContextUtil.getBean(MeterRegistry::class.java))
+        var exceptionClass = BkTimedAspect.DEFAULT_EXCEPTION_TAG_VALUE
+        try {
+            return OkhttpUtils.doRedirectHttp(request) { response ->
+                if (!response.isSuccessful) {
+                    handleApiException(operation, response.code(), response.body()?.string() ?: "")
+                }
+                JsonUtil.getObjectMapper().readValue(response.body()!!.string(), classOfT)
             }
-            JsonUtil.getObjectMapper().readValue(response.body()!!.string(), classOfT)
+        } catch (err: Exception) {
+            exceptionClass = err.javaClass.simpleName
+            throw err
+        } finally {
+            val tags = Tags.of(
+                "operation", operation
+            )
+            SpringContextUtil.getBean(BkTimedAspect::class.java)
+                .record("bk_method_time", tags, "工蜂接口耗时度量", sample, exceptionClass)
         }
     }
 
@@ -515,6 +535,19 @@ open class GitApi {
             )
         val request = get(host, token, url, queryParam)
         return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_PROJECT_USER_INFO, request))
+    }
+
+    fun getTapdWorkitems(
+        host: String,
+        token: String,
+        id: String,
+        type: String,
+        iid: Long
+    ): List<TapdWorkItem> {
+        val url = "projects/$id/tapd_workitems"
+        val queryParam = "type=$type&iid=$iid"
+        val request = get(host, token, url, queryParam)
+        return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_TAPD_WORKITEMS, request))
     }
 
     private fun String.addParams(args: Map<String, Any?>): String {
