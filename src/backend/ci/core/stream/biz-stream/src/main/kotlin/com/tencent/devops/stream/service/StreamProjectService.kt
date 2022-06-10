@@ -90,7 +90,6 @@ class StreamProjectService @Autowired constructor(
         }
 
         val gitProjects = gitProjects(
-
             userId = userId,
             type = type,
             realPage = realPage,
@@ -148,8 +147,8 @@ class StreamProjectService @Autowired constructor(
         userId: String,
         type: StreamProjectType?,
         search: String?,
-        realPage: Int?,
-        realPageSize: Int?,
+        realPage: Int,
+        realPageSize: Int,
         orderBy: StreamProjectsOrder?,
         sort: StreamSortAscOrDesc?
     ): List<StreamProjectGitInfo>? {
@@ -159,7 +158,7 @@ class StreamProjectService @Autowired constructor(
                 page = realPage,
                 pageSize = realPageSize,
                 search = search,
-                orderBy = orderBy ?: StreamProjectsOrder.UPDATE,
+                orderBy = orderBy ?: StreamProjectsOrder.ACTIVITY,
                 sort = sort ?: StreamSortAscOrDesc.DESC,
                 owned = null,
                 minAccessLevel = if (type == StreamProjectType.MY_PROJECT) {
@@ -173,35 +172,72 @@ class StreamProjectService @Autowired constructor(
                 "STREAM|gitProjects|stream scm service is unavailable.|userId=$userId|" +
                     "realPage=$realPage|realPageSize=$realPageSize"
             )
-            val res = redisOperation.get(getProjectListKey("$userId-$realPage-$realPageSize"))
+            val res = redisOperation.get(getProjectListKey(userId))
             if (res.isNullOrEmpty()) {
                 logger.info("STREAM|gitProjects|This does not exist in redis|userId=$userId")
                 return null
             }
             return JsonUtil.to(res, object : TypeReference<List<StreamProjectGitInfo>>() {})
+                .subList((realPage - 1) * realPageSize, realPage * realPageSize)
         } ?: return null
         // 每次成功访问stream 接口就刷新redis
-        val updateLock = RedisLock(redisOperation, getProjectListLockKey("$userId-$realPage-$realPageSize"), 10)
-        updateLock.lock()
-        try {
-            logger.info("STREAM|gitProjects|update redis|userId=$userId|realPage=$realPage|realPageSize=$realPageSize")
-            val newRedisValue = gitProjects.map {
-                StreamProjectSimpleInfo(
-                    id = it.id,
-                    pathWithNamespace = it.pathWithNamespace,
-                    description = it.description,
-                    avatarUrl = it.avatarUrl
-                )
-            }
-            redisOperation.set(
-                getProjectListKey("$userId-$realPage-$realPageSize"),
-                JsonUtil.toJson(newRedisValue),
-                TimeUnit.MINUTES.toSeconds(60)
-            )
-        } finally {
-            updateLock.unlock()
-        }
+        cacheProjectList(userId)
         return gitProjects
+    }
+
+    fun cacheProjectList(userId: String): List<StreamProjectSimpleInfo> {
+        val res = redisOperation.get(getProjectListKey(userId))
+        if (res.isNullOrEmpty()) {
+            logger.info("STREAM|gitProjects|This does not exist in redis, so create it|userId=$userId")
+            val projectList = mutableListOf<StreamProjectSimpleInfo>()
+            var page = 1
+            var enableCiNumber = 0
+            do {
+                val list = streamGitTransferService.getProjectList(
+                    userId = userId,
+                    page = page,
+                    pageSize = 150,
+                    search = null,
+                    orderBy = StreamProjectsOrder.ACTIVITY,
+                    sort = StreamSortAscOrDesc.DESC,
+                    owned = null,
+                    minAccessLevel = GitAccessLevelEnum.DEVELOPER
+                ) ?: emptyList()
+                val settings = streamBasicSettingDao.searchProjectByIds(
+                    dslContext = dslContext,
+                    projectIds = list.map { it.id }.toSet()
+                ).associateBy { it.id }
+                list.map { item ->
+                    projectList.add(
+                        StreamProjectSimpleInfo(
+                            id = item.id,
+                            pathWithNamespace = item.pathWithNamespace,
+                            description = item.description,
+                            avatarUrl = item.avatarUrl,
+                            enabledCi = settings[item.id]?.enableCi,
+                            projectCode = settings[item.id]?.projectCode
+                        )
+                    )
+                }
+                enableCiNumber += settings.values.filter { it.enableCi == true }.size
+                page += 1
+            } while (list.isNotEmpty() || enableCiNumber >= 100)
+            val updateLock = RedisLock(redisOperation, getProjectListLockKey(userId), 10)
+            updateLock.lock()
+            try {
+                logger.info("STREAM|gitProjects|update redis|userId=$userId")
+                redisOperation.set(
+                    getProjectListKey(userId),
+                    JsonUtil.toJson(projectList),
+                    TimeUnit.MINUTES.toSeconds(1440)
+                )
+            } finally {
+                updateLock.unlock()
+            }
+            return projectList
+        } else {
+            return JsonUtil.to(res, object : TypeReference<List<StreamProjectSimpleInfo>>() {})
+        }
     }
 
     fun addUserProjectHistory(
