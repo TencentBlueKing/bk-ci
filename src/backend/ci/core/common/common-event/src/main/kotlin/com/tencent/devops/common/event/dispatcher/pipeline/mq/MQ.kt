@@ -92,8 +92,15 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_START_DISPATCHER = "q.engine.pipeline.build.start.dispatcher"
     const val QUEUE_PIPELINE_BUILD_START_WEBHOOK_QUEUE = "q.engine.pipeline.build.start.webhook.queue"
 
+    // 构建审核和检查步骤广播exchange ====================================
+    const val EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT = "e.engine.pipeline.build.review.fanout"
+    const val EXCHANGE_PIPELINE_BUILD_QUALITY_CHECK_FANOUT = "e.engine.pipeline.build.quality.check.fanout"
+
     // 构建结束后续广播exchange ====================================
     const val EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT = "e.engine.pipeline.build.finish"
+
+    // 构建取消后续广播exchange ====================================
+    const val EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT = "e.engine.pipeline.build.cancel"
 
     // 接收上述广播的队列
     const val QUEUE_PIPELINE_BUILD_FINISH_MEASURE = "q.engine.pipeline.build.measure"
@@ -190,6 +197,11 @@ object MQ {
     const val ROUTE_TGIT_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.tgit.event"
     const val QUEUE_TGIT_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.tgit.event"
 
+    // P4代码仓库webhook请求回调
+    const val EXCHANGE_P4_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.p4.event"
+    const val ROUTE_P4_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.p4.event"
+    const val QUEUE_P4_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.p4.event"
+
     // 广播清理文件
     const val EXCHANGE_BKJOB_CLEAR_JOB_TMP_FANOUT = "e.bkjob.clear.file.fanout"
     const val ROUTE_BKJOB_CLEAR_JOB_TMP_EVENT = "r.bkjob.clear.file"
@@ -241,6 +253,11 @@ object MQ {
     // 蓝盾监控数据上报事件广播
     const val EXCHANGE_ATOM_MONITOR_DATA_REPORT_FANOUT = "e.engine.atom.monitor.data.report.fanout"
 
+    // 蓝盾构建结束后metrics数据上报事件广播
+    const val EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT = "e.engine.build.end.metrics.data.report.fanout"
+    // 流水线标签变化metrics数据同步广播
+    const val EXCHANGE_PIPELINELABEL_CHANGE_METRICS_DATA_SYNC_FANOUT = "e.pipeline.label.change.metrics.data.sync.fanout"
+
     // webhook锁
     const val EXCHANGE_GIT_WEBHOOK_UNLOCK_EVENT = "e.webhook.unlock.event"
     const val ROUTE_GIT_WEBHOOK_UNLOCK_EVENT = "r.webhook.unlock.event"
@@ -250,4 +267,10 @@ object MQ {
     const val EXCHANGE_AUTH_REFRESH_FANOUT = "e.auth.refresh.exchange.fanout"
     const val ROUTE_AUTH_REFRESH_FANOUT = "r.auth.refresh.exchange.fanout"
     const val QUEUE_AUTH_REFRESH_EVENT = "q.auth.refresh.exchange.queue"
+
+    // 流水线webhook commit记录
+    const val EXCHANGE_PIPELINE_BUILD_COMMIT_FINISH_FANOUT = "e.engine.pipeline.build.commits.finish.fanout"
+
+    // 质量红线每日数据上报队列
+    const val EXCHANGE_QUALITY_DAILY_FANOUT = "e.metrics.quality.daily.exchange.fanout"
 }

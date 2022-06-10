@@ -30,6 +30,7 @@ package com.tencent.devops.common.db.util
 import org.jooq.DatePart
 import org.jooq.Field
 import org.jooq.impl.DSL
+import java.math.BigDecimal
 import java.sql.Timestamp
 
 object JooqUtils {
@@ -62,5 +63,12 @@ object JooqUtils {
                 String::class.java, t1, t2
             )
         }
+    }
+
+    fun <T>sum(data: Field<T>): Field<BigDecimal> {
+        return DSL.field(
+            "sum(${data.name})",
+            BigDecimal::class.java
+        )
     }
 }

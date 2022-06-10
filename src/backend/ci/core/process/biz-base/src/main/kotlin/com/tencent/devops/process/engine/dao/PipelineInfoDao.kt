@@ -35,12 +35,10 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Field
 import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
-import org.jooq.impl.SQLDataType
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -60,7 +58,8 @@ class PipelineInfoDao {
         channelCode: ChannelCode,
         manualStartup: Boolean,
         canElementSkip: Boolean,
-        taskCount: Int
+        taskCount: Int,
+        id: Long? = null
     ): Int {
         val count = with(T_PIPELINE_INFO) {
             dslContext.insertInto(
@@ -78,7 +77,8 @@ class PipelineInfoDao {
                 MANUAL_STARTUP,
                 ELEMENT_SKIP,
                 TASK_COUNT,
-                PIPELINE_NAME_PINYIN
+                PIPELINE_NAME_PINYIN,
+                ID
             )
                 .values(
                     pipelineId,
@@ -92,7 +92,8 @@ class PipelineInfoDao {
                     if (manualStartup) 1 else 0,
                     if (canElementSkip) 1 else 0,
                     taskCount,
-                    nameToPinyin(pipelineName)
+                    nameToPinyin(pipelineName),
+                    id
                 )
                 .execute()
         }
@@ -100,17 +101,20 @@ class PipelineInfoDao {
         return version
     }
 
+    @Suppress("ComplexMethod")
     fun update(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
-        userId: String,
+        userId: String?,
         updateVersion: Boolean = true,
         pipelineName: String? = null,
         pipelineDesc: String? = null,
         manualStartup: Boolean? = null,
         canElementSkip: Boolean? = null,
         taskCount: Int = 0,
-        latestVersion: Int = 0
+        latestVersion: Int = 0,
+        updateLastModifyUser: Boolean? = true
     ): Int {
         val count = with(T_PIPELINE_INFO) {
 
@@ -136,13 +140,16 @@ class PipelineInfoDao {
             if (taskCount > 0) {
                 update.set(TASK_COUNT, taskCount)
             }
-            val conditions = ArrayList<Condition>(2)
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(PIPELINE_ID.eq(pipelineId))
             if (latestVersion > 0) {
                 conditions.add(VERSION.eq(latestVersion))
             }
+            if (userId != null && updateLastModifyUser == true) {
+                update.set(LAST_MODIFY_USER, userId)
+            }
             update.set(UPDATE_TIME, LocalDateTime.now())
-                .set(LAST_MODIFY_USER, userId)
                 .where(conditions)
                 .execute()
         }
@@ -154,7 +161,7 @@ class PipelineInfoDao {
         val version = with(T_PIPELINE_INFO) {
             dslContext.select(VERSION)
                 .from(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne(0, Int::class.java)!!
         }
         logger.info(
@@ -183,7 +190,8 @@ class PipelineInfoDao {
     fun countByProjectIds(
         dslContext: DSLContext,
         projectIds: Collection<String>,
-        channelCode: ChannelCode? = null
+        channelCode: ChannelCode? = null,
+        keyword: String? = null
     ): Int {
         return with(T_PIPELINE_INFO) {
             val query = dslContext.selectCount().from(this)
@@ -193,15 +201,11 @@ class PipelineInfoDao {
                 query.and(CHANNEL.eq(channelCode.name))
             }
 
-            query.and(DELETE.eq(false)).fetchOne(0, Int::class.java)!!
-        }
-    }
+            if (!keyword.isNullOrBlank()) {
+                query.and(PIPELINE_NAME.like("%$keyword%"))
+            }
 
-    @Suppress("unused")
-    fun listAll(dslContext: DSLContext): Result<TPipelineInfoRecord> {
-        return with(T_PIPELINE_INFO) {
-            dslContext.selectFrom(this)
-                .fetch()
+            query.and(DELETE.eq(false)).fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -237,7 +241,7 @@ class PipelineInfoDao {
         }
     }
 
-    fun searchByPipelineName(
+    fun searchByProject(
         dslContext: DSLContext,
         pipelineName: String?,
         projectCode: String,
@@ -275,7 +279,7 @@ class PipelineInfoDao {
         }
     }
 
-    fun searchByPipelineName(dslContext: DSLContext, projectId: String): Result<TPipelineInfoRecord>? {
+    fun searchByProject(dslContext: DSLContext, projectId: String): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -350,12 +354,13 @@ class PipelineInfoDao {
 
     fun getPipelineInfo(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         channelCode: ChannelCode? = null
     ): TPipelineInfoRecord? {
         return with(T_PIPELINE_INFO) {
             val query = dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
 
             if (channelCode != null) {
                 query.and(CHANNEL.eq(channelCode.name))
@@ -366,14 +371,14 @@ class PipelineInfoDao {
 
     fun getPipelineInfo(
         dslContext: DSLContext,
-        projectId: String? = null,
+        projectId: String,
         pipelineId: String,
         channelCode: ChannelCode? = null,
         delete: Boolean? = false,
         days: Long? = null // 搜索范围：{days}天内的流水线
     ): TPipelineInfoRecord? {
         return with(T_PIPELINE_INFO) {
-            val query = if (!projectId.isNullOrBlank()) {
+            val query = if (!projectId.isBlank()) {
                 dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
                     .and(PIPELINE_ID.eq(pipelineId))
             } else {
@@ -447,32 +452,15 @@ class PipelineInfoDao {
         }
     }
 
-    @Suppress("SpreadOperator")
-    fun listOrderInfoByPipelineIds(
-        dslContext: DSLContext,
-        pipelineIds: List<String>
-    ): Result<TPipelineInfoRecord> {
-        return with(T_PIPELINE_INFO) {
-            val query = dslContext.selectFrom(this).where(PIPELINE_ID.`in`(pipelineIds))
-            val args = arrayOfNulls<Field<out Any>?>(pipelineIds.size + 1)
-            args[0] = DSL.field("PIPELINE_ID")
-            var index = 1
-            pipelineIds.forEach { pipelineId ->
-                args[index++] = DSL.`val`(pipelineId)
-            }
-            query.orderBy(DSL.function("field", SQLDataType.VARCHAR, *args))
-            query.fetch()
-        }
-    }
-
     fun getPipelineInfo(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         version: Int
     ): TPipelineInfoRecord {
         return with(T_PIPELINE_INFO) {
             val query = dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(VERSION.eq(version))
             query.fetch().first()
         }
@@ -554,10 +542,54 @@ class PipelineInfoDao {
         }
     }
 
+    fun searchByProjectId(
+        dslContext: DSLContext,
+        pipelineName: String?,
+        projectCode: String,
+        limit: Int,
+        offset: Int,
+        channelCode: ChannelCode? = null
+    ): Result<TPipelineInfoRecord>? {
+        return with(T_PIPELINE_INFO) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectCode))
+            conditions.add(DELETE.eq(false))
+            conditions.add(CHANNEL.`in`(listOf(ChannelCode.BS, ChannelCode.GIT)))
+            if (!pipelineName.isNullOrEmpty()) {
+                conditions.add(PIPELINE_NAME.like("%$pipelineName%"))
+            }
+            if (channelCode != null) {
+                conditions.add(CHANNEL.eq(channelCode.name))
+            }
+            dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun getPipelineVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        userId: String,
+        channelCode: ChannelCode
+    ): Int {
+        return with(T_PIPELINE_INFO) {
+            dslContext.select(this.VERSION)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(CHANNEL.eq(channelCode.name))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun listByProject(dslContext: DSLContext, projectCode: String): Result<Record2<String, Long>> {
         return with(T_PIPELINE_INFO) {
             dslContext.select(PIPELINE_ID.`as`("pipelineId"), ID.`as`("id")).from(this)
-                .where(PROJECT_ID.eq(projectCode)).fetch()
+                .where(PROJECT_ID.eq(projectCode).and(DELETE.eq(false))).fetch()
         }
     }
 
@@ -573,12 +605,18 @@ class PipelineInfoDao {
         }
     }
 
-    fun getPieplineByAutoId(
+    fun getPipelineByAutoId(
         dslContext: DSLContext,
-        ids: List<Int>
+        ids: List<Int>,
+        projectId: String? = null
     ): Result<TPipelineInfoRecord> {
         return with(T_PIPELINE_INFO) {
-            dslContext.selectFrom(this).where(ID.`in`(ids)).fetch()
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ID.`in`(ids))
+            if (projectId != null) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            dslContext.selectFrom(this).where(conditions).fetch()
         }
     }
 
@@ -589,18 +627,32 @@ class PipelineInfoDao {
         var fetchSize = 0
         do {
             with(T_PIPELINE_INFO) {
-                val fetch = dslContext.select(PIPELINE_ID, PIPELINE_NAME).from(this).orderBy(CREATE_TIME)
+                val fetch = dslContext.select(PROJECT_ID, PIPELINE_ID, PIPELINE_NAME).from(this).orderBy(CREATE_TIME)
                     .limit(offset, limit).fetch()
-                val updates = fetch.map {
+                fetch.map {
                     dslContext.update(this).set(PIPELINE_NAME_PINYIN, nameToPinyin(it[PIPELINE_NAME]))
-                        .where(PIPELINE_ID.eq(it[PIPELINE_ID]))
+                        .where(PIPELINE_ID.eq(it[PIPELINE_ID]).and(PROJECT_ID.eq(it[PROJECT_ID])))
+                        .execute()
                 }
-                dslContext.batch(updates).execute()
                 val size = fetch.size
                 offset += size
                 fetchSize = size
             }
         } while (fetchSize == 1000)
+    }
+
+    fun updateLatestStartTime(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        startTime: LocalDateTime
+    ) {
+        with(T_PIPELINE_INFO) {
+            dslContext.update(this)
+                .set(LATEST_START_TIME, startTime)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .execute()
+        }
     }
 
     companion object {

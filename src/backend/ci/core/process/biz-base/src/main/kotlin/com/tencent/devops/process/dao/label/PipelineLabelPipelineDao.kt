@@ -27,12 +27,12 @@
 
 package com.tencent.devops.process.dao.label
 
-import com.tencent.devops.model.process.tables.TPipelineGroup
+import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
 import com.tencent.devops.model.process.tables.TPipelineLabel
 import com.tencent.devops.model.process.tables.TPipelineLabelPipeline
 import com.tencent.devops.model.process.tables.records.TPipelineLabelPipelineRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record3
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -49,7 +49,8 @@ class PipelineLabelPipelineDao {
         projectId: String,
         pipelineId: String,
         labelId: Long,
-        userId: String
+        userId: String,
+        id: Long? = null
     ) {
         logger.info("Create pipeline-label for pipeline $pipelineId with label $labelId by user $userId")
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
@@ -59,14 +60,16 @@ class PipelineLabelPipelineDao {
                 PIPELINE_ID,
                 LABEL_ID,
                 CREATE_TIME,
-                CREATE_USER
+                CREATE_USER,
+                ID
             )
                 .values(
                     projectId,
                     pipelineId,
                     labelId,
                     LocalDateTime.now(),
-                    userId
+                    userId,
+                    id
                 ).onDuplicateKeyIgnore()
                 .execute()
         }
@@ -76,143 +79,144 @@ class PipelineLabelPipelineDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        labelIds: Set<Long>,
+        pipelineLabelRels: List<Pair<Long, Long?>>,
         userId: String
     ) {
-        logger.info("Create pipeline-label for pipeline $pipelineId with labels $labelIds by user $userId")
+        logger.info("Create pipeline-label for pipeline $pipelineId with labels $pipelineLabelRels by user $userId")
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
-            dslContext.batch(
-                labelIds.map {
-                    dslContext.insertInto(
-                        this,
-                        PROJECT_ID,
-                        PIPELINE_ID,
-                        LABEL_ID,
-                        CREATE_TIME,
-                        CREATE_USER
-                    )
-                        .values(
-                            projectId,
-                            pipelineId,
-                            it,
-                            LocalDateTime.now(),
-                            userId
-                        ).onDuplicateKeyIgnore()
-                }
-            ).execute()
+            pipelineLabelRels.map {
+                dslContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    PIPELINE_ID,
+                    LABEL_ID,
+                    CREATE_TIME,
+                    CREATE_USER,
+                    ID
+                )
+                    .values(
+                        projectId,
+                        pipelineId,
+                        it.first,
+                        LocalDateTime.now(),
+                        userId,
+                        it.second
+                    ).onDuplicateKeyIgnore()
+                    .execute()
+            }
         }
     }
 
     fun delete(
         dslContext: DSLContext,
+        projectId: String,
         id: Long,
         userId: String
     ) {
         logger.info("Delete pipeline-label $id by user $userId")
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             dslContext.deleteFrom(this)
-                .where(ID.eq(id))
+                .where(ID.eq(id).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }
 
     fun deleteByPipeline(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         userId: String
     ): Int {
         logger.info("Delete pipeline-label of pipeline $pipelineId by user $userId")
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             return dslContext.deleteFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }
 
     fun deleteByLabel(
         dslContext: DSLContext,
+        projectId: String,
         labelId: Long,
         userId: String
     ): Int {
         logger.info("Delete pipeline-label of label $labelId by user $userId")
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             return dslContext.deleteFrom(this)
-                .where(LABEL_ID.eq(labelId))
+                .where(LABEL_ID.eq(labelId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }
 
     fun listPipelines(
         dslContext: DSLContext,
-        labelId: Long
-    ): Result<TPipelineLabelPipelineRecord> {
-        with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
-            return dslContext.selectFrom(this)
-                .where(LABEL_ID.eq(labelId))
-                .fetch()
-        }
-    }
-
-    fun listPipelines(
-        dslContext: DSLContext,
+        projectId: String,
         labelId: Set<Long>
     ): Result<TPipelineLabelPipelineRecord> {
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             return dslContext.selectFrom(this)
-                .where(LABEL_ID.`in`(labelId))
+                .where(LABEL_ID.`in`(labelId).and(PROJECT_ID.eq(projectId)))
                 .fetch()
         }
     }
 
     fun listLabels(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String
     ): Result<TPipelineLabelPipelineRecord> {
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetch()
         }
     }
 
-    /**
-     * 获取Pipelines的group与label
-     */
-    fun listPipelinesGroupsAndLabels(
+    fun listPipelineLabelRels(
         dslContext: DSLContext,
-        pipelineIds: List<String>
-    ): Result<Record3<String, String, String>> {
-        val labelPipelineTable = TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE.`as`("t1")
-        val labelTable = TPipelineLabel.T_PIPELINE_LABEL.`as`("t2")
-        val groupTable = TPipelineGroup.T_PIPELINE_GROUP.`as`("t3")
-        // 排除标签和分组为空的情况
-        return dslContext.select(
-            labelPipelineTable.PIPELINE_ID.`as`("PIPELINE_ID"),
-            groupTable.NAME.`as`("GROUP_NAME"),
-            labelTable.NAME.`as`("LABEL_NAME")
-        ).from(labelPipelineTable)
-            .leftJoin(labelTable)
-            .on(labelPipelineTable.LABEL_ID.eq(labelTable.ID))
-            .leftJoin(groupTable)
-            .on(labelTable.GROUP_ID.eq(groupTable.ID))
-            .where(labelPipelineTable.PIPELINE_ID.`in`(pipelineIds))
-            .and(labelTable.NAME.notEqual(""))
-            .and(labelTable.NAME.isNotNull)
-            .and(groupTable.NAME.notEqual(""))
-            .and(groupTable.NAME.isNotNull)
-            .and(labelPipelineTable.PIPELINE_ID.notEqual(""))
-            .and(labelPipelineTable.PIPELINE_ID.isNotNull)
-            .fetch()
+        pipelineIds: Collection<String>,
+        projectId: String
+    ): Result<TPipelineLabelPipelineRecord>? {
+        with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PIPELINE_ID.`in`(pipelineIds))
+            conditions.add(PROJECT_ID.eq(projectId))
+            return dslContext.selectFrom(this).where(conditions).fetch()
+        }
     }
 
-    /**
-     * 获取Pipeline的group与label
-     */
-    fun listPipelineGroupsAndLabels(
+    fun getPipelineLabelRelateInfoCount(dslContext: DSLContext): Long {
+        with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
+            return dslContext.selectCount().from(this)
+                .where(this.PROJECT_ID.notEqual(""))
+                .and(this.PROJECT_ID.isNotNull)
+                .fetchOne(0, Long::class.java) ?: 0L
+        }
+    }
+
+    fun getPipelineLabelRelateInfos(
         dslContext: DSLContext,
-        pipelineId: String
-    ): Result<Record3<String, String, String>> {
-        return listPipelinesGroupsAndLabels(dslContext, listOf(pipelineId))
+        page: Int,
+        pageSize: Int
+    ): List<PipelineLabelRelateInfo> {
+        with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
+            val pipelineLabel = TPipelineLabel.T_PIPELINE_LABEL
+            return dslContext.select(
+                PROJECT_ID,
+                PIPELINE_ID,
+                LABEL_ID,
+                pipelineLabel.NAME,
+                CREATE_USER,
+                CREATE_TIME
+            ).from(this)
+                .join(pipelineLabel)
+                .on(LABEL_ID.eq(pipelineLabel.ID))
+                .where(this.PROJECT_ID.notEqual(""))
+                .and(this.PROJECT_ID.isNotNull)
+                .limit((page - 1) * pageSize, pageSize)
+                .fetchInto(PipelineLabelRelateInfo::class.java)
+        }
     }
 
     companion object {

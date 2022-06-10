@@ -30,6 +30,7 @@ package com.tencent.devops.process.api
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.Model
@@ -411,6 +412,16 @@ class ServicePipelineResourceImpl @Autowired constructor(
     override fun batchUpdatePipelineNamePinYin(userId: String): Result<Boolean> {
         pipelineInfoFacadeService.batchUpdatePipelineNamePinYin(userId)
         return Result(true)
+    }
+
+    override fun getPipelineLabelInfos(
+        userId: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<PipelineLabelRelateInfo>> {
+        return Result(
+            pipelineListFacadeService.getProjectPipelineLabelInfos(page, pageSize)
+        )
     }
 
     private fun checkParams(userId: String, projectId: String) {

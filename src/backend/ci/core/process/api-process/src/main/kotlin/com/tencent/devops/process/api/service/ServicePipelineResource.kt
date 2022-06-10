@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -482,4 +483,19 @@ interface ServicePipelineResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
+
+    @ApiOperation("获取流水线标签关系列表")
+    @GET
+    @Path("/labelinfos/list")
+    fun getPipelineLabelInfos(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("页码", required = true, defaultValue = "1")
+        @QueryParam("page")
+        page: Int,
+        @ApiParam("每页大小", required = true, defaultValue = "1000")
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Page<PipelineLabelRelateInfo>>
 }
