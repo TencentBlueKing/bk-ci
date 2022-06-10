@@ -50,6 +50,7 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Tags
 import io.micrometer.core.instrument.Timer
 import com.tencent.devops.scm.pojo.TapdWorkItem
@@ -57,6 +58,7 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
+import org.springframework.beans.BeansException
 import java.net.URLEncoder
 
 @Suppress("ALL")
@@ -378,8 +380,34 @@ open class GitApi {
             val tags = Tags.of(
                 "operation", operation
             )
-            SpringContextUtil.getBean(BkTimedAspect::class.java)
-                .record("bk_method_time", tags, "工蜂接口耗时度量", sample, exceptionClass)
+            record("bk_tgit_api_time", tags, "工蜂接口耗时度量", sample, exceptionClass)
+        }
+    }
+
+    fun record(
+        metricName: String,
+        tags: Iterable<Tag>,
+        description: String? = null,
+        sample: Timer.Sample,
+        exceptionClass: String,
+        applicationName: String? = null
+    ) {
+        try {
+            val registry = SpringContextUtil.getBean(MeterRegistry::class.java)
+            logger.info("registry get success")
+            sample.stop(
+                Timer.builder(metricName)
+                    .description(description)
+                    .tags(BkTimedAspect.EXCEPTION_TAG, exceptionClass)
+                    .tags(tags)
+                    .tag(BkTimedAspect.APPLICATION_TAG, applicationName ?: "")
+                    .register(registry)
+            )
+        } catch (err: BeansException) {
+            logger.error("registry get failed")
+            throw err
+        } catch (ignore: Exception) {
+            logger.warn("record failed", ignore)
         }
     }
 
