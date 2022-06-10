@@ -40,6 +40,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_QUALITY_BUILD"], description = "用户-构建红线")
@@ -70,6 +71,9 @@ interface UserQualityBuildResource {
         elementId: String,
         @ApiParam("动作", required = true)
         @PathParam("action")
-        action: ManualReviewAction
+        action: ManualReviewAction,
+        @ApiParam("红线ID", required = true)
+        @QueryParam("ruleIds")
+        ruleIds: List<String>
     ): Result<Boolean>
 }

@@ -62,7 +62,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         elementId: String,
-        action: ManualReviewAction
+        action: ManualReviewAction,
+        ruleIds: List<String>
     ): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -79,7 +80,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             buildId = buildId,
             elementId = elementId,
             action = action,
-            channelCode = channelCode
+            channelCode = channelCode,
+            ruleIds = ruleIds
         )
         return Result(true)
     }

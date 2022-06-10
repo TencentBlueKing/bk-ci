@@ -47,7 +47,8 @@ class UserQualityBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         elementId: String,
-        action: ManualReviewAction
+        action: ManualReviewAction,
+        ruleIds: List<String>
     ): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -63,7 +64,8 @@ class UserQualityBuildResourceImpl @Autowired constructor(
             buildId = buildId,
             elementId = elementId,
             action = action,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.BS,
+            ruleIds = ruleIds
         )
         return Result(true)
     }
