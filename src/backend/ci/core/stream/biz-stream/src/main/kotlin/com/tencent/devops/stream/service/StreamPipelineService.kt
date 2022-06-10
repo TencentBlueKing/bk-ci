@@ -330,7 +330,7 @@ class StreamPipelineService @Autowired constructor(
         )
     }
 
-    fun createNewPipeLine(gitProjectId: String, file: StreamCreateFileInfo, userId: String) {
+    fun createNewPipeLine(gitProjectId: String, file: StreamCreateFileInfo, userId: String, branch: String) {
         val pipeline = StreamTriggerPipeline(
             gitProjectId = gitProjectId,
             pipelineId = "",
@@ -361,7 +361,8 @@ class StreamPipelineService @Autowired constructor(
                     gitProjectId = gitProjectId.toLong(),
                     projectCode = gitProjectCode,
                     modelAndSetting = createTriggerModel(gitProjectCode),
-                    updateLastModifyUser = true
+                    updateLastModifyUser = true,
+                    branch = branch
                 )
             }
         }
