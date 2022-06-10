@@ -411,11 +411,23 @@ open class GitApi {
     }
 
     private fun getBody(operation: String, request: Request): String {
-        OkhttpUtils.doHttp(request).use { response ->
-            if (!response.isSuccessful) {
-                handleApiException(operation, response.code(), response.body()?.string() ?: "")
+        val sample = Timer.start(SpringContextUtil.getBean(MeterRegistry::class.java))
+        var exceptionClass = BkTimedAspect.DEFAULT_EXCEPTION_TAG_VALUE
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                if (!response.isSuccessful) {
+                    handleApiException(operation, response.code(), response.body()?.string() ?: "")
+                }
+                return response.body()!!.string()
             }
-            return response.body()!!.string()
+        } catch (err: Exception) {
+            exceptionClass = err.javaClass.simpleName
+            throw err
+        } finally {
+            val tags = Tags.of(
+                "operation", operation
+            )
+            record("bk_tgit_api_time", tags, "工蜂接口耗时度量", sample, exceptionClass)
         }
     }
 
