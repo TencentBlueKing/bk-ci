@@ -27,7 +27,6 @@
 
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
-import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
@@ -66,7 +65,7 @@ object ModelParameters {
 
         val event = action.data.eventCommon
         val startParams = mutableMapOf<String, String>()
-        val parsedCommitMsg = EmojiUtil.removeAllEmoji(event.commit.commitMsg ?: "")
+        val commitMsg = event.commit.commitMsg ?: ""
 
         // 通用参数
         startParams[CommonVariables.CI_PIPELINE_NAME] = yaml.name ?: ""
@@ -77,7 +76,7 @@ object ModelParameters {
             event.userId
         }
         startParams[CommonVariables.CI_BRANCH] = event.branch
-        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = parsedCommitMsg
+        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = commitMsg
         startParams[PIPELINE_GIT_SHA] = event.commit.commitId
         if (event.commit.commitId.isNotBlank() && event.commit.commitId.length >= 8) {
             startParams[PIPELINE_GIT_SHA_SHORT] = event.commit.commitId.substring(0, 8)
@@ -89,7 +88,7 @@ object ModelParameters {
         }
 
         // 替换BuildMessage为了展示commit信息
-        startParams[PIPELINE_BUILD_MSG] = parsedCommitMsg
+        startParams[PIPELINE_BUILD_MSG] = commitMsg
 
         // git事件触发的action直接使用webhook参数即可
         if (action.needAddWebhookParams()) {
