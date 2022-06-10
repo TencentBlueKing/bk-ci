@@ -124,7 +124,7 @@ class UserPreBuildResourceImpl @Autowired constructor(
             Result(buildId)
         } catch (e: Throwable) {
             logger.error("startBuild failed, exception: ", e)
-            Result(3, "启动失败，错误详情: ${e.message}")
+            Result(3, "error message: ${e.message}")
         }
     }
 
@@ -138,7 +138,7 @@ class UserPreBuildResourceImpl @Autowired constructor(
             Result(preBuildService.shutDown(userId, accessToken, preProjectId, buildId))
         } catch (e: Throwable) {
             logger.error("shutDown failed, exception: ", e)
-            Result(1, "强制终止失败，错误详情: ${e.message}")
+            Result(1, "error message: ${e.message}")
         }
     }
 

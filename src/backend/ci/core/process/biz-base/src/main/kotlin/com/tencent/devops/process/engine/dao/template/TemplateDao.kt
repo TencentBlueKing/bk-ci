@@ -304,6 +304,36 @@ class TemplateDao {
         }
     }
 
+    fun getTemplate(
+        dslContext: DSLContext,
+        projectId: String? = null,
+        templateId: String,
+        versionName: String?,
+        version: Long? = null
+    ): TTemplateRecord {
+        with(TTemplate.T_TEMPLATE) {
+            val conditions = mutableListOf<Condition>()
+                conditions.add(ID.eq(templateId))
+            if (version != null) {
+                conditions.add(VERSION.eq(version))
+            }
+            if (!versionName.isNullOrBlank()) {
+                conditions.add(VERSION_NAME.eq(versionName))
+            }
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(CREATED_TIME.desc(), VERSION.desc())
+                .limit(1)
+                .fetchOne() ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
+                defaultMessage = "模板不存在"
+            )
+        }
+    }
+
     fun getSrcTemplateId(dslContext: DSLContext, projectId: String, templateId: String, type: String? = null): String? {
         return with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()

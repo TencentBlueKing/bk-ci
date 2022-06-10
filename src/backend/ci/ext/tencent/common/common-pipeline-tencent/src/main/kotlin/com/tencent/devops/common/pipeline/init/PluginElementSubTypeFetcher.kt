@@ -90,12 +90,16 @@ import com.tencent.devops.common.pipeline.element.ZhiyunUpdateAsyncEXElement
 import com.tencent.devops.common.pipeline.element.store.ExtServiceBuildDeployElement
 import com.tencent.devops.common.pipeline.element.store.StoreCodeccValidateElement
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveElement
 
 class PluginElementSubTypeFetcher : ElementSubTypeFetcher {
 
     override fun jsonSubTypes(): Map<String, Class<out Element>> {
         return mapOf(
+            LinuxCodeCCScriptElement.classType to LinuxCodeCCScriptElement::class.java,
+            LinuxPaasCodeCCScriptElement.classType to LinuxPaasCodeCCScriptElement::class.java,
             SendRTXNotifyElement.classType to SendRTXNotifyElement::class.java,
             SendEmailNotifyElement.classType to SendEmailNotifyElement::class.java,
             SendSmsNotifyElement.classType to SendSmsNotifyElement::class.java,

@@ -64,4 +64,8 @@ class ServiceArchiveStoreFileResourceImpl @Autowired constructor(
             disposition = disposition
         )
     }
+
+    override fun deleteFile(repoName: String, fullPath: String, type: String): Result<Boolean> {
+        return archiveStoreFileService.deleteFile(repoName, fullPath, type)
+    }
 }

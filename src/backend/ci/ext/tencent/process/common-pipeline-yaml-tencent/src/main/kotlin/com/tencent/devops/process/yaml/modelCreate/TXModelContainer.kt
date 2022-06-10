@@ -36,8 +36,10 @@ import com.tencent.devops.common.pipeline.matrix.MatrixConfig.Companion.MATRIX_C
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
+import com.tencent.devops.process.yaml.modelCreate.pojo.PreCIDispatchInfo
+import com.tencent.devops.process.yaml.modelCreate.pojo.RdsDispatchInfo
+import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
 import com.tencent.devops.process.yaml.modelCreate.utils.TXStreamDispatchUtils
-import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import org.springframework.beans.factory.annotation.Autowired
@@ -66,15 +68,15 @@ class TXModelContainer @Autowired(required = false) constructor(
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ) {
         val defaultImage = inner!!.defaultImage
-        val dispatchInfo = if (JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")) {
-            StreamDispatchInfo(
-                name = "dispatchInfo_${job.id}",
-                job = job,
-                projectCode = projectCode,
-                defaultImage = defaultImage,
-                resources = resources
-            )
-        } else null
+        val containsMatrix = JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")
+        val dispatchInfo = (inner as TXInnerModelCreator).getDispatchInfo(
+            name = "dispatchInfo_${job.id}",
+            job = job,
+            projectCode = projectCode,
+            defaultImage = defaultImage,
+            resources = resources
+        )
+
         val vmContainer = VMBuildContainer(
             jobId = job.id,
             name = job.name ?: "Job-${jobIndex + 1}",
@@ -95,13 +97,26 @@ class TXModelContainer @Autowired(required = false) constructor(
                 job = job,
                 projectCode = projectCode,
                 defaultImage = defaultImage,
+                bizType = when (dispatchInfo) {
+                    is RdsDispatchInfo -> DispatchBizType.RDS
+                    is PreCIDispatchInfo -> DispatchBizType.PRECI
+                    else -> DispatchBizType.STREAM
+                },
                 resources = resources,
-                containsMatrix = dispatchInfo != null,
+                containsMatrix = containsMatrix,
                 buildTemplateAcrossInfo = buildTemplateAcrossInfo
             ),
             matrixGroupFlag = job.strategy != null,
-            matrixControlOption = getMatrixControlOption(job, dispatchInfo)
+            matrixControlOption = getMatrixControlOption(
+                job,
+                if (containsMatrix) {
+                    dispatchInfo
+                } else {
+                    null
+                }
+            )
         )
+
         containerList.add(vmContainer)
     }
 }

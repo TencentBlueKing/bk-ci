@@ -136,7 +136,7 @@ interface UserTemplateInstanceResource {
         @ApiParam("模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @ApiParam("版本名", required = true)
+        @ApiParam("版本号", required = true)
         @QueryParam("version")
         version: Long,
         @ApiParam("是否应用模板设置")

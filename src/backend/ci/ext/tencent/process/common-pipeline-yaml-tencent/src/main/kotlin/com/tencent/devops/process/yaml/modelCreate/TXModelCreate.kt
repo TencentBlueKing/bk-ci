@@ -27,9 +27,6 @@
 
 package com.tencent.devops.process.yaml.modelCreate
 
-import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
-import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
-import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
@@ -54,9 +51,7 @@ class TXModelCreate @Autowired constructor(
         pipelineParams: List<BuildFormProperty>
     ): PipelineModelAndSetting {
         // 预安装插件市场的插件
-        ModelCommon.installMarketAtom(client, event.projectCode, event.userId, GitCiCodeRepoTask.atomCode)
-        ModelCommon.installMarketAtom(client, event.projectCode, event.userId, DockerRunDevCloudTask.atomCode)
-        ModelCommon.installMarketAtom(client, event.projectCode, event.userId, ServiceJobDevCloudTask.atomCode)
+        modelStage.inner?.preInstallMarketAtom(client, event)
 
         return super.createPipelineModel(modelName, event, yaml, pipelineParams)
     }
