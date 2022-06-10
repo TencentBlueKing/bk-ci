@@ -53,6 +53,7 @@ import com.tencent.devops.stream.pojo.StreamGitPipelineDir
 import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerLock
+import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -338,7 +339,7 @@ class StreamPipelineService @Autowired constructor(
             gitProjectId = gitProjectId,
             filePath = pipeline.filePath
         )
-        val gitProjectCode = getProjectCode(gitProjectId)
+        val gitProjectCode = GitCommonUtils.getCiProjectId(gitProjectId = gitProjectId.toLong())
         val realPipeline: StreamTriggerPipeline
         // 避免出现多个触发拿到空的pipelineId后依次进来创建，所以需要在锁后重新获取pipeline
         triggerLock.use {

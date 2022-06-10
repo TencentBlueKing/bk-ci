@@ -50,7 +50,7 @@ data class StreamGitProjectPipeline(
     val latestBuildBranch: String?,
     @ApiModelProperty("git yaml文件链接", required = false)
     val yamlLink: String? = "",
-    @ApiModelProperty("git yaml文件链接", required = false)
+    @ApiModelProperty("最后一次更新分支", required = false)
     val lastUpdateBranch: String? = ""
 )
 
