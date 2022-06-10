@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.env
 
+import com.tencent.devops.common.api.enums.OSArch
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.PropertyUtil
@@ -62,6 +63,7 @@ object AgentEnv {
     private var secretKey: String? = null
     private var gateway: String? = null
     private var os: OSType? = null
+    private var arch: OSArch? = null
     private var env: Env? = null
     private var logStorageMode: LogStorageMode? = null
 
@@ -168,6 +170,27 @@ object AgentEnv {
                 if (os == null) {
                     val osName = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH)
                     logger.info("Get the os name - ($osName)")
+                    os = if (osName.indexOf(string = "mac") >= 0 || osName.indexOf("darwin") >= 0) {
+                        OSType.MAC_OS
+                    } else if (osName.indexOf("win") >= 0) {
+                        OSType.WINDOWS
+                    } else if (osName.indexOf("nux") >= 0) {
+                        OSType.LINUX
+                    } else {
+                        OSType.OTHER
+                    }
+                }
+            }
+        }
+        return os!!
+    }
+
+    fun getOSArch(): OSType {
+        if (arch == null) {
+            synchronized(this) {
+                if (os == null) {
+                    val osName = System.getProperty("os.arch", "generic").toLowerCase(Locale.ENGLISH)
+                    logger.info("Get the os arch - ($osName)")
                     os = if (osName.indexOf(string = "mac") >= 0 || osName.indexOf("darwin") >= 0) {
                         OSType.MAC_OS
                     } else if (osName.indexOf("win") >= 0) {
