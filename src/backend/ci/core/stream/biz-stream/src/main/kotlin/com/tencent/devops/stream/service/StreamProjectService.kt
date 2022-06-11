@@ -214,7 +214,7 @@ class StreamProjectService @Autowired constructor(
                             pathWithNamespace = item.pathWithNamespace,
                             description = item.description,
                             avatarUrl = item.avatarUrl,
-                            enabledCi = settings[item.id]?.enableCi,
+                            enabledCi = settings[item.id]?.enableCi ?: false,
                             projectCode = settings[item.id]?.projectCode
                         )
                     )
