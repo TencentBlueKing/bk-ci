@@ -29,6 +29,7 @@ package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -81,6 +82,16 @@ class StreamYamlService @Autowired constructor(
                     Result(1, "Invalid yaml: ${e.message}")
                 }
             }
+        }
+    }
+
+    fun checkYaml(originYaml: String, templateType: TemplateType?, isCiFile: Boolean): Result<String>  {
+        return try {
+            yamlSchemaCheck.check(originYaml, templateType, isCiFile)
+            Result("OK")
+        } catch (e: Exception) {
+            logger.error("Check yaml schema failed.", e)
+            Result(1, "Invalid yaml: ${e.message}")
         }
     }
 }
