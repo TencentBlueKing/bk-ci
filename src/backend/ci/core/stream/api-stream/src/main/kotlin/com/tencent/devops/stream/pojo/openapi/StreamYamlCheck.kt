@@ -32,10 +32,10 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("stream检验yaml格式模型")
 data class StreamYamlCheck(
-    @ApiModelProperty(name = "yaml 原文", required = true)
+    @ApiModelProperty("yaml 原文", required = true)
     val originYaml: String,
-    @ApiModelProperty(name = "模板类型", required = false)
+    @ApiModelProperty("模板类型", required = false)
     val templateType: String?,
-    @ApiModelProperty(name = "是否为流水线yaml", required = true)
-    val isCiFile: Boolean
+    @ApiModelProperty("是否为流水线yaml", required = true)
+    val checkCiFile: Boolean
 )
