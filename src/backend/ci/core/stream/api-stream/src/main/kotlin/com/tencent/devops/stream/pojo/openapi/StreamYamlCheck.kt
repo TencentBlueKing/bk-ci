@@ -37,5 +37,5 @@ data class StreamYamlCheck(
     @ApiModelProperty("模板类型", required = false)
     val templateType: String?,
     @ApiModelProperty("是否为流水线yaml", required = true)
-    val isCiFile: Boolean
+    val checkCiFile: Boolean
 )
