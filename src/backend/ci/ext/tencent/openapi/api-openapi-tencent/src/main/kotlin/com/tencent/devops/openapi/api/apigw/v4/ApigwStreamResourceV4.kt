@@ -369,6 +369,9 @@ interface ApigwStreamResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam(value = "工蜂项目ID", required = false)
+        @QueryParam("gitProjectId")
+        gitProjectId: String?,
         @ApiParam(value = "目标授权人", required = true)
         yamlCheck: StreamYamlCheck
     ): Result<String>

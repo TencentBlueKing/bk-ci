@@ -267,7 +267,7 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
         )
     }
 
-    override fun checkYaml(userId: String, yamlCheck: StreamYamlCheck): Result<String> {
+    override fun checkYaml(userId: String, gitProjectId: String?, yamlCheck: StreamYamlCheck): Result<String> {
         return client.get(ServiceStreamTriggerResource::class).checkYaml(userId, yamlCheck)
     }
 }
