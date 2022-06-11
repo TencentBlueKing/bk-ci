@@ -58,7 +58,7 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
         return streamYamlService.checkYaml(
             originYaml = yamlCheck.originYaml,
             templateType = yamlCheck.templateType?.let { TemplateType.valueOf(it) },
-            isCiFile = yamlCheck.isCiFile
+            isCiFile = yamlCheck.checkCiFile
         )
     }
 
