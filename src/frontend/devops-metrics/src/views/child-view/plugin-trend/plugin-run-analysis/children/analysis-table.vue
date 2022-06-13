@@ -38,14 +38,14 @@ const handleRowClick = (e, row) => {
     name: 'PluginFailAnalysis',
     query: {
       pipelineId: row.pipelineId,
+      atomCode: row.atomCode
     },
   })
 }
 
 const getData = () => {
   isLoading.value = true;
-  http
-    .getAtomStatisticsDetail(
+  http.getAtomStatisticsDetail(
       props.status,
       pagination.value.current,
       pagination.value.limit,
@@ -61,6 +61,7 @@ const getData = () => {
         if (!record.classifyCode) {
           record.classifyCode = '--'
         }
+        record.successRate += '%'
         return {
           ...record,
           ...record.atomBaseInfo,
@@ -75,8 +76,12 @@ const getData = () => {
 };
 
 watch(
-  props.status,
-  getData,
+  () => props.status, () => {
+    columns.value = []
+    tableData.value = []
+    getData()
+  }
+  ,
 );
 onMounted(getData);
 </script>

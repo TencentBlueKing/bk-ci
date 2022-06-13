@@ -9,12 +9,20 @@ import http from '@/http/api';
 import {
   sharedProps,
 } from '../common/props-type';
+import useFilter from '@/composables/use-filter';
 
+const emit = defineEmits(['change']);
 const props = defineProps(sharedProps);
+
+const {
+  handleChange,
+} = useFilter(emit);
+
 const isLoading = ref(false);
 const data = ref<IData>({
   labels: [],
   list: [],
+  errorTypes: [],
 });
 
 const getData = () => {
@@ -25,6 +33,7 @@ const getData = () => {
       pipelineFailInfoList?.forEach((failInfo) => {
         data.value.list.push(failInfo.errorCount);
         data.value.labels.push(failInfo.name);
+        data.value.errorTypes.push(failInfo.errorType)
       });
     })
     .finally(() => {
@@ -32,11 +41,20 @@ const getData = () => {
     });
 };
 
+const handleDoughnutClick = ([{ index }]) => {
+  if (data.value.errorTypes.length > 1) {
+    handleChange({
+      errorTypes: [data.value.errorTypes[index]]
+    })
+  }
+}
+
 watch(
   () => props.status, () =>{
-    data.value.list = []
-    data.value.labels = []
-    getData()
+    data.value.list = [];
+    data.value.labels = [];
+    data.value.errorTypes = [];
+    getData();
   }
 );
 onMounted(getData);
@@ -48,7 +66,7 @@ onMounted(getData);
     :loading="isLoading"
   >
     <h3 class="g-card-title">Stat by error type</h3>
-    <doughnut :data="data"></doughnut>
+    <doughnut :data="data" @doughnut-click="handleDoughnutClick"></doughnut>
   </bk-loading>
 </template>
 

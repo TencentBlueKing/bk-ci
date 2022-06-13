@@ -12,6 +12,7 @@ import useColor from '@/composables/use-color';
 export interface IData {
   labels: Array<string>,
   list: Array<string | number>
+  errorTypes: Array<number>
 }
 
 export default defineComponent({
@@ -19,7 +20,9 @@ export default defineComponent({
     data: Object as PropType<IData>,
   },
 
-  setup(props) {
+  emits: ['doughnut-click'],
+
+  setup(props, { emit }) {
     const canvasRef = ref(null);
     let chart;
 
@@ -50,14 +53,25 @@ export default defineComponent({
           cutoutPercentage: 20,
           rotation: -1.5707963267948966,
           plugins: {
+            tooltip: {
+              bodySpacing: 10
+            },
             legend: {
               position: 'bottom',
+              labels: {
+                padding: 30
+              },
             },
             animation: {
               animateRotate: true,
               animateScale: false,
             },
           },
+          onClick (_, datasets) {
+            if (datasets.length > 0) {
+              emit('doughnut-click', datasets)
+            }
+          }
         },
       });
     };
