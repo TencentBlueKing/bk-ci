@@ -101,10 +101,6 @@ class CallBackControl @Autowired constructor(
         callBackPipelineEvent(projectId, pipelineId, CallBackEvent.RESTORE_PIPELINE)
     }
 
-    fun pipelineRenameEvent(projectId: String, pipelineId: String) {
-        callBackPipelineEvent(projectId, pipelineId, CallBackEvent.RENAME_PIPELINE)
-    }
-
     private fun callBackPipelineEvent(projectId: String, pipelineId: String, callBackEvent: CallBackEvent) {
         logger.info("$projectId|$pipelineId|$callBackEvent|callback pipeline event")
         val list = projectPipelineCallBackService.listProjectCallBack(

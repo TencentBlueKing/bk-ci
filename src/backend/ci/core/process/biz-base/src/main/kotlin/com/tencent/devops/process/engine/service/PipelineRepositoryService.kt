@@ -66,7 +66,6 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
-import com.tencent.devops.process.engine.pojo.event.PipelineRenameEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
@@ -1034,12 +1033,6 @@ class PipelineRepositoryService constructor(
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId
             )
-            // 在此获取旧的流水线名称  对比  如果有修改则发送一个rename事件
-            val oldPiplineInfo = getPipelineInfo(
-                projectId = setting.projectId,
-                pipelineId = setting.pipelineId,
-                delete = null
-            )
             pipelineInfoDao.update(
                 dslContext = context,
                 projectId = setting.projectId,
@@ -1070,19 +1063,6 @@ class PipelineRepositoryService constructor(
                 )
             }
             pipelineSettingDao.saveSetting(context, setting).toString()
-            if(oldPiplineInfo != null && !oldPiplineInfo.pipelineName.equals(setting.pipelineName)){
-                // 如果流水线之前存在并且名称改变，发送rename事件
-                logger.info("dispatch rename event")
-                pipelineEventDispatcher.dispatch(
-                    PipelineRenameEvent(
-                        source = "rename_pipeline",
-                        projectId = setting.projectId,
-                        pipelineId = setting.pipelineId,
-                        version = version,
-                        userId = userId
-                    )
-                )
-            }
         }
     }
 

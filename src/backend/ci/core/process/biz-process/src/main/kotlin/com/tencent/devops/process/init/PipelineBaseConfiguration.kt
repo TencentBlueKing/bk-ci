@@ -31,7 +31,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineCreateListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineDeleteListener
-import com.tencent.devops.process.engine.listener.pipeline.MQPipelineRenameListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineRestoreListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineUpdateListener
 import org.springframework.amqp.core.Binding
@@ -183,45 +182,6 @@ class PipelineBaseConfiguration {
             startConsumerMinInterval = 5000,
             consecutiveActiveTrigger = 5,
             concurrency = pipelineUpdateConcurrency!!,
-            maxConcurrency = 50
-        )
-    }
-
-    @Value("\${queueConcurrency.pipelineRename:2}")
-    private val pipelineRenameConcurrency: Int? = null
-
-    /**
-     * 流水线更新队列--- 并发一般
-     */
-    @Bean
-    fun pipelineRenameQueue() = Queue(MQ.QUEUE_PIPELINE_RENAME)
-
-    @Bean
-    fun pipelineRenameQueueBind(
-        @Autowired pipelineRenameQueue: Queue,
-        @Autowired pipelineCoreExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineRenameQueue).to(pipelineCoreExchange).with(MQ.ROUTE_PIPELINE_RENAME)
-    }
-
-    @Bean
-    fun pipelineRenameListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineRenameQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired renameListener: MQPipelineRenameListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineRenameQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = renameListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = pipelineRenameConcurrency!!,
             maxConcurrency = 50
         )
     }
