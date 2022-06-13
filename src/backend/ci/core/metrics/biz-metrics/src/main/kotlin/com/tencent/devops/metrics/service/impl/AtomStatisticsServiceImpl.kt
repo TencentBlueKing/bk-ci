@@ -105,10 +105,12 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             )
         )
         logger.info("queryAtomTrendInfo result:$result")
-        val atomTrendInfoMap = mutableMapOf<String, AtomTrendInfoDO>    ()
+        val atomTrendInfoMap = mutableMapOf<String, AtomTrendInfoDO>()
         val atomTrendInfoDateMap = mutableMapOf<String, MutableList<String>>()
+        //  查询的时间区间
         val betweenDate = getBetweenDate(queryAtomTrendInfoDTO.startTime, queryAtomTrendInfoDTO.endTime)
         result.forEach { record ->
+            //  按插件code和统计时间分组数据
             val atomCode = record[BK_ATOM_CODE] as String
             val statisticsTime = (record[BK_STATISTICS_TIME] as LocalDateTime).toLocalDate()
             if (!atomTrendInfoMap.containsKey(atomCode)) {
@@ -139,6 +141,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             }
         }
         logger.info("queryAtomTrendInfo atomTrendInfoDateMap：$atomTrendInfoDateMap")
+        //  对查询区间中没有数据的时间添加占位数据
         atomTrendInfoDateMap.forEach{
             val atomCode = it.key
             val atomTrendInfos = atomTrendInfoMap[atomCode]?.atomTrendInfos

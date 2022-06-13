@@ -171,20 +171,6 @@ class ProjectInfoServiceImpl @Autowired constructor(
         return createCount
     }
 
-    /**
-     * 获取当天的最晚时间戳
-     *
-     * @return 当天的最晚时间戳
-     */
-    final fun getTodayStartTime(): Long {
-        //设置时区
-        val calendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT+8"))
-        calendar.set(Calendar.HOUR_OF_DAY, 24)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        return calendar.timeInMillis
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectInfoServiceImpl::class.java)
     }
