@@ -102,6 +102,8 @@ class ModelElement @Autowired(required = false) constructor(
             }
 
             if (element != null) {
+                // 统一禁用插件的retry属性
+                element.canRetry = false
                 elementList.add(element)
 
                 if (element is MarketBuildAtomElement) {
