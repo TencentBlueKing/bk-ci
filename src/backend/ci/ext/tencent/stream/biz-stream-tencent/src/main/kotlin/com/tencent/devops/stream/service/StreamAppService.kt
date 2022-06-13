@@ -67,7 +67,9 @@ class StreamAppService @Autowired constructor(
                 )
             }
             val hasNext = cacheList.size >= pageSize * page
-            return Pagination(hasNext, cacheList.subList((page - 1) * pageSize, page * pageSize))
+            val start = ((page - 1) * pageSize).takeIf { it < cacheList.size && it >= 0 } ?: cacheList.size
+            val end = (page * pageSize).takeIf { it < cacheList.size && it >= 0 } ?: cacheList.size
+            return Pagination(hasNext, cacheList.subList(start, end))
         }
         val token = oauthService.getAndCheckOauthToken(userId).accessToken
         val projectIdMap = streamScmService.getProjectList(
@@ -89,7 +91,7 @@ class StreamAppService @Autowired constructor(
                 projectCode = it.projectCode,
                 // 使用 pathWithPathSpace唯一标识App 中项目名称
                 projectName = gitCodeInfo?.pathWithNamespace ?: gitCodeInfo?.nameWithNamespace ?: it.pathWithNameSpace
-                    ?: it.nameWithNameSpace ?: it.name,
+                ?: it.nameWithNameSpace ?: it.name,
                 logoUrl = gitCodeInfo?.avatarUrl,
                 projectSource = ProjectSourceEnum.GIT_CI.id
             )
