@@ -77,6 +77,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.WebhookBuildParameterService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -135,7 +136,8 @@ class PipelineBuildFacadeService(
     private val buildLogPrinter: BuildLogPrinter,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelineRedisService: PipelineRedisService,
-    private val pipelineRetryFacadeService: PipelineRetryFacadeService
+    private val pipelineRetryFacadeService: PipelineRetryFacadeService,
+    private val webhookBuildParameterService: WebhookBuildParameterService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -427,8 +429,9 @@ class PipelineBuildFacadeService(
                 // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数，并清理VAR表内容
                 try {
                     buildInfo.buildParameters?.forEach { param -> paramMap[param.key] = param }
-                    // TODO #6090 代码库 WEB_HOOK 类型的触发暂时不做清理，增加 HOOK 参数保存逻辑后变成统一清理（去掉if条件）
-                    // TODO 将 webhook 触发时保存的参数重新加入 paramMap
+                    webhookBuildParameterService.getBuildParameters(buildId)?.forEach { param ->
+                        paramMap[param.key] = param
+                    }
                     buildVariableService.deleteBuildVars(projectId, pipelineId, buildId)
                 } catch (ignored: Exception) {
                     logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
@@ -639,25 +642,17 @@ class PipelineBuildFacadeService(
              */
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
-            // TODO #6090 将webhook参数持久化存储
-            val startParams = mutableListOf<BuildParameters>()
-            for (it in parameters) {
-                startParams.add(BuildParameters(it.key, it.value))
+            val pipelineParamMap = mutableMapOf<String, BuildParameters>()
+            parameters.forEach { (key, value) ->
+                pipelineParamMap[key] = BuildParameters(key, value)
             }
-            val paramsKeyList = startParams.map { it.key }
             triggerContainer.params.forEach {
-                if (paramsKeyList.contains(it.id)) {
+                if (pipelineParamMap.contains(it.id)) {
                     return@forEach
                 }
-                startParams.add(BuildParameters(key = it.id, value = it.defaultValue, readOnly = it.readOnly))
+                pipelineParamMap[it.id] = BuildParameters(key = it.id, value = it.defaultValue, readOnly = it.readOnly)
             }
-
-            val pipelineParamMap = mutableMapOf<String, BuildParameters>()
-            startParams.forEach { (key, value, valueType, readOnly) ->
-                pipelineParamMap[key] = BuildParameters(key, value, valueType, readOnly)
-            }
-
-            return pipelineBuildService.startPipeline(
+            val buildId = pipelineBuildService.startPipeline(
                 userId = userId,
                 pipeline = readyToBuildPipelineInfo,
                 startType = StartType.WEB_HOOK,
@@ -668,6 +663,15 @@ class PipelineBuildFacadeService(
                 signPipelineVersion = null,
                 frequencyLimit = false
             )
+            if (buildId.isNotBlank()) {
+                webhookBuildParameterService.save(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    buildParameters = pipelineParamMap.values.toList()
+                )
+            }
+            return buildId
         } finally {
             logger.info("Webhook| It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline($pipelineId)")
         }

@@ -65,6 +65,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
 import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogContext
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.engine.service.WebhookBuildParameterService
 import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
 import com.tencent.devops.process.engine.utils.RepositoryUtils
@@ -94,6 +95,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         buildLogPrinter = applicationContext.getBean(BuildLogPrinter::class.java)
         pipelinebuildWebhookService = applicationContext.getBean(PipelineBuildWebhookService::class.java)
         pipelineBuildCommitService = applicationContext.getBean(PipelineBuildCommitService::class.java)
+        webhookBuildParameterService = applicationContext.getBean(WebhookBuildParameterService::class.java)
     }
 
     companion object {
@@ -108,6 +110,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         lateinit var buildLogPrinter: BuildLogPrinter
         lateinit var pipelinebuildWebhookService: PipelineBuildWebhookService // 给AOP调用
         lateinit var pipelineBuildCommitService: PipelineBuildCommitService
+        lateinit var webhookBuildParameterService: WebhookBuildParameterService
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
     }
 
@@ -482,7 +485,6 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         }
 
         // 兼容从旧v1版本下发过来的请求携带旧的变量命名
-        // TODO #6090 将webhook参数持久化存储
         val params = mutableMapOf<String, Any>()
         val pipelineParamMap = HashMap<String, BuildParameters>(startParams.size, 1F)
         startParams.forEach {
@@ -524,6 +526,14 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                     tag = startParams[PIPELINE_START_TASK_ID]?.toString() ?: ""
                 )
             })
+            if (buildId.isNotBlank()) {
+                webhookBuildParameterService.save(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    buildParameters = pipelineParamMap.values.toList()
+                )
+            }
             return buildId
         } catch (ignore: Exception) {
             logger.warn("[$pipelineId]| webhook trigger fail to start repo($repoName): ${ignore.message}", ignore)
