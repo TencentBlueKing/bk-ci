@@ -110,6 +110,7 @@ class PipelineSettingFacadeService @Autowired constructor(
             pipelineId = setting.pipelineId,
             labelIds = setting.labels
         )
+        logger.info("dispatchPipelineUpdateEvent is $dispatchPipelineUpdateEvent")
         if(dispatchPipelineUpdateEvent == true){
             logger.info("dispatch update event")
             pipelineEventDispatcher.dispatch(
