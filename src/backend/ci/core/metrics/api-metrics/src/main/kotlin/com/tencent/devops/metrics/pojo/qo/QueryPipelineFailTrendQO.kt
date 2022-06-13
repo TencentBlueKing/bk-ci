@@ -27,7 +27,7 @@
 
 package com.tencent.devops.metrics.pojo.qo
 
-import com.tencent.devops.metrics.pojo.`do`.BaseQueryReqDO
+import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -36,7 +36,7 @@ data class QueryPipelineFailTrendQO(
     @ApiModelProperty("项目ID")
     val projectId: String,
     @ApiModelProperty("基本查询条件信息")
-    val baseQueryReq: BaseQueryReqDO,
+    val baseQueryReq: BaseQueryReqVO,
     @ApiModelProperty("错误类型")
     val errorType: Int
 )

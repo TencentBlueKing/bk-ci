@@ -30,7 +30,7 @@ package com.tencent.devops.metrics.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.metrics.pojo.`do`.BaseQueryReqDO
+import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineSumInfoVO
 import com.tencent.devops.metrics.pojo.vo.PipelineTrendInfoVO
 import io.swagger.annotations.Api
@@ -60,7 +60,7 @@ interface UserPipelineOverviewResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("查询条件", required = false)
-        baseQueryReq: BaseQueryReqDO?
+        baseQueryReq: BaseQueryReqVO?
     ): Result<PipelineSumInfoVO>
 
     @ApiOperation("查询流水线运行趋势数据")
@@ -74,7 +74,7 @@ interface UserPipelineOverviewResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("查询条件", required = false)
-        baseQueryReq: BaseQueryReqDO?
+        baseQueryReq: BaseQueryReqVO?
     ): Result<PipelineTrendInfoVO>
 
 }

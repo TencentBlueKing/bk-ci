@@ -34,8 +34,8 @@ import com.tencent.devops.metrics.constant.QueryParamCheckUtil.checkParam
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getEndDateTime
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getStartDateTime
 import com.tencent.devops.metrics.service.PipelineStageManageService
-import com.tencent.devops.metrics.pojo.`do`.BaseQueryReqDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
+import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.StageTrendSumInfoVO
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -46,9 +46,9 @@ class UserPipelineStageResourceImpl @Autowired constructor(
     override fun queryPipelineStageTrendInfo(
         projectId: String,
         userId: String,
-        baseQueryReq: BaseQueryReqDO?
+        baseQueryReq: BaseQueryReqVO?
     ): Result<List<StageTrendSumInfoVO>> {
-        val queryReq = baseQueryReq?: BaseQueryReqDO()
+        val queryReq = baseQueryReq?: BaseQueryReqVO()
         if (queryReq.startTime.isNullOrBlank()) { queryReq.startTime = getStartDateTime() }
         if (queryReq.endTime.isNullOrBlank()) { queryReq.endTime = getEndDateTime() }
         checkParam(userId, projectId, queryReq.startTime!!, queryReq.endTime!!)
