@@ -219,12 +219,13 @@ func (cc *TaskCC) preExecute(command []string) (*dcSDK.BKDistCommand, error) {
 	return &dcSDK.BKDistCommand{
 		Commands: []dcSDK.BKCommand{
 			{
-				WorkDir:     cc.sandbox.Dir,
-				ExePath:     "",
-				ExeName:     cc.serverSideArgs[0],
-				Params:      cc.serverSideArgs[1:],
-				Inputfiles:  cc.sendFiles,
-				ResultFiles: cc.outputFile,
+				WorkDir:         cc.sandbox.Dir,
+				ExePath:         "",
+				ExeName:         cc.serverSideArgs[0],
+				ExeToolChainKey: dcSDK.GetJsonToolChainKey(command[0]),
+				Params:          cc.serverSideArgs[1:],
+				Inputfiles:      cc.sendFiles,
+				ResultFiles:     cc.outputFile,
 			},
 		},
 	}, nil
