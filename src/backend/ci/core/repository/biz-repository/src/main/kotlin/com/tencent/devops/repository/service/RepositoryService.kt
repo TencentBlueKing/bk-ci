@@ -663,7 +663,11 @@ class RepositoryService @Autowired constructor(
                     aliasName = repository.aliasName,
                     url = repository.url,
                     credentialId = record.credentialId,
-                    region = CodeSvnRegion.valueOf(record.region),
+                    region = if (record.region.isNullOrBlank()) {
+                        CodeSvnRegion.TC
+                    } else {
+                        CodeSvnRegion.valueOf(record.region)
+                    },
                     projectName = record.projectName,
                     userName = record.userName,
                     projectId = repository.projectId,
@@ -851,7 +855,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeSvnDao.edit(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        region = repository.region,
+                        region = repository.region ?: CodeSvnRegion.TC,
                         projectName = repository.projectName,
                         userName = repository.userName,
                         credentialId = repository.credentialId,
