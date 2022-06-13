@@ -429,9 +429,7 @@ class PipelineBuildFacadeService(
                     buildInfo.buildParameters?.forEach { param -> paramMap[param.key] = param }
                     // TODO #6090 代码库 WEB_HOOK 类型的触发暂时不做清理，增加 HOOK 参数保存逻辑后变成统一清理（去掉if条件）
                     // TODO 将 webhook 触发时保存的参数重新加入 paramMap
-                    if (startType == StartType.WEB_HOOK) {
-                        buildVariableService.deleteBuildVars(projectId, pipelineId, buildId)
-                    }
+                    buildVariableService.deleteBuildVars(projectId, pipelineId, buildId)
                 } catch (ignored: Exception) {
                     logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
                 }
