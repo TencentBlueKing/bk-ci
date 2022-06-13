@@ -30,9 +30,11 @@ package com.tencent.bkrepo.repository.service.repo.impl
 import com.tencent.bkrepo.auth.api.ServicePermissionResource
 import com.tencent.bkrepo.common.api.constant.DEFAULT_PAGE_NUMBER
 import com.tencent.bkrepo.common.api.constant.DEFAULT_PAGE_SIZE
+import com.tencent.bkrepo.common.api.constant.TOTAL_RECORDS_INFINITY
 import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.bkrepo.common.api.message.CommonMessageCode
 import com.tencent.bkrepo.common.api.pojo.Page
+import com.tencent.bkrepo.common.api.util.EscapeUtils
 import com.tencent.bkrepo.common.artifact.message.ArtifactMessageCode
 import com.tencent.bkrepo.common.mongo.dao.util.Pages
 import com.tencent.bkrepo.common.service.util.SpringContextUtils.Companion.publishEvent
@@ -42,6 +44,7 @@ import com.tencent.bkrepo.repository.pojo.project.ProjectCreateRequest
 import com.tencent.bkrepo.repository.pojo.project.ProjectInfo
 import com.tencent.bkrepo.repository.pojo.project.ProjectListOption
 import com.tencent.bkrepo.repository.pojo.project.ProjectRangeQueryRequest
+import com.tencent.bkrepo.repository.pojo.project.ProjectSearchOption
 import com.tencent.bkrepo.repository.pojo.project.ProjectUpdateRequest
 import com.tencent.bkrepo.repository.service.repo.ProjectService
 import com.tencent.bkrepo.repository.util.ProjectEventFactory.buildCreatedEvent
@@ -52,6 +55,7 @@ import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
 import org.springframework.data.mongodb.core.query.and
 import org.springframework.data.mongodb.core.query.inValues
+import org.springframework.data.mongodb.core.query.regex
 import org.springframework.data.mongodb.core.query.where
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -77,6 +81,21 @@ class ProjectServiceImpl(
 
     override fun listProject(): List<ProjectInfo> {
         return projectDao.findAll().map { convert(it)!! }
+    }
+
+    override fun searchProject(option: ProjectSearchOption): Page<ProjectInfo> {
+        with(option) {
+            val pageRequest = Pages.ofRequest(pageNumber, pageSize)
+            val query = Query().with(pageRequest)
+
+            if (!namePrefix.isNullOrEmpty()) {
+                val criteria = TProject::name.regex("^${EscapeUtils.escapeRegex(namePrefix!!)}", "i")
+                query.addCriteria(criteria)
+            }
+
+            val records = projectDao.find(query)
+            return Pages.ofResponse(pageRequest, TOTAL_RECORDS_INFINITY, records.map { convert(it)!! })
+        }
     }
 
     override fun listPermissionProject(userId: String, option: ProjectListOption?): List<ProjectInfo> {

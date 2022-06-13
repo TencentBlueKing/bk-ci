@@ -31,6 +31,8 @@
 
 package com.tencent.bkrepo.helm.utils
 
+import com.tencent.bkrepo.common.api.constant.CharPool
+import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.bkrepo.common.api.util.readYamlString
 import com.tencent.bkrepo.common.artifact.api.ArtifactFile
 import com.tencent.bkrepo.common.artifact.api.ArtifactFileMap
@@ -98,10 +100,30 @@ object ChartParserUtil {
     }
 
     fun parseNameAndVersion(fullPath: String): Map<String, Any> {
-        val substring = fullPath.trimStart('/').substring(0, fullPath.lastIndexOf('.') - 1)
-        val name = substring.substringBeforeLast('-')
-        val version = substring.substringAfterLast('-')
+        val substring = fullPath.trimStart('/').substring(0, fullPath.lastIndexOf(".tgz") - 1)
+        val parts = substring.split('-')
+        val lastIndex = parts.size - 1
+        var name = parts[0]
+        var version = StringPool.EMPTY
+        for (i in lastIndex downTo 0 step 1) {
+            val num = parts[i][0]
+            // see if this part looks like a version (starts with int)
+            if (num in '0'..'9') {
+                version = createString(parts.subList(i, parts.size))
+                name = createString(parts.subList(0, i))
+                break
+            }
+        }
+        // no parts looked like a real version, just take everything after last hyphen
+        if (version.isBlank()) {
+            name = createString(parts.subList(0, lastIndex))
+            version = parts[lastIndex]
+        }
         return mapOf("name" to name, "version" to version)
+    }
+
+    private fun createString(list: List<String>): String {
+        return list.joinToString(CharPool.DASH.toString())
     }
 
     /**

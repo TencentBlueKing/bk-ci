@@ -51,7 +51,7 @@ abstract class DownloadInterceptor<T>(
         val match = matcher(node, rule)
         val forbidden = (allowed() && !match) || (!allowed() && match)
         if (forbidden) {
-            throw ArtifactDownloadForbiddenException("download node[${node.fullPath}] is forbidden by rule[$rule]")
+            throw ArtifactDownloadForbiddenException(node.projectId)
         }
     }
 

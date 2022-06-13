@@ -1,4 +1,4 @@
-service.name: helm
+spring.application.name: helm
 server.port: 25806
 
 helm:

@@ -1,12 +1,11 @@
 package com.tencent.bkrepo.generic.service
 
-import com.tencent.bkrepo.common.api.constant.HttpStatus
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.tencent.bkrepo.common.api.exception.ErrorCodeException
-import com.tencent.bkrepo.common.api.stream.CompositeOutputStream
+import com.tencent.bkrepo.common.api.exception.NotFoundException
 import com.tencent.bkrepo.common.artifact.api.ArtifactFile
 import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
 import com.tencent.bkrepo.common.artifact.exception.ArtifactNotFoundException
-import com.tencent.bkrepo.common.artifact.exception.ArtifactResponseException
 import com.tencent.bkrepo.common.artifact.exception.NodeNotFoundException
 import com.tencent.bkrepo.common.artifact.manager.StorageManager
 import com.tencent.bkrepo.common.artifact.message.ArtifactMessageCode
@@ -16,27 +15,26 @@ import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContextHold
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactDownloadContext
 import com.tencent.bkrepo.common.artifact.repository.core.ArtifactService
 import com.tencent.bkrepo.common.artifact.resolve.file.ArtifactFileFactory
-import com.tencent.bkrepo.common.artifact.resolve.file.chunk.ChunkedFileOutputStream
 import com.tencent.bkrepo.common.artifact.stream.FileArtifactInputStream
 import com.tencent.bkrepo.common.artifact.util.http.IOExceptionUtils
-import com.tencent.bkrepo.common.bksync.BkSync
-import com.tencent.bkrepo.common.bksync.BlockInputStream
-import com.tencent.bkrepo.common.bksync.ByteArrayBlockInputStream
-import com.tencent.bkrepo.common.bksync.ChecksumIndex
-import com.tencent.bkrepo.common.bksync.FileBlockInputStream
+import com.tencent.bkrepo.common.bksync.BlockChannel
+import com.tencent.bkrepo.common.bksync.ByteArrayBlockChannel
+import com.tencent.bkrepo.common.bksync.FileBlockChannel
+import com.tencent.bkrepo.common.redis.RedisOperation
 import com.tencent.bkrepo.common.security.util.SecurityUtils
 import com.tencent.bkrepo.common.service.util.HeaderUtils
 import com.tencent.bkrepo.common.storage.core.StorageProperties
 import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
-import com.tencent.bkrepo.common.storage.monitor.Throughput
 import com.tencent.bkrepo.generic.artifact.GenericArtifactInfo
 import com.tencent.bkrepo.generic.artifact.GenericLocalRepository
 import com.tencent.bkrepo.generic.config.GenericProperties
+import com.tencent.bkrepo.generic.constant.GenericMessageCode
 import com.tencent.bkrepo.generic.constant.HEADER_EXPIRES
 import com.tencent.bkrepo.generic.constant.HEADER_MD5
 import com.tencent.bkrepo.generic.constant.HEADER_OVERWRITE
 import com.tencent.bkrepo.generic.constant.HEADER_SHA256
 import com.tencent.bkrepo.generic.dao.SignFileDao
+import com.tencent.bkrepo.generic.enum.GenericAction
 import com.tencent.bkrepo.generic.model.TSignFile
 import com.tencent.bkrepo.repository.api.NodeClient
 import com.tencent.bkrepo.repository.api.RepositoryClient
@@ -44,18 +42,20 @@ import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.service.NodeCreateRequest
 import com.tencent.bkrepo.repository.pojo.repo.RepositoryDetail
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DuplicateKeyException
+import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
-import java.io.OutputStream
 import java.time.LocalDateTime
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.ceil
-import kotlin.system.measureNanoTime
 
 /**
  * 增量同步实现类
@@ -69,14 +69,14 @@ class DeltaSyncService(
     val signFileDao: SignFileDao,
     val repositoryClient: RepositoryClient,
     storageProperties: StorageProperties,
-    val taskExecutor: ThreadPoolTaskScheduler
+    private val redisOperation: RedisOperation
 ) : ArtifactService() {
 
     private val deltaProperties = genericProperties.delta
     private val blockSize = deltaProperties.blockSize.toBytes().toInt()
     private val patchTimeout = deltaProperties.patchTimeout.toMillis()
-    val signFileProjectId = deltaProperties.projectId!!
-    val signFileRepoName = deltaProperties.repoName!!
+    val signFileProjectId = deltaProperties.projectId
+    val signFileRepoName = deltaProperties.repoName
     val signRepo: RepositoryDetail by lazy {
         repositoryClient.getRepoDetail(signFileProjectId, signFileRepoName).data
             ?: throw ErrorCodeException(ArtifactMessageCode.REPOSITORY_NOT_FOUND, signFileRepoName)
@@ -86,65 +86,22 @@ class DeltaSyncService(
     /**
      * 签名文件
      * */
-    fun sign() {
+    fun downloadSignFile(queryMd5: String? = null) {
         with(ArtifactContext()) {
-            val node = nodeClient.getNodeDetail(projectId, repoName, artifactInfo.getArtifactFullPath()).data
-            if (node == null || node.folder) {
-                throw NodeNotFoundException(artifactInfo.getArtifactFullPath())
-            }
-            // 查看是否已有sign文件，没有则生成。
-            val sha256 = node.sha256!!
-            signFileDao.findByDetail(sha256, blockSize)?.let {
-                val artifactInfo = GenericArtifactInfo(it.projectId, it.repoName, it.fullPath)
-                val downloadContext = ArtifactDownloadContext(repo = signRepo, artifact = artifactInfo)
-                repository.download(downloadContext)
+            val md5 = queryMd5 ?: getMd5FromNode(this)
+            val signNode = signFileDao.findByDetail(projectId, repoName, md5, blockSize)
+                ?: throw NotFoundException(GenericMessageCode.SIGN_FILE_NOT_FOUND, md5)
+            if (request.method == HttpMethod.HEAD.name) {
                 return
             }
-            // 计算出需要返回的大小
-            val length = ceil(node.size.toDouble() / blockSize) * ChecksumIndex.CHECKSUM_SIZE
-            response.setContentLength(length.toInt())
-            val chunkedArtifactFile = ArtifactFileFactory.buildChunked()
-            val chunkedFileOutputStream = ChunkedFileOutputStream(chunkedArtifactFile)
-            val outputStream = CompositeOutputStream(chunkedFileOutputStream, response.outputStream).buffered()
-            val artifactInputStream = storageManager.loadArtifactInputStream(node, storageCredentials)?.buffered()
-                ?: throw ArtifactNotFoundException("file[$sha256] not found in ${storageCredentials?.key}")
-            val nanoTime = measureNanoTime {
-                try {
-                    generateSignFile(artifactInputStream, outputStream)
-                } finally {
-                    // chunkedFileOutputStream close 会删除掉临时文件，
-                    // 由于用了buffered stream,所以这里需要flush,而且不能使用close
-                    outputStream.flush()
-                    artifactInputStream.close()
-                }
-            }
-            chunkedArtifactFile.finish()
-            val throughput = Throughput(chunkedArtifactFile.getSize(), nanoTime)
-            logger.info("Success to generate artifact sign file [${node.fullPath}], $throughput.")
-            saveSignFile(node, chunkedArtifactFile)
+            val artifactInfo = GenericArtifactInfo(signNode.projectId, signNode.repoName, signNode.fullPath)
+            val downloadContext = ArtifactDownloadContext(repo = signRepo, artifact = artifactInfo)
+            repository.download(downloadContext)
         }
     }
 
-    /**
-     * 生成sign file
-     * @param inputStream 需要签名的文件输入流
-     * @param outputStream sign file的输出流
-     * */
-    private fun generateSignFile(
-        inputStream: InputStream,
-        outputStream: OutputStream
-    ) {
-        try {
-            val bkSync = BkSync(blockSize)
-            bkSync.checksum(inputStream, outputStream)
-        } catch (exception: IOException) {
-            if (IOExceptionUtils.isClientBroken(exception)) {
-                val message = exception.message.orEmpty()
-                val status = if (IOExceptionUtils.isClientBroken(exception))
-                    HttpStatus.BAD_REQUEST else HttpStatus.INTERNAL_SERVER_ERROR
-                throw ArtifactResponseException(message, status)
-            }
-        }
+    fun uploadSignFile(file: ArtifactFile, artifactInfo: GenericArtifactInfo, md5: String) {
+        saveSignFile(artifactInfo, file, md5)
     }
 
     /**
@@ -166,22 +123,53 @@ class DeltaSyncService(
                 }
             }
             val counterInputStream = CounterInputStream(deltaFile.getInputStream())
-            val blockInputStream = getBlockInputStream(node, storageCredentials)
+            val blockChannel = getBlockChannel(node, storageCredentials)
             val emitter = SseEmitter(patchTimeout)
-            val patchContext = buildPatchContext(counterInputStream, emitter, this, blockInputStream)
+            val patchContext = buildPatchContext(counterInputStream, emitter, this, blockChannel)
             emitter.onCompletion { patchContext.hasCompleted.set(true) }
-            val reportAction = { reportProcess(patchContext) }
-            val ackFuture = taskExecutor.scheduleWithFixedDelay(reportAction, HEART_BEAT_INTERVAL)
-            taskExecutor.execute {
+            val reportAction = Runnable { reportProcess(patchContext) }
+            val ackFuture = heartBeatExecutor.scheduleWithFixedDelay(
+                reportAction, 0,
+                HEART_BEAT_INTERVAL, TimeUnit.MILLISECONDS
+            )
+            patchExecutor.execute {
                 try {
                     doPatch(patchContext)
                 } finally {
-                    blockInputStream.close()
+                    blockChannel.close()
                     counterInputStream.close()
                     ackFuture.cancel(true)
                 }
             }
             return emitter
+        }
+    }
+
+    fun whiteList(): List<String> {
+        return deltaProperties.whiteList
+    }
+
+    fun recordSpeed(ip: String, action: GenericAction, speed: Int) {
+        val key = "$SPEED_KEY_PREFIX$ip:$action"
+        val expiredInSecond = deltaProperties.speedTestExpired.seconds
+        redisOperation.set(key, speed.toString(), expiredInSecond)
+    }
+
+    fun getSpeed(ip: String, action: GenericAction): Int {
+        val key = "$SPEED_KEY_PREFIX$ip:$action"
+        return redisOperation.get(key)?.toInt() ?: -1
+    }
+
+    /**
+     * 根据上下文中的节点信息获取节点的md5
+     * */
+    private fun getMd5FromNode(context: ArtifactContext): String {
+        with(context) {
+            val node = nodeClient.getNodeDetail(projectId, repoName, artifactInfo.getArtifactFullPath()).data
+            if (node == null || node.folder) {
+                throw NodeNotFoundException(artifactInfo.getArtifactFullPath())
+            }
+            return node.md5!!
         }
     }
 
@@ -210,15 +198,28 @@ class DeltaSyncService(
                 emitter.send(event)
                 emitter.complete()
             } catch (e: ErrorCodeException) {
-                val msg = SseEmitter.event()
-                    .name(PATCH_EVENT_TYPE_ERROR)
-                    .data(e.message.orEmpty())
-                emitter.send(msg)
+                // 客户端异常
+                sendError(e.message.orEmpty(), emitter)
                 emitter.complete()
             } catch (e: Exception) {
+                // 服务端异常
+                sendError(e.message.orEmpty(), emitter)
                 emitter.completeWithError(e)
+                logger.error("Patch artifact[$artifactInfo] failed.", e)
             }
         }
+    }
+
+    /**
+     * sse发送错误信息
+     * @param errorMsg 错误信息
+     * @param sseEmitter sse发送器
+     * */
+    private fun sendError(errorMsg: String, sseEmitter: SseEmitter) {
+        val msg = SseEmitter.event()
+            .name(PATCH_EVENT_TYPE_ERROR)
+            .data(errorMsg)
+        sseEmitter.send(msg)
     }
 
     /**
@@ -247,7 +248,9 @@ class DeltaSyncService(
                     clientError.set(true)
                     return
                 }
-                logger.error("Send sse event failed.", e)
+                logger.error("Send sse event io error.", e)
+            } catch (e: Exception) {
+                logger.error("Send sse event unknown error.", e)
             }
         }
     }
@@ -297,17 +300,17 @@ class DeltaSyncService(
      * 构建Patch上下文
      * @param emitter sse发送器
      * @param context 当前上下文
-     * @param blockInputStream 增量同步使用的块输入流
+     * @param blockChannel 增量同步使用的块输入流
      * */
     private fun buildPatchContext(
         counterInputStream: CounterInputStream,
         emitter: SseEmitter,
         context: ArtifactContext,
-        blockInputStream: BlockInputStream
+        blockChannel: BlockChannel
     ): PatchContext {
         with(context) {
             val repository = ArtifactContextHolder.getRepository(RepositoryCategory.LOCAL) as GenericLocalRepository
-            val file = ArtifactFileFactory.buildBkSync(blockInputStream, counterInputStream, blockSize)
+            val file = ArtifactFileFactory.buildBkSync(blockChannel, counterInputStream, blockSize)
             return PatchContext(
                 uploadSha256 = HeaderUtils.getHeader(HEADER_SHA256),
                 uploadMd5 = HeaderUtils.getHeader(HEADER_MD5),
@@ -320,7 +323,7 @@ class DeltaSyncService(
                 artifactInfo = artifactInfo,
                 repositoryDetail = repositoryDetail,
                 file = file,
-                blockInputStream = blockInputStream,
+                blockChannel = blockChannel,
                 userId = SecurityUtils.getUserId()
             )
         }
@@ -350,31 +353,38 @@ class DeltaSyncService(
 
     /**
      * 保存sign文件到指定仓库
-     * @param nodeDetail 节点信息
+     * @param artifactInfo 构件信息
+     * @param md5 校验和md5
      * @param file 节点sign文件
      * */
-    private fun saveSignFile(nodeDetail: NodeDetail, file: ArtifactFile) {
-        with(nodeDetail) {
-            val signFileFullPath = "$projectId/$repoName/$blockSize/$fullPath$SUFFIX_SIGN"
-            val artifactInfo = GenericArtifactInfo(signFileProjectId, signFileRepoName, signFileFullPath)
+    private fun saveSignFile(artifactInfo: GenericArtifactInfo, file: ArtifactFile, md5: String) {
+        with(artifactInfo) {
+            val signFileFullPath = "$projectId/$repoName/$blockSize/$md5$SUFFIX_SIGN"
+            val signFileArtifactInfo = GenericArtifactInfo(signFileProjectId, signFileRepoName, signFileFullPath)
             val nodeCreateRequest =
-                buildSignFileNodeCreateRequest(signRepo, artifactInfo, SecurityUtils.getUserId(), file)
-            storageManager.storeArtifactFile(nodeCreateRequest, file, signRepo.storageCredentials)
-            val signFile = TSignFile(
-                srcSha256 = sha256!!,
-                projectId = signFileProjectId,
-                repoName = signFileRepoName,
-                fullPath = signFileFullPath,
-                blockSize = blockSize,
-                createdBy = SecurityUtils.getUserId(),
-                createdDate = LocalDateTime.now()
-            )
-            signFileDao.save(signFile)
-            logger.info("Success to save sign file[$signFileFullPath].")
+                buildSignFileNodeCreateRequest(signRepo, signFileArtifactInfo, SecurityUtils.getUserId(), file)
+            try {
+                storageManager.storeArtifactFile(nodeCreateRequest, file, signRepo.storageCredentials)
+                val signFile = TSignFile(
+                    srcProjectId = projectId,
+                    srcRepoName = repoName,
+                    srcMd5 = md5,
+                    projectId = signFileProjectId,
+                    repoName = signFileRepoName,
+                    fullPath = signFileFullPath,
+                    blockSize = blockSize,
+                    createdBy = SecurityUtils.getUserId(),
+                    createdDate = LocalDateTime.now()
+                )
+                signFileDao.save(signFile)
+                logger.info("Success to save sign file[$signFileFullPath].")
+            } catch (ignore: DuplicateKeyException) {
+                // 说明文件已存在，可以忽略
+            }
         }
     }
 
-    private fun getBlockInputStream(node: NodeDetail, storageCredentials: StorageCredentials?): BlockInputStream {
+    private fun getBlockChannel(node: NodeDetail, storageCredentials: StorageCredentials?): BlockChannel {
         val artifactInputStream = storageManager.loadArtifactInputStream(node, storageCredentials)
             ?: throw ArtifactNotFoundException("file[${node.sha256}] not found in ${storageCredentials?.key}")
         artifactInputStream.use {
@@ -383,15 +393,15 @@ class DeltaSyncService(
             if (node.size <= fileSizeThreshold) {
                 val dataOutput = ByteArrayOutputStream()
                 artifactInputStream.copyTo(dataOutput)
-                return ByteArrayBlockInputStream(dataOutput.toByteArray(), name)
+                return ByteArrayBlockChannel(dataOutput.toByteArray(), name)
             }
             // 本地cache
             if (artifactInputStream is FileArtifactInputStream) {
-                return FileBlockInputStream(artifactInputStream.file, name)
+                return FileBlockChannel(artifactInputStream.file, name)
             }
             // 远端网络流
             val file = ArtifactFileFactory.build(artifactInputStream, node.size).getFile()!!
-            return FileBlockInputStream(file, name)
+            return FileBlockChannel(file, name)
         }
     }
 
@@ -436,7 +446,7 @@ class DeltaSyncService(
         val artifactInfo: ArtifactInfo,
         val file: ArtifactFile,
         val overwrite: Boolean,
-        val blockInputStream: BlockInputStream
+        val blockChannel: BlockChannel
     )
 
     companion object {
@@ -448,5 +458,15 @@ class DeltaSyncService(
 
         // 3s patch 回复心跳时间，保持连接存活
         private const val HEART_BEAT_INTERVAL = 3000L
+        private const val SPEED_KEY_PREFIX = "delta:speed:"
+        private val heartBeatExecutor = ScheduledThreadPoolExecutor(
+            Runtime.getRuntime().availableProcessors(),
+            ThreadFactoryBuilder().setNameFormat("BkSync-heart-beat-%d").build()
+        )
+        private val patchExecutor = ThreadPoolExecutor(
+            200, 200, 60, TimeUnit.SECONDS,
+            LinkedBlockingQueue<Runnable>(8192),
+            ThreadFactoryBuilder().setNameFormat("BkSync-patch-%d").build()
+        )
     }
 }

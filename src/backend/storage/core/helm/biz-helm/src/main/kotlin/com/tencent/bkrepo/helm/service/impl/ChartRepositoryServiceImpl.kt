@@ -247,6 +247,14 @@ class ChartRepositoryServiceImpl(
         }
     }
 
+    @Permission(ResourceType.REPO, PermissionAction.WRITE)
+    @Transactional(rollbackFor = [Throwable::class])
+    override fun updatePackageForRemote(artifactInfo: HelmArtifactInfo) {
+        helmOperationService.lockAction(artifactInfo.projectId, artifactInfo.repoName) {
+            helmOperationService.updatePackageForRemote(artifactInfo.projectId, artifactInfo.repoName)
+        }
+    }
+
     @Permission(ResourceType.REPO, PermissionAction.READ)
     @Transactional(rollbackFor = [Throwable::class])
     override fun batchInstallTgz(artifactInfo: HelmArtifactInfo, startTime: LocalDateTime) {

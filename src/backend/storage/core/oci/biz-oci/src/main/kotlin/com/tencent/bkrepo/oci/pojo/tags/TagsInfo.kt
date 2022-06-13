@@ -28,6 +28,6 @@
 package com.tencent.bkrepo.oci.pojo.tags
 
 class TagsInfo(
-    private val name: String,
-    private val tags: List<String>
+    val name: String,
+    val tags: List<String>
 )
