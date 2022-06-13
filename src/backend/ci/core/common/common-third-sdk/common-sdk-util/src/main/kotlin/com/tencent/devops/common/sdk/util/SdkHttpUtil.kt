@@ -107,6 +107,12 @@ object SdkHttpUtil {
         params.putAll(request.getUdfParams())
 
         val finalUrl = "${apiUrl.removeSuffix("/")}/${request.getApiPath().removePrefix("/")}"
+        logger.info(
+            "request $finalUrl by " +
+                "headers(${SdkJsonUtil.toJson(request.getHeaderMap())}), " +
+                "requestParams:${SdkJsonUtil.toJson(requestParams)}," +
+                "udfParams: ${SdkJsonUtil.toJson(request.getUdfParams())}"
+        )
         val httpRequest = when (request.getHttpMethod()) {
             HttpMethod.GET ->
                 buildGet(url = finalUrl, headers = headers, params = params)
