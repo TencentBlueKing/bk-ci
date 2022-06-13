@@ -372,7 +372,7 @@ interface ApigwStreamResourceV4 {
         @ApiParam(value = "工蜂项目ID", required = false)
         @QueryParam("gitProjectId")
         gitProjectId: String?,
-        @ApiParam(value = "目标授权人", required = true)
+        @ApiParam(value = "yaml检查模型", required = true)
         yamlCheck: StreamYamlCheck
     ): Result<String>
 }
