@@ -85,7 +85,7 @@ class StreamYamlService @Autowired constructor(
         }
     }
 
-    fun checkYaml(originYaml: String, templateType: TemplateType?, isCiFile: Boolean): Result<String>  {
+    fun checkYaml(originYaml: String, templateType: TemplateType?, isCiFile: Boolean): Result<String> {
         return try {
             yamlSchemaCheck.check(originYaml, templateType, isCiFile)
             Result("OK")
