@@ -27,9 +27,6 @@
 
 package com.tencent.devops.openapi
 
-import com.tencent.devops.common.web.validation.BkFieldValidator
-import javax.validation.Constraint
-
 @Target(AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
 @kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
 @Suppress("LongParameterList")
