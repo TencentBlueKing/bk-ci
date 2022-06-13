@@ -32,98 +32,112 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Tags
 import io.micrometer.core.instrument.Timer
-import io.micrometer.core.lang.NonNullApi
-import java.util.Optional
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import java.util.Optional
 import java.util.concurrent.CompletionStage
+import java.util.concurrent.ConcurrentHashMap
+import javax.ws.rs.Path
+import kotlin.jvm.Throws
 
-/**
- * AspectJ aspect for intercepting types or methods annotated with [@BkTimed][BkTimed].
- */
 @Aspect
-@NonNullApi
 class BkTimedAspect(
     private val registry: MeterRegistry
 ) {
+
     @Value("\${spring.application.name:#{null}}")
     val applicationName: String? = null
 
-    @Around("execution (@com.tencent.devops.common.service.prometheus.BkTimed * *.*(..))")
+    companion object {
+        const val DEFAULT_METRIC_NAME = "bk_method_time"
+        const val DEFAULT_EXCEPTION_TAG_VALUE = "null"
+        const val EXCEPTION_TAG = "exception"
+        const val APPLICATION_TAG = "application"
+        const val PATH_TAG = "path"
+
+        private val logger = LoggerFactory.getLogger(BkTimedAspect::class.java)
+
+        private val pathMap = ConcurrentHashMap<String,String>()
+    }
+
+    @Around("execution(@com.tencent.devops.common.service.prometheus.BkTimed * *.*(..))")
     @Throws(Throwable::class)
-    fun timedMethod(pjp: ProceedingJoinPoint): Any {
-        var method = (pjp.signature as MethodSignature).method
+    fun timedMethod(point: ProceedingJoinPoint): Any {
+        var method = (point.signature as MethodSignature).method
         var timed = method.getAnnotation(BkTimed::class.java)
         if (timed == null) {
-            method = pjp.target.javaClass.getMethod(method.name, *method.parameterTypes)
+            method = point.target.javaClass.getMethod(method.name, *method.parameterTypes)
             timed = method.getAnnotation(BkTimed::class.java)
         }
+
         val metricName = timed.value.ifEmpty { DEFAULT_METRIC_NAME }
         val stopWhenCompleted = CompletionStage::class.java.isAssignableFrom(method.returnType)
+
         return if (!timed.longTask) {
-            processWithTimer(pjp, timed, metricName, stopWhenCompleted)
+            processWithTimer(point, timed, metricName, stopWhenCompleted)
         } else {
-            processWithLongTaskTimer(pjp, timed, metricName, stopWhenCompleted)
+            processWithLongTaskTimer(point, timed, metricName, stopWhenCompleted)
         }
     }
 
-    @Throws(Throwable::class)
     private fun processWithTimer(
-        pjp: ProceedingJoinPoint,
-        timed: BkTimed,
-        metricName: String,
-        stopWhenCompleted: Boolean
+            point: ProceedingJoinPoint,
+            timed: BkTimed,
+            metricName: String,
+            stopWhenCompleted: Boolean
     ): Any {
         val sample = Timer.start(registry)
         if (stopWhenCompleted) {
             return try {
-                (pjp.proceed() as CompletionStage<*>).whenComplete { _: Any?, throwable: Throwable? ->
-                    record(
-                        pjp,
-                        timed,
-                        metricName,
-                        sample,
-                        getExceptionTag(throwable)
-                    )
+                (point.proceed() as CompletionStage<*>).whenComplete { _: Any?, throwable: Throwable? ->
+                    record(point, timed, metricName, sample, getExceptionTag(throwable))
                 }
-            } catch (ex: Exception) {
-                record(pjp, timed, metricName, sample, ex.javaClass.simpleName)
-                throw ex
+            } catch (e: Exception) {
+                record(point, timed, metricName, sample, e.javaClass.simpleName)
+                throw e
             }
         }
+
         var exceptionClass = DEFAULT_EXCEPTION_TAG_VALUE
+
         return try {
-            pjp.proceed()
-        } catch (ex: Exception) {
-            exceptionClass = ex.javaClass.simpleName
-            throw ex
+            point.proceed()
+        } catch (e: Exception) {
+            exceptionClass = e.javaClass.simpleName
+            throw e
         } finally {
-            record(pjp, timed, metricName, sample, exceptionClass)
+            record(point, timed, metricName, sample, exceptionClass)
         }
+
     }
 
     private fun record(
-        pjp: ProceedingJoinPoint,
-        timed: BkTimed,
-        metricName: String,
-        sample: Timer.Sample,
-        exceptionClass: String
+            point: ProceedingJoinPoint,
+            timed: BkTimed,
+            metricName: String,
+            sample: Timer.Sample,
+            exceptionClass: String
     ) {
         try {
-            sample.stop(
-                Timer.builder(metricName)
+            val builder = Timer.builder(metricName)
                     .description(timed.description)
                     .tags(*timed.extraTags)
                     .tags(EXCEPTION_TAG, exceptionClass)
-                    .tags(tagsBasedOnJoinPoint(pjp))
-                    .tag(APPLICATION_TAG, applicationName ?: "")
+                    .tags(tagsBasedOnJoinPoint(point))
+                    .tags(APPLICATION_TAG, applicationName ?: "")
                     .publishPercentileHistogram(timed.histogram)
                     .publishPercentiles(*(timed.percentiles))
-                    .register(registry)
+
+            if (timed.tagPath) {
+                builder.tag(PATH_TAG, getPathWhenTagPath(point))
+            }
+
+            sample.stop(
+                builder.register(registry)
             )
         } catch (e: Exception) {
             logger.warn("record failed", e)
@@ -137,14 +151,20 @@ class BkTimedAspect(
         )
     }
 
+
     private fun getExceptionTag(throwable: Throwable?): String {
+
         if (throwable == null) {
             return DEFAULT_EXCEPTION_TAG_VALUE
         }
+
         return if (throwable.cause == null) {
             throwable.javaClass.simpleName
-        } else throwable.cause?.javaClass?.simpleName ?: "unknown"
+        } else {
+            throwable.cause?.javaClass?.simpleName ?: "unknown"
+        }
     }
+
 
     @Suppress("NAME_SHADOWING")
     @Throws(Throwable::class)
@@ -212,12 +232,26 @@ class BkTimedAspect(
         }
     }
 
-    companion object {
-        const val DEFAULT_METRIC_NAME = "bk_method_time"
-        const val DEFAULT_EXCEPTION_TAG_VALUE = "null"
-        const val EXCEPTION_TAG = "exception"
-        const val APPLICATION_TAG = "application"
-
-        private val logger = LoggerFactory.getLogger(BkTimedAspect::class.java)
+    /**
+     * 获取配置的Path
+     */
+    private fun getPathWhenTagPath(pjp: ProceedingJoinPoint): String {
+        val clazzName = pjp.staticPart.signature.declaringTypeName
+        val methodName = pjp.staticPart.signature.name
+        val key = "$clazzName:$methodName"
+        if (pathMap.contains(key)) {
+            return key
+        }
+        val clazz = pjp.target
+        val clazzPath = clazz.javaClass.getAnnotation(Path::class.java)
+        var method = (pjp.signature as MethodSignature).method
+        var methodPath = method.getAnnotation(Path::class.java)
+        if (methodPath == null) {
+            method = pjp.target.javaClass.getMethod(method.name, *method.parameterTypes)
+            methodPath = method.getAnnotation(Path::class.java)
+        }
+        val path = (clazzPath?.value ?: "") + (methodPath?.value ?: "")
+        pathMap[key] = path
+        return path
     }
 }

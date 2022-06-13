@@ -61,7 +61,6 @@ Vue.use(VeeValidate, {
 })
 VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
-console.log(BkPipeline)
 Vue.use(BkPipeline, {
     i18n
 })
