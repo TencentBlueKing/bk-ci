@@ -85,17 +85,16 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         buildId: String,
         dispatchType: DispatchType
     ) {
-        // 一般性处理
-        commonDispatchTypeParser.parse(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            dispatchType = dispatchType
-        )
-
         if (dispatchType is StoreDispatchType) {
             if (dispatchType.imageType == ImageType.BKSTORE) {
+                // 一般性处理
+                commonDispatchTypeParser.parse(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    dispatchType = dispatchType
+                )
                 // 腾讯内部版专有处理
                 if (dispatchType.imageType == ImageType.BKDEVOPS) {
                     if (dispatchType is DockerDispatchType) {
