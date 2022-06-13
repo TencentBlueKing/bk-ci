@@ -80,6 +80,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         updateLastModifyUser: Boolean? = true,
         dispatchPipelineUpdateEvent: Boolean? = true
     ): String {
+        logger.info("into saveSetting function")
         if (checkPermission) {
             checkEditPermission(
                 userId = userId,
