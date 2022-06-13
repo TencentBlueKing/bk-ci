@@ -260,7 +260,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                     String.format("%.2f",(it[BK_TOTAL_AVG_COST_TIME_SUM] as BigDecimal).toLong() / days).toDouble(),
                 totalExecuteCount = totalExecuteCount,
                 successExecuteCount = successExecuteCount,
-                successRate = if (successExecuteCount.toDouble() <= 0.0 || totalExecuteCount <= 0.0) 0.0
+                successRate = if (successExecuteCount <= 0L || totalExecuteCount <= 0L) 0.0
                 else String.format("%.2f", successExecuteCount.toDouble() * 100 / totalExecuteCount).toDouble(),
                 atomFailInfos = atomFailInfos[it[BK_ATOM_CODE]]?.toMap()?: emptyMap()
             )
