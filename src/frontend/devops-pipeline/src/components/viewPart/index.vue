@@ -29,20 +29,28 @@
                         <span v-if="row.artifactoryType === 'PIPELINE'">{{ $t('details.pipelineRepo') }}</span>
                     </div>
                     <div class="table-part-item part-item-handler">
-                        <!-- <i @click.stop="gotoArtifactory" class="devops-icon icon-position-shape handler-btn" :title="$t('editPage.atomForm.toArtifactory')"></i> -->
-                        <i class="devops-icon icon-new-download handler-btn" v-if="hasPermission" :title="$t('download')"
-                            @click="requestUrl(row, 'download')"></i>
-                        <!-- <i class="devops-icon icon-tree-module-shape handler-btn" v-if="hasPermission && isMof && isWindows && isApkOrIpa(row)" :title="$t('details.mofDownload')"
-                            @click="requestUrl(row, 'download', null, 'MoF')"></i> -->
-                        <!-- <span class="handler-btn-tool copy" v-if="row.artifactoryType === 'PIPELINE'" :title="$t('details.saveToCustom')" @click="copyToCustom(row)">
-                            <Logo class="icon-copy" name="copy" size="15"></Logo>
-                        </span> -->
+                        <span @click.stop="gotoArtifactory" class="handler-btn" v-bk-tooltips="$t('editPage.atomForm.toArtifactory')">
+                            {{ $t('locate') }}
+                        </span>
+                        <span class="handler-btn" v-if="hasPermission" v-bk-tooltips="$t('download')"
+                            @click="requestUrl(row, 'download')">
+                            {{$t('download')}}
+                        </span>
+                        <span class="handler-btn" v-if="hasPermission && isMof && isWindows && isApkOrIpa(row)" v-bk-tooltips="$t('details.mofDownload')"
+                            @click="requestUrl(row, 'download', null, 'MoF')">
+                            {{ $t('details.mofDownload') }}
+                        </span>
+                        <span class="handler-btn-tool copy" v-if="row.artifactoryType === 'PIPELINE'" v-bk-tooltips="$t('details.saveToCustom')" @click="copyToCustom(row)">
+                            {{ $t('saveAs') }}
+                        </span>
                         <span class="handler-btn-tool qrcode"
                             v-if="(extForFile(row.name) === 'ipafile' || extForFile(row.name) === 'apkfile') && hasPermission">
-                            <i class="devops-icon icon-qrcode handler-btn"
+                            <span class="handler-btn"
                                 id="partviewqrcode"
-                                :title="$t('details.qrcode')"
-                                @click="requestUrl(row, 'url', index)"></i>
+                                v-bk-tooltips="$t('details.qrcode')"
+                                @click="requestUrl(row, 'url', index)">
+                                {{ $t('details.qrcode') }}
+                            </span>
                             <p class="qrcode-box" v-if="row.display"
                                 v-bkloading="{
                                     isLoading: !curIndexItemUrl,
@@ -57,6 +65,7 @@
                                 <p>{{ $t('details.noDownloadPermTips') }}</p>
                             </template>
                         </bk-popover>
+                        <artifactory-operation :artifact="row" />
                     </div>
                 </div>
             </div>
@@ -134,10 +143,12 @@
 <script>
     import qrcode from '@/components/devops/qrcode'
     import { convertFileSize, convertTime } from '@/utils/util'
+    import { ArtifactoryOperation } from '@/components/Hooks'
 
     export default {
         components: {
-            qrcode
+            qrcode,
+            ArtifactoryOperation
         },
         data () {
             return {
@@ -184,6 +195,12 @@
             },
             buildNo () {
                 return this.$route.params.buildNo
+            },
+            artifactoryUrl () {
+                return `${WEB_URL_PREFIX}/artifactory/${this.projectId}/?pipelineId=${this.pipelineId}&buildId=${this.buildNo}`
+            },
+            isMof () {
+                return this.$store.state.curProject.deptName === '魔方工作室群'
             },
             isWindows () {
                 return /WINDOWS/.test(window.navigator.userAgent.toUpperCase())
@@ -259,12 +276,15 @@
 
                         this.curIndexItemUrl = res.url
                     } else {
-                        const res = await this.$store.dispatch('common/requestDownloadUrl', {
-                            projectId: this.projectId,
-                            artifactoryType: row.artifactoryType,
-                            path: row.path
-                        })
-                        const url = res.url2
+                        const [isDevnet, res] = await Promise.all([
+                            this.$store.dispatch('common/requestDevnetGateway'),
+                            this.$store.dispatch('common/requestDownloadUrl', {
+                                projectId: this.projectId,
+                                artifactoryType: row.artifactoryType,
+                                path: row.path
+                            })
+                        ])
+                        const url = isDevnet ? res.url : res.url2
                         window.location.href = type ? `${API_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url
                     }
                 } catch (err) {
@@ -276,7 +296,7 @@
                             name: this.pipelineId
                         }],
                         projectId: this.projectId
-                    }])
+                    }], this.getPermUrlByRole(this.projectId, this.pipelineId, this.roleMap.manager))
                 }
             },
 
@@ -290,7 +310,8 @@
                             name: this.pipelineId
                         }],
                         projectId: this.projectId
-                    }]
+                    }],
+                    applyPermissionUrl: this.getPermUrlByRole(this.projectId, this.pipelineId, this.roleMap.executor)
                 })
             },
             clickHandler (event) {
@@ -300,7 +321,9 @@
                     })
                 }
             },
-
+            gotoArtifactory () {
+                window.open(this.artifactoryUrl, '_blank')
+            },
             addClickListenr () {
                 document.addEventListener('mouseup', this.clickHandler)
             },
@@ -494,18 +517,19 @@
         }
         .part-item-handler {
             flex: 2;
-            max-width: 180px;
-            font-size: 16px;
+            max-width: 222px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
             cursor: pointer;
-            i {
-                margin-right: 16px;
-            }
-            i:last-child {
-                margin-right: 0px;
-            }
-            .handler-btn:hover {
+            > span {
+                margin-right: 12px;
                 color: $primaryColor;
             }
+            span:last-child {
+                margin-right: 0px;
+            }
+
         }
         .qrcode {
             position: relative;

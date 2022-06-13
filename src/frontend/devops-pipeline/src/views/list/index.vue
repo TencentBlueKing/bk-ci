@@ -184,7 +184,7 @@
                 }
             },
             tutorial () {
-                window.open(`${DOCS_URL_PREFIX}/产品简介/README.md`, '_blank')
+                window.open(`${IWIKI_DOCS_URL}/x/RY6j`, '_blank')
             },
             routerToManage (type) {
                 this.$router.push({ name: type })

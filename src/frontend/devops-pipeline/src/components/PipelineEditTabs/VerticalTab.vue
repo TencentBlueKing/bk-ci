@@ -21,7 +21,11 @@
     import NotifySetting from '@/components/pipelineSetting/NotifySetting'
     import BaseInfo from '@/components/pipelineSetting/BaseInfo'
     import RunningLock from '@/components/pipelineSetting/RunningLock'
+    import CleanPolicy from '@/components/pipelineSetting/CleanPolicy'
+    import AuthoritySetting from '../pipelineSetting/AuthoritySetting'
     import CodeRecordTable from '@/components/codeRecord/CodeRecordTable'
+    import codeCheck from '@/components/outputOption/code_check'
+    import wetestReport from '@/components/outputOption/wetest_report'
     import thirdPartyReport from '@/components/outputOption/thirdParty_report'
     import IframeReport from '@/components/outputOption/IframeReport'
 
@@ -31,7 +35,11 @@
             NotifySetting,
             BaseInfo,
             RunningLock,
+            CleanPolicy,
+            AuthoritySetting,
             CodeRecordTable,
+            codeCheck,
+            wetestReport,
             thirdPartyReport,
             IframeReport
         },

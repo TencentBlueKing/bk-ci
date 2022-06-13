@@ -15,10 +15,12 @@
     "dependencies": {
         "@blueking/log": "2.0.4",
         "@icon-cool/bk-icon-devops": "^0.2.1",
+        "@vue/composition-api": "^1.6.1",
         "axios": "^0.27.2",
         "bk-magic-vue": "2.4.11",
         "bkui-pipeline": "~0.1.22",
         "clipboard": "^1.7.1",
+        "echarts": "^5.3.2",
         "moment": "^2.29.2",
         "monaco-editor": "^0.30.1",
         "monaco-editor-webpack-plugin": "^6.0.0",
@@ -28,10 +30,14 @@
         "uuid": "^8.1.0",
         "vee-validate": "^2.0.3",
         "vue": "2.6.12",
+        "vue-echarts": "^6.0.2",
         "vue-json-viewer": "^2.2.5",
         "vue-router": "^2.8.1",
         "vuedraggable": "^2.16.0",
-        "vuex": "^2.4.0"
+        "vuex": "^2.4.0",
+        "xterm": "^4.15.0",
+        "xterm-addon-attach": "^0.6.0",
+        "xterm-addon-fit": "^0.5.0"
     },
     "devDependencies": {
         "@babel/core": "^7.15.8",
@@ -49,8 +55,6 @@
         "@babel/plugin-transform-object-assign": "^7.14.5",
         "@babel/plugin-transform-runtime": "^7.15.8",
         "@babel/preset-env": "^7.15.8",
-        "@babel/preset-react": "^7.16.0",
-        "@vue/babel-preset-jsx": "^1.2.4",
         "babel-helper-vue-jsx-merge-props": "^2.0.3",
         "babel-loader": "^8.2.2",
         "babel-plugin-transform-vue-jsx": "^4.0.1",
@@ -69,8 +73,9 @@
         "mini-css-extract-plugin": "2.4.2",
         "sass": "^1.42.1",
         "sass-loader": "^12.1.0",
-        "style-loader": "^3.3.1",
+        "style-loader": "^0.23.0",
         "vue-loader": "^15.9.8",
+        "vue-style-loader": "^3.0.3",
         "vue-template-compiler": "2.6.12",
         "webpack": "^5.58.1"
     }
