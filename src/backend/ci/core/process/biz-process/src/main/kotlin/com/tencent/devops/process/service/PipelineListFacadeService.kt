@@ -1410,7 +1410,8 @@ class PipelineListFacadeService @Autowired constructor(
             )
         val pipelineInfos = mutableListOf<PipelineIdAndName>()
         pipelineRecords?.map {
-            pipelineInfos.add(PipelineIdAndName(it.pipelineId, it.pipelineName))
+            pipelineInfos.add(
+                PipelineIdAndName(it.pipelineId, it.pipelineName, ChannelCode.getChannel(it.channel)))
         }
         val count = pipelineInfoDao.countByProjectIds(
             dslContext = dslContext,
