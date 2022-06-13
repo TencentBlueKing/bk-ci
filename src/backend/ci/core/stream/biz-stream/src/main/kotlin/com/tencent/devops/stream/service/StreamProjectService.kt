@@ -177,8 +177,10 @@ class StreamProjectService @Autowired constructor(
                 logger.info("STREAM|gitProjects|This does not exist in redis|userId=$userId")
                 return null
             }
-            return JsonUtil.to(res, object : TypeReference<List<StreamProjectGitInfo>>() {})
-                .subList((realPage - 1) * realPageSize, realPage * realPageSize)
+            val cacheList = JsonUtil.to(res, object : TypeReference<List<StreamProjectGitInfo>>() {})
+            val start = ((realPage - 1) * realPageSize).takeIf { it < cacheList.size && it >= 0 } ?: cacheList.size
+            val end = (realPage * realPageSize).takeIf { it < cacheList.size && it >= 0 } ?: cacheList.size
+            return cacheList.subList(start, end)
         } ?: return null
         // 每次成功访问stream 接口就刷新redis
         cacheProjectList(userId)
