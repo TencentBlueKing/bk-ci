@@ -44,13 +44,15 @@ class UserErrorCodeInfoResourceImpl constructor(
         userId: String,
         errorTypes: List<Int>?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        keyword: String?
     ): Result<Page<ErrorCodeInfoDO>> {
         return Result(
             errorCodeInfoManageService.getErrorCodeInfo(
                 QueryErrorCodeInfoDTO(
                     errorTypes,
                     page,
+                    keyword,
                     pageSize
                 )
             )

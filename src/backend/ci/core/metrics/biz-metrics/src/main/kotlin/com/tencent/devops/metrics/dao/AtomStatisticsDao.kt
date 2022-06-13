@@ -173,7 +173,8 @@ class AtomStatisticsDao {
         queryCondition: QueryAtomStatisticsQO
     ): Result<Record4<String, Int, BigDecimal, String>> {
         with(TAtomFailSummaryData.T_ATOM_FAIL_SUMMARY_DATA) {
-            val startTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime!!)!!.atStartOfDay()
+            val startTimeDateTime =
+                DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime!!)!!.atStartOfDay()
             val endTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime!!)!!.atStartOfDay()
             val tErrorTypeDict = TErrorTypeDict.T_ERROR_TYPE_DICT
             val t = dslContext.select(
