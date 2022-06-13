@@ -7,4 +7,6 @@ dependencies {
     api("org.springframework.cloud:spring-cloud-starter-consul-discovery")
     api("org.springframework.cloud:spring-cloud-starter-consul-config")
     api("com.github.ben-manes.caffeine:caffeine")
+    api("io.micrometer:micrometer-registry-prometheus")
+    api("org.springframework.boot:spring-boot-starter-aop")
 }
