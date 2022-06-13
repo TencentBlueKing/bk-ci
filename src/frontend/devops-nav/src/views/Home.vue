@@ -12,10 +12,12 @@
                         class="recent-visit-service-list"
                     >
                         <template v-if="recentVisitService.length">
-                            <router-link
+                            <a
                                 v-for="service in recentVisitService"
+                                :href="service.newWindow ? service.newWindowUrl : addConsole(service.link_new)"
                                 :key="service.key"
-                                :to="addConsole(service.link_new)"
+                                :target="service.newWindow ? '_blank' : '_self'"
+                                @click.prevent="gotoPage(service)"
                             >
                                 <img v-if="isAbsoluteUrl(service.logoUrl)" :src="service.logoUrl" class="recent-logo-icon" />
                                 <Logo
@@ -23,8 +25,9 @@
                                     :name="service.logoUrl"
                                     size="16"
                                 />
+
                                 {{ serviceName(service.name) }}
-                            </router-link>
+                            </a>
                         </template>
                         <p
                             v-else
@@ -66,7 +69,7 @@
                 >{{ item.label }}</span>
                 <div class="bkdevops-button">
                     <a
-                        :href="DOCS_URL_PREFIX"
+                        :href="`${IWIKI_DOCS_URL}/x/kJKj`"
                         target="_blank"
                     >
                         <bk-button
@@ -113,7 +116,7 @@
                 <p>
                     {{ $t("bkdevopsDesc") }}
                     <a
-                        :href="DOCS_URL_PREFIX"
+                        :href="`${IWIKI_DOCS_URL}/display/DevOps`"
                         class="more"
                         target="_blank"
                     >{{ $t("learnMore") }}</a>
@@ -123,11 +126,6 @@
                 <h2>{{ $t("bkdevopsTarget") }}</h2>
                 <p>
                     {{ $t("bkdevopsWay") }}
-                    <!-- <a
-                        :href="DOCS_URL_PREFIX"
-                        target="_blank"
-                        class="more"
-                    >{{ $t("learnMore") }}</a> -->
                 </p>
             </article>
             <article>
@@ -144,6 +142,7 @@
                 </div>
             </article>
         </aside>
+        <consult-tools />
     </div>
 </template>
 
@@ -153,7 +152,8 @@
     import { State, Action } from 'vuex-class'
     import NavBox from '../components/NavBox/index.vue'
     import Logo from '../components/Logo/index.vue'
-    import { Accordion, AccordionItem } from '../components/Accordion/index'
+    import { Accordion, AccordionItem } from '../components/Accordion'
+    import ConsultTools from '../components/ConsultTools/index.vue'
     
     import { urlJoin, isAbsoluteUrl } from '../utils/util'
 
@@ -162,7 +162,8 @@
             NavBox,
             Accordion,
             AccordionItem,
-            Logo
+            Logo,
+            ConsultTools
         }
     })
     export default class Home extends Vue {
@@ -171,9 +172,9 @@
         @State related
         @Action fetchLinks
         isAllServiceListShow: boolean = false
-        DOCS_URL_PREFIX: string = `${DOCS_URL_PREFIX}/产品简介/README.md`
-        isAbsoluteUrl = isAbsoluteUrl
+        IWIKI_DOCS_URL: string = IWIKI_DOCS_URL
         BK_CI_VERSION: string = window.BK_CI_VERSION
+        isAbsoluteUrl = isAbsoluteUrl
 
         get funcArray (): object[] {
             const funcArray = ['issueLabel', 'developLabel', 'testLabel', 'deployLabel', 'operationLabel']
@@ -184,15 +185,20 @@
         }
 
         get recentVisitService (): object[] {
-            const recentVisitService = localStorage.getItem('recentVisitService')
-            const recentVisitServiceList = recentVisitService ? JSON.parse(recentVisitService) : []
-            return recentVisitServiceList.map(service => {
-                const serviceObj = window.serviceObject.serviceMap[service.key] || {}
-                return {
-                    ...service,
-                    ...serviceObj
-                }
-            })
+            try {
+                const recentVisitService = localStorage.getItem('recentVisitService')
+                const recentVisitServiceList = recentVisitService ? JSON.parse(recentVisitService) : []
+                return recentVisitServiceList.map(service => {
+                    const serviceObj = window.serviceObject.serviceMap[service.key] || {}
+                    return {
+                        ...service,
+                        ...serviceObj
+                    }
+                })
+            } catch (error) {
+                console.error(error)
+                return []
+            }
         }
 
         get serviceCount (): number {
@@ -201,6 +207,11 @@
                 return sum
             }, 0)
         }
+        
+        gotoPage ({ link_new: linkNew, newWindow = false, newWindowUrl }) {
+           const destUrl = this.addConsole(linkNew)
+           newWindow ? window.open(newWindowUrl, '_blank') : this.$router.push(destUrl)
+       }
 
         updateShowAllService (show: boolean): void {
             this.isAllServiceListShow = show

@@ -41,6 +41,7 @@
     import TimePicker from '@/components/AtomFormComponent/TimePicker'
     import Parameter from '@/components/AtomFormComponent/Parameter'
     import Tips from '@/components/AtomFormComponent/Tips'
+    import NameSpaceVar from '@/components/atomFormField/NameSpaceVar'
     import DynamicParameter from '@/components/AtomFormComponent/DynamicParameter'
     import DynamicParameterSimple from '@/components/AtomFormComponent/DynamicParameterSimple'
     import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
@@ -56,6 +57,7 @@
             TimePicker,
             Parameter,
             Tips,
+            NameSpaceVar,
             DynamicParameter,
             DynamicParameterSimple,
             AtomOutput

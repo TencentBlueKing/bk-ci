@@ -15,6 +15,7 @@
 
 <script>
     import { getPlanList } from '@/api'
+
     export default {
         data () {
             return {
@@ -27,11 +28,13 @@
                 isloading: false
             }
         },
+
         computed: {
             projectId () {
                 return this.$route.params.projectId
             }
         },
+
         watch: {
             '$route.name': {
                 handler (name) {
@@ -39,20 +42,24 @@
                 },
                 immediate: true
             },
+
             projectId () {
                 this.goToInitPage()
             }
         },
+
         created () {
             window.addEventListener('resize', this.flexible, false)
             this.flexible()
         },
+
         beforeDestroy () {
             window.removeEventListener('resize', this.flexible, false)
             const doc = window.document
             const docEl = doc.documentElement
             docEl.style.fontSize = '14px'
         },
+
         methods: {
             setActive (name) {
                 const activeMap = {
@@ -70,6 +77,7 @@
                 if (curActive) this.active = curActive
                 else this.goToInitPage(true)
             },
+
             goToInitPage (needInit) {
                 this.isloading = true
                 return getPlanList(this.projectId, 1).then((res) => {
@@ -88,9 +96,11 @@
                     this.isloading = false
                 })
             },
+
             gotoPage (name) {
                 this.$router.push({ name })
             },
+
             flexible () {
                 const doc = window.document
                 const docEl = doc.documentElement

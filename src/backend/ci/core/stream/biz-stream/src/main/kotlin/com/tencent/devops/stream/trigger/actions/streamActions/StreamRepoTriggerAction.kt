@@ -93,4 +93,8 @@ class StreamRepoTriggerAction(
     override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) {
         baseAction.registerCheckRepoTriggerCredentials(repoHook)
     }
+
+    override fun updateLastBranch(pipelineId: String, branch: String) {
+        baseAction.updateLastBranch(pipelineId, branch)
+    }
 }

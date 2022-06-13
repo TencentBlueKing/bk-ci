@@ -2,10 +2,10 @@
     <section>
         <section v-if="!connectError" style="height: 100%" v-bkloading="{
             isLoading,
-            title: $t('editPage.docker.loadingTitle')
+            title: loadingTitle
         }">
             <div class="console-header">
-                <bk-button class="debug-btn" theme="danger" @click="stopDebugDocker">{{ $t('editPage.docker.exitDebug') }}</bk-button>
+                <bk-button class="debug-btn" theme="danger" @click="stopDebug">{{ $t('editPage.docker.exitDebug') }}</bk-button>
                 <p class="debug-tips" v-show="isRunning">{{ $t('editPage.docker.fromRunningTips') }}</p>
             </div>
             <div class="container">
@@ -41,21 +41,32 @@
                 resizeUrl: '',
                 execId: '',
                 isRunning: false,
+                isExiting: false,
                 config: {
                     title: this.$t('editPage.docker.failTitle'),
                     desc: this.$t('editPage.docker.failDesc')
-                }
+                },
+                containerName: ''
             }
         },
         computed: {
             isLoading () {
                 return !this.url
             },
+            loadingTitle () {
+                return !this.isExiting ? this.$t('editPage.docker.loadingTitle') : 'exiting'
+            },
+            consoleType () {
+                return this.$route.query.type || 'DOCKER'
+            },
             projectId () {
                 return this.$route.params.projectId
             },
             pipelineId () {
                 return this.$route.query.pipelineId
+            },
+            buildId () {
+                return this.$route.query.buildId
             },
             targetIp () {
                 return this.$route.query.targetIp
@@ -68,12 +79,15 @@
             }
         },
         async created () {
-            if (this.targetIp && this.pipelineId && this.containerId) {
-                this.isRunning = true
-                this.getLinkDetail(this.containerId, this.targetIp)
-                // this.url = `ws://${PROXY_URL_PREFIX}/docker-console?pipelineId=${this.pipelineId}&containerId=${this.containerId}&projectId=${this.projectId}&targetIP=${this.targetIp}`
-            } else {
-                await this.getContainerInfo()
+            if (this.consoleType === 'DOCKER') {
+                if (this.targetIp && this.pipelineId && this.containerId) {
+                    this.isRunning = true
+                    this.getLinkDetail(this.containerId, this.targetIp)
+                } else {
+                    await this.getContainerInfo()
+                }
+            } else if (this.consoleType === 'DEVCLOUD') {
+                await this.linkDevCloud()
             }
         },
         mounted () {
@@ -83,17 +97,31 @@
             this.removeLeaveListenr()
         },
         methods: {
+            async linkDevCloud () {
+                try {
+                    const res = await this.$store.dispatch('common/startDebugDevcloud', {
+                        pipelineId: this.pipelineId,
+                        vmSeqId: this.vmSeqId,
+                        buildId: this.buildId
+                    })
+                    this.url = res.websocketUrl
+                    this.containerName = res.containerName
+                } catch (err) {
+                    console.log(err)
+                    this.connectError = true
+                    this.config.desc = err.message || this.$t('editPage.docker.failDesc')
+                }
+            },
             async getContainerInfo () {
                 clearTimeout(this.timer)
                 try {
-                    const res = await this.$store.dispatch('soda/getContainerInfo', {
+                    const res = await this.$store.dispatch('common/getContainerInfo', {
                         projectId: this.projectId,
                         pipelineId: this.pipelineId,
                         vmSeqId: this.vmSeqId
                     })
                     if (res && res.status === 2 && res.containerId && res.address) {
                         this.getLinkDetail(res.containerId, res.address)
-                        // this.url = `ws://${PROXY_URL_PREFIX}/docker-console?pipelineId=${this.pipelineId}&containerId=${res.containerId}&projectId=${this.projectId}&targetIP=${res.address}`
                     } else {
                         this.timer = setTimeout(async () => {
                             await this.getContainerInfo()
@@ -112,17 +140,28 @@
                     }
                 }
             },
-            async stopDebugDocker () {
+            async stopDebug () {
                 const content = this.$t('editPage.docker.stopTips')
 
                 navConfirm({ title: this.$t('editPage.docker.confirmStop'), content })
                     .then(async () => {
                         try {
-                            await this.$store.dispatch('soda/stopDebugDocker', {
-                                projectId: this.projectId,
-                                pipelineId: this.pipelineId,
-                                vmSeqId: this.vmSeqId
-                            })
+                            if (this.consoleType === 'DOCKER') {
+                                await this.$store.dispatch('common/stopDebugDocker', {
+                                    projectId: this.projectId,
+                                    pipelineId: this.pipelineId,
+                                    vmSeqId: this.vmSeqId
+                                })
+                            } else if (this.consoleType === 'DEVCLOUD') {
+                                this.isExiting = true
+                                this.url = ''
+                                this.$store.dispatch('common/stopDebugDevcloud', {
+                                    projectId: this.projectId,
+                                    pipelineId: this.pipelineId,
+                                    vmSeqId: this.vmSeqId,
+                                    containerName: this.containerName
+                                })
+                            }
                             this.$router.push({
                                 name: 'pipelinesEdit',
                                 params: {
@@ -130,6 +169,7 @@
                                 }
                             })
                         } catch (err) {
+                            this.isExiting = false
                             this.$showTips({
                                 theme: 'error',
                                 message: err.message || err
@@ -138,14 +178,11 @@
                     }).catch(() => {})
             },
             async getLinkDetail (containerId, targetIp) {
-                if (!containerId || !targetIp) {
-                    this.showTips({
-                        theme: 'error',
-                        message: this.$t('editPage.docker.abnormalParams')
-                    })
-                }
                 try {
-                    const execId = await this.$store.dispatch('soda/getDockerExecId', {
+                    if (!containerId || !targetIp) {
+                        throw Error(this.$t('editPage.docker.abnormalParams'))
+                    }
+                    const execId = await this.$store.dispatch('common/getDockerExecId', {
                         targetIp,
                         containerId,
                         projectId: this.projectId,
@@ -154,9 +191,13 @@
                     })
                     this.execId = execId
                     this.resizeUrl = `docker-console-resize?pipelineId=${this.pipelineId}&projectId=${this.projectId}&targetIp=${targetIp}`
-                    this.url = `ws://${PROXY_URL_PREFIX}/docker-console-new?eventId=${execId}&pipelineId=${this.pipelineId}&projectId=${this.projectId}&targetIP=${targetIp}&containerId=${containerId}`
+                    const protocol = document.location.protocol === 'https:' ? 'wss:' : 'ws:'
+                    this.url = `${protocol}${PROXY_URL_PREFIX}/docker-console-new?eventId=${execId}&pipelineId=${this.pipelineId}&projectId=${this.projectId}&targetIP=${targetIp}&containerId=${containerId}`
                 } catch (err) {
-                    this.$showTips(err.message || err)
+                    this.$showTips({
+                        message: err.message,
+                        theme: 'error'
+                    })
                 }
             },
             addLeaveListenr () {

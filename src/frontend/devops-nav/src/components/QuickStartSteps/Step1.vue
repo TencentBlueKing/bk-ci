@@ -28,7 +28,7 @@
                 v-if="isError"
                 class="error-tip"
             >
-                <i class="bk-icon icon-info-circle" />
+                <i class="devops-icon icon-info-circle" />
                 <span>
                     <template v-if="errorTip === 2">
                         {{ $t("quickStart.approvalingTips") }}
@@ -63,6 +63,7 @@
 
         @Prop({ default: false })
         isError: boolean = false
+
         errorTip: number = 1
 
         selectedProjectId: string = this.demo ? this.demo.projectId : ''

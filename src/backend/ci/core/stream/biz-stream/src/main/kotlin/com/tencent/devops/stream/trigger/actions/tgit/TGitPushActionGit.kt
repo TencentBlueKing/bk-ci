@@ -453,6 +453,21 @@ class TGitPushActionGit(
         }
     }
 
+    override fun updateLastBranch(
+        pipelineId: String,
+        branch: String
+    ) {
+        try {
+            gitPipelineResourceDao.updatePipelineLastBranch(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                branch = branch
+            )
+        } catch (e: Exception) {
+            logger.info("updateLastBranch fail,pipelineId:$pipelineId,branch:$branch,")
+        }
+    }
+
     private fun checkHaveGroupName(
         name: String,
         userName: String?

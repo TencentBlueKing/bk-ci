@@ -1,6 +1,6 @@
 const Vue = window.Vue
 const vue = new Vue()
-const prefix = 'turbo/api/user'
+const prefix = 'turbo-new/api/user'
 
 module.exports = {
     getOverViewStatData (projectId) {
