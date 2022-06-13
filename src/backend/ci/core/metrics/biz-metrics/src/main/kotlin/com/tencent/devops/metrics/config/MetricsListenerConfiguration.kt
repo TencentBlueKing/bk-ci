@@ -141,51 +141,6 @@ class MetricsListenerConfiguration {
         return container
     }
 
-
-    @Bean
-    fun pipelineLabelChangeMetricsDataSyncQueue() = Queue(QUEUE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC)
-
-    /**
-     * 流水线标签变化数据同步广播交换机
-     */
-    @Bean
-    fun pipelineLabelChangeMetricsDataSyncFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINELABEL_CHANGE_METRICS_DATA_SYNC_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun pipelineLabelChangeMetricsDataSyncQueueBind(
-        @Autowired pipelineLabelChangeMetricsDataSyncQueue: Queue,
-        @Autowired pipelineLabelChangeMetricsDataSyncFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineLabelChangeMetricsDataSyncQueue)
-            .to(pipelineLabelChangeMetricsDataSyncFanoutExchange)
-    }
-
-    @Bean
-    fun pipelineLabelChangeMetricsDataSyncListenerContainer(
-        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME) @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineLabelChangeMetricsDataSyncQueue: Queue,
-        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME) @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: LabelChangeMetricsDataSyncListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(pipelineLabelChangeMetricsDataSyncQueue.name)
-        container.setConcurrentConsumers(1)
-        container.setMaxConcurrentConsumers(max(10, 1))
-        container.setAmqpAdmin(rabbitAdmin)
-        container.setStartConsumerMinInterval(5000)
-        container.setConsecutiveActiveTrigger(10)
-        container.setMismatchedQueuesFatal(true)
-        container.setMessageListener(adapter)
-        return container
-    }
-
     companion object {
         private const val QUEUE_BUILD_END_METRICS_DATA_REPORT = "q.build.end.metrics.data.report.queue"
         private const val QUEUE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC

@@ -39,7 +39,6 @@ import com.tencent.devops.metrics.pojo.qo.QueryProjectInfoQO
 import com.tencent.devops.model.metrics.tables.records.TProjectPipelineLabelInfoRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -86,11 +85,9 @@ class ProjectInfoDao {
     ): List<PipelineLabelInfo> {
         with(TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO) {
             val conditions = mutableListOf<Condition>()
-                if (!queryCondition.pipelineIds.isNullOrEmpty()) {
-                    conditions.add(PROJECT_ID.eq(queryCondition.projectId))
+            conditions.add(PROJECT_ID.eq(queryCondition.projectId))
+            if (!queryCondition.pipelineIds.isNullOrEmpty()) {
                     conditions.add(PIPELINE_ID.`in`(queryCondition.pipelineIds))
-            } else {
-                    conditions.add(PROJECT_ID.eq(queryCondition.projectId))
             }
             if (!queryCondition.keyword.isNullOrBlank()) {
                 conditions.add(LABEL_NAME.like("%${queryCondition.keyword}%"))
@@ -109,12 +106,11 @@ class ProjectInfoDao {
     ): Long {
         val conditions = mutableListOf<Condition>()
         with(TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO) {
-            conditions.add(PROJECT_ID.eq(queryCondition.projectId))
+
             if (!queryCondition.pipelineIds.isNullOrEmpty()) {
                 conditions.add(PIPELINE_ID.`in`(queryCondition.pipelineIds))
-            } else {
-                conditions.add(PROJECT_ID.eq(queryCondition.projectId))
             }
+            conditions.add(PROJECT_ID.eq(queryCondition.projectId))
             if (!queryCondition.keyword.isNullOrBlank()) {
                 conditions.add(LABEL_NAME.like("%${queryCondition.keyword}%"))
             }
@@ -142,7 +138,6 @@ class ProjectInfoDao {
                 .where(conditions)
                 .groupBy(ERROR_TYPE)
                 .limit((page - 1) * pageSize, pageSize)
-            logger.info("queryPipelineErrorTypes: $step")
             return  step.fetchInto(PipelineErrorTypeInfoDO::class.java)
         }
     }
@@ -218,9 +213,4 @@ class ProjectInfoDao {
             }
         }
     }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ProjectInfoDao::class.java)
-    }
-
 }

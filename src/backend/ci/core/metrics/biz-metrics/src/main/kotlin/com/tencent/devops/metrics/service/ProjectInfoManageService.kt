@@ -45,7 +45,7 @@ interface ProjectInfoManageService {
     /**
      * 获取项目下流水线标签列表
      */
-    fun queryProjectPipelineLabels(queryProjectInfoDTO: QueryProjectPipelineLabelDTO): Page<PipelineLabelInfo>
+    fun queryProjectPipelineLabels(queryProjectPipelineLabelDTO: QueryProjectPipelineLabelDTO): Page<PipelineLabelInfo>
 
     /**
      * 获取项目下流水线异常类型列表

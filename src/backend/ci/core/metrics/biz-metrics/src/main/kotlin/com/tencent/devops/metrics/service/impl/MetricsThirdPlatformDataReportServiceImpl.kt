@@ -76,7 +76,6 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                 projectId,
                 statisticsTime
             )
-            logger.info("metricsCodeCheckDataReport: $metricsThirdPlatformRecord")
             if (metricsThirdPlatformRecord == null) {
                 val thirdPlatformDatePO = ThirdPlatformDatePO(
                     id = client.get(ServiceAllocIdResource::class)
@@ -85,9 +84,9 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                     statisticsTime = statisticsTime,
                     resolvedDefectNum = codeCheckReportEvent.resolvedDefectNum,
                     repoCodeccAvgScore = BigDecimal(codeCheckReportEvent.repoCodeccAvgScore),
-                    qualityPipelineExecuteNum = 0,
-                    qualityPipelineInterceptionNum = 0,
-                    turboSaveTime = 0L,
+                    qualityPipelineExecuteNum = null,
+                    qualityPipelineInterceptionNum = null,
+                    turboSaveTime = null,
                     createTime = currentTime,
                     updateTime = currentTime
                 )
@@ -108,7 +107,7 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                     createTime = metricsThirdPlatformRecord.createTime,
                     updateTime = currentTime
                 )
-                metricsThirdPlatformInfoDao.updataMetricsThirdPlatformData(
+                metricsThirdPlatformInfoDao.updateMetricsThirdPlatformData(
                     dslContext,
                     thirdPlatformDatePO
                 )
@@ -131,17 +130,16 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                 projectId,
                 statisticsTime
             )
-            logger.info("metricsCodeCheckDataReport: $metricsThirdPlatformRecord")
             if (metricsThirdPlatformRecord == null) {
                 val thirdPlatformDatePO = ThirdPlatformDatePO(
                     id = client.get(ServiceAllocIdResource::class)
                         .generateSegmentId("METRICS_PROJECT_THIRD_PLATFORM_DATA").data?: 0,
                     projectId = projectId,
                     statisticsTime = statisticsTime,
-                    resolvedDefectNum = 0,
-                    repoCodeccAvgScore = BigDecimal(0),
-                    qualityPipelineExecuteNum = 0,
-                    qualityPipelineInterceptionNum = 0,
+                    resolvedDefectNum = null,
+                    repoCodeccAvgScore = null,
+                    qualityPipelineExecuteNum = null,
+                    qualityPipelineInterceptionNum = null,
                     turboSaveTime = turboReportMessage.turboSaveTime,
                     createTime = currentTime,
                     updateTime = currentTime
@@ -163,7 +161,7 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                     createTime = metricsThirdPlatformRecord.createTime,
                     updateTime = currentTime
                 )
-                metricsThirdPlatformInfoDao.updataMetricsThirdPlatformData(
+                metricsThirdPlatformInfoDao.updateMetricsThirdPlatformData(
                     dslContext,
                     thirdPlatformDatePO
                 )
@@ -178,9 +176,9 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
         val projectId = qualityReportMessage.projectId
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(qualityReportMessage.statisticsTime, YYYY_MM_DD)
         val lock = RedisLock(
-            redisOperation,
-            metricsThirdPlatformDataReportKey(projectId, statisticsTime.toString()),
-            10
+            redisOperation = redisOperation,
+            lockKey = metricsThirdPlatformDataReportKey(projectId, statisticsTime.toString()),
+            expiredTimeInSeconds = 10
         )
         val currentTime = LocalDateTime.now()
         try {
@@ -190,18 +188,17 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                 projectId,
                 statisticsTime
             )
-            logger.info("metricsCodeCheckDataReport: $metricsThirdPlatformRecord")
             if (metricsThirdPlatformRecord == null) {
                 val thirdPlatformDatePO = ThirdPlatformDatePO(
                     id = client.get(ServiceAllocIdResource::class)
                         .generateSegmentId("METRICS_PROJECT_THIRD_PLATFORM_DATA").data?: 0,
                     projectId = projectId,
                     statisticsTime = statisticsTime,
-                    resolvedDefectNum = 0,
-                    repoCodeccAvgScore = BigDecimal(0),
+                    resolvedDefectNum = null,
+                    repoCodeccAvgScore = null,
                     qualityPipelineExecuteNum = qualityReportMessage.qualityPipelineExecuteNum,
                     qualityPipelineInterceptionNum = qualityReportMessage.qualityPipelineInterceptionNum,
-                    turboSaveTime = 0L,
+                    turboSaveTime = null,
                     createTime = currentTime,
                     updateTime = currentTime
                 )
@@ -223,7 +220,7 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                     createTime = metricsThirdPlatformRecord.createTime,
                     updateTime = currentTime
                 )
-                metricsThirdPlatformInfoDao.updataMetricsThirdPlatformData(
+                metricsThirdPlatformInfoDao.updateMetricsThirdPlatformData(
                     dslContext,
                     thirdPlatformDatePO
                 )

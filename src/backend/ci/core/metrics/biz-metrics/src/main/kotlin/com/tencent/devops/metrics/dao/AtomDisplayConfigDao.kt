@@ -97,8 +97,8 @@ class AtomDisplayConfigDao {
         userId: String,
         atomCodes: List<String>,
         keyword: String?,
-//        page: Int,
-//        pageSize: Int
+        page: Int,
+        pageSize: Int
     ): List<AtomBaseInfoDO> {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
             val step = dslContext.select(ATOM_CODE, ATOM_NAME)
@@ -109,7 +109,7 @@ class AtomDisplayConfigDao {
                 if (!keyword.isNullOrBlank()) step.and(ATOM_NAME.like("%$keyword%")) else step
                 return conditionStep
                     .groupBy(ATOM_CODE)
-//                    .limit((page - 1) * pageSize, pageSize)
+                    .limit((page - 1) * pageSize, pageSize)
                     .fetchInto(AtomBaseInfoDO::class.java)
         }
     }

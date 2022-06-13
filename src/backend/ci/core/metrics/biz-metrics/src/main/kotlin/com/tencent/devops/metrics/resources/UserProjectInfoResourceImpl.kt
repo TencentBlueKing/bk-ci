@@ -94,6 +94,6 @@ class UserProjectInfoResourceImpl @Autowired constructor(
     }
 
     override fun syncPipelineLabelData(userId: String): Result<String> {
-        return Result("syncCount:" + projectInfoManageService.syncPipelineLabelData(userId))
+        return Result(projectInfoManageService.syncPipelineLabelData(userId))
     }
 }

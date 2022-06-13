@@ -39,11 +39,11 @@ data class AtomExecutionStatisticsInfoDO(
     @ApiModelProperty("插件分类代码")
     val classifyCode: String,
     @ApiModelProperty("平均耗时")
-    val avgCostTime: Long,
+    val avgCostTime: Double,
     @ApiModelProperty("总执行次数")
-    val totalExecuteCount: Int,
+    val totalExecuteCount: Long,
     @ApiModelProperty("成功执行次数")
-    val successExecuteCount: Int,
+    val successExecuteCount: Long,
     @ApiModelProperty("成功率")
     val successRate: Double,
     @ApiModelProperty("插件错误信息")

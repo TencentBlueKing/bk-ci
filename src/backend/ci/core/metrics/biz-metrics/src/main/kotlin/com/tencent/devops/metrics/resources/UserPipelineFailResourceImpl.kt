@@ -34,11 +34,11 @@ import com.tencent.devops.metrics.api.UserPipelineFailResource
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.checkParam
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getEndDateTime
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getStartDateTime
-import com.tencent.devops.metrics.pojo.`do`.BaseQueryReqDO
 import com.tencent.devops.metrics.service.PipelineFailManageService
 import com.tencent.devops.metrics.pojo.`do`.PipelineFailDetailInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineFailDTO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineFailTrendInfoDTO
+import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineFailTrendInfoVO
 import com.tencent.devops.metrics.pojo.vo.PipelineFailInfoQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineFailSumInfoVO
@@ -51,9 +51,9 @@ class UserPipelineFailResourceImpl @Autowired constructor(
     override fun queryPipelineFailTrendInfo(
         projectId: String,
         userId: String,
-        baseQueryReq: BaseQueryReqDO?
+        baseQueryReq: BaseQueryReqVO?
     ): Result<List<PipelineFailTrendInfoVO>> {
-        val queryReq = baseQueryReq?: BaseQueryReqDO()
+        val queryReq = baseQueryReq?: BaseQueryReqVO()
             if (queryReq.startTime.isNullOrBlank()) { queryReq.startTime = getStartDateTime() }
             if (queryReq.endTime.isNullOrBlank()) { queryReq.endTime = getEndDateTime()}
 

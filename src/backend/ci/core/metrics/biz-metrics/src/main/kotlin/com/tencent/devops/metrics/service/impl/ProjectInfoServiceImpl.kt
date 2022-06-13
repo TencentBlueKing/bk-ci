@@ -91,29 +91,29 @@ class ProjectInfoServiceImpl @Autowired constructor(
     }
 
     override fun queryProjectPipelineLabels(
-        queryPipelineLabelDTO: QueryProjectPipelineLabelDTO
+        queryProjectPipelineLabelDTO: QueryProjectPipelineLabelDTO
     ): Page<PipelineLabelInfo> {
         return Page(
-            page = queryPipelineLabelDTO.page,
-            pageSize = queryPipelineLabelDTO.pageSize,
+            page = queryProjectPipelineLabelDTO.page,
+            pageSize = queryProjectPipelineLabelDTO.pageSize,
             count = projectInfoDao.queryProjectPipelineLabelsCount(
                 dslContext,
                 QueryProjectInfoQO(
-                    projectId = queryPipelineLabelDTO.projectId,
-                    pipelineIds = queryPipelineLabelDTO.pipelineIds,
-                    keyword = queryPipelineLabelDTO.keyword,
-                    page = queryPipelineLabelDTO.page,
-                    pageSize = queryPipelineLabelDTO.pageSize
+                    projectId = queryProjectPipelineLabelDTO.projectId,
+                    pipelineIds = queryProjectPipelineLabelDTO.pipelineIds,
+                    keyword = queryProjectPipelineLabelDTO.keyword,
+                    page = queryProjectPipelineLabelDTO.page,
+                    pageSize = queryProjectPipelineLabelDTO.pageSize
                 )
             ),
             records = projectInfoDao.queryProjectPipelineLabels(
                 dslContext,
                 QueryProjectInfoQO(
-                    projectId = queryPipelineLabelDTO.projectId,
-                    pipelineIds = queryPipelineLabelDTO.pipelineIds,
-                    keyword = queryPipelineLabelDTO.keyword,
-                    page = queryPipelineLabelDTO.page,
-                    pageSize = queryPipelineLabelDTO.pageSize
+                    projectId = queryProjectPipelineLabelDTO.projectId,
+                    pipelineIds = queryProjectPipelineLabelDTO.pipelineIds,
+                    keyword = queryProjectPipelineLabelDTO.keyword,
+                    page = queryProjectPipelineLabelDTO.page,
+                    pageSize = queryProjectPipelineLabelDTO.pageSize
                 )
             )
         )

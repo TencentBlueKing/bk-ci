@@ -32,7 +32,7 @@ object Constants {
     const val BK_REPO_CODECC_AVG_SCORE = "repoCodeccAvgScore"
     const val BK_RESOLVED_DEFECT_NUM = "resolvedDefectNum"
     const val BK_QUALITY_PIPELINE_INTERCEPTION_NUM = "qualityPipelineInterceptionNum"
-    const val BK_QUALITY_PIPELINE_EXECUTE_NUM = "QualityPipelineExecuteNum"
+    const val BK_QUALITY_PIPELINE_EXECUTE_NUM = "qualityPipelineExecuteNum"
     const val BK_TURBO_SAVE_TIME = "TurboSaveTime"
 
     const val BK_PIPELINE_NAME = "pipelineName"
@@ -67,6 +67,7 @@ object Constants {
 
     const val BK_QUERY_COUNT_MAX = 10000
     const val MAX_CREATE_COUNT = 100
+    const val DEFAULT_LIMIT_NUM = 10
 
     const val BK_ATOM_CODE_FIELD_NAME = "插件"
     const val BK_CLASSIFY_CODE_FIELD_NAME = "类型"

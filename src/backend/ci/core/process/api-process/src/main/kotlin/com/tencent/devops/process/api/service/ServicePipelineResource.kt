@@ -34,6 +34,8 @@ import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
@@ -523,7 +525,8 @@ interface ServicePipelineResource {
         @ApiParam("页码", required = true, defaultValue = "1")
         @QueryParam("page")
         page: Int,
-        @ApiParam("每页大小", required = true, defaultValue = "1000")
+        @ApiParam("每页大小", required = true, defaultValue = "100")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<PipelineLabelRelateInfo>>

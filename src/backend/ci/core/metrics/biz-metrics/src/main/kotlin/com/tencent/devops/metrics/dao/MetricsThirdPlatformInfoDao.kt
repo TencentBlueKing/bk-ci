@@ -72,7 +72,7 @@ class MetricsThirdPlatformInfoDao {
         }
     }
 
-    fun updataMetricsThirdPlatformData(
+    fun updateMetricsThirdPlatformData(
         dslContext: DSLContext,
         thirdPlatformDate: ThirdPlatformDatePO
     ) {

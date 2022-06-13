@@ -27,7 +27,9 @@
 
 package com.tencent.devops.metrics.pojo.qo
 
-import com.tencent.devops.metrics.pojo.`do`.BaseQueryReqDO
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -36,7 +38,7 @@ class QueryAtomFailInfoQO (
     @ApiModelProperty("项目ID", required = true)
     val projectId: String,
     @ApiModelProperty("基本查询条件", required = true)
-    val baseQueryReq: BaseQueryReqDO,
+    val baseQueryReq: BaseQueryReqVO,
     @ApiModelProperty("错误类型", required = false)
     val errorTypes: List<Int>?,
     @ApiModelProperty("错误码", required = false)
@@ -44,7 +46,8 @@ class QueryAtomFailInfoQO (
     @ApiModelProperty("插件code", required = false)
     val atomCodes: List<String>?,
     @ApiModelProperty("页码", required = false)
-    val page: Int? = 1,
+    val page: Int = 1,
     @ApiModelProperty("页数", required = false)
-    val pageSize: Int? = 10
+    @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+    val pageSize: Int = 10
 )

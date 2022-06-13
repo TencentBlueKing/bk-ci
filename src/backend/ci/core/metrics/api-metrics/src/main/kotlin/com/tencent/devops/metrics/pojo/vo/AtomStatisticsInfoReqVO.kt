@@ -27,7 +27,7 @@
 
 package com.tencent.devops.metrics.pojo.vo
 
-import com.tencent.devops.metrics.pojo.`do`.BaseQueryReqDO
+import com.tencent.devops.metrics.pojo.`vo`.BaseQueryReqVO
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiParam
 
@@ -45,4 +45,4 @@ data class AtomStatisticsInfoReqVO(
     val errorTypes: List<Int>? = null,
     @ApiParam("插件代码", required = false)
     val atomCodes: List<String>? = null
-): BaseQueryReqDO(pipelineIds, pipelineLabelIds, startTime, endTime)
+): BaseQueryReqVO(pipelineIds, pipelineLabelIds, startTime, endTime)

@@ -49,14 +49,16 @@ class SyncPipelineRelateLabelDataServiceImpl @Autowired constructor(
 ): SyncPipelineRelateLabelDataService {
     companion object {
         private val logger = LoggerFactory.getLogger(SyncPipelineRelateLabelDataServiceImpl::class.java)
-        private fun metricsDataReportKey(keyWord: String) = "SyncPipelineRelateLabel:${keyWord}"
+        private fun metricsDataReportKey(projectId: String, pipelineId: String): String {
+            return "SyncPipelineRelateLabel:$projectId::$pipelineId"
+        }
     }
     override fun syncCreatePipelineRelateLabelData(
         projectId: String,
         pipelineId: String,
         pipelineLabelRelateInfos: List<PipelineLabelRelateInfo>
     ): Boolean {
-        val lock = RedisLock(redisOperation, metricsDataReportKey("$projectId::$pipelineId"), 10)
+        val lock = RedisLock(redisOperation, metricsDataReportKey(projectId, pipelineId), 10)
         try {
             lock.lock()
             val pipelineLabelInfoRecords = pipelineLabelRelateInfos.map {
@@ -89,7 +91,7 @@ class SyncPipelineRelateLabelDataServiceImpl @Autowired constructor(
         pipelineId: String,
         pipelineLabelRelateInfos: List<PipelineLabelRelateInfo>
     ): Boolean {
-        val lock = RedisLock(redisOperation, metricsDataReportKey("$projectId::$pipelineId"), 10)
+        val lock = RedisLock(redisOperation, metricsDataReportKey(projectId, pipelineId), 10)
         try {
             lock.lock()
             projectInfoDao.batchDeletePipelineLabelData(
@@ -109,7 +111,7 @@ class SyncPipelineRelateLabelDataServiceImpl @Autowired constructor(
         statisticsTime: LocalDateTime,
         pipelineLabelRelateInfos: List<PipelineLabelRelateInfo>
     ): Boolean {
-        val lock = RedisLock(redisOperation, metricsDataReportKey("$projectId::$pipelineId"), 10)
+        val lock = RedisLock(redisOperation, metricsDataReportKey(projectId, pipelineId), 10)
         try {
             lock.lock()
             projectInfoDao.batchUpdatePipelineLabelData(

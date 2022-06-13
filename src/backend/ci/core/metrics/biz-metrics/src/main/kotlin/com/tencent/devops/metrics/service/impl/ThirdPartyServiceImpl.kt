@@ -71,17 +71,15 @@ class ThirdPartyServiceImpl @Autowired constructor(
             ),
             dslContext
         )
-        logger.info("queryPipelineSummaryInfo result: $result")
 
         val repoCodeccAvgScore = result?.get(BK_REPO_CODECC_AVG_SCORE, BigDecimal::class.java)?.toDouble()
         val executeNum = result?.get(BK_QUALITY_PIPELINE_EXECUTE_NUM, BigDecimal::class.java)?.toInt()
         val interceptionCount = result?.get(BK_QUALITY_PIPELINE_INTERCEPTION_NUM, BigDecimal::class.java)?.toInt()
-        val qualityInterceptionRate: Double?
-            if (executeNum == null || interceptionCount == null || executeNum == 0) qualityInterceptionRate = null
+        val qualityInterceptionRate =
+            if (executeNum == null || interceptionCount == null || executeNum == 0) null
         else {
-            if (executeNum == interceptionCount) qualityInterceptionRate = 0.0
-            else qualityInterceptionRate=
-                String.format("%.2f", interceptionCount.toDouble() / executeNum.toDouble()).toDouble()
+            if (executeNum == interceptionCount) 0.0
+            else String.format("%.2f", interceptionCount.toDouble() / executeNum.toDouble()).toDouble()
         }
             return ThirdPlatformOverviewInfoVO(
                 CodeCheckInfoDO(
@@ -95,7 +93,7 @@ class ThirdPartyServiceImpl @Autowired constructor(
                     totalExecuteCount = executeNum,
                     interceptionCount = interceptionCount
                         ),
-                TurboInfoDO(result?.get(BK_TURBO_SAVE_TIME, BigDecimal::class.java)?.toLong())
+                TurboInfoDO(result?.get(BK_TURBO_SAVE_TIME, BigDecimal::class.java)?.toDouble())
             )
         }
 

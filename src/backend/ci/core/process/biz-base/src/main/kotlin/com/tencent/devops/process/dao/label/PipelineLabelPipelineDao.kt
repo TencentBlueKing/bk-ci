@@ -214,6 +214,7 @@ class PipelineLabelPipelineDao {
                 .on(LABEL_ID.eq(pipelineLabel.ID))
                 .where(this.PROJECT_ID.notEqual(""))
                 .and(this.PROJECT_ID.isNotNull)
+                .orderBy(this.LABEL_ID)
                 .limit((page - 1) * pageSize, pageSize)
                 .fetchInto(PipelineLabelRelateInfo::class.java)
         }

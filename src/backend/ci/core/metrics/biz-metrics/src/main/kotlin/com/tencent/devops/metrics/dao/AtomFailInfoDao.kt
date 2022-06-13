@@ -47,11 +47,14 @@ import com.tencent.devops.model.metrics.tables.TAtomFailDetailData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.pojo.`do`.AtomFailDetailInfoDO
 import com.tencent.devops.metrics.pojo.qo.QueryAtomFailInfoQO
+import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.model.metrics.tables.TErrorTypeDict
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record1
 import org.jooq.Record5
 import org.jooq.Result
+import org.jooq.SelectJoinStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
@@ -65,11 +68,12 @@ class AtomFailInfoDao {
         with(TAtomFailDetailData.T_ATOM_FAIL_DETAIL_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val tErrorTypeDict = TErrorTypeDict.T_ERROR_TYPE_DICT
+            val pipelineLabelIds = queryCondition.baseQueryReq.pipelineLabelIds
             val conditions = getConditions(
                 queryCondition,
                 tProjectPipelineLabelInfo
             )
-            val errorCount = DSL.field("count(${this.ERROR_CODE.name})", Int::class.java).`as`(BK_ERROR_COUNT)
+            val errorCount = DSL.field("count(${ERROR_CODE.name})", Int::class.java).`as`(BK_ERROR_COUNT)
             val step = dslContext.select(
                 this.ERROR_TYPE.`as`(BK_ERROR_TYPE),
                 tErrorTypeDict.NAME.`as`(BK_ERROR_TYPE_NAME),
@@ -77,8 +81,7 @@ class AtomFailInfoDao {
                 this.ERROR_MSG.`as`(BK_ERROR_MSG),
                 errorCount
             ).from(this)
-            val conditionStep
-            = if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+            val conditionStep = if (!pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
                     .join(tErrorTypeDict)
@@ -92,7 +95,8 @@ class AtomFailInfoDao {
             return conditionStep
                 .groupBy(this.ERROR_CODE)
                 .orderBy(errorCount.desc())
-                .limit((queryCondition.page!! - 1) * queryCondition.pageSize!!, queryCondition.pageSize)
+                .offset((queryCondition.page - 1) * queryCondition.pageSize)
+                .limit(queryCondition.pageSize)
                 .fetch()
         }
 
@@ -109,15 +113,9 @@ class AtomFailInfoDao {
                 tProjectPipelineLabelInfo
             )
             val step = dslContext.select(this.ERROR_CODE).from(this)
-            val conditionStep
-                    = if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
-                step.leftJoin(tProjectPipelineLabelInfo)
-                    .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                    .where(conditions)
-            } else {
-                step.where(conditions)
-            }
+            val conditionStep = getConditionStep(queryCondition.baseQueryReq, step, tProjectPipelineLabelInfo)
             return conditionStep
+                .where(conditions)
                 .groupBy(this.ERROR_CODE)
                 .execute()
         }
@@ -150,6 +148,19 @@ class AtomFailInfoDao {
         val endTimeDateTime = DateTimeUtil.stringToLocalDate(baseQueryReq.endTime!!)!!.atStartOfDay()
         conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
         return conditions
+    }
+
+    private fun<T> TAtomFailDetailData.getConditionStep(
+        baseQueryReq: BaseQueryReqVO,
+        step: SelectJoinStep<Record1<T>>,
+        tProjectPipelineLabelInfo: TProjectPipelineLabelInfo
+    ): SelectJoinStep<Record1<T>> {
+        return if (!baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+            step.leftJoin(tProjectPipelineLabelInfo)
+                .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
+        } else {
+            step
+        }
     }
 
     fun queryAtomFailDetailInfo(
@@ -192,7 +203,8 @@ class AtomFailInfoDao {
             }
             return conditionStep
                 .groupBy(this.PIPELINE_ID, this.BUILD_NUM)
-                .limit((queryCondition.page!! - 1) * queryCondition.pageSize!!, queryCondition.pageSize)
+                .offset((queryCondition.page - 1) * queryCondition.pageSize)
+                .limit(queryCondition.pageSize)
                 .fetchInto(AtomFailDetailInfoDO::class.java)
         }
     }
@@ -208,15 +220,9 @@ class AtomFailInfoDao {
                 tProjectPipelineLabelInfo
             )
             val step = dslContext.select(ID).from(this)
-            val conditionStep
-                    = if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
-                step.leftJoin(tProjectPipelineLabelInfo)
-                    .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                    .where(conditions)
-            } else {
-                step.where(conditions)
-            }
+            val conditionStep = getConditionStep(queryCondition.baseQueryReq, step, tProjectPipelineLabelInfo)
             return conditionStep
+                .where(conditions)
                 .groupBy(this.PIPELINE_ID, this.BUILD_NUM)
                 .execute().toLong()
         }

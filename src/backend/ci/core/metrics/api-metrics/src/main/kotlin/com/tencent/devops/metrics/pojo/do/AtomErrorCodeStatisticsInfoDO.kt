@@ -35,5 +35,5 @@ data class AtomErrorCodeStatisticsInfoDO(
     @ApiModelProperty("错误码信息")
     val errorCodeInfo: ErrorCodeInfoDO,
     @ApiModelProperty("错误次数")
-    val errorCount: Int
+    val errorCount: Long
 )

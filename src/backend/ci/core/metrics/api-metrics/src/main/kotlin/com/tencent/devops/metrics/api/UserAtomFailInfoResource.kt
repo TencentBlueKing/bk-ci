@@ -63,14 +63,7 @@ interface UserAtomFailInfoResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("查询条件", required = true)
-        atomFailInfoReq: AtomFailInfoReqVO,
-//        @ApiParam("页码", required = true, defaultValue = "1")
-//        @QueryParam("page")
-//        page: Int,
-//        @ApiParam("每页大小", required = true, defaultValue = "10")
-//        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
-//        @QueryParam("pageSize")
-//        pageSize: Int
+        atomFailInfoReq: AtomFailInfoReqVO
     ): Result<List<AtomErrorCodeStatisticsInfoDO>>
 
     @ApiOperation("查询流水线插件失败详情数据")
