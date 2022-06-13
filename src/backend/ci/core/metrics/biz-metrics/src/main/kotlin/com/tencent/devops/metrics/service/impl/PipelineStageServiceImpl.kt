@@ -65,7 +65,7 @@ class PipelineStageServiceImpl @Autowired constructor(
         val betweenDate = QueryParamCheckUtil.getBetweenDate(startTime!!, endTime!!).toMutableList()
         var pipelineNames: MutableSet<String>
         return tags.map { tag ->
-            stageTrendSumInfos = mutableMapOf<String, List<StageAvgCostTimeInfoDO>>()
+            stageTrendSumInfos = mutableMapOf()
             pipelineNames = mutableSetOf()
             val result = pipelineStageDao.queryPipelineStageTrendInfo(
                 dslContext,
@@ -75,7 +75,6 @@ class PipelineStageServiceImpl @Autowired constructor(
                     tag
                 )
             )
-            logger.info("PipelineStageServiceImpl tag:$tag result: $result ")
             result.map {
                 val pipelineName = it[BK_PIPELINE_NAME] as String
                 val avgCostTime = toMinutes((it[BK_AVG_COST_TIME] as Long))

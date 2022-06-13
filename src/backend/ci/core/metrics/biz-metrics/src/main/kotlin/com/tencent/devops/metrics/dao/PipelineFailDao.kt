@@ -28,6 +28,7 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.service.utils.JooqUtils.sum
 import com.tencent.devops.model.metrics.tables.TErrorTypeDict
 import com.tencent.devops.model.metrics.tables.TPipelineFailDetailData
 import com.tencent.devops.model.metrics.tables.TPipelineFailSummaryData
@@ -37,25 +38,52 @@ import com.tencent.devops.metrics.constant.Constants.BK_ERROR_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
-import com.tencent.devops.metrics.pojo.`do`.BaseQueryReqDO
+import com.tencent.devops.metrics.constant.Constants.DEFAULT_LIMIT_NUM
 import com.tencent.devops.metrics.pojo.po.PipelineFailDetailDataPO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineFailQO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
+import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
+import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record1
 import org.jooq.Record2
-import org.jooq.Record3
 import org.springframework.stereotype.Repository
 import org.jooq.Result
 import org.jooq.SelectConditionStep
-import org.jooq.impl.DSL
-import org.jooq.impl.TableImpl
-import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Repository
 class PipelineFailDao {
+
+    fun getPipelineIdByTotalExecuteCount(
+        dslContext: DSLContext,
+        queryPipelineFailQo: QueryPipelineFailQO,
+    ): List<String> {
+        with(TPipelineFailSummaryData.T_PIPELINE_FAIL_SUMMARY_DATA) {
+            val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
+            val pipelineIds = queryPipelineFailQo.baseQueryReq.pipelineIds
+            val pipelineLabelIds = queryPipelineFailQo.baseQueryReq.pipelineLabelIds
+            val conditions = getConditions(
+                queryPipelineFailQo.projectId,
+                queryPipelineFailQo.baseQueryReq,
+                pipelineIds,
+                tProjectPipelineLabelInfo,
+                mutableListOf()
+            )
+            val step = dslContext.select(PIPELINE_ID).from(this)
+            val conditionStep =
+                if (!pipelineLabelIds.isNullOrEmpty()) {
+                    step.leftJoin(tProjectPipelineLabelInfo)
+                        .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
+                        .where(conditions)
+                } else {
+                    step.where(conditions)
+                }
+            return conditionStep.orderBy(ERROR_COUNT.desc()).limit(DEFAULT_LIMIT_NUM).fetchInto(String::class.java)
+        }
+    }
 
     fun queryPipelineFailTrendInfo(
         dslContext: DSLContext,
@@ -63,17 +91,18 @@ class PipelineFailDao {
         errorType: Int
     ): Result<Record2<LocalDateTime, BigDecimal>> {
         with(TPipelineFailSummaryData.T_PIPELINE_FAIL_SUMMARY_DATA) {
-
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
+            var pipelineIds = queryPipelineFailTrendQo.baseQueryReq.pipelineIds
             val conditions = getConditions(
                 queryPipelineFailTrendQo.projectId,
                 queryPipelineFailTrendQo.baseQueryReq,
+                pipelineIds,
                 tProjectPipelineLabelInfo,
                 mutableListOf()
             )
             val step = dslContext.select(
                 this.STATISTICS_TIME.`as`(BK_STATISTICS_TIME),
-                DSL.field("sum(${this.ERROR_COUNT.name})", BigDecimal::class.java).`as`(BK_ERROR_COUNT_SUM)
+                sum<Int>(ERROR_COUNT).`as`(BK_ERROR_COUNT_SUM)
             ).from(this)
             conditions.add(ERROR_TYPE.eq(errorType))
             val conditionStep =
@@ -90,43 +119,49 @@ class PipelineFailDao {
 
     fun queryPipelineFailErrorTypeInfo(
         dslContext: DSLContext,
-        queryReq: QueryPipelineOverviewQO
-    ): Result<Record2<Int, String>> {
+        queryPipelineFailTrendQo: QueryPipelineOverviewQO
+    ): List<Int> {
         with(TPipelineFailSummaryData.T_PIPELINE_FAIL_SUMMARY_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            val tErrorTypeDict = TErrorTypeDict.T_ERROR_TYPE_DICT
+            var pipelineIds = queryPipelineFailTrendQo.baseQueryReq.pipelineIds
+            val pipelineLabelIds = queryPipelineFailTrendQo.baseQueryReq.pipelineLabelIds
             val conditions = getConditions(
-                queryReq.projectId,
-                queryReq.baseQueryReq,
+                queryPipelineFailTrendQo.projectId,
+                queryPipelineFailTrendQo.baseQueryReq,
+                pipelineIds,
                 tProjectPipelineLabelInfo,
                 mutableListOf()
             )
-            val step = dslContext.select(this.ERROR_TYPE, tErrorTypeDict.NAME)
+            val step = dslContext.select(this.ERROR_TYPE)
                 .from(this)
-            val conditionStep: SelectConditionStep<Record2<Int, String>> =
-                if (!queryReq.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
-                step.leftJoin(tErrorTypeDict).on(this.ERROR_TYPE.eq(tErrorTypeDict.ERROR_TYPE))
-                    .leftJoin(tProjectPipelineLabelInfo)
+            val conditionStep =
+                if (!pipelineLabelIds.isNullOrEmpty()) {
+                step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
                     .where(conditions)
             } else {
-                step.leftJoin(tErrorTypeDict).on(this.ERROR_TYPE.eq(tErrorTypeDict.ERROR_TYPE)).where(conditions)
+                step.where(conditions)
             }
-            return conditionStep.groupBy(ERROR_TYPE).fetch()
+            return conditionStep.groupBy(ERROR_TYPE).fetchInto(Int::class.java)
         }
     }
 
     fun queryPipelineFailSumInfo(
         dslContext: DSLContext,
         queryPipelineFailQo: QueryPipelineFailQO
-    ): Result<Record3<Int, String, BigDecimal>> {
+    ): Result<Record2<Int, BigDecimal>> {
         with(TPipelineFailSummaryData.T_PIPELINE_FAIL_SUMMARY_DATA) {
+            var pipelineIds = queryPipelineFailQo.baseQueryReq.pipelineIds
             val labelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            val tErrorTypeDict = TErrorTypeDict.T_ERROR_TYPE_DICT
+            val pipelineLabelIds = queryPipelineFailQo.baseQueryReq.pipelineLabelIds
+            if (!pipelineIds.isNullOrEmpty()) {
+                pipelineIds = getPipelineIdByTotalExecuteCount(dslContext, queryPipelineFailQo)
+            }
             val conditions =
                 getConditions(
                     queryPipelineFailQo.projectId,
                     queryPipelineFailQo.baseQueryReq,
+                    pipelineIds,
                     labelInfo,
                     mutableListOf()
                 )
@@ -135,19 +170,16 @@ class PipelineFailDao {
             }
             val step = dslContext.select(
                 ERROR_TYPE.`as`(BK_ERROR_TYPE),
-                tErrorTypeDict.NAME.`as`(BK_ERROR_NAME),
-                DSL.field("sum(${this.ERROR_COUNT.name})", BigDecimal::class.java).`as`(BK_ERROR_COUNT_SUM)
+                sum<Int>(ERROR_COUNT).`as`(BK_ERROR_COUNT_SUM)
             )
                 .from(this)
             val conditionStep =
-                if (!queryPipelineFailQo.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
-                step.leftJoin(tErrorTypeDict).on(this.ERROR_TYPE.eq(tErrorTypeDict.ERROR_TYPE))
-                    .leftJoin(labelInfo).on(this.PIPELINE_ID.eq(labelInfo.PIPELINE_ID))
+                if (!pipelineLabelIds.isNullOrEmpty()) {
+                step.leftJoin(labelInfo).on(this.PIPELINE_ID.eq(labelInfo.PIPELINE_ID))
                     .where(conditions)
             } else {
-                step.leftJoin(tErrorTypeDict).on(this.ERROR_TYPE.eq(tErrorTypeDict.ERROR_TYPE)).where(conditions)
+                step.where(conditions)
             }
-            logger.info("queryPipelineFailSumInfo conditionStep:$conditionStep")
             return conditionStep.groupBy(this.ERROR_TYPE).fetch()
         }
     }
@@ -158,7 +190,6 @@ class PipelineFailDao {
     ): List<PipelineFailDetailDataPO> {
         with(TPipelineFailDetailData.T_PIPELINE_FAIL_DETAIL_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            val tErrorTypeDict = TErrorTypeDict.T_ERROR_TYPE_DICT
             val conditions = getConditions(
                 queryPipelineFailQo.projectId,
                 queryPipelineFailQo.baseQueryReq,
@@ -180,7 +211,6 @@ class PipelineFailDao {
                 START_TIME,
                 END_TIME,
                 ERROR_TYPE,
-                tErrorTypeDict.NAME.`as`(BK_ERROR_TYPE_NAME),
                 ERROR_CODE,
                 ERROR_MSG,
                 STATISTICS_TIME
@@ -189,17 +219,15 @@ class PipelineFailDao {
                 if (!queryPipelineFailQo.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                    .join(tErrorTypeDict)
-                    .on(ERROR_TYPE.eq(tErrorTypeDict.ERROR_TYPE))
                     .where(conditions)
             } else {
-                    step.leftJoin(tErrorTypeDict).on(this.ERROR_TYPE.eq(tErrorTypeDict.ERROR_TYPE)).where(conditions)
+                    step.where(conditions)
             }
-            val t =conditionStep
+            return conditionStep
                 .groupBy(this.PIPELINE_ID, this.BUILD_NUM)
-                .limit((queryPipelineFailQo.page - 1) * queryPipelineFailQo.pageSize, queryPipelineFailQo.pageSize)
-                logger.info("queryPipelineFailDetailInfoDao::$t")
-            return t.fetchInto(PipelineFailDetailDataPO::class.java)
+                .offset((queryPipelineFailQo.page - 1) * queryPipelineFailQo.pageSize)
+                .limit(queryPipelineFailQo.pageSize)
+                .fetchInto(PipelineFailDetailDataPO::class.java)
         }
     }
 
@@ -209,7 +237,6 @@ class PipelineFailDao {
     ): Long {
         with(TPipelineFailDetailData.T_PIPELINE_FAIL_DETAIL_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            val tErrorTypeDict = TErrorTypeDict.T_ERROR_TYPE_DICT
             val pipelineLabelIds = queryPipelineFailQo.baseQueryReq.pipelineLabelIds
             val conditions = getConditions(
                 queryPipelineFailQo.projectId,
@@ -223,14 +250,11 @@ class PipelineFailDao {
             val step = dslContext.select().from(this)
             val conditionStep =
                 if (!pipelineLabelIds.isNullOrEmpty()) {
-                step.leftJoin(tErrorTypeDict).on(this.ERROR_TYPE.eq(tErrorTypeDict.ERROR_TYPE))
-                    .leftJoin(tProjectPipelineLabelInfo)
+                step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
                     .where(conditions)
             } else {
-                step.leftJoin(tErrorTypeDict)
-                    .on(this.ERROR_TYPE.eq(tErrorTypeDict.ERROR_TYPE))
-                    .where(conditions)
+                step.where(conditions)
             }
             return conditionStep
                 .groupBy(this.PIPELINE_ID, this.BUILD_NUM)
@@ -240,7 +264,7 @@ class PipelineFailDao {
 
     private fun TPipelineFailDetailData.getConditions(
         projectId: String,
-        pipelineFailDetailDataBaseQuery: BaseQueryReqDO,
+        pipelineFailDetailDataBaseQuery: BaseQueryReqVO,
         tProjectPipelineLabelInfo: TProjectPipelineLabelInfo,
         conditions: MutableList<Condition>
     ): MutableList<Condition> {
@@ -262,13 +286,14 @@ class PipelineFailDao {
 
     private fun TPipelineFailSummaryData.getConditions(
         projectId: String,
-        baseQueryReq: BaseQueryReqDO,
+        baseQueryReq: BaseQueryReqVO,
+        pipelineIds: List<String>?,
         tProjectPipelineLabelInfo: TProjectPipelineLabelInfo,
         conditions: MutableList<Condition>
     ): MutableList<Condition> {
         conditions.add(PROJECT_ID.eq(projectId))
-        if (!baseQueryReq.pipelineIds.isNullOrEmpty()) {
-            conditions.add(this.PIPELINE_ID.`in`(baseQueryReq.pipelineIds))
+        if (!pipelineIds.isNullOrEmpty()) {
+            conditions.add(this.PIPELINE_ID.`in`(pipelineIds))
         }
         if (!baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
             conditions.add(tProjectPipelineLabelInfo.LABEL_ID.`in`(baseQueryReq.pipelineLabelIds))
@@ -277,8 +302,5 @@ class PipelineFailDao {
         val endTimeDateTime = DateTimeUtil.stringToLocalDate(baseQueryReq.endTime!!)!!.atStartOfDay()
         conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
         return conditions
-    }
-    companion object {
-        private val logger = LoggerFactory.getLogger(PipelineFailDao::class.java)
     }
 }

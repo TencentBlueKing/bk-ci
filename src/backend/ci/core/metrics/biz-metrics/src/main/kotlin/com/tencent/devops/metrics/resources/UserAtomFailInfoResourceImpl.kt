@@ -48,9 +48,7 @@ class UserAtomFailInfoResourceImpl @Autowired constructor(
     override fun queryAtomErrorCodeStatisticsInfo(
         projectId: String,
         userId: String,
-        atomFailInfoReq: AtomFailInfoReqVO,
-//        page: Int,
-//        pageSize: Int
+        atomFailInfoReq: AtomFailInfoReqVO
     ): Result<List<AtomErrorCodeStatisticsInfoDO>> {
         val startTime =
             if (atomFailInfoReq.startTime.isNullOrBlank()) getStartDateTime()
@@ -70,8 +68,6 @@ class UserAtomFailInfoResourceImpl @Autowired constructor(
                     errorTypes = atomFailInfoReq.errorTypes,
                     errorCodes = atomFailInfoReq.errorCodes,
                     atomCodes = atomFailInfoReq.atomCodes
-//                    page,
-//                    pageSize
                 )
             )
         )

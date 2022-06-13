@@ -52,7 +52,6 @@ import org.jooq.Record5
 import org.jooq.Record6
 import org.jooq.Result
 import com.tencent.devops.common.service.utils.JooqUtils.sum
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -64,10 +63,7 @@ class AtomStatisticsDao {
         dslContext: DSLContext,
         queryCondition: QueryAtomStatisticsQO
     ): Result<Record5<String, String, BigDecimal, Long, LocalDateTime>> {
-
-        val atomCodes = if (!queryCondition.errorTypes.isNullOrEmpty()) {
-            getAtomCodesByErrorType(dslContext, queryCondition)
-        } else queryCondition.atomCodes
+        val atomCodes = getAtomCodesByErrorType(dslContext, queryCondition)
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val conditions = getConditions(queryCondition, tProjectPipelineLabelInfo, atomCodes)
@@ -107,8 +103,8 @@ class AtomStatisticsDao {
         if (!atomCodes.isNullOrEmpty()) {
             conditions.add(this.ATOM_CODE.`in`(atomCodes))
         }
-        val startTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime!!)!!.atStartOfDay()
-        val endTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime!!)!!.atStartOfDay()
+        val startTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime)?.atStartOfDay()
+        val endTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime)?.atStartOfDay()
         conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
         return conditions
     }
@@ -121,12 +117,16 @@ class AtomStatisticsDao {
             if (!pipelineIds.isNullOrEmpty()) {
                 conditions.add(this.PIPELINE_ID.`in`(pipelineIds))
             }
-            conditions.add(this.ATOM_CODE.`in`(queryCondition.atomCodes))
-            conditions.add(this.ERROR_TYPE.`in`(queryCondition.errorTypes))
+            if (!queryCondition.atomCodes.isNullOrEmpty()) {
+                conditions.add(this.ATOM_CODE.`in`(queryCondition.atomCodes))
+            }
+            if (!queryCondition.errorTypes.isNullOrEmpty()) {
+                conditions.add(this.ERROR_TYPE.`in`(queryCondition.errorTypes))
+            }
             val startTimeDateTime =
-                DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime!!)!!.atStartOfDay()
+                DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime)?.atStartOfDay()
             val endTimeDateTime =
-                DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime!!)!!.atStartOfDay()
+                DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime)?.atStartOfDay()
             conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
             val fetch = dslContext.select(ATOM_CODE).from(this).where(conditions).groupBy(ATOM_CODE).fetch()
             if (fetch.isNotEmpty) {
@@ -142,9 +142,7 @@ class AtomStatisticsDao {
     ): Result<Record6<String, String, String, BigDecimal, BigDecimal, BigDecimal>> {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            val atomCodes = if (!queryCondition.errorTypes.isNullOrEmpty()) {
-                getAtomCodesByErrorType(dslContext, queryCondition)
-            } else queryCondition.atomCodes
+            val atomCodes = getAtomCodesByErrorType(dslContext, queryCondition)
             val conditions = getConditions(queryCondition, tProjectPipelineLabelInfo, atomCodes)
             val step = dslContext.select(
                 ATOM_CODE.`as`(BK_ATOM_CODE),
@@ -163,7 +161,8 @@ class AtomStatisticsDao {
             }
             return conditionStep
                 .groupBy(PIPELINE_ID,ATOM_CODE)
-                .limit((queryCondition.page - 1) * queryCondition.pageSize, queryCondition.pageSize)
+                .offset((queryCondition.page - 1) * queryCondition.pageSize)
+                .limit(queryCondition.pageSize)
                 .fetch()
         }
     }
@@ -177,7 +176,7 @@ class AtomStatisticsDao {
                 DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime!!)!!.atStartOfDay()
             val endTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime!!)!!.atStartOfDay()
             val tErrorTypeDict = TErrorTypeDict.T_ERROR_TYPE_DICT
-            val t = dslContext.select(
+            return dslContext.select(
                 ATOM_CODE.`as`(BK_ATOM_CODE),
                 ERROR_TYPE.`as`(BK_ERROR_TYPE),
                 sum<Int>(ERROR_COUNT).`as`(BK_ERROR_COUNT_SUM),
@@ -189,8 +188,7 @@ class AtomStatisticsDao {
                 .and(STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
                 .groupBy(ATOM_CODE, ERROR_TYPE)
                 .orderBy(ATOM_CODE)
-            logger.info("queryAtomFailStatisticsInfoDao::$t")
-            return t.fetch()
+                .fetch()
         }
     }
 
@@ -199,9 +197,7 @@ class AtomStatisticsDao {
         queryCondition: QueryAtomStatisticsQO
     ): Long {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
-            val atomCodes = if (!queryCondition.errorTypes.isNullOrEmpty()) {
-                getAtomCodesByErrorType(dslContext, queryCondition)
-            } else queryCondition.atomCodes
+            val atomCodes = getAtomCodesByErrorType(dslContext, queryCondition)
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val conditions = getConditions(queryCondition, tProjectPipelineLabelInfo, atomCodes)
             val step = dslContext.selectCount().from(this)
@@ -214,9 +210,5 @@ class AtomStatisticsDao {
             }
             return conditionStep.fetchOne(0, Long::class.java) ?: 0L
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(AtomStatisticsDao::class.java)
     }
 }

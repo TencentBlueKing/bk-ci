@@ -27,6 +27,8 @@
 
 package com.tencent.devops.metrics.pojo.dto
 
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -47,5 +49,6 @@ data class QueryPipelineFailDTO(
     @ApiModelProperty("页码")
     val page: Int = 1,
     @ApiModelProperty("页数")
+    @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
     val pageSize: Int = 10
 )

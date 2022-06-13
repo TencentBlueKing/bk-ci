@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
+import com.tencent.devops.metrics.constant.Constants.DEFAULT_LIMIT_NUM
 import com.tencent.devops.model.metrics.tables.TPipelineStageOverviewData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineStageTrendInfoQO
@@ -38,7 +39,6 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record3
 import org.jooq.Result
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -62,7 +62,7 @@ class PipelineStageDao {
             return conditionStep
                 .groupBy(PIPELINE_ID)
                 .orderBy(AVG_COST_TIME.desc())
-                .limit(10)
+                .limit(DEFAULT_LIMIT_NUM)
                 .fetch()
                 .map {
                     it.value1()
@@ -76,7 +76,6 @@ class PipelineStageDao {
     ): Result<Record3<String, LocalDateTime, Long>> {
         with(TPipelineStageOverviewData.T_PIPELINE_STAGE_OVERVIEW_DATA) {
             val pipelineInfos = getStageTrendPipelineInfo(dslContext, queryInfo)
-            logger.info("queryPipelineStageTrendInfo pipelineInfos：$pipelineInfos")
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val conditions = getConditions(queryInfo, tProjectPipelineLabelInfo)
             conditions.add(PIPELINE_ID.`in`(pipelineInfos))
@@ -95,7 +94,6 @@ class PipelineStageDao {
                 step.where(conditions)
                     .groupBy(PIPELINE_ID, STATISTICS_TIME)
             }
-            logger.info("queryPipelineStageTrendInfo  conditionStep:$conditionStep")
             return conditionStep.fetch()
 
         }
@@ -131,9 +129,5 @@ class PipelineStageDao {
         conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
         conditions.add(this.STAGE_TAG_NAME.eq(queryCondition.stageTag))
         return conditions
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PipelineStageDao::class.java)
     }
 }

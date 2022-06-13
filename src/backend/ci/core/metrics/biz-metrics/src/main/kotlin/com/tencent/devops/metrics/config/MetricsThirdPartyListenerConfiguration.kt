@@ -84,8 +84,17 @@ class MetricsThirdPartyListenerConfiguration {
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(metricsMessageConverter)
-        val container = SimpleMessageListenerContainer(connectionFactory)
+        val container = getContainer(connectionFactory, rabbitAdmin, adapter)
         container.setQueueNames(receiveCodeCheckDailyMessageQueue.name)
+        return container
+    }
+
+    fun getContainer(
+        connectionFactory: ConnectionFactory,
+        rabbitAdmin: RabbitAdmin,
+        adapter: MessageListenerAdapter
+    ): SimpleMessageListenerContainer {
+        val container = SimpleMessageListenerContainer(connectionFactory)
         container.setConcurrentConsumers(1)
         container.setMaxConcurrentConsumers(max(10, 1))
         container.setAmqpAdmin(rabbitAdmin)
@@ -124,15 +133,8 @@ class MetricsThirdPartyListenerConfiguration {
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        val container = SimpleMessageListenerContainer(connectionFactory)
+        val container = getContainer(connectionFactory, rabbitAdmin, adapter)
         container.setQueueNames(metricsQualityDailyReportQueue.name)
-        container.setConcurrentConsumers(1)
-        container.setMaxConcurrentConsumers(max(10, 1))
-        container.setAmqpAdmin(rabbitAdmin)
-        container.setStartConsumerMinInterval(5000)
-        container.setConsecutiveActiveTrigger(10)
-        container.setMismatchedQueuesFatal(true)
-        container.setMessageListener(adapter)
         return container
     }
 
@@ -164,15 +166,8 @@ class MetricsThirdPartyListenerConfiguration {
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        val container = SimpleMessageListenerContainer(connectionFactory)
+        val container = getContainer(connectionFactory, rabbitAdmin, adapter)
         container.setQueueNames(metricsTurboDailyReportQueue.name)
-        container.setConcurrentConsumers(1)
-        container.setMaxConcurrentConsumers(max(10, 1))
-        container.setAmqpAdmin(rabbitAdmin)
-        container.setStartConsumerMinInterval(5000)
-        container.setConsecutiveActiveTrigger(10)
-        container.setMismatchedQueuesFatal(true)
-        container.setMessageListener(adapter)
         return container
     }
 

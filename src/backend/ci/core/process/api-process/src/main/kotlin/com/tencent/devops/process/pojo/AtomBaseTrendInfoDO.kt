@@ -36,7 +36,7 @@ import java.time.LocalDate
 data class AtomBaseTrendInfoDO(
     @ApiModelProperty("成功率")
     val successRate: Double? = null,
-    @JsonFormat(pattern="yyyy-MM-dd",timezone="GMT+8")
+    @JsonFormat(pattern="yyyy-MM-dd")
     @ApiModelProperty("统计时间")
     val statisticsTime: LocalDate,
     @ApiModelProperty("平均耗时")

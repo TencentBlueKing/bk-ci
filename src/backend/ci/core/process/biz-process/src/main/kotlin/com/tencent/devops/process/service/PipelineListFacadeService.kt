@@ -1392,13 +1392,13 @@ class PipelineListFacadeService @Autowired constructor(
         )
     }
 
-    fun paginationGetIdAndName(
+    fun searchByProjectIdAndName(
         projectId: String,
         keyword: String?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        channelCodes: List<ChannelCode>?
     ): Page<PipelineIdAndName> {
-        logger.info("paginationGetIdAndName |$projectId|$keyword| $page| $pageSize")
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val pipelineRecords =
             pipelineInfoDao.searchByProjectId(
@@ -1407,6 +1407,7 @@ class PipelineListFacadeService @Autowired constructor(
                 projectCode = projectId,
                 limit = sqlLimit.limit,
                 offset = sqlLimit.offset,
+                channelCodes = channelCodes
             )
         val pipelineInfos = mutableListOf<PipelineIdAndName>()
         pipelineRecords?.map {
@@ -1423,6 +1424,22 @@ class PipelineListFacadeService @Autowired constructor(
             pageSize = pageSize,
             count = count.toLong(),
             records = pipelineInfos
+        )
+    }
+
+    fun searchByPipeline(
+        projectId: String,
+        pipelineId: String
+    ): PipelineIdAndName? {
+        val pipelineRecords = pipelineInfoDao.getPipelineId(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: return null
+        return PipelineIdAndName(
+            pipelineId = pipelineRecords.pipelineId,
+            pipelineName = pipelineRecords.pipelineName,
+            channelCode = ChannelCode.getChannel(pipelineRecords.channel)
         )
     }
 

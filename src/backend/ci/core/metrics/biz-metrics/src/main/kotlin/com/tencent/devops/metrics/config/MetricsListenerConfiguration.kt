@@ -82,15 +82,8 @@ class MetricsListenerConfiguration {
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        val container = SimpleMessageListenerContainer(connectionFactory)
+        val container = getListenerContainer(connectionFactory, rabbitAdmin, adapter)
         container.setQueueNames(buildEndMetricsDataReportQueue.name)
-        container.setConcurrentConsumers(1)
-        container.setMaxConcurrentConsumers(max(10, 1))
-        container.setAmqpAdmin(rabbitAdmin)
-        container.setStartConsumerMinInterval(5000)
-        container.setConsecutiveActiveTrigger(10)
-        container.setMismatchedQueuesFatal(true)
-        container.setMessageListener(adapter)
         return container
     }
 
@@ -127,13 +120,22 @@ class MetricsListenerConfiguration {
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        val container = SimpleMessageListenerContainer(connectionFactory)
+        val container = getListenerContainer(connectionFactory, rabbitAdmin, adapter)
         container.setQueueNames(pipelineLabelChangeMetricsDataSyncQueue.name)
+        return container
+    }
+
+    fun getListenerContainer(
+        connectionFactory: ConnectionFactory,
+        rabbitAdmin: RabbitAdmin,
+        adapter: MessageListenerAdapter
+    ): SimpleMessageListenerContainer {
+        val container = SimpleMessageListenerContainer(connectionFactory)
         container.setConcurrentConsumers(1)
         container.setMaxConcurrentConsumers(max(10, 1))
+        container.setConsecutiveActiveTrigger(10)
         container.setAmqpAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(5000)
-        container.setConsecutiveActiveTrigger(10)
         container.setMismatchedQueuesFatal(true)
         container.setMessageListener(adapter)
         return container

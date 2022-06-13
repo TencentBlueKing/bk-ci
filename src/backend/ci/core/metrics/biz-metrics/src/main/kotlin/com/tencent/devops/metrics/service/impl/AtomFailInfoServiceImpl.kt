@@ -40,7 +40,7 @@ import com.tencent.devops.metrics.dao.AtomFailInfoDao
 import com.tencent.devops.metrics.service.AtomFailInfoManageService
 import com.tencent.devops.metrics.pojo.`do`.AtomErrorCodeStatisticsInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomFailDetailInfoDO
-import com.tencent.devops.metrics.pojo.`do`.BaseQueryReqDO
+import com.tencent.devops.metrics.pojo.`vo`.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryAtomFailInfoDTO
 import com.tencent.devops.metrics.pojo.qo.QueryAtomFailInfoQO
@@ -58,13 +58,12 @@ class AtomFailInfoServiceImpl @Autowired constructor(
     override fun queryAtomErrorCodeStatisticsInfo(
         queryAtomFailInfoDTO: QueryAtomFailInfoDTO
     ): List<AtomErrorCodeStatisticsInfoDO> {
-        logger.info("queryAtomFailInfoDTO: $queryAtomFailInfoDTO")
         //  获取查询记录总数
         val atomErrorCodeCount = atomFailInfoDao.queryAtomErrorCodeOverviewCount(
             dslContext,
             QueryAtomFailInfoQO(
                 projectId = queryAtomFailInfoDTO.projectId,
-                BaseQueryReqDO(
+                BaseQueryReqVO(
                     pipelineIds = queryAtomFailInfoDTO.pipelineIds,
                     pipelineLabelIds = queryAtomFailInfoDTO.pipelineLabelIds,
                     startTime = queryAtomFailInfoDTO.startTime,
@@ -85,7 +84,7 @@ class AtomFailInfoServiceImpl @Autowired constructor(
             dslContext,
             QueryAtomFailInfoQO(
                 projectId = queryAtomFailInfoDTO.projectId,
-                BaseQueryReqDO(
+                BaseQueryReqVO(
                     pipelineIds = queryAtomFailInfoDTO.pipelineIds,
                     pipelineLabelIds = queryAtomFailInfoDTO.pipelineLabelIds,
                     startTime = queryAtomFailInfoDTO.startTime,
@@ -106,28 +105,21 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                     errorCode = it[BK_ERROR_CODE] as Int,
                     errorMsg = it[BK_ERROR_MSG] as String
                 ),
-                errorCount = it[BK_ERROR_COUNT] as Int
+                errorCount = it[BK_ERROR_COUNT] as Long
             )
         }
         return atomErrorCodeStatisticsInfos
-//        return Page(
-//            page = queryAtomFailInfoDTO.page!!,
-//            pageSize = queryAtomFailInfoDTO.pageSize!!,
-//            count = atomErrorCodeCount.toLong(),
-//            records = atomErrorCodeStatisticsInfos
-//        )
     }
 
     override fun queryPipelineFailDetailInfo(
         queryAtomFailInfoDTO: QueryAtomFailInfoDTO
     ): Page<AtomFailDetailInfoDO> {
-        logger.info("queryAtomFailInfoDTO: $queryAtomFailInfoDTO")
         // 查询符合查询条件的记录数
         val pipelineFailDetailCount = atomFailInfoDao.queryAtomFailDetailCount(
             dslContext,
             QueryAtomFailInfoQO(
                 projectId = queryAtomFailInfoDTO.projectId,
-                BaseQueryReqDO(
+                BaseQueryReqVO(
                     pipelineIds = queryAtomFailInfoDTO.pipelineIds,
                     pipelineLabelIds = queryAtomFailInfoDTO.pipelineLabelIds,
                     startTime = queryAtomFailInfoDTO.startTime,
@@ -138,7 +130,6 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 atomCodes = queryAtomFailInfoDTO.atomCodes
             )
         )
-        logger.info("queryPipelineFailDetailInfo  pipelineFailDetailCount: $pipelineFailDetailCount")
         if (pipelineFailDetailCount > BK_QUERY_COUNT_MAX) {
             throw ErrorCodeException(
                 errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
@@ -148,7 +139,7 @@ class AtomFailInfoServiceImpl @Autowired constructor(
             dslContext,
             QueryAtomFailInfoQO(
                 projectId = queryAtomFailInfoDTO.projectId,
-                BaseQueryReqDO(
+                BaseQueryReqVO(
                     pipelineIds = queryAtomFailInfoDTO.pipelineIds,
                     pipelineLabelIds = queryAtomFailInfoDTO.pipelineLabelIds,
                     startTime = queryAtomFailInfoDTO.startTime,
@@ -161,10 +152,9 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 queryAtomFailInfoDTO.pageSize
             )
         )
-        logger.info("queryPipelineFailDetailInfo result: $result")
         return Page(
-            page = queryAtomFailInfoDTO.page!!,
-            pageSize = queryAtomFailInfoDTO.pageSize!!,
+            page = queryAtomFailInfoDTO.page,
+            pageSize = queryAtomFailInfoDTO.pageSize,
             count = pipelineFailDetailCount,
             records = result
         )

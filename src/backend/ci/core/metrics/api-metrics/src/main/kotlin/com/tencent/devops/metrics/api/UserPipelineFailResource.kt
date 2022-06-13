@@ -33,8 +33,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.metrics.pojo.`do`.BaseQueryReqDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineFailDetailInfoDO
+import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineFailInfoQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineFailSumInfoVO
 import com.tencent.devops.metrics.pojo.vo.PipelineFailTrendInfoVO
@@ -66,7 +66,7 @@ interface UserPipelineFailResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("查询条件", required = false)
-        baseQueryReq: BaseQueryReqDO?
+        baseQueryReq: BaseQueryReqVO?
     ): Result<List<PipelineFailTrendInfoVO>>
 
     @ApiOperation("查询流水线错误类型统计数据")

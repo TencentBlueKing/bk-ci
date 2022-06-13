@@ -27,6 +27,8 @@
 
 package com.tencent.devops.metrics.pojo.dto
 
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -47,7 +49,8 @@ data class QueryAtomStatisticsInfoDTO(
     @ApiModelProperty("插件代码")
     val atomCodes: List<String>?,
     @ApiModelProperty("页码")
-    val page: Int? = 1,
+    val page: Int = 1,
     @ApiModelProperty("页数")
-    val pageSize: Int? = 10
+    @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+    val pageSize: Int = 10
 )

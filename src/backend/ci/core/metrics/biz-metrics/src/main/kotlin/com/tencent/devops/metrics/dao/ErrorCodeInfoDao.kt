@@ -30,8 +30,11 @@ package com.tencent.devops.metrics.dao
 import com.tencent.devops.model.metrics.tables.TErrorCodeInfo
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.qo.QueryErrorCodeInfoQO
+import com.tencent.devops.model.metrics.tables.TErrorTypeDict
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record2
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -53,7 +56,8 @@ class ErrorCodeInfoDao {
                 .from(this)
                 .where(conditions)
                 .groupBy(ERROR_CODE)
-                .limit((queryCondition.page - 1) * queryCondition.pageSize, queryCondition.pageSize)
+                .offset((queryCondition.page - 1) * queryCondition.pageSize)
+                .limit(queryCondition.pageSize)
                 .fetchInto(ErrorCodeInfoDO::class.java)
         }
     }
@@ -75,6 +79,14 @@ class ErrorCodeInfoDao {
                 .where(conditions)
                 .groupBy(ERROR_CODE)
                 .execute().toLong()
+        }
+    }
+
+    fun getErrorTypeDict(dslContext: DSLContext): Result<Record2<Int, String>> {
+        with(TErrorTypeDict.T_ERROR_TYPE_DICT) {
+            return dslContext.select(ERROR_TYPE, NAME)
+                .from(this)
+                .fetch()
         }
     }
 }

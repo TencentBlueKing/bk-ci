@@ -29,6 +29,7 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineInfoResource
 import com.tencent.devops.process.service.PipelineListFacadeService
@@ -48,6 +49,25 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
         return Result(result)
     }
 
+    override fun paginationGetIdAndName(
+        userId: String,
+        projectId: String,
+        keyword: String?,
+        page: Int,
+        pageSize: Int,
+        channelCodes: List<ChannelCode>?
+    ): Result<Page<PipelineIdAndName>> {
+        checkParam(userId, projectId)
+        val result = pipelineListFacadeService.searchByProjectIdAndName(
+            projectId = projectId,
+            keyword = keyword,
+            page = page,
+            pageSize = pageSize,
+            channelCodes = channelCodes
+        )
+        return Result(result)
+    }
+
     override fun searchByName(
         userId: String,
         projectId: String,
@@ -61,6 +81,17 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
             pageSize = null
         )
         return Result(pipelineInfos)
+    }
+
+    override fun searchByPipelineName(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<PipelineIdAndName?> {
+        checkParam(userId, projectId)
+        return Result(
+            pipelineListFacadeService.searchByPipeline(projectId, pipelineId)
+        )
     }
 
     override fun getPipelineInfo(userId: String, projectId: String, pipelineId: String): Result<PipelineDetailInfo?> {

@@ -66,7 +66,6 @@ class PipelineOverviewServiceImpl @Autowired constructor(
         val totalExecuteCountSum = result?.get(BK_TOTAL_EXECUTE_COUNT_SUM, BigDecimal::class.java)?.toLong()
         val successExecuteCountSum = result?.get(BK_SUCCESS_EXECUTE_COUNT_SUM, BigDecimal::class.java)?.toLong()
         val totalAvgCostTimeSum = result?.get(BK_TOTAL_AVG_COST_TIME_SUM, BigDecimal::class.java)?.toDouble()
-        logger.info("queryPipelineSumInfo result:$result")
         if (totalExecuteCountSum != null && totalAvgCostTimeSum != null) {
             return PipelineSumInfoDO(
                 totalSuccessRate = if (successExecuteCountSum == null || successExecuteCountSum == 0L) 0.0
@@ -89,19 +88,17 @@ class PipelineOverviewServiceImpl @Autowired constructor(
                 queryPipelineOverviewDTO.baseQueryReq
             )
         )
-        logger.info("queryPipelineTrendInfo result:$result")
         val trendInfos = result?.map {
             val totalAvgCostTime = (it.get(BK_TOTAL_AVG_COST_TIME, BigDecimal::class.java))?.toLong()
             val failAvgCostTime = (it.get(BK_FAIL_AVG_COST_TIME, BigDecimal::class.java))?.toLong()
             PipelineTrendInfoDO(
                 statisticsTime = it.get(BK_STATISTICS_TIME, LocalDateTime::class.java),
-                totalExecuteCount = (it.get(BK_TOTAL_EXECUTE_COUNT, BigDecimal::class.java))?.toInt()?: 0,
-                failedExecuteCount = (it.get(BK_FAIL_EXECUTE_COUNT, BigDecimal::class.java))?.toInt()?: 0,
+                totalExecuteCount = (it.get(BK_TOTAL_EXECUTE_COUNT, BigDecimal::class.java))?.toLong()?: 0L,
+                failedExecuteCount = (it.get(BK_FAIL_EXECUTE_COUNT, BigDecimal::class.java))?.toLong()?: 0L,
                 totalAvgCostTime = toMinutes(totalAvgCostTime?: 0L),
                 failAvgCostTime = toMinutes(failAvgCostTime?: 0L)
             )
         }
-        logger.info("queryPipelineTrendInfo trendInfos: $result")
         return trendInfos?: emptyList()
     }
 

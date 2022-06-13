@@ -37,5 +37,5 @@ data class PipelineFailInfoDO(
     @ApiModelProperty("错误类型标识")
     val errorType: Int,
     @ApiModelProperty("错误次数")
-    val errorCount: Int
+    val errorCount: Long
 )
