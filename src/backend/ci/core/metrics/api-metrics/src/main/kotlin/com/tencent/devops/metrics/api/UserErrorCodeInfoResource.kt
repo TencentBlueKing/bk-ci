@@ -70,6 +70,9 @@ interface UserErrorCodeInfoResource {
         @ApiParam("每页大小", required = true, defaultValue = "10")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int,
+        @ApiParam("keyword", required = false)
+        @QueryParam("keyword")
+        keyword: String?
     ): Result<Page<ErrorCodeInfoDO>>
 }

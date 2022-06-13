@@ -36,6 +36,8 @@ data class QueryErrorCodeInfoDTO(
     val errorTypes: List<Int>?,
     @ApiModelProperty("页码")
     val page: Int = 1,
+    @ApiModelProperty
+    val keyword: String?,
     @ApiModelProperty("页数")
     val pageSize: Int = 10
 )

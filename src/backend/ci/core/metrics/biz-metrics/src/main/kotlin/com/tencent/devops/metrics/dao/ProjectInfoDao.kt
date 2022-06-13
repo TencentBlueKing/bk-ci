@@ -107,10 +107,10 @@ class ProjectInfoDao {
         dslContext: DSLContext,
         queryCondition: QueryProjectInfoQO
     ): Long {
+        val conditions = mutableListOf<Condition>()
         with(TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO) {
-            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(queryCondition.projectId))
             if (!queryCondition.pipelineIds.isNullOrEmpty()) {
-                conditions.add(PROJECT_ID.eq(queryCondition.projectId))
                 conditions.add(PIPELINE_ID.`in`(queryCondition.pipelineIds))
             } else {
                 conditions.add(PROJECT_ID.eq(queryCondition.projectId))
@@ -197,14 +197,14 @@ class ProjectInfoDao {
         statisticsTime: LocalDateTime,
         pipelineLabelRelateInfos: List<PipelineLabelRelateInfo>
     ) {
+        val conditions = mutableListOf<Condition>()
         with(TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO) {
             return dslContext.batched {
                pipelineLabelRelateInfos.forEach { pipelineLabelRelateInfo ->
-                   val conditions = mutableListOf<Condition>()
-                   conditions.add(this.PROJECT_ID.eq(pipelineLabelRelateInfo.projectId))
                    if (!pipelineLabelRelateInfo.pipelineId.isNullOrBlank()) {
                        conditions.add(this.PIPELINE_ID.eq(pipelineLabelRelateInfo.pipelineId))
                    }
+                   conditions.add(this.PROJECT_ID.eq(pipelineLabelRelateInfo.projectId))
                    if (pipelineLabelRelateInfo.labelId != null) {
                        conditions.add(LABEL_ID.eq(pipelineLabelRelateInfo.labelId))
                    }
