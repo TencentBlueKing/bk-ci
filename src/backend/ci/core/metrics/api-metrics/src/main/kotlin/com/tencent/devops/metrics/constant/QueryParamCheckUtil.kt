@@ -87,19 +87,19 @@ object QueryParamCheckUtil {
                 params = arrayOf("projectId")
             )
         }
-        val startDate = DateTimeUtil.stringToLocalDate(startTime)
-        val endDate = DateTimeUtil.stringToLocalDate(endTime)
-        val firstDate = LocalDate.now().minusDays(1)
-        val secondDate = firstDate.minusMonths(6)
-        if (startDate!!.isBefore(secondDate)) {
-            throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
-            )
-        }
-        if (endDate!!.isAfter(firstDate)) {
-            throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
-            )
-        }
+//        val startDate = DateTimeUtil.stringToLocalDate(startTime)
+//        val endDate = DateTimeUtil.stringToLocalDate(endTime)
+//        val firstDate = LocalDate.now().minusDays(1)
+//        val secondDate = firstDate.minusMonths(6)
+//        if (startDate!!.isBefore(secondDate)) {
+//            throw ErrorCodeException(
+//                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
+//            )
+//        }
+//        if (endDate!!.isAfter(firstDate)) {
+//            throw ErrorCodeException(
+//                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
+//            )
+//        }
     }
 }

@@ -109,7 +109,7 @@ interface UserPipelineInfoResource {
         pipelineName: String?
     ): Result<List<PipelineIdAndName>>
 
-    @ApiOperation("根据流水线名称搜索")
+    @ApiOperation("根据流水线ID搜索")
     @GET
     @Path("{projectId}/searchByPipelineId")
     fun searchByPipelineName(
@@ -120,7 +120,7 @@ interface UserPipelineInfoResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("搜索名称")
-        @QueryParam("pipelineName")
+        @QueryParam("pipelineId")
         pipelineId: String
     ): Result<PipelineIdAndName?>
 
