@@ -139,10 +139,10 @@ class AuthCoreConfiguration {
     @Bean
     fun tokenFilter(clientTokenService: ClientTokenService) = TokenCheckFilter(clientTokenService)
 
-//    @Bean
-//    fun blackListFilter(
-//        authUserBlackListService: AuthUserBlackListService
-//    ) = BlackListFilter(authUserBlackListService)
+    @Bean
+    fun blackListFilter(
+        authUserBlackListService: AuthUserBlackListService
+    ) = BlackListFilter(authUserBlackListService)
 
     @Bean
     fun blackListAspect(authUserBlackListService: AuthUserBlackListService) = BlackListAspect(authUserBlackListService)

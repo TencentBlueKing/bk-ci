@@ -43,7 +43,7 @@ class BlackListAspect @Autowired constructor(
     val authUserBlackListService: AuthUserBlackListService
 ) {
 
-    @Before("execution (@com.tencent.devops.auth.filter.BlackListCheck * *.*(..))")
+    @Before("execution (* com.tencent.devops.auth.api.service..*.*(..))")
     fun beforeMethod(jp: JoinPoint) {
         logger.info("BlackListAspect start")
         // 参数value
@@ -68,6 +68,6 @@ class BlackListAspect @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(BlackListFilter::class.java)
+        val logger = LoggerFactory.getLogger(BlackListAspect::class.java)
     }
 }
