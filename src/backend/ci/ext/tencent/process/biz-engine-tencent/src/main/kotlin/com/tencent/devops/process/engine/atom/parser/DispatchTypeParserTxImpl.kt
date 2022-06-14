@@ -96,8 +96,6 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     dispatchType = dispatchType
                 )
 
-                logger.info("After common parse, dispatchTypeValue: ${dispatchType.value}, " +
-                                "${dispatchType.dockerBuildVersion}")
                 // 腾讯内部版专有处理
                 if (dispatchType.imageType == ImageType.BKDEVOPS) {
                     if (dispatchType is DockerDispatchType) {
@@ -121,9 +119,6 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                         dispatchType.dockerBuildVersion = dispatchType.value
                     }
                 }
-
-                logger.info("After tx parse, dispatchTypeValue: ${dispatchType.value}, " +
-                                "${dispatchType.dockerBuildVersion}")
             } else if (dispatchType.imageType == ImageType.BKDEVOPS) {
                 // 针对非商店的旧数据处理
                 if (dispatchType.value != DockerVersion.TLINUX1_2.value &&
@@ -148,9 +143,9 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     genThirdDevCloudDispatchMessage(dispatchType, projectId, buildId)
                 }
             }
-            logger.info("DispatchTypeParserTxImpl:AfterTransfer:dispatchType=(${JsonUtil.toJson(dispatchType)})")
+            logger.info("$buildId DispatchTypeParserTxImpl:AfterTransfer:dispatchType=(${JsonUtil.toJson(dispatchType)})")
         } else {
-            logger.info("DispatchTypeParserTxImpl:not StoreDispatchType, no transfer")
+            logger.info("$buildId DispatchTypeParserTxImpl:not StoreDispatchType, no transfer")
         }
     }
 
