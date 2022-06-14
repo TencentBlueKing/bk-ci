@@ -235,8 +235,6 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 pageSize = queryAtomTrendInfoDTO.pageSize
             )
         )
-        val queryAtomCodes = atomStatisticResult.map { it[BK_ATOM_CODE] as String }
-        logger.info("query atom executeStatisticsInfo queryAtomCodes: $queryAtomCodes")
         val queryAtomFailStatisticsInfo = atomStatisticsDao.queryAtomFailStatisticsInfo(
             dslContext,
             QueryAtomStatisticsQO(
@@ -248,7 +246,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                     queryAtomTrendInfoDTO.endTime
                 ),
                 errorTypes = queryAtomTrendInfoDTO.errorTypes,
-                atomCodes = queryAtomCodes
+                atomCodes = atomCodes
             )
         )
         //  获取表头固定字段
