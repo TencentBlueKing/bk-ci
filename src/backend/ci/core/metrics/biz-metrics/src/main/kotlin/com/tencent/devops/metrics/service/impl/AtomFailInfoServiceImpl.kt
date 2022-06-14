@@ -80,6 +80,7 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
             )
         }
+        // 查询插件统计信息
         val result = atomFailInfoDao.queryAtomErrorCodeStatisticsInfo(
             dslContext,
             QueryAtomFailInfoQO(
@@ -97,6 +98,7 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 pageSize = queryAtomFailInfoDTO.pageSize
             )
         )
+        // 对查询结果处理封装
         val atomErrorCodeStatisticsInfos = result.map {
             AtomErrorCodeStatisticsInfoDO(
                 ErrorCodeInfoDO(
@@ -135,6 +137,7 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
             )
         }
+        //  查询详情数据
         val result = atomFailInfoDao.queryAtomFailDetailInfo(
             dslContext,
             QueryAtomFailInfoQO(

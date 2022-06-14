@@ -156,7 +156,6 @@ class AtomStatisticsServiceImpl @Autowired constructor(
     override fun queryAtomExecuteStatisticsInfo(
         queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO
     ): ListPageVO<AtomExecutionStatisticsInfoDO> {
-        logger.info("queryAtomTrendInfoDTO: $queryAtomTrendInfoDTO")
         // 查询符合查询条件的记录数
         val queryAtomExecuteStatisticsCount =
             atomStatisticsDao.queryAtomExecuteStatisticsInfoCount(
@@ -179,7 +178,8 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
             )
         }
-        logger.info("queryAtomExecuteStatisticsCount: $queryAtomExecuteStatisticsCount")
+        logger.info("query atom executeStatisticsInfo Count: $queryAtomExecuteStatisticsCount")
+        //
         val atomStatisticResult = atomStatisticsDao.queryAtomExecuteStatisticsInfo(
             dslContext,
             QueryAtomStatisticsQO(
@@ -197,7 +197,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             )
         )
         val queryAtomCodes = atomStatisticResult.map { it[BK_ATOM_CODE] as String }
-        logger.info("queryAtomCodes: $queryAtomCodes")
+        logger.info("query atom executeStatisticsInfo queryAtomCodes: $queryAtomCodes")
         val queryAtomFailStatisticsInfo = atomStatisticsDao.queryAtomFailStatisticsInfo(
             dslContext,
             QueryAtomStatisticsQO(
@@ -212,7 +212,6 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 atomCodes = queryAtomCodes
             )
         )
-        logger.info("queryAtomExecuteStatisticsInfo queryAtomFailStatisticsInfo: $queryAtomFailStatisticsInfo")
         //  获取表头固定字段
         val headerInfo = getHeaderInfo()
         val atomFailInfos = mutableMapOf<String, MutableMap<String, String>>()
@@ -261,7 +260,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 atomFailInfos = atomFailInfos[it[BK_ATOM_CODE]]?.toMap()?: emptyMap()
             )
         }
-        logger.info("headerInfo: $headerInfo")
+        logger.info("query atom executeStatisticsInfo headerInfo: $headerInfo")
 
         return ListPageVO(
             count = queryAtomExecuteStatisticsCount,

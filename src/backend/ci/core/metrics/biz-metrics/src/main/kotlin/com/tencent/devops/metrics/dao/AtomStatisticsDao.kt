@@ -109,7 +109,7 @@ class AtomStatisticsDao {
         return conditions
     }
 
-    fun getAtomCodesByErrorType(dslContext: DSLContext, queryCondition: QueryAtomStatisticsQO,): List<String> {
+    fun getAtomCodesByErrorType(dslContext: DSLContext, queryCondition: QueryAtomStatisticsQO,): List<String>? {
         with(TAtomFailSummaryData.T_ATOM_FAIL_SUMMARY_DATA) {
             val conditions = mutableListOf<Condition>()
             val pipelineIds = queryCondition.baseQueryReq.pipelineIds
@@ -132,7 +132,7 @@ class AtomStatisticsDao {
             if (fetch.isNotEmpty) {
                 return fetch.map { it.value1() }
             }
-            return emptyList()
+            return queryCondition.atomCodes
         }
     }
 
@@ -160,7 +160,7 @@ class AtomStatisticsDao {
                 step.where(conditions)
             }
             return conditionStep
-                .groupBy(PIPELINE_ID,ATOM_CODE)
+                .groupBy(PIPELINE_ID, ATOM_CODE)
                 .offset((queryCondition.page - 1) * queryCondition.pageSize)
                 .limit(queryCondition.pageSize)
                 .fetch()
