@@ -151,7 +151,7 @@ class ModelCreate @Autowired constructor(
                     ?: yaml.concurrency?.group?.let { true }
                     ?: true,
                 runLockType = when {
-                    yaml.concurrency?.group != null -> PipelineRunLockType.SINGLE
+                    yaml.concurrency?.group != null -> PipelineRunLockType.GROUP_LOCK
                     else -> PipelineRunLockType.MULTIPLE
                 },
                 waitQueueTimeMinute = TimeUnit.HOURS.toMinutes(8).toInt()
