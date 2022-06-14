@@ -321,8 +321,9 @@ class TGitMrActionGit(
         // 获取mr请求的变更文件列表，用来给后面判断
         val changeSet = mutableSetOf<String>()
         apiService.getMrChangeInfo(
-            cred = getGitCred(),
-            gitProjectId = data.getGitProjectId(),
+            cred = getGitCred(data.context.repoTrigger?.buildUserID),
+            // 获取mr信息的project Id和事件强关联，不一定是流水线所处库
+            gitProjectId = data.eventCommon.gitProjectId,
             mrId = event().object_attributes.id.toString(),
             retry = ApiRequestRetryInfo(true)
         )?.files?.forEach {
