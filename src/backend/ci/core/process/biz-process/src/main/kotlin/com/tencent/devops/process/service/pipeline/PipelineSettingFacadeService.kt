@@ -78,7 +78,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         checkPermission: Boolean = true,
         version: Int = 0,
         updateLastModifyUser: Boolean? = true,
-        dispatchPipelineUpdateEvent: Boolean? = true
+        dispatchPipelineUpdateEvent: Boolean = true
     ): String {
         if (checkPermission) {
             checkEditPermission(
@@ -110,7 +110,7 @@ class PipelineSettingFacadeService @Autowired constructor(
             pipelineId = setting.pipelineId,
             labelIds = setting.labels
         )
-        if (dispatchPipelineUpdateEvent ?: true) {
+        if (dispatchPipelineUpdateEvent) {
             pipelineEventDispatcher.dispatch(
                 PipelineUpdateEvent(
                     source = "update_pipeline",
