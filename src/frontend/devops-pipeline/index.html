@@ -47,7 +47,7 @@
                 true
             );
             ajax.send();
-            ajax.onload = function (e) {
+            ajax.onload = function(e) {
                 var div = document.createElement("div");
                 div.setAttribute(
                     "style",
@@ -67,7 +67,7 @@
         <script src="<%= htmlWebpackPlugin.options.VENDOR_LIBS%>"></script>
         <script>
             var X_DEVOPS_PROJECT_ID = "X-DEVOPS-PROJECT-ID";
-            var API_URL_PREFIX = "https://dev.devops-woa.com/ms";
+            var API_URL_PREFIX = "/ms";
             var WEB_URL_PREFIX = "/console";
             var PERM_URL_PREFIX = "__BK_PAAS_PUBLIC_URL__/o/bk_iam_app"; // EE PERM URL PREFIX
             var DOCS_URL_PREFIX = "__BK_CI_DOCS_URL__";
