@@ -700,7 +700,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             setting,
             false,
             pipelineResult.version,
-            dispatchPipelineUpdateEvent = false
+            dispatchPipelineUpdateEvent = true
         )
         return pipelineResult
     }
