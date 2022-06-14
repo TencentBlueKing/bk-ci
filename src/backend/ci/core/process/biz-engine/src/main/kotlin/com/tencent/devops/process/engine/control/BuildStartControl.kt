@@ -196,14 +196,38 @@ class BuildStartControl @Autowired constructor(
             val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
             // #4074 LOCK 不会进入到这里，在启动API已经拦截
             if (setting?.runLockType == PipelineRunLockType.SINGLE ||
-                setting?.runLockType == PipelineRunLockType.SINGLE_LOCK ||
-                setting?.runLockType == PipelineRunLockType.GROUP_LOCK) {
+                setting?.runLockType == PipelineRunLockType.SINGLE_LOCK) {
                 // #4074 锁定当前构建是队列中第一个排队待执行的
                 if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
                     canStart = pipelineRuntimeExtService.queueCanPend2Start(projectId, pipelineId, buildId = buildId)
                 }
                 if (canStart) {
                     val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
+
+                    if (buildSummaryRecord!!.runningCount > 0) {
+                        // 需要重新入队等待
+                        pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
+
+                        buildLogPrinter.addLine(
+                            message = "Mode: ${setting.runLockType}, queue: ${buildSummaryRecord.runningCount}",
+                            buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
+                        )
+                        canStart = false
+                    }
+                } else {
+                    buildLogPrinter.addLine(
+                        message = "Waiting build #${buildInfo.buildNum - 1}",
+                        buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
+                    )
+                }
+            }
+
+            if (setting?.runLockType == PipelineRunLockType.GROUP_LOCK){
+                // #4074 锁定当前构建是队列中第一个排队待执行的
+                if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
+                    canStart = pipelineRuntimeExtService.queueCanPend2Start(projectId, pipelineId, buildId = buildId)
+                }
+                if (canStart) {
                     // #6521 并发组中需要等待其他流水线
                     val concurrencyGroupRunningCount = setting.concurrencyGroup?.let {
                         pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
@@ -213,15 +237,13 @@ class BuildStartControl @Autowired constructor(
                         ).size
                     } ?: 0
 
-                    if (buildSummaryRecord!!.runningCount > 0 || concurrencyGroupRunningCount > 0) {
+                    if (concurrencyGroupRunningCount > 0) {
                         // 需要重新入队等待
                         pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
-
                         buildLogPrinter.addLine(
-                            message = "Mode: ${setting.runLockType}," + if (concurrencyGroupRunningCount > 0)
+                            message = "Mode: ${setting.runLockType}," +
                                 "concurrency for group(${setting.concurrencyGroup}) " +
-                                    "and queue: $concurrencyGroupRunningCount"
-                            else " queue: ${buildSummaryRecord.runningCount}",
+                                        "and queue: $concurrencyGroupRunningCount",
                             buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
                         )
                         canStart = false
