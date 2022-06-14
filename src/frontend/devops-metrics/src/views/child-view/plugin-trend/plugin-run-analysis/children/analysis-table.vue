@@ -38,14 +38,14 @@ const handleRowClick = (e, row) => {
     name: 'PluginFailAnalysis',
     query: {
       pipelineId: row.pipelineId,
+      atomCode: row.atomCode
     },
   })
 }
 
 const getData = () => {
   isLoading.value = true;
-  http
-    .getAtomStatisticsDetail(
+  http.getAtomStatisticsDetail(
       props.status,
       pagination.value.current,
       pagination.value.limit,
@@ -57,10 +57,17 @@ const getData = () => {
           field,
         });
       });
-      tableData.value = data.records?.map(record => ({
-        ...record,
-        ...record.atomBaseInfo,
-      }));
+      tableData.value = data.records?.map(record => {
+        if (!record.classifyCode) {
+          record.classifyCode = '--'
+        }
+        record.successRate += '%'
+        return {
+          ...record,
+          ...record.atomBaseInfo,
+          ...record.atomFailInfos,
+        }
+      });
       pagination.value.count = data.count;
     })
     .finally(() => {
@@ -69,8 +76,12 @@ const getData = () => {
 };
 
 watch(
-  props.status,
-  getData,
+  () => props.status, () => {
+    columns.value = []
+    tableData.value = []
+    getData()
+  }
+  ,
 );
 onMounted(getData);
 </script>
@@ -97,5 +108,8 @@ onMounted(getData);
 .analysis-table {
   margin-top: .15rem;
   margin-bottom: .08rem;
+  ::v-deep .bk-table-body {
+    cursor: pointer;
+  }
 }
 </style>

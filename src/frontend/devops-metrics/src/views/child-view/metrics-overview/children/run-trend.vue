@@ -93,6 +93,7 @@ const init = () => {
           label: runFail.name,
           errorType: runFail.errorType,
           backgroundColor: barColorList[index],
+          borderColor: barColorList[index],
         });
         runFailTrend.value.labels = runFail.failInfos.map(failInfo => failInfo.statisticsTime);
       });
@@ -103,8 +104,14 @@ const init = () => {
 };
 
 watch(
-  () => props.status,
-  init,
+  () => props.status, () => {
+    runTimeTrend.value.data[0].list = []
+    runTimeTrend.value.data[1].list = []
+    runTimeTrend.value.labels = []
+    runFailTrend.value.data = []
+    runFailTrend.value.labels = []
+    init()
+  }
 );
 onBeforeMount(init);
 </script>

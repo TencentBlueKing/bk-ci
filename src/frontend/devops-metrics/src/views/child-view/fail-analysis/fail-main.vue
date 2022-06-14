@@ -16,7 +16,7 @@ const status = ref({
   pipelineLabelIds: [],
   startTime: <string>route.query.time || '',
   endTime: <string>route.query.time || '',
-  errorTypes: <any[]>[route.query.errorType].filter(v => v),
+  errorTypes: <number[]>[],
 });
 
 const handleFilterChange = (newStatus) => {
@@ -24,6 +24,12 @@ const handleFilterChange = (newStatus) => {
     ...status.value,
     ...newStatus,
   };
+};
+
+if (route.query.errorType) {
+  handleFilterChange({
+    errorTypes: [Number(route.query.errorType)]
+  })
 };
 </script>
 
@@ -36,6 +42,7 @@ const handleFilterChange = (newStatus) => {
     />
     <error-doughnut
       :status="status"
+      @change="handleFilterChange"
     />
     <error-table
       :status="status"

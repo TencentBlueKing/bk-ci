@@ -57,6 +57,7 @@ export default defineComponent({
           responsive: true,
           plugins: {
             tooltip: {
+              bodySpacing: 10,
               mode: 'x',
               intersect: false,
               enableItemActive: true,
