@@ -45,6 +45,7 @@ object Constants {
     const val BK_FAIL_EXECUTE_COUNT = "failExecuteCount"
     const val BK_TOTAL_AVG_COST_TIME = "totalAvgCostTime"
     const val BK_FAIL_AVG_COST_TIME = "failAvgCostTime"
+    const val BK_PROJECT_ID = "projectId"
     const val BK_PIPELINE_ID = "pipelineId"
     const val BK_ERROR_TYPE = "errorType"
     const val BK_ERROR_TYPE_NAME = "errorTypeName"

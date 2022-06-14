@@ -105,7 +105,7 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                     errorCode = it[BK_ERROR_CODE] as Int,
                     errorMsg = it[BK_ERROR_MSG] as String
                 ),
-                errorCount = it[BK_ERROR_COUNT] as Long
+                errorCount = (it[BK_ERROR_COUNT] as Int).toLong()
             )
         }
         return atomErrorCodeStatisticsInfos

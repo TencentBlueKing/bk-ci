@@ -41,6 +41,7 @@ import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_ID
 import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_NAME
+import com.tencent.devops.metrics.constant.Constants.BK_PROJECT_ID
 import com.tencent.devops.metrics.constant.Constants.BK_START_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_START_USER
 import com.tencent.devops.model.metrics.tables.TAtomFailDetailData
@@ -175,7 +176,7 @@ class AtomFailInfoDao {
                 tProjectPipelineLabelInfo
             )
             val step = dslContext.select(
-                this.PROJECT_ID,
+                this.PROJECT_ID.`as`(BK_PROJECT_ID),
                 this.PIPELINE_ID.`as`(BK_PIPELINE_ID),
                 this.PIPELINE_NAME.`as`(BK_PIPELINE_NAME),
                 this.BUILD_ID.`as`(BK_BUILD_ID),
