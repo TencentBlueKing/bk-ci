@@ -95,6 +95,9 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     buildId = buildId,
                     dispatchType = dispatchType
                 )
+
+                logger.info("After common parse, dispatchTypeValue: ${dispatchType.value}, " +
+                                "${dispatchType.dockerBuildVersion}")
                 // 腾讯内部版专有处理
                 if (dispatchType.imageType == ImageType.BKDEVOPS) {
                     if (dispatchType is DockerDispatchType) {
@@ -118,6 +121,9 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                         dispatchType.dockerBuildVersion = dispatchType.value
                     }
                 }
+
+                logger.info("After tx parse, dispatchTypeValue: ${dispatchType.value}, " +
+                                "${dispatchType.dockerBuildVersion}")
             } else if (dispatchType.imageType == ImageType.BKDEVOPS) {
                 // 针对非商店的旧数据处理
                 if (dispatchType.value != DockerVersion.TLINUX1_2.value && dispatchType.value != DockerVersion.TLINUX2_2.value) {
