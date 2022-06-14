@@ -495,8 +495,8 @@ class TaskLogOverviewServiceImpl @Autowired constructor(
                     taskLogOverviewEntity.taskId = taskId
                     taskLogOverviewEntity.buildId = buildId
                     taskLogOverviewEntity.buildNum = taskLogGroup.firstOrNull()?.buildNum
-                    taskLogOverviewEntity.startTime = taskLogGroup.map { it.startTime }.min()
-                    taskLogOverviewEntity.endTime = taskLogGroup.map { it.endTime }.max()
+                    taskLogOverviewEntity.startTime = taskLogGroup.map { it.startTime }.minOrNull ()
+                    taskLogOverviewEntity.endTime = taskLogGroup.map { it.endTime }.maxOrNull ()
                     taskLogOverviewEntity.taskLogEntityList = taskLogGroup
                     taskLogOverviewEntity.status = calTaskStatus(taskLogGroup)
                     taskLogOverviewEntityList.add(taskLogOverviewEntity)
