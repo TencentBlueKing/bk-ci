@@ -43,9 +43,8 @@ class BlackListAspect @Autowired constructor(
     val authUserBlackListService: AuthUserBlackListService
 ) {
 
-    @Before("execution (* com.tencent.devops.auth.api.service..*.*(..))")
+    @Before("execution (* com.tencent.devops.auth.api..*.*(..))")
     fun beforeMethod(jp: JoinPoint) {
-        logger.info("BlackListAspect start")
         // 参数value
         val parameterValue = jp.args
         var userId: String? = null
@@ -57,8 +56,8 @@ class BlackListAspect @Autowired constructor(
                 else -> Unit
             }
         }
-        logger.info("BlackListAspect userId: $userId")
         if (!userId.isNullOrEmpty()) {
+            logger.info("BlackListAspect userId: $userId")
             val checkBlackList = authUserBlackListService.checkBlackListUser(userId)
             if (checkBlackList) {
                 logger.warn("blackList user $userId call ${jp.signature.name}")

@@ -27,17 +27,14 @@
 
 package com.tencent.devops.auth.service.iam
 
-import com.tencent.devops.auth.filter.BlackListCheck
 import com.tencent.devops.common.auth.api.AuthPermission
 
 interface PermissionService {
-    @BlackListCheck
     fun validateUserActionPermission(
         userId: String,
         action: String
     ): Boolean
 
-    @BlackListCheck
     fun validateUserResourcePermission(
         userId: String,
         action: String,
@@ -45,7 +42,6 @@ interface PermissionService {
         resourceType: String?
     ): Boolean
 
-    @BlackListCheck
     fun validateUserResourcePermissionByRelation(
         userId: String,
         action: String,
