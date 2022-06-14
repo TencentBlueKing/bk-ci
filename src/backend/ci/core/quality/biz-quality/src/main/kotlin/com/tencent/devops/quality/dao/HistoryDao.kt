@@ -284,15 +284,20 @@ class HistoryDao @Autowired constructor(
         pipelineId: String,
         buildId: String,
         result: RuleInterceptResult,
-        ruleIds: Set<Long>
+        ruleIds: Set<Long>?
     ): Int {
         return with(THistory.T_HISTORY) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                PIPELINE_ID.eq(pipelineId),
+                BUILD_ID.eq(buildId)
+            )
+            if (!ruleIds.isNullOrEmpty()) {
+                conditions.add(RULE_ID.`in`(ruleIds))
+            }
             innerDslContext.update(this)
                 .set(RESULT, result.name)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .and(BUILD_ID.eq(buildId))
-                .and(RULE_ID.`in`(ruleIds))
+                .where(conditions)
                 .and(RESULT.eq(RuleInterceptResult.WAIT.name))
                 .execute()
         }

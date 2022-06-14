@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -546,6 +547,20 @@ class PipelineBuildQualityService(
             if (success.toBoolean()) {
                 AtomResponse(BuildStatus.REVIEW_PROCESSED)
             } else {
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildReviewBroadCastEvent(
+                        source = "taskAtom",
+                        projectId = task.projectId,
+                        pipelineId = task.pipelineId,
+                        buildId = buildId,
+                        reviewType = BuildReviewType.QUALITY_TASK_REVIEW_ABORT,
+                        status = "",
+                        userId = "",
+                        taskId = null,
+                        stageId = "",
+                        timeout = true
+                    )
+                )
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "${taskName}审核超时",
