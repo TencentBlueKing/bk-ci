@@ -100,7 +100,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                         page = 1,
                         pageSize = 10
                     ).map { it.atomCode }
-                } else emptyList()
+                } else configs
 
         } else queryAtomTrendInfoDTO.atomCodes!!
         val result = atomStatisticsDao.queryAtomTrendInfo(
@@ -193,7 +193,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                         page = 1,
                         pageSize = 10
                     ).map { it.atomCode }
-                } else emptyList()
+                } else configs
 
             } else queryAtomTrendInfoDTO.atomCodes!!
         val queryAtomExecuteStatisticsCount =
