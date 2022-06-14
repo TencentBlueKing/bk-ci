@@ -28,6 +28,7 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.service.utils.JooqUtils.count
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_BUILD_ID
@@ -74,7 +75,7 @@ class AtomFailInfoDao {
                 queryCondition,
                 tProjectPipelineLabelInfo
             )
-            val errorCount = DSL.field("count(${ERROR_CODE.name})", Int::class.java).`as`(BK_ERROR_COUNT)
+            val errorCount = count(ERROR_CODE).`as`(BK_ERROR_COUNT)
             val step = dslContext.select(
                 this.ERROR_TYPE.`as`(BK_ERROR_TYPE),
                 tErrorTypeDict.NAME.`as`(BK_ERROR_TYPE_NAME),

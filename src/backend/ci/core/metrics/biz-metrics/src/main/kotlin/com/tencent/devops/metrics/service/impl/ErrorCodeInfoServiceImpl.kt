@@ -44,7 +44,6 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
     private val errorCodeInfoDao: ErrorCodeInfoDao
 ): ErrorCodeInfoManageService {
     override fun getErrorCodeInfo(queryErrorCodeInfoDTO: QueryErrorCodeInfoDTO): Page<ErrorCodeInfoDO> {
-        logger.info("queryErrorCodeInfoDTO: $queryErrorCodeInfoDTO")
         return Page(
             page = queryErrorCodeInfoDTO.page,
             pageSize = queryErrorCodeInfoDTO.pageSize,
