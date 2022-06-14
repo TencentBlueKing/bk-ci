@@ -261,7 +261,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 totalExecuteCount = totalExecuteCount,
                 successExecuteCount = successExecuteCount,
                 successRate = if (successExecuteCount <= 0L || totalExecuteCount <= 0L) 0.0
-                else String.format("%.2f", successExecuteCount.toDouble() * 100 / totalExecuteCount).toDouble(),
+                else String.format("%.2f", successExecuteCount.toDouble() * 100 / totalExecuteCount.toDouble()).toDouble(),
                 atomFailInfos = atomFailInfos[it[BK_ATOM_CODE]]?.toMap()?: emptyMap()
             )
         }
