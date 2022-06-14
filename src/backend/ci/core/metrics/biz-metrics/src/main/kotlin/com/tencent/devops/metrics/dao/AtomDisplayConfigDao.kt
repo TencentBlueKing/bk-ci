@@ -31,6 +31,7 @@ import com.tencent.devops.model.metrics.tables.TAtomDisplayConfig
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.po.AtomDisplayConfigPO
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -85,7 +86,9 @@ class AtomDisplayConfigDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
             val conditionStep =
-                if (!keyword.isNullOrBlank()) step.and(ATOM_NAME.like("%$keyword%")) else step
+                if (!keyword.isNullOrBlank()) {
+                    step.and(ATOM_NAME.like("%$keyword%"))
+                } else { step }
                 return conditionStep.fetchInto(AtomBaseInfoDO::class.java)
         }
     }
@@ -99,14 +102,17 @@ class AtomDisplayConfigDao {
         pageSize: Int
     ): List<AtomBaseInfoDO> {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
-            val step = dslContext.select(ATOM_CODE, ATOM_NAME)
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(ATOM_CODE.notIn(atomCodes))
-            val conditionStep =
-                if (!keyword.isNullOrBlank()) step.and(ATOM_NAME.like("%$keyword%")) else step
-                return conditionStep
-                    .groupBy(ATOM_CODE)
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            if (!atomCodes.isNullOrEmpty()) {
+                conditions.add(ATOM_CODE.notIn(atomCodes))
+            }
+            if (!keyword.isNullOrBlank()) {
+                conditions.add(ATOM_NAME.like("%$keyword%"))
+            }
+            val step = dslContext.select(ATOM_CODE, ATOM_NAME).from(this)
+                .where(conditions)
+                return step.groupBy(ATOM_CODE)
                     .limit((page - 1) * pageSize, pageSize)
                     .fetchInto(AtomBaseInfoDO::class.java)
         }
