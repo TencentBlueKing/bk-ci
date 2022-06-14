@@ -51,6 +51,11 @@ class BlackListFilter @Autowired constructor(
         val userId = httpServletRequest.getHeader(AUTH_HEADER_USER_ID)
             ?: httpServletRequest.getParameter("userId")
 
+        val map = httpServletRequest.parameterMap
+        map.forEach { t, u ->
+            logger.info("parameterMap key $t value $u")
+        }
+
         if (userId.isNullOrEmpty()) {
             chain.doFilter(request, response)
         }

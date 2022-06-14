@@ -69,7 +69,7 @@ class AuthUserBlackListService @Autowired constructor(
         userId: String
     ): Boolean {
         // 优先从缓存中取数据
-        if (unBlackListCache.getIfPresent(userId) == null) {
+        if (unBlackListCache.getIfPresent(userId) != null) {
             return false
         }
         val userInfo = authUserBlackListDao.get(dslContext, userId)
