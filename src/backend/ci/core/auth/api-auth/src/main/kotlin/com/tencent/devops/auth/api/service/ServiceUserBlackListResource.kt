@@ -63,7 +63,7 @@ interface ServiceUserBlackListResource {
     @Path("/")
     @ApiOperation("移出黑名单用户")
     fun removeBlackListUser(
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @QueryParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待移出用户Id")
         removeUserId: String
     ): Result<Boolean>
