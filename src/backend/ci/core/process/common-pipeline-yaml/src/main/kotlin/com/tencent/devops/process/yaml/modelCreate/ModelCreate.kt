@@ -154,8 +154,7 @@ class ModelCreate @Autowired constructor(
                     yaml.concurrency?.group != null -> PipelineRunLockType.SINGLE
                     else -> PipelineRunLockType.MULTIPLE
                 },
-                waitQueueTimeMinute = TimeUnit.HOURS.toMinutes(8).toInt(),
-                maxQueueSize = 1
+                waitQueueTimeMinute = TimeUnit.HOURS.toMinutes(8).toInt()
             )
         )
     }
