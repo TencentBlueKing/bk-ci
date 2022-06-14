@@ -11,7 +11,6 @@ import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
-import com.tencent.devops.stream.trigger.actions.tgit.TGitActionGit
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
@@ -118,7 +117,6 @@ class StreamRepoTriggerAction(
         if (repoHook.name!!.contains("/") && !repoHook.name!!.startsWith("/")) {
             checkHaveGroupName(repoHook.name!!, userName)
         }
-
     }
 
     override fun updateLastBranch(pipelineId: String, branch: String) {
