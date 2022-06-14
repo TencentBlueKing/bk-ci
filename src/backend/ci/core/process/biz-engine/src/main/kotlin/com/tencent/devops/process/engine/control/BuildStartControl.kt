@@ -264,12 +264,11 @@ class BuildStartControl @Autowired constructor(
             val concurrencyGroupRunningCount = concurrencyGroup?.let {
                 pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                     projectId = projectId,
-
                     concurrencyGroup = it,
                     status = listOf(BuildStatus.RUNNING)
                 ).size
             } ?: 0
-
+            LOG.info("ENGINE|$buildId|$source|CHECK_GROUP_TYPE|$concurrencyGroup|$concurrencyGroupRunningCount")
             if (concurrencyGroupRunningCount > 0) {
                 // 需要重新入队等待
                 pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
