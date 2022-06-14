@@ -100,9 +100,9 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                         page = 1,
                         pageSize = 10
                     ).map { it.atomCode }
-                } else queryAtomTrendInfoDTO.atomCodes
+                } else emptyList()
 
-        } else queryAtomTrendInfoDTO.atomCodes
+        } else queryAtomTrendInfoDTO.atomCodes!!
         val result = atomStatisticsDao.queryAtomTrendInfo(
             dslContext,
             QueryAtomStatisticsQO(
@@ -193,9 +193,9 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                         page = 1,
                         pageSize = 10
                     ).map { it.atomCode }
-                } else queryAtomTrendInfoDTO.atomCodes
+                } else emptyList()
 
-            } else queryAtomTrendInfoDTO.atomCodes
+            } else queryAtomTrendInfoDTO.atomCodes!!
         val queryAtomExecuteStatisticsCount =
             atomStatisticsDao.queryAtomExecuteStatisticsInfoCount(
                 dslContext,

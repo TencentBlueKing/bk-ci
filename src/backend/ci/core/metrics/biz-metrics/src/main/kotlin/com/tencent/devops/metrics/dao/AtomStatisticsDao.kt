@@ -91,7 +91,7 @@ class AtomStatisticsDao {
     private fun TAtomOverviewData.getConditions(
         queryCondition: QueryAtomStatisticsQO,
         pipelineLabelInfo: TProjectPipelineLabelInfo,
-        atomCodes: List<String>?
+        atomCodes: List<String>
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(this.PROJECT_ID.eq(queryCondition.projectId))
@@ -102,16 +102,14 @@ class AtomStatisticsDao {
         if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
             conditions.add(pipelineLabelInfo.LABEL_ID.`in`(queryCondition.baseQueryReq.pipelineLabelIds))
         }
-        if (!atomCodes.isNullOrEmpty()) {
-            conditions.add(this.ATOM_CODE.`in`(atomCodes))
-        }
+        conditions.add(this.ATOM_CODE.`in`(atomCodes))
         val startTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime)?.atStartOfDay()
         val endTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime)?.atStartOfDay()
         conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
         return conditions
     }
 
-    fun getAtomCodesByErrorType(dslContext: DSLContext, queryCondition: QueryAtomStatisticsQO,): List<String>? {
+    fun getAtomCodesByErrorType(dslContext: DSLContext, queryCondition: QueryAtomStatisticsQO,): List<String> {
         with(TAtomFailSummaryData.T_ATOM_FAIL_SUMMARY_DATA) {
             val conditions = mutableListOf<Condition>()
             val pipelineIds = queryCondition.baseQueryReq.pipelineIds

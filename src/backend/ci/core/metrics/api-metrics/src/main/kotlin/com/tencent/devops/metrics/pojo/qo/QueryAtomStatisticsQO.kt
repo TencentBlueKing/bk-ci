@@ -40,7 +40,7 @@ data class QueryAtomStatisticsQO(
     @ApiModelProperty("错误类型")
     val errorTypes: List<Int>?,
     @ApiModelProperty("插件代码")
-    val atomCodes: List<String>?,
+    val atomCodes: List<String>,
     @ApiModelProperty("页码")
     val page: Int = 1,
     @ApiModelProperty("页数")
