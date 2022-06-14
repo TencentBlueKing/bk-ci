@@ -34,6 +34,8 @@ import java.time.LocalDateTime
 
 @ApiModel("插件失败详情信息")
 data class AtomFailDetailInfoDO(
+    @ApiModelProperty("项目ID")
+    val projectId: String,
     @ApiModelProperty("流水线ID")
     val pipelineId: String,
     @ApiModelProperty("流水线名称")

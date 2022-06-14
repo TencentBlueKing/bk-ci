@@ -175,6 +175,7 @@ class AtomFailInfoDao {
                 tProjectPipelineLabelInfo
             )
             val step = dslContext.select(
+                this.PROJECT_ID,
                 this.PIPELINE_ID.`as`(BK_PIPELINE_ID),
                 this.PIPELINE_NAME.`as`(BK_PIPELINE_NAME),
                 this.BUILD_ID.`as`(BK_BUILD_ID),
