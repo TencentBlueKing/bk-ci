@@ -80,7 +80,7 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
             )
         }
-        val errorCodeStatisticsInfo = atomFailInfoDao.queryAtomErrorCodeStatisticsInfo(
+        val result = atomFailInfoDao.queryAtomErrorCodeStatisticsInfo(
             dslContext,
             QueryAtomFailInfoQO(
                 projectId = queryAtomFailInfoDTO.projectId,
@@ -97,7 +97,7 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 pageSize = queryAtomFailInfoDTO.pageSize
             )
         )
-        val atomErrorCodeStatisticsInfos = errorCodeStatisticsInfo.map {
+        val atomErrorCodeStatisticsInfos = result.map {
             AtomErrorCodeStatisticsInfoDO(
                 ErrorCodeInfoDO(
                     errorType = it[BK_ERROR_TYPE] as Int,

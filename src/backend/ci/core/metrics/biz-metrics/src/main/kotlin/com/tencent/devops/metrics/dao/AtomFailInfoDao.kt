@@ -75,7 +75,7 @@ class AtomFailInfoDao {
                 queryCondition,
                 tProjectPipelineLabelInfo
             )
-            val errorCount = count(ERROR_CODE).`as`(BK_ERROR_COUNT)
+            val errorCount = count<Int>(ERROR_CODE).`as`(BK_ERROR_COUNT)
             val step = dslContext.select(
                 this.ERROR_TYPE.`as`(BK_ERROR_TYPE),
                 tErrorTypeDict.NAME.`as`(BK_ERROR_TYPE_NAME),
