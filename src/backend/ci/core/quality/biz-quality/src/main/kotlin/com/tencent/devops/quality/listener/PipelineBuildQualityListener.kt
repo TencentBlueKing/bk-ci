@@ -50,6 +50,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("NestedBlockDepth")
 class PipelineBuildQualityListener @Autowired constructor(
     private val dslContext: DSLContext,
     private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
@@ -136,16 +137,30 @@ class PipelineBuildQualityListener @Autowired constructor(
     fun listenPipelineTimeoutBroadCastEvent(pipelineTimeoutEvent: PipelineBuildReviewBroadCastEvent) {
         try {
             logger.info("QUALITY|pipelineTimeoutListener timeoutEvent: $pipelineTimeoutEvent")
+            val projectId = pipelineTimeoutEvent.projectId
+            val pipelineId = pipelineTimeoutEvent.pipelineId
+            val buildId = pipelineTimeoutEvent.buildId
             if (pipelineTimeoutEvent.timeout == true) {
-                val ruleIdList = qualityRuleBuildHisDao.listBuildHisRules(
-                    dslContext = dslContext,
-                    projectId = pipelineTimeoutEvent.projectId,
-                    pipelineId = pipelineTimeoutEvent.pipelineId,
-                    ruleBuildId = pipelineTimeoutEvent.buildId
-                ).map { it.id }
-                logger.info("QUALITY|timeout_rule_size: ${ruleIdList.size}")
-                if (ruleIdList.isNotEmpty()) {
-                    qualityRuleBuildHisDao.batchUpdateStatus(ruleIdList, RuleInterceptResult.FAIL.name)
+                if (pipelineTimeoutEvent.source == "taskAtom") {
+                    logger.info("QUALITY_TIMEOUT|projectId=[$projectId]|pipelineId=[$pipelineId]|buildId=[$buildId]")
+                    qualityHistoryDao.batchUpdateHistoryResult(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        result = RuleInterceptResult.INTERCEPT_TIMEOUT,
+                        ruleIds = null
+                    )
+                } else {
+                    val ruleIdList = qualityRuleBuildHisDao.listBuildHisRules(
+                        dslContext = dslContext,
+                        projectId = pipelineTimeoutEvent.projectId,
+                        pipelineId = pipelineTimeoutEvent.pipelineId,
+                        ruleBuildId = pipelineTimeoutEvent.buildId
+                    ).map { it.id }
+                    logger.info("QUALITY|timeout_rule_size: ${ruleIdList.size}")
+                    if (ruleIdList.isNotEmpty()) {
+                        qualityRuleBuildHisDao.batchUpdateStatus(ruleIdList, RuleInterceptResult.INTERCEPT_TIMEOUT.name)
+                    }
                 }
             }
         } catch (e: Exception) {
