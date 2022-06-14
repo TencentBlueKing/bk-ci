@@ -143,7 +143,8 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     genThirdDevCloudDispatchMessage(dispatchType, projectId, buildId)
                 }
             }
-            logger.info("$buildId DispatchTypeParserTxImpl:AfterTransfer:dispatchType=(${JsonUtil.toJson(dispatchType)})")
+            logger.info("$buildId DispatchTypeParserTxImpl:AfterTransfer:" +
+                            "dispatchType=(${JsonUtil.toJson(dispatchType)})")
         } else {
             logger.info("$buildId DispatchTypeParserTxImpl:not StoreDispatchType, no transfer")
         }
