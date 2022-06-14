@@ -173,7 +173,8 @@ class BuildEndControl @Autowired constructor(
         val allStageStatus = pipelineBuildDetailService.buildEnd(
             projectId = projectId,
             buildId = buildId,
-            buildStatus = buildStatus
+            buildStatus = buildStatus,
+            errorMsg = errorMsg
         )
 
         pipelineRuntimeService.updateBuildHistoryStageState(projectId, buildId, allStageStatus)
