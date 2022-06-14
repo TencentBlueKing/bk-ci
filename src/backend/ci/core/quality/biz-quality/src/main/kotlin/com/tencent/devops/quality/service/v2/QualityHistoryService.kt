@@ -430,8 +430,8 @@ class QualityHistoryService @Autowired constructor(
                 )) {
                     QualityRuleBuildHisOpt(
                         ruleHashId = hisRuleHashId,
-                        gateOptUser = reviewer,
-                        gateOptTime = reviewTime.toString()
+                        gateOptUser = this?.reviewer,
+                        gateOptTime = this?.reviewTime.toString()
                     )
                 }
             } else { null }

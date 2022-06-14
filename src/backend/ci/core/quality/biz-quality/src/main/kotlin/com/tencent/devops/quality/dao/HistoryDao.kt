@@ -293,6 +293,7 @@ class HistoryDao @Autowired constructor(
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(BUILD_ID.eq(buildId))
                 .and(RULE_ID.`in`(ruleIds))
+                .and(RESULT.eq(RuleInterceptResult.WAIT.name))
                 .execute()
         }
     }

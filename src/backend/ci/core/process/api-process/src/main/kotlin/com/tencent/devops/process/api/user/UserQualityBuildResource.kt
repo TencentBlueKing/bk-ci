@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
+import com.tencent.devops.common.quality.pojo.request.QualityReviewRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -40,7 +41,6 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_QUALITY_BUILD"], description = "用户-构建红线")
@@ -73,7 +73,6 @@ interface UserQualityBuildResource {
         @PathParam("action")
         action: ManualReviewAction,
         @ApiParam("红线ID", required = true)
-        @QueryParam("ruleIds")
-        ruleIds: List<String>
+        request: QualityReviewRequest
     ): Result<Boolean>
 }

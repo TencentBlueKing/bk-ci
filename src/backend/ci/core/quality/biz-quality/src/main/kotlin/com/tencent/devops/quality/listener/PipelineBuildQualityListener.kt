@@ -172,28 +172,60 @@ class PipelineBuildQualityListener @Autowired constructor(
             logger.info("QUALITY|qualityReviewListener reviewEvent: $event")
             val action = if (event.reviewType == BuildReviewType.QUALITY_TASK_REVIEW_PASS)
                 RuleInterceptResult.INTERCEPT_PASS else RuleInterceptResult.INTERCEPT
+            val projectId = event.projectId
+            val pipelineId = event.pipelineId
+            val buildId = event.buildId
             val ruleIds = event.ruleIds.map { HashUtil.decodeIdToLong(it) }.toSet()
             val count = qualityHistoryDao.batchUpdateHistoryResult(
-                projectId = event.projectId,
-                pipelineId = event.pipelineId,
-                buildId = event.buildId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
                 result = action,
                 ruleIds = ruleIds
             )
             logger.info("QUALITY|[${event.buildId}]history result update count: $count")
 
-            // 保存蓝盾红线审核人信息
-            qualityRuleReviewerDao.batchCreate(
-                dslContext = dslContext,
-                projectId = event.projectId,
-                pipelineId = event.pipelineId,
-                buildId = event.buildId,
-                ruleIds = ruleIds,
-                reviewer = event.userId
-            )
+            // 保存或更新蓝盾红线审核人信息
+            ruleIds.forEach { ruleId ->
+                if (checkReviewExist(projectId, pipelineId, buildId, ruleId)) {
+                    qualityRuleReviewerDao.update(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        ruleId = ruleId,
+                        reviewer = event.userId
+                    )
+                } else {
+                    qualityRuleReviewerDao.create(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        ruleId = ruleId,
+                        reviewer = event.userId
+                    )
+                }
+            }
             logger.info("QUALITY|[${event.buildId}]save reviewer info done.")
         } catch (e: Exception) {
             logger.error("quality review error: ${e.message}")
         }
+    }
+
+    private fun checkReviewExist(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        ruleId: Long
+    ): Boolean {
+        val result = qualityRuleReviewerDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            ruleId = ruleId
+        )
+        return result == null
     }
 }

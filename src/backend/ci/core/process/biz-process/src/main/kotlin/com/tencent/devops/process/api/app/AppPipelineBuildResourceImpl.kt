@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.quality.pojo.request.QualityReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -63,7 +64,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         buildId: String,
         elementId: String,
         action: ManualReviewAction,
-        ruleIds: List<String>
+        request: QualityReviewRequest
     ): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -81,7 +82,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             elementId = elementId,
             action = action,
             channelCode = channelCode,
-            ruleIds = ruleIds
+            ruleIds = request.ruleIds
         )
         return Result(true)
     }
