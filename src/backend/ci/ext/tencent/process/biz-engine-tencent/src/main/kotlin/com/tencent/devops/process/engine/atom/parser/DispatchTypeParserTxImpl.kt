@@ -85,17 +85,17 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         buildId: String,
         dispatchType: DispatchType
     ) {
-        // 一般性处理
-        commonDispatchTypeParser.parse(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            dispatchType = dispatchType
-        )
-
         if (dispatchType is StoreDispatchType) {
             if (dispatchType.imageType == ImageType.BKSTORE) {
+                // 一般性处理
+                commonDispatchTypeParser.parse(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    dispatchType = dispatchType
+                )
+
                 // 腾讯内部版专有处理
                 if (dispatchType.imageType == ImageType.BKDEVOPS) {
                     if (dispatchType is DockerDispatchType) {
@@ -121,7 +121,8 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                 }
             } else if (dispatchType.imageType == ImageType.BKDEVOPS) {
                 // 针对非商店的旧数据处理
-                if (dispatchType.value != DockerVersion.TLINUX1_2.value && dispatchType.value != DockerVersion.TLINUX2_2.value) {
+                if (dispatchType.value != DockerVersion.TLINUX1_2.value &&
+                    dispatchType.value != DockerVersion.TLINUX2_2.value) {
                     dispatchType.dockerBuildVersion = "bkdevops/" + dispatchType.value
                     dispatchType.value = "bkdevops/" + dispatchType.value
                 } else {
@@ -142,9 +143,10 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     genThirdDevCloudDispatchMessage(dispatchType, projectId, buildId)
                 }
             }
-            logger.info("DispatchTypeParserTxImpl:AfterTransfer:dispatchType=(${JsonUtil.toJson(dispatchType)})")
+            logger.info("$buildId DispatchTypeParserTxImpl:AfterTransfer:" +
+                            "dispatchType=(${JsonUtil.toJson(dispatchType)})")
         } else {
-            logger.info("DispatchTypeParserTxImpl:not StoreDispatchType, no transfer")
+            logger.info("$buildId DispatchTypeParserTxImpl:not StoreDispatchType, no transfer")
         }
     }
 
