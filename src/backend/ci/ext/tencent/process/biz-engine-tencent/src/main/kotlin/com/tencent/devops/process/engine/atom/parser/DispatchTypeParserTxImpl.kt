@@ -126,7 +126,8 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                                 "${dispatchType.dockerBuildVersion}")
             } else if (dispatchType.imageType == ImageType.BKDEVOPS) {
                 // 针对非商店的旧数据处理
-                if (dispatchType.value != DockerVersion.TLINUX1_2.value && dispatchType.value != DockerVersion.TLINUX2_2.value) {
+                if (dispatchType.value != DockerVersion.TLINUX1_2.value &&
+                    dispatchType.value != DockerVersion.TLINUX2_2.value) {
                     dispatchType.dockerBuildVersion = "bkdevops/" + dispatchType.value
                     dispatchType.value = "bkdevops/" + dispatchType.value
                 } else {
