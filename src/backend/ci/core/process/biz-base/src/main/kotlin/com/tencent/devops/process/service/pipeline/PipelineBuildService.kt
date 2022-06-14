@@ -298,7 +298,6 @@ class PipelineBuildService(
                 logger.info("[$pipelineId]|Concurrency Group is ${setting.concurrencyGroup}")
             }
 
-
             val interceptResult = pipelineInterceptorChain.filter(
                 InterceptData(
                     pipelineInfo = readyToBuildPipelineInfo,
