@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.auth.filter.BlackListCheck
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
@@ -39,8 +40,10 @@ interface PermissionProjectService {
 
     fun getUserProjects(userId: String): List<String>
 
+    @BlackListCheck
     fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean
 
+    @BlackListCheck
     fun checkProjectManager(userId: String, projectCode: String): Boolean
 
     fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean

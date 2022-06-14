@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.common
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.auth.filter.BlackListAspect
 import com.tencent.devops.auth.filter.BlackListFilter
 import com.tencent.devops.auth.filter.TokenCheckFilter
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
@@ -138,10 +139,13 @@ class AuthCoreConfiguration {
     @Bean
     fun tokenFilter(clientTokenService: ClientTokenService) = TokenCheckFilter(clientTokenService)
 
+//    @Bean
+//    fun blackListFilter(
+//        authUserBlackListService: AuthUserBlackListService
+//    ) = BlackListFilter(authUserBlackListService)
+
     @Bean
-    fun blackListFilter(
-        authUserBlackListService: AuthUserBlackListService
-    ) = BlackListFilter(authUserBlackListService)
+    fun blackListAspect(authUserBlackListService: AuthUserBlackListService) = BlackListAspect(authUserBlackListService)
 
     @Bean
     @ConditionalOnMissingBean(name = ["permissionExtService"])

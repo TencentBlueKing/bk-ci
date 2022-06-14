@@ -25,46 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.api.service
+package com.tencent.devops.auth.filter
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import java.lang.annotation.Inherited
 
-@Api(tags = ["AUTH_USER_BLACKLIST"], description = "黑名单用户")
-@Path("/service/user/blacklist")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceUserBlackListResource {
-
-    @POST
-    @Path("/")
-    @ApiOperation("添加黑名单用户")
-    fun createBlackListUser(
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @ApiParam("待拉黑用户Id")
-        userId: String,
-        @QueryParam("remark")
-        @ApiParam("拉黑原因")
-        remark: String?
-    ): Result<Boolean>
-
-    @DELETE
-    @Path("/")
-    @ApiOperation("移出黑名单用户")
-    fun removeBlackListUser(
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @ApiParam("待移出用户Id")
-        userId: String
-    ): Result<Boolean>
-}
+@Target(
+    AnnotationTarget.ANNOTATION_CLASS,
+    AnnotationTarget.CLASS,
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.PROPERTY_GETTER,
+    AnnotationTarget.PROPERTY_SETTER
+)
+@Retention(AnnotationRetention.RUNTIME)
+@Inherited
+annotation class BlackListCheck(
+    val value: String = ""
+)
