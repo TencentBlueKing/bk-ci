@@ -160,7 +160,7 @@ class AtomStatisticsDao {
                 step.where(conditions)
             }
             return conditionStep
-                .groupBy(PIPELINE_ID, ATOM_CODE)
+                .groupBy(ATOM_CODE)
                 .offset((queryCondition.page - 1) * queryCondition.pageSize)
                 .limit(queryCondition.pageSize)
                 .fetch()
