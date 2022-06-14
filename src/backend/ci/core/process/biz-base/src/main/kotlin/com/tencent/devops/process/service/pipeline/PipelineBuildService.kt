@@ -291,13 +291,13 @@ class PipelineBuildService(
                 }
             }
 
-            setting?.apply {
-                // #6987 修复stream的并发执行判断问题 在判断并发时再替换上下文
-                concurrencyGroup?.let {
-                    val varMap = paramsWithType.associate { param -> param.key to param.value.toString() }
-                    concurrencyGroup = EnvUtils.parseEnv(concurrencyGroup, PipelineVarUtil.fillContextVarMap(varMap))
-                }
+            // #6987 修复stream的并发执行判断问题 在判断并发时再替换上下文
+            setting?.concurrencyGroup?.let {
+                val varMap = paramsWithType.associate { param -> param.key to param.value.toString() }
+                setting.concurrencyGroup = EnvUtils.parseEnv(it, PipelineVarUtil.fillContextVarMap(varMap))
+                logger.info("[$pipelineId]|Concurrency Group is ${setting.concurrencyGroup}")
             }
+
 
             val interceptResult = pipelineInterceptorChain.filter(
                 InterceptData(
