@@ -52,6 +52,7 @@ import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
+import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
@@ -252,7 +253,7 @@ class TGitPushActionGit(
 
         for (i in 1..10) {
             val result = apiService.getCommitChangeList(
-                cred = getGitCred(data.context.repoTrigger?.buildUserID),
+                cred = (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as TGitCred,
                 gitProjectId = data.eventCommon.gitProjectId,
                 from = from,
                 to = to,

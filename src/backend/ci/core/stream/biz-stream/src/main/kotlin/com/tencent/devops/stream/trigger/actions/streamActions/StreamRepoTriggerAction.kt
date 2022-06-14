@@ -167,7 +167,7 @@ class StreamRepoTriggerAction(
             )
         }
         // 增加远程仓库时所使用权限的userId
-        this.data.context.repoTrigger = this.data.context.repoTrigger?.copy(buildUserID = repoTriggerUserId)
+        this.data.context.repoTrigger?.buildUserID = repoTriggerUserId
         return repoTriggerUserId
     }
 
@@ -203,14 +203,16 @@ class StreamRepoTriggerAction(
                 )
             )
         }
+
+        this.data.context.repoTrigger?.repoTriggerCred = TGitCred(
+            userId = null,
+            accessToken = token,
+            useAccessToken = false
+        )
         // stream 侧需要的是user 数字id 而不是 rtx
         val userInfo = try {
             this.api.getUserInfoByToken(
-                TGitCred(
-                    userId = null,
-                    accessToken = token,
-                    useAccessToken = false
-                )
+                this.data.context.repoTrigger?.repoTriggerCred as TGitCred
             ) ?: return Pair(false, null)
         } catch (e: Throwable) {
             throw StreamTriggerException(
@@ -224,11 +226,7 @@ class StreamRepoTriggerAction(
             )
         }
         val check = this.api.getProjectUserInfo(
-            cred = TGitCred(
-                userId = null,
-                accessToken = token,
-                useAccessToken = false
-            ),
+            cred = this.data.context.repoTrigger?.repoTriggerCred as TGitCred,
             userId = userInfo.id,
             gitProjectId = this.data.eventCommon.gitProjectId
         ).accessLevel >= 40
