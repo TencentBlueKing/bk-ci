@@ -49,8 +49,7 @@ import java.math.BigDecimal
 @Service
 class ThirdPartyServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val thirdPartyOverviewInfoDao: ThirdPartyOverviewInfoDao,
-//    private val measureEventDispatcher: MetricsEventDispatcher
+    private val thirdPartyOverviewInfoDao: ThirdPartyOverviewInfoDao
 ): ThirdPartyManageService {
     override fun queryPipelineSummaryInfo(
         queryPipelineSummaryInfoDTO: QueryPipelineSummaryInfoDTO

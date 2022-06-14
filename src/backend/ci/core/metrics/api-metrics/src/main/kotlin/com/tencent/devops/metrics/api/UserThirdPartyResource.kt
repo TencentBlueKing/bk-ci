@@ -64,16 +64,4 @@ interface UserThirdPartyResource {
         @QueryParam("endTime")
         endTime: String?
     ): Result<ThirdPlatformOverviewInfoVO>
-
-    @ApiOperation("添加第三方汇总信息")
-    @Path("/summary/data/add")
-    @GET
-    fun addPipelineSummaryInfo(
-        @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String,
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<Boolean>
 }

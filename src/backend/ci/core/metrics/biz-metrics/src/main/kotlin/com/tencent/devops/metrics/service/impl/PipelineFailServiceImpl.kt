@@ -149,7 +149,9 @@ class PipelineFailServiceImpl @Autowired constructor(
 
     }
 
-    override fun queryPipelineFailDetailInfo(queryPipelineFailDTO: QueryPipelineFailDTO): Page<PipelineFailDetailInfoDO> {
+    override fun queryPipelineFailDetailInfo(
+        queryPipelineFailDTO: QueryPipelineFailDTO
+    ): Page<PipelineFailDetailInfoDO> {
         // 查询符合查询条件的记录数
         val queryPipelineFailDetailCount =
             pipelineFailDao.queryPipelineFailDetailCount(
@@ -165,6 +167,7 @@ class PipelineFailServiceImpl @Autowired constructor(
                 errorTypes = queryPipelineFailDTO.errorTypes
             )
         )
+        // 查询记录过多，提醒用户缩小查询范围
         if (queryPipelineFailDetailCount > BK_QUERY_COUNT_MAX) {
             throw ErrorCodeException(
                 errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND

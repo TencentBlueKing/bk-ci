@@ -151,8 +151,8 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 errorTypes = queryAtomFailInfoDTO.errorTypes,
                 errorCodes = queryAtomFailInfoDTO.errorCodes,
                 atomCodes = queryAtomFailInfoDTO.atomCodes,
-                queryAtomFailInfoDTO.page,
-                queryAtomFailInfoDTO.pageSize
+                page = queryAtomFailInfoDTO.page,
+                pageSize = queryAtomFailInfoDTO.pageSize
             )
         )
         return Page(

@@ -83,7 +83,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
     private val atomDisplayConfigDao: AtomDisplayConfigDao
 ): AtomStatisticsManageService {
     override fun queryAtomTrendInfo(queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO): AtomTrendInfoVO {
-        //  查询插件趋势信息
+        // 未选择查询的插件时读取插件显示配置
         val atomCodes =
             if (queryAtomTrendInfoDTO.atomCodes.isNullOrEmpty()) {
                 val configs = atomDisplayConfigDao.getAtomDisplayConfig(
@@ -92,6 +92,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                     null
                 ).map { it.atomCode }
                 configs.ifEmpty {
+                    // 插件配置为空择读取项目下插件
                     atomDisplayConfigDao.getOptionalAtomDisplayConfig(
                         dslContext = dslContext,
                         projectId = queryAtomTrendInfoDTO.projectId,
@@ -101,8 +102,8 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                         pageSize = 10
                     ).map { it.atomCode }
                 }
-
         } else queryAtomTrendInfoDTO.atomCodes!!
+        //  查询插件趋势信息
         val result = atomStatisticsDao.queryAtomTrendInfo(
             dslContext,
             QueryAtomStatisticsQO(
@@ -177,7 +178,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
     override fun queryAtomExecuteStatisticsInfo(
         queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO
     ): ListPageVO<AtomExecutionStatisticsInfoDO> {
-        // 查询符合查询条件的记录数
+        // 未选择查询的插件时读取插件显示配置
         val atomCodes = if (queryAtomTrendInfoDTO.atomCodes.isNullOrEmpty()) {
                 val configs = atomDisplayConfigDao.getAtomDisplayConfig(
                     dslContext = dslContext,
@@ -196,6 +197,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             }
 
             } else queryAtomTrendInfoDTO.atomCodes!!
+        // 查询符合查询条件的记录数
         val queryAtomExecuteStatisticsCount =
             atomStatisticsDao.queryAtomExecuteStatisticsInfoCount(
                 dslContext,
@@ -292,7 +294,8 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 totalExecuteCount = totalExecuteCount,
                 successExecuteCount = successExecuteCount,
                 successRate = if (successExecuteCount <= 0L || totalExecuteCount <= 0L) 0.0
-                else String.format("%.2f", (successExecuteCount.toDouble() * 100 / totalExecuteCount.toDouble())).toDouble(),
+                else String.format("%.2f", (successExecuteCount.toDouble() * 100 / totalExecuteCount.toDouble()))
+                    .toDouble(),
                 atomFailInfos = atomFailInfos[it[BK_ATOM_CODE]]?.toMap()?: emptyMap()
             )
         }

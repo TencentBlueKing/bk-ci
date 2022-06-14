@@ -55,7 +55,6 @@ class PipelineOverviewServiceImpl @Autowired constructor(
     private val pipelineOverviewDao: PipelineOverviewDao
 ): PipelineOverviewManageService {
     override fun queryPipelineSumInfo(queryPipelineOverviewDTO: QueryPipelineOverviewDTO): PipelineSumInfoDO? {
-        logger.info("queryPipelineOverviewDTO baseQueryReq: ${queryPipelineOverviewDTO.baseQueryReq}")
         val result = pipelineOverviewDao.queryPipelineSumInfo(
             dslContext,
             QueryPipelineOverviewQO(
@@ -80,7 +79,6 @@ class PipelineOverviewServiceImpl @Autowired constructor(
     }
 
     override fun queryPipelineTrendInfo(queryPipelineOverviewDTO: QueryPipelineOverviewDTO): List<PipelineTrendInfoDO> {
-        logger.info("queryPipelineOverviewDTO: $queryPipelineOverviewDTO")
         val result = pipelineOverviewDao.queryPipelineTrendInfo(
             dslContext,
             QueryPipelineOverviewQO(

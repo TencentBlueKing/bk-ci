@@ -47,8 +47,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Calendar
-import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 
 @Service

@@ -66,9 +66,4 @@ class UserThirdPartyResourceImpl @Autowired constructor(
             )
         )
     }
-
-    override fun addPipelineSummaryInfo(projectId: String, userId: String): Result<Boolean> {
-        thirdPartyManageService.addPipelineSummaryInfo(projectId)
-        return Result(true)
-    }
 }

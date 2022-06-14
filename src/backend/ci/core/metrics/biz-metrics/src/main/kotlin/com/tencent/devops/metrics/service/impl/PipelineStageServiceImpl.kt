@@ -64,7 +64,7 @@ class PipelineStageServiceImpl @Autowired constructor(
         val endTime = queryPipelineOverviewDTO.baseQueryReq.endTime
         val betweenDate = QueryParamCheckUtil.getBetweenDate(startTime!!, endTime!!).toMutableList()
         var pipelineNames: MutableSet<String>
-        return tags.map { tag ->
+        return tags.map { tag -> // 根据stage标签分组获取数据
             stageTrendSumInfos = mutableMapOf()
             pipelineNames = mutableSetOf()
             val result = pipelineStageDao.queryPipelineStageTrendInfo(
@@ -75,6 +75,7 @@ class PipelineStageServiceImpl @Autowired constructor(
                     tag
                 )
             )
+            //  将查询结果根据流水线分组封装
             result.map {
                 val pipelineName = it[BK_PIPELINE_NAME] as String
                 val avgCostTime = toMinutes((it[BK_AVG_COST_TIME] as Long))
@@ -94,7 +95,7 @@ class PipelineStageServiceImpl @Autowired constructor(
                 pipelineNames.add(pipelineName)
                 betweenDate.removeIf{s -> s == statisticsTime.format(DATE_FORMATTER) }
             }
-            logger.info("PipelineStageServiceImpl  stageTrendSumInfos:$stageTrendSumInfos")
+            //  对每组流水线数据中无数据的日期添加占位数据
             pipelineNames.forEach { pipelineName ->
                 val stageAvgCostTimeInfos = stageTrendSumInfos[pipelineName]!!.toMutableList()
                 betweenDate.forEach { date ->
