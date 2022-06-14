@@ -226,6 +226,6 @@ class PipelineBuildQualityListener @Autowired constructor(
             buildId = buildId,
             ruleId = ruleId
         )
-        return result == null
+        return result != null
     }
 }
