@@ -127,11 +127,11 @@ class RedisUtils @Autowired constructor(
     }
 
     private fun idlePoolKey(): String {
-        return "buildless:idle_pool:${CommonUtils.getInnerIP()}"
+        return "buildless:idle_pool:${CommonUtils.getHostIp()}"
     }
 
     private fun buildLessPoolKey(): String {
-        return "buildless:contianer_pool:${CommonUtils.getInnerIP()}"
+        return "buildless:contianer_pool:${CommonUtils.getHostIp()}"
     }
 
     private fun buildLessReadyTaskKey(): String {
