@@ -293,7 +293,11 @@ class PipelineBuildDetailService @Autowired constructor(
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
                 if (allStageStatus.isEmpty()) {
-                    allStageStatus = fetchHistoryStageStatus(model, buildStatus, errorMsg)
+                    allStageStatus = fetchHistoryStageStatus(
+                        model = model,
+                        buildStatus = buildStatus,
+                        errorMsg = errorMsg
+                    )
                 }
                 if (BuildStatus.parse(stage.status).isRunning()) {
                     stage.status = buildStatus.name
