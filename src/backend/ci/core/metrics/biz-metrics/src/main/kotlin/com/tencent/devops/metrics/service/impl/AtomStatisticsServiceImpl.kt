@@ -258,7 +258,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 ),
                 classifyCode = it[BK_CLASSIFY_CODE] as String,
                 avgCostTime =
-                    String.format("%.2f", (avgCostTimeSum / days)).toDouble(),
+                    String.format("%.2f", (avgCostTimeSum.toDouble() / days.toDouble())).toDouble(),
                 totalExecuteCount = totalExecuteCount,
                 successExecuteCount = successExecuteCount,
                 successRate = if (successExecuteCount <= 0L || totalExecuteCount <= 0L) 0.0
