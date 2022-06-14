@@ -78,7 +78,6 @@ class AtomDisplayConfigDao {
     fun getAtomDisplayConfig(
         dslContext: DSLContext,
         projectId: String,
-        userId: String,
         keyword: String?
     ): List<AtomBaseInfoDO> {
         with(TAtomDisplayConfig.T_ATOM_DISPLAY_CONFIG) {
@@ -94,8 +93,7 @@ class AtomDisplayConfigDao {
     fun getOptionalAtomDisplayConfig(
         dslContext: DSLContext,
         projectId: String,
-        userId: String,
-        atomCodes: List<String>,
+        atomCodes: List<String>?,
         keyword: String?,
         page: Int,
         pageSize: Int
@@ -117,7 +115,6 @@ class AtomDisplayConfigDao {
     fun getOptionalAtomDisplayConfigCount(
         dslContext: DSLContext,
         projectId: String,
-        userId: String,
         atomCodes: List<String>,
         keyword: String?
     ): Long {

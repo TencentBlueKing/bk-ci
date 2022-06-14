@@ -56,6 +56,7 @@ import com.tencent.devops.metrics.constant.QueryParamCheckUtil.DATE_FORMATTER
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getBetweenDate
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getIntervalTime
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.toMinutes
+import com.tencent.devops.metrics.dao.AtomDisplayConfigDao
 import com.tencent.devops.metrics.dao.AtomStatisticsDao
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseTrendInfoDO
@@ -78,10 +79,30 @@ import java.util.stream.Collectors
 @Service
 class AtomStatisticsServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val atomStatisticsDao: AtomStatisticsDao
+    private val atomStatisticsDao: AtomStatisticsDao,
+    private val atomDisplayConfigDao: AtomDisplayConfigDao
 ): AtomStatisticsManageService {
     override fun queryAtomTrendInfo(queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO): AtomTrendInfoVO {
         //  查询插件趋势信息
+        val atomCodes =
+            if (queryAtomTrendInfoDTO.atomCodes.isNullOrEmpty()) {
+                val configs = atomDisplayConfigDao.getAtomDisplayConfig(
+                    dslContext,
+                    queryAtomTrendInfoDTO.projectId,
+                    null
+                ).map { it.atomCode }
+                if (configs.isNullOrEmpty()) {
+                    atomDisplayConfigDao.getOptionalAtomDisplayConfig(
+                        dslContext = dslContext,
+                        projectId = queryAtomTrendInfoDTO.projectId,
+                        atomCodes = emptyList(),
+                        keyword = null,
+                        page = 1,
+                        pageSize = 10
+                    ).map { it.atomCode }
+                } else queryAtomTrendInfoDTO.atomCodes
+
+        } else queryAtomTrendInfoDTO.atomCodes
         val result = atomStatisticsDao.queryAtomTrendInfo(
             dslContext,
             QueryAtomStatisticsQO(
@@ -93,7 +114,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                     queryAtomTrendInfoDTO.endTime
                 ),
                 errorTypes = queryAtomTrendInfoDTO.errorTypes,
-                atomCodes = queryAtomTrendInfoDTO.atomCodes
+                atomCodes = atomCodes
             )
         )
         val atomTrendInfoMap = mutableMapOf<String, AtomTrendInfoDO>()
@@ -157,6 +178,24 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO
     ): ListPageVO<AtomExecutionStatisticsInfoDO> {
         // 查询符合查询条件的记录数
+        val atomCodes = if (queryAtomTrendInfoDTO.atomCodes.isNullOrEmpty()) {
+                val configs = atomDisplayConfigDao.getAtomDisplayConfig(
+                    dslContext = dslContext,
+                    projectId = queryAtomTrendInfoDTO.projectId,
+                    null
+                ).map { it.atomCode }
+                if (configs.isNullOrEmpty()) {
+                    atomDisplayConfigDao.getOptionalAtomDisplayConfig(
+                        dslContext = dslContext,
+                        projectId = queryAtomTrendInfoDTO.projectId,
+                        atomCodes = emptyList(),
+                        keyword = null,
+                        page = 1,
+                        pageSize = 10
+                    ).map { it.atomCode }
+                } else queryAtomTrendInfoDTO.atomCodes
+
+            } else queryAtomTrendInfoDTO.atomCodes
         val queryAtomExecuteStatisticsCount =
             atomStatisticsDao.queryAtomExecuteStatisticsInfoCount(
                 dslContext,
@@ -169,7 +208,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                         queryAtomTrendInfoDTO.endTime
                     ),
                     errorTypes = queryAtomTrendInfoDTO.errorTypes,
-                    atomCodes = queryAtomTrendInfoDTO.atomCodes
+                    atomCodes = atomCodes
                 )
             )
         // 查询记录过多，提醒用户缩小查询范围
@@ -191,7 +230,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                     queryAtomTrendInfoDTO.endTime
                 ),
                 errorTypes = queryAtomTrendInfoDTO.errorTypes,
-                atomCodes = queryAtomTrendInfoDTO.atomCodes,
+                atomCodes = atomCodes,
                 page = queryAtomTrendInfoDTO.page,
                 pageSize = queryAtomTrendInfoDTO.pageSize
             )

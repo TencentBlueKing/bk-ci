@@ -85,7 +85,6 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
             atomDisplayConfigDao.getAtomDisplayConfig(
                 dslContext,
                 projectId,
-                userId,
                 keyword
             )
         )
@@ -101,27 +100,24 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
         val atomCodes = atomDisplayConfigDao.getAtomDisplayConfig(
             dslContext,
             projectId,
-            userId,
             keyword
         ).map { it.atomCode }
         return Page(
             page = page?: 1,
             pageSize = pageSize?: 10,
             count = atomDisplayConfigDao.getOptionalAtomDisplayConfigCount(
-                dslContext,
-                projectId,
-                userId,
-                atomCodes,
-                keyword
+                dslContext = dslContext,
+                projectId = projectId,
+                atomCodes = atomCodes,
+                keyword = keyword
             ),
             records = atomDisplayConfigDao.getOptionalAtomDisplayConfig(
-                dslContext,
-                projectId,
-                userId,
-                atomCodes,
-                keyword,
-                page?: 1,
-                pageSize?: 10
+                dslContext = dslContext,
+                projectId = projectId,
+                atomCodes = atomCodes,
+                keyword = keyword,
+                page = page?: 1,
+                pageSize = pageSize?: 10
             )
         )
     }
