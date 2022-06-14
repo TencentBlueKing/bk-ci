@@ -668,7 +668,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             userId = userId,
             setting = setting,
             checkPermission = true,
-            dispatchPipelineUpdateEvent = false
+            dispatchPipelineUpdateEvent = true
         )
     }
 
@@ -700,7 +700,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             setting,
             false,
             pipelineResult.version,
-            dispatchPipelineUpdateEvent = true
+            dispatchPipelineUpdateEvent = false
         )
         return pipelineResult
     }

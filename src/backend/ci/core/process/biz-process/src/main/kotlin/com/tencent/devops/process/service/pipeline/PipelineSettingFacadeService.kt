@@ -80,7 +80,6 @@ class PipelineSettingFacadeService @Autowired constructor(
         updateLastModifyUser: Boolean? = true,
         dispatchPipelineUpdateEvent: Boolean? = true
     ): String {
-        logger.info("into saveSetting function")
         if (checkPermission) {
             checkEditPermission(
                 userId = userId,
@@ -111,9 +110,7 @@ class PipelineSettingFacadeService @Autowired constructor(
             pipelineId = setting.pipelineId,
             labelIds = setting.labels
         )
-        logger.info("dispatchPipelineUpdateEvent is $dispatchPipelineUpdateEvent")
         if (dispatchPipelineUpdateEvent ?: true) {
-            logger.info("dispatch update event")
             pipelineEventDispatcher.dispatch(
                 PipelineUpdateEvent(
                     source = "update_pipeline",
@@ -276,9 +273,5 @@ class PipelineSettingFacadeService @Autowired constructor(
             runLockType = oldSetting.runLockType,
             waitQueueTimeMinute = oldSetting.waitQueueTimeMinute
         )
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PipelineSettingFacadeService::class.java)
     }
 }
