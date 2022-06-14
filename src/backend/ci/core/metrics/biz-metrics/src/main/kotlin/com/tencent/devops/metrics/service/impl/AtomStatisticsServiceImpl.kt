@@ -31,33 +31,27 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE
-import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE_FIELD_NAME
-import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
-import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME_FIELD_NAME
-import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE
-import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE_FIELD_NAME
-import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
 import com.tencent.devops.metrics.constant.Constants.BK_QUERY_COUNT_MAX
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT
-import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME
-import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_RATE
-import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_RATE_FIELD_NAME
-import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_RATE_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT
-import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_FIELD_NAME
-import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
 import com.tencent.devops.metrics.constant.MetricsMessageCode
+import com.tencent.devops.metrics.constant.MetricsMessageCode.BK_ATOM_CODE_FIELD_NAME_ENGLISH
+import com.tencent.devops.metrics.constant.MetricsMessageCode.BK_AVG_COST_TIME_FIELD_NAME_ENGLISH
+import com.tencent.devops.metrics.constant.MetricsMessageCode.BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH
+import com.tencent.devops.metrics.constant.MetricsMessageCode.BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME_ENGLISH
+import com.tencent.devops.metrics.constant.MetricsMessageCode.BK_SUCCESS_RATE_FIELD_NAME_ENGLISH
+import com.tencent.devops.metrics.constant.MetricsMessageCode.BK_TOTAL_EXECUTE_COUNT_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.DATE_FORMATTER
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getBetweenDate
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getIntervalTime
@@ -79,7 +73,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import java.util.stream.Collectors
 
 @Service
@@ -143,11 +136,13 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         atomTrendInfoDateMap.forEach{
             val atomCode = it.key
             val atomTrendInfos = atomTrendInfoMap[atomCode]?.atomTrendInfos
+            //  将查询的时间区间减去存在数据的时间，对没有数据的时间添加占位数据
             (betweenDate - it.value).forEach { date ->
                 atomTrendInfos?.add(
                     AtomBaseTrendInfoDO(statisticsTime = DateTimeUtil.stringToLocalDate(date)!!)
                 )
             }
+            //  对集合按日期排序对象
             atomTrendInfoMap[atomCode]?.atomTrendInfos =
                 atomTrendInfos?.stream()?.sorted(
                     Comparator.comparing(AtomBaseTrendInfoDO::statisticsTime))?.collect(Collectors.toList())!!
@@ -281,18 +276,14 @@ class AtomStatisticsServiceImpl @Autowired constructor(
 
     private fun getHeaderInfo(): MutableMap<String, String> {
         val headerInfo = mutableMapOf<String, String>()
-        headerInfo[BK_ATOM_CODE] = MessageCodeUtil
-            .getMessageByLocale(BK_ATOM_CODE_FIELD_NAME, BK_ATOM_CODE_FIELD_NAME_ENGLISH)
-        headerInfo[BK_CLASSIFY_CODE] = MessageCodeUtil
-            .getMessageByLocale(BK_CLASSIFY_CODE_FIELD_NAME, BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH)
-        headerInfo[BK_SUCCESS_RATE] = MessageCodeUtil
-            .getMessageByLocale(BK_SUCCESS_RATE_FIELD_NAME, BK_SUCCESS_RATE_FIELD_NAME_ENGLISH)
-        headerInfo[BK_AVG_COST_TIME] = MessageCodeUtil
-            .getMessageByLocale(BK_AVG_COST_TIME_FIELD_NAME, BK_AVG_COST_TIME_FIELD_NAME_ENGLISH)
-        headerInfo[BK_TOTAL_EXECUTE_COUNT] = MessageCodeUtil
-            .getMessageByLocale(BK_TOTAL_EXECUTE_COUNT_FIELD_NAME, BK_TOTAL_EXECUTE_COUNT_FIELD_NAME_ENGLISH)
+        headerInfo[BK_ATOM_CODE] = MessageCodeUtil.getCodeLanMessage(BK_ATOM_CODE_FIELD_NAME_ENGLISH)
+        headerInfo[BK_CLASSIFY_CODE] = MessageCodeUtil.getCodeLanMessage(BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH)
+        headerInfo[BK_SUCCESS_RATE] = MessageCodeUtil.getCodeLanMessage(BK_SUCCESS_RATE_FIELD_NAME_ENGLISH)
+        headerInfo[BK_AVG_COST_TIME] = MessageCodeUtil.getCodeLanMessage(BK_AVG_COST_TIME_FIELD_NAME_ENGLISH)
+        headerInfo[BK_TOTAL_EXECUTE_COUNT]= MessageCodeUtil
+            .getCodeLanMessage(BK_TOTAL_EXECUTE_COUNT_FIELD_NAME_ENGLISH)
         headerInfo[BK_SUCCESS_EXECUTE_COUNT] = MessageCodeUtil
-            .getMessageByLocale(BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME, BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME_ENGLISH)
+            .getCodeLanMessage(BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME_ENGLISH)
         return headerInfo
     }
 

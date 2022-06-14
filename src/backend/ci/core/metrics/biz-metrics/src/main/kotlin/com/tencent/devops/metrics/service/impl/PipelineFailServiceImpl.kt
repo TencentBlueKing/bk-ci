@@ -150,9 +150,9 @@ class PipelineFailServiceImpl @Autowired constructor(
     }
 
     override fun queryPipelineFailDetailInfo(queryPipelineFailDTO: QueryPipelineFailDTO): Page<PipelineFailDetailInfoDO> {
-        logger.info("queryPipelineFailTrendInfoDTO: $queryPipelineFailDTO")
         // 查询符合查询条件的记录数
-        val queryPipelineFailDetailCount = pipelineFailDao.queryPipelineFailDetailCount(
+        val queryPipelineFailDetailCount =
+            pipelineFailDao.queryPipelineFailDetailCount(
             dslContext = dslContext,
             queryPipelineFailQo = QueryPipelineFailQO(
                 projectId = queryPipelineFailDTO.projectId,
@@ -184,9 +184,11 @@ class PipelineFailServiceImpl @Autowired constructor(
                     page = queryPipelineFailDTO.page,
                     pageSize = queryPipelineFailDTO.pageSize
             )
-        ).map {
-            PipelineFailDetailInfoDO(
-                pipelineBuildInfo =
+        )
+        val detailInfos = if (!result.isNullOrEmpty()) {
+            result.map {
+                PipelineFailDetailInfoDO(
+                    pipelineBuildInfo =
                     PipelineBuildInfoDO(
                         projectId = it.projectId,
                         pipelineId = it.pipelineId,
@@ -195,23 +197,25 @@ class PipelineFailServiceImpl @Autowired constructor(
                         buildNum = it.buildNum,
                         branch = it.branch
                     ),
-                startUser = it.startUser,
-                startTime = it.startTime,
-                endTime = it.endTime,
-                errorInfo =
+                    startUser = it.startUser,
+                    startTime = it.startTime,
+                    endTime = it.endTime,
+                    errorInfo =
                     ErrorCodeInfoDO(
                         errorType = it.errorType,
                         errorTypeName = it.errorTypeName,
                         errorCode = it.errorCode!!,
                         errorMsg = it.errorMsg
                     )
-            )
-        }
+                )
+            }
+        } else emptyList()
+
         return Page(
             page = queryPipelineFailDTO.page,
             pageSize = queryPipelineFailDTO.pageSize,
             count = queryPipelineFailDetailCount,
-            records = result
+            records = detailInfos
         )
     }
 

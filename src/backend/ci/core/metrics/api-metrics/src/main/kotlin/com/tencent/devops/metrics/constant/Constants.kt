@@ -69,20 +69,4 @@ object Constants {
     const val MAX_CREATE_COUNT = 100
     const val DEFAULT_LIMIT_NUM = 10
 
-    const val BK_ATOM_CODE_FIELD_NAME = "插件"
-    const val BK_CLASSIFY_CODE_FIELD_NAME = "类型"
-    const val BK_SUCCESS_RATE_FIELD_NAME = "成功率"
-    const val BK_AVG_COST_TIME_FIELD_NAME = "平均耗时"
-    const val BK_TOTAL_EXECUTE_COUNT_FIELD_NAME = "执行次数"
-    const val BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME = "成功执行次数"
-
-    const val BK_ATOM_CODE_FIELD_NAME_ENGLISH = "plug"
-    const val BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH = "type"
-    const val BK_SUCCESS_RATE_FIELD_NAME_ENGLISH = "successRate"
-    const val BK_AVG_COST_TIME_FIELD_NAME_ENGLISH = "averageTime"
-    const val BK_TOTAL_EXECUTE_COUNT_FIELD_NAME_ENGLISH = "executeCount"
-    const val BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME_ENGLISH = "successExecuteCount"
-
-
-
 }
