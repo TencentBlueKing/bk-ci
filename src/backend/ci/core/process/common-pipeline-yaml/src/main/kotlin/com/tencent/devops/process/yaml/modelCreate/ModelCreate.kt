@@ -149,12 +149,13 @@ class ModelCreate @Autowired constructor(
                 // Cancel-In-Progress 配置group后默认为true
                 concurrencyCancelInProgress = yaml.concurrency?.cancelInProgress
                     ?: yaml.concurrency?.group?.let { true }
-                    ?: false,
+                    ?: true,
                 runLockType = when {
                     yaml.concurrency?.group != null -> PipelineRunLockType.SINGLE
                     else -> PipelineRunLockType.MULTIPLE
                 },
-                waitQueueTimeMinute = TimeUnit.HOURS.toMinutes(8).toInt()
+                waitQueueTimeMinute = TimeUnit.HOURS.toMinutes(8).toInt(),
+                maxQueueSize = 1
             )
         )
     }
