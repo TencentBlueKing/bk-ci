@@ -68,7 +68,7 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val jobCommonSettingConfig: JobCommonSettingConfig,
     private val taskCommonSettingConfig: TaskCommonSettingConfig,
     private val client: Client,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
     fun saveSetting(
