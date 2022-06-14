@@ -27,6 +27,6 @@
 
 package com.tencent.devops.common.quality.pojo.request
 
-data class QualityReviewRequest (
+data class QualityReviewRequest(
     val ruleIds: List<String>
 )
