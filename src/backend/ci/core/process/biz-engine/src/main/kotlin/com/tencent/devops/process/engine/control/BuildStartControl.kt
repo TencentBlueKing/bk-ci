@@ -71,6 +71,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_TIME_START
+import com.tencent.devops.process.utils.PipelineVarUtil
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
@@ -254,8 +255,13 @@ class BuildStartControl @Autowired constructor(
             checkStart = pipelineRuntimeExtService.queueCanPend2Start(projectId, pipelineId, buildId = buildId)
         }
         if (checkStart) {
+
+            val concurrencyGroup = setting.concurrencyGroup?.let {
+                val varMap = buildVariableService.getAllVariable(projectId, buildId)
+                EnvUtils.parseEnv(it, PipelineVarUtil.fillContextVarMap(varMap))
+            }
             // #6521 并发组中需要等待其他流水线
-            val concurrencyGroupRunningCount = setting.concurrencyGroup?.let {
+            val concurrencyGroupRunningCount = concurrencyGroup?.let {
                 pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                     projectId = projectId,
 
