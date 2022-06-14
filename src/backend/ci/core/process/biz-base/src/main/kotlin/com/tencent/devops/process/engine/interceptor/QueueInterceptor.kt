@@ -167,7 +167,7 @@ class QueueInterceptor @Autowired constructor(
 
     private fun checkRunLockWithGroupType(
         task: InterceptData,
-        latestStartUser: String?,
+        latestStartUser: String?
     ): Response<BuildStatus> {
         val projectId = task.pipelineInfo.projectId
         val setting = task.setting
