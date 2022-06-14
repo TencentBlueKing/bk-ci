@@ -196,7 +196,8 @@ class BuildStartControl @Autowired constructor(
             val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
             // #4074 LOCK 不会进入到这里，在启动API已经拦截
             if (setting?.runLockType == PipelineRunLockType.SINGLE ||
-                setting?.runLockType == PipelineRunLockType.SINGLE_LOCK) {
+                setting?.runLockType == PipelineRunLockType.SINGLE_LOCK
+            ) {
                 // #4074 锁定当前构建是队列中第一个排队待执行的
                 if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
                     canStart = pipelineRuntimeExtService.queueCanPend2Start(projectId, pipelineId, buildId = buildId)
@@ -222,7 +223,7 @@ class BuildStartControl @Autowired constructor(
                 }
             }
 
-            if (setting?.runLockType == PipelineRunLockType.GROUP_LOCK){
+            if (setting?.runLockType == PipelineRunLockType.GROUP_LOCK) {
                 // #4074 锁定当前构建是队列中第一个排队待执行的
                 if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
                     canStart = pipelineRuntimeExtService.queueCanPend2Start(projectId, pipelineId, buildId = buildId)
@@ -242,8 +243,8 @@ class BuildStartControl @Autowired constructor(
                         pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
                         buildLogPrinter.addLine(
                             message = "Mode: ${setting.runLockType}," +
-                                "concurrency for group(${setting.concurrencyGroup}) " +
-                                        "and queue: $concurrencyGroupRunningCount",
+                                    "concurrency for group(${setting.concurrencyGroup}) " +
+                                    "and queue: $concurrencyGroupRunningCount",
                             buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
                         )
                         canStart = false
