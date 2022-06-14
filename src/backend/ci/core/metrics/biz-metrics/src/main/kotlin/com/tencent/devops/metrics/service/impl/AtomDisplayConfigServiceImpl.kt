@@ -57,7 +57,7 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
             atomDisplayConfigPOS.add(
                 AtomDisplayConfigPO(
                     id = client.get(ServiceAllocIdResource::class)
-                        .generateSegmentId("ATOM_DISPLAY_CONFIG_DATA").data?: 0,
+                        .generateSegmentId("ATOM_DISPLAY_CONFIG").data?: 0,
                     projectId = atomDisplayConfigDTO.projectId,
                     userId = atomDisplayConfigDTO.userId,
                     atomCode = atomBaseInfo.atomCode,

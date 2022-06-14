@@ -91,7 +91,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                     queryAtomTrendInfoDTO.projectId,
                     null
                 ).map { it.atomCode }
-                if (configs.isNullOrEmpty()) {
+                configs.ifEmpty {
                     atomDisplayConfigDao.getOptionalAtomDisplayConfig(
                         dslContext = dslContext,
                         projectId = queryAtomTrendInfoDTO.projectId,
@@ -100,7 +100,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                         page = 1,
                         pageSize = 10
                     ).map { it.atomCode }
-                } else configs
+                }
 
         } else queryAtomTrendInfoDTO.atomCodes!!
         val result = atomStatisticsDao.queryAtomTrendInfo(
@@ -184,16 +184,16 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                     projectId = queryAtomTrendInfoDTO.projectId,
                     null
                 ).map { it.atomCode }
-                if (configs.isNullOrEmpty()) {
-                    atomDisplayConfigDao.getOptionalAtomDisplayConfig(
-                        dslContext = dslContext,
-                        projectId = queryAtomTrendInfoDTO.projectId,
-                        atomCodes = emptyList(),
-                        keyword = null,
-                        page = 1,
-                        pageSize = 10
-                    ).map { it.atomCode }
-                } else configs
+            configs.ifEmpty {
+                atomDisplayConfigDao.getOptionalAtomDisplayConfig(
+                    dslContext = dslContext,
+                    projectId = queryAtomTrendInfoDTO.projectId,
+                    atomCodes = emptyList(),
+                    keyword = null,
+                    page = 1,
+                    pageSize = 10
+                ).map { it.atomCode }
+            }
 
             } else queryAtomTrendInfoDTO.atomCodes!!
         val queryAtomExecuteStatisticsCount =
@@ -218,7 +218,6 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             )
         }
         logger.info("query atom executeStatisticsInfo Count: $queryAtomExecuteStatisticsCount")
-        //
         val atomStatisticResult = atomStatisticsDao.queryAtomExecuteStatisticsInfo(
             dslContext,
             QueryAtomStatisticsQO(
