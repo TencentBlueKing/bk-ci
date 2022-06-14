@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.quality.pojo.request.QualityReviewRequest
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
@@ -164,8 +165,7 @@ interface AppPipelineBuildResource {
         @PathParam("action")
         action: ManualReviewAction,
         @ApiParam("红线ID", required = true)
-        @QueryParam("ruleIds")
-        ruleIds: List<String>
+        request: QualityReviewRequest
     ): Result<Boolean>
 
     @ApiOperation("人工审核")

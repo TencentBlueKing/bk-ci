@@ -36,37 +36,52 @@ import java.time.LocalDateTime
 @Repository
 class QualityRuleReviewerDao {
 
-    fun batchCreate(
+    fun create(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         buildId: String,
-        ruleIds: Set<Long>,
+        ruleId: Long,
         reviewer: String
     ) {
-        if (ruleIds.isEmpty()) {
-            return
+        with(TQualityRuleReviewer.T_QUALITY_RULE_REVIEWER) {
+            dslContext.insertInto(
+                this,
+                this.PROJECT_ID,
+                this.PIPELINE_ID,
+                this.BUILD_ID,
+                this.RULE_ID,
+                this.REVIEWER,
+                this.REVIEW_TIME
+            ).values(
+                projectId,
+                pipelineId,
+                buildId,
+                ruleId,
+                reviewer,
+                LocalDateTime.now()
+            ).execute()
         }
-        dslContext.batch(ruleIds.map {
-            with(TQualityRuleReviewer.T_QUALITY_RULE_REVIEWER) {
-                dslContext.insertInto(
-                    this,
-                    this.PROJECT_ID,
-                    this.PIPELINE_ID,
-                    this.BUILD_ID,
-                    this.RULE_ID,
-                    this.REVIEWER,
-                    this.REVIEW_TIME
-                ).values(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    it,
-                    reviewer,
-                    LocalDateTime.now()
-                )
-            }
-        }).execute()
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        ruleId: Long,
+        reviewer: String
+    ) {
+        with(TQualityRuleReviewer.T_QUALITY_RULE_REVIEWER) {
+            dslContext.update(this)
+                .set(REVIEWER, reviewer)
+                .set(REVIEW_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .and(RULE_ID.eq(ruleId))
+                .execute()
+        }
     }
 
     fun get(
@@ -75,14 +90,14 @@ class QualityRuleReviewerDao {
         pipelineId: String,
         buildId: String,
         ruleId: Long
-    ): TQualityRuleReviewerRecord {
+    ): TQualityRuleReviewerRecord? {
         with(TQualityRuleReviewer.T_QUALITY_RULE_REVIEWER) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(BUILD_ID.eq(buildId))
                 .and(RULE_ID.eq(ruleId))
-                .fetchOne()!!
+                .fetchOne()
         }
     }
 }
