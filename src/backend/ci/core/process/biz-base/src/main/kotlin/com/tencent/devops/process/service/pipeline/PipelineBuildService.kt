@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.pipeline
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
@@ -76,6 +77,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
 import com.tencent.devops.process.utils.PIPELINE_VERSION
+import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
@@ -126,7 +128,8 @@ class PipelineBuildService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在")
+                defaultMessage = "流水线不存在"
+            )
 
         val startEpoch = System.currentTimeMillis()
         try {
@@ -147,11 +150,14 @@ class PipelineBuildService(
 
             val defaultParam = mutableListOf<BuildParameters>()
             triggerContainer.params.forEach {
-                defaultParam.add(BuildParameters(
+                defaultParam.add(
+                    BuildParameters(
                         key = it.id,
                         value = it.defaultValue,
                         valueType = it.type,
-                        readOnly = it.readOnly))
+                        readOnly = it.readOnly
+                    )
+                )
             }
             val startParamsWithType = buildParamCompatibilityTransformer.transform(inputBuildParam, defaultParam)
 
@@ -232,23 +238,6 @@ class PipelineBuildService(
             }
             val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
 
-            val interceptResult = pipelineInterceptorChain.filter(
-                InterceptData(
-                    pipelineInfo = readyToBuildPipelineInfo,
-                    model = model,
-                    startType = startType,
-                    setting = setting
-                )
-            )
-            if (interceptResult.isNotOk()) {
-                // 发送排队失败的事件
-                throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = interceptResult.status.toString(),
-                    defaultMessage = "Pipeline start failed: [${interceptResult.message}]"
-                )
-            }
-
             val userName = when (startType) {
                 StartType.PIPELINE -> ParameterUtils.getListValueByKey(
                     list = startParamsList,
@@ -300,6 +289,31 @@ class PipelineBuildService(
                 if (originKey && !it.key.startsWith(CONTEXT_PREFIX)) {
                     paramsWithType = paramsWithType.plus(it.copy(key = "$CONTEXT_PREFIX${it.key}"))
                 }
+            }
+
+            setting?.apply {
+                // #6987 修复stream的并发执行判断问题 在判断并发时再替换上下文
+                concurrencyGroup?.let {
+                    val varMap = paramsWithType.associate { param -> param.key to param.value.toString() }
+                    concurrencyGroup = EnvUtils.parseEnv(concurrencyGroup, PipelineVarUtil.fillContextVarMap(varMap))
+                }
+            }
+
+            val interceptResult = pipelineInterceptorChain.filter(
+                InterceptData(
+                    pipelineInfo = readyToBuildPipelineInfo,
+                    model = model,
+                    startType = startType,
+                    setting = setting
+                )
+            )
+            if (interceptResult.isNotOk()) {
+                // 发送排队失败的事件
+                throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = interceptResult.status.toString(),
+                    defaultMessage = "Pipeline start failed: [${interceptResult.message}]"
+                )
             }
 
             return pipelineRuntimeService.startBuild(
@@ -403,13 +417,15 @@ class PipelineBuildService(
                             if (elementId == null) {
                                 elementId = modelTaskIdGenerator.getNextId()
                             }
-                            elementItemList.add(ElementBaseInfo(
-                                elementId = elementId,
-                                elementName = element.name,
-                                atomCode = atomCode,
-                                version = version,
-                                elementJobIndex = elementIndex
-                            ))
+                            elementItemList.add(
+                                ElementBaseInfo(
+                                    elementId = elementId,
+                                    elementName = element.name,
+                                    atomCode = atomCode,
+                                    version = version,
+                                    elementJobIndex = elementIndex
+                                )
+                            )
                         }
                     }
                 }

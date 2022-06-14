@@ -50,6 +50,7 @@ import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 import com.tencent.devops.process.yaml.v2.models.stage.Stage as StreamV2Stage
 
 @Component
@@ -146,10 +147,7 @@ class ModelCreate @Autowired constructor(
                 pipelineCreator = event.userId
             ),
             setting = PipelineSetting(
-                concurrencyGroup = yaml.concurrency?.group?.let {
-                    val varMap = pipelineParams.associate { param -> param.id to param.defaultValue.toString() }
-                    EnvUtils.parseEnv(it, PipelineVarUtil.fillContextVarMap(varMap))
-                },
+                concurrencyGroup = yaml.concurrency?.group,
                 // Cancel-In-Progress 配置group后默认为true
                 concurrencyCancelInProgress = yaml.concurrency?.cancelInProgress
                     ?: yaml.concurrency?.group?.let { true }
@@ -157,7 +155,8 @@ class ModelCreate @Autowired constructor(
                 runLockType = when {
                     yaml.concurrency?.group != null -> PipelineRunLockType.SINGLE
                     else -> PipelineRunLockType.MULTIPLE
-                }
+                },
+                waitQueueTimeMinute = TimeUnit.HOURS.toMinutes(8).toInt()
             )
         )
     }
