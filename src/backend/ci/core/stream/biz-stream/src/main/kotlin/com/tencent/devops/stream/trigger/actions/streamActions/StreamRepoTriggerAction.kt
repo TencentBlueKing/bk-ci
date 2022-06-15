@@ -35,6 +35,7 @@ class StreamRepoTriggerAction(
     companion object {
         private val logger = LoggerFactory.getLogger(StreamRepoTriggerAction::class.java)
     }
+
     override val metaData: ActionMetaData = baseAction.metaData
     override var data: ActionData = baseAction.data
     override val api: StreamGitApiService = baseAction.api
@@ -85,13 +86,7 @@ class StreamRepoTriggerAction(
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
-        val branch = TGitActionCommon.getTriggerBranch(data.eventCommon.branch)
-
-        val isDefaultBranch = branch == data.context.defaultBranch
-        // 校验是否注册跨项目触发
-        if (isDefaultBranch) {
-            triggerCheckRepoTriggerCredentials(triggerOn)
-        }
+        triggerCheckRepoTriggerCredentials(triggerOn)
         return baseAction.isMatch(triggerOn)
     }
 
