@@ -84,7 +84,8 @@ class ModelElement @Autowired(required = false) constructor(
                         RunCondition.PRE_TASK_FAILED_ONLY
                     else -> RunCondition.CUSTOM_CONDITION_MATCH
                 },
-                customCondition = step.ifFiled
+                customCondition = step.ifFiled,
+                manualRetry = false
             )
 
             additionalOptions.enable = jobEnable && PathMatchUtils.isIncludePathMatch(step.ifModify, changeSet)
