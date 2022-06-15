@@ -43,7 +43,7 @@ class AuthUserBlackListService @Autowired constructor(
     // 非黑名单用户, 用于检验是快速响应
     private val unBlackListCache = CacheBuilder.newBuilder()
         .maximumSize(200)
-        .expireAfterWrite(1, TimeUnit.DAYS)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
         .build<String, String>()
 
     fun createBlackListUser(
@@ -62,6 +62,8 @@ class AuthUserBlackListService @Autowired constructor(
         userId: String
     ): Boolean {
         logger.info("remove $userId blackList")
+        // 清理内存缓存，缓存只有5分钟。 其他实例5分钟后可访问
+        unBlackListCache.invalidate(userId)
         return authUserBlackListDao.delete(dslContext, userId) == 1
     }
 
