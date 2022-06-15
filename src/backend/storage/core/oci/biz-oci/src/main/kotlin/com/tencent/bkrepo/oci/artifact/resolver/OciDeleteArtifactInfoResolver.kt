@@ -33,8 +33,8 @@ package com.tencent.bkrepo.oci.artifact.resolver
 
 import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
-import com.tencent.bkrepo.common.artifact.config.ArtifactConfigurerSupport
 import com.tencent.bkrepo.common.artifact.resolve.path.ArtifactInfoResolver
+import com.tencent.bkrepo.oci.artifact.OciRegistryArtifactConfigurer
 import com.tencent.bkrepo.common.artifact.resolve.path.Resolver
 import com.tencent.bkrepo.oci.constant.NAME
 import com.tencent.bkrepo.oci.constant.PACKAGE_KEY
@@ -48,7 +48,7 @@ import org.springframework.web.servlet.HandlerMapping
 @Component
 @Resolver(OciArtifactInfo::class)
 class OciDeleteArtifactInfoResolver(
-    private val artifactConfigurerSupport: ArtifactConfigurerSupport
+    private val artifactConfigurerSupport: OciRegistryArtifactConfigurer
 ) : ArtifactInfoResolver {
     override fun resolve(
         projectId: String,

@@ -146,6 +146,21 @@ jobs:
           asset_path: ./bkcodecc-slim.tar.gz
           asset_name: bkcodecc-slim.tar.gz
           asset_content_type: application/gzip
+      - name: download bkrepo
+        uses: actions/download-artifact@v1
+        with:
+          name: bkrepo
+          path: ./
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bkrepo-slim.tar.gz
+          asset_name: bkrepo-slim.tar.gz
+          asset_content_type: application/gzip          
 
   codecc:
     name: Build CodeCC
@@ -192,3 +207,24 @@ jobs:
         with:
           name: codecc
           path: bkcodecc-slim.tar.gz
+  bkrepo:
+    name: Build BkRepo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+          cache: 'gradle'
+      - name: Create artifact - make package
+        id: create-artifact
+        run: |
+          cd scripts/deploy-storage
+          ./build.sh
+
+      - uses: actions/upload-artifact@v1
+        with:
+          name: bkrepo
+          path: bin/bkrepo-slim.tar.gz

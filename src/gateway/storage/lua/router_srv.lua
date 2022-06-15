@@ -50,5 +50,8 @@ end
 
 ngx.var.target = hostUtil:get_addr(service_name)
 
+if service_name == config.service_name then
+    ngx.var.target = ngx.var.target .. "/" .. ngx.var.service
+end
 
 

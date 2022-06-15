@@ -27,3 +27,7 @@ security:
     jwt:
       secretKey: bkrepo@secret
 
+auth:
+  security:
+    enablePrefix: true
+

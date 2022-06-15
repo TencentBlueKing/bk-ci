@@ -48,7 +48,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@RestControllerAdvice
+@RestControllerAdvice("com.tencent.bkrepo.maven")
 class MavenExceptionHandler {
     @ExceptionHandler(MavenPathParserException::class)
     @ResponseStatus(HttpStatus.PRECONDITION_FAILED)
