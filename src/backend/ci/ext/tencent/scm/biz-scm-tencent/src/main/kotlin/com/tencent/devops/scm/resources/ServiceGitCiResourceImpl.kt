@@ -45,6 +45,8 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.services.GitCiService
 import com.tencent.devops.scm.services.GitService
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.QueryParam
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -202,10 +204,20 @@ class ServiceGitCiResourceImpl @Autowired constructor(
         to: String,
         straight: Boolean?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        useAccessToken: Boolean
     ): Result<List<ChangeFileInfo>> {
         return Result(
-            gitCiService.getChangeFileList(token, gitProjectId, from, to, straight, page, pageSize)
+            gitCiService.getChangeFileList(
+                token = token,
+                gitProjectId = gitProjectId,
+                from = from,
+                to = to,
+                straight = straight,
+                page = page,
+                pageSize = pageSize,
+                useAccessToken = useAccessToken
+            )
         )
     }
 

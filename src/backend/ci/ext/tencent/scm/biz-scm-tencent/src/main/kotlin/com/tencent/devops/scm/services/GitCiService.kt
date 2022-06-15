@@ -53,6 +53,7 @@ import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.utils.GitCodeUtils
 import com.tencent.devops.scm.utils.QualityUtils
 import com.tencent.devops.scm.utils.RetryUtils
+import io.swagger.annotations.ApiParam
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -64,6 +65,7 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 import okhttp3.OkHttpClient
 
@@ -439,11 +441,17 @@ class GitCiService {
         to: String,
         straight: Boolean? = false,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        useAccessToken: Boolean
     ): List<ChangeFileInfo> {
         val newPage = if (page == 0) 1 else page
         val newPageSize = if (pageSize > 10000) 10000 else pageSize
-        val url = "${getUrlPrefix(gitProjectId)}/repository/compare/changed_files/list?access_token=$token"
+        val url = "${getUrlPrefix(gitProjectId)}/repository/compare/changed_files/list" +
+                if (useAccessToken) {
+                    "?access_token=$token"
+                } else {
+                    "?private_token=$token"
+                }
             .addParams(
                 mapOf(
                     "from" to from,
