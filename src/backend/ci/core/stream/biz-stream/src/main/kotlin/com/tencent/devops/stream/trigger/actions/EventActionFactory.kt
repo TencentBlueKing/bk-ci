@@ -125,7 +125,9 @@ class EventActionFactory @Autowired constructor(
         if (actionSetting != null) {
             action.data.setting = actionSetting
         }
-        return action
+        return if (actionContext.repoTrigger != null) {
+            StreamRepoTriggerAction(action, client)
+        } else action
     }
 
     private fun loadEvent(event: CodeWebhookEvent): BaseAction? {
@@ -200,9 +202,6 @@ class EventActionFactory @Autowired constructor(
         val action = when {
             gitAction.isStreamDeleteAction() -> {
                 StreamDeleteAction(gitAction)
-            }
-            gitAction.data.context.repoTrigger != null -> {
-                StreamRepoTriggerAction(gitAction, client)
             }
             else -> gitAction
         }
