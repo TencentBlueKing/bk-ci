@@ -157,7 +157,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         )
     }
 
-    fun createNewPipeLine(pipeline: StreamTriggerPipeline, projectCode: String) {
+    fun createNewPipeLine(pipeline: StreamTriggerPipeline, projectCode: String, action: BaseAction) {
         // pipelineId可能为blank所以使用filePath为key
         val gitProjectId = pipeline.gitProjectId
         val triggerLock = StreamTriggerLock(
@@ -180,6 +180,11 @@ class StreamYamlBaseBuild @Autowired constructor(
                     projectCode = projectCode,
                     modelAndSetting = createTriggerModel(projectCode),
                     updateLastModifyUser = true
+                )
+                streamPipelineBranchService.saveOrUpdate(
+                    gitProjectId = action.data.getGitProjectId().toLong(),
+                    pipelineId = realPipeline.pipelineId,
+                    branch = action.data.eventCommon.branch
                 )
             }
         }
