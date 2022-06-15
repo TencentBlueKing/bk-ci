@@ -1,6 +1,6 @@
 package com.tencent.devops.common.stream.pulsar.util
 
-import org.junit.Assert
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
 internal class PulsarTopicUtilsTest {
@@ -12,7 +12,7 @@ internal class PulsarTopicUtilsTest {
         try {
             PulsarTopicUtils.validateTopicName("build/log/status/event")
         } catch (e: Exception) {
-            Assert.assertEquals(e.javaClass, IllegalArgumentException::class.java)
+            Assertions.assertEquals(e.javaClass, IllegalArgumentException::class.java)
         }
     }
 
@@ -23,6 +23,6 @@ internal class PulsarTopicUtilsTest {
             namespace = "namespace1",
             topic = "topic1"
         )
-        Assert.assertEquals(topic, "tenant1/namespace1/topic1")
+        Assertions.assertEquals(topic, "tenant1/namespace1/topic1")
     }
 }

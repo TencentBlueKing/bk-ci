@@ -28,10 +28,10 @@
 package com.tencent.devops.common.sdk.tgit
 
 import com.tencent.devops.common.sdk.tgit.request.ListMrCommitRequest
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 
-@Ignore
+@Disabled
 class TGitApiTest {
 
     private val client = DefaultTGitClient(

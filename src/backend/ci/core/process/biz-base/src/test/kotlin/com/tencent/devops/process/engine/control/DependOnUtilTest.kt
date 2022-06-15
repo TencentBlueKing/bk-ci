@@ -33,8 +33,8 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.option.JobControlOption
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class DependOnUtilTest {
 
@@ -69,7 +69,7 @@ class DependOnUtilTest {
         DependOnUtils.checkRepeatedJobId(stage)
     }
 
-    @Test(expected = ErrorCodeException::class)
+    @Test
     fun `check repeated job`() {
         val container1 = NormalContainer(
             id = "1",
@@ -97,7 +97,7 @@ class DependOnUtilTest {
             id = "1",
             containers = listOf(container1, container2)
         )
-        DependOnUtils.checkRepeatedJobId(stage)
+        Assertions.assertThrows(ErrorCodeException::class.java) {DependOnUtils.checkRepeatedJobId(stage)}
     }
 
     @Test
@@ -175,7 +175,7 @@ class DependOnUtilTest {
             containers = listOf(container1, expectedContainer2)
         )
         DependOnUtils.checkRepeatedJobId(stage)
-        Assert.assertEquals(expectedStage, stage)
+        Assertions.assertEquals(expectedStage, stage)
     }
 
     @Test
@@ -210,7 +210,7 @@ class DependOnUtilTest {
         )
         val params = mapOf<String, String>()
         DependOnUtils.initDependOn(stage, params)
-        Assert.assertEquals(stage, expectedStage)
+        Assertions.assertEquals(stage, expectedStage)
     }
 
     @Test
@@ -261,10 +261,10 @@ class DependOnUtilTest {
         )
         val params = mapOf<String, String>()
         DependOnUtils.initDependOn(stage, params)
-        Assert.assertEquals(stage, expectedStage)
+        Assertions.assertEquals(stage, expectedStage)
     }
 
-    @Test(expected = ErrorCodeException::class)
+    @Test
     fun `check init dependon for cycle dependon`() {
         val container1 = NormalContainer(
             id = "1",
@@ -297,7 +297,7 @@ class DependOnUtilTest {
             containers = listOf(container1, container2)
         )
         val params = mapOf<String, String>()
-        DependOnUtils.initDependOn(stage, params)
+        Assertions.assertThrows(ErrorCodeException::class.java) {DependOnUtils.initDependOn(stage, params)}
     }
 
     @Test
@@ -351,7 +351,7 @@ class DependOnUtilTest {
             id = "1",
             containers = listOf(container1, expectedContainer2)
         )
-        Assert.assertEquals(expectedStage, stage)
+        Assertions.assertEquals(expectedStage, stage)
     }
 
     @Test
@@ -403,7 +403,7 @@ class DependOnUtilTest {
             id = "1",
             containers = listOf(container1, expectedContainer2)
         )
-        Assert.assertEquals(expectedStage, stage)
+        Assertions.assertEquals(expectedStage, stage)
     }
 
     @Test
@@ -454,7 +454,7 @@ class DependOnUtilTest {
             id = "1",
             containers = listOf(container1, expectedContainer2)
         )
-        Assert.assertEquals(expectedStage, stage)
+        Assertions.assertEquals(expectedStage, stage)
     }
 
     @Test
@@ -506,6 +506,6 @@ class DependOnUtilTest {
             id = "1",
             containers = listOf(container1, expectedContainer2)
         )
-        Assert.assertEquals(expectedStage, stage)
+        Assertions.assertEquals(expectedStage, stage)
     }
 }
