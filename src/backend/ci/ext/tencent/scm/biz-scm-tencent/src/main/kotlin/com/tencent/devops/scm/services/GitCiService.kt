@@ -53,7 +53,6 @@ import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.utils.GitCodeUtils
 import com.tencent.devops.scm.utils.QualityUtils
 import com.tencent.devops.scm.utils.RetryUtils
-import io.swagger.annotations.ApiParam
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -65,7 +64,6 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 import okhttp3.OkHttpClient
 

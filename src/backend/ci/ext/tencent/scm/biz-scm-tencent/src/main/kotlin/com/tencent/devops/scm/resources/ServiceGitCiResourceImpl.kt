@@ -45,8 +45,6 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.services.GitCiService
 import com.tencent.devops.scm.services.GitService
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.QueryParam
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
