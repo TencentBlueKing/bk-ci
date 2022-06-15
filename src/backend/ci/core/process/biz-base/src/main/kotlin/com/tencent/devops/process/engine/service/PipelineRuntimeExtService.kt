@@ -103,6 +103,59 @@ class PipelineRuntimeExtService @Autowired constructor(
         }
     }
 
+    fun getConcurrencyQueueBuildInfo(
+        projectId: String,
+        pipelineId: String,
+        concurrencyGroup: String,
+        buildStatus: BuildStatus = BuildStatus.QUEUE_CACHE
+    ): List<BuildInfo?> {
+        val redisLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "$nextBuildKey:$pipelineId",
+            expiredTimeInSeconds = expiredTimeInSeconds
+        )
+        try {
+            redisLock.lock()
+            val buildInfo =
+                pipelineBuildDao.getAllConcurrencyQueueBuild(
+                    dslContext,
+                    projectId = projectId,
+                    concurrencyGroup = concurrencyGroup
+                ).map {
+                    val convert = pipelineBuildDao.convert(it)
+                    if (convert != null) {
+                        pipelineBuildDao.updateStatus(
+                            dslContext = dslContext,
+                            projectId = projectId,
+                            buildId = convert.buildId,
+                            oldBuildStatus = convert.status,
+                            newBuildStatus = buildStatus
+                        )
+                    }
+                    convert
+                }
+            return buildInfo
+        } finally {
+            redisLock.unlock()
+        }
+    }
+
+    fun queuePend2Start(projectId: String, pipelineId: String, buildId: String): Boolean {
+        val redisLock = RedisLock(redisOperation, "$nextBuildKey:$pipelineId", expiredTimeInSeconds)
+        try {
+            redisLock.lock()
+            return pipelineBuildDao.updateStatus(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                oldBuildStatus = BuildStatus.QUEUE,
+                newBuildStatus = BuildStatus.QUEUE_CACHE
+            )
+        } finally {
+            redisLock.unlock()
+        }
+    }
+
     fun existQueue(projectId: String, pipelineId: String, buildId: String, buildStatus: BuildStatus): Boolean {
         val redisLock = RedisLock(redisOperation, "$nextBuildKey:$pipelineId:$buildId", expiredTimeInSeconds)
         try {
