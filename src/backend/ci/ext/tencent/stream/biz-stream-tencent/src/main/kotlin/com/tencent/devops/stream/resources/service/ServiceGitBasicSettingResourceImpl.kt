@@ -32,8 +32,10 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.repository.api.ServiceGitOauthResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
@@ -60,6 +62,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
     private val txStreamBasicSettingService: TXStreamBasicSettingService,
     private val permissionService: StreamPermissionService,
     private val streamScmService: StreamScmService,
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val client: Client
 ) : ServiceGitBasicSettingResource {
 
@@ -95,6 +98,14 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
                 enableCi = enabled
             )
         }
+        pipelineEventDispatcher.dispatch(
+            PipelineStreamEnabledEvent(
+                source = "update_pipeline",
+                projectId = projectId,
+                pipelineId = "",
+                userId = userId,
+            )
+        )
         return Result(result)
     }
 
