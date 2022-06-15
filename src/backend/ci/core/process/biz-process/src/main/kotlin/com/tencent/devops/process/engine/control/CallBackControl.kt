@@ -101,6 +101,16 @@ class CallBackControl @Autowired constructor(
         callBackPipelineEvent(projectId, pipelineId, CallBackEvent.RESTORE_PIPELINE)
     }
 
+    fun piplineStreamEnabledEvent(projectId: String, pipelineId: String) {
+        logger.info("$projectId|$pipelineId|STREAM_ENABLED|callback pipeline event")
+        val list = projectPipelineCallBackService.listProjectCallBack(
+            projectId = projectId,
+            events = CallBackEvent.STREAM_ENABLED.name
+        )
+
+        sendToCallBack(CallBackData(event = CallBackEvent.STREAM_ENABLED, data = null), list)
+    }
+
     private fun callBackPipelineEvent(projectId: String, pipelineId: String, callBackEvent: CallBackEvent) {
         logger.info("$projectId|$pipelineId|$callBackEvent|callback pipeline event")
         val list = projectPipelineCallBackService.listProjectCallBack(

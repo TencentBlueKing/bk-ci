@@ -31,6 +31,9 @@ object MQ {
     // 核心交换机及队列 ====================================
     const val ENGINE_PROCESS_LISTENER_EXCHANGE = "e.engine.pipeline.listener"
 
+    const val ROUTE_PIPELINE_STREAM_ENABLED = "r.engine.pipeline.stream.enabled"
+    const val QUEUE_PIPELINE_STREAM_ENABLED = "q.engine.pipeline.stream.enabled"
+
     const val ROUTE_PIPELINE_UPDATE = "r.engine.pipeline.update"
     const val QUEUE_PIPELINE_UPDATE = "q.engine.pipeline.update"
 
