@@ -32,4 +32,6 @@ import com.tencent.bkrepo.scanner.executor.pojo.ScanExecutorTask
 
 interface ScanExecutor {
     fun scan(task: ScanExecutorTask): ScanExecutorResult
+
+    fun stop(taskId: String): Boolean
 }

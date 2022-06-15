@@ -33,9 +33,9 @@ import com.tencent.bkrepo.scanner.pojo.ScanTask
 import com.tencent.bkrepo.scanner.pojo.ScanTriggerType
 import com.tencent.bkrepo.scanner.pojo.SubScanTask
 import com.tencent.bkrepo.scanner.pojo.request.ArtifactVulnerabilityRequest
+import com.tencent.bkrepo.scanner.pojo.request.BatchScanRequest
 import com.tencent.bkrepo.scanner.pojo.request.FileScanResultDetailRequest
 import com.tencent.bkrepo.scanner.pojo.request.FileScanResultOverviewRequest
-import com.tencent.bkrepo.scanner.pojo.request.MatchPlanSingleScanRequest
 import com.tencent.bkrepo.scanner.pojo.request.ReportResultRequest
 import com.tencent.bkrepo.scanner.pojo.request.ScanRequest
 import com.tencent.bkrepo.scanner.pojo.request.ScanTaskQuery
@@ -64,6 +64,13 @@ interface ScanService {
     fun singleScan(request: SingleScanRequest): ScanTask
 
     /**
+     * 批量扫描
+     *
+     * @param request 批量扫描请求
+     */
+    fun batchScan(request: BatchScanRequest): ScanTask
+
+    /**
      * 停止子任务
      *
      * @param projectId 项目id
@@ -82,11 +89,6 @@ interface ScanService {
      * @return true 停止成功，false 停止失败
      */
     fun stopSubtask(projectId: String, subtaskId: String): Boolean
-
-    /**
-     * 匹配文件扫描
-     */
-    fun matchPlanScan(request: MatchPlanSingleScanRequest): List<ScanTask>
 
     /**
      * 获取扫描任务

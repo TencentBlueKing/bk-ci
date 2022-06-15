@@ -28,6 +28,7 @@
 package com.tencent.bkrepo.repository.controller.user
 
 import com.tencent.bkrepo.auth.pojo.enums.PermissionAction
+import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.common.security.manager.PermissionManager
 import com.tencent.bkrepo.common.security.permission.Principal
@@ -36,6 +37,7 @@ import com.tencent.bkrepo.common.service.util.ResponseBuilder
 import com.tencent.bkrepo.repository.pojo.project.ProjectCreateRequest
 import com.tencent.bkrepo.repository.pojo.project.ProjectInfo
 import com.tencent.bkrepo.repository.pojo.project.ProjectListOption
+import com.tencent.bkrepo.repository.pojo.project.ProjectSearchOption
 import com.tencent.bkrepo.repository.pojo.project.ProjectUpdateRequest
 import com.tencent.bkrepo.repository.pojo.project.UserProjectCreateRequest
 import com.tencent.bkrepo.repository.service.repo.ProjectService
@@ -110,6 +112,13 @@ class UserProjectController(
             @RequestBody projectUpdateRequest: ProjectUpdateRequest
     ): Response<Boolean> {
         return ResponseBuilder.success(projectService.updateProject(name, projectUpdateRequest))
+    }
+
+    @ApiOperation("分页查询所有项目列表")
+    @GetMapping("/search")
+    @Principal(PrincipalType.ADMIN)
+    fun searchProject(option: ProjectSearchOption): Response<Page<ProjectInfo>> {
+        return ResponseBuilder.success(projectService.searchProject(option))
     }
 
     @ApiOperation("项目列表")

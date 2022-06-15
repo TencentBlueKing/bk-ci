@@ -47,7 +47,7 @@
                 true
             );
             ajax.send();
-            ajax.onload = function (e) {
+            ajax.onload = function(e) {
                 var div = document.createElement("div");
                 div.setAttribute(
                     "style",
@@ -72,14 +72,6 @@
             var PERM_URL_PREFIX = "__BK_PAAS_PUBLIC_URL__/o/bk_iam_app"; // EE PERM URL PREFIX
             var DOCS_URL_PREFIX = "__BK_CI_DOCS_URL__";
             var IWIKI_DOCS_URL = "__IWIKI_DOCS_URL__";
-            var PROXY_URL_PREFIX = "//devnet.devops.woa.com";
-            if (location.host.endsWith(".oa.com")) {
-                PROXY_URL_PREFIX = PROXY_URL_PREFIX.replace(
-                    ".woa.com",
-                    ".oa.com"
-                ).replace("-devnet", ".devnet");
-            }
-            console.log("proxyUrl:", PROXY_URL_PREFIX);
         </script>
     </body>
 </html>

@@ -27,9 +27,12 @@
 
 package com.tencent.bkrepo.job.batch
 
-import com.tencent.bkrepo.common.artifact.event.repo.RepoRefreshedEvent
+import com.tencent.bkrepo.common.api.util.readJsonString
+import com.tencent.bkrepo.common.artifact.pojo.configuration.RepositoryConfiguration
+import com.tencent.bkrepo.common.artifact.pojo.configuration.composite.CompositeConfiguration
+import com.tencent.bkrepo.common.artifact.pojo.configuration.remote.RemoteConfiguration
 import com.tencent.bkrepo.common.service.log.LoggerHolder
-import com.tencent.bkrepo.common.stream.event.supplier.EventSupplier
+import com.tencent.bkrepo.helm.api.HelmClient
 import com.tencent.bkrepo.job.CATEGORY
 import com.tencent.bkrepo.job.TYPE
 import com.tencent.bkrepo.job.batch.base.JobContext
@@ -44,9 +47,9 @@ import org.springframework.scheduling.annotation.Scheduled
 /**
  * 用于remote类型或者composite类型仓库定时从远程代理刷新信息
  */
-class RemoteRepoRefreshJob(
+open class RemoteRepoRefreshJob(
     private val properties: RepoRefreshJobProperties,
-    private val eventSupplier: EventSupplier
+    private val helmClient: HelmClient
 ) : MongoDbBatchJob<RemoteRepoRefreshJob.ProxyRepoData>(properties) {
 
     private val types: List<String>
@@ -55,7 +58,7 @@ class RemoteRepoRefreshJob(
     private val categories: List<String>
         get() = properties.categories
 
-    @Scheduled(cron = "0 0 4/24 * * ?") // 4点开始，6小时执行一次
+    @Scheduled(fixedDelay = 3600 * 1000L, initialDelay = 90 * 1000L)
     override fun start(): Boolean {
         return super.start()
     }
@@ -78,38 +81,18 @@ class RemoteRepoRefreshJob(
     override fun run(row: ProxyRepoData, collectionName: String, context: JobContext) {
         with(row) {
             try {
-                logger.info("send repo refresh message with $projectId|$name")
-                val event = buildRefreshEvent(
-                    projectId = projectId,
-                    repoName = name,
-                    userId = createdBy
-                )
-                eventSupplier.delegateToSupplier(
-                    event = event,
-                    topic = event.topic
-                )
+                val config = configuration.readJsonString<RepositoryConfiguration>()
+                if (checkConfigType(config)) {
+                    logger.info("Refresh request will be sent in repo $projectId|$name")
+                    helmClient.refreshIndexYamlAndPackage(projectId, name)
+                }
             } catch (e: Exception) {
-                throw JobExecuteException("Failed to send repo refresh event for repo ${row.projectId}|${row.name}.", e)
+                throw JobExecuteException("Failed to send refresh request for repo ${row.projectId}|${row.name}.", e)
             }
         }
     }
 
     override fun getLockAtMostFor(): Duration = Duration.ofDays(7)
-
-    /**
-     * 仓库刷新事件
-     */
-    private fun buildRefreshEvent(
-        projectId: String,
-        repoName: String,
-        userId: String
-    ): RepoRefreshedEvent {
-        return RepoRefreshedEvent(
-            projectId = projectId,
-            repoName = repoName,
-            userId = userId
-        )
-    }
 
     companion object {
         private val logger = LoggerHolder.jobLogger
@@ -120,9 +103,21 @@ class RemoteRepoRefreshJob(
         return ProxyRepoData(row)
     }
 
+    /**
+     * 只针对remote仓库或者composite代理仓库进行刷新
+     */
+    fun checkConfigType(configuration: RepositoryConfiguration): Boolean {
+        if (configuration is CompositeConfiguration) {
+            if (configuration.proxy.channelList.isNotEmpty()) return true
+        }
+        if (configuration is RemoteConfiguration) return true
+        return false
+    }
+
     data class ProxyRepoData(private val map: Map<String, Any?>) {
         val name: String by map
         val projectId: String by map
         val createdBy: String by map
+        val configuration: String by map
     }
 }

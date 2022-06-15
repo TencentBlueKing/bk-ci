@@ -23,7 +23,7 @@ func getServerFileArch() string {
 
 func DownloadUpgradeFile(saveDir string) (string, error) {
 	return api.DownloadUpgradeFile(
-		"upgrade/upgrader"+getServerFileArch(), saveDir+"/"+config.UpgraderFileServerMacOs,
+		"upgrade/upgrader"+getServerFileArch(), saveDir+"/"+config.UpgraderFileClientLinux,
 	)
 }
 

@@ -42,7 +42,7 @@ import com.tencent.bkrepo.repository.pojo.packages.PackageSummary
 import com.tencent.bkrepo.scanner.pojo.Node
 import com.tencent.bkrepo.scanner.pojo.rule.RuleArtifact
 import com.tencent.bkrepo.scanner.utils.Request
-import com.tencent.bkrepo.scanner.utils.RuleMatcher
+import com.tencent.bkrepo.common.query.matcher.RuleMatcher
 import kotlin.math.min
 
 /**
@@ -96,7 +96,15 @@ class PackageIterator(
                     .ifEmpty { listOf(pkg.latestVersion) }
                     .asSequence()
                     .filter { version ->
-                        RuleMatcher.nameVersionMatch(pkg.artifactName, version, position.rule as Rule.NestedRule)
+                        val valuesToMatch = mapOf(
+                            Package::projectId.name to pkg.projectId,
+                            Package::repoName.name to pkg.repoName,
+                            PackageSummary::type.name to pkg.type,
+                            PackageSummary::key.name to pkg.packageKey,
+                            RuleArtifact::name.name to pkg.artifactName,
+                            RuleArtifact::version.name to version
+                        )
+                        RuleMatcher.match(position.rule, valuesToMatch)
                     }
                     .map { version -> pkg.copy(packageVersion = version) }
                     .toList()
@@ -111,6 +119,7 @@ class PackageIterator(
     private fun parse(packageSummary: Map<*, *>) = Package(
         projectId = packageSummary[PackageSummary::projectId.name] as String,
         repoName = packageSummary[PackageSummary::repoName.name] as String,
+        type = packageSummary[PackageSummary::type.name] as String,
         artifactName = packageSummary[PackageSummary::name.name] as String,
         packageKey = packageSummary[PackageSummary::key.name] as String,
         latestVersion = packageSummary[PackageSummary::latest.name] as String,
@@ -241,6 +250,7 @@ class PackageIterator(
         private val packageSelect = listOf(
             PackageSummary::projectId.name,
             PackageSummary::repoName.name,
+            PackageSummary::type.name,
             PackageSummary::key.name,
             PackageSummary::name.name,
             PackageSummary::latest.name,
@@ -251,6 +261,7 @@ class PackageIterator(
     data class Package(
         val projectId: String,
         val repoName: String,
+        val type: String,
         val artifactName: String,
         val packageKey: String,
         val latestVersion: String,

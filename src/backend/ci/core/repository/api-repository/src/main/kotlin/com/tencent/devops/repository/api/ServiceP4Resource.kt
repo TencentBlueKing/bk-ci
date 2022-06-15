@@ -35,6 +35,7 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -82,4 +83,25 @@ interface ServiceP4Resource {
         @QueryParam("change")
         change: Int
     ): Result<List<P4FileSpec>>
+
+    @ApiOperation("获取p4文件内容")
+    @GET
+    @Path("getFileContent")
+    fun getFileContent(
+        @ApiParam(value = "p4Port")
+        @QueryParam("p4Port")
+        p4Port: String,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String,
+        @ApiParam(value = "版本号")
+        @QueryParam("reversion")
+        reversion: Int,
+        @ApiParam(value = "username")
+        @HeaderParam("username")
+        username: String,
+        @ApiParam(value = "password")
+        @HeaderParam("password")
+        password: String
+    ): Result<String>
 }

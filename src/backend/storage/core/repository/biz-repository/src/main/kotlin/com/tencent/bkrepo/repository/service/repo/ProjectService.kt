@@ -32,6 +32,7 @@ import com.tencent.bkrepo.repository.pojo.project.ProjectCreateRequest
 import com.tencent.bkrepo.repository.pojo.project.ProjectInfo
 import com.tencent.bkrepo.repository.pojo.project.ProjectListOption
 import com.tencent.bkrepo.repository.pojo.project.ProjectRangeQueryRequest
+import com.tencent.bkrepo.repository.pojo.project.ProjectSearchOption
 import com.tencent.bkrepo.repository.pojo.project.ProjectUpdateRequest
 
 /**
@@ -53,6 +54,14 @@ interface ProjectService {
      * 查询所有项目列表
      */
     fun listProject(): List<ProjectInfo>
+
+    /**
+     * 分页查询所有项目
+     * @param option 查询选项
+     *
+     * @return 项目列表，返回的数据中不包含totalCount
+     */
+    fun searchProject(option: ProjectSearchOption): Page<ProjectInfo>
 
     /**
      * 查询用户有权限的项目列表
