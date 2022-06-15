@@ -86,7 +86,6 @@ echo "put config to consul kv success."
 
 采用OpenResty作为网关服务器，部署主要分为OpenResty安装， gateway的lua和nginx配置代码部署两部分。
 
-- [bkrepo网关部署](gateway.md)
 
 
 ### 3.2 前端部署
