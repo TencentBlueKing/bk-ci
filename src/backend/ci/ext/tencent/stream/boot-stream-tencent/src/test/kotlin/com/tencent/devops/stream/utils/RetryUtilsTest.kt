@@ -28,8 +28,8 @@
 package com.tencent.devops.stream.utils
 
 import com.tencent.devops.common.api.exception.ClientException
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class RetryUtilsTest {
 
@@ -48,7 +48,7 @@ class RetryUtilsTest {
                 }
             }
         } catch (re: ClientException) {
-            Assert.assertEquals(expected, i)
+            Assertions.assertEquals(expected, i)
         }
 
         i = 0
@@ -61,7 +61,7 @@ class RetryUtilsTest {
                 i
             }
         }
-        Assert.assertEquals(expected, i - 1)
+        Assertions.assertEquals(expected, i - 1)
 
         retryTime = 2
         expected = 3
@@ -75,7 +75,7 @@ class RetryUtilsTest {
                 }
             }
         } catch (re: ClientException) {
-            Assert.assertEquals(expected, i)
+            Assertions.assertEquals(expected, i)
         }
 
         i = 0
@@ -89,6 +89,6 @@ class RetryUtilsTest {
             }
         }
 
-        Assert.assertEquals(expected, i - 1)
+        Assertions.assertEquals(expected, i - 1)
     }
 }
