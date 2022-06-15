@@ -46,6 +46,8 @@ stages:
       retry-times: null
       env: null
       run: null
+      runAdditionalOptions:
+        shell: null
       checkout: "self"
     - name: "腾讯代码分析(官方-代码分析工作组)"
       id: "check"
@@ -96,6 +98,8 @@ stages:
       retry-times: null
       env: null
       run: null
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: null
       id: "123123123"
@@ -108,6 +112,8 @@ stages:
       retry-times: null
       env: null
       run: "echo 123\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     if-modify: null
     timeout-minutes: null

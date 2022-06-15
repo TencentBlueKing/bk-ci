@@ -1,6 +1,6 @@
 <template>
     <router-link :to="{ name: 'details', params: { code: atom.code, type: $route.query.pipeType || 'atom' } }" class="card-home">
-        <img class="card-pic atom-logo" :src="atom.logoUrl">
+        <img class="card-pic atom-logo" :src="atom.logoUrl || defaultUrl">
         <p :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']">{{ atom.name }}</p>
         <h5 class="card-detail">
             <span class="text-overflow">{{ atom.publisher }}</span>
@@ -19,6 +19,7 @@
 
 <script>
     import commentRate from '../comment-rate'
+    import { DEFAULT_LOGO_URL } from '@/utils/'
 
     export default {
         components: {
@@ -28,6 +29,12 @@
         props: {
             atom: Object,
             hasSummary: Boolean
+        },
+
+        data () {
+            return {
+                defaultUrl: DEFAULT_LOGO_URL
+            }
         },
 
         computed: {

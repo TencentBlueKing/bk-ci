@@ -29,7 +29,7 @@ const state = {
     showViewManage: false,
     showViewCreate: false,
     currentViewId: '',
-    viewManageAuth: [],
+    userInfo: [],
     currentViewList: [],
     viewSettingList: [],
     createViewForm: {
@@ -46,7 +46,7 @@ const getters = {
     getTagGroupList: state => state.tagGroupList, // 标签分组集
     getShowViewCreate: state => state.showViewCreate,
     getCreateViewForm: state => state.createViewForm,
-    getViewManageAuth: state => state.viewManageAuth
+    getUserInfo: state => state.userInfo
 }
 
 const mutations = {
@@ -77,8 +77,8 @@ const mutations = {
     updateViewForm (state, obj) {
         state.createViewForm = obj
     },
-    setViewManageAuth (state, res) {
-        state.viewManageAuth = res
+    setUserInfo (state, res) {
+        state.userInfo = res
     }
 }
 
@@ -129,12 +129,9 @@ const actions = {
             return response.data
         })
     },
-    checkViewManageAuth ({ commit }, { projectId }) {
-        return ajax.get(`/project/api/user/projects/${projectId}/hasPermission/VIEWS_MANAGER`).then(response => {
+    requestUserInfo ({ commit }, { projectId }) {
+        return ajax.get(`/project/api/user/users/projects/${projectId}/roles/list/`).then(response => {
             return response.data
-        }).catch(e => {
-            console.log(e)
-            return false
         })
     }
 }

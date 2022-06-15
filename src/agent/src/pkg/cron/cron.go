@@ -29,6 +29,7 @@ package cron
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -60,8 +61,8 @@ func TryCleanFile() {
 		}
 	}()
 
-	cleanDumpFile(36)
-	cleanLogFile(96)
+	cleanDumpFile(config.GAgentConfig.LogsKeepHours)
+	cleanLogFile(config.GAgentConfig.LogsKeepHours)
 }
 
 func cleanDumpFile(timeBeforeInHours int) {

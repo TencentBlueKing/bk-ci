@@ -10,8 +10,8 @@ module.exports = {
                 'subject-valid': function ({ subject }) {
                     console.log('it is a subject', subject)
                     return [
-                        /^[\s\S]+?(issue\s+#\d+)$/i.test(subject),
-                        `commit-msg should end with (issue #{issueId})`
+                        /[story|bug|task]=\d+$/i.test(subject),
+                        `commit-msg should end with (--[story|bug|task]={Id})`
                     ]
                 }
             }

@@ -60,6 +60,7 @@ data class PreStep(
     val retryTimes: Int?,
     val env: Map<String, Any?>? = emptyMap(),
     val run: String?,
+    val shell: String?,
     val checkout: String?,
     override val yamlMetaData: MetaData? = null
 ) : YamlMetaData

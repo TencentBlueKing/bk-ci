@@ -15,7 +15,7 @@
                     :key="index"
                     :class="{ &quot;step&quot;: true, &quot;done&quot;: isDone(index + 1), &quot;active&quot;: isActive(index + 1) }"
                 >
-                    <span v-if="isDone(index + 1) || (isActive(index + 1) && index + 1 === stepList.length) "><i class="bk-icon icon-check-1" /></span>
+                    <span v-if="isDone(index + 1) || (isActive(index + 1) && index + 1 === stepList.length) "><i class="devops-icon icon-check-1" /></span>
                     <span v-else>{{ index + 1 }}</span>
                     <p>{{ step }}</p>
                 </li>
@@ -68,7 +68,7 @@
             return index === this.stepIndex
         }
 
-        validate () {
+        validate (): boolean {
             return !(this.$refs.step.validate && !this.$refs.step.validate())
         }
 
@@ -79,6 +79,7 @@
 </script>
 
 <style lang='scss'>
+    @use "sass:math";
     @import '../../assets/scss/conf';
     .quick-start-step-wrapper {
         display: -webkit-box;
@@ -133,8 +134,8 @@
                     &.done {
                         > span {
                             color: white;
-                            background-color: $fontLigtherColor;
-                            border-color: $fontLigtherColor;
+                            background-color: $fontLighterColor;
+                            border-color: $fontLighterColor;
                         }
                     }
                     > span {
@@ -156,7 +157,7 @@
                         border-left: 2px dotted $borderWeightColor;
                         height: $marginHeight;
                         top: $numSize;
-                        left: $numSize / 2;
+                        left: math.div($numSize, 2);
 
                     }
                 }

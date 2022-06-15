@@ -38,7 +38,7 @@ dependencies {
     api("org.jooq:jooq")
 }
 
-val moduleNames = when (val moduleName = name.split("-")[1]) {
+var moduleNames = when (val moduleName = name.split("-")[1]) {
     "misc" -> {
         listOf("process", "project", "repository", "dispatch", "plugin", "quality", "artifactory", "environment")
     }
@@ -52,6 +52,10 @@ val moduleNames = when (val moduleName = name.split("-")[1]) {
         listOf("stream")
     }
     else -> listOf(moduleName)
+}
+
+if (name == "model-dispatch-bcs") {
+    moduleNames = listOf("dispatch_bcs")
 }
 
 val mysqlPrefix: String? = System.getProperty("mysqlPrefix") ?: System.getenv("mysqlPrefix")

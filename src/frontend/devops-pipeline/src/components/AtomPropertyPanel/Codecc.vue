@@ -14,7 +14,7 @@
                 <accordion show-checkbox show-content :key="prop.id" v-if="!newModel[prop.id].hidden || (showScript && prop.id === 'script')">
                     <header class="var-header" slot="header">
                         <span>{{ getPropName(prop.name) }}</span>
-                        <i class="bk-icon icon-angle-down" style="display:block"></i>
+                        <i class="devops-icon icon-angle-down" style="display:block"></i>
                     </header>
                     <div slot="content" class="bk-form bk-form-vertical">
                         <form-field v-for="key of prop.item" v-if="!newModel[key].hidden" :key="key" :desc="newModel[key].desc" :required="newModel[key].required" :label="newModel[key].label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
@@ -42,7 +42,7 @@
             <accordion show-checkbox show-content key="otherChoice">
                 <header class="var-header" slot="header">
                     <span>其它选项</span>
-                    <i class="bk-icon icon-angle-down" style="display:block"></i>
+                    <i class="devops-icon icon-angle-down" style="display:block"></i>
                 </header>
                 <div slot="content" class="bk-form bk-form-vertical">
                     <template v-for="key in otherChoice">
@@ -65,7 +65,6 @@
         mixins: [atomMixin, validMixins],
         data () {
             return {
-                CODECC_SOFWARE_URL: CODECC_SOFWARE_URL,
                 newModel: {},
                 task: {},
                 elementId: '',
@@ -81,20 +80,20 @@
                 disAllowToolsInThird: ['CHECKSTYLE', 'STYLECOP', 'SENSITIVE', 'PHPCS', 'DETEKT', 'OCCHECK'],
                 dataMap: [
                     {
-                        'old': 'C',
-                        'new': 'C_CPP'
+                        old: 'C',
+                        new: 'C_CPP'
                     },
                     {
-                        'old': 'C_PLUS_PLUSH',
-                        'new': 'C_CPP'
+                        old: 'C_PLUS_PLUSH',
+                        new: 'C_CPP'
                     },
                     {
-                        'old': 'OBJECTIVE_C',
-                        'new': 'OC'
+                        old: 'OBJECTIVE_C',
+                        new: 'OC'
                     },
                     {
-                        'old': 'JAVASCRIPT',
-                        'new': 'JS'
+                        old: 'JAVASCRIPT',
+                        new: 'JS'
                     }
                 ],
                 otherChoice: ['path', 'asynchronous']
@@ -114,7 +113,7 @@
             commonModel () {
                 const { languages, tools } = this.newModel
                 return {
-                    'row': { languages, tools }
+                    row: { languages, tools }
                 }
             },
             accordionList () {
@@ -257,7 +256,7 @@
                 this.handleUpdateElement('scanType', '1')
             }
             if (this.element.languages && this.element.languages.length) {
-                this.element.languages.map((lang, index) => {
+                this.element.languages.forEach((lang, index) => {
                     if (this.dataMap.filter(item => item.old === lang).length > 0) {
                         this.element.languages.splice(index, 1, this.getDataMap(lang))
                     }
@@ -444,14 +443,14 @@
             },
             handleIntro (vals) {
                 let list = []
-                vals.map(val => {
+                vals.forEach(val => {
                     const curLang = this.newModel.languages.list.find(item => item.id === val)
                     if (curLang && curLang.intro) {
                         list = list.concat(curLang.intro)
                     }
                     list = Array.from(new Set(list))
                 })
-                this.newModel.tools.list.map((tool, index) => {
+                this.newModel.tools.list.forEach((tool, index) => {
                     if (list.filter(item => tool.id === item).length > 0) {
                         this.newModel.tools.list[index].disabled = false
                     } else {
@@ -517,7 +516,7 @@
                 return name
             },
             handleStrictLang () {
-                this.newModel.languages.list.map((lang, index) => {
+                this.newModel.languages.list.forEach((lang, index) => {
                     this.newModel.languages.list[index].disabled = true
                 })
             },
@@ -558,7 +557,10 @@
                         }
                     } catch (e) {
                         if (e.code === 403) { // 没有权限编辑
-                            this.setPermissionConfig(`流水线：${this.pipeline.name}`, '编辑')
+                            this.setPermissionConfig(this.$permissionResourceMap.pipeline, this.$permissionActionMap.edit, [{
+                                id: this.pipeline.pipelineId,
+                                name: this.pipeline.name
+                            }], params.projectId, this.getPermUrlByRole(params.projectId, this.pipeline.pipelineId, this.roleMap.manager))
                         } else {
                             this.$showTips({
                                 message: e.message,
@@ -598,6 +600,15 @@
                     } finally {
                         this.isLoading = false
                     }
+                } else {
+                    this.$bkInfo({
+                        subTitle: '暂无编译加速任务，点击去新建任务',
+                        closeIcon: false,
+                        confirmFn: this.goRegist,
+                        cancelFn: () => {
+                            this.banAllBooster = false
+                        }
+                    })
                 }
             },
             async initData () {
@@ -624,51 +635,48 @@
             },
             // 新建编译加速任务跳转
             async goRegist () {
-                if (!this.elementId) {
-                    const { checkPipelineInvalid, $route: { params }, pipeline } = this
-                    const { inValid, message } = checkPipelineInvalid(pipeline.stages)
-                    this.btnDisabled = true
-                    this.handleUpdateElement('compilePlat', this.container.baseOS)
-                    const tab = window.open('about:blank')
-                    try {
-                        if (inValid) {
-                            throw new Error(message)
-                        }
-                        const { data } = await this.$ajax.put(`/process/api/user/pipelines/${params.projectId}/${params.pipelineId}`, pipeline)
-                        if (data) {
-                            // this.requestPipeline(this.$route.params)
-                            const response = await this.$ajax.get(`/process/api/user/pipelines/${params.projectId}/${params.pipelineId}`)
-                            this.setPipeline(response.data)
-                            this.updatePipelineToTurbo(response.data)
-                            const { containerIndex, elementIndex, stageIndex } = this.getEditingElementPos
-                            const container = response.data.stages[stageIndex]
-                            this.elementId = container.containers[containerIndex].elements[elementIndex].id
-
-                            tab.location = `${WEB_URL_PIRFIX}/turbo/${this.projectId}/registration#${this.$route.params.pipelineId}&${this.elementId}`
-                        } else {
-                            this.$showTips({
-                                message: `${pipeline.name}修改失败`,
-                                theme: 'error'
-                            })
-                            tab.close()
-                        }
-                    } catch (e) {
-                        if (e.code === 403) { // 没有权限编辑
-                            this.setPermissionConfig(`流水线：${this.pipeline.name}`, '编辑')
-                        } else {
-                            this.$showTips({
-                                message: e.message,
-                                theme: 'error'
-                            })
-                        }
-                        tab.close()
-                    } finally {
-                        this.btnDisabled = false
+                const { checkPipelineInvalid, $route: { params }, pipeline } = this
+                const { inValid, message } = checkPipelineInvalid(pipeline.stages)
+                this.btnDisabled = true
+                this.handleUpdateElement('compilePlat', this.container.baseOS)
+                const tab = window.open('about:blank')
+                try {
+                    if (inValid) {
+                        throw new Error(message)
                     }
-                } else {
-                    setTimeout(() => {
-                        window.open(`${WEB_URL_PIRFIX}/turbo/${this.projectId}/registration#${this.$route.params.pipelineId}&${this.elementId}`, '_blank')
-                    }, 200)
+                    const { data } = await this.$ajax.put(`/process/api/user/pipelines/${params.projectId}/${params.pipelineId}`, pipeline)
+                    if (data) {
+                        // this.requestPipeline(this.$route.params)
+                        const response = await this.$ajax.get(`/process/api/user/pipelines/${params.projectId}/${params.pipelineId}`)
+                        this.setPipeline(response.data)
+                        this.updatePipelineToTurbo(response.data)
+                        const { containerIndex, elementIndex, stageIndex } = this.getEditingElementPos
+                        const container = response.data.stages[stageIndex]
+                        this.elementId = container.containers[containerIndex].elements[elementIndex].id
+
+                        tab.location = `${WEB_URL_PREFIX}/turbo/${this.projectId}/registration#${this.$route.params.pipelineId}&${this.elementId}`
+                    } else {
+                        this.$showTips({
+                            message: `${pipeline.name}修改失败`,
+                            theme: 'error'
+                        })
+                        tab.close()
+                    }
+                } catch (e) {
+                    if (e.code === 403) { // 没有权限编辑
+                        this.setPermissionConfig(this.$permissionResourceMap.pipeline, this.$permissionActionMap.edit, [{
+                            id: this.pipeline.pipelineId,
+                            name: this.pipeline.name
+                        }], params.projectId, this.getPermUrlByRole(params.projectId, this.pipeline.pipelineId, this.roleMap.manager))
+                    } else {
+                        this.$showTips({
+                            message: e.message,
+                            theme: 'error'
+                        })
+                    }
+                    tab.close()
+                } finally {
+                    this.btnDisabled = false
                 }
             },
             updatePipelineToTurbo (pipeline) {

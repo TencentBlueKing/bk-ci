@@ -85,23 +85,25 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         buildId: String,
         dispatchType: DispatchType
     ) {
+        // 一般性处理
+        commonDispatchTypeParser.parse(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            dispatchType = dispatchType
+        )
+
         if (dispatchType is StoreDispatchType) {
             if (dispatchType.imageType == ImageType.BKSTORE) {
-                // 一般性处理
-                commonDispatchTypeParser.parse(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    dispatchType = dispatchType
-                )
                 // 腾讯内部版专有处理
                 if (dispatchType.imageType == ImageType.BKDEVOPS) {
                     if (dispatchType is DockerDispatchType) {
                         dispatchType.dockerBuildVersion = dispatchType.value.removePrefix("paas/")
                     } else if (dispatchType is PublicDevCloudDispathcType) {
                         // 在商店发布的蓝盾源镜像，无需凭证
-                        val pool = Pool(dispatchType.value.removePrefix("/"), null, null, false, dispatchType.performanceConfigId)
+                        val pool = Pool(dispatchType.value.removePrefix("/"), null, null,
+                            false, dispatchType.performanceConfigId)
                         dispatchType.image = JsonUtil.toJson(pool)
                     } else if (dispatchType is IDCDispatchType) {
                         dispatchType.image = dispatchType.value.removePrefix("paas/")

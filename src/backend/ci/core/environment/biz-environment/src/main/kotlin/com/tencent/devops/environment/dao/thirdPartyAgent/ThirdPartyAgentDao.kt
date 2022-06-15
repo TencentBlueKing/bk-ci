@@ -382,6 +382,15 @@ class ThirdPartyAgentDao {
         }
     }
 
+    fun saveAgentProps(dslContext: DSLContext, agentId: Long, propsJsonStr: String) {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            dslContext.update(this)
+                .set(AGENT_PROPS, propsJsonStr)
+                .where(ID.eq(agentId))
+                .execute()
+        }
+    }
+
     fun addAgentAction(
         dslContext: DSLContext,
         projectId: String,
