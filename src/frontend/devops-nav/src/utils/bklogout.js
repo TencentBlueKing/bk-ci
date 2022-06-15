@@ -7,7 +7,7 @@
 const bklogout = {
     ret: -1,
     mainDomain: '',
-    oaLogoutUrl: 'http://bklogin.oa.com/clear_cookie/',
+    oaLogoutUrl: '//bklogin.woa.com/clear_cookie/',
     getCookie (b) {
         const a = document.cookie.match(new RegExp('(^| )' + b + '=([^;]*)(;|$)'))
         return !a ? '' : decodeURIComponent(a[2])
@@ -33,7 +33,7 @@ const bklogout = {
         const g = bklogout.getCookie('bk_ticket')
         let e = ''
         const h = b ? 'oa.com' : bklogout.mainDomain
-        e = 'http://bklogin.' + h + '/logout?'
+        e = '//bklogin.' + h + '/logout?'
         e += ('bk_ticket=' + encodeURIComponent(g) + '&deep_logout=1')
         return e
     },

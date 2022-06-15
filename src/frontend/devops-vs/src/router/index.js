@@ -24,9 +24,7 @@ const routes = [
                 name: 'vsReport',
                 component: vsReport,
                 meta: {
-                    title: () => {
-                        return `查看报告`
-                    },
+                    title: () => '查看报告',
                     logo: 'vs',
                     header: 'vs',
                     to: 'vsList'

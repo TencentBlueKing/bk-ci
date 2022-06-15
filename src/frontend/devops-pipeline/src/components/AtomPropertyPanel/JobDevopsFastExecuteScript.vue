@@ -293,7 +293,7 @@ job_start
                         ...item
                     }))
                     if (this.element[type].length > 0) {
-                        this.element[type].map(typeItem => {
+                        this.element[type].forEach(typeItem => {
                             if (typeItem !== '' && list.filter(item => item.nodeHashId === typeItem).length === 0) {
                                 // 删除原数组中的当前项
                                 this.element[type].splice(this.element[type].findIndex(iitem => iitem.id === typeItem), 1)
