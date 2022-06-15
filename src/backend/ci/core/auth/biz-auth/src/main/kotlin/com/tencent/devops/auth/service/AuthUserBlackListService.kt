@@ -29,6 +29,8 @@ package com.tencent.devops.auth.service
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.dao.AuthUserBlackListDao
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.redis.RedisOperation
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,19 +40,16 @@ import java.util.concurrent.TimeUnit
 @Service
 class AuthUserBlackListService @Autowired constructor(
     val dslContext: DSLContext,
-    val authUserBlackListDao: AuthUserBlackListDao
+    val authUserBlackListDao: AuthUserBlackListDao,
+    val redisOperation: RedisOperation
 ) {
-    // 非黑名单用户, 用于检验是快速响应
-    private val unBlackListCache = CacheBuilder.newBuilder()
-        .maximumSize(200)
-        .expireAfterWrite(5, TimeUnit.MINUTES)
-        .build<String, String>()
 
     fun createBlackListUser(
         userId: String,
         remark: String?
     ): Boolean {
         logger.info("create $userId blackList with $remark")
+        redisOperation.delete(BLACKLIST_REDIS_KEY + userId)
         return authUserBlackListDao.create(
             dslContext = dslContext,
             userId = userId,
@@ -62,8 +61,6 @@ class AuthUserBlackListService @Autowired constructor(
         userId: String
     ): Boolean {
         logger.info("remove $userId blackList")
-        // 清理内存缓存，缓存只有5分钟。 其他实例5分钟后可访问
-        unBlackListCache.invalidate(userId)
         return authUserBlackListDao.delete(dslContext, userId) == 1
     }
 
@@ -71,13 +68,11 @@ class AuthUserBlackListService @Autowired constructor(
         userId: String
     ): Boolean {
         // 优先从缓存中取数据
-        if (unBlackListCache.getIfPresent(userId) != null) {
-            return false
-        }
+        redisOperation.get(BLACKLIST_REDIS_KEY + userId)
         val userInfo = authUserBlackListDao.get(dslContext, userId)
         if (userInfo == null) {
             // 只缓存非名单内的用户
-            unBlackListCache.put(userId, "")
+            redisOperation.set(BLACKLIST_REDIS_KEY + userId, "", DateTimeUtil.minuteToSecond(5).toLong())
             return false
         }
         return true
@@ -85,5 +80,6 @@ class AuthUserBlackListService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(AuthUserBlackListService::class.java)
+        const val BLACKLIST_REDIS_KEY = "bkci:auth:blackList:"
     }
 }
