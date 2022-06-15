@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.engine.listener.run.finish
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 /**
  * deng
@@ -39,6 +39,6 @@ class PipelineBuildFailureNotifyListenerTest {
     @Test
     fun testListJoin() {
         val list = listOf("a", "b")
-        Assert.assertEquals("a,b", list.joinToString(","))
+        Assertions.assertEquals("a,b", list.joinToString(","))
     }
 }

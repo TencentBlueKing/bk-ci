@@ -102,10 +102,6 @@ allprojects {
         }
     }
 
-    // 兼容Junit4
-    dependencies {
-        testImplementation("org.junit.vintage:junit-vintage-engine")
-    }
     // 兼容 Log4j
     configurations.forEach {
         it.exclude("org.springframework.boot", "spring-boot-starter-tomcat")
