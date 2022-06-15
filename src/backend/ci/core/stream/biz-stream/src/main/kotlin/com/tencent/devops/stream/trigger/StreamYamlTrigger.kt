@@ -210,7 +210,8 @@ class StreamYamlTrigger @Autowired constructor(
     private fun needUpdateLastBuildBranch(action: BaseAction): Boolean {
         return action.data.context.pipeline!!.pipelineId.isBlank() ||
             (
-                !action.getChangeSet().isNullOrEmpty() &&
+                action is GitBaseAction &&
+                        !action.getChangeSet().isNullOrEmpty() &&
                     action.getChangeSet()!!.toSet()
                         .contains(action.data.context.pipeline!!.filePath)
                 )
