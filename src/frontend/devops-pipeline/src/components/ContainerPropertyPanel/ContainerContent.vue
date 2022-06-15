@@ -529,11 +529,6 @@
                 'getMacSysVersion',
                 'getMacXcodeVersion'
             ]),
-            ...mapActions('common', [
-                'startDebugDocker',
-                'getContainerInfoByBuildId',
-                'startDebugDevcloud'
-            ]),
             ...mapActions('pipelines', [
                 'requestImageVersionlist',
                 'requestImageHistory'
@@ -708,64 +703,10 @@
             async startDebug () {
                 const realSeqId = this.getRealSeqId(this.stages, this.stageIndex, this.containerIndex)
                 const vmSeqId = this.isDetailPage ? (this.container.containerId || realSeqId) : realSeqId
-                let url = ''
                 const tab = window.open('about:blank')
-                try {
-                    if (this.buildResourceType === 'DOCKER') {
-                        // docker 分根据buildId获取容器信息和新启动一个容器
-                        if (this.routeName === 'pipelinesDetail' && this.container.status === 'RUNNING') {
-                            const res = await this.getContainerInfoByBuildId({
-                                projectId: this.projectId,
-                                pipelineId: this.pipelineId,
-                                buildId: this.buildId,
-                                vmSeqId
-                            })
-                            if (res.containerId && res.address) {
-                                url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/dockerConsole/?pipelineId=${this.pipelineId}&containerId=${res.containerId}&targetIp=${res.address}`
-                            }
-                        } else {
-                            const res = await this.startDebugDocker({
-                                projectId: this.projectId,
-                                pipelineId: this.pipelineId,
-                                vmSeqId,
-                                imageCode: this.buildImageCode,
-                                imageVersion: this.buildImageVersion,
-                                imageName: this.buildResource,
-                                buildEnv: this.container.buildEnv,
-                                imageType: this.buildImageType,
-                                credentialId: this.buildImageCreId
-                            })
-                            if (res === true) {
-                                url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/dockerConsole/?pipelineId=${this.pipelineId}&vmSeqId=${vmSeqId}`
-                            }
-                        }
-                    } else if (this.isPublicDevCloud) {
-                        const buildIdStr = this.buildId ? `&buildId=${this.buildId}` : ''
-                        url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/dockerConsole/?type=DEVCLOUD&pipelineId=${this.pipelineId}&vmSeqId=${vmSeqId}${buildIdStr}`
-                    }
-                    tab.location = url
-                } catch (err) {
-                    tab.close()
-                    if (err.code === 403) {
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                actionId: this.$permissionActionMap.edit,
-                                resourceId: this.$permissionResourceMap.pipeline,
-                                instanceId: [{
-                                    id: this.pipelineId,
-                                    name: this.pipelineId
-                                }],
-                                projectId: this.projectId
-                            }],
-                            applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_manager=pipeline:${this.pipelineId}`
-                        })
-                    } else {
-                        this.$showTips({
-                            theme: 'error',
-                            message: err.message || err
-                        })
-                    }
-                }
+                const buildIdStr = this.buildId ? `&buildId=${this.buildId}` : ''
+                const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/dockerConsole/?pipelineId=${this.pipelineId}&dispatchType=${this.buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
+                tab.location = url
             },
             handleNfsSwitchChange (name, value) {
                 if (!value) {

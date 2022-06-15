@@ -101,7 +101,11 @@ class StreamYamlTrigger @Autowired constructor(
                 creator = action.data.getUserId(),
                 lastUpdateBranch = action.data.eventCommon.branch
             )
-            streamYamlBaseBuild.createNewPipeLine(pipeline = pipeline, projectCode = action.getProjectCode())
+            streamYamlBaseBuild.createNewPipeLine(
+                pipeline = pipeline,
+                projectCode = action.getProjectCode(),
+                action = action
+            )
             // 新建流水线放
             action.data.context.pipeline = pipeline
         } else if (needUpdateLastBuildBranch(action)) {
