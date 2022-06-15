@@ -37,6 +37,9 @@ import java.lang.annotation.Inherited
 
 /**
  * 注解表示需要对资源鉴权
+ * @param type 资源类型
+ * @param action 权限动作
+ * @param anonymous 是否允许平台匿名请求
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)

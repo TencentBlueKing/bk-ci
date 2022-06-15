@@ -7,7 +7,7 @@ import com.tencent.bkrepo.common.security.http.credentials.HttpAuthCredentials
 import com.tencent.bkrepo.common.security.http.credentials.UsernamePasswordCredentials
 import com.tencent.bkrepo.common.security.manager.AuthenticationManager
 import com.tencent.bkrepo.common.service.util.HeaderUtils
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import javax.servlet.http.HttpServletRequest
 
 /**

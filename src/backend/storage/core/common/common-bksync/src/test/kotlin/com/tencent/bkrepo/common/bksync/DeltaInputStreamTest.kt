@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 
 class DeltaInputStreamTest {
 
+    private val reuseThreshold = 0.2f
     private val bkSync = BkSync(4, 2)
     private val oldData = byteArrayOf(
         1, 2, 3, 4,
@@ -36,7 +37,7 @@ class DeltaInputStreamTest {
             15
         )
         newFile.writeBytes(newData)
-        bkSync.diff(newFile, checksumStream, deltaOutput)
+        bkSync.diff(newFile, checksumStream, deltaOutput, reuseThreshold)
         val deltaInput = DeltaInputStream(ByteArrayInputStream(deltaOutput.toByteArray()))
         // -1 len delta(1, 3, 4, 5, 6, 7, 13, 8) ref2 -1 len delta(15)
         // pos -1
@@ -74,7 +75,7 @@ class DeltaInputStreamTest {
         val newFile = createTempFile()
         newFile.writeBytes(newData)
         val deltaOutput = ByteArrayOutputStream()
-        bkSync.diff(newFile, checksumStream, deltaOutput)
+        bkSync.diff(newFile, checksumStream, deltaOutput, reuseThreshold)
         val deltaInput = DeltaInputStream(ByteArrayInputStream(deltaOutput.toByteArray()))
         // -1 len delta(1, 3, 4, 5, 6, 7, 13, 8) ref2
         var move = 0

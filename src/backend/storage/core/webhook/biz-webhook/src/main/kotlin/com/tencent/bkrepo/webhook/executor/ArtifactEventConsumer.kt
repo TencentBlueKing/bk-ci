@@ -29,50 +29,114 @@ package com.tencent.bkrepo.webhook.executor
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.tencent.bkrepo.common.artifact.event.base.ArtifactEvent
 import com.tencent.bkrepo.common.artifact.event.base.EventType
+import com.tencent.bkrepo.webhook.config.WebHookProperties
+import com.tencent.bkrepo.webhook.constant.AssociationType
 import com.tencent.bkrepo.webhook.dao.WebHookDao
 import com.tencent.bkrepo.webhook.model.TWebHook
 import org.slf4j.LoggerFactory
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+import org.springframework.messaging.Message
 import org.springframework.stereotype.Component
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
+import java.util.regex.Pattern
 
 /**
  * 事件消息消费者
  */
 @Component("artifactEvent")
 class ArtifactEventConsumer(
-    private val threadPoolTaskExecutor: ThreadPoolTaskExecutor,
     private val webHookDao: WebHookDao,
-    private val webHookExecutor: WebHookExecutor
-) : Consumer<ArtifactEvent> {
+    private val webHookExecutor: WebHookExecutor,
+    private val webHookProperties: WebHookProperties
+) : Consumer<Message<ArtifactEvent>> {
+
+    private val executors = ThreadPoolExecutor(
+        100,
+        200,
+        60,
+        TimeUnit.SECONDS, LinkedBlockingQueue<Runnable>(1024),
+        ThreadFactoryBuilder().setNameFormat("webhook-event-worker-%d").build(),
+        ThreadPoolExecutor.CallerRunsPolicy()
+    )
 
     private val systemWebHookCache = CacheBuilder.newBuilder()
         .maximumSize(100)
         .expireAfterWrite(10, TimeUnit.MINUTES)
-        .build<EventType, List<TWebHook>>(CacheLoader.from { key -> webHookDao.findSystemWebHookByEventType(key) })
+        .build<EventType, List<TWebHook>>(CacheLoader.from { key ->
+            webHookDao.findByAssociationTypeAndAssociationId(
+                AssociationType.SYSTEM, null
+            )
+        })
 
-    override fun accept(event: ArtifactEvent) {
-        logger.info("accept artifact event: $event")
-        val task = Runnable { triggerWebHooks(event) }
-        threadPoolTaskExecutor.execute(task)
+    override fun accept(message: Message<ArtifactEvent>) {
+        logger.info("accept artifact event: ${message.payload}, header: ${message.headers}")
+        val task = Runnable { triggerWebHooks(message.payload) }
+        executors.execute(task)
     }
 
     fun triggerWebHooks(event: ArtifactEvent) {
         val webHookList = mutableListOf<TWebHook>()
 
+        if (!checkIfNeedTrigger(event)) {
+            return
+        }
+
         webHookList.addAll(systemWebHookCache.get(event.type))
 
         if (event.projectId.isNotBlank()) {
-            webHookList.addAll(webHookDao.findProjectWebHookByEventType(event.projectId, event.type))
+            webHookList.addAll(
+                webHookDao.findByAssociationTypeAndAssociationId(
+                    AssociationType.PROJECT, event.projectId
+                )
+            )
         }
 
         if (event.projectId.isNotBlank() && event.repoName.isNotBlank()) {
-            webHookList.addAll(webHookDao.findRepoWebHookByEventType(event.projectId, event.repoName, event.type))
+            val associationId = "${event.projectId}:${event.repoName}"
+            webHookList.addAll(
+                webHookDao.findByAssociationTypeAndAssociationId(
+                    AssociationType.REPO, associationId
+                )
+            )
         }
+        webHookList.filter {
+            it.triggers.contains(event.type) && matchResourceKey(
+                it.resourceKeyPattern,
+                event.resourceKey
+            )
+        }
+        logger.info("event: $event, webHookList: $webHookList")
         webHookExecutor.asyncExecutor(event, webHookList)
+    }
+
+    private fun checkIfNeedTrigger(event: ArtifactEvent): Boolean {
+        val projectRepoKey = "${event.projectId}:${event.repoName}"
+        webHookProperties.filterProjectRepoKey.forEach {
+            val regex = Regex(it.replace("*", ".*"))
+            if (projectRepoKey.matches(regex)) {
+                return false
+            }
+        }
+        return true
+    }
+
+    private fun matchResourceKey(resourceKeyPattern: String?, resourceKey: String): Boolean {
+        if (resourceKeyPattern.isNullOrBlank()) {
+            return true
+        }
+        return try {
+            val pattern = Pattern.compile(resourceKeyPattern)
+            val matcher = pattern.matcher(resourceKey)
+            matcher.matches()
+        } catch (e: Exception) {
+            logger.warn("match resourceKey[$resourceKey] by pattern[$resourceKeyPattern] error, $e")
+            false
+        }
     }
 
     companion object {

@@ -31,11 +31,8 @@ import com.tencent.bkrepo.common.artifact.api.ArtifactFile
 import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
 import com.tencent.bkrepo.common.artifact.util.PackageKeys
 import com.tencent.bkrepo.common.security.util.SecurityUtils
-import com.tencent.bkrepo.oci.constant.DIGEST
 import com.tencent.bkrepo.oci.constant.IMAGE_VERSION
-import com.tencent.bkrepo.oci.constant.MANIFEST_DIGEST
 import com.tencent.bkrepo.oci.constant.MEDIA_TYPE
-import com.tencent.bkrepo.oci.constant.SCHEMA_VERSION
 import com.tencent.bkrepo.oci.pojo.artifact.OciManifestArtifactInfo
 import com.tencent.bkrepo.oci.pojo.user.BasicInfo
 import com.tencent.bkrepo.repository.pojo.metadata.MetadataSaveRequest
@@ -72,19 +69,13 @@ object ObjectBuildUtils {
 
     fun buildMetadata(
         mediaType: String,
-        digest: String,
-        version: String,
-        schemaVersion: Int? = null,
-        manifestDigest: String? = null,
+        version: String?,
         yamlData: Map<String, Any>? = null
     ): MutableMap<String, Any> {
         return mutableMapOf<String, Any>(
-            MEDIA_TYPE to mediaType,
-            DIGEST to digest,
-            IMAGE_VERSION to version
+            MEDIA_TYPE to mediaType
         ).apply {
-            schemaVersion?.let { this[SCHEMA_VERSION] = schemaVersion }
-            manifestDigest?.let { this[MANIFEST_DIGEST] = manifestDigest }
+            version?.let { this.put(IMAGE_VERSION, version) }
             yamlData?.let {
                 this.putAll(yamlData)
             }
@@ -112,15 +103,19 @@ object ObjectBuildUtils {
         version: String,
         size: Long,
         fullPath: String,
+        repoType: String,
         metadata: Map<String, Any>? = null
     ): PackageVersionCreateRequest {
         with(ociArtifactInfo) {
+            // 兼容多仓库类型支持
+            val packageType = PackageType.valueOf(repoType)
+            val packageKey = PackageKeys.ofName(repoType.toLowerCase(), packageName)
             return PackageVersionCreateRequest(
                 projectId = projectId,
                 repoName = repoName,
                 packageName = packageName,
-                packageKey = PackageKeys.ofOci(packageName),
-                packageType = PackageType.OCI,
+                packageKey = packageKey,
+                packageType = packageType,
                 versionName = version,
                 size = size,
                 artifactPath = fullPath,
@@ -133,17 +128,17 @@ object ObjectBuildUtils {
 
     fun buildPackageVersionUpdateRequest(
         ociArtifactInfo: OciManifestArtifactInfo,
-        packageName: String,
         version: String,
         size: Long,
         fullPath: String,
-        metadata: Map<String, Any>? = null
+        metadata: Map<String, Any>? = null,
+        packageKey: String
     ): PackageVersionUpdateRequest {
         with(ociArtifactInfo) {
             return PackageVersionUpdateRequest(
                 projectId = projectId,
                 repoName = repoName,
-                packageKey = PackageKeys.ofOci(packageName),
+                packageKey = packageKey,
                 versionName = version,
                 size = size,
                 manifestPath = fullPath,
@@ -155,6 +150,7 @@ object ObjectBuildUtils {
     fun buildPackageUpdateRequest(
         artifactInfo: ArtifactInfo,
         name: String,
+        packageKey: String,
         appVersion: String? = null,
         description: String? = null
     ): PackageUpdateRequest {
@@ -163,7 +159,7 @@ object ObjectBuildUtils {
             repoName = artifactInfo.repoName,
             name = name,
             description = description,
-            packageKey = PackageKeys.ofOci(name),
+            packageKey = packageKey,
             extension = appVersion?.let { mapOf("appVersion" to appVersion) }
         )
     }
