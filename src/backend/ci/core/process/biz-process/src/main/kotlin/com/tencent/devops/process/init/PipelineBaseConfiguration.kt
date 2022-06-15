@@ -32,6 +32,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineCreateListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineDeleteListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineRestoreListener
+import com.tencent.devops.process.engine.listener.pipeline.MQPipelineStreamEnabledListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineUpdateListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -234,5 +235,44 @@ class PipelineBaseConfiguration {
         val pipelineSettingChangeExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_SETTING_CHANGE_FANOUT, true, false)
         pipelineSettingChangeExchange.isDelayed = true
         return pipelineSettingChangeExchange
+    }
+
+    @Value("\${queueConcurrency.pipelineStreamEnabled:5}")
+    private val pipelineStreamEnabledConcurrency: Int? = null
+
+    /**
+     * 流水线开启stream队列--- 并发一般
+     */
+    @Bean
+    fun pipelineStreamEnabledQueue() = Queue(MQ.QUEUE_PIPELINE_STREAM_ENABLED)
+
+    @Bean
+    fun pipelineStreamEnabledQueueBind(
+        @Autowired pipelineUpdateQueue: Queue,
+        @Autowired pipelineCoreExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(pipelineUpdateQueue).to(pipelineCoreExchange).with(MQ.ROUTE_PIPELINE_STREAM_ENABLED)
+    }
+
+    @Bean
+    fun pipelineStreamEnabledListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired pipelineStreamEnabledQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired streamEnabledListener: MQPipelineStreamEnabledListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = pipelineStreamEnabledQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = streamEnabledListener,
+            messageConverter = messageConverter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = 5,
+            concurrency = pipelineStreamEnabledConcurrency!!,
+            maxConcurrency = 50
+        )
     }
 }
