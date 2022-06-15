@@ -147,12 +147,18 @@ class UserStreamGitResourceImpl @Autowired constructor(
             streamCreateFile = newFile
         )
         if (createNewFileIsSuccess) {
-            streamPipelineService.createNewPipeLine(gitProjectId, newFile, userId)
+            streamPipelineService.createNewPipeLine(
+                gitProjectId = gitProjectId,
+                file = newFile,
+                userId = userId,
+                branch = streamCreateFile.branch
+            )
         }
         return Result(
             createNewFileIsSuccess
         )
     }
+
     // 默认在.ci目录下，.yml后缀
     private fun getFilePath(filePath: String): String {
         var newPath = filePath

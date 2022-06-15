@@ -25,24 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.stream.pojo.openapi
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-data class StreamProjectSimpleInfo(
-    @JsonProperty("id")
-    @ApiModelProperty(name = "id")
-    val id: Long?,
-    @JsonProperty("path_with_namespace")
-    @ApiModelProperty(name = "path_with_namespace")
-    val pathWithNamespace: String?,
-    @JsonProperty("description")
-    @ApiModelProperty(name = "description")
-    val description: String?,
-    @JsonProperty("avatar_url")
-    @ApiModelProperty(name = "avatar_url")
-    val avatarUrl: String?,
-    val enabledCi: Boolean?,
-    val projectCode: String?
+@ApiModel("stream检验yaml格式模型")
+data class StreamYamlCheck(
+    @ApiModelProperty("yaml 原文", required = true)
+    val originYaml: String,
+    @ApiModelProperty("模板类型", required = false)
+    val templateType: String?,
+    @ApiModelProperty("是否为流水线yaml", required = true)
+    val checkCiFile: Boolean
 )
