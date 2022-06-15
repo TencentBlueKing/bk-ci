@@ -74,32 +74,22 @@ object QueryParamCheckUtil {
         return list
     }
 
-    fun checkParam(userId: String, projectId: String, startTime: String, endTime: String) {
-        if (userId.isBlank()) {
+    fun checkDateInterval(startTime: String, endTime: String) {
+
+        val startDate = DateTimeUtil.stringToLocalDate(startTime)
+        val endDate = DateTimeUtil.stringToLocalDate(endTime)
+        val firstDate = LocalDate.now()
+//            .minusDays(1)
+        val secondDate = firstDate.minusMonths(6)
+        if (startDate!!.isBefore(secondDate)) {
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
-                params = arrayOf("userId")
+                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
             )
         }
-        if (projectId.isBlank()) {
+        if (endDate!!.isAfter(firstDate)) {
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
-                params = arrayOf("projectId")
+                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
             )
         }
-//        val startDate = DateTimeUtil.stringToLocalDate(startTime)
-//        val endDate = DateTimeUtil.stringToLocalDate(endTime)
-//        val firstDate = LocalDate.now().minusDays(1)
-//        val secondDate = firstDate.minusMonths(6)
-//        if (startDate!!.isBefore(secondDate)) {
-//            throw ErrorCodeException(
-//                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
-//            )
-//        }
-//        if (endDate!!.isAfter(firstDate)) {
-//            throw ErrorCodeException(
-//                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
-//            )
-//        }
     }
 }

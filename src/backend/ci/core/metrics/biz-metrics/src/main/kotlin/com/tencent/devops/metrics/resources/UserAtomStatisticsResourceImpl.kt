@@ -30,7 +30,7 @@ package com.tencent.devops.metrics.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.metrics.api.UserAtomStatisticsResource
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.checkParam
+import com.tencent.devops.metrics.constant.QueryParamCheckUtil.checkDateInterval
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getEndDateTime
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getStartDateTime
 import com.tencent.devops.metrics.service.AtomStatisticsManageService
@@ -56,7 +56,7 @@ class UserAtomStatisticsResourceImpl @Autowired constructor(
         val endTime =
             if (atomStatisticsInfoReq.endTime.isNullOrBlank()) getEndDateTime()
             else atomStatisticsInfoReq.endTime
-        checkParam(userId, projectId, startTime!!, endTime!!)
+        checkDateInterval(startTime!!, endTime!!)
         return Result(
             atomStatisticsManageService.queryAtomTrendInfo(
                 QueryAtomStatisticsInfoDTO(
@@ -85,7 +85,7 @@ class UserAtomStatisticsResourceImpl @Autowired constructor(
         val endTime =
             if (atomStatisticsInfoReq.endTime.isNullOrBlank()) getEndDateTime()
             else atomStatisticsInfoReq.endTime
-        checkParam(userId, projectId, startTime!!, endTime!!)
+        checkDateInterval(startTime!!, endTime!!)
         return Result(
             atomStatisticsManageService.queryAtomExecuteStatisticsInfo(
                 QueryAtomStatisticsInfoDTO(

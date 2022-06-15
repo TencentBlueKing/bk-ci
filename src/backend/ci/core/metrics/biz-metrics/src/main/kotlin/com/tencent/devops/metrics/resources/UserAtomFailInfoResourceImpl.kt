@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.metrics.api.UserAtomFailInfoResource
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.checkParam
+import com.tencent.devops.metrics.constant.QueryParamCheckUtil.checkDateInterval
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getEndDateTime
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getStartDateTime
 import com.tencent.devops.metrics.service.AtomFailInfoManageService
@@ -56,7 +56,7 @@ class UserAtomFailInfoResourceImpl @Autowired constructor(
         val endTime =
             if (atomFailInfoReq.endTime.isNullOrBlank()) getEndDateTime()
             else atomFailInfoReq.endTime
-        checkParam(userId, projectId, startTime!!, endTime!!)
+        checkDateInterval(startTime!!, endTime!!)
         return Result(
             atomFailInfoManageService.queryAtomErrorCodeStatisticsInfo(
                 QueryAtomFailInfoDTO(
@@ -86,7 +86,7 @@ class UserAtomFailInfoResourceImpl @Autowired constructor(
         val endTime =
             if (atomFailInfoReq.endTime.isNullOrBlank()) getEndDateTime()
             else atomFailInfoReq.endTime
-        checkParam(userId, projectId, startTime!!, endTime!!)
+        checkDateInterval(startTime!!, endTime!!)
         return Result(
             atomFailInfoManageService.queryPipelineFailDetailInfo(
                 QueryAtomFailInfoDTO(

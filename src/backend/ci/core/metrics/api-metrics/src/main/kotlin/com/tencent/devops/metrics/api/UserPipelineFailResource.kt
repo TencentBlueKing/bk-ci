@@ -61,8 +61,10 @@ interface UserPipelineFailResource {
     fun queryPipelineFailTrendInfo(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @BkField(required = true)
         projectId: String,
         @ApiParam("userId", required = true)
+        @BkField(required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("查询条件", required = false)
@@ -75,9 +77,11 @@ interface UserPipelineFailResource {
     fun queryPipelineFailSumInfo(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @BkField(required = true)
         projectId: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
         userId: String,
         @ApiParam("查询条件", required = true)
         pipelineFailInfoQueryReq: PipelineFailInfoQueryReqVO
@@ -89,9 +93,11 @@ interface UserPipelineFailResource {
     fun queryPipelineFailDetailInfo(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @BkField(required = true)
         projectId: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
         userId: String,
         @ApiParam("查询条件", required = true)
         pipelineFailInfoQueryReq: PipelineFailInfoQueryReqVO,

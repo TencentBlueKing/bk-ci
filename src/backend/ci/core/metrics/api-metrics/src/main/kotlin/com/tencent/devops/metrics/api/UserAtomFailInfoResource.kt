@@ -58,9 +58,11 @@ interface UserAtomFailInfoResource {
     fun queryAtomErrorCodeStatisticsInfo(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @BkField(required = true)
         projectId: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
         userId: String,
         @ApiParam("查询条件", required = true)
         atomFailInfoReq: AtomFailInfoReqVO
@@ -72,9 +74,11 @@ interface UserAtomFailInfoResource {
     fun queryPipelineFailDetailInfo(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @BkField(required = true)
         projectId: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
         userId: String,
         @ApiParam("查询条件", required = true)
         atomFailInfoReq: AtomFailInfoReqVO,

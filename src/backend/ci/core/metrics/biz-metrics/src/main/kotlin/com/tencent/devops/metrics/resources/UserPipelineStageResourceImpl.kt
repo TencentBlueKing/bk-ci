@@ -30,7 +30,7 @@ package com.tencent.devops.metrics.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.metrics.api.UserPipelineStageResource
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.checkParam
+import com.tencent.devops.metrics.constant.QueryParamCheckUtil.checkDateInterval
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getEndDateTime
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getStartDateTime
 import com.tencent.devops.metrics.service.PipelineStageManageService
@@ -51,7 +51,7 @@ class UserPipelineStageResourceImpl @Autowired constructor(
         val queryReq = baseQueryReq?: BaseQueryReqVO()
         if (queryReq.startTime.isNullOrBlank()) { queryReq.startTime = getStartDateTime() }
         if (queryReq.endTime.isNullOrBlank()) { queryReq.endTime = getEndDateTime() }
-        checkParam(userId, projectId, queryReq.startTime!!, queryReq.endTime!!)
+        checkDateInterval(queryReq.startTime!!, queryReq.endTime!!)
         return Result(
             pipelineStageManageService.queryPipelineStageTrendInfo(
                 QueryPipelineOverviewDTO(

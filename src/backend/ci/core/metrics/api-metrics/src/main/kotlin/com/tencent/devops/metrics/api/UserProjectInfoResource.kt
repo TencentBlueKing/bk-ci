@@ -58,9 +58,11 @@ interface UserProjectInfoResource {
     fun queryProjectAtomList(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @BkField(required = true)
         projectId: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
         userId: String,
         @ApiParam("流水线ID", required = false)
         pipelineIds: List<String>?,
@@ -82,9 +84,11 @@ interface UserProjectInfoResource {
     fun queryProjectPipelineLabels(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @BkField(required = true)
         projectId: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
         userId: String,
         @ApiParam("流水线ID", required = false)
         pipelineIds: List<String>?,
@@ -106,6 +110,7 @@ interface UserProjectInfoResource {
     fun queryProjectPipelineErrorTypes(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
         userId: String,
         @ApiParam("页码", required = true, defaultValue = "1")
         @QueryParam("page")

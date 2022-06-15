@@ -30,6 +30,7 @@ package com.tencent.devops.metrics.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineSumInfoVO
 import com.tencent.devops.metrics.pojo.vo.PipelineTrendInfoVO
@@ -55,8 +56,10 @@ interface UserPipelineOverviewResource {
     fun queryPipelineSumInfo(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @BkField(required = true)
         projectId: String,
         @ApiParam("userId", required = true)
+        @BkField(required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("查询条件", required = false)
@@ -69,9 +72,11 @@ interface UserPipelineOverviewResource {
     fun queryPipelineTrendInfo(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @BkField(required = true)
         projectId: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
         userId: String,
         @ApiParam("查询条件", required = false)
         baseQueryReq: BaseQueryReqVO?

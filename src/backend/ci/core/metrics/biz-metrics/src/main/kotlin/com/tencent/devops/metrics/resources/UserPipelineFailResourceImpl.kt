@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.metrics.api.UserPipelineFailResource
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.checkParam
+import com.tencent.devops.metrics.constant.QueryParamCheckUtil.checkDateInterval
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getEndDateTime
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getStartDateTime
 import com.tencent.devops.metrics.service.PipelineFailManageService
@@ -57,7 +57,7 @@ class UserPipelineFailResourceImpl @Autowired constructor(
             if (queryReq.startTime.isNullOrBlank()) { queryReq.startTime = getStartDateTime() }
             if (queryReq.endTime.isNullOrBlank()) { queryReq.endTime = getEndDateTime()}
 
-        checkParam(userId, projectId, queryReq.startTime!!, queryReq.endTime!!)
+        checkDateInterval(queryReq.startTime!!, queryReq.endTime!!)
         return Result(
             pipelineFailManageService.queryPipelineFailTrendInfo(
                 QueryPipelineFailTrendInfoDTO(projectId, queryReq)
@@ -76,7 +76,7 @@ class UserPipelineFailResourceImpl @Autowired constructor(
         val endTime =
             if (pipelineFailInfoQueryReq.endTime.isNullOrBlank()) { getEndDateTime() }
             else pipelineFailInfoQueryReq.endTime
-        checkParam(userId, projectId, startTime!!, endTime!!)
+        checkDateInterval(startTime!!, endTime!!)
         return Result(
             PipelineFailSumInfoVO(
                 pipelineFailManageService.queryPipelineFailSumInfo(
@@ -107,7 +107,7 @@ class UserPipelineFailResourceImpl @Autowired constructor(
         val endTime =
             if (pipelineFailInfoQueryReq.endTime.isNullOrBlank()) { getEndDateTime() }
             else pipelineFailInfoQueryReq.endTime
-        checkParam(userId, projectId, startTime!!, endTime!!)
+        checkDateInterval(startTime!!, endTime!!)
         return Result(
             pipelineFailManageService.queryPipelineFailDetailInfo(
                 QueryPipelineFailDTO(

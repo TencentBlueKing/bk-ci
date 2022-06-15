@@ -30,7 +30,7 @@ package com.tencent.devops.metrics.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.metrics.api.UserThirdPartyResource
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.checkParam
+import com.tencent.devops.metrics.constant.QueryParamCheckUtil.checkDateInterval
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getEndDateTime
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getStartDateTime
 import com.tencent.devops.metrics.service.ThirdPartyManageService
@@ -52,7 +52,7 @@ class UserThirdPartyResourceImpl @Autowired constructor(
         val startDateTime = if (!startTime.isNullOrBlank()) startTime else getStartDateTime()
         val endDateTime = if (!endTime.isNullOrBlank()) endTime else getEndDateTime()
 
-            checkParam(userId, projectId, startDateTime, endDateTime)
+        checkDateInterval(startDateTime, endDateTime)
 
 
         return Result(

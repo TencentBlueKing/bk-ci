@@ -36,6 +36,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
 import io.swagger.annotations.Api
 import javax.ws.rs.Consumes
@@ -53,9 +54,11 @@ interface UserThirdPartyResource {
     fun queryPipelineSummaryInfo(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @BkField(required = true)
         projectId: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
         userId: String,
         @ApiParam("开始时间", required = false)
         @QueryParam("startTime")
