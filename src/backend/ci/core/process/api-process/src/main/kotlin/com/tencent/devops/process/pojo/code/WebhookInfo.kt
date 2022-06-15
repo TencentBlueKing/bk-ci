@@ -47,5 +47,11 @@ data class WebhookInfo(
     val webhookMergeCommitSha: String?,
     @ApiModelProperty("源分支", required = false)
     // 源分支
-    val webhookSourceBranch: String?
+    val webhookSourceBranch: String?,
+    // mr id
+    val mrId: String?,
+    // mr iid
+    val mrIid: String?,
+    // mr url
+    val mrUrl: String?
 )

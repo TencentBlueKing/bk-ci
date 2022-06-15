@@ -25,11 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.utils
+package com.tencent.devops.repository.utils
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
+import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
@@ -109,6 +110,17 @@ object RepositoryUtils {
                     url = repositoryUrl,
                     userName = userName,
                     projectName = projectName,
+                    projectId = projectId,
+                    repoHashId = null
+                )
+            }
+            ScmType.CODE_P4 -> {
+                CodeP4Repository(
+                    aliasName = repositoryUrl,
+                    url = repositoryUrl,
+                    credentialId = credentialId!!,
+                    projectName = repositoryUrl,
+                    userName = userName,
                     projectId = projectId,
                     repoHashId = null
                 )
