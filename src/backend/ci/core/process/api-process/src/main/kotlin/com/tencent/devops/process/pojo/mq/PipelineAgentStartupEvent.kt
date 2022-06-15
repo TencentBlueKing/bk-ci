@@ -54,6 +54,7 @@ data class PipelineAgentStartupEvent(
     val stageId: String,
     val containerId: String,
     val containerHashId: String?,
+    val queueTimeoutMinutes: Int? = null,
     val containerType: String,
     val atoms: Map<String, String> = mapOf(), // 用插件框架开发的插件信息 key为插件code，value为下载路径
     override var actionType: ActionType = ActionType.REFRESH,

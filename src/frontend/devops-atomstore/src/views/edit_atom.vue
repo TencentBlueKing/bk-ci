@@ -5,7 +5,7 @@
         </bread-crumbs>
 
         <div class="edit-atom-content" v-if="showContent">
-            <form class="bk-form edit-atom-form g-form-radio">
+            <div class="bk-form edit-atom-form g-form-radio">
                 <div class="bk-form-item name-form-item is-required">
                     <label class="bk-label"> {{ $t('store.名称') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
@@ -167,7 +167,7 @@
                 <div class="bk-form-item publish-form-item is-required" ref="releaseTypeError" v-if="atomForm.releaseType !== 'CANCEL_RE_RELEASE'">
                     <label class="bk-label publish-type-label"> {{ $t('store.发布类型') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips radio-flex">
-                        <section v-if="atomForm.version" style="min-width: 100%;">
+                        <section v-if="atomForm.releaseType !== 'NEW'" style="min-width: 100%;">
                             <bk-radio-group v-model="atomForm.releaseType" class="radio-group">
                                 <bk-radio :value="entry.value" v-for="(entry, key) in publishTypeList" :key="key" @click.native="formErrors.releaseTypeError = false">
                                     <bk-popover placement="top" :delay="800" style="margin-top:0;margin-left:0;">
@@ -188,22 +188,41 @@
                         </section>
                     </div>
                 </div>
+                <bk-alert
+                    v-if="atomForm.releaseType === 'HIS_VERSION_UPGRADE'"
+                    class="history-version-tip"
+                    type="warning"
+                    :title="$t('store.hisUpgradeTips')"
+                ></bk-alert>
                 <div class="bk-form-item version-num-form-item is-required" style="margin-top: 10px">
                     <label class="bk-label"> {{ $t('store.版本号') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
-                        <p class="version-num-content" style="min-width: 100%;">
-                            <span class="version-prompt"> {{ $t('store.semverType', [curVersion]) }} </span>
-                            <span class="version-modify" @click="atomForm.releaseType = 'COMPATIBILITY_FIX'" v-if="atomForm.releaseType === 'CANCEL_RE_RELEASE'"> {{ $t('store.修改') }} </span>
-                        </p>
-                        <bk-popover placement="left">
-                            <i class="devops-icon icon-info-circle"></i>
-                            <template slot="content">
-                                <p> {{ $t('store.根据发布类型自动生成') }} </p>
-                            </template>
-                        </bk-popover>
+                        <bk-input v-model="curVersion" v-if="atomForm.releaseType === 'HIS_VERSION_UPGRADE'"></bk-input>
+                        <template v-else>
+                            <p class="version-num-content" style="min-width: 100%;">
+                                <span class="version-prompt"> {{ $t('store.semverType', [curVersion]) }} </span>
+                                <span
+                                    class="version-modify"
+                                    @click="atomForm.releaseType = 'COMPATIBILITY_FIX'"
+                                    v-if="atomForm.releaseType === 'CANCEL_RE_RELEASE'"
+                                > {{ $t('store.修改') }} </span>
+                            </p>
+                            <bk-popover placement="left">
+                                <i class="devops-icon icon-info-circle"></i>
+                                <template slot="content">
+                                    <p> {{ $t('store.根据发布类型自动生成') }} </p>
+                                </template>
+                            </bk-popover>
+                        </template>
                     </div>
                 </div>
-                <div class="bk-form-item release-package-form-item is-required" style="margin-top: 10px">
+                <div class="bk-form-item version-num-form-item is-required" style="margin-top: 10px" v-if="atomForm.releaseType === 'HIS_VERSION_UPGRADE'">
+                    <label class="bk-label"> {{ $t('store.分支') }} </label>
+                    <div class="bk-form-content atom-item-content is-tooltips">
+                        <bk-input v-model="atomForm.branch"></bk-input>
+                    </div>
+                </div>
+                <div class="bk-form-item release-package-form-item is-required">
                     <label class="bk-label"> {{ $t('store.发布包') }} </label>
                     <div class="bk-form-content atom-item-content">
                         <bk-file-upload
@@ -238,11 +257,11 @@
                     </div>
                 </div>
                 <div class="form-footer">
-                    <button class="bk-button bk-primary" type="button" @click="submit()"> {{ $t('store.提交') }} </button>
-                    <button class="bk-button bk-default" type="button" @click="$router.back()"> {{ $t('store.取消') }} </button>
+                    <bk-button theme="primary" @click="submit()"> {{ $t('store.提交') }} </bk-button>
+                    <bk-button @click="$router.back()"> {{ $t('store.取消') }} </bk-button>
                 </div>
                 <select-logo :form="atomForm" type="ATOM" :is-err="formErrors.logoUrlError" ref="logoUrlError"></select-logo>
-            </form>
+            </div>
         </div>
     </div>
 </template>
@@ -252,6 +271,7 @@
     import { toolbars } from '@/utils/editor-options'
     import bkFileUpload from '@/components/common/file-upload'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import api from '@/api'
 
     export default {
         components: {
@@ -266,7 +286,7 @@
                 initJobType: '',
                 initReleaseType: '',
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/store/plugins/create-plugin`,
+                docsLink: `${DOCS_URL_PREFIX}/Services/Store/start-new-task.md`,
                 showContent: false,
                 isUploading: false,
                 initOs: [],
@@ -301,6 +321,11 @@
                         label: this.$t('store.兼容式问题修正'),
                         value: 'COMPATIBILITY_FIX',
                         desc: this.$t('store.当新版本为bug fix时，使用兼容式问题修正方式，发布后用户无需修改流水线中的插件版本号，默认使用最新版本。')
+                    },
+                    {
+                        label: this.$t('store.历史大版本问题修复'),
+                        value: 'HIS_VERSION_UPGRADE',
+                        desc: this.$t('store.当历史大版本下发现 bug 时，使用此方式进行 fix。不建议在此场景下新增/删除入参。')
                     }
                 ],
                 frontendTypeList: [
@@ -330,7 +355,8 @@
                     frontendType: 'NORMAL',
                     version: '1.0.0',
                     releaseType: 'NEW',
-                    versionContent: ''
+                    versionContent: '',
+                    branch: ''
                 },
                 formErrors: {
                     categoryError: false,
@@ -340,7 +366,8 @@
                     sortError: false,
                     envError: false,
                     releaseTypeError: false
-                }
+                },
+                versionMap: {}
             }
         },
         computed: {
@@ -385,23 +412,7 @@
             },
 
             'atomForm.releaseType' (val) {
-                const tpl = ['INCOMPATIBILITY_UPGRADE', 'COMPATIBILITY_UPGRADE', 'COMPATIBILITY_FIX']
-                let temp = this.atomForm.version.split('.')
-
-                for (let i = 0; i < temp.length; i++) {
-                    if (tpl[i] === val) {
-                        temp[i] = (parseInt(temp[i]) + 1).toString()
-                    }
-                }
-                if (val === 'INCOMPATIBILITY_UPGRADE') {
-                    temp[1] = '0'
-                    temp[2] = '0'
-                } else if (val === 'COMPATIBILITY_UPGRADE') {
-                    temp[2] = '0'
-                } else if (val === 'CANCEL_RE_RELEASE') {
-                    temp = this.atomForm.version.split('.')
-                }
-                this.curVersion = temp.join('.')
+                this.curVersion = this.versionMap[val] || ''
                 this.formErrors.releaseTypeError = false
             }
         },
@@ -446,42 +457,24 @@
                     const res = await this.$store.dispatch('store/requestAtomDetail', {
                         atomId: atomId
                     })
+                    const { showVersionList } = await api.requestAtomVersionDetail(res.atomCode)
                     if (res) {
                         Object.assign(this.atomForm, res, {})
-                        this.curVersion = res.version
                         this.atomForm.jobType = !this.atomForm.jobType ? 'AGENT' : this.atomForm.jobType
                         this.initJobType = this.atomForm.jobType
-                        this.atomForm.labelIdList = this.atomForm.labelList.map(item => {
+                        this.atomForm.labelIdList = (this.atomForm.labelList || []).map(item => {
                             return item.id
                         })
                         this.initOs = JSON.parse(JSON.stringify(this.atomForm.os))
-
-                        if (res.version) {
-                            let status = ''
-                            switch (res.atomStatus) {
-                                case 'GROUNDING_SUSPENSION':
-                                    status = 'CANCEL_RE_RELEASE'
-                                    break
-                                default:
-                                    const types = {
-                                        NEW: 'INCOMPATIBILITY_UPGRADE',
-                                        INCOMPATIBILITY_UPGRADE: 'INCOMPATIBILITY_UPGRADE',
-                                        COMPATIBILITY_UPGRADE: 'COMPATIBILITY_UPGRADE',
-                                        COMPATIBILITY_FIX: 'COMPATIBILITY_FIX'
-                                    }
-                                    status = types[res.releaseType] || 'COMPATIBILITY_FIX'
-                                    break
+                        // init version
+                        showVersionList.forEach((versionInfo) => {
+                            this.versionMap[versionInfo.releaseType] = versionInfo.version
+                            if (versionInfo.defaultFlag) {
+                                this.curVersion = versionInfo.version
+                                this.atomForm.releaseType = versionInfo.releaseType
+                                this.initReleaseType = versionInfo.releaseType
                             }
-                            this.$set(this.atomForm, 'releaseType', status)
-
-                            const temp = this.atomForm.version.split('.')
-                            temp[0] = (parseInt(temp[0]) + 1).toString()
-                            this.curVersion = temp.join('.')
-                        } else {
-                            this.curVersion = '1.0.0'
-                        }
-
-                        this.initReleaseType = this.atomForm.releaseType
+                        })
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -653,12 +646,13 @@
             },
 
             validate () {
-                return new Promise(async (resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     const isCheckValid = this.checkValid()
                     const message = this.checkJobType()
-                    const valid = await this.$validator.validate()
-                    if (isCheckValid && !message && valid) resolve()
-                    else reject(new Error(message || this.$t('store.校验不通过，请修改后再试')))
+                    this.$validator.validate().then(valid => {
+                        if (isCheckValid && !message && valid) resolve()
+                        else reject(new Error(message || this.$t('store.校验不通过，请修改后再试')))
+                    })
                 })
             },
 
@@ -685,7 +679,8 @@
                         packageShaContent: this.atomForm.packageShaContent,
                         pkgName: this.atomForm.pkgName,
                         frontendType: this.atomForm.frontendType,
-                        fieldCheckConfirmFlag
+                        fieldCheckConfirmFlag,
+                        branch: this.atomForm.branch
                     }
 
                     return this.$store.dispatch('store/editAtom', {
@@ -699,13 +694,15 @@
                 }).catch((err) => {
                     if (err.httpStatus === 200) {
                         const h = this.$createElement
-                        const subHeader = h('p', { style: {
-                            textDecoration: 'none',
-                            cursor: 'pointer',
-                            whiteSpace: 'normal',
-                            textAlign: 'left',
-                            lineHeight: '24px'
-                        } }, err.message || err)
+                        const subHeader = h('p', {
+                            style: {
+                                textDecoration: 'none',
+                                cursor: 'pointer',
+                                whiteSpace: 'normal',
+                                textAlign: 'left',
+                                lineHeight: '24px'
+                            }
+                        }, err.message || err)
                         if ([2120030, 2120031].includes(err.code)) {
                             const confirmFn = () => this.submit(true)
                             this.$bkInfo({
@@ -738,6 +735,10 @@
     @import '@/assets/scss/conf.scss';
     .atom-item-content {
         max-width: calc(100% - 110px);
+    }
+
+    .history-version-tip {
+        margin: 5px 0 0 110px;
     }
 
     .edit-atom-wrapper {

@@ -39,8 +39,8 @@ class PipelineLabelService @Autowired constructor(
     /**
      * 获取标签信息
      */
-    fun getLabelInfo(pipelineId: String): PipelineLabelDetail {
-        val pipelineGroupLabelMap = pipelineGroupService.getPipelinesGroupLabel(listOf(pipelineId))
+    fun getLabelInfo(projectId: String, pipelineId: String): PipelineLabelDetail {
+        val pipelineGroupLabelMap = pipelineGroupService.getPipelinesGroupLabel(listOf(pipelineId), projectId)
         return PipelineLabelDetail(pipelineLabelInfo = pipelineGroupLabelMap[pipelineId])
     }
 }

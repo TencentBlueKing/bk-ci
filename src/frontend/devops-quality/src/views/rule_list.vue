@@ -291,11 +291,11 @@
                     hasFooter: false
                 },
                 indexHandlerConf: {
-                    'LT': '<',
-                    'LE': '<=',
-                    'GT': '>',
-                    'GE': '>=',
-                    'EQ': '='
+                    LT: '<',
+                    LE: '<=',
+                    GT: '>',
+                    GE: '>=',
+                    EQ: '='
                 },
                 sideSliderConfig: {
                     show: false,
@@ -389,7 +389,7 @@
                     
                     this.ruleList.splice(0, this.ruleList.length)
                     if (res.records) {
-                        res.records.map(item => {
+                        res.records.forEach(item => {
                             this.ruleList.push(item)
                         })
                         this.pagination.count = res.count
@@ -441,7 +441,7 @@
 
                     this.recordList.splice(0, this.recordList.length)
                     if (res.records) {
-                        res.records.map(item => {
+                        res.records.forEach(item => {
                             this.recordList.push(item)
                         })
                         this.sliderPagination.count = res.count
@@ -464,7 +464,7 @@
                     pipelineId: [],
                     templateId: []
                 }
-                rangeSummary.map(item => {
+                rangeSummary.forEach(item => {
                     item.type === 'PIPELINE' ? params.pipelineId.push(item.id) : params.templateId.push(item.id)
                 })
                 
@@ -477,7 +477,7 @@
                     
                     this.totalPipelineList.splice(0, this.totalPipelineList.length)
                     if (res.length) {
-                        res.map(item => {
+                        res.forEach(item => {
                             this.totalPipelineList.push(item)
                         })
                         setTimeout(() => {
@@ -506,7 +506,7 @@
                     }, `确定删除规则(${row.name})？`)
 
                     this.$bkInfo({
-                        title: `删除`,
+                        title: '删除',
                         subHeader: content,
                         confirmFn: async () => {
                             this.deleteRule(row.ruleHashId)
@@ -612,8 +612,8 @@
                 this.rangeList.splice(0, this.rangeList.length, ...this.totalRangeList.slice(start, end))
             },
             getIndicatorDesc (indicatorList) {
-                let tips = ``
-                indicatorList.map((item, index) => {
+                let tips = ''
+                indicatorList.forEach((item, index) => {
                     const isWrap = index === (indicatorList.length - 1) ? '' : '\n'
                     tips += `${item.cnName}${this.indexHandlerConf[item.operation]}${item.threshold}${isWrap}`
                 })

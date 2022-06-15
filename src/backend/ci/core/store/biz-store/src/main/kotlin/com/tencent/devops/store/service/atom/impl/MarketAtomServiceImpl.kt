@@ -34,11 +34,12 @@ import com.tencent.devops.common.api.constant.AND
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DANG
 import com.tencent.devops.common.api.constant.DEFAULT
-import com.tencent.devops.common.api.constant.OUTPUT_DESC
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.MULTIPLE_SELECTOR
 import com.tencent.devops.common.api.constant.NO_LABEL
 import com.tencent.devops.common.api.constant.OPTIONS
 import com.tencent.devops.common.api.constant.OR
+import com.tencent.devops.common.api.constant.OUTPUT_DESC
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.SINGLE_SELECTOR
 import com.tencent.devops.common.api.constant.TIMETOSELECT
@@ -50,6 +51,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.util.RegexUtils
@@ -95,6 +97,7 @@ import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.StoreDailyStatistic
+import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomLabelService
@@ -286,6 +289,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val flag = generateInstallFlag(defaultFlag, members, userId, visibleList, userDeptList)
                 val classifyId = it["CLASSIFY_ID"] as String
                 var logoUrl = it["LOGO_URL"] as? String
+                logoUrl = if (logoUrl?.contains("?") == true) {
+                    logoUrl.plus("&logo=true")
+                } else {
+                    logoUrl?.plus("?logo=true")
+                }
                 if (urlProtocolTrim) { // #4796 LogoUrl跟随主站协议
                     logoUrl = RegexUtils.trimProtocol(logoUrl)
                 }
@@ -317,7 +325,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
                         recommendFlag = it["RECOMMEND_FLAG"] as? Boolean,
                         yamlFlag = it["YAML_FLAG"] as? Boolean,
-                        dailyStatisticList = getRecentDailyStatisticList(atomCode),
                         recentExecuteNum = statistic?.recentExecuteNum ?: 0
                     )
                 )
@@ -489,8 +496,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         accessToken: String,
         userId: String,
         atomName: String?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<MyAtomResp?> {
         logger.info("the getMyAtoms userId is :$userId,atomName is :$atomName")
         // 获取有权限的插件代码列表
@@ -498,16 +505,51 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val count = marketAtomDao.countMyAtoms(dslContext, userId, atomName)
         // 获取项目ID对应的名称
         val projectCodeList = mutableListOf<String>()
+        val atomCodeList = mutableListOf<String>()
+        val atomProjectMap = mutableMapOf<String, String>()
         records?.forEach {
+            val atomCode = it["atomCode"] as String
+            atomCodeList.add(atomCode)
             val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
-                dslContext,
-                userId,
-                it["atomCode"] as String,
-                StoreTypeEnum.ATOM
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM
             )
-            if (null != testProjectCode) projectCodeList.add(testProjectCode)
+            if (null != testProjectCode) {
+                projectCodeList.add(testProjectCode)
+                atomProjectMap[atomCode] = testProjectCode
+            }
         }
         val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
+        val processingAtomRecords = marketAtomDao.getAtomsByConditions(
+            dslContext = dslContext,
+            atomCodeList = atomCodeList,
+            atomStatusList = AtomStatusEnum.getProcessingStatusList()
+        )
+        // 获取插件处于流程中的版本信息
+        var processingVersionInfoMap: MutableMap<String, MutableList<AtomBaseInfo>>? = null
+        processingAtomRecords?.forEach { processingAtomRecord ->
+            if (processingAtomRecord.version == INIT_VERSION || processingAtomRecord.version.isNullOrBlank()) {
+                return@forEach
+            }
+            if (processingVersionInfoMap == null) {
+                processingVersionInfoMap = mutableMapOf()
+            }
+            val atomCode = processingAtomRecord.atomCode
+            val atomBaseInfo = AtomBaseInfo(
+                atomId = processingAtomRecord.id,
+                atomCode = atomCode,
+                version = processingAtomRecord.version,
+                atomStatus = AtomStatusEnum.getAtomStatus(processingAtomRecord.atomStatus.toInt())
+            )
+            if (processingVersionInfoMap!!.containsKey(atomCode)) {
+                val atomBaseInfoList = processingVersionInfoMap!![atomCode]
+                atomBaseInfoList?.add(atomBaseInfo)
+            } else {
+                processingVersionInfoMap!![atomCode] = mutableListOf(atomBaseInfo)
+            }
+        }
         val myAtoms = mutableListOf<MyAtomRespItem?>()
         records?.forEach {
             val atomCode = it["atomCode"] as String
@@ -526,19 +568,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     logoUrl = it["logoUrl"] as? String,
                     version = it["version"] as String,
                     atomStatus = AtomStatusEnum.getAtomStatus((it["atomStatus"] as Byte).toInt()),
-                    projectName = projectMap?.get(
-                        storeProjectRelDao.getUserStoreTestProjectCode(
-                            dslContext,
-                            userId,
-                            it["atomCode"] as String,
-                            StoreTypeEnum.ATOM
-                        )
-                    ) ?: "",
+                    projectName = projectMap?.get(atomProjectMap[atomCode]) ?: "",
                     releaseFlag = releaseFlag,
                     creator = it["creator"] as String,
                     modifier = it["modifier"] as String,
                     createTime = DateTimeUtil.toDateTime(it["createTime"] as LocalDateTime),
-                    updateTime = DateTimeUtil.toDateTime(it["updateTime"] as LocalDateTime)
+                    updateTime = DateTimeUtil.toDateTime(it["updateTime"] as LocalDateTime),
+                    processingVersionInfos = processingVersionInfoMap?.get(atomCode)
                 )
             )
         }
@@ -551,6 +587,34 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     @Suppress("UNCHECKED_CAST")
     override fun getAtomById(atomId: String, userId: String): Result<AtomVersion?> {
         return getAtomVersion(atomId, userId)
+    }
+
+    /**
+     * 根据插件标识获取插件回显版本信息
+     */
+    override fun getAtomShowVersionInfo(userId: String, atomCode: String): Result<StoreShowVersionInfo> {
+        val record = marketAtomDao.getNewestAtomByCode(dslContext, atomCode) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(atomCode)
+        )
+        val cancelFlag = record.atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
+        val showVersion = if (cancelFlag) {
+            record.version
+        } else {
+            marketAtomDao.getMaxVersionAtomByCode(dslContext, atomCode)?.version
+        }
+        val releaseType = if (record.atomStatus == AtomStatusEnum.INIT.status.toByte()) {
+            null
+        } else {
+            marketAtomVersionLogDao.getAtomVersion(dslContext, record.id).releaseType
+        }
+        val showReleaseType = if (releaseType != null) {
+            ReleaseTypeEnum.getReleaseTypeObj(releaseType.toInt())
+        } else {
+            null
+        }
+        val showVersionInfo = storeCommonService.getStoreShowVersionInfo(cancelFlag, showReleaseType, showVersion)
+        return Result(showVersionInfo)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -587,6 +651,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     defaultMessage = classifyName
                 )
             } else classifyName
+            val releaseType = if (record["releaseType"] != null) {
+                ReleaseTypeEnum.getReleaseTypeObj((record["releaseType"] as Byte).toInt())
+            } else null
+            val atomStatus = AtomStatusEnum.getAtomStatus((record["atomStatus"] as Byte).toInt())
+            val version = record["version"] as? String
             Result(
                 AtomVersion(
                     atomId = atomId,
@@ -606,11 +675,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     ) as List<String> else null,
                     summary = record["summary"] as? String,
                     description = record["description"] as? String,
-                    version = record["version"] as? String,
-                    atomStatus = AtomStatusEnum.getAtomStatus((record["atomStatus"] as Byte).toInt()),
-                    releaseType = if (record["releaseType"] != null) {
-                        ReleaseTypeEnum.getReleaseType((record["releaseType"] as Byte).toInt())
-                    } else null,
+                    version = version,
+                    atomStatus = atomStatus,
+                    releaseType = releaseType?.name,
                     versionContent = record["versionContent"] as? String,
                     language = record["language"] as? String,
                     codeSrc = record["codeSrc"] as? String,
@@ -1161,10 +1228,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         )
                         sb.append("\r\n")
                         sb.append("    $paramKey: ")
-                        if (type == "atom-checkbox") {
-                            sb.append("boolean")
-                        } else {
-                            sb.append("string")
+                        when (type) {
+                            "atom-checkbox" -> sb.append("boolean")
+                            "key-value-normal" -> sb.append(
+                                "\n    - key: string" +
+                                "\n      value: string"
+                            )
+                            else -> sb.append("string")
                         }
                         sb.append("\r\n")
                     }
@@ -1216,6 +1286,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         tokenType: TokenTypeEnum
     ): Result<Boolean>
 
+    @Suppress("UNCHECKED_CAST")
     private fun addParamComment(
         builder: StringBuilder,
         description: String,

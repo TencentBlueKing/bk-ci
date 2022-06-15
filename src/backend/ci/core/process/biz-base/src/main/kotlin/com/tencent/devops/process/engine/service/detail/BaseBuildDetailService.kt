@@ -61,18 +61,20 @@ open class BaseBuildDetailService constructor(
         private const val ExpiredTimeInSeconds: Long = 10
     }
 
-    fun getBuildModel(buildId: String): Model? {
-        val record = buildDetailDao.get(dslContext, buildId) ?: return null
+    fun getBuildModel(projectId: String, buildId: String): Model? {
+        val record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
         return JsonUtil.to(record.model, Model::class.java)
     }
 
+    @Suppress("LongParameterList")
     protected fun update(
+        projectId: String,
         buildId: String,
         modelInterface: ModelInterface,
         buildStatus: BuildStatus,
         cancelUser: String? = null,
         operation: String = ""
-    ) {
+    ): Model {
         val watcher = Watcher(id = "updateDetail#$buildId#$operation")
         var message = "nothing"
         val lock = RedisLock(redisOperation, "process.build.detail.lock.$buildId", ExpiredTimeInSeconds)
@@ -82,7 +84,7 @@ open class BaseBuildDetailService constructor(
             lock.lock()
 
             watcher.start("getDetail")
-            val record = buildDetailDao.get(dslContext, buildId)
+            val record = buildDetailDao.get(dslContext, projectId, buildId)
             Preconditions.checkArgument(record != null, "The build detail is not exist")
 
             watcher.start("model")
@@ -102,12 +104,13 @@ open class BaseBuildDetailService constructor(
             val (change, finalStatus) = takeBuildStatus(record, buildStatus)
             if (modelStr.isNullOrBlank() && !change) {
                 message = "Will not update"
-                return
+                return model
             }
 
             watcher.start("updateModel")
             buildDetailDao.update(
                 dslContext = dslContext,
+                projectId = projectId,
                 buildId = buildId,
                 model = modelStr,
                 buildStatus = finalStatus,
@@ -115,11 +118,17 @@ open class BaseBuildDetailService constructor(
             )
 
             watcher.start("dispatchEvent")
-            pipelineDetailChangeEvent(buildId)
+            pipelineDetailChangeEvent(projectId, buildId)
             message = "update done"
+            return model
         } catch (ignored: Throwable) {
             message = ignored.message ?: ""
             logger.warn("[$buildId]| Fail to update the build detail: ${ignored.message}", ignored)
+            watcher.start("getDetail")
+            val record = buildDetailDao.get(dslContext, projectId, buildId)
+            Preconditions.checkArgument(record != null, "The build detail is not exist")
+            watcher.start("model")
+            return JsonUtil.to(record!!.model, Model::class.java)
         } finally {
             lock.unlock()
             watcher.stop()
@@ -140,11 +149,10 @@ open class BaseBuildDetailService constructor(
         }
     }
 
-    @Suppress("NestedBlockDepth", "ReturnCount")
+    @Suppress("NestedBlockDepth", "ReturnCount", "ComplexMethod")
     private fun traverseModel(model: Model, modelInterface: ModelInterface) {
-        var containerId = 1
-        for (i in 1 until model.stages.size) {
-            val stage = model.stages[i]
+        // 不应该过滤掉第一个Stage，交由子类决定
+        for (stage in model.stages) {
             val traverse = modelInterface.onFindStage(stage, model)
             if (Traverse.BREAK == traverse) {
                 return
@@ -153,25 +161,42 @@ open class BaseBuildDetailService constructor(
             }
 
             for (container in stage.containers) {
-                val cTraverse = modelInterface.onFindContainer(containerId, container, stage)
+                val cTraverse = modelInterface.onFindContainer(container, stage)
                 if (Traverse.BREAK == cTraverse) {
                     return
                 } else if (Traverse.SKIP == cTraverse) {
                     continue
                 }
 
-                containerId++
                 container.elements.forEachIndexed { index, e ->
                     if (Traverse.BREAK == modelInterface.onFindElement(index, e, container)) {
                         return
+                    }
+                }
+
+                // 进入矩阵组内做遍历查询
+                if (container.matrixGroupFlag == true) {
+                    for (groupContainer in container.fetchGroupContainers() ?: emptyList()) {
+                        val gTraverse = modelInterface.onFindContainer(groupContainer, stage)
+                        if (Traverse.BREAK == gTraverse) {
+                            return
+                        } else if (Traverse.SKIP == gTraverse) {
+                            continue
+                        }
+
+                        groupContainer.elements.forEachIndexed { index, e ->
+                            if (Traverse.BREAK == modelInterface.onFindElement(index, e, groupContainer)) {
+                                return
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    protected fun pipelineDetailChangeEvent(buildId: String) {
-        val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: return
+    protected fun pipelineDetailChangeEvent(projectId: String, buildId: String) {
+        val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId) ?: return
         // 异步转发，解耦核心
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(
@@ -189,7 +214,7 @@ open class BaseBuildDetailService constructor(
 
         fun onFindStage(stage: Stage, model: Model) = Traverse.CONTINUE
 
-        fun onFindContainer(id: Int, container: Container, stage: Stage) = Traverse.CONTINUE
+        fun onFindContainer(container: Container, stage: Stage) = Traverse.CONTINUE
 
         fun onFindElement(index: Int, e: Element, c: Container) = Traverse.CONTINUE
 

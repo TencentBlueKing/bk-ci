@@ -30,5 +30,6 @@ package com.tencent.devops.scm.pojo
 data class RevisionInfo(
     val revision: String,
     val updatedMessage: String,
-    val branchName: String
+    val branchName: String,
+    val authorName: String
 )

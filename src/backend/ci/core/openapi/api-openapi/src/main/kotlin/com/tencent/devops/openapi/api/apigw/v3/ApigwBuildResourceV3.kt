@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
@@ -61,7 +62,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwBuildResourceV3 {
 
-    @ApiOperation("启动构建")
+    @ApiOperation("启动构建", tags = ["v3_app_build_start", "v3_user_build_start"])
     @POST
     @Path("/start")
     fun start(
@@ -80,14 +81,14 @@ interface ApigwBuildResourceV3 {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("启动参数", required = true)
+        @ApiParam("启动参数：map<变量名(string),变量值(string)>", required = true)
         values: Map<String, String>,
         @ApiParam("手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
         buildNo: Int? = null
     ): Result<BuildId>
 
-    @ApiOperation("停止构建")
+    @ApiOperation("停止构建", tags = ["v3_app_build_stop", "v3_user_build_stop"])
     @POST
     @Path("/{buildId}/stop")
     fun stop(
@@ -111,7 +112,7 @@ interface ApigwBuildResourceV3 {
         buildId: String
     ): Result<Boolean>
 
-    @ApiOperation("重试构建-重试或者跳过失败插件")
+    @ApiOperation("重试构建-重试或者跳过失败插件", tags = ["v3_app_build_retry", "v3_user_build_retry"])
     @POST
     @Path("/{buildId}/retry")
     fun retry(
@@ -144,7 +145,7 @@ interface ApigwBuildResourceV3 {
         skipFailedTask: Boolean? = false
     ): Result<BuildId>
 
-    @ApiOperation("查看构建状态信息,#4295增加stageStatus等")
+    @ApiOperation("查看构建状态信息,#4295增加stageStatus等", tags = ["v3_app_build_status", "v3_user_build_status"])
     @GET
     @Path("/{buildId}/status")
     fun getStatus(
@@ -168,7 +169,7 @@ interface ApigwBuildResourceV3 {
         buildId: String
     ): Result<BuildHistoryWithVars>
 
-    @ApiOperation("获取流水线构建历史")
+    @ApiOperation("获取流水线构建历史", tags = ["v3_user_build_list", "v3_app_build_list"])
     @GET
     @Path("/history")
     fun getHistoryBuild(
@@ -192,10 +193,16 @@ interface ApigwBuildResourceV3 {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam(
+            value = "利用updateTime进行排序，True为降序，False为升序，null时以Build number 降序",
+            required = false, defaultValue = "null"
+        )
+        @QueryParam("updateTimeDesc")
+        updateTimeDesc: Boolean? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
-    @ApiOperation("获取流水线手动启动参数")
+    @ApiOperation("获取流水线手动启动参数", tags = ["v3_app_build_startInfo", "v3_user_build_startInfo"])
     @GET
     @Path("/manualStartupInfo")
     fun manualStartupInfo(
@@ -216,7 +223,7 @@ interface ApigwBuildResourceV3 {
         pipelineId: String
     ): Result<BuildManualStartupInfo>
 
-    @ApiOperation("构建详情")
+    @ApiOperation("构建详情", tags = ["v3_app_build_detail", "v3_user_build_detail"])
     @GET
     @Path("/{buildId}/detail")
     fun detail(
@@ -240,7 +247,7 @@ interface ApigwBuildResourceV3 {
         buildId: String
     ): Result<ModelDetail>
 
-    @ApiOperation("手动审核启动阶段")
+    @ApiOperation("手动审核启动阶段", tags = ["v3_app_build_stage_start", "v3_user_build_stage_start"])
     @POST
     @Path("/{buildId}/stages/{stageId}/manualStart")
     fun manualStartStage(
@@ -272,7 +279,7 @@ interface ApigwBuildResourceV3 {
         reviewRequest: StageReviewRequest? = null
     ): Result<Boolean>
 
-    @ApiOperation("获取构建中的变量值")
+    @ApiOperation("获取构建中的变量值", tags = ["v3_app_build_variables_value", "v3_user_build_variables_value"])
     @POST
     @Path("/{buildId}/variables")
     fun getVariableValue(
@@ -298,7 +305,7 @@ interface ApigwBuildResourceV3 {
         variableNames: List<String>
     ): Result<Map<String, String>>
 
-    @ApiOperation("操作暂停插件")
+    @ApiOperation("操作暂停插件", tags = ["v3_app_pause_build_execute", "v3_user_pause_build_execute"])
     @POST
     @Path("/{buildId}/execute/pause")
     fun executionPauseAtom(
@@ -316,4 +323,26 @@ interface ApigwBuildResourceV3 {
         buildId: String,
         taskPauseExecute: BuildTaskPauseInfo
     ): Result<Boolean>
+
+    @ApiOperation("取消并发起新构建", tags = ["v3_app_build_restart", "v3_user_build_restart"])
+    @POST
+    @Path("/{buildId}/build/restart")
+    fun buildRestart(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @BkField(required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        @BkField(required = true)
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        @BkField(required = true)
+        buildId: String
+    ): Result<String>
 }

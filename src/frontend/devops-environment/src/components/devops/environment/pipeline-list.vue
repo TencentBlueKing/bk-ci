@@ -13,7 +13,7 @@
                 <template slot-scope="props">
                     <a class="item-pipelinename" :title="props.row.pipelineName"
                         target="_blank"
-                        :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/detail/${props.row.buildId}`">{{ props.row.pipelineName }}
+                        :href="`/console/pipeline/${props.row.projectId}/${props.row.pipelineId}/detail/${props.row.buildId}`">{{ props.row.pipelineName }}
                     </a>
                 </template>
             </bk-table-column>
@@ -66,10 +66,10 @@
                     limit: 10
                 },
                 statusMap: {
-                    'QUEUE': this.$t('environment.nodeInfo.queuing'),
-                    'RUNNING': this.$t('environment.nodeInfo.running'),
-                    'DONE': this.$t('environment.nodeInfo.succeed'),
-                    'FAIL': this.$t('environment.nodeInfo.fail')
+                    QUEUE: this.$t('environment.nodeInfo.queuing'),
+                    RUNNING: this.$t('environment.nodeInfo.running'),
+                    DONE: this.$t('environment.nodeInfo.succeed'),
+                    FAIL: this.$t('environment.nodeInfo.fail')
                 }
             }
         },

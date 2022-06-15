@@ -30,6 +30,7 @@ package com.tencent.devops.repository.api
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
+import com.tencent.devops.repository.pojo.github.GithubAppUrl
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.repository.pojo.github.GithubToken
@@ -96,7 +97,7 @@ interface ServiceGithubResource {
     @ApiOperation("获取github触发原子配置")
     @GET
     @Path("/githubAppUrl")
-    fun getGithubAppUrl(): Result<String>
+    fun getGithubAppUrl(): Result<GithubAppUrl>
 
     @ApiOperation("创建github checkRuns")
     @POST
@@ -156,4 +157,28 @@ interface ServiceGithubResource {
         @QueryParam("tag")
         tag: String
     ): Result<GithubTag?>
+
+    @ApiOperation("List all the branches of github")
+    @GET
+    @Path("/branches")
+    fun listBranches(
+        @ApiParam("accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @ApiParam("projectName", required = true)
+        @QueryParam("projectName")
+        projectName: String
+    ): Result<List<String>>
+
+    @ApiOperation("List all the branches of github")
+    @GET
+    @Path("/tags")
+    fun listTags(
+        @ApiParam("accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @ApiParam("projectName", required = true)
+        @QueryParam("projectName")
+        projectName: String
+    ): Result<List<String>>
 }

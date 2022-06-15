@@ -26,7 +26,6 @@
                 :default-active="$route.name"
                 v-bind="navTheme"
                 :toggle-active="nav.toggle"
-                @select="() => {}"
             >
                 <bk-navigation-menu-item
                     v-for="item in nav.menu"
@@ -50,6 +49,7 @@
     export default class AsideNav extends Vue {
         @Prop({ default: '' })
         headerTitle: string
+
         @Prop({ required: true })
         nav: Object
 
@@ -63,7 +63,9 @@
                 itemActiveBgColor: '#ebf4ff',
                 itemHoverBgColor: '#ebf4ff',
                 itemHoverColor: '#3c96ff',
+                itemHoverIconColor: '#3c96ff',
                 itemActiveColor: '#3c96ff',
+                itemActiveIconColor: '#3c96ff',
                 itemDefaultColor: '#7b7d8a'
             }
         }

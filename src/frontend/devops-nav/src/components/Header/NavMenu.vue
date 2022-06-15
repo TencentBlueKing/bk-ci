@@ -163,11 +163,11 @@
         }
 
         gotoPage ({ link_new: linkNew }) {
-            const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage['link_new'])
+            const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage.link_new)
             const nAlias = getServiceAliasByPath(linkNew)
             const destUrl = this.addConsole(linkNew)
 
-            if (cAlias === nAlias && this.currentPage && this.currentPage['inject_type'] === 'iframe') {
+            if (cAlias === nAlias && this.currentPage && this.currentPage.inject_type === 'iframe') {
                 eventBus.$emit('goHome')
                 return
             }

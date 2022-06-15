@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
-import com.tencent.devops.scm.pojo.MATCH_PATHS
+import com.tencent.devops.common.webhook.pojo.code.MATCH_PATHS
 import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 

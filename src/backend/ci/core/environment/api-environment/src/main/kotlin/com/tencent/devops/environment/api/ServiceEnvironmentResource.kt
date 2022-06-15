@@ -31,13 +31,17 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
+import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -63,6 +67,69 @@ interface ServiceEnvironmentResource {
         @PathParam("projectId")
         projectId: String
     ): Result<List<EnvWithPermission>>
+
+    @ApiOperation("创建环境")
+    @POST
+    @Path("/projects/{projectId}")
+    fun create(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "环境信息", required = true)
+        environment: EnvCreateInfo
+    ): Result<EnvironmentId>
+
+    @ApiOperation("删除环境")
+    @DELETE
+    @Path("/projects/{projectId}/envs/{envHashId}")
+    fun delete(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String
+    ): Result<Boolean>
+
+    @ApiOperation("添加节点到环境")
+    @POST
+    @Path("/projects/{projectId}/envs/{envHashId}/add_nodes")
+    fun addNodes(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @ApiParam("节点 HashId", required = true)
+        nodeHashIds: List<String>
+    ): Result<Boolean>
+
+    @ApiOperation("从环境删除节点")
+    @POST
+    @Path("/projects/{projectId}/envs/{envHashId}/delete_nodes")
+    fun deleteNodes(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @ApiParam("节点 HashId", required = true)
+        nodeHashIds: List<String>
+    ): Result<Boolean>
 
     @ApiOperation("获取环境（多个）的节点列表")
     @POST
@@ -132,4 +199,21 @@ interface ServiceEnvironmentResource {
         @QueryParam("os")
         os: OS
     ): Result<List<EnvWithNodeCount>>
+
+    @ApiOperation("设置环境共享")
+    @POST
+    @Path("/{projectId}/{envHashId}/share")
+    fun setShareEnv(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @ApiParam(value = "共享的项目列表", required = true)
+        sharedProjects: SharedProjectInfoWrap
+    ): Result<Boolean>
 }

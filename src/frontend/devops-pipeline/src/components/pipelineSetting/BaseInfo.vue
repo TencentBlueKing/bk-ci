@@ -67,7 +67,7 @@
         },
         computed: {
             ...mapGetters({
-                'tagGroupList': 'pipelines/getTagGroupList'
+                tagGroupList: 'pipelines/getTagGroupList'
             }),
             projectId () {
                 return this.$route.params.projectId
@@ -143,7 +143,7 @@
                 this.handleBaseInfoChange('labels', labels)
             },
             handleGoDocumentInfo () {
-                window.open('https://docs.bkci.net/services/pipelines/pipeline-edit/alias-buildno')
+                window.open(`${DOCS_URL_PREFIX}/Services/Pipeline/pipeline-edit-guide/alias-buildno.md`)
             }
         }
     }

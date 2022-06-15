@@ -29,8 +29,10 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.SUCCESS
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.configuration.StoreDetailUrlConfig
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.OperationLogDao
 import com.tencent.devops.store.dao.common.ReasonRelDao
@@ -53,6 +55,8 @@ import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreBuildInfo
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.StoreShowVersionItem
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreCommonService
@@ -114,27 +118,45 @@ class StoreCommonServiceImpl @Autowired constructor(
      */
     override fun getRequireVersion(
         dbVersion: String,
-        releaseType: ReleaseTypeEnum
-    ): String {
-        var requireVersion = INIT_VERSION
+        releaseType: ReleaseTypeEnum,
+        reqVersion: String?
+    ): List<String> {
+        var requireVersionList = listOf(INIT_VERSION)
+        if (dbVersion.isBlank()) {
+            return requireVersionList
+        }
         val dbVersionParts = dbVersion.split(".")
+        val firstVersionPart = dbVersionParts[0]
+        val secondVersionPart = dbVersionParts[1]
+        val thirdVersionPart = dbVersionParts[2]
         when (releaseType) {
             ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE -> {
-                requireVersion = "${dbVersionParts[0].toInt() + 1}.0.0"
+                requireVersionList = listOf("${firstVersionPart.toInt() + 1}.0.0")
             }
             ReleaseTypeEnum.COMPATIBILITY_UPGRADE -> {
-                requireVersion = "${dbVersionParts[0]}.${dbVersionParts[1].toInt() + 1}.0"
+                requireVersionList = listOf("$firstVersionPart.${secondVersionPart.toInt() + 1}.0")
             }
             ReleaseTypeEnum.COMPATIBILITY_FIX -> {
-                requireVersion = "${dbVersionParts[0]}.${dbVersionParts[1]}.${dbVersionParts[2].toInt() + 1}"
+                requireVersionList = listOf("$firstVersionPart.$secondVersionPart.${thirdVersionPart.toInt() + 1}")
             }
             ReleaseTypeEnum.CANCEL_RE_RELEASE -> {
-                requireVersion = dbVersion
+                requireVersionList = listOf(dbVersion)
+            }
+            ReleaseTypeEnum.HIS_VERSION_UPGRADE -> {
+                if (!reqVersion.isNullOrBlank()) {
+                    val reqVersionParts = reqVersion.split(".")
+                    requireVersionList = listOf(
+                        "${reqVersionParts[0]}.${reqVersionParts[1]}.${reqVersionParts[2].toInt() + 1}",
+                        "${reqVersionParts[0]}.${reqVersionParts[1].toInt() + 1}.0"
+                    )
+                } else {
+                    throw ErrorCodeException(errorCode = StoreMessageCode.USER_HIS_VERSION_UPGRADE_INVALID)
+                }
             }
             else -> {
             }
         }
-        return requireVersion
+        return requireVersionList
     }
 
     /**
@@ -232,5 +254,45 @@ class StoreCommonServiceImpl @Autowired constructor(
         storeStatisticTotalDao.deleteStoreStatisticTotal(context, storeCode, storeType)
         storeStatisticDailyDao.deleteDailyStatisticData(context, storeCode, storeType)
         return true
+    }
+
+    override fun getStoreShowVersionInfo(
+        cancelFlag: Boolean,
+        releaseType: ReleaseTypeEnum?,
+        version: String?
+    ): StoreShowVersionInfo {
+        val defaultShowReleaseType = when {
+            cancelFlag -> {
+                ReleaseTypeEnum.CANCEL_RE_RELEASE
+            }
+            releaseType?.isDefaultShow() == true -> {
+                releaseType
+            }
+            releaseType == null -> {
+                ReleaseTypeEnum.NEW
+            }
+            else -> {
+                ReleaseTypeEnum.COMPATIBILITY_FIX
+            }
+        }
+        val dbVersion = version ?: ""
+        val defaultShowVersion = getRequireVersion(dbVersion, defaultShowReleaseType)[0]
+        val showVersionList = mutableListOf<StoreShowVersionItem>()
+        showVersionList.add(StoreShowVersionItem(defaultShowVersion, defaultShowReleaseType.name, true))
+        if (dbVersion.isBlank()) {
+            return StoreShowVersionInfo(showVersionList)
+        }
+        val tmpReleaseTypeList = listOf(
+            ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE,
+            ReleaseTypeEnum.COMPATIBILITY_UPGRADE,
+            ReleaseTypeEnum.COMPATIBILITY_FIX
+        )
+        tmpReleaseTypeList.forEach { tmpReleaseType ->
+            if (tmpReleaseType != defaultShowReleaseType) {
+                val showVersion = getRequireVersion(dbVersion, tmpReleaseType)[0]
+                showVersionList.add(StoreShowVersionItem(showVersion, tmpReleaseType.name))
+            }
+        }
+        return StoreShowVersionInfo(showVersionList)
     }
 }

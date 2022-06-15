@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.enums.LogType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -76,6 +77,9 @@ interface AppLogResource {
         @ApiParam("是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
+        @ApiParam("过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
@@ -115,6 +119,9 @@ interface AppLogResource {
         @ApiParam("是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
+        @ApiParam("过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
         @ApiParam("日志行数", required = false)
         @QueryParam("num")
         num: Int? = 100,
@@ -163,6 +170,9 @@ interface AppLogResource {
         @ApiParam("是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
+        @ApiParam("过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
@@ -199,6 +209,9 @@ interface AppLogResource {
         @ApiParam("是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
+        @ApiParam("过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
         @ApiParam("返回日志条数", required = false)
         @QueryParam("size")
         size: Int?,
@@ -269,6 +282,9 @@ interface AppLogResource {
         @ApiParam("是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
+        @ApiParam("过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
@@ -302,6 +318,9 @@ interface AppLogResource {
         @ApiParam("是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
+        @ApiParam("过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
         @ApiParam("返回日志条数", required = false)
         @QueryParam("size")
         size: Int?,

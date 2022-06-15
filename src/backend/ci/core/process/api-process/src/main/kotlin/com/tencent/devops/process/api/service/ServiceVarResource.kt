@@ -48,6 +48,9 @@ interface ServiceVarResource {
     @Path("/get_build_variable")
     @GET
     fun getBuildVar(
+        @ApiParam(value = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,
@@ -60,6 +63,12 @@ interface ServiceVarResource {
     @Path("/get_build_context")
     @GET
     fun getContextVar(
+        @ApiParam(value = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
         @ApiParam(value = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,

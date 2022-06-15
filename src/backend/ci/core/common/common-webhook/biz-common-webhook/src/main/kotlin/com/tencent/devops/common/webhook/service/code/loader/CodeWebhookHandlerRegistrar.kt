@@ -35,14 +35,14 @@ import java.util.concurrent.ConcurrentHashMap
 object CodeWebhookHandlerRegistrar {
     private val logger = LoggerFactory.getLogger(CodeWebhookHandlerRegistrar::class.java)
 
-    private val containerPluginMaps = ConcurrentHashMap<String, CodeWebhookTriggerHandler<*>>()
+    private val webhookHandlerMaps = ConcurrentHashMap<String, CodeWebhookTriggerHandler<*>>()
 
     /**
      * 注册[CodeWebhookTriggerHandler]webhook事件处理器
      */
     fun register(codeWebhookTriggerHandler: CodeWebhookTriggerHandler<out CodeWebhookEvent>) {
         logger.info("[REGISTER]| ${codeWebhookTriggerHandler.javaClass} for ${codeWebhookTriggerHandler.eventClass()}")
-        containerPluginMaps[codeWebhookTriggerHandler.eventClass().canonicalName] = codeWebhookTriggerHandler
+        webhookHandlerMaps[codeWebhookTriggerHandler.eventClass().canonicalName] = codeWebhookTriggerHandler
     }
 
     /**
@@ -50,7 +50,7 @@ object CodeWebhookHandlerRegistrar {
      */
     @Suppress("UNCHECKED_CAST")
     fun <T : CodeWebhookEvent> getHandler(webhookEvent: T): CodeWebhookTriggerHandler<T> {
-        return (containerPluginMaps[webhookEvent::class.qualifiedName] as CodeWebhookTriggerHandler<T>?)
+        return (webhookHandlerMaps[webhookEvent::class.qualifiedName] as CodeWebhookTriggerHandler<T>?)
             ?: throw IllegalArgumentException("${webhookEvent::class.qualifiedName} handler is not found")
     }
 }

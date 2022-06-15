@@ -53,7 +53,8 @@ class UserDao {
         centerId: Int,
         centerName: String,
         groupId: Int,
-        groupName: String
+        groupName: String,
+        publicAccount: Boolean? = false
     ) {
         val now = LocalDateTime.now()
         with(TUser.T_USER) {
@@ -70,7 +71,8 @@ class UserDao {
                 GROYP_ID,
                 GROUP_NAME,
                 CREATE_TIME,
-                UPDATE_TIME
+                UPDATE_TIME,
+                USER_TYPE
             ).values(
                 userId,
                 name,
@@ -83,7 +85,8 @@ class UserDao {
                 groupId,
                 groupName,
                 now,
-                now
+                now,
+                publicAccount
             ).execute()
         }
     }

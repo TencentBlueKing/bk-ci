@@ -12,12 +12,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,18 +31,27 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
 	"time"
 
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 	"github.com/astaxie/beego/logs"
 	"github.com/kardianos/service"
 )
 
+const daemonProcess = "daemon"
+
 func main() {
+	if len(os.Args) == 2 && os.Args[1] == "version" {
+		fmt.Println(config.AgentVersion)
+		systemutil.ExitProcess(0)
+	}
+	logs.Info("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 	runtime.GOMAXPROCS(4)
 
 	workDir := systemutil.GetExecutableDir()
@@ -69,6 +79,11 @@ func main() {
 		DisplayName:      "displayName",
 		Description:      "description",
 		WorkingDirectory: "C:/data/landun",
+	}
+
+	if ok := systemutil.CheckProcess(daemonProcess); !ok {
+		logs.Info("get process lock failed, exit")
+		return
 	}
 
 	daemonProgram := &program{}

@@ -42,21 +42,25 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElemen
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketCheckImageElement
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import io.swagger.annotations.ApiModelProperty
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
 @JsonSubTypes(
+    JsonSubTypes.Type(value = MatrixStatusElement::class, name = MatrixStatusElement.classType),
     JsonSubTypes.Type(value = CodeGitWebHookTriggerElement::class, name = CodeGitWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeGitlabWebHookTriggerElement::class, name = CodeGitlabWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeSVNWebHookTriggerElement::class, name = CodeSVNWebHookTriggerElement.classType),
@@ -79,24 +83,49 @@ import com.tencent.devops.common.pipeline.utils.SkipElementUtils
     JsonSubTypes.Type(value = QualityGateOutElement::class, name = QualityGateOutElement.classType),
     JsonSubTypes.Type(value = CodeTGitWebHookTriggerElement::class, name = CodeTGitWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeGitGenericWebHookTriggerElement::class,
-        name = CodeGitGenericWebHookTriggerElement.classType)
+        name = CodeGitGenericWebHookTriggerElement.classType),
+    JsonSubTypes.Type(value = CodeP4WebHookTriggerElement::class, name = CodeP4WebHookTriggerElement.classType)
 )
 @Suppress("ALL")
 abstract class Element(
+    @ApiModelProperty("任务名称", required = false)
     open val name: String,
+    @ApiModelProperty("id", required = false)
     open var id: String? = null,
+    @ApiModelProperty("状态", required = false)
     open var status: String? = null,
+    @ApiModelProperty("执行次数", required = false)
     open var executeCount: Int = 1,
+    @ApiModelProperty("是否重试", required = false)
     open var canRetry: Boolean? = null,
+    @ApiModelProperty("是否跳过", required = false)
     open var canSkip: Boolean? = null,
+    @ApiModelProperty("执行时间", required = false)
     open var elapsed: Long? = null,
+    @ApiModelProperty("启动时间", required = false)
     open var startEpoch: Long? = null,
+    @ApiModelProperty("插件原始版本", required = false)
+    open var originVersion: String = "1.*",
+    @ApiModelProperty("插件版本", required = false)
     open var version: String = "1.*",
+    @ApiModelProperty("模板对比的时候是不是有变更", required = false)
     open var templateModify: Boolean? = null, // 模板对比的时候是不是又变更
+    @ApiModelProperty("附加参数", required = false)
     open var additionalOptions: ElementAdditionalOptions? = null,
+    @ApiModelProperty("用户自定义ID，用于上下文键值设置", required = false)
+    open var stepId: String? = null, // 用于上下文键值设置
+    @ApiModelProperty("错误类型", required = false)
     open var errorType: String? = null,
+    @ApiModelProperty("错误代码", required = false)
     open var errorCode: Int? = null,
-    open var errorMsg: String? = null
+    @ApiModelProperty("错误信息", required = false)
+    open var errorMsg: String? = null,
+    @ApiModelProperty("插件名称,构建结束后的快照名称", required = false)
+    open var atomName: String? = null,
+    @ApiModelProperty("所属插件分类代码", required = false)
+    open var classifyCode: String? = null,
+    @ApiModelProperty("所属插件分类名称", required = false)
+    open var classifyName: String? = null
 ) {
 
     open fun getAtomCode() = getClassType()
@@ -106,7 +135,7 @@ abstract class Element(
     open fun getTaskAtom(): String = ""
 
     open fun genTaskParams(): MutableMap<String, Any> {
-        return JsonUtil.toMutableMapSkipEmpty(this)
+        return JsonUtil.toMutableMap(this)
     }
 
     open fun cleanUp() {}

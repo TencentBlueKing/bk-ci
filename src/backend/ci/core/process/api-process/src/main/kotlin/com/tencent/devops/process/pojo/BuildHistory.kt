@@ -89,5 +89,9 @@ data class BuildHistory(
     @ApiModelProperty("构建信息", required = false)
     var buildMsg: String?,
     @ApiModelProperty("自定义构建版本号", required = false)
-    val buildNumAlias: String? = null
+    val buildNumAlias: String? = null,
+    @ApiModelProperty("更新时间", required = false)
+    val updateTime: Long? = null,
+    @ApiModelProperty("并发时,设定的group", required = false)
+    var concurrencyGroup: String? = null
 )

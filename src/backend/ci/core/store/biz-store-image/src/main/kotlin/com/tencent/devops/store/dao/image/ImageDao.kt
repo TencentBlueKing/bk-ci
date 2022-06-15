@@ -255,6 +255,8 @@ class ImageDao {
         return with(TImage.T_IMAGE) {
             dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode).and(VERSION.like(VersionUtils.generateQueryVersion(version))))
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
                 .fetchOne()
         }
     }

@@ -223,7 +223,7 @@
                     })
 
                     this.partList.splice(0, this.partList.length)
-                    res.records.map(item => {
+                    res.records.forEach(item => {
                         item.display = false
                         this.partList.push(item)
                     })
@@ -483,7 +483,7 @@
                 left: 0;
                 font-size: 30px;
                 width: 38px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
             }
         }
         .part-item-path {
@@ -559,10 +559,10 @@
             }
         }
         .disabled-btn {
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
             cursor: url(../../images/cursor-lock.png),auto;
             &:hover {
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
             }
         }
         .handler-btn-tool {

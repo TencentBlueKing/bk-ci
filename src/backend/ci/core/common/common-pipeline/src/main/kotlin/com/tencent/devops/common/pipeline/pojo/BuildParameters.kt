@@ -36,7 +36,7 @@ data class BuildParameters(
     @ApiModelProperty("元素值ID-标识符", required = true)
     var key: String,
     @ApiModelProperty("元素值名称-显示用", required = true)
-    val value: Any,
+    var value: Any,
     @ApiModelProperty("元素值类型", required = false)
     val valueType: BuildFormPropertyType? = null,
     @ApiModelProperty("是否只读", required = false)

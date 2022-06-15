@@ -135,8 +135,8 @@
         },
         methods: {
             handleFormat (codes) {
-                let tips = ``
-                codes.map(item => {
+                let tips = ''
+                codes.forEach(item => {
                     tips += `${item}\n`
                 })
 
@@ -195,7 +195,7 @@
             },
             selectAll (selection) {
                 if (selection.length) {
-                    selection.map(item => {
+                    selection.forEach(item => {
                         if (!this.localSelected.includes(item.templateId)) {
                             this.localSelected.push(item.templateId)
                         }

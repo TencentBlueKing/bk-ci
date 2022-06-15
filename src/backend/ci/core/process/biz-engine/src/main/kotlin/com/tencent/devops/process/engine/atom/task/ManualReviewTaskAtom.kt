@@ -27,9 +27,11 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -79,6 +81,7 @@ class ManualReviewTaskAtom(
 
         val reviewUsers = parseVariable(param.reviewUsers.joinToString(","), runVariables)
         val reviewDesc = parseVariable(param.desc, runVariables)
+        val notifyTitle = parseVariable(param.notifyTitle, runVariables)
 
         if (reviewUsers.isBlank()) {
             logger.warn("[$buildId]|taskId=$taskId|Review user is empty")
@@ -105,6 +108,14 @@ class ManualReviewTaskAtom(
 
         val pipelineName = runVariables[PIPELINE_NAME].toString()
         pipelineEventDispatcher.dispatch(
+            PipelineBuildReviewBroadCastEvent(
+                source = "ManualReviewTaskAtom",
+                projectId = projectCode, pipelineId = pipelineId,
+                buildId = buildId, userId = task.starter,
+                reviewType = buildReviewType,
+                status = BuildStatus.REVIEWING.name,
+                stageId = task.stageId, taskId = taskId
+            ),
             PipelineBuildNotifyEvent(
                 notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE.name,
                 source = "ManualReviewTaskAtom", projectId = projectCode, pipelineId = pipelineId,
@@ -112,7 +123,7 @@ class ManualReviewTaskAtom(
                 receivers = reviewUsers.split(","),
                 notifyType = checkNotifyType(param.notifyType),
                 titleParams = mutableMapOf(
-                    "content" to (param.notifyTitle ?: "")
+                    "content" to notifyTitle
                 ),
                 bodyParams = mutableMapOf(
                     "buildNum" to (runVariables[PIPELINE_BUILD_NUM] ?: "1"),
@@ -120,7 +131,9 @@ class ManualReviewTaskAtom(
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                     "reviewDesc" to reviewDesc
-                )
+                ),
+                position = null,
+                stageId = null
             )
         )
 
@@ -137,13 +150,18 @@ class ManualReviewTaskAtom(
         val taskId = task.taskId
         val buildId = task.buildId
         val manualAction = task.getTaskParam(BS_MANUAL_ACTION)
-        val taskParam = JsonUtil.toMutableMapSkipEmpty(task.taskParams)
+        val taskParam = JsonUtil.toMutableMap(task.taskParams)
         logger.info("[$buildId]|TRY_FINISH|${task.taskName}|taskId=$taskId|action=$manualAction")
         if (manualAction.isBlank()) {
             return AtomResponse(BuildStatus.REVIEWING)
         }
 
-        val suggestContent = beforePrint(task = task, taskParam = taskParam)
+        val manualActionUserId = task.getTaskParam(BS_MANUAL_ACTION_USERID)
+        val suggestContent = beforePrint(
+            task = task,
+            taskParam = taskParam,
+            manualActionUserId = manualActionUserId
+        )
 
         val response = when (ManualReviewAction.valueOf(manualAction)) {
             ManualReviewAction.PROCESS -> {
@@ -153,11 +171,29 @@ class ManualReviewTaskAtom(
                 buildLogPrinter.addLine(buildId = buildId, message = "审核参数：${getParamList(taskParam)}",
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildReviewBroadCastEvent(
+                        source = "tasks(${task.taskId}) reviewed with PROCESSED",
+                        projectId = task.projectId, pipelineId = task.pipelineId,
+                        buildId = task.buildId, userId = manualActionUserId,
+                        reviewType = buildReviewType, status = BuildStatus.REVIEW_PROCESSED.name,
+                        stageId = task.stageId, taskId = task.taskId
+                    )
+                )
                 AtomResponse(BuildStatus.SUCCEED)
             }
             ManualReviewAction.ABORT -> {
                 buildLogPrinter.addRedLine(buildId = buildId, message = "审核结果：驳回",
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                )
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildReviewBroadCastEvent(
+                        source = "tasks(${task.taskId}) reviewed with ABORT",
+                        projectId = task.projectId, pipelineId = task.pipelineId,
+                        buildId = task.buildId, userId = manualActionUserId,
+                        reviewType = buildReviewType, status = BuildStatus.REVIEW_ABORT.name,
+                        stageId = task.stageId, taskId = task.taskId
+                    )
                 )
                 AtomResponse(BuildStatus.REVIEW_ABORT)
             }
@@ -218,8 +254,11 @@ class ManualReviewTaskAtom(
         )
     }
 
-    private fun beforePrint(task: PipelineBuildTask, taskParam: MutableMap<String, Any>): Any? {
-        val manualActionUserId = task.getTaskParam(BS_MANUAL_ACTION_USERID)
+    private fun beforePrint(
+        task: PipelineBuildTask,
+        taskParam: MutableMap<String, Any>,
+        manualActionUserId: String
+    ): Any? {
         val suggestContent = taskParam[BS_MANUAL_ACTION_SUGGEST]
         buildLogPrinter.addYellowLine(
             buildId = task.buildId, message = "============步骤审核结束============",
@@ -247,6 +286,7 @@ class ManualReviewTaskAtom(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ManualReviewTaskAtom::class.java)
+        private val buildReviewType = BuildReviewType.TASK_REVIEW
         const val MANUAL_REVIEW_ATOM_REVIEWER = "MANUAL_REVIEWER"
         const val MANUAL_REVIEW_ATOM_SUGGEST = "MANUAL_REVIEW_SUGGEST"
         const val MANUAL_REVIEW_ATOM_RESULT = "MANUAL_REVIEW_RESULT"

@@ -28,6 +28,7 @@
 package com.tencent.devops.process.utils
 
 const val PIPELINE_VERSION = "BK_CI_PIPELINE_VERSION" // "pipeline.version"
+const val PIPELINE_START_PARENT_PROJECT_ID = "BK_CI_PARENT_PROJECT_ID"
 const val PIPELINE_START_PARENT_PIPELINE_ID = "BK_CI_PARENT_PIPELINE_ID" // "pipeline.start.parent.pipeline.id"
 const val PIPELINE_START_PARENT_BUILD_ID = "BK_CI_PARENT_BUILD_ID" // "pipeline.start.parent.build.id"
 const val PIPELINE_START_PARENT_BUILD_TASK_ID = "BK_CI_PARENT_BUILD_TASK_ID" // "pipeline.start.parent.build.task.id"
@@ -41,33 +42,14 @@ const val PIPELINE_BUILD_NUM = "BK_CI_BUILD_NUM" // "pipeline.build.num"
 const val PIPELINE_BUILD_LAST_UPDATE = "BK_CI_BUILD_LAST_UPDATE" // "pipeline.build.last.update"
 const val PIPELINE_BUILD_SVN_REVISION = "BK_CI_BUILD_SVN_REVISION" // "pipeline.build.svn.revision"
 const val PIPELINE_BUILD_NUM_ALIAS = "BK_CI_BUILD_NUM_ALIAS"
-
-const val PIPELINE_WEBHOOK_REVISION = "BK_CI_HOOK_REVISION" // hookRevision
-const val PIPELINE_WEBHOOK_BRANCH = "BK_CI_HOOK_BRANCH" // hookBranch
-const val PIPELINE_WEBHOOK_SOURCE_BRANCH = "BK_CI_HOOK_SOURCE_BRANCH" // hookSourceBranch
-const val PIPELINE_WEBHOOK_TARGET_BRANCH = "BK_CI_HOOK_TARGET_BRANCH" // hookTargetBranch
-const val PIPELINE_WEBHOOK_SOURCE_URL = "BK_CI_HOOK_SOURCE_URL" // hookSourceUrl
-const val PIPELINE_WEBHOOK_TARGET_URL = "BK_CI_HOOK_TARGET_URL" // hookTargetUrl
-const val PIPELINE_WEBHOOK_REPO = "BK_CI_HOOK_REPO" // hookRepo
-const val PIPELINE_WEBHOOK_REPO_TYPE = "BK_CI_HOOK_REPO_TYPE" // hookRepoType
-const val PIPELINE_WEBHOOK_BLOCK = "BK_CI_HOOK_BLOCK" // hookBlock
-const val PIPELINE_WEBHOOK_TYPE = "BK_CI_HOOK_TYPE" // hookType
-const val PIPELINE_WEBHOOK_EVENT_TYPE = "BK_CI_HOOK_EVENT_TYPE" // hookEventType
-const val PIPELINE_WEBHOOK_MR_ID = "BK_CI_HOOK_MR_ID" // bk_hookMergeRequestId
-const val PIPELINE_REPO_NAME = "BK_CI_REPO_NAME" // "repoName"
-const val PIPELINE_WEBHOOK_MR_COMMITTER = "BK_CI_HOOK_MR_COMMITTER" // "bk_hookMergeRequest_committer"
-const val PIPELINE_WEBHOOK_COMMIT_MESSAGE = "BK_CI_HOOK_MESSAGE" // hook message
-const val PIPELINE_WEBHOOK_SOURCE_PROJECT_ID = "BK_CI_HOOK_SOURCE_PROJECT_ID"
-const val PIPELINE_WEBHOOK_TARGET_PROJECT_ID = "BK_CI_HOOK_TARGET_PROJECT_ID"
-const val PIPELINE_WEBHOOK_SOURCE_REPO_NAME = "BK_CI_HOOK_SOURCE_REPO_NAME"
-const val PIPELINE_WEBHOOK_TARGET_REPO_NAME = "BK_CI_HOOK_TARGET_REPO_NAME"
-const val PIPELINE_WEBHOOK_QUEUE = "BK_CI_HOOK_QUEUE"
+const val PIPELINE_BUILD_URL = "BK_CI_BUILD_URL"
 
 const val GIT_MR_NUMBER = "BK_CI_GIT_MR_NUMBER" // git_mr_number
 const val GITHUB_PR_NUMBER = "BK_CI_GITHUB_PR_NUMBER" // github_pr_number
 
 const val PIPELINE_NAME = "BK_CI_PIPELINE_NAME" // "pipeline.name"
 const val PIPELINE_ID = "BK_CI_PIPELINE_ID" // "pipeline.id"
+const val WORKSPACE = "WORKSPACE" // "ci.workspace"
 
 const val PIPELINE_TIME_DURATION = "BK_CI_BUILD_TOTAL_TIME" // "pipeline.time.duration"
 
@@ -121,6 +103,7 @@ const val PIPELINE_ATOM_NAME = "BK_CI_ATOM_NAME" // "流水线插件名称"
 const val PIPELINE_ATOM_CODE = "BK_CI_ATOM_CODE" // "流水线插件代码"
 const val PIPELINE_ATOM_VERSION = "BK_CI_ATOM_VERSION" // "流水线插件版本"
 const val PIPELINE_TASK_NAME = "BK_CI_TASK_NAME" // "流水线任务名称（步骤名称）"
+const val PIPELINE_STEP_ID = "BK_CI_STEP_ID" // "用户自定义ID（上下文标识）"
 
 /**
  * 流水线设置-最大排队数量-默认值
@@ -176,6 +159,22 @@ const val PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX = 4000
  * 流水线设置-流水线错误信息入库长度最大值 单位:分钟
  */
 const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 30000
+/**
+ * 流水线设置-流水线最大任务并发数量-最大值
+ */
+const val PIPELINE_CON_RUNNING_CONTAINER_SIZE_MAX = 30
+/**
+ * 流水线设置-矩阵内最大并发数量-默认值
+ */
+const val PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT = 5
+/**
+ * 流水线设置-矩阵内最大并发数量-最大值
+ */
+const val PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX = 20
+/**
+ * 流水线设置-Stage内最大分裂后Job数量-最大值
+ */
+const val PIPELINE_STAGE_CONTAINERS_COUNT_MAX = 256
 
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 

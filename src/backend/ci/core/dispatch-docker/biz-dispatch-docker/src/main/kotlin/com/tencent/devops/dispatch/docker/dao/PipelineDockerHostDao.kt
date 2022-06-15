@@ -115,7 +115,7 @@ class PipelineDockerHostDao {
         dslContext: DSLContext,
         projectId: String,
         type: DockerHostType = DockerHostType.BUILD
-    ): List<String> {
+    ): Set<String> {
         with(TDispatchPipelineDockerHost.T_DISPATCH_PIPELINE_DOCKER_HOST) {
             val result = dslContext.select(HOST_IP).from(this)
                 .where(PROJECT_CODE.eq(projectId))
@@ -123,9 +123,9 @@ class PipelineDockerHostDao {
                 .fetchOne(HOST_IP)
 
             return if (result != null && result.isNotEmpty()) {
-                result.split(",")
+                result.split(",").toSet()
             } else {
-                emptyList()
+                emptySet()
             }
         }
     }

@@ -132,10 +132,10 @@ class TriggerConfiguration {
             rabbitAdmin = rabbitAdmin,
             buildListener = buildListener,
             messageConverter = messageConverter,
-            startConsumerMinInterval = 20000,
+            startConsumerMinInterval = 5000,
             consecutiveActiveTrigger = 3,
             concurrency = timerConcurrency!!,
-            maxConcurrency = 20
+            maxConcurrency = 30
         )
     }
 

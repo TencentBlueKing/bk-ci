@@ -292,10 +292,10 @@
                         style: {
                             textAlign: 'center'
                         }
-                    }, `确定删除该条指标？`)
+                    }, '确定删除该条指标？')
 
                     this.$bkInfo({
-                        title: `删除`,
+                        title: '删除',
                         subHeader: content,
                         confirmFn: async () => {
                             this.deleteIndicator()

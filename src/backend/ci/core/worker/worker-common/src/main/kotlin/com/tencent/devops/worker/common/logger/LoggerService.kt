@@ -51,6 +51,8 @@ import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.FileUtils
+import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -64,7 +66,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 
-@Suppress("MagicNumber", "TooManyFunctions")
+@Suppress("MagicNumber", "TooManyFunctions", "ComplexMethod")
 object LoggerService {
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
@@ -73,6 +75,7 @@ object LoggerService {
     private val running = AtomicBoolean(true)
     private var currentTaskLineNo = 0
     private val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
+    private const val SENSITIVE_MIXER = "******"
 
     /**
      * 构建日志处理的异步线程池
@@ -165,8 +168,24 @@ object LoggerService {
     }
 
     fun start() {
-        logger.info("Start the log service")
-        future = executorService.submit(loggerThread)
+        if (future == null) {
+            logger.info("Start the log service")
+            future = executorService.submit(loggerThread)
+            addStopHook(loggerService = this)
+        }
+    }
+
+    /**
+     *  防止进程关闭时忘记停止，导致被hold住
+     */
+    private fun addStopHook(loggerService: LoggerService) {
+        try {
+            Runtime.getRuntime().addShutdownHook(object : Thread() {
+                override fun run() = loggerService.stop()
+            })
+        } catch (t: Throwable) {
+            logger.warn("Fail to add shutdown hook", t)
+        }
     }
 
     fun flush(): Int {
@@ -203,6 +222,8 @@ object LoggerService {
     fun addNormalLine(message: String) {
         var subTag: String? = null
         var realMessage = message
+
+        // #2342 处理插件内日志的前缀标签，进行日志分级
         if (message.contains(LOG_SUBTAG_FLAG)) {
             val prefix = message.substringBefore(LOG_SUBTAG_FLAG)
             val list = message.substringAfter(LOG_SUBTAG_FLAG).split(LOG_SUBTAG_FLAG)
@@ -216,13 +237,16 @@ object LoggerService {
             }
             realMessage = prefix + realMessage
         }
-
         val logType = when {
             realMessage.startsWith(LOG_DEBUG_FLAG) -> LogType.DEBUG
             realMessage.startsWith(LOG_ERROR_FLAG) -> LogType.ERROR
             realMessage.startsWith(LOG_WARN_FLAG) -> LogType.WARN
             else -> LogType.LOG
         }
+
+        // #4273 敏感信息过滤，遍历所有敏感信息是否存在日志中
+        realMessage = fixSensitiveContent(realMessage)
+
         val logMessage = LogMessage(
             message = realMessage,
             timestamp = System.currentTimeMillis(),
@@ -233,7 +257,8 @@ object LoggerService {
             executeCount = executeCount
         )
         logger.info(logMessage.toString())
-        // 如果已经进入Job执行任务，则可以做日志本地落盘
+
+        // #3772 如果已经进入Job执行任务，则可以做日志本地落盘
         if (elementId.isNotBlank() && pipelineLogDir != null) {
             saveLocalLog(logMessage)
         }
@@ -244,12 +269,16 @@ object LoggerService {
                 fixUploadMessage(logMessage)
                 this.uploadQueue.put(logMessage)
             } else if (elementId2LogProperty[elementId]?.logStorageMode != LogStorageMode.LOCAL) {
-                logger.warn("The number of Task[$elementId] log lines exceeds the limit, " +
-                    "the log file will be archived.")
-                this.uploadQueue.put(logMessage.copy(
-                    message = "Printed logs cannot exceed 1 million lines. " +
-                        "Please download logs to view."
-                ))
+                logger.warn(
+                    "The number of Task[$elementId] log lines exceeds the limit, " +
+                        "the log file will be archived."
+                )
+                this.uploadQueue.put(
+                    logMessage.copy(
+                        message = "Printed logs cannot exceed 1 million lines. " +
+                            "Please download logs to view."
+                    )
+                )
                 elementId2LogProperty[elementId]?.logStorageMode = LogStorageMode.LOCAL
             }
         } catch (ignored: InterruptedException) {
@@ -257,14 +286,33 @@ object LoggerService {
         }
     }
 
-    fun addWarnLine(message: String) =
-        addNormalLine("$LOG_WARN_FLAG$message")
+    private fun fixSensitiveContent(message: String): String {
+        var realMessage = message
+        SensitiveValueService.sensitiveStringSet.forEach { sensitiveStr ->
+            if (realMessage.contains(sensitiveStr)) {
+                realMessage = realMessage.replace(sensitiveStr, SENSITIVE_MIXER)
+            }
+        }
+        return realMessage
+    }
 
-    fun addErrorLine(message: String) =
-        addNormalLine("$LOG_ERROR_FLAG$message")
+    fun addWarnLine(message: String) {
+        // 修复换行后无法通过前缀渲染颜色的问题
+        val msg = "$LOG_WARN_FLAG$message"
+        addNormalLine(msg.replace("\n", "\n$LOG_WARN_FLAG"))
+    }
 
-    fun addDebugLine(message: String) =
-        addNormalLine("$LOG_DEBUG_FLAG$message")
+    fun addErrorLine(message: String) {
+        // 修复换行后无法通过前缀渲染颜色的问题
+        val msg = "$LOG_ERROR_FLAG$message"
+        addNormalLine(msg.replace("\n", "\n$LOG_ERROR_FLAG"))
+    }
+
+    fun addDebugLine(message: String) {
+        // 修复换行后无法通过前缀渲染颜色的问题
+        val msg = "$LOG_DEBUG_FLAG$message"
+        addNormalLine(msg.replace("\n", "\n$LOG_DEBUG_FLAG"))
+    }
 
     fun addFoldStartLine(foldName: String) {
         val logMessage = LogMessage(
@@ -310,26 +358,39 @@ object LoggerService {
 
                 // 如果日志文件过大，则取消归档
                 if (property.logFile.length() > LOG_FILE_LENGTH_LIMIT) {
-                    logger.warn("Cancel archiving task[$elementId] build log " +
-                        "file(${property.logFile.absolutePath}), length(${property.logFile.length()})")
+                    logger.warn(
+                        "Cancel archiving task[$elementId] build log " +
+                            "file(${property.logFile.absolutePath}), length(${property.logFile.length()})"
+                    )
                     return@forEach
                 }
 
                 if (!property.logFile.exists()) {
-                    logger.warn("Cancel archiving task[$elementId] build log " +
-                        "file(${property.logFile.absolutePath}) which not exists")
+                    logger.warn(
+                        "Cancel archiving task[$elementId] build log " +
+                            "file(${property.logFile.absolutePath}) which not exists"
+                    )
                     return@forEach
                 }
 
                 // 开始归档符合归档条件的日志文件
                 logger.info("Archive task[$elementId] build log file(${property.logFile.absolutePath})")
-                ArchiveUtils.archiveLogFile(
-                    file = property.logFile,
-                    destFullPath = property.childPath,
-                    buildVariables = buildVariables!!,
-                    token = token
-                )
-                property.logStorageMode = LogStorageMode.ARCHIVED
+                try {
+                    HttpRetryUtils.retry(
+                        retryTime = 5,
+                        retryPeriodMills = 1000
+                    ) {
+                        ArchiveUtils.archiveLogFile(
+                            file = property.logFile,
+                            destFullPath = property.childPath,
+                            buildVariables = buildVariables!!,
+                            token = token
+                        )
+                    }
+                    property.logStorageMode = LogStorageMode.ARCHIVED
+                } catch (ignore: Exception) {
+                    logger.error("archiveLogFile| retry fail with message: ", ignore)
+                }
                 archivedCount++
             }
             logger.info("Finished archiving log $archivedCount files")

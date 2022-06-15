@@ -13,6 +13,7 @@
                         :data="recycleList"
                         size="small">
                         <bk-table-column :label="$t('pipelineName')" prop="pipelineName"></bk-table-column>
+                        <bk-table-column :label="$t('restore.deleter')" prop="lastModifyUser"></bk-table-column>
                         <bk-table-column :label="$t('restore.deleteTime')" prop="updateTime" :formatter="formatTime"></bk-table-column>
                         <bk-table-column :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime"></bk-table-column>
                         <bk-table-column :label="$t('operate')" width="150">

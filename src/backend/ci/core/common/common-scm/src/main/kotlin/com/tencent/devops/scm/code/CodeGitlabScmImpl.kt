@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.scm.IScm
+import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitApi
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
@@ -38,13 +39,17 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import org.eclipse.jgit.api.Git
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
+@SuppressWarnings("TooManyFunctions")
 class CodeGitlabScmImpl constructor(
     override val projectName: String,
     override val branchName: String?,
     override val url: String,
+    private var privateKey: String? = null,
+    private var passPhrase: String? = null,
     private val token: String,
     gitConfig: GitConfig,
     private val event: String? = null
@@ -58,16 +63,23 @@ class CodeGitlabScmImpl constructor(
         return RevisionInfo(
             revision = gitBranch.commit.id,
             updatedMessage = gitBranch.commit.message,
-            branchName = branch
+            branchName = branch,
+            authorName = gitBranch.commit.authorName
         )
     }
 
-    override fun getBranches(search: String?) =
+    override fun getBranches(
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ) =
         gitApi.listBranches(
             host = apiUrl,
             token = token,
             projectName = projectName,
-            search = search
+            search = search,
+            page = page,
+            pageSize = pageSize
         )
 
     override fun getTags(search: String?) =
@@ -87,6 +99,21 @@ class CodeGitlabScmImpl constructor(
                 ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
                 ScmType.CODE_GITLAB.name
             )
+        }
+        if (privateKey != null) {
+            try {
+                // Check the private key
+                val command = Git.lsRemoteRepository()
+                val credentialSetter = CodeGitCredentialSetter(privateKey!!, passPhrase)
+                credentialSetter.setGitCredential(command)
+                command.setRemote(url).call()
+            } catch (ignored: Throwable) {
+                logger.warn("Fail to check the private key of git", ignored)
+                throw ScmException(
+                    ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_INVALID),
+                    ScmType.CODE_GITLAB.name
+                )
+            }
         }
     }
 

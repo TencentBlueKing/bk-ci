@@ -32,6 +32,9 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.annotation.SkipLogField
 import org.junit.Assert
 import org.junit.Test
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 /**
  * @version 1.0
@@ -81,9 +84,49 @@ class JsonUtilTest {
 
     @Test
     fun toMutableMapSkipEmpty() {
-        val json = "{}"
+        val json = "{\"a\": \"1\" , \"emptyKey\": \"\"}"
         val map = JsonUtil.toMutableMapSkipEmpty(json)
         Assert.assertNotNull(map)
+        Assert.assertEquals(map.size, 2)
+        Assert.assertEquals(map["emptyKey"], "")
+
+        map["str_array"] = ArrayList<String>()
+
+        val mt = JsonUtil.toMutableMapSkipEmpty(map)
+        Assert.assertNotNull(mt["a"])
+        Assert.assertNull(mt["emptyKey"])
+        Assert.assertNull(mt["str_array"])
+    }
+
+    @Test
+    fun toMutableMap() {
+        val json = "{\"a\": \"1\" , \"emptyKey\": \"\"}"
+        val map = JsonUtil.toMap(json)
+        Assert.assertNotNull(map)
+        Assert.assertNotNull(map["emptyKey"])
+        Assert.assertEquals(map["a"], "1")
+        Assert.assertEquals(map["emptyKey"], "")
+
+        val map2 = JsonUtil.toMap(map)
+        Assert.assertNotNull(map2)
+        Assert.assertNotNull(map2["emptyKey"])
+        Assert.assertEquals(map2["a"], "1")
+        Assert.assertEquals(map2["emptyKey"], "")
+
+        val mt = JsonUtil.toMutableMap(map)
+        mt["str_array"] = ArrayList<String>()
+
+        println(mt)
+
+        val mutableMap = JsonUtil.toMutableMap(mt)
+        Assert.assertNotNull(mutableMap)
+        Assert.assertNotNull(mutableMap["emptyKey"])
+        Assert.assertNotNull(mutableMap["str_array"])
+        Assert.assertEquals(mutableMap["a"], "1")
+        Assert.assertEquals(mutableMap["emptyKey"], "")
+        mutableMap["a"] = "2"
+        Assert.assertEquals(mutableMap["a"], "2")
+        println(mutableMap)
     }
 
     @Test
@@ -133,6 +176,25 @@ class JsonUtilTest {
         Assert.assertNotNull(haveNoSkipLogFieldsMap["key"])
     }
 
+    @Test
+    fun dataTime() {
+        val localDate = LocalDate.now()
+        val localTime = LocalTime.now()
+        val localDateTime = LocalDateTime.now()
+        val dateAndTime = DateAndTime(localDate, localTime, localDateTime, emptyList())
+
+        val jsonStr = JsonUtil.toJson(dateAndTime)
+        val deserializeObj = JsonUtil.to(jsonStr, DateAndTime::class.java)
+        Assert.assertEquals(dateAndTime, deserializeObj)
+
+        val map = JsonUtil.toMap(dateAndTime)
+        val mapToObj = JsonUtil.mapTo(map, DateAndTime::class.java)
+        Assert.assertEquals(dateAndTime, mapToObj)
+
+        val skipEmptyMap = JsonUtil.toMutableMapSkipEmpty(dateAndTime)
+        Assert.assertNull(skipEmptyMap["emptyList"])
+    }
+
     data class NameAndValue(
         val key: String,
         @SkipLogField
@@ -152,5 +214,12 @@ class JsonUtilTest {
         val isSecrecy: Boolean?, // 错误的字段示例命名，会导致反序列化的空值
         @get:JsonProperty("is_exact_resource")
         val exactResource: Int = 1
+    )
+
+    data class DateAndTime(
+        val localDate: LocalDate,
+        val localTime: LocalTime,
+        val localDateTime: LocalDateTime,
+        val emptyList: List<String>
     )
 }

@@ -38,7 +38,6 @@ import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
@@ -47,6 +46,7 @@ import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
+import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -231,6 +231,31 @@ abstract class AbstractDockerHostBuildService constructor(
         }
     }
 
+    fun afterOverlayFs(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: Int,
+        poolNo: Int
+    ) {
+        try {
+            val qpcGitProjectList = dockerHostBuildApi.getQpcGitProjectList(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId.toString(),
+                poolNo = poolNo
+            )?.data
+
+            // 针对overlayfs白名单项目清理工作空间
+            if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
+                val upperDir = "${dockerHostConfig.hostPathWorkspace}/$buildId/${getTailPath(vmSeqId, poolNo)}"
+                FileUtils.deleteQuietly(File(upperDir))
+            }
+        } catch (e: Throwable) {
+            logger.info("afterOverlayFs $buildId $vmSeqId $poolNo error: ${e.message}")
+        }
+    }
+
     fun getWorkspace(
         pipelineId: String,
         vmSeqId: Int,
@@ -238,129 +263,6 @@ abstract class AbstractDockerHostBuildService constructor(
         path: String
     ): String {
         return "$path/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
-    }
-
-/*    fun mountOverlayfs(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: Int,
-        poolNo: Int,
-        hostConfig: HostConfig
-    ) {
-        val qpcGitProjectList = dockerHostBuildApi.getQpcGitProjectList(
-            projectId = projectId,
-            buildId = buildId,
-            vmSeqId = vmSeqId.toString(),
-            poolNo = poolNo
-        )?.data
-
-        var qpcUniquePath = ""
-        if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
-            qpcUniquePath = qpcGitProjectList.first()
-        }
-
-        mountOverlayfs(pipelineId, vmSeqId, poolNo, qpcUniquePath, hostConfig)
-    }
-
-    fun mountOverlayfs(
-        pipelineId: String,
-        vmSeqId: Int,
-        poolNo: Int,
-        qpcUniquePath: String?,
-        hostConfig: HostConfig
-    ) {
-        if (qpcUniquePath != null && qpcUniquePath.isNotBlank()) {
-            val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}upper"
-            val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}work"
-            val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/$qpcUniquePath"
-
-            if (!File(upperDir).exists()) {
-                File(upperDir).mkdirs()
-            }
-
-            if (!File(workDir).exists()) {
-                File(workDir).mkdirs()
-            }
-
-            if (!File(lowerDir).exists()) {
-                File(lowerDir).mkdirs()
-            }
-
-            val mount = Mount().withType(MountType.VOLUME)
-                .withTarget(dockerHostConfig.volumeWorkspace)
-                .withVolumeOptions(
-                    VolumeOptions().withDriverConfig(
-                        Driver().withName("local").withOptions(
-                            mapOf(
-                                "type" to "overlay",
-                                "device" to "overlay",
-                                "o" to "lowerdir=$lowerDir,upperdir=$upperDir,workdir=$workDir"
-                            )
-                        )
-                    )
-                )
-
-            hostConfig.withMounts(listOf(mount))
-        }
-    }
-
-    fun mountBazelOverlayfs(
-        pipelineId: String,
-        vmSeqId: Int,
-        poolNo: Int,
-        hostConfig: HostConfig
-    ) {
-        val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}upper"
-        val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}work"
-        val lowerDir = "${dockerHostConfig.bazelLowerPath}"
-
-        if (!File(upperDir).exists()) {
-            File(upperDir).mkdirs()
-        }
-
-        if (!File(workDir).exists()) {
-            File(workDir).mkdirs()
-        }
-
-        if (!File(lowerDir).exists()) {
-            File(lowerDir).mkdirs()
-        }
-
-        val mount = Mount().withType(MountType.VOLUME)
-            .withTarget(dockerHostConfig.bazelContainerPath)
-            .withVolumeOptions(
-                VolumeOptions().withDriverConfig(
-                    Driver().withName("local").withOptions(
-                        mapOf(
-                            "type" to "overlay",
-                            "device" to "overlay",
-                            "o" to "lowerdir=$lowerDir,upperdir=$upperDir,workdir=$workDir"
-                        )
-                    )
-                )
-            )
-
-        hostConfig.withMounts(listOf(mount))
-    }*/
-
-    fun reWriteBazelCache(
-        pipelineId: String,
-        vmSeqId: Int,
-        poolNo: Int
-    ) {
-        // 出现错误也不影响执行
-        try {
-            val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}upper"
-            CommandLineUtils.execute(
-                command = "time flock -xn ${dockerHostConfig.bazelLowerPath}  " +
-                        "rsync --stats -ah --ignore-errors $upperDir/ ${dockerHostConfig.bazelLowerPath}/",
-                workspace = File(dockerHostConfig.bazelLowerPath!!),
-                print2Logger = true
-            )
-        } catch (e: Throwable) {
-            logger.info("reWriteBazelCache $pipelineId $vmSeqId $poolNo error: ${e.message}")
-        }
     }
 
     private fun getTailPath(vmSeqId: Int, poolNo: Int): String {

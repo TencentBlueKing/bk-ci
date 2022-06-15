@@ -38,7 +38,7 @@
                             <bk-popover placement="right">
                                 <i class="devops-icon icon-info-circle"></i>
                                 <div slot="content" style="white-space: normal;">
-                                    <div> {{ getTypeDesc(localConfig.credentialType) }}<a style="color:#3c96ff" target="_blank" :href="`${DOCS_URL_PREFIX}/services/ticket`">{{ $t('ticket.learnMore') }}。</a> </div>
+                                    <div> {{ getTypeDesc(localConfig.credentialType) }}<a style="color:#3c96ff" target="_blank" :href="ticketDocsUrl">{{ $t('ticket.learnMore') }}。</a> </div>
                                 </div>
                             </bk-popover>
                         </div>
@@ -145,7 +145,7 @@
         },
         data () {
             return {
-                DOCS_URL_PREFIX: DOCS_URL_PREFIX,
+                ticketDocsUrl: `${DOCS_URL_PREFIX}/Services/Ticket/ticket-add.md`,
                 showContent: false,
                 hasPermission: true,
                 newModel: {},
@@ -255,7 +255,7 @@
             },
             cancel () {
                 this.$router.push({
-                    'name': 'credentialList'
+                    name: 'credentialList'
                 })
             },
             getTypeDesc (type) {
@@ -266,10 +266,10 @@
                 this.$validator.validateAll().then(async (result) => {
                     if (result) {
                         const credential = {
-                            'credentialId': this.localConfig.credentialId,
-                            'credentialRemark': this.localConfig.credentialRemark,
-                            'credentialType': this.localConfig.credentialType,
-                            'credentialName': this.localConfig.credentialName
+                            credentialId: this.localConfig.credentialId,
+                            credentialRemark: this.localConfig.credentialRemark,
+                            credentialType: this.localConfig.credentialType,
+                            credentialName: this.localConfig.credentialName
                         }
                         for (const key in this.newModel) {
                             Object.assign(credential, { [key]: this.localConfig.credential[key] })
@@ -300,7 +300,7 @@
                             })
                             if (theme === 'success') {
                                 this.$router.push({
-                                    'name': 'credentialList'
+                                    name: 'credentialList'
                                 })
                             }
                         }
@@ -311,7 +311,7 @@
                 this.$router.push({
                     name: 'createCredentialWithType',
                     params: {
-                        'type': id
+                        type: id
                     }
                 })
                 this.newModel = this.getTicketByType(id)

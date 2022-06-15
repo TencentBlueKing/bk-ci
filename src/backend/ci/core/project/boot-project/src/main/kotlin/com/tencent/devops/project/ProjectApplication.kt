@@ -29,10 +29,12 @@ package com.tencent.devops.project
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
+import com.tencent.devops.leaf.plugin.annotation.EnableLeafServer
 import org.springframework.context.annotation.ComponentScan
 
 @MicroService
 @ComponentScan("com.tencent.devops.plugin", "com.tencent.devops.project")
+@EnableLeafServer
 class ProjectApplication
 
 fun main(args: Array<String>) {

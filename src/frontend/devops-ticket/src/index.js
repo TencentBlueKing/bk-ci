@@ -22,7 +22,7 @@ import store from './store'
 import './scss/app.scss'
 
 window.Pages = window.Pages || {}
-window.Pages['ticket'] = {
+window.Pages.ticket = {
     title: 'credentialManage',
     routes,
     store

@@ -27,15 +27,26 @@
 
 package com.tencent.devops.common.pipeline.container
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
 /**
  *  互斥组
  */
+@ApiModel("互斥组模型")
 data class MutexGroup(
+    @ApiModelProperty("是否启用", required = false)
     val enable: Boolean,
+    @ApiModelProperty("互斥组名称", required = false)
     val mutexGroupName: String? = "",
+    @ApiModelProperty("是否排队", required = false)
     val queueEnable: Boolean,
+    @ApiModelProperty("延迟", required = false)
     val timeout: Int = 0,
-    val queue: Int = 0
+    @ApiModelProperty("排队队列大小", required = false)
+    val queue: Int = 0,
+    @ApiModelProperty("占用锁定的信息用于日志提示", required = false)
+    var linkTip: String? = null // #5454 占用锁定的信息用于日志提示/不写入到Model，仅在构建开始时产生
 ) {
     fun genMutexLockKey(projectId: String): String {
         val mutexGroupName = mutexGroupName ?: ""
@@ -45,5 +56,9 @@ data class MutexGroup(
     fun genMutexQueueKey(projectId: String): String {
         val mutexGroupName = mutexGroupName ?: ""
         return "lock:container:mutex:$projectId:$mutexGroupName:queue"
+    }
+
+    fun genMutexLinkTipKey(containerMutexId: String): String {
+        return "linkTip:$containerMutexId"
     }
 }

@@ -32,7 +32,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
-import com.tencent.devops.process.pojo.template.TemplateType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,12 +45,20 @@ class TemplateService @Autowired constructor(
     private val templatePipelineDao: TemplatePipelineDao
 ) {
 
-    fun getTemplateIdByPipeline(pipelineId: String): String? {
-        return templatePipelineDao.get(dslContext = dslContext, pipelineId = pipelineId)?.templateId
+    fun getTemplateIdByPipeline(projectId: String, pipelineId: String): String? {
+        return templatePipelineDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.templateId
     }
 
-    fun isTemplatePipeline(pipelineId: String): Boolean {
-        return templatePipelineDao.isTemplatePipeline(dslContext = dslContext, pipelineId = pipelineId)
+    fun isTemplatePipeline(projectId: String, pipelineId: String): Boolean {
+        return templatePipelineDao.isTemplatePipeline(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
     }
 
     /**
@@ -74,16 +81,9 @@ class TemplateService @Autowired constructor(
         val versionName: String
 
         when {
-            latestTemplate.type == TemplateType.CONSTRAINT.name -> { // 如果是强制模式，则查找父模板
-                logger.info("template[$templateId] is from store, srcTemplateId is ${latestTemplate.srcTemplateId}")
-                val rootTemplate = templateDao.getLatestTemplate(dslContext, latestTemplate.srcTemplateId)
-                rootTemplateId = rootTemplate.id
-                templateVersion = rootTemplate.version
-                versionName = rootTemplate.versionName
-            }
             fixTemplateVersion != null -> { // 否则以指定的版本
                 templateVersion = fixTemplateVersion
-                versionName = templateDao.getTemplate(dslContext, fixTemplateVersion).versionName
+                versionName = templateDao.getTemplate(dslContext = dslContext, version = fixTemplateVersion).versionName
             }
             else -> { // 以指定的模板Id创建
                 templateVersion = latestTemplate.version

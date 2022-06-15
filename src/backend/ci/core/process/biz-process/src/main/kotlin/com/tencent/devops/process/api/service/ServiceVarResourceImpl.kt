@@ -38,20 +38,28 @@ class ServiceVarResourceImpl @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val pipelineContextService: PipelineContextService
 ) : ServiceVarResource {
-    override fun getBuildVar(buildId: String, varName: String?): Result<Map<String, String>> {
+
+    override fun getBuildVar(projectId: String, buildId: String, varName: String?): Result<Map<String, String>> {
         return if (varName.isNullOrBlank()) {
-            Result(buildVariableService.getAllVariable(buildId))
+            Result(buildVariableService.getAllVariable(projectId, buildId))
         } else {
-            Result(mapOf(varName to (buildVariableService.getVariable(buildId, varName) ?: "")))
+            Result(mapOf(varName to (buildVariableService.getVariable(projectId, buildId, varName) ?: "")))
         }
     }
 
-    override fun getContextVar(buildId: String, contextName: String?): Result<Map<String, String>> {
-        val buildVars = buildVariableService.getAllVariable(buildId)
+    override fun getContextVar(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        contextName: String?
+    ): Result<Map<String, String>> {
+        val variables = buildVariableService.getAllVariable(projectId, buildId)
         return if (contextName.isNullOrBlank()) {
-            Result(pipelineContextService.getAllBuildContext(buildVars))
+            Result(variables.plus(
+                pipelineContextService.buildFinishContext(projectId, pipelineId, buildId, variables)
+            ))
         } else {
-            val context = pipelineContextService.getBuildContext(buildVars, contextName)
+            val context = pipelineContextService.getBuildContext(variables, contextName)
             if (context.isNullOrEmpty()) {
                 Result(emptyMap())
             } else {

@@ -1,3 +1,4 @@
+//go:build linux || darwin
 // +build linux darwin
 
 /*
@@ -12,12 +13,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -50,6 +52,12 @@ const (
 )
 
 func main() {
+	if len(os.Args) == 2 && os.Args[1] == "version" {
+		fmt.Println(config.AgentVersion)
+		systemutil.ExitProcess(0)
+	}
+	logs.Info("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
+
 	runtime.GOMAXPROCS(4)
 
 	workDir := systemutil.GetExecutableDir()
@@ -113,6 +121,7 @@ func doCheckAndLaunchAgent() {
 	workDir := systemutil.GetWorkDir()
 	agentLock := flock.New(fmt.Sprintf("%s/agent.lock", systemutil.GetRuntimeDir()))
 
+	defer func() { _ = agentLock.Unlock() }() // #1613 fix open too many files
 	ok, err := agentLock.TryLock()
 	if err != nil {
 		logs.Error("try to get agent.lock failed: %v", err)
@@ -122,7 +131,6 @@ func doCheckAndLaunchAgent() {
 		return
 	}
 	logs.Warn("agent is not available, will launch it")
-	_ = agentLock.Unlock()
 
 	process, err := launch(workDir + "/" + config.AgentFileClientLinux)
 	if err != nil {

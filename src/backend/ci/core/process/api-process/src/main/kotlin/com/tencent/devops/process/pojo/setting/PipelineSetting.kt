@@ -45,7 +45,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("")
 data class PipelineSetting(
     @ApiModelProperty("项目id", required = false)
-    val projectId: String = "",
+    var projectId: String = "",
     @ApiModelProperty("流水线id", required = false)
     var pipelineId: String = "",
     @ApiModelProperty("流水线名称", required = false)
@@ -64,6 +64,10 @@ data class PipelineSetting(
     val waitQueueTimeMinute: Int = PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT,
     @ApiModelProperty("最大排队数量", required = false)
     val maxQueueSize: Int = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
+    @ApiModelProperty("并发时,设定的group", required = false)
+    var concurrencyGroup: String? = null,
+    @ApiModelProperty("并发时,是否相同group取消正在执行的流水线", required = false)
+    val concurrencyCancelInProgress: Boolean = false,
     @ApiModelProperty("是否有操作权限", required = false)
     var hasPermission: Boolean? = null,
     @ApiModelProperty("保存流水线编排的最大个数", required = false)

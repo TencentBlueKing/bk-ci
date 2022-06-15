@@ -73,7 +73,7 @@
                         </ul>
                     </div>
                     <div v-if="showPreview && tempPipeline" class="pipeline-detail-preview">
-                        <stages class="pipeline-preview" :stages="tempPipeline.stages"></stages>
+                        <bk-pipeline class="pipeline-preview" :pipeline="tempPipeline"></bk-pipeline>
                     </div>
                     <div class="right-temp-info">
                         <div class="temp-info-detail">
@@ -143,14 +143,12 @@
 <script>
     import { mapActions, mapState, mapGetters } from 'vuex'
     import Logo from '@/components/Logo'
-    import stages from '@/components/Stages'
 
     export default {
         name: 'pipeline-template-popup',
 
         components: {
-            Logo,
-            stages
+            Logo
         },
 
         props: {
@@ -194,7 +192,7 @@
                 'templateCategory'
             ]),
             ...mapGetters({
-                'tagGroupList': 'pipelines/getTagGroupList'
+                tagGroupList: 'pipelines/getTagGroupList'
             }),
 
             tplTypes () {
@@ -231,7 +229,7 @@
                         }
                     })
                 } else {
-                    Object.keys(pipelineTemplate || {}).map(item => {
+                    Object.keys(pipelineTemplate || {}).forEach(item => {
                         const curItem = pipelineTemplate[item] || {}
                         if ((type === 'custom' && ['PUBLIC', 'CUSTOMIZE'].includes(curItem.templateType)) || curItem.category.includes(type)) {
                             list.push({
@@ -265,13 +263,13 @@
         },
 
         watch: {
-            'pipelineTemplate': function (newVal, oldVal) {
+            pipelineTemplate: function (newVal, oldVal) {
                 if (newVal) {
                     this.isLoading = false
                     this.selectTemp(0)
                 }
             },
-            'isShow': function () {
+            isShow: function () {
                 if (this.isShow) {
                     this.isLoading = true
                     this.requestCategory()
@@ -624,7 +622,7 @@
                 > h2 {
                     font-size: 12px;
                     margin: 18px 0 10px 0;
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                     padding: 0 40px;
                 }
                 > ul {
@@ -825,7 +823,7 @@
                     }
                     .bk-selector-wrapper {
                         .bk-selector-input.placeholder, .bk-selector-icon{
-                            color: $fontLigtherColor;
+                            color: $fontLighterColor;
                         }
                         .bk-selector-input {
                             color: $fontWeightColor;

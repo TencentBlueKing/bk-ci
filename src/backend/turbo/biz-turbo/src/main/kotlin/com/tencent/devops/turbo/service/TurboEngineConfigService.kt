@@ -15,10 +15,10 @@ import com.tencent.devops.turbo.model.pojo.ParamConfigEntity
 import com.tencent.devops.turbo.model.pojo.ParamEnumEntity
 import com.tencent.devops.turbo.pojo.ParamConfigModel
 import com.tencent.devops.turbo.pojo.ParamEnumModel
+import com.tencent.devops.turbo.pojo.ParamEnumSimpleModel
 import com.tencent.devops.turbo.pojo.TurboDisplayFieldModel
 import com.tencent.devops.turbo.pojo.TurboEngineConfigModel
 import com.tencent.devops.turbo.pojo.TurboEngineConfigPriorityModel
-import com.tencent.devops.turbo.pojo.ParamEnumSimpleModel
 import com.tencent.devops.turbo.vo.TurboEngineConfigVO
 import org.quartz.CronScheduleBuilder
 import org.quartz.JobBuilder
@@ -34,7 +34,6 @@ import org.springframework.expression.Expression
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.expression.spel.support.StandardEvaluationContext
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
@@ -71,7 +70,6 @@ class TurboEngineConfigService @Autowired constructor(
     /**
      * 新增引擎配置信息
      */
-    @Transactional
     fun addNewEngineConfig(
         turboEngineConfigModel: TurboEngineConfigModel,
         user: String
@@ -619,7 +617,7 @@ class TurboEngineConfigService @Autowired constructor(
     /**
      * 添加worker version逻辑
      */
-    fun addWorkerVersion(engineCode: String, paramKey: String, paramEnum: ParamEnumModel) : Boolean {
+    fun addWorkerVersion(engineCode: String, paramKey: String, paramEnum: ParamEnumModel): Boolean {
         logger.info("add new worker version")
         val turboEngineConfigEntity = turboEngineConfigRepository.findByEngineCode(engineCode)
         if (null == turboEngineConfigEntity || turboEngineConfigEntity.id.isNullOrBlank()) {
@@ -714,12 +712,12 @@ class TurboEngineConfigService @Autowired constructor(
                         visualRange = visualRange
                     )
                 }
-            else it }
+            else it
+        }
         paramConfig.paramEnum = tempParamEnum
         turboEngineConfigRepository.save(turboEngineConfigEntity)
         return true
     }
-
 
     /**
      * spel表达式缓存方法

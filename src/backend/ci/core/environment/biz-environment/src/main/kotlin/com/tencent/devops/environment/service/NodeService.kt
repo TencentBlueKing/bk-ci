@@ -342,13 +342,6 @@ class NodeService @Autowired constructor(
             params = arrayOf(nodeHashId)
         )
         when (node.nodeType) {
-            NodeType.CC.name -> {
-                if (userId == node.operator || userId == node.bakOperator) {
-                    nodeDao.updateCreatedUser(dslContext = dslContext, nodeId = nodeId, userId = userId)
-                } else {
-                    throw ErrorCodeException(errorCode = ERROR_NODE_NO_EDIT_PERMISSSION)
-                }
-            }
             NodeType.CMDB.name -> {
                 val isOperator = userId == node.operator
                 val isBakOperator = node.bakOperator.split(";").contains(userId)

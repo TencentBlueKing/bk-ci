@@ -450,14 +450,14 @@ public class NewCCNDefectTracingComponent extends AbstractDefectTracingComponent
                 && (ccnDefectEntity.getStatus() & ComConstants.DefectStatus.FIXED.value()) == 0
                 && (PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, filterPaths)
                 || (CollectionUtils.isNotEmpty(pathList)
-                && !PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, pathList)))) {
+                && !PathUtils.checkIfMaskByPath(filePath, pathList)))) {
             ccnDefectEntity.setStatus(ccnDefectEntity.getStatus() | ComConstants.DefectStatus.PATH_MASK.value());
             ccnDefectEntity.setExcludeTime(curTime);
             return true;
         }
         // 如果已经是被路径屏蔽的，但是实质没有被路径屏蔽，则要把屏蔽状态去掉
         else if ((CollectionUtils.isEmpty(pathList)
-                || PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, pathList))
+                || PathUtils.checkIfMaskByPath(filePath, pathList))
                 && !PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, filterPaths)
                 && (ccnDefectEntity.getStatus() & ComConstants.DefectStatus.PATH_MASK.value()) > 0) {
             ccnDefectEntity.setStatus(ccnDefectEntity.getStatus() - ComConstants.DefectStatus.PATH_MASK.value());

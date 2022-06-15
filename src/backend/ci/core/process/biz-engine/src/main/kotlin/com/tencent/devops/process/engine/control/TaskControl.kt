@@ -36,21 +36,25 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.TaskAtomService
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.common.BS_TASK_HOST
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
-import com.tencent.devops.process.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 /**
  * 任务（最小单元Atom）控制器
@@ -74,6 +78,7 @@ class TaskControl @Autowired constructor(
     /**
      * 处理[event]插件任务执行逻辑入口
      */
+    @BkTimed
     fun handle(event: PipelineBuildAtomTaskEvent) {
         val watcher = Watcher(
             id = "ENGINE|TaskControl|${event.traceId}|${event.buildId}|Job#${event.containerId}|Task#${event.taskId}"
@@ -99,29 +104,14 @@ class TaskControl @Autowired constructor(
     @Suppress("LongMethod")
     private fun PipelineBuildAtomTaskEvent.execute() {
 
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
 
-        val buildTask = pipelineRuntimeService.getBuildTask(buildId, taskId)
+        val buildTask = pipelineTaskService.getBuildTask(projectId, buildId, taskId)
         // 检查构建状态,防止重复跑
         if (buildInfo?.status?.isFinish() == true || buildTask?.status?.isFinish() == true) {
             LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)" +
-                "|status=${buildTask?.status ?: "not exists"}")
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildContainerEvent(
-                    source = "from_t($taskId)",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    buildId = buildId,
-                    stageId = stageId,
-                    containerId = containerId,
-                    containerType = containerType,
-                    actionType = actionType,
-                    errorCode = errorCode,
-                    errorTypeName = errorTypeName,
-                    reason = reason
-                )
-            )
+                "|build=${buildInfo?.status}|task=${buildTask?.status ?: "not exists"}")
+            // #5109 移除构建已经结束的，失效的消息，比如质量红线的延迟消息
             return
         }
 
@@ -184,7 +174,7 @@ class TaskControl @Autowired constructor(
                 (actionType == ActionType.END && runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL)
             ) {
                 // #2400 因任务终止&结束的事件命令而未执行的原子设置为UNEXEC，而不是SKIP
-                pipelineRuntimeService.updateTaskStatus(
+                pipelineTaskService.updateTaskStatus(
                     task = buildTask, userId = userId, buildStatus = BuildStatus.UNEXEC
                 )
                 BuildStatus.UNEXEC // SKIP 仅当是用户意愿明确正常运行情况要跳过执行的，不影响主流程的才能是SKIP
@@ -225,10 +215,13 @@ class TaskControl @Autowired constructor(
      */
     private fun PipelineBuildAtomTaskEvent.finishTask(buildTask: PipelineBuildTask, buildStatus: BuildStatus) {
         if (buildStatus == BuildStatus.CANCELED) {
-            // 删除redis中取消构建标识
-            redisOperation.delete("${BuildStatus.CANCELED.name}_$buildId")
+            // 删除redis中取消构建操作标识
+            redisOperation.delete(BuildUtils.getCancelActionBuildKey(buildId))
             // 当task任务是取消状态时，把taskId存入redis供心跳接口获取
-            redisOperation.leftPush(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId), taskId)
+            val cancelTaskKey = TaskUtils.getCancelTaskIdRedisKey(buildId, containerId)
+            redisOperation.leftPush(cancelTaskKey, taskId)
+            // 为取消任务设置最大超时时间，防止构建异常产生的脏数据
+            redisOperation.expire(cancelTaskKey, TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS))
         }
         // 如果是取消的构建，则会统一取消子流水线的构建
         if (buildStatus.isPassiveStop() || buildStatus.isCancel()) {
@@ -236,9 +229,9 @@ class TaskControl @Autowired constructor(
         }
         if (buildStatus.isFailure() && !FastKillUtils.isTerminateCode(errorCode)) { // 失败的任务 并且不是需要终止的错误码
             // 如果配置了失败重试，且重试次数上线未达上限，则将状态设置为重试，让其进入
-            if (pipelineTaskService.isRetryWhenFail(taskId, buildId)) {
+            if (pipelineTaskService.isRetryWhenFail(buildTask.projectId, taskId, buildId)) {
                 LOG.info("ENGINE|$buildId|$source|ATOM_FIN|$stageId|j($containerId)|t($taskId)|RetryFail")
-                pipelineRuntimeService.updateTaskStatus(
+                pipelineTaskService.updateTaskStatus(
                     task = buildTask, userId = buildTask.starter, buildStatus = BuildStatus.RETRY
                 )
             } else {
@@ -263,7 +256,9 @@ class TaskControl @Autowired constructor(
         }
 
         if (errorTypeName != null && ErrorType.getErrorType(errorTypeName!!) != null) {
-            pipelineRuntimeService.setTaskErrorInfo(
+            pipelineTaskService.setTaskErrorInfo(
+                transactionContext = null,
+                projectId = projectId,
                 buildId = buildId,
                 taskId = taskId,
                 errorCode = errorCode,
@@ -281,6 +276,7 @@ class TaskControl @Autowired constructor(
                 buildId = buildId,
                 stageId = stageId,
                 containerId = containerId,
+                containerHashId = containerHashId,
                 containerType = containerType,
                 actionType = actionType,
                 errorCode = errorCode,
@@ -300,11 +296,11 @@ class TaskControl @Autowired constructor(
             return
         }
 
-        val subBuildInfo = pipelineRuntimeService.getBuildInfo(buildTask.subBuildId!!)
+        val subBuildInfo = pipelineRuntimeService.getBuildInfo(buildTask.subProjectId!!, buildTask.subBuildId!!)
 
         if (subBuildInfo?.status?.isFinish() == false) { // 子流水线状态为未构建结束的，开始下发退出命令
             try {
-                val tasks = pipelineRuntimeService.getRunningTask(subBuildInfo.buildId)
+                val tasks = pipelineTaskService.getRunningTask(subBuildInfo.projectId, subBuildInfo.buildId)
                 tasks.forEach { task ->
                     val taskId = task["taskId"] ?: ""
                     val containerId = task["containerId"] ?: ""

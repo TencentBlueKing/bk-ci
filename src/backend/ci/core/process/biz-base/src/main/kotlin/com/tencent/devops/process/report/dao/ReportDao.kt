@@ -47,7 +47,8 @@ class ReportDao {
         elementId: String,
         indexFile: String,
         name: String,
-        type: String
+        type: String,
+        id: Long? = null
     ): Long {
         val now = LocalDateTime.now()
         with(TReport.T_REPORT) {
@@ -61,7 +62,8 @@ class ReportDao {
                 NAME,
                 TYPE,
                 CREATE_TIME,
-                UPDATE_TIME
+                UPDATE_TIME,
+                ID
             ).values(
                 projectId,
                 pipelineId,
@@ -71,7 +73,8 @@ class ReportDao {
                 name,
                 type,
                 now,
-                now
+                now,
+                id
             )
                 .returning(ID)
                 .fetchOne()!!

@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.atom
 
+import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -35,7 +37,7 @@ import io.swagger.annotations.ApiModelProperty
 data class ManualReviewParam(
     @ApiModelProperty("参数名", required = true)
     var key: String = "",
-    @ApiModelProperty("参数内容", required = true)
+    @ApiModelProperty("参数内容(Any 类型)", required = true, dataType = "string")
     var value: Any? = "",
     @ApiModelProperty("参数类型", required = false)
     val valueType: ManualReviewParamType = ManualReviewParamType.STRING,
@@ -44,9 +46,11 @@ data class ManualReviewParam(
     @ApiModelProperty("参数描述", required = false)
     val desc: String? = "",
     @ApiModelProperty("下拉框列表")
-    val options: List<ManualReviewParamPair>? = null,
+    var options: List<ManualReviewParamPair>? = null,
     @ApiModelProperty("中文名称", required = false)
-    val chineseName: String? = null
+    val chineseName: String? = null,
+    @ApiModelProperty("变量形式的options")
+    val variableOption: String? = null
 ) {
     /**
      *  变量值处理，如果是已有值则直接使用，如果是变量引用则做替换
@@ -61,5 +65,15 @@ data class ManualReviewParam(
         } else {
             ObjectReplaceEnvVarUtil.replaceEnvVar(value, variables)
         }
+        options = if (!variableOption.isNullOrBlank()) {
+            EnvUtils.parseEnv(variableOption, variables).let {
+                val optionList = try {
+                    JsonUtil.to<List<Any>>(it)
+                } catch (e: Throwable) {
+                    emptyList()
+                }
+                optionList.map { item -> ManualReviewParamPair(item.toString(), item.toString()) }
+            }
+        } else options
     }
 }

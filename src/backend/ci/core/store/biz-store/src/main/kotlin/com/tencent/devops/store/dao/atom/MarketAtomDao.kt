@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.dao.atom
 
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
@@ -289,6 +290,7 @@ class MarketAtomDao : AtomBaseDao() {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(a.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
+        conditions.add(a.LATEST_FLAG.eq(true))
         conditions.add(b.USERNAME.eq(userId))
         conditions.add(b.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         if (null != atomName) {
@@ -323,8 +325,6 @@ class MarketAtomDao : AtomBaseDao() {
         val a = TAtom.T_ATOM.`as`("a")
         val b = TStoreMember.T_STORE_MEMBER.`as`("b")
         val d = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("d")
-        val t = dslContext.select(a.ATOM_CODE.`as`("atomCode"), DSL.max(a.CREATE_TIME).`as`("createTime"))
-            .from(a).groupBy(a.ATOM_CODE) // 查找每组atomCode最新的记录
         val conditions = generateGetMyAtomConditions(a, userId, b, atomName)
         val baseStep = dslContext.select(
             a.ID.`as`("atomId"),
@@ -341,9 +341,6 @@ class MarketAtomDao : AtomBaseDao() {
             a.UPDATE_TIME.`as`("updateTime")
         )
             .from(a)
-            .join(t)
-            .on(a.ATOM_CODE.eq(t.field("atomCode", String::class.java))
-                .and(a.CREATE_TIME.eq(t.field("createTime", LocalDateTime::class.java))))
             .join(b)
             .on(a.ATOM_CODE.eq(b.STORE_CODE))
             .leftJoin(d)
@@ -403,7 +400,7 @@ class MarketAtomDao : AtomBaseDao() {
                     "",
                     AtomTypeEnum.THIRD_PARTY.type.toByte(),
                     AtomStatusEnum.INIT.status.toByte(),
-                    "",
+                    INIT_VERSION,
                     false,
                     true,
                     repositoryHashId,
@@ -450,7 +447,6 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(CLASS_TYPE, classType)
                 .set(PROPS, props)
                 .set(LOGO_URL, marketAtomUpdateRequest.logoUrl)
-                .set(ICON, marketAtomUpdateRequest.iconData)
                 .set(HTML_TEMPLATE_VERSION, marketAtomUpdateRequest.frontendType.typeVersion)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
@@ -492,10 +488,10 @@ class MarketAtomDao : AtomBaseDao() {
                 DESCRIPTION,
                 CATEGROY,
                 VERSION,
-                ICON,
                 DEFAULT_FLAG,
                 LATEST_FLAG,
                 REPOSITORY_HASH_ID,
+                BRANCH,
                 CODE_SRC,
                 PAY_FLAG,
                 PROPS,
@@ -525,10 +521,10 @@ class MarketAtomDao : AtomBaseDao() {
                     atomRequest.description,
                     atomRequest.category.category.toByte(),
                     atomRequest.version,
-                    atomRequest.iconData,
                     atomRecord.defaultFlag,
                     false,
                     atomRecord.repositoryHashId,
+                    atomRequest.branch ?: atomRecord.branch,
                     atomRecord.codeSrc,
                     atomRecord.payFlag,
                     props,
@@ -584,6 +580,21 @@ class MarketAtomDao : AtomBaseDao() {
             } else {
                 baseStep.fetch()
             }
+        }
+    }
+
+    fun getAtomsByConditions(
+        dslContext: DSLContext,
+        atomCodeList: List<String>,
+        atomStatusList: List<Byte>? = null
+    ): Result<TAtomRecord>? {
+        return with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.`in`(atomCodeList))
+            if (atomStatusList != null) {
+                conditions.add(ATOM_STATUS.`in`(atomStatusList))
+            }
+            dslContext.selectFrom(this).where(conditions).orderBy(CREATE_TIME.desc()).fetch()
         }
     }
 
@@ -755,24 +766,34 @@ class MarketAtomDao : AtomBaseDao() {
         atomId: String,
         atomStatus: Byte,
         approveReq: ApproveReq,
-        latestFlag: Boolean,
+        latestFlag: Boolean? = null,
         pubTime: LocalDateTime? = null
     ) {
         with(TAtom.T_ATOM) {
-            dslContext.update(this)
+            val baseStep = dslContext.update(this)
                 .set(ATOM_STATUS, atomStatus)
                 .set(ATOM_STATUS_MSG, approveReq.message)
                 .set(ATOM_TYPE, approveReq.atomType.type.toByte())
                 .set(DEFAULT_FLAG, approveReq.defaultFlag)
-                .set(WEIGHT, approveReq.weight)
                 .set(BUILD_LESS_RUN_FLAG, approveReq.buildLessRunFlag)
                 .set(SERVICE_SCOPE, JsonUtil.getObjectMapper().writeValueAsString(approveReq.serviceScope))
-                .set(LATEST_FLAG, latestFlag)
-                .set(PUB_TIME, pubTime)
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(ID.eq(atomId))
-                .execute()
+            val weight = approveReq.weight
+            if (null != weight) {
+                baseStep.set(WEIGHT, weight)
+            }
+            val buildLessRunFlag = approveReq.buildLessRunFlag
+            if (null != buildLessRunFlag) {
+                baseStep.set(BUILD_LESS_RUN_FLAG, buildLessRunFlag)
+            }
+            if (null != latestFlag) {
+                baseStep.set(LATEST_FLAG, latestFlag)
+            }
+            if (null != pubTime) {
+                baseStep.set(PUB_TIME, pubTime)
+            }
+            baseStep.where(ID.eq(atomId)).execute()
         }
     }
 

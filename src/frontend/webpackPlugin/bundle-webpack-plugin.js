@@ -67,7 +67,7 @@ module.exports = class BundleWebpackPlugin {
                                 entryPointPublicPath
                             )
                             // Skip if the public path is not a .css, .mjs or .js file
-                            if (!extMatch) {
+                            if (!extMatch || /\.hot-update\.js$/.test(entryPointPublicPath)) {
                                 return
                             }
                             // Skip if this file is already known

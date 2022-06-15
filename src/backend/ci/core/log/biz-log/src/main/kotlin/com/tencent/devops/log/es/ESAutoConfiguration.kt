@@ -129,16 +129,16 @@ class ESAutoConfiguration : DisposableBean {
         }
 
         val httpPort = port ?: 9200
-        val indexShards = shards ?: 1                           // 索引总分片数
-        val indexReplicas = replicas ?: 1                       // 分片副本数
-        val indexShardsPerNode = shardsPerNode ?: 1             // 每个节点分片数
-        val socketTimeout = socketTimeout ?: 30000              // 等待连接响应超时
-        val tcpKeepAliveSeconds = 30000                         // 探活连接时长
-        val connectTimeOut = 1000                               // 请求连接超时
-        val connectionRequestTimeOut = 500                      // 获取连接的超时时间
-        val maxConnectNum = 10                                  // 最大连接数
-        val maxConnectPerRoute = 30                             // 最大路由连接数
-        val requestTimeout = if (socketTimeout > 0) {           // ES响应超时，取主动超时的一半
+        val indexShards = shards ?: 1 // 索引总分片数
+        val indexReplicas = replicas ?: 1 // 分片副本数
+        val indexShardsPerNode = shardsPerNode ?: 1 // 每个节点分片数
+        val socketTimeout = socketTimeout ?: 30000 // 等待连接响应超时
+        val tcpKeepAliveSeconds = 30000 // 探活连接时长
+        val connectTimeOut = 1000 // 请求连接超时
+        val connectionRequestTimeOut = 500 // 获取连接的超时时间
+        val maxConnectNum = 10 // 最大连接数
+        val maxConnectPerRoute = 30 // 最大路由连接数
+        val requestTimeout = if (socketTimeout > 0) { // ES响应超时，取主动超时的一半
             socketTimeout / 2
         } else {
             30000

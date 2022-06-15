@@ -30,6 +30,8 @@ package com.tencent.devops.worker.common.api.atom
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
+import com.tencent.devops.artifactory.constant.REALM_BK_REPO
+import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
@@ -48,6 +50,7 @@ import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_SOURCE
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_USER_ID
+import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import okhttp3.MediaType
 import okhttp3.MultipartBody
@@ -56,6 +59,8 @@ import java.io.File
 import java.net.URLEncoder
 
 class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
+
+    private val realm = ArtifactoryBuildResourceApi().getRealm()
 
     /**
      * 获取插件信息
@@ -198,9 +203,14 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         file: File,
         isVmBuildEnv: Boolean
     ) {
+        val filePath = when (realm) {
+            REALM_LOCAL -> "$BK_CI_ATOM_DIR/$atomFilePath"
+            REALM_BK_REPO -> "/bk-store/plugin/$atomFilePath"
+            else -> throw IllegalArgumentException("unknown artifactory realm")
+        }
         val path = "/ms/artifactory/api/build/artifactories/file/download?filePath=${
             URLEncoder.encode(
-                "$BK_CI_ATOM_DIR/$atomFilePath",
+                filePath,
                 "UTF-8"
             )
         }"
@@ -220,6 +230,20 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             "types/$buildHostType/oss/$buildHostOs"
         val request = buildGet(path)
         val responseContent = request(request, "获取插件开发语言相关的环境变量信息失败")
+        return objectMapper.readValue(responseContent)
+    }
+
+    override fun addAtomDockingPlatforms(
+        atomCode: String,
+        platformCodes: Set<String>
+    ): Result<Boolean> {
+        val path = "/ms/store/api/build/store/docking/platforms/types/ATOM/codes/$atomCode/add"
+        val body = RequestBody.create(
+            MediaType.parse("application/json; charset=utf-8"),
+            objectMapper.writeValueAsString(platformCodes)
+        )
+        val request = buildPost(path, body)
+        val responseContent = request(request, "添加插件对接平台信息失败")
         return objectMapper.readValue(responseContent)
     }
 }

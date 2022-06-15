@@ -6,47 +6,39 @@
                     <h3>{{ $t('editPage.chooseAtom') }}<i @click="freshAtomList(searchKey)" class="devops-icon icon-refresh atom-fresh" :class="fetchingAtomList ? &quot;spin-icon&quot; : &quot;&quot;" /></h3>
                     <bk-input class="atom-search-input" ref="searchStr" :clearable="true" :placeholder="$t('editPage.searchTips')" right-icon="icon-search" :value="searchKey" @input="handleClear" @enter="handleSearch"></bk-input>
                 </header>
-                <bk-tab v-bkloading="{ isLoading: fetchingAtomList }" class="atom-tab" size="small" ref="tab" :active.sync="classifyCode" type="unborder-card" v-if="!searchKey">
+                <bk-tab v-if="!searchKey" class="atom-tab" size="small" ref="tab" :active.sync="classifyCode" type="unborder-card">
                     <bk-tab-panel
+                        ref="atomListDom"
+                        v-bkloading="{ isLoading: fetchingAtomList }"
                         v-for="classify in classifyCodeList"
                         :key="classify"
                         :name="classify"
                         @scroll.native.passive="scrollLoadMore(classify, $event)"
-                        :label="atomTree[classify].classifyName"
+                        :label="atomClassifyMap[classify].classifyName"
                         render-directive="if"
                         :class="[{ [getClassifyCls(classify)]: true }, 'tab-section']"
                     >
-                        <atom-card v-for="atom in curTabList"
+                        <atom-card v-for="(atom) in curTabList"
                             :key="atom.atomCode"
-                            :disabled="atom.disabled"
                             :atom="atom"
                             :container="container"
                             :element-index="elementIndex"
                             :atom-code="atomCode"
                             :active-atom-code="activeAtomCode"
                             @close="close"
-                            @click.native="activeAtom(atom.atomCode)"
+                            @click="activeAtom(atom.atomCode)"
                             :class="{
                                 selected: atom.atomCode === atomCode,
                                 [getAtomClass(atom.atomCode)]: true
                             }"
                         ></atom-card>
-                        <unrecommend :show-unrecommend="curTabUncomList.length"
-                            :unrecommend-arr="curTabUncomList"
-                            @close="close"
-                            @choose="activeAtom"
-                            :atom-code="atomCode"
-                            :active-atom-code="activeAtomCode"
-                            :container="container"
-                            :element-index="elementIndex"
-                        ></unrecommend>
-                        <div class="empty-atom-list" v-if="atomTree[classify].children.length === 0">
+                        <div class="empty-atom-list" v-if="curTabList.length <= 0 && !fetchingAtomList">
                             <empty-tips type="no-result"></empty-tips>
                         </div>
                     </bk-tab-panel>
                 </bk-tab>
-                <section v-else class="search-result">
-                    <h3 v-if="!searchResultEmpty" class="search-title">{{ $t('newlist.installed') }}（{{installArr.length}}）</h3>
+                <section v-else class="search-result" ref="searchResult" v-bkloading="{ isLoading: fetchingAtomList }">
+                    <h3 v-if="installArr.length" class="search-title">{{ $t('newlist.installed') }}（{{installArr.length}}）</h3>
                     <atom-card v-for="atom in installArr"
                         :key="atom.atomCode"
                         :disabled="atom.disabled"
@@ -56,13 +48,13 @@
                         :atom-code="atomCode"
                         :active-atom-code="activeAtomCode"
                         @close="close"
-                        @click.native="activeAtom(atom.atomCode)"
+                        @click="activeAtom(atom.atomCode)"
                         :class="{
                             selected: atom.atomCode === atomCode
                         }"
                     ></atom-card>
 
-                    <h3 v-if="!searchResultEmpty" class="search-title gap-border">{{ $t('editPage.notInstall') }}（{{uninstallArr.length}}）</h3>
+                    <h3 v-if="uninstallArr.length" class="search-title gap-border">{{ $t('editPage.notInstall') }}（{{uninstallArr.length}}）</h3>
                     <atom-card v-for="atom in uninstallArr"
                         :key="atom.atomCode"
                         :disabled="atom.disabled"
@@ -72,21 +64,12 @@
                         :atom-code="atomCode"
                         :active-atom-code="activeAtomCode"
                         @close="close"
-                        @click.native="activeAtom(atom.atomCode)"
+                        @click="activeAtom(atom.atomCode)"
                         :class="{
                             selected: atom.atomCode === atomCode
                         }"
                     ></atom-card>
-                    <unrecommend :show-unrecommend="!searchResultEmpty"
-                        :unrecommend-arr="unRecommendArr"
-                        @close="close"
-                        @choose="activeAtom"
-                        :atom-code="atomCode"
-                        :active-atom-code="activeAtomCode"
-                        :container="container"
-                        :element-index="elementIndex"
-                    ></unrecommend>
-                    <div class="empty-atom-list" v-if="searchResultEmpty">
+                    <div class="empty-atom-list" v-if="curTabList.length <= 0 && !fetchingAtomList">
                         <empty-tips type="no-result"></empty-tips>
                     </div>
                 </section>
@@ -98,7 +81,6 @@
 <script>
     import { mapGetters, mapActions, mapState } from 'vuex'
     import atomCard from './atomCard'
-    import unrecommend from './unRecommend'
     import EmptyTips from '../common/empty'
 
     const RD_STORE_CODE = 'rdStore'
@@ -107,7 +89,6 @@
         name: 'atom-selector',
         components: {
             atomCard,
-            unrecommend,
             EmptyTips
         },
         props: {
@@ -119,8 +100,7 @@
                 type: Object,
                 default: () => ({})
             },
-            elementIndex: Number,
-            freshAtomList: Function
+            elementIndex: Number
         },
         data () {
             return {
@@ -128,27 +108,26 @@
                 classifyCode: 'all',
                 activeAtomCode: '',
                 curTabList: [],
-                curTabUncomList: []
+                installArr: [],
+                uninstallArr: [],
+                isThrottled: false
             }
         },
 
         computed: {
             ...mapGetters('atom', [
-                'getAtomTree',
-                'getAtomCodeListByCategory',
                 'classifyCodeListByCategory',
                 'isTriggerContainer'
             ]),
             ...mapState('atom', [
                 'fetchingAtomList',
                 'showAtomSelectorPopup',
-                'isPropertyPanelVisible',
                 'atomClassifyMap',
-                'atomCodeList',
-                'storeAtomData',
                 'atomClassifyCodeList',
                 'atomMap',
-                'atomModalMap'
+                'atomList',
+                'fetchingAtomMoreLoading',
+                'isAtomPageOver'
             ]),
 
             atomCode () {
@@ -167,11 +146,16 @@
                 return this.isTriggerContainer(this.container) ? 'TRIGGER' : 'TASK'
             },
 
-            atomTree () {
-                const { container, getAtomTree, getAtomFromStore, category, searchKey } = this
-                const atomTree = getAtomTree(container.baseOS, category, searchKey)
-                getAtomFromStore(atomTree)
-                return atomTree
+            baseOS () {
+                return this.container.baseOS
+            },
+
+            projectCode () {
+                return this.$route.params.projectId
+            },
+
+            classifyId () {
+                return this.atomClassifyMap[this.classifyCode] && this.atomClassifyMap[this.classifyCode].id
             },
 
             classifyCodeList () {
@@ -185,28 +169,6 @@
 
             firstClassify () {
                 return Array.isArray(this.classifyCodeList) ? this.classifyCodeList[0] : 'all'
-            },
-
-            installArr () {
-                const installed = this.atomTree.rdStore ? this.atomTree.rdStore.children : []
-                return installed.filter((item) => (item.hasInstalled && item.recommendFlag !== false))
-            },
-
-            uninstallArr () {
-                const storeList = this.atomTree.rdStore ? this.atomTree.rdStore.children : []
-                return storeList.filter((item) => (!item.hasInstalled && item.recommendFlag !== false))
-            },
-
-            unRecommendArr () {
-                const storeList = this.atomTree.rdStore ? this.atomTree.rdStore.children : []
-                return storeList.filter(item => item.recommendFlag === false)
-            },
-
-            searchResultEmpty () {
-                const all = this.installArr || []
-                const rdStore = this.uninstallArr || []
-                const unRecommend = this.unRecommendArr || []
-                return all.length <= 0 && rdStore.length <= 0 && unRecommend.length <= 0
             }
         },
 
@@ -217,7 +179,8 @@
                     if (visible) {
                         this.classifyCode = atomMap[atomCode] ? atomMap[atomCode].classifyCode : firstClassify
                         this.activeAtomCode = atomCode
-                        this.fetchAtoms({ projectCode: this.$route.params.projectId })
+                        this.fetchClassify()
+                        this.fetchAtomList()
                         setTimeout(() => {
                             this.$refs.searchStr.focus()
                         }, 0)
@@ -230,88 +193,61 @@
 
             classifyCode: {
                 handler (val) {
-                    const classifyObject = this.atomTree[val] || {}
-                    const children = classifyObject.children || []
-                    this.curTabList = children.filter(item => item.recommendFlag !== false)
-                    this.curTabUncomList = children.filter(item => item.recommendFlag === false)
-                },
-                immediate: true
+                    this.freshRequestAtomData()
+                    this.fetchAtomList()
+                }
             },
 
-            atomTree: {
+            atomList: {
                 handler (val) {
-                    const classifyObject = val[this.classifyCode] || {}
-                    const children = classifyObject.children || []
-                    this.curTabList = children.filter(item => item.recommendFlag !== false)
-                    this.curTabUncomList = children.filter(item => item.recommendFlag === false)
+                    this.curTabList = val
+                    if (this.searchKey) {
+                        this.uninstallArr = val.filter(item => (!item.defaultFlag && !item.installed && item.recommendFlag !== false))
+                        this.installArr = val.filter(item => (item.defaultFlag || (item.installed && item.recommendFlag !== false)))
+                    }
                 },
                 immediate: true
             }
         },
 
-        created () {
-            const pageIndex = this.storeAtomData.page || 1
-            if (pageIndex <= 1) this.addStoreAtom()
-        },
-
         methods: {
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
-                'addStoreAtom',
-                'clearStoreAtom',
-                'setStoreSearch',
-                'fetchAtoms'
+                'setRequestAtomData',
+                'fetchAtoms',
+                'fetchClassify',
+                'setAtomPageOver',
+                'clearAtomData'
             ]),
 
-            getAtomFromStore (atomTree) {
-                const storeList = (this.storeAtomData.data || []).filter((item) => {
-                    let res = true
-                    if (this.category === 'TRIGGER') res = item.category === 'TRIGGER'
-                    else res = item.category !== 'TRIGGER'
-                    return res
-                })
-                const allAtom = atomTree.all || {}
-                const allInstalledAtom = allAtom.children || []
-                const codes = []
-                allInstalledAtom.forEach((atom) => {
-                    const code = atom.atomCode
-                    codes.push(code)
-                    const index = storeList.findIndex(x => x.code === code)
-                    if (index < 0) {
-                        atom.code = code
-                        atom.rdType = atom.atomType
-                        storeList.push(atom)
-                    }
-                })
-
-                const baseOs = this.container.baseOS
-                const rdStoreList = storeList.map((store) => {
-                    store.atomCode = store.code
-                    store.atomType = store.rdType
-
-                    const os = store.os || []
-                    const isInOs = (!os.length && store.buildLessRunFlag) || (!os.length && !baseOs) || os.findIndex((x) => (x === baseOs)) > -1 || store.category === 'TRIGGER'
-
-                    store.disabled = !isInOs
-                    store.notShowSelect = true
-                    store.isInOs = isInOs
-
-                    const code = store.code
-                    const index = codes.findIndex((x) => (x === code))
-                    const hasInstalled = index > -1
-                    if (hasInstalled) codes.splice(index, 1)
-                    store.hasInstalled = hasInstalled
-
-                    if (isInOs) {
-                        store.notShowSelect = !hasInstalled && !store.publicFlag
-
-                        if (!store.flag) store.tips = this.$t('editPage.noPermToInstall')
-                        else store.tips = ''
-                    }
-
-                    return store
-                })
-                atomTree.rdStore = { children: rdStoreList, classifyCode: RD_STORE_CODE, classifyName: this.$t('store'), level: 0 }
+            /**
+             * 获取插件列表数据
+             */
+            fetchAtomList () {
+                if (!this.fetchingAtomMoreLoading && !this.isThrottled && !this.isAtomPageOver) {
+                    this.isThrottled = true
+                    this.timer = setTimeout(async () => {
+                        this.isThrottled = false
+                        const queryProjectAtomFlag = this.classifyCode !== 'rdStore' // 是否查询项目插件标识
+        
+                        let jobType // job类型 => 触发器插件无需传jobType
+                        if (this.category === 'TRIGGER') {
+                            jobType = undefined
+                        } else {
+                            jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(this.baseOS) ? 'AGENT' : 'AGENT_LESS'
+                        }
+                        
+                        await this.fetchAtoms({
+                            projectCode: this.projectCode,
+                            category: this.category,
+                            classifyId: this.classifyId,
+                            os: this.baseOS,
+                            jobType: jobType,
+                            searchKey: this.searchKey,
+                            queryProjectAtomFlag
+                        })
+                    }, 300)
+                }
             },
 
             getClassifyCls (classifyCode) {
@@ -326,10 +262,9 @@
             },
             handleSearch (value) {
                 this.searchKey = value.trim()
-                this.searching = true
-                this.clearStoreAtom()
-                this.setStoreSearch(this.searchKey)
-                this.addStoreAtom()
+                this.setAtomPageOver()
+                this.freshRequestAtomData()
+                this.fetchAtomList()
             },
 
             handleClear (str) {
@@ -338,27 +273,45 @@
                     this.activeAtomCode = this.atomCode
                 }
             },
-
+            freshRequestAtomData () {
+                this.setAtomPageOver()
+                this.setRequestAtomData({
+                    page: 1,
+                    pageSize: 50,
+                    recommendFlag: true,
+                    keyword: this.searchKey
+                })
+                this.clearAtomData()
+            },
             clearSearch () {
                 const input = this.$refs.searchStr || {}
                 input.curValue = ''
-                this.searching = false
                 this.searchKey = ''
-                this.clearStoreAtom()
-                this.setStoreSearch()
-                this.addStoreAtom()
+                this.setAtomPageOver()
+                this.freshRequestAtomData()
+                this.fetchAtomList()
             },
             close () {
                 this.toggleAtomSelectorPopup(false)
                 this.clearSearch()
             },
 
-            scrollLoadMore (classify, $event) {
-                if (classify !== RD_STORE_CODE) return
+            freshAtomList (searchKey) {
+                if (this.fetchingAtomList) return
+                if (this.searchKey) {
+                    this.$refs.searchResult.scrollTo(0, 0)
+                } else {
+                    const curDom = this.$refs.atomListDom.find(item => item.name === this.classifyCode)
+                    !this.searchKey && curDom.$el.scrollTo(0, 0)
+                }
+                this.freshRequestAtomData()
+                this.fetchAtomList()
+            },
 
+            scrollLoadMore (classify, $event) {
                 const target = event.target
                 const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
-                if (bottomDis <= 400) this.addStoreAtom()
+                if (bottomDis <= 600) this.fetchAtomList()
             }
         }
     }
@@ -410,7 +363,7 @@
                 margin-left: 3px;
                 color: $primaryColor;
                 &.spin-icon {
-                    color: $fontLigtherColor
+                    color: $fontLighterColor
                 }
             }
             > h3 {
@@ -491,7 +444,7 @@
             &.disabled {
                 .atom-info-content,
                 .atom-info-content .desc {
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                 }
             }
             .atom-logo {
@@ -500,7 +453,7 @@
                 font-size: 50px;
                 line-height: 50px;
                 margin-right: 15px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 .devops-icon {
                     fill: currentColor
                 }
@@ -524,7 +477,7 @@
                     .allow-os-list {
                         margin-left: 10px;
                         .os-tag {
-                            color: $fontLigtherColor;
+                            color: $fontLighterColor;
                             font-size: 14px;
                             padding-right: 4px;
                             vertical-align: top;

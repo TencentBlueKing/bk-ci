@@ -212,8 +212,8 @@
             },
 
             handleFormat (codes) {
-                let tips = ``
-                codes.map(item => {
+                let tips = ''
+                codes.forEach(item => {
                     tips += `${item}\n`
                 })
 
@@ -234,7 +234,7 @@
                 if (!this.canCreatePP) return
                 this.$router.push({
                     name: 'templateInstance',
-                    params: { 'templateId': row.templateId }
+                    params: { templateId: row.templateId }
                 })
             },
 
@@ -243,7 +243,7 @@
 
                 this.$router.push({
                     name: 'templateEdit',
-                    params: { 'templateId': row.templateId }
+                    params: { templateId: row.templateId }
                 })
             },
 

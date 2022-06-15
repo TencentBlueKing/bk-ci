@@ -18,7 +18,7 @@ BEGIN
                     AND TABLE_NAME = 'T_REPOSITORY_GITHUB'
                     AND COLUMN_NAME = 'CREDENTIAL_ID') THEN
         ALTER TABLE T_REPOSITORY_GITHUB
-            ADD COLUMN `CREDENTIAL_ID` varchar(128) NULL AFTER REPOSITORY_ID;
+            ADD COLUMN `CREDENTIAL_ID` varchar(128) NULL COMMENT '凭据ID' AFTER REPOSITORY_ID;
     ELSEIF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
@@ -64,12 +64,12 @@ CALL ci_repository_schema_update();
 
 CREATE TABLE IF NOT EXISTS `T_REPOSITORY_GIT_TOKEN`
 (
-    `ID`            bigint(20) NOT NULL AUTO_INCREMENT,
-    `USER_ID`       varchar(64) DEFAULT NULL,
-    `ACCESS_TOKEN`  varchar(96) DEFAULT NULL,
-    `REFRESH_TOKEN` varchar(96) DEFAULT NULL,
-    `TOKEN_TYPE`    varchar(64) DEFAULT NULL,
-    `EXPIRES_IN`    bigint(20)  DEFAULT NULL,
+    `ID`            bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `USER_ID`       varchar(64) DEFAULT NULL COMMENT '用户ID',
+    `ACCESS_TOKEN`  varchar(96) DEFAULT NULL COMMENT '权限Token',
+    `REFRESH_TOKEN` varchar(96) DEFAULT NULL COMMENT '刷新token',
+    `TOKEN_TYPE`    varchar(64) DEFAULT NULL COMMENT 'token类型',
+    `EXPIRES_IN`    bigint(20)  DEFAULT NULL COMMENT '过期时间',
     PRIMARY KEY (`ID`),
     UNIQUE KEY `USER_ID` (`USER_ID`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT='';

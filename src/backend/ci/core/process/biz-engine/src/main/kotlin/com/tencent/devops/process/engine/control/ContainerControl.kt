@@ -33,6 +33,7 @@ import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
@@ -40,15 +41,20 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCmdC
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
 import com.tencent.devops.process.engine.control.command.container.impl.CheckConditionalSkipContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.CheckDependOnContainerCmd
+import com.tencent.devops.process.engine.control.command.container.impl.CheckDispatchQueueContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.CheckMutexContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.CheckPauseContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.ContainerCmdLoop
+import com.tencent.devops.process.engine.control.command.container.impl.InitializeMatrixGroupStageCmd
+import com.tencent.devops.process.engine.control.command.container.impl.MatrixExecuteContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.StartActionTaskContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.UpdateStateContainerCmdFinally
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineStageService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,7 +67,9 @@ import org.springframework.stereotype.Service
 @Service
 class ContainerControl @Autowired constructor(
     private val redisOperation: RedisOperation,
-    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineStageService: PipelineStageService,
+    private val pipelineContainerService: PipelineContainerService,
+    private val pipelineTaskService: PipelineTaskService,
     private val buildVariableService: BuildVariableService,
     private val mutexControl: MutexControl
 ) {
@@ -80,6 +88,7 @@ class ContainerControl @Autowired constructor(
             }
         )
 
+    @BkTimed
     fun handle(event: PipelineBuildContainerEvent) {
         val watcher = Watcher(id = "ENGINE|ContainerControl|${event.traceId}|${event.buildId}|Job#${event.containerId}")
         with(event) {
@@ -88,7 +97,19 @@ class ContainerControl @Autowired constructor(
                 containerIdLock.lock()
                 watcher.start("execute")
                 watcher.start("getContainer")
-                val container = pipelineRuntimeService.getContainer(buildId, stageId, containerId) ?: run {
+                val projectId = event.projectId
+                // #5951 在已结束或不存在的stage下，不再受理，抛弃消息
+                val stage = pipelineStageService.getStage(projectId, buildId, stageId)
+                if (stage == null || stage.status.isFinish()) {
+                    LOG.warn("ENGINE|$buildId|$source|$stageId|j($containerId)|bad stage with status(${stage?.status})")
+                    return
+                }
+                val container = pipelineContainerService.getContainer(
+                    projectId = projectId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerId = containerId
+                ) ?: run {
                     LOG.warn("ENGINE|$buildId|$source|$stageId|j($containerId)|bad container")
                     return
                 }
@@ -111,7 +132,7 @@ class ContainerControl @Autowired constructor(
     private fun PipelineBuildContainer.execute(watcher: Watcher, event: PipelineBuildContainerEvent) {
 
         watcher.start("init_context")
-        val variables = buildVariableService.getAllVariable(buildId)
+        val variables = buildVariableService.getAllVariable(projectId, buildId)
         val mutexGroup = mutexControl.decorateMutexGroup(controlOption?.mutexGroup, variables)
 
         // 当build的状态是结束的时候，直接返回
@@ -122,7 +143,8 @@ class ContainerControl @Autowired constructor(
                 buildId = buildId,
                 stageId = stageId,
                 containerId = containerId,
-                mutexGroup = controlOption?.mutexGroup
+                mutexGroup = controlOption?.mutexGroup,
+                executeCount = executeCount
             )
             return
         }
@@ -132,12 +154,20 @@ class ContainerControl @Autowired constructor(
         }
 
         // 已按任务序号递增排序，如未排序要注意
-        val containerTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, containerId)
-        val executeCount = buildVariableService.getBuildExecuteCount(buildId)
+        val containerTasks = pipelineTaskService.listContainerBuildTasks(projectId, buildId, containerId)
+        val executeCount = buildVariableService.getBuildExecuteCount(projectId, buildId)
+        val stageMatrixCount = pipelineContainerService.countStageContainers(
+            transactionContext = null,
+            projectId = projectId,
+            buildId = buildId,
+            stageId = stageId,
+            onlyMatrixGroup = true
+        )
 
         val context = ContainerContext(
-            buildStatus = this.status, // 初始状态为容器状态，中间流转会切换状态，并最张赋值给容器状态
+            buildStatus = this.status, // 初始状态为容器状态，中间流转会切换状态，并最终赋值给该容器状态
             mutexGroup = mutexGroup,
+            stageMatrixCount = stageMatrixCount,
             event = event,
             container = this,
             latestSummary = event.reason ?: "init",
@@ -153,6 +183,9 @@ class ContainerControl @Autowired constructor(
             commandCache.get(CheckConditionalSkipContainerCmd::class.java), // 检查条件跳过处理
             commandCache.get(CheckPauseContainerCmd::class.java), // 检查暂停处理
             commandCache.get(CheckMutexContainerCmd::class.java), // 检查Job互斥组处理
+            commandCache.get(CheckDispatchQueueContainerCmd::class.java), // 检查流水线全局Job并发队列
+            commandCache.get(InitializeMatrixGroupStageCmd::class.java), // 执行matrix运算生成所有Container数据
+            commandCache.get(MatrixExecuteContainerCmd::class.java), // 循环进行矩阵执行和状态刷新
             commandCache.get(StartActionTaskContainerCmd::class.java), // 检查启动事件消息
             commandCache.get(ContainerCmdLoop::class.java), // 发送本事件的循环消息
             commandCache.get(UpdateStateContainerCmdFinally::class.java) // 更新Job状态并可能返回Stage处理

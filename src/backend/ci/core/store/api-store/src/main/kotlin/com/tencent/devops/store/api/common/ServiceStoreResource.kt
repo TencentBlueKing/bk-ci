@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.api.common
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
@@ -38,7 +37,6 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -106,23 +104,5 @@ interface ServiceStoreResource {
         @ApiParam("用户ID", required = true)
         @QueryParam("userId")
         userId: String
-    ): Result<Boolean>
-
-    @GET
-    @Path("/projects/{projectCode}/types/{storeType}/codes/{storeCode}/permission/validate")
-    @ApiOperation("校验项目是否有使用该组件的权限")
-    fun validateProjectAtomPermission(
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @ApiParam("认证token", required = true)
-        token: String,
-        @PathParam("projectCode")
-        @ApiParam("项目编码", required = true)
-        projectCode: String,
-        @ApiParam("标识", required = true)
-        @PathParam("storeCode")
-        storeCode: String,
-        @ApiParam("类型", required = true)
-        @PathParam("storeType")
-        storeType: StoreTypeEnum
     ): Result<Boolean>
 }

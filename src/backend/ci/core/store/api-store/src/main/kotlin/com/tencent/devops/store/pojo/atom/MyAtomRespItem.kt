@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -64,5 +65,7 @@ data class MyAtomRespItem(
     @ApiModelProperty("创建时间", required = true)
     val createTime: String,
     @ApiModelProperty("创建时间", required = true)
-    val updateTime: String
+    val updateTime: String,
+    @ApiModelProperty("处于流程中的插件版本信息", required = false)
+    val processingVersionInfos: List<AtomBaseInfo>? = null
 )

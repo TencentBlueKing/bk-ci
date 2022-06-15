@@ -40,7 +40,7 @@
         },
 
         computed: {
-            ...mapGetters('store', { 'commentList': 'getCommentList' })
+            ...mapGetters('store', { commentList: 'getCommentList' })
         },
 
         watch: {

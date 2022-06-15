@@ -38,6 +38,7 @@ import com.tencent.devops.common.client.ms.MicroServiceTarget
 import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import feign.Contract
 import feign.Feign
 import feign.MethodMetadata
 import feign.Request
@@ -48,6 +49,7 @@ import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import feign.jaxrs.JAXRSContract
 import feign.okhttp.OkHttpClient
+import feign.spring.SpringContract
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -137,6 +139,7 @@ class Client @Autowired constructor(
 
     private val feignClient = OkHttpClient(okHttpClient)
     private val clientContract = ClientContract()
+    private val springContract = SpringContract()
     private val jacksonDecoder = JacksonDecoder(objectMapper)
     private val jacksonEncoder = JacksonEncoder(objectMapper)
 
@@ -159,6 +162,19 @@ class Client @Autowired constructor(
             beanCaches.get(clz) as T
         } catch (ignored: Throwable) {
             getImpl(clz)
+        }
+    }
+
+    fun <T : Any> getSpringMvc(clz: KClass<T>): T {
+        return get(clz, "", springContract)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> get(clz: KClass<T>, suffix: String, contract: Contract = clientContract): T {
+        return try {
+            beanCaches.get(clz) as T
+        } catch (ignored: Throwable) {
+            getImpl(clz, contract)
         }
     }
 
@@ -240,7 +256,10 @@ class Client @Autowired constructor(
             .target(clz.java, buildGatewayUrl(path = "/$serviceName/api", gatewayType = GatewayType.IDC_PROXY))
     }
 
-    fun <T : Any> getImpl(clz: KClass<T>): T {
+    /**
+     * 支持对spring MVC注解的解析
+     */
+    fun <T : Any> getImpl(clz: KClass<T>, contract: Contract = clientContract): T {
         try {
             return SpringContextUtil.getBean(clz.java)
         } catch (ignored: Exception) {
@@ -252,7 +271,7 @@ class Client @Autowired constructor(
             .errorDecoder(clientErrorDecoder)
             .encoder(jacksonEncoder)
             .decoder(jacksonDecoder)
-            .contract(clientContract)
+            .contract(contract)
             .requestInterceptor(requestInterceptor)
             .target(MicroServiceTarget(findServiceName(clz), clz.java, consulClient!!, tag))
     }

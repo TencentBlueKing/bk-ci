@@ -115,14 +115,14 @@
                     this.parameters = values.map((value) => {
                         const modelId = value.id
                         const originModel = this.parameters.find(x => x.id === modelId)
-                        if (!originModel) return
+                        if (!originModel) return undefined
                         const currentModel = JSON.parse(JSON.stringify(originModel))
                         const paramModels = currentModel.paramModels
                         const values = value.values
                         paramModels.forEach((model) => {
-                            const currentValue = values.find(x => x.id === model.id)
+                            const currentValue = values.find(x => x.id === model.id) || {}
                             if (Array.isArray(currentValue.value)) currentValue.value = currentValue.value.filter(v => v !== '')
-                            model.value = currentValue.value
+                            model.value = currentValue.value === undefined ? '' : currentValue.value
                         })
                         return currentModel
                     })

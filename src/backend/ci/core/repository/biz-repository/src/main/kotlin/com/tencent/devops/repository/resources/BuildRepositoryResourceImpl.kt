@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.BuildRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
@@ -38,17 +39,14 @@ import com.tencent.devops.repository.service.RepositoryService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-@Suppress("ALL")
+@Suppress("LongParameterList")
 class BuildRepositoryResourceImpl @Autowired constructor(
     private val repositoryService: RepositoryService
 ) : BuildRepositoryResource {
 
-    override fun get(buildId: String, vmSeqId: String, vmName: String, repositoryHashId: String): Result<Repository> {
-        checkParam(buildId, vmSeqId, vmName, repositoryHashId)
-        return Result(repositoryService.buildGet(buildId, buildConfig(repositoryHashId, null)))
-    }
-
+    @BkTimed(extraTags = ["operate", "get"])
     override fun getByType(
+        projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String,
@@ -56,27 +54,16 @@ class BuildRepositoryResourceImpl @Autowired constructor(
         repositoryType: RepositoryType?
     ): Result<Repository> {
         checkParam(buildId, vmSeqId, vmName, repositoryId)
-        return Result(repositoryService.buildGet(buildId, buildConfig(repositoryId, repositoryType)))
-    }
-
-    override fun getV2(buildId: String, vmSeqId: String, vmName: String, repositoryHashId: String): Result<Repository> {
-        checkParam(buildId, vmSeqId, vmName, repositoryHashId)
-        return Result(repositoryService.buildGet(buildId, buildConfig(repositoryHashId, null)))
+        return Result(repositoryService.serviceGet(projectId, buildConfig(repositoryId, repositoryType)))
     }
 
     private fun checkParam(buildId: String, vmSeqId: String, vmName: String, repositoryId: String) {
-        val message = when {
+        when {
             buildId.isBlank() -> "Invalid buildId"
             vmSeqId.isBlank() -> "Invalid vmSeqId"
             vmName.isBlank() -> "Invalid vmName"
             repositoryId.isBlank() -> "Invalid repositoryId"
             else -> null
-        }
-
-        if (message.isNullOrBlank()) {
-            return
-        }
-
-        throw ParamBlankException(message!!)
+        }?.let { message -> throw ParamBlankException(message) }
     }
 }

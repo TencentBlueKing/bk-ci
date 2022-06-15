@@ -31,26 +31,63 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
+import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
+import org.jooq.DSLContext
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Service
-class PipelineStatusService(private val pipelineRuntimeService: PipelineRuntimeService) {
+class PipelineStatusService(
+    private val dslContext: DSLContext,
+    private val pipelineInfoDao: PipelineInfoDao,
+    private val pipelineSettingDao: PipelineSettingDao,
+    private val pipelineRuntimeService: PipelineRuntimeService
+) {
 
     // 获取单条流水线的运行状态
     fun getPipelineStatus(projectId: String, pipelineId: String): PipelineStatus? {
-        val pipelineInfo = pipelineRuntimeService.getBuildSummaryRecords(
-            projectId = projectId, channelCode = ChannelCode.BS, pipelineIds = setOf(pipelineId)
-        ).firstOrNull() ?: return null
-        val buildStatusOrd = pipelineInfo["LATEST_STATUS"] as Int?
-        val finishCount = pipelineInfo["FINISH_COUNT"] as Int? ?: 0
-        val runningCount = pipelineInfo["RUNNING_COUNT"] as Int? ?: 0
+        val pipelineInfo = pipelineInfoDao.getPipelineInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = ChannelCode.BS,
+            pipelineId = pipelineId
+        ) ?: return null
+        val pipelineSetting = pipelineSettingDao.getSetting(dslContext, projectId, pipelineId) ?: return null
+        val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId) ?: return null
+        val buildStatusOrd = pipelineBuildSummary.latestStatus
+        val finishCount = pipelineBuildSummary.finishCount ?: 0
+        val runningCount = pipelineBuildSummary.runningCount ?: 0
 
-        val pipelineBuildStatus = if (buildStatusOrd != null) {
+        val pipelineBuildStatus = getBuildStatus(buildStatusOrd)
+
+        // todo还没想好与Pipeline结合，减少这部分的代码，收归一处
+        return PipelineStatus(
+            taskCount = pipelineInfo.taskCount,
+            buildCount = (finishCount + runningCount).toLong(),
+            canManualStartup = pipelineInfo.manualStartup == 1,
+            currentTimestamp = System.currentTimeMillis(),
+            hasCollect = false, // 无关紧要参数
+            latestBuildEndTime = (pipelineBuildSummary.latestEndTime)?.timestampmilli() ?: 0,
+            latestBuildEstimatedExecutionSeconds = 1L,
+            latestBuildId = pipelineBuildSummary.latestBuildId,
+            latestBuildNum = pipelineBuildSummary.buildNum,
+            latestBuildStartTime = (pipelineBuildSummary.latestStartTime)?.timestampmilli() ?: 0,
+            latestBuildStatus = pipelineBuildStatus,
+            latestBuildTaskName = pipelineBuildSummary.latestTaskName,
+            lock = PipelineRunLockType.checkLock(pipelineSetting.runLockType),
+            runningBuildCount = pipelineBuildSummary.runningCount ?: 0
+        )
+    }
+
+    /**
+     * 获取构建状态
+     */
+    fun getBuildStatus(buildStatusOrd: Int?): BuildStatus? {
+        return if (buildStatusOrd != null) {
             val tmpStatus = BuildStatus.values()[buildStatusOrd.coerceAtMost(BuildStatus.values().size - 1)]
             if (tmpStatus.isFinish()) {
                 BuildStatusSwitcher.pipelineStatusMaker.finish(tmpStatus)
@@ -60,23 +97,5 @@ class PipelineStatusService(private val pipelineRuntimeService: PipelineRuntimeS
         } else {
             null
         }
-
-        // todo还没想好与Pipeline结合，减少这部分的代码，收归一处
-        return PipelineStatus(
-            taskCount = pipelineInfo["TASK_COUNT"] as Int,
-            buildCount = (finishCount + runningCount).toLong(),
-            canManualStartup = pipelineInfo["MANUAL_STARTUP"] as Int == 1,
-            currentTimestamp = System.currentTimeMillis(),
-            hasCollect = false, // 无关紧要参数
-            latestBuildEndTime = (pipelineInfo["LATEST_END_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
-            latestBuildEstimatedExecutionSeconds = 1L,
-            latestBuildId = pipelineInfo["LATEST_BUILD_ID"] as String,
-            latestBuildNum = pipelineInfo["BUILD_NUM"] as Int,
-            latestBuildStartTime = (pipelineInfo["LATEST_START_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
-            latestBuildStatus = pipelineBuildStatus,
-            latestBuildTaskName = pipelineInfo["LATEST_TASK_NAME"] as String?,
-            lock = PipelineRunLockType.checkLock(pipelineInfo["RUN_LOCK_TYPE"] as Int?),
-            runningBuildCount = pipelineInfo["RUNNING_COUNT"] as Int? ?: 0
-        )
     }
 }

@@ -28,7 +28,9 @@
 package com.tencent.devops.store.service.atom
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.MarketAtomClassify
+import com.tencent.devops.store.pojo.common.Classify
 
 /**
  * 插件市场-插件分类业务逻辑类
@@ -41,4 +43,11 @@ interface MarketAtomClassifyService {
      * 获取所有插件分类信息
      */
     fun getAllAtomClassify(): Result<List<MarketAtomClassify>>
+
+    /**
+     * 获取插件分类信息
+     * @param atomCode 插件标识
+     * @return 插件分类信息
+     */
+    fun getAtomClassifyInfo(atomCode: String): Result<AtomClassifyInfo?>
 }

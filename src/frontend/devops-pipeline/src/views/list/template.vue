@@ -87,7 +87,7 @@
                     name: '',
                     desc: '',
                     labels: [],
-                    stages: [{ 'containers': [{ '@type': 'trigger', 'name': this.$t('buildTrigger'), 'elements': [{ '@type': 'manualTrigger', 'name': this.$t('manualTrigger'), 'id': 'T-1-1-1', 'canElementSkip': true, 'useLatestParameters': false, 'executeCount': 1, 'canRetry': false, 'classType': 'manualTrigger', 'taskAtom': '' }], 'params': [], 'canRetry': false, 'classType': 'trigger' }], 'id': 'stage-1' }]
+                    stages: [{ containers: [{ '@type': 'trigger', name: this.$t('buildTrigger'), elements: [{ '@type': 'manualTrigger', name: this.$t('manualTrigger'), id: 'T-1-1-1', canElementSkip: true, useLatestParameters: false, executeCount: 1, canRetry: false, classType: 'manualTrigger', taskAtom: '' }], params: [], canRetry: false, classType: 'trigger' }], id: 'stage-1' }]
                 }
             }
         },
@@ -146,7 +146,7 @@
                         })
                         this.$router.push({
                             name: 'templateEdit',
-                            params: { 'templateId': res.id }
+                            params: { templateId: res.id }
                         })
                     } catch (err) {
                         this.$showTips({

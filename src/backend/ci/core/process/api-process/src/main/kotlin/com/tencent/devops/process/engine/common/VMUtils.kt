@@ -40,7 +40,11 @@ object VMUtils {
 
     fun genEndPointTaskId(seq: Int) = "${getEndLabel()}$seq"
 
-    fun genVMSeq(containerSeq: Int, taskSeq: Int): Int = containerSeq * 1000 + taskSeq
+    fun genVMTaskSeq(containerSeq: Int, taskSeq: Int): Int = containerSeq * 1000 + taskSeq
+
+    fun genMatrixContainerSeq(matrixGroupId: Int, innerIndex: Int): Int = matrixGroupId * 1000 + innerIndex
+
+    fun genMatrixJobId(groupJobId: String, innerSeq: Int) = "$groupJobId.$innerSeq"
 
     fun genStartVMTaskId(containerSeq: String) = "${getStartVmLabel()}$containerSeq"
 

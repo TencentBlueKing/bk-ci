@@ -15,7 +15,7 @@ server:
 # fileTask为文件托管任务配置，主要用于作品平台构件分发插件，
 # 可配置文件暂存目录、临时文件过期时间、数据库记录清理策略
 artifactory:
-  realm: local  # 如果使用蓝鲸制品库，则该值要修改为 bkrepo
+  realm: __BK_CI_ARTIFACTORY_REALM__  # 如果使用蓝鲸制品库，则该值要修改为 bkrepo
   archiveLocalBasePath: __BK_CI_DATA_DIR__/artifactory  # 如果多节点部署, 需要使用共享存储.
   fileTask:
     savedir: __BK_CI_DATA_DIR__/artifactory-filetask/  # 不一定共享, 但是建议准备较大容量.
@@ -26,6 +26,6 @@ artifactory:
         enable: false
         expireTimeDays: 7
 #  当realm=bkrepo时，需要部署好bkrepo服务，并且将以下配置打开
-#  bkrepo:
-#    baseUrl:  __BK_REPO_API_URL__               # bkrepo的地址
-#    authorization: __BK_REPO_AUTHORIZATION__    # 访问bkrepo鉴权信息，例如Token串
+  bkrepo:
+   baseUrl:  __BK_REPO_API_URL__               # bkrepo的地址
+   authorization: __BK_REPO_AUTHORIZATION__    # 访问bkrepo鉴权信息，例如Token串

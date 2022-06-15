@@ -9,15 +9,28 @@
             <span @click="currentTab = 'setting'" :class="{ active: currentTab === 'setting' }">{{ $t('execDetail.setting') }}</span>
         </span>
         <template v-slot:content>
-            <job-log v-show="currentTab === 'log'"
+            
+            <plugin-log :id="currentJob.containerHashId"
+                :build-id="execDetail.id"
+                :current-tab="currentTab"
+                :execute-count="currentJob.executeCount"
+                type="containerLog"
+                ref="jobLog"
+                v-show="currentTab === 'log'"
+                v-if="currentJob.matrixGroupFlag"
+            />
+            <job-log
+                v-else
+                v-show="currentTab === 'log'"
                 :plugin-list="pluginList"
                 :build-id="execDetail.id"
                 :down-load-link="downLoadJobLink"
                 :execute-count="executeCount"
                 ref="jobLog"
             />
-            <container-content v-show="currentTab === 'setting'"
+            <container-content v-if="currentTab === 'setting'"
                 :container-index="editingElementPos.containerIndex"
+                :container-group-index="editingElementPos.containerGroupIndex"
                 :stage-index="editingElementPos.stageIndex"
                 :stages="execDetail.model.stages"
                 :editable="false"
@@ -27,8 +40,8 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
     import jobLog from './log/jobLog'
+    import pluginLog from './log/pluginLog'
     import detailContainer from './detailContainer'
     import ContainerContent from '@/components/ContainerPropertyPanel/ContainerContent'
 
@@ -36,9 +49,19 @@
         components: {
             detailContainer,
             jobLog,
+            pluginLog,
             ContainerContent
         },
-
+        props: {
+            execDetail: {
+                type: Object,
+                required: true
+            },
+            editingElementPos: {
+                type: Object,
+                required: true
+            }
+        },
         data () {
             return {
                 showTime: false,
@@ -48,10 +71,6 @@
         },
 
         computed: {
-            ...mapState('atom', [
-                'execDetail',
-                'editingElementPos'
-            ]),
 
             downLoadJobLink () {
                 const editingElementPos = this.editingElementPos
@@ -65,7 +84,16 @@
                 const model = execDetail.model || {}
                 const stages = model.stages || []
                 const currentStage = stages[editingElementPos.stageIndex] || []
-                return currentStage.containers[editingElementPos.containerIndex]
+                
+                try {
+                    if (editingElementPos.containerGroupIndex === undefined) {
+                        return currentStage.containers[editingElementPos.containerIndex]
+                    } else {
+                        return currentStage.containers[editingElementPos.containerIndex].groupContainers[editingElementPos.containerGroupIndex]
+                    }
+                } catch (_) {
+                    return {}
+                }
             },
 
             pluginList () {
@@ -82,7 +110,7 @@
 </script>
 
 <style lang="scss" scoped>
-    /deep/ .container-property-panel {
+    ::v-deep .container-property-panel {
         padding: 10px 50px;
         overflow: auto;
         .bk-form-item.is-required .bk-label, .bk-form-inline-item.is-required .bk-label {

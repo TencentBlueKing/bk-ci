@@ -36,6 +36,7 @@ import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -151,6 +152,25 @@ interface ServiceProjectResource {
         accessToken: String? = null
     ): Result<Boolean>
 
+    @POST
+    @Path("/create/ext/system")
+    @ApiOperation("创建扩展系统项目")
+    fun createExtSystem(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目信息")
+        projectInfo: ProjectCreateInfo,
+        @QueryParam("needAuth")
+        @ApiParam("是否需要权限")
+        needAuth: Boolean,
+        @QueryParam("needAuth")
+        @ApiParam("是否需要校验")
+        needValidate: Boolean,
+        @QueryParam("projectChanel")
+        channel: ProjectChannelCode
+    ): Result<ProjectVO?>
+
     @PUT
     @Path("/{projectId}")
     @ApiOperation("修改项目")
@@ -167,6 +187,31 @@ interface ServiceProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String? = null
     ): Result<Boolean>
+
+    @PUT
+    @Path("/{projectCode}/projectName")
+    fun updateProjectName(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目Code", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String
+    ): Result<Boolean>
+
+    @GET
+    @Path("projectNames/{projectName}")
+    fun getProjectByName(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("projectName", required = true)
+        @PathParam("projectName")
+        projectName: String
+    ): Result<ProjectVO?>
 
     @PUT
     @Path("/{validateType}/names/validate")

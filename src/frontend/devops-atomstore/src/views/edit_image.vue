@@ -265,7 +265,7 @@
                     category: '',
                     agentTypeScope: []
                 },
-                docsLink: `${DOCS_URL_PREFIX}/store/ci-images/image-build`,
+                docsLink: `${DOCS_URL_PREFIX}/Services/Store/docker-build.md`,
                 ticketList: [],
                 classifys: [],
                 labelList: [],
@@ -490,7 +490,7 @@
         height: 400px;
         overflow: auto;
         background: black;
-        /deep/ .CodeMirror {
+        ::v-deep .CodeMirror {
             font-family: Consolas, "Courier New", monospace;
             line-height: 1.5;
             padding: 10px;

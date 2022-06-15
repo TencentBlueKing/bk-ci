@@ -97,8 +97,10 @@
     .stage-review-content {
         padding: 23px 33px;
         font-size: 12px;
+        position: relative;
+        min-height: 100%;
     }
-    /deep/ .review-subtitle {
+    ::v-deep .review-subtitle {
         display: block;
         margin: 24px 0 8px;
         font-size: 12px;

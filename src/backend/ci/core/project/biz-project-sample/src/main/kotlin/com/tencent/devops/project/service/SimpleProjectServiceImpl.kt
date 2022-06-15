@@ -69,7 +69,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
     client: Client,
     projectDispatcher: ProjectDispatcher,
     authPermissionApi: AuthPermissionApi,
-    projectAuthServiceCode: ProjectAuthServiceCode
+    projectAuthServiceCode: ProjectAuthServiceCode,
+    shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService
 ) : AbsProjectServiceImpl(
     projectPermissionService,
     dslContext,
@@ -80,7 +81,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
     client,
     projectDispatcher,
     authPermissionApi,
-    projectAuthServiceCode
+    projectAuthServiceCode,
+    shardingRoutingRuleAssignService
 ) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {

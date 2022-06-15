@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
 abstract class AbsQualityPermissionServiceImpl constructor(
@@ -54,7 +55,7 @@ abstract class AbsQualityPermissionServiceImpl constructor(
         if (!authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = qualityAuthServiceCode,
-                resourceType = AuthResourceType.QUALITY_GROUP,
+                resourceType = AuthResourceType.QUALITY_GROUP_NEW,
                 projectCode = projectId,
                 resourceCode = HashUtil.encodeLongId(groupId),
                 permission = authPermission
@@ -73,7 +74,7 @@ abstract class AbsQualityPermissionServiceImpl constructor(
         authResourceApi.createResource(
             user = userId,
             serviceCode = qualityAuthServiceCode,
-            resourceType = AuthResourceType.QUALITY_GROUP,
+            resourceType = AuthResourceType.QUALITY_GROUP_NEW,
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(groupId),
             resourceName = groupName
@@ -83,7 +84,7 @@ abstract class AbsQualityPermissionServiceImpl constructor(
     override fun modifyGroupResource(projectId: String, groupId: Long, groupName: String) {
         authResourceApi.modifyResource(
             serviceCode = qualityAuthServiceCode,
-            resourceType = AuthResourceType.QUALITY_GROUP,
+            resourceType = AuthResourceType.QUALITY_GROUP_NEW,
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(groupId),
             resourceName = groupName
@@ -93,7 +94,7 @@ abstract class AbsQualityPermissionServiceImpl constructor(
     override fun deleteGroupResource(projectId: String, groupId: Long) {
         authResourceApi.deleteResource(
             serviceCode = qualityAuthServiceCode,
-            resourceType = AuthResourceType.QUALITY_GROUP,
+            resourceType = AuthResourceType.QUALITY_GROUP_NEW,
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(groupId)
         )
@@ -107,23 +108,29 @@ abstract class AbsQualityPermissionServiceImpl constructor(
         val permissionResourceMap = authPermissionApi.getUserResourcesByPermissions(
             user = user,
             serviceCode = qualityAuthServiceCode,
-            resourceType = AuthResourceType.QUALITY_GROUP,
+            resourceType = AuthResourceType.QUALITY_GROUP_NEW,
             projectCode = projectId,
             permissions = authPermissions,
             supplier = supplierForPermissionRule(projectId)
         )
-        val map = mutableMapOf<AuthPermission, List<Long>>()
-        permissionResourceMap.forEach { (key, value) ->
-            map[key] = value.map { HashUtil.decodeIdToLong(it) }
+        val permissionGroupMap = mutableMapOf<AuthPermission, List<Long>>()
+        permissionResourceMap.forEach { (permission, value) ->
+            if (value.contains("*")) {
+                logger.info("filterRules $user has $projectId all group")
+                permissionGroupMap[permission] = supplierPermissionGroup(projectId)
+                return@forEach
+            } else {
+                permissionGroupMap[permission] = value.map { HashUtil.decodeIdToLong(it) }
+            }
         }
-        return map
+        return permissionGroupMap
     }
 
     override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = qualityAuthServiceCode,
-            resourceType = AuthResourceType.QUALITY_GROUP,
+            resourceType = AuthResourceType.QUALITY_RULE,
             projectCode = projectId,
             permission = authPermission
         )
@@ -138,7 +145,7 @@ abstract class AbsQualityPermissionServiceImpl constructor(
         if (!authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = qualityAuthServiceCode,
-                resourceType = AuthResourceType.QUALITY_GROUP,
+                resourceType = AuthResourceType.QUALITY_RULE,
                 projectCode = projectId,
                 permission = authPermission
             )) {
@@ -163,7 +170,7 @@ abstract class AbsQualityPermissionServiceImpl constructor(
         if (!authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = qualityAuthServiceCode,
-                resourceType = AuthResourceType.QUALITY_GROUP,
+                resourceType = AuthResourceType.QUALITY_RULE,
                 projectCode = projectId,
                 resourceCode = HashUtil.encodeLongId(ruleId),
                 permission = authPermission)) {
@@ -223,7 +230,13 @@ abstract class AbsQualityPermissionServiceImpl constructor(
         )
         val permissionRuleMap = mutableMapOf<AuthPermission, List<Long>>()
         permissionResourceMap.forEach { (permission, list) ->
-            permissionRuleMap[permission] = list.map { HashUtil.decodeIdToLong(it) }
+            if (list.contains("*")) {
+                logger.info("filterRules $userId has $projectId all rule")
+                permissionRuleMap[permission] = supplierPermissionRule(projectId)
+                return@forEach
+            } else {
+                permissionRuleMap[permission] = list.map { HashUtil.decodeIdToLong(it) }
+            }
         }
         return permissionRuleMap
     }
@@ -231,4 +244,12 @@ abstract class AbsQualityPermissionServiceImpl constructor(
     abstract fun supplierForPermissionGroup(projectId: String): () -> MutableList<String>
 
     abstract fun supplierForPermissionRule(projectId: String): () -> MutableList<String>
+
+    abstract fun supplierPermissionRule(projectId: String): List<Long>
+
+    abstract fun supplierPermissionGroup(projectId: String): List<Long>
+
+    companion object {
+        val logger = LoggerFactory.getLogger(AbsQualityPermissionServiceImpl::class.java)
+    }
 }

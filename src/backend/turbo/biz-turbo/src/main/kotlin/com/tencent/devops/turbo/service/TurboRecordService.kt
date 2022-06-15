@@ -9,9 +9,12 @@ import com.tencent.devops.common.db.PageUtils
 import com.tencent.devops.common.util.IOUtil
 import com.tencent.devops.common.util.JsonUtil
 import com.tencent.devops.common.util.MathUtil
+import com.tencent.devops.common.util.constants.EXCHANGE_TURBO_PLUGIN
+import com.tencent.devops.common.util.constants.ROUTE_TURBO_PLUGIN_DATA
 import com.tencent.devops.common.util.constants.codeccAdmin
 import com.tencent.devops.turbo.dao.mongotemplate.TurboRecordDao
 import com.tencent.devops.turbo.dao.repository.TurboRecordRepository
+import com.tencent.devops.turbo.dto.TurboRecordPluginUpdateDto
 import com.tencent.devops.turbo.dto.TurboRecordRefreshModel
 import com.tencent.devops.turbo.enums.EnumDistccTaskStatus
 import com.tencent.devops.turbo.model.TTurboPlanEntity
@@ -22,6 +25,7 @@ import com.tencent.devops.turbo.vo.TurboDisplayFieldVO
 import com.tencent.devops.turbo.vo.TurboRecordDisplayVO
 import com.tencent.devops.turbo.vo.TurboRecordHistoryVO
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -40,7 +44,8 @@ class TurboRecordService @Autowired constructor(
     private val turboRecordRepository: TurboRecordRepository,
     private val turboRecordDao: TurboRecordDao,
     private val turboEngineConfigService: TurboEngineConfigService,
-    private val turboRecordSeqNumService: TurboRecordSeqNumService
+    private val turboRecordSeqNumService: TurboRecordSeqNumService,
+    private val rabbitTemplate: RabbitTemplate
 ) {
 
     companion object {
@@ -52,6 +57,9 @@ class TurboRecordService @Autowired constructor(
 
     @Value("\${devops.rootpath}")
     private val devopRootPath: String? = null
+
+    @Value("\${tbs.dashboard:#{null}}")
+    private val tbsDashboardUrl: String? = null
 
     /**
      * 通过记录id查找
@@ -228,9 +236,14 @@ class TurboRecordService @Autowired constructor(
     /**
      * 获取加速历史列表
      */
-    fun getTurboRecordHistoryList(pageNum: Int?, pageSize: Int?, sortField: String?, sortType: String?, turboRecordModel: TurboRecordModel): Page<TurboRecordHistoryVO> {
+    fun getTurboRecordHistoryList(pageNum: Int?,
+                                  pageSize: Int?,
+                                  sortField: String?,
+                                  sortType: String?,
+                                  turboRecordModel: TurboRecordModel
+    ): Page<TurboRecordHistoryVO> {
 
-        val sortFieldInDb = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, sortField ?: "executeNum")
+        val sortFieldInDb = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, sortField ?: "execute_num")
 
         val turboRecordHistoryList = turboRecordDao.getTurboRecordHistoryList(
             pageable = PageUtils.convertPageSizeToPageable(pageNum, pageSize, sortFieldInDb, sortType ?: "DESC"),
@@ -289,6 +302,7 @@ class TurboRecordService @Autowired constructor(
     /**
      * 获取编译加速记录显示信息
      */
+    @Suppress("ComplexMethod")
     fun getTurboRecordDisplayInfo(turboRecordEntity: TTurboRecordEntity, turboPlanEntity: TTurboPlanEntity): TurboRecordDisplayVO {
         val displayFields = mutableListOf(
             TurboDisplayFieldVO(
@@ -358,7 +372,11 @@ class TurboRecordService @Autowired constructor(
                 )
             )
         }
-        val recordViewUrl = null
+        val recordViewUrl = if(!turboRecordEntity.tbsRecordId.isNullOrBlank() && turboPlanEntity.engineCode.startsWith("disttask-") && !tbsDashboardUrl.isNullOrBlank()) {
+            "$tbsDashboardUrl${turboRecordEntity.tbsRecordId}"
+        } else {
+            null
+        }
         return TurboRecordDisplayVO(
             startTime = turboRecordEntity.startTime,
             status = turboRecordEntity.status,
@@ -382,6 +400,33 @@ class TurboRecordService @Autowired constructor(
             user = user
         )
     }
+
+    /**
+     * 插件扫描完成后调用后端接口，
+     */
+    fun processAfterPluginFinish(buildId: String, user: String) : String?{
+        val turboRecordEntity = turboRecordRepository.findByBuildId(buildId)
+        if (null != turboRecordEntity) {
+            /**
+             * 发送延时队列，如果该记录没有同步至平台，则将状态更新至失败
+             */
+            rabbitTemplate.convertAndSend(
+                EXCHANGE_TURBO_PLUGIN, ROUTE_TURBO_PLUGIN_DATA, TurboRecordPluginUpdateDto(buildId, user)
+            ) { message ->
+                message.messageProperties.delay = 90 * 1000
+                message
+            }
+        }
+        return turboRecordEntity?.id
+    }
+
+    /**
+     * 用于插件更新记录状态
+     */
+    fun updateRecordStatusForPlugin(buildId: String, status: String, user: String) {
+        turboRecordDao.updateRecordStatusForPlugin(buildId, status, user)
+    }
+
 
     // ///////////////////////////以下逻辑为数据刷新逻辑，刷新后需要去除////////////////////////////////
     /**

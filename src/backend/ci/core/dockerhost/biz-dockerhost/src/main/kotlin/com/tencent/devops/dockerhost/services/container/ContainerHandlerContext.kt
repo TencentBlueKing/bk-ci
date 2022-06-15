@@ -19,6 +19,7 @@ data class ContainerHandlerContext(
     val qpcUniquePath: String? = null,
     val dockerResource: DockerResourceOptionsVO? = null,
     val dockerRunParam: DockerRunParam? = null,
+    val specialProjectList: String? = null,
     var formatImageName: String? = "",
     var containerId: String? = "",
     var dockerRunResponse: DockerRunResponse? = null,
@@ -27,12 +28,14 @@ data class ContainerHandlerContext(
     override val buildId: String,
     override val vmSeqId: Int,
     override val poolNo: Int,
-    override val userName: String
+    override val userName: String,
+    override val pipelineTaskId: String? = null
 ) : HandlerContext(
     projectId = projectId,
     pipelineId = pipelineId,
     buildId = buildId,
     vmSeqId = vmSeqId,
     poolNo = poolNo,
-    userName = userName
+    userName = userName,
+    pipelineTaskId = pipelineTaskId
 )

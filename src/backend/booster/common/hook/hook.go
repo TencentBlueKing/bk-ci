@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package hook
 
 import (
@@ -38,7 +47,8 @@ const (
 
 // RunProcess to hook and start process
 func RunProcess(ldPreloadLibPath string, hookConfigPath string, envs map[string]string, cmd string) (int, error) {
-	fmt.Printf("RunProcess with ldPreloadLibPath[%s],hookConfigPath[%s],cmd[%s]\n", ldPreloadLibPath, hookConfigPath, cmd)
+	fmt.Printf("RunProcess with ldPreloadLibPath[%s],hookConfigPath[%s],cmd[%s]\n",
+		ldPreloadLibPath, hookConfigPath, cmd)
 	if err := checkParams(ldPreloadLibPath, hookConfigPath); err != nil {
 		fmt.Printf("failed to RunProcess[%s] for error[%s]\n", cmd, err.Error())
 		return int(ErrorFileNotExist), err
@@ -69,8 +79,10 @@ func RunProcess(ldPreloadLibPath string, hookConfigPath string, envs map[string]
 }
 
 // RunBazelProcess to hook and start bazel build process
-func RunBazelProcess(ldPreloadLibPath string, hookConfigPath string, envs map[string]string, cmd string, jobs string) (int, error) {
-	fmt.Printf("RunBazelProcess with ldPreloadLibPath[%s],hookConfigPath[%s],cmd[%s]\n", ldPreloadLibPath, hookConfigPath, cmd)
+func RunBazelProcess(
+	ldPreloadLibPath string, hookConfigPath string, envs map[string]string, cmd string, jobs string) (int, error) {
+	fmt.Printf("RunBazelProcess with ldPreloadLibPath[%s],hookConfigPath[%s],cmd[%s]\n",
+		ldPreloadLibPath, hookConfigPath, cmd)
 	if err := isValidBazelCmd(cmd); err != nil {
 		fmt.Printf("failed to RunBazelProcess[%s] for error[%s]\n", cmd, err.Error())
 		return int(ErrorInvalidBazelCmd), err
@@ -95,7 +107,8 @@ func isValidBazelCmd(cmd string) error {
 	return nil
 }
 
-func getNewBazelCmd(ldPreloadLibPath string, hookConfigPath string, envs map[string]string, cmd string, jobs string) (string, error) {
+func getNewBazelCmd(
+	ldPreloadLibPath string, hookConfigPath string, envs map[string]string, cmd string, jobs string) (string, error) {
 	actionEnvHome := fmt.Sprintf("%s=HOME", BazelActionEnvKey)
 	actionEnvPreload := fmt.Sprintf("%s=%s=%s", BazelActionEnvKey, EnvKeyLDPreload, ldPreloadLibPath)
 	actionEnvConfig := fmt.Sprintf("%s=%s=%s", BazelActionEnvKey, EnvKeyHookConfig, hookConfigPath)
@@ -115,7 +128,8 @@ func getNewBazelCmd(ldPreloadLibPath string, hookConfigPath string, envs map[str
 		bazelJobs = fmt.Sprintf("--jobs=%d", intjobs)
 	}
 
-	replaceStr := fmt.Sprintf(" %s %s %s %s %s %s ", BazelBuildKey, actionEnvHome, actionEnvPreload, actionEnvConfig, actionEnvDistcc, bazelJobs)
+	replaceStr := fmt.Sprintf(" %s %s %s %s %s %s ",
+		BazelBuildKey, actionEnvHome, actionEnvPreload, actionEnvConfig, actionEnvDistcc, bazelJobs)
 	if strings.HasSuffix(cmd, BazelBuildSuffixKey) {
 		return strings.Replace(cmd, BazelBuildSuffixKey, replaceStr, -1), nil
 	} else {

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
@@ -97,15 +98,21 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(
         templateId: String,
         page: Int?,
         pageSize: Int?,
-        searchKey: String?
+        searchKey: String?,
+        sortType: TemplateSortTypeEnum?,
+        desc: Boolean?
     ): Result<TemplateInstancePage> {
-        return Result(templateFacadeService.listTemplateInstancesInPage(
-            projectId = projectId,
-            userId = userId,
-            templateId = templateId,
-            page = page,
-            pageSize = checkPageSize(pageSize),
-            searchKey = searchKey)
+        return Result(
+            templateFacadeService.listTemplateInstancesInPage(
+                projectId = projectId,
+                userId = userId,
+                templateId = templateId,
+                page = page,
+                pageSize = checkPageSize(pageSize),
+                searchKey = searchKey,
+                sortType = sortType,
+                desc = desc
+            )
         )
     }
 
@@ -116,13 +123,15 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(
         version: Long,
         pipelineIds: List<PipelineId>
     ): Result<Map<String, TemplateInstanceParams>> {
-        return Result(templateFacadeService.listTemplateInstancesParams(
-            userId = userId,
-            projectId = projectId,
-            templateId = templateId,
-            version = version,
-            pipelineIds = pipelineIds.map { it.id }.toSet()
-        ))
+        return Result(
+            templateFacadeService.listTemplateInstancesParams(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                version = version,
+                pipelineIds = pipelineIds.map { it.id }.toSet()
+            )
+        )
     }
 
     private fun checkPageSize(pageSize: Int?) = if (pageSize != null && pageSize > 30) 30 else pageSize

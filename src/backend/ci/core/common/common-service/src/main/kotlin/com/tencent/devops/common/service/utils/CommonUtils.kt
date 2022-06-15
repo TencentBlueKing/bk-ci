@@ -32,6 +32,13 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.PROFILE_AUTO
+import com.tencent.devops.common.service.PROFILE_DEFAULT
+import com.tencent.devops.common.service.PROFILE_DEVELOPMENT
+import com.tencent.devops.common.service.PROFILE_PRODUCTION
+import com.tencent.devops.common.service.PROFILE_STREAM
+import com.tencent.devops.common.service.PROFILE_TEST
+import com.tencent.devops.common.service.Profile
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.i18n.LocaleContextHolder
@@ -52,9 +59,17 @@ import kotlin.collections.set
 
 object CommonUtils {
 
-    private val simpleCnLanList = listOf("ZH_CN", "ZH-CN")
+    const val ZH_CN = "ZH_CN" // 简体中文
 
-    private val twCnLanList = listOf("ZH_TW", "ZH-TW", "ZH_HK", "ZH-HK")
+    const val ZH_TW = "ZH_TW" // 台湾繁体中文
+
+    private const val EN = "EN" // 英文
+
+    private const val ZH_HK = "ZH_HK" // 香港繁体中文
+
+    private val simpleCnLanList = listOf(ZH_CN, "ZH-CN")
+
+    private val twCnLanList = listOf(ZH_TW, "ZH-TW", ZH_HK, "ZH-HK")
 
     private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
 
@@ -126,10 +141,11 @@ object CommonUtils {
         userId: String,
         serviceUrlPrefix: String,
         file: File,
-        fileChannelType: String
+        fileChannelType: String,
+        logo: Boolean = false
     ): Result<String?> {
-        val serviceUrl =
-            "$serviceUrlPrefix/service/artifactories/file/upload?userId=$userId&fileChannelType=$fileChannelType"
+        val serviceUrl = "$serviceUrlPrefix/service/artifactories/file/upload" +
+                "?userId=$userId&fileChannelType=$fileChannelType&logo=$logo"
         logger.info("the serviceUrl is:$serviceUrl")
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             val responseContent = response.body()!!.string()
@@ -143,27 +159,30 @@ object CommonUtils {
 
     /**
      * 获取语言信息
+     * @return local语言信息
      */
     private fun getOriginLocale(): String {
+        // 从request请求中获取本地语言信息
         val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
         return if (null != attributes) {
             val request = attributes.request
             val cookieLan = CookieUtil.getCookieValue(request, "blueking_language")
             cookieLan ?: LocaleContextHolder.getLocale().toString() // 获取字符集（与http请求头中的Accept-Language有关）
         } else {
-            "ZH_CN" // 取不到语言信息默认为中文
+            ZH_CN // 取不到语言信息默认为中文
         }
     }
 
     /**
      * 获取蓝盾能处理的语言信息
+     * @return 蓝盾语言信息
      */
     fun getBkLocale(): String {
         val locale = getOriginLocale()
         return when {
-            simpleCnLanList.contains(locale.toUpperCase()) -> "ZH_CN" // 简体中文
-            twCnLanList.contains(locale.toUpperCase()) -> "ZH_TW" // 繁体中文
-            else -> "EN" // 英文描述
+            simpleCnLanList.contains(locale.toUpperCase()) -> ZH_CN // 简体中文
+            twCnLanList.contains(locale.toUpperCase()) -> ZH_TW // 繁体中文
+            else -> EN // 英文描述
         }
     }
 
@@ -174,5 +193,39 @@ object CommonUtils {
         return if (string != null && string.length > length) {
             string.substring(0, length - 1)
         } else string
+    }
+
+    /**
+     * 获取db集群名称
+     */
+    fun getDbClusterName(): String {
+        val profile = SpringContextUtil.getBean(Profile::class.java)
+        return when {
+            profile.isDev() -> {
+                PROFILE_DEVELOPMENT
+            }
+            profile.isTest() -> {
+                PROFILE_TEST
+            }
+            profile.isProd() -> {
+                when {
+                    profile.isAuto() -> {
+                        PROFILE_AUTO
+                    }
+                    profile.isStream() -> {
+                        PROFILE_STREAM
+                    }
+                    else -> {
+                        PROFILE_PRODUCTION
+                    }
+                }
+            }
+            profile.isLocal() -> {
+                PROFILE_DEFAULT
+            }
+            else -> {
+                PROFILE_PRODUCTION
+            }
+        }
     }
 }

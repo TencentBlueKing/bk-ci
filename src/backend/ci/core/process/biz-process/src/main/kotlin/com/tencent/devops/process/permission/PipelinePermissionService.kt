@@ -112,4 +112,11 @@ interface PipelinePermissionService {
      * @param group 项目组角色
      */
     fun isProjectUser(userId: String, projectId: String, group: BkAuthGroup?): Boolean
+
+    /**
+     * 判断是否某个项目管理员
+     * @param userId 用户id
+     * @param projectId projectId
+     */
+    fun checkProjectManager(userId: String, projectId: String): Boolean
 }

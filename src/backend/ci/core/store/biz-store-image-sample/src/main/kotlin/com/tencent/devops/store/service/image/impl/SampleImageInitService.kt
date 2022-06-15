@@ -66,7 +66,7 @@ class SampleImageInitService @Autowired constructor(
 
     @Suppress("ALL")
     fun imageInit(imageInitRequest: ImageInitRequest?): Result<Boolean> {
-        val projectCode = imageInitRequest?.projectCode ?: "Demo"
+        val projectCode = imageInitRequest?.projectCode ?: "demo"
         val userId = imageInitRequest?.userId ?: "admin"
         val imageCode = imageInitRequest?.imageCode ?: "bkci"
         val accessToken = imageInitRequest?.accessToken ?: ""
@@ -136,7 +136,7 @@ class SampleImageInitService @Autowired constructor(
                 summary = imageInitRequest?.summary ?: "CI basic image based on tlinux2.2",
                 description = imageInitRequest?.description ?: "Docker public build machine base image",
                 logoUrl = imageInitRequest?.logoUrl
-                    ?: "/ms/artifactory/api/user/artifactories/file/download?filePath=%2Ffile%2Fpng%2FDOCKER.png",
+                    ?: "/ms/artifactory/api/user/artifactories/file/download?filePath=%2Ffile%2Fpng%2FDOCKER.png&logo=true",
                 iconData = imageInitRequest?.iconData,
                 ticketId = ticketId,
                 imageSourceType = ImageType.THIRD,

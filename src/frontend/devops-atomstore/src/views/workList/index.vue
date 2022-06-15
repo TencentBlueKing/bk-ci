@@ -19,7 +19,7 @@
 <script>
     import transitionTab from '@/components/transition-tab.vue'
     import breadCrumbs from '@/components/bread-crumbs.vue'
-    import * as cookie from 'js-cookie'
+    import cookie from 'js-cookie'
     let currentProjectCode = cookie.get(X_DEVOPS_PROJECT_ID)
     if (!currentProjectCode) currentProjectCode = (window.projectList[0] || {}).projectCode
 
@@ -33,24 +33,28 @@
             return {
                 currentTabName: this.$route.name,
                 tabList: [
-                    { name: 'atomWork',
-                      label: this.$t('store.流水线插件'),
-                      links: [
-                          { name: this.$t('store.插件指引'), link: `${DOCS_URL_PREFIX}/store/plugins/create-plugin` },
-                          { name: this.$t('store.debugTask'), link: `/console/pipeline/${currentProjectCode}/atomDebug` }
-                      ]
+                    {
+                        name: 'atomWork',
+                        label: this.$t('store.流水线插件'),
+                        links: [
+                            { name: this.$t('store.插件指引'), link: `${DOCS_URL_PREFIX}/Services/Store/start-new-task.md` },
+                            
+                            { name: this.$t('store.debugTask'), link: `/console/pipeline/${currentProjectCode}/atomDebug` }
+                        ]
                     },
-                    { name: 'templateWork',
-                      label: this.$t('store.流水线模板'),
-                      links: [
-                          { name: this.$t('store.模版指引'), link: `${DOCS_URL_PREFIX}/store/store-home` }
-                      ]
+                    {
+                        name: 'templateWork',
+                        label: this.$t('store.流水线模板'),
+                        links: [
+                            { name: this.$t('store.模版指引'), link: `${DOCS_URL_PREFIX}/Services/Store/start-new-template.md` }
+                        ]
                     },
-                    { name: 'imageWork',
-                      label: this.$t('store.容器镜像'),
-                      links: [
-                          { name: this.$t('store.镜像指引'), link: `${DOCS_URL_PREFIX}/store/ci-images/image-build` }
-                      ]
+                    {
+                        name: 'imageWork',
+                        label: this.$t('store.容器镜像'),
+                        links: [
+                            { name: this.$t('store.镜像指引'), link: `${DOCS_URL_PREFIX}/Services/Store/docker-build.md` }
+                        ]
                     }
                 ]
             }

@@ -219,7 +219,7 @@
                 const chartDatas = []
                 const chartLabels = []
                 const backgroundColors = []
-                dailyStatisticList.map((statis) => {
+                dailyStatisticList.forEach((statis) => {
                     const val = statis.dailySuccessRate
                     const isEmpty = [0, undefined, null].includes(val)
                     const isUndefinedOrNull = [undefined, null].includes(val)
@@ -414,7 +414,7 @@
             .chart-empty {
                 color: #e2e2e2;
             }
-            /deep/ div[data-bkcharts-tooltips] {
+            ::v-deep div[data-bkcharts-tooltips] {
                 min-width: 140px;
             }
             &:last-child:after {
@@ -552,10 +552,10 @@
             padding-top: 0;
         }
     }
-    /deep/ .is-error .big-select {
+    ::v-deep .is-error .big-select {
         border: 1px solid $dangerColor;
     }
-    /deep/ .bk-dialog-body .tips-body {
+    ::v-deep .bk-dialog-body .tips-body {
         text-align: left;
     }
 </style>

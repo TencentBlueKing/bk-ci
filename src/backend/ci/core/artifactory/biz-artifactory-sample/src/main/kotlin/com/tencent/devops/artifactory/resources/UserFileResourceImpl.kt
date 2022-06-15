@@ -70,10 +70,10 @@ class UserFileResourceImpl @Autowired constructor(
         checkParam(userId, projectId, path)
         val url = archiveFileService.uploadFile(
             userId = userId,
-            projectId = projectId,
-            filePath = path,
             inputStream = inputStream,
             disposition = disposition,
+            projectId = projectId,
+            filePath = path,
             fileType = FileTypeEnum.BK_CUSTOM,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW
         )
@@ -88,15 +88,15 @@ class UserFileResourceImpl @Autowired constructor(
         return archiveFileService.downloadFileToLocal(userId, filePath, response)
     }
 
-    override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse) {
+    override fun downloadFile(userId: String, filePath: String, logo: Boolean?, response: HttpServletResponse) {
         val validateResult = archiveFileService.validateUserDownloadFilePermission(userId, filePath)
         if (!validateResult) {
             throw PermissionForbiddenException("no permission")
         }
-        archiveFileService.downloadFile(userId, filePath, response)
+        archiveFileService.downloadFile(userId, filePath, response, logo)
     }
 
-    override fun downloadFileExt(userId: String, filePath: String, response: HttpServletResponse) {
-        downloadFile(userId, filePath, response)
+    override fun downloadFileExt(userId: String, filePath: String, logo: Boolean?, response: HttpServletResponse) {
+        downloadFile(userId, filePath, logo, response)
     }
 }

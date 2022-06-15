@@ -33,9 +33,16 @@ package com.tencent.bkrepo.repository.dao
 
 import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.bkrepo.common.artifact.path.PathUtils
-import com.tencent.bkrepo.common.mongo.dao.sharding.ShardingMongoDao
+import com.tencent.bkrepo.common.mongo.dao.sharding.HashShardingMongoDao
+import com.tencent.bkrepo.common.mongo.dao.util.Pages
 import com.tencent.bkrepo.repository.model.TNode
+import com.tencent.bkrepo.repository.pojo.node.NodeListOption
 import com.tencent.bkrepo.repository.util.NodeQueryHelper
+import org.springframework.data.domain.Page
+import org.springframework.data.mongodb.core.query.Query
+import org.springframework.data.mongodb.core.query.and
+import org.springframework.data.mongodb.core.query.isEqualTo
+import org.springframework.data.mongodb.core.query.where
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -43,7 +50,7 @@ import java.time.LocalDateTime
  * 节点 Dao
  */
 @Repository
-class NodeDao : ShardingMongoDao<TNode>() {
+class NodeDao : HashShardingMongoDao<TNode>() {
     /**
      * 查询节点
      */
@@ -62,6 +69,31 @@ class NodeDao : ShardingMongoDao<TNode>() {
             return true
         }
         return this.exists(NodeQueryHelper.nodeQuery(projectId, repoName, fullPath))
+    }
+
+    /**
+     * 根据[sha256]分页查询节点，需要遍历所有分表
+     *
+     * @param includeDeleted 是否包含被删除的节点
+     */
+    fun pageBySha256(
+        sha256: String,
+        option: NodeListOption,
+        includeDeleted: Boolean = false
+    ): Page<TNode> {
+        val pageRequest = Pages.ofRequest(option.pageNumber, option.pageSize)
+
+        // 构造查询条件
+        val criteria = where(TNode::sha256).isEqualTo(sha256).and(TNode::folder).isEqualTo(false)
+        if (!includeDeleted) {
+            criteria.and(TNode::deleted).isEqualTo(null)
+        }
+        val query = Query(criteria)
+        if (!option.includeMetadata) {
+            query.fields().exclude(TNode::metadata.name)
+        }
+
+        return pageWithoutShardingKey(pageRequest, query)
     }
 
     companion object {

@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package encrypt
 
 import (
@@ -5,13 +14,16 @@ import (
 	"crypto/cipher"
 	"crypto/des"
 	"encoding/base64"
+	"fmt"
 
-	"build-booster/common/static"
+	"github.com/Tencent/bk-ci/src/booster/common/static"
 )
 
 var (
 	//key for encryption
 	priKey = static.EncryptionKey
+
+	Disabled = ""
 )
 
 // PKCS5Padding size padding
@@ -29,7 +41,17 @@ func PKCS5UnPadding(origData []byte) []byte {
 }
 
 // DesEncryptToBase encrypt with priKey simply, out base64 string
-func DesEncryptToBase(src []byte) ([]byte, error) {
+func DesEncryptToBase(src []byte) (b []byte, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("encrypt code from %s error, not a valid param", string(src))
+		}
+	}()
+
+	if Disabled != "" {
+		return src, nil
+	}
+
 	block, err := des.NewTripleDESCipher([]byte(priKey))
 	if err != nil {
 		return nil, err
@@ -43,7 +65,17 @@ func DesEncryptToBase(src []byte) ([]byte, error) {
 }
 
 // DesDecryptFromBase base64 decoding, and decrypt with priKey
-func DesDecryptFromBase(src []byte) ([]byte, error) {
+func DesDecryptFromBase(src []byte) (b []byte, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("decrypt code from %s error, not a valid param", string(src))
+		}
+	}()
+
+	if Disabled != "" {
+		return src, nil
+	}
+
 	ori, _ := base64.StdEncoding.DecodeString(string(src))
 	block, err := des.NewTripleDESCipher([]byte(priKey))
 	if err != nil {

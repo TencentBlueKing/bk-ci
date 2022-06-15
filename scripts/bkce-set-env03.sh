@@ -10,6 +10,7 @@ on_ERR (){
 set -a
 CTRL_DIR="${CTRL_DIR:-/data/install}"
 source $CTRL_DIR/load_env.sh
+source $CTRL_DIR/bin/02-dynamic/hosts.env
 BK_PKG_SRC_PATH=${BK_PKG_SRC_PATH:-/data/src}
 BK_CI_SRC_DIR=${BK_CI_SRC_DIR:-$BK_PKG_SRC_PATH/ci}
 set +a
@@ -68,7 +69,13 @@ set_env03 BK_HTTP_SCHEMA=http \
   BK_CI_PAAS_LOGIN_URL=\$BK_PAAS_PUBLIC_URL/login/\?c_url= \
   BK_CI_REPOSITORY_GITLAB_URL=http://\$BK_CI_FQDN \
   BK_CI_APP_CODE=bk_ci \
-  BK_CI_APP_TOKEN=$(uuid_v4)
+  BK_CI_APP_TOKEN=$(uuid_v4) \
+  BK_CI_INFLUXDB_ADDR=$BK_CI_IP0:8086 \
+  BK_CI_INFLUXDB_DB=agentMetrix \
+  BK_CI_INFLUXDB_HOST=$BK_CI_IP0 \
+  BK_CI_INFLUXDB_PASSWORD=$BK_INFLUXDB_ADMIN_PASSWORD \
+  BK_CI_INFLUXDB_PORT=8086 \
+  BK_CI_INFLUXDB_USER=admin
 # 复用es7, 读取账户密码, 刷新03env.
 set_env03 BK_CI_ES_REST_ADDR=$BK_ES7_IP BK_CI_ES_USER=elastic BK_CI_ES_PASSWORD=$BK_ES7_ADMIN_PASSWORD
 # 复用rabbitmq, 生成密码并创建账户, 刷新03env.
@@ -77,6 +84,11 @@ set_env03 BK_CI_RABBITMQ_ADDR=$BK_RABBITMQ_IP:5672 BK_CI_RABBITMQ_USER=bk_ci BK_
 set_env03 BK_CI_MYSQL_ADDR=${BK_MYSQL_IP}:3306 BK_CI_MYSQL_USER=bk_ci BK_CI_MYSQL_PASSWORD=$(random_pass)
 # 复用redis, 读取密码, 刷新03env.
 set_env03 BK_CI_REDIS_HOST=$BK_REDIS_IP BK_CI_REDIS_PASSWORD=$BK_PAAS_REDIS_PASSWORD
+
+if grep -w repo $CTRL_DIR/install.config|grep -v ^\# ; then
+  set_env03 BK_REPO_GATEWAY_IP=$BK_REPO_GATEWAY_IP \
+  BK_REPO_HOST=$BK_REPO_HOST
+fi
 
 echo "合并env."
 ./bin/merge_env.sh ci &>/dev/null || true

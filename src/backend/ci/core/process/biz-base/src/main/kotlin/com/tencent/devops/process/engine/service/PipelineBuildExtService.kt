@@ -31,6 +31,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 
 interface PipelineBuildExtService {
 
-    fun buildExt(task: PipelineBuildTask, variable: Map<String, String>): Map<String, String>
+    fun buildExt(task: PipelineBuildTask, variables: Map<String, String>): Map<String, String>
+
     fun endBuild(task: PipelineBuildTask)
 }

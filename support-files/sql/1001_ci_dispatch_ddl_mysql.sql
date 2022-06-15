@@ -8,106 +8,106 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_MACHINE` (
-  `MACHINE_ID` int(11) NOT NULL AUTO_INCREMENT,
-  `MACHINE_IP` varchar(128) NOT NULL,
-  `MACHINE_NAME` varchar(128) NOT NULL,
-  `MACHINE_USERNAME` varchar(128) NOT NULL,
-  `MACHINE_PASSWORD` varchar(128) NOT NULL,
-  `MACHINE_CREATED_TIME` datetime NOT NULL,
-  `MACHINE_UPDATED_TIME` datetime NOT NULL,
-  `CURRENT_VM_RUN` int(11) NOT NULL DEFAULT '0',
-  `MAX_VM_RUN` int(11) NOT NULL DEFAULT '1',
+  `MACHINE_ID` int(11) NOT NULL AUTO_INCREMENT COMMENT '机器ID',
+  `MACHINE_IP` varchar(128) NOT NULL COMMENT '机器ip地址',
+  `MACHINE_NAME` varchar(128) NOT NULL COMMENT '机器名称',
+  `MACHINE_USERNAME` varchar(128) NOT NULL COMMENT '机器用户名',
+  `MACHINE_PASSWORD` varchar(128) NOT NULL COMMENT '机器密码',
+  `MACHINE_CREATED_TIME` datetime NOT NULL COMMENT '机器创建时间',
+  `MACHINE_UPDATED_TIME` datetime NOT NULL COMMENT '机器修改时间',
+  `CURRENT_VM_RUN` int(11) NOT NULL DEFAULT '0' COMMENT '当前运行的虚拟机台数',
+  `MAX_VM_RUN` int(11) NOT NULL DEFAULT '1' COMMENT '最多允许允许的虚拟机台数',
   PRIMARY KEY (`MACHINE_ID`),
   UNIQUE KEY `MACHINE_IP` (`MACHINE_IP`),
   UNIQUE KEY `MACHINE_NAME` (`MACHINE_NAME`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
 
 -- ----------------------------
 -- Table structure for T_DISPATCH_PIPELINE_BUILD
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_PIPELINE_BUILD` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `PROJECT_ID` varchar(32) NOT NULL,
-  `PIPELINE_ID` varchar(34) NOT NULL,
-  `BUILD_ID` varchar(34) NOT NULL,
-  `VM_SEQ_ID` varchar(34) NOT NULL DEFAULT '',
-  `VM_ID` bigint(20) NOT NULL,
-  `CREATED_TIME` datetime NOT NULL,
-  `UPDATED_TIME` datetime NOT NULL,
-  `STATUS` int(11) NOT NULL,
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `PROJECT_ID` varchar(32) NOT NULL COMMENT '项目ID',
+  `PIPELINE_ID` varchar(34) NOT NULL COMMENT '流水线ID',
+  `BUILD_ID` varchar(34) NOT NULL COMMENT '构建ID',
+  `VM_SEQ_ID` varchar(34) NOT NULL DEFAULT '' COMMENT '构建序列号',
+  `VM_ID` bigint(20) NOT NULL COMMENT '虚拟机ID',
+  `CREATED_TIME` datetime NOT NULL COMMENT '创建时间',
+  `UPDATED_TIME` datetime NOT NULL COMMENT '更新时间',
+  `STATUS` int(11) NOT NULL COMMENT '状态',
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
 
 -- ----------------------------
 -- Table structure for T_DISPATCH_PIPELINE_DOCKER_BUILD
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_PIPELINE_DOCKER_BUILD` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `BUILD_ID` varchar(64) NOT NULL,
-  `VM_SEQ_ID` int(20) NOT NULL,
-  `SECRET_KEY` varchar(64) NOT NULL DEFAULT '',
-  `STATUS` int(11) NOT NULL,
-  `CREATED_TIME` datetime NOT NULL,
-  `UPDATED_TIME` datetime NOT NULL,
-  `ZONE` varchar(128) DEFAULT NULL,
-  `PROJECT_ID` varchar(34) DEFAULT '',
-  `PIPELINE_ID` varchar(34) DEFAULT '',
-  `DISPATCH_MESSAGE` varchar(4096) DEFAULT '',
-  `STARTUP_MESSAGE` text,
-  `ROUTE_KEY` varchar(64) DEFAULT '',
-  `DOCKER_INST_ID` bigint(20) DEFAULT NULL,
-  `VERSION_ID` int(20) DEFAULT NULL,
-  `TEMPLATE_ID` int(20) DEFAULT NULL,
-  `NAMESPACE_ID` bigint(20) DEFAULT NULL,
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `BUILD_ID` varchar(64) NOT NULL COMMENT '构建ID',
+  `VM_SEQ_ID` int(20) NOT NULL COMMENT '构建序列号',
+  `SECRET_KEY` varchar(64) NOT NULL DEFAULT '' COMMENT '密钥',
+  `STATUS` int(11) NOT NULL COMMENT '状态',
+  `CREATED_TIME` datetime NOT NULL COMMENT '创建时间',
+  `UPDATED_TIME` datetime NOT NULL COMMENT '更新时间',
+  `ZONE` varchar(128) DEFAULT NULL COMMENT '构建机地域',
+  `PROJECT_ID` varchar(34) DEFAULT '' COMMENT '项目ID',
+  `PIPELINE_ID` varchar(34) DEFAULT '' COMMENT '流水线ID',
+  `DISPATCH_MESSAGE` varchar(4096) DEFAULT '' COMMENT '发送信息',
+  `STARTUP_MESSAGE` text COMMENT '启动信息',
+  `ROUTE_KEY` varchar(64) DEFAULT '' COMMENT '消息队列的路由KEY',
+  `DOCKER_INST_ID` bigint(20) DEFAULT NULL COMMENT '',
+  `VERSION_ID` int(20) DEFAULT NULL COMMENT '版本ID',
+  `TEMPLATE_ID` int(20) DEFAULT NULL COMMENT '模板ID',
+  `NAMESPACE_ID` bigint(20) DEFAULT NULL COMMENT '命名空间ID',
   `DOCKER_IP` VARCHAR(64) DEFAULT '' COMMENT '构建机IP',
   `CONTAINER_ID` VARCHAR(128) DEFAULT '' COMMENT '构建容器ID',
   `POOL_NO` INT(11) DEFAULT 0 COMMENT '构建容器池序号',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `BUILD_ID` (`BUILD_ID`,`VM_SEQ_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
 
 -- ----------------------------
 -- Table structure for T_DISPATCH_PIPELINE_DOCKER_HOST_ZONE
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_PIPELINE_DOCKER_HOST_ZONE` (
-  `HOST_IP` varchar(128) NOT NULL,
-  `ZONE` varchar(128) NOT NULL,
-  `ENABLE` tinyint(1) DEFAULT '1',
-  `REMARK` varchar(1024) DEFAULT NULL,
-  `CREATED_TIME` datetime NOT NULL,
-  `UPDATED_TIME` datetime NOT NULL,
-  `TYPE` int(11) NOT NULL DEFAULT '0',
-  `ROUTE_KEY` varchar(45) DEFAULT NULL,
+  `HOST_IP` varchar(128) NOT NULL COMMENT '主机ip',
+  `ZONE` varchar(128) NOT NULL COMMENT '构建机地域',
+  `ENABLE` tinyint(1) DEFAULT '1' COMMENT '是否启用',
+  `REMARK` varchar(1024) DEFAULT NULL COMMENT '评论',
+  `CREATED_TIME` datetime NOT NULL COMMENT '创建时间',
+  `UPDATED_TIME` datetime NOT NULL COMMENT '更新时间',
+  `TYPE` int(11) NOT NULL DEFAULT '0' COMMENT '类型',
+  `ROUTE_KEY` varchar(45) DEFAULT NULL COMMENT '消息队列的路由KEY',
   PRIMARY KEY (`HOST_IP`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
 
 -- ----------------------------
 -- Table structure for T_DISPATCH_PIPELINE_DOCKER_TASK
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_PIPELINE_DOCKER_TASK` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `PROJECT_ID` varchar(64) NOT NULL,
-  `AGENT_ID` varchar(32) NOT NULL,
-  `PIPELINE_ID` varchar(34) NOT NULL DEFAULT '',
-  `BUILD_ID` varchar(34) NOT NULL,
-  `VM_SEQ_ID` int(20) NOT NULL,
-  `STATUS` int(11) NOT NULL,
-  `SECRET_KEY` varchar(128) NOT NULL,
-  `IMAGE_NAME` varchar(1024) NOT NULL,
-  `CHANNEL_CODE` varchar(128) DEFAULT NULL,
-  `HOST_TAG` varchar(128) DEFAULT NULL,
-  `CONTAINER_ID` varchar(128) DEFAULT NULL,
-  `CREATED_TIME` datetime NOT NULL,
-  `UPDATED_TIME` datetime NOT NULL,
-  `ZONE`          varchar(128) DEFAULT NULL,
-  `REGISTRY_USER` varchar(128) DEFAULT NULL,
-  `REGISTRY_PWD`  varchar(128) DEFAULT NULL,
-  `IMAGE_TYPE`    varchar(128) DEFAULT NULL,
-  `CONTAINER_HASH_ID` varchar(128) DEFAULT NULL,
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+  `AGENT_ID` varchar(32) NOT NULL COMMENT '构建机ID',
+  `PIPELINE_ID` varchar(34) NOT NULL DEFAULT '' COMMENT '流水线ID',
+  `BUILD_ID` varchar(34) NOT NULL COMMENT '构建ID',
+  `VM_SEQ_ID` int(20) NOT NULL COMMENT '构建序列号',
+  `STATUS` int(11) NOT NULL COMMENT '状态',
+  `SECRET_KEY` varchar(128) NOT NULL COMMENT '密钥',
+  `IMAGE_NAME` varchar(1024) NOT NULL COMMENT '镜像名称',
+  `CHANNEL_CODE` varchar(128) DEFAULT NULL COMMENT '渠道号，默认为DS',
+  `HOST_TAG` varchar(128) DEFAULT NULL COMMENT '主机标签',
+  `CONTAINER_ID` varchar(128) DEFAULT NULL COMMENT '构建容器ID',
+  `CREATED_TIME` datetime NOT NULL COMMENT '创建时间',
+  `UPDATED_TIME` datetime NOT NULL COMMENT '更新时间',
+  `ZONE`          varchar(128) DEFAULT NULL COMMENT '构建机地域',
+  `REGISTRY_USER` varchar(128) DEFAULT NULL COMMENT '注册用户名',
+  `REGISTRY_PWD`  varchar(128) DEFAULT NULL COMMENT '注册用户密码',
+  `IMAGE_TYPE`    varchar(128) DEFAULT NULL COMMENT '镜像类型',
+  `CONTAINER_HASH_ID` varchar(128) DEFAULT NULL COMMENT '构建Job唯一标识',
   `IMAGE_PUBLIC_FLAG` bit(1) DEFAULT NULL COMMENT '镜像是否为公共镜像：0否1是',
   `IMAGE_RD_TYPE` tinyint(1) DEFAULT NULL COMMENT '镜像研发来源：0自研1第三方',
   PRIMARY KEY (`ID`),
@@ -115,26 +115,26 @@ CREATE TABLE IF NOT EXISTS `T_DISPATCH_PIPELINE_DOCKER_TASK` (
   KEY `UPDATED_TIME` (`UPDATED_TIME`),
   KEY `STATUS` (`STATUS`),
   KEY `HOST_TAG` (`HOST_TAG`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
 
 -- ----------------------------
 -- Table structure for T_DISPATCH_THIRDPARTY_AGENT_BUILD
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_THIRDPARTY_AGENT_BUILD` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `PROJECT_ID` varchar(64) NOT NULL,
-  `AGENT_ID` varchar(32) NOT NULL,
-  `PIPELINE_ID` varchar(34) NOT NULL DEFAULT '',
-  `BUILD_ID` varchar(34) NOT NULL,
-  `VM_SEQ_ID` varchar(34) NOT NULL,
-  `STATUS` int(11) NOT NULL,
-  `CREATED_TIME` datetime NOT NULL,
-  `UPDATED_TIME` datetime NOT NULL,
-  `WORKSPACE` varchar(4096) DEFAULT NULL,
-  `BUILD_NUM` int(20) DEFAULT '0',
-  `PIPELINE_NAME` varchar(255) DEFAULT '',
-  `TASK_NAME` varchar(255) DEFAULT '',
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+  `AGENT_ID` varchar(32) NOT NULL COMMENT '构建机ID',
+  `PIPELINE_ID` varchar(34) NOT NULL DEFAULT '' COMMENT '流水线ID',
+  `BUILD_ID` varchar(34) NOT NULL COMMENT '构建ID',
+  `VM_SEQ_ID` varchar(34) NOT NULL COMMENT '构建序列号',
+  `STATUS` int(11) NOT NULL COMMENT '状态',
+  `CREATED_TIME` datetime NOT NULL COMMENT '创建时间',
+  `UPDATED_TIME` datetime NOT NULL COMMENT '更新时间',
+  `WORKSPACE` varchar(4096) DEFAULT NULL COMMENT '工作空间',
+  `BUILD_NUM` int(20) DEFAULT '0' COMMENT '构建次数',
+  `PIPELINE_NAME` varchar(255) DEFAULT '' COMMENT '流水线名称',
+  `TASK_NAME` varchar(255) DEFAULT '' COMMENT '任务名称',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `BUILD_ID` (`BUILD_ID`,`VM_SEQ_ID`),
   KEY `idx_agent_id` (`AGENT_ID`),
@@ -142,133 +142,133 @@ CREATE TABLE IF NOT EXISTS `T_DISPATCH_THIRDPARTY_AGENT_BUILD` (
   KEY `idx_status`(`STATUS`),
   KEY `IDX_PROJECT_PIPELINE_SEQ_STATUS_TIME`(`PROJECT_ID`, `PIPELINE_ID`, `VM_SEQ_ID`, `STATUS`, `CREATED_TIME`),
   KEY `IDX_AGENTID_STATUS_UPDATE`(`AGENT_ID`, `STATUS`, `UPDATED_TIME`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_PIPELINE_DOCKER_TEMPLATE`
 (
-    `ID`                int(20)     NOT NULL AUTO_INCREMENT,
-    `VERSION_ID`        int(20)     NOT NULL,
-    `SHOW_VERSION_ID`   int(20)     NOT NULL,
-    `SHOW_VERSION_NAME` varchar(64) NOT NULL,
-    `DEPLOYMENT_ID`     int(20)     NOT NULL,
-    `DEPLOYMENT_NAME`   varchar(64) NOT NULL,
-    `CC_APP_ID`         bigint(20)  NOT NULL,
-    `BCS_PROJECT_ID`    varchar(64) NOT NULL,
-    `CLUSTER_ID`        varchar(64) NOT NULL,
-    `CREATED_TIME`      datetime    NOT NULL,
+    `ID`                int(20)     NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `VERSION_ID`        int(20)     NOT NULL COMMENT '版本ID',
+    `SHOW_VERSION_ID`   int(20)     NOT NULL COMMENT '',
+    `SHOW_VERSION_NAME` varchar(64) NOT NULL COMMENT '版本名称',
+    `DEPLOYMENT_ID`     int(20)     NOT NULL COMMENT '部署 ID',
+    `DEPLOYMENT_NAME`   varchar(64) NOT NULL COMMENT '部署 名称',
+    `CC_APP_ID`         bigint(20)  NOT NULL COMMENT '应用ID',
+    `BCS_PROJECT_ID`    varchar(64) NOT NULL COMMENT '',
+    `CLUSTER_ID`        varchar(64) NOT NULL COMMENT '集群ID',
+    `CREATED_TIME`      datetime    NOT NULL COMMENT '创建时间',
     PRIMARY KEY (`ID`)
 ) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4;
+  DEFAULT CHARSET = utf8mb4 COMMENT='';
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_VM`
 (
-    `VM_ID`               bigint(20)   NOT NULL AUTO_INCREMENT,
-    `VM_MACHINE_ID`       int(11)      NOT NULL,
-    `VM_IP`               varchar(128) NOT NULL,
-    `VM_NAME`             varchar(128) NOT NULL,
-    `VM_OS`               varchar(64)  NOT NULL,
-    `VM_OS_VERSION`       varchar(64)  NOT NULL DEFAULT '',
-    `VM_CPU`              varchar(64)  NOT NULL,
-    `VM_MEMORY`           varchar(64)  NOT NULL,
-    `VM_TYPE_ID`          int(11)      NOT NULL,
-    `VM_MAINTAIN`         tinyint(1)   NOT NULL DEFAULT '0',
-    `VM_MANAGER_USERNAME` varchar(128) NOT NULL DEFAULT '',
-    `VM_MANAGER_PASSWD`   varchar(128) NOT NULL DEFAULT '' COMMENT 'SUDO Password',
-    `VM_USERNAME`         varchar(128) NOT NULL DEFAULT '',
-    `VM_PASSWD`           varchar(128) NOT NULL DEFAULT '',
-    `VM_CREATED_TIME`     datetime     NOT NULL,
-    `VM_UPDATED_TIME`     datetime     NOT NULL,
+    `VM_ID`               bigint(20)   NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `VM_MACHINE_ID`       int(11)      NOT NULL COMMENT 'VM 对应母机ID',
+    `VM_IP`               varchar(128) NOT NULL COMMENT 'VM IP地址',
+    `VM_NAME`             varchar(128) NOT NULL COMMENT 'VM 名称',
+    `VM_OS`               varchar(64)  NOT NULL COMMENT 'VM 系统信息',
+    `VM_OS_VERSION`       varchar(64)  NOT NULL DEFAULT '' COMMENT 'VM 系统信息版本',
+    `VM_CPU`              varchar(64)  NOT NULL COMMENT 'VM CPU信息',
+    `VM_MEMORY`           varchar(64)  NOT NULL COMMENT 'VM 内存信息',
+    `VM_TYPE_ID`          int(11)      NOT NULL COMMENT 'VM 类型ID',
+    `VM_MAINTAIN`         tinyint(1)   NOT NULL DEFAULT '0' COMMENT 'VM 是否在维护状态',
+    `VM_MANAGER_USERNAME` varchar(128) NOT NULL DEFAULT '' COMMENT 'VM 管理员用户名',
+    `VM_MANAGER_PASSWD`   varchar(128) NOT NULL DEFAULT '' COMMENT 'VM 管理员密码',
+    `VM_USERNAME`         varchar(128) NOT NULL DEFAULT '' COMMENT 'VM 非管理员用户名',
+    `VM_PASSWD`           varchar(128) NOT NULL DEFAULT '' COMMENT 'VM 非管理员密码',
+    `VM_CREATED_TIME`     datetime     NOT NULL COMMENT '创建时间',
+    `VM_UPDATED_TIME`     datetime     NOT NULL COMMENT '修改时间',
     PRIMARY KEY (`VM_ID`),
     UNIQUE KEY `VM_IP` (`VM_IP`),
     UNIQUE KEY `VM_NAME` (`VM_NAME`)
 ) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4;
+  DEFAULT CHARSET = utf8mb4 COMMENT='';
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_PIPELINE_VM`
 (
-    `PIPELINE_ID` varchar(64) NOT NULL,
-    `VM_NAMES`    text        NOT NULL,
-    `VM_SEQ_ID`   int(20)     NOT NULL DEFAULT '-1',
+    `PIPELINE_ID` varchar(64) NOT NULL COMMENT '流水线ID',
+    `VM_NAMES`    text        NOT NULL COMMENT 'VM 名称',
+    `VM_SEQ_ID`   int(20)     NOT NULL DEFAULT '-1' COMMENT '构建序列号',
     PRIMARY KEY (`PIPELINE_ID`, `VM_SEQ_ID`)
 ) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4;
+  DEFAULT CHARSET = utf8mb4 COMMENT='';
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_PRIVATE_VM`
 (
-    `VM_ID`      int(11)     NOT NULL,
-    `PROJECT_ID` varchar(64) NOT NULL,
+    `VM_ID`      int(11)     NOT NULL COMMENT 'VM ID',
+    `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
     PRIMARY KEY (`VM_ID`),
     UNIQUE KEY `VM_PROJECT_ID` (`VM_ID`, `PROJECT_ID`)
 ) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4;
+  DEFAULT CHARSET = utf8mb4 COMMENT='';
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_PROJECT_SNAPSHOT`
 (
-    `PROJECT_ID`          varchar(64) NOT NULL,
-    `VM_STARTUP_SNAPSHOT` varchar(64) NOT NULL,
+    `PROJECT_ID`          varchar(64) NOT NULL COMMENT '项目ID',
+    `VM_STARTUP_SNAPSHOT` varchar(64) NOT NULL COMMENT 'VM 启动快照',
     PRIMARY KEY (`PROJECT_ID`),
     UNIQUE KEY `U_PROJECT_SNAPSHOT` (`PROJECT_ID`, `VM_STARTUP_SNAPSHOT`)
 ) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4;
+  DEFAULT CHARSET = utf8mb4 COMMENT='';
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_VM_TYPE`
 (
-    `TYPE_ID`           int(11)     NOT NULL AUTO_INCREMENT,
-    `TYPE_NAME`         varchar(64) NOT NULL,
-    `TYPE_CREATED_TIME` datetime    NOT NULL,
-    `TYPE_UPDATED_TIME` datetime    NOT NULL,
+    `TYPE_ID`           int(11)     NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `TYPE_NAME`         varchar(64) NOT NULL COMMENT '名称',
+    `TYPE_CREATED_TIME` datetime    NOT NULL COMMENT '创建时间',
+    `TYPE_UPDATED_TIME` datetime    NOT NULL COMMENT '更新时间',
     PRIMARY KEY (`TYPE_ID`),
     UNIQUE KEY `TYPE_NAME` (`TYPE_NAME`)
 ) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4;
+  DEFAULT CHARSET = utf8mb4 COMMENT='';
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_PIPELINE_DOCKER_DEBUG`
 (
-    `ID`            bigint(20)       NOT NULL AUTO_INCREMENT,
-    `PROJECT_ID`    varchar(64)   NOT NULL,
-    `PIPELINE_ID`   varchar(34)   NOT NULL DEFAULT '',
-    `VM_SEQ_ID`     varchar(34)   NOT NULL,
-    `POOL_NO`       int(11)       NOT NULL DEFAULT 0,
-    `STATUS`        int(11)       NOT NULL,
-    `TOKEN`         varchar(128)           DEFAULT NULL,
-    `IMAGE_NAME`    varchar(1024) NOT NULL,
-    `HOST_TAG`      varchar(128)           DEFAULT NULL,
-    `CONTAINER_ID`  varchar(128)           DEFAULT NULL,
-    `CREATED_TIME`  datetime      NOT NULL,
-    `UPDATED_TIME`  datetime      NOT NULL,
-    `ZONE`          varchar(128)           DEFAULT NULL,
-    `BUILD_ENV`     varchar(4096)          DEFAULT NULL,
-    `REGISTRY_USER` varchar(128)           DEFAULT NULL,
-    `REGISTRY_PWD`  varchar(128)           DEFAULT NULL,
-    `IMAGE_TYPE`    varchar(128)           DEFAULT NULL,
+    `ID`            bigint(20)       NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `PROJECT_ID`    varchar(64)   NOT NULL COMMENT '项目ID',
+    `PIPELINE_ID`   varchar(34)   NOT NULL DEFAULT '' COMMENT '流水线ID',
+    `VM_SEQ_ID`     varchar(34)   NOT NULL COMMENT '构建序列号',
+    `POOL_NO`       int(11)       NOT NULL DEFAULT 0 COMMENT '构建池序号',
+    `STATUS`        int(11)       NOT NULL COMMENT '状态',
+    `TOKEN`         varchar(128)           DEFAULT NULL COMMENT 'TOKEN',
+    `IMAGE_NAME`    varchar(1024) NOT NULL COMMENT '镜像名称',
+    `HOST_TAG`      varchar(128)           DEFAULT NULL COMMENT '主机标签',
+    `CONTAINER_ID`  varchar(128)           DEFAULT NULL COMMENT '构建容器ID',
+    `CREATED_TIME`  datetime      NOT NULL COMMENT '创建时间',
+    `UPDATED_TIME`  datetime      NOT NULL COMMENT '修改时间',
+    `ZONE`          varchar(128)           DEFAULT NULL COMMENT '构建机地域',
+    `BUILD_ENV`     varchar(4096)          DEFAULT NULL COMMENT '构建机环境变量',
+    `REGISTRY_USER` varchar(128)           DEFAULT NULL COMMENT '注册用户名',
+    `REGISTRY_PWD`  varchar(128)           DEFAULT NULL COMMENT '注册用户密码',
+    `IMAGE_TYPE`    varchar(128)           DEFAULT NULL COMMENT '镜像类型',
     `IMAGE_PUBLIC_FLAG` bit(1) DEFAULT NULL COMMENT '镜像是否为公共镜像：0否1是',
     `IMAGE_RD_TYPE` tinyint(1) DEFAULT NULL COMMENT '镜像研发来源：0自研1第三方',
     PRIMARY KEY (`ID`),
     UNIQUE KEY `PIPELINE_ID` (`PIPELINE_ID`, `VM_SEQ_ID`)
 ) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4;
+  DEFAULT CHARSET = utf8mb4 COMMENT='';
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_PIPELINE_DOCKER_ENABLE`
 (
-    `PIPELINE_ID` varchar(64) NOT NULL,
-    `ENABLE`      tinyint(1)  NOT NULL DEFAULT '0',
-    `VM_SEQ_ID`   int(20)     NOT NULL DEFAULT '-1',
+    `PIPELINE_ID` varchar(64) NOT NULL COMMENT '流水线ID',
+    `ENABLE`      tinyint(1)  NOT NULL DEFAULT '0' COMMENT '是否启用',
+    `VM_SEQ_ID`   int(20)     NOT NULL DEFAULT '-1' COMMENT '构建序列号',
     PRIMARY KEY (`PIPELINE_ID`, `VM_SEQ_ID`)
 ) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4;
+  DEFAULT CHARSET = utf8mb4 COMMENT='';
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_PIPELINE_DOCKER_HOST`
 (
-    `PROJECT_CODE` varchar(128) NOT NULL,
-    `HOST_IP`      varchar(128) NOT NULL,
-    `REMARK`       varchar(1024)         DEFAULT NULL,
-    `CREATED_TIME` datetime     NOT NULL,
-    `UPDATED_TIME` datetime     NOT NULL,
-    `TYPE`         int(11)      NOT NULL DEFAULT '0',
-    `ROUTE_KEY`    varchar(45)           DEFAULT NULL,
+    `PROJECT_CODE` varchar(128) NOT NULL COMMENT '用户组所属项目',
+    `HOST_IP`      varchar(128) NOT NULL COMMENT '主机ip',
+    `REMARK`       varchar(1024)         DEFAULT NULL COMMENT '评论',
+    `CREATED_TIME` datetime     NOT NULL COMMENT '创建时间',
+    `UPDATED_TIME` datetime     NOT NULL COMMENT '更新时间',
+    `TYPE`         int(11)      NOT NULL DEFAULT '0' COMMENT '类型',
+    `ROUTE_KEY`    varchar(45)           DEFAULT NULL COMMENT '消息队列的路由KEY',
     PRIMARY KEY (`PROJECT_CODE`, `HOST_IP`)
 ) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4;
+  DEFAULT CHARSET = utf8mb4 COMMENT='';
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE` (
     `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
@@ -330,45 +330,45 @@ CREATE TABLE IF NOT EXISTS `T_DISPATCH_PIPELINE_DOCKER_IP_INFO` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='DOCKER构建机负载表';
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_QUOTA_SYSTEM` (
-  `VM_TYPE` varchar(128) NOT NULL,
-  `RUNNING_JOBS_MAX_SYSTEM` int(10) NOT NULL,
-  `RUNNING_JOBS_MAX_PROJECT` int(10) NOT NULL,
-	`RUNNING_TIME_JOB_MAX` int(10) NOT NULL,
-  `RUNNING_TIME_JOB_MAX_PROJECT` int(10) NOT NULL,
-	`RUNNING_JOBS_MAX_GITCI_SYSTEM` int(10) NOT NULL,
-  `RUNNING_JOBS_MAX_GITCI_PROJECT` int(10) NOT NULL,
-	`RUNNING_TIME_JOB_MAX_GITCI` int(10) NOT NULL,
-  `RUNNING_TIME_JOB_MAX_PROJECT_GITCI` int(10) NOT NULL,
-	`PROJECT_RUNNING_JOB_THRESHOLD` int(10) NOT NULL,
-	`PROJECT_RUNNING_TIME_THRESHOLD` int(10) NOT NULL,
-	`SYSTEM_RUNNING_JOB_THRESHOLD` int(10) NOT NULL,
-	`CREATED_TIME` datetime NOT NULL,
-  `UPDATED_TIME` datetime NOT NULL,
-	`OPERATOR` varchar(128) NOT NULL,
+  `VM_TYPE` varchar(128) NOT NULL COMMENT '构建机类型',
+  `RUNNING_JOBS_MAX_SYSTEM` int(10) NOT NULL COMMENT '蓝盾系统最大并发JOB数',
+  `RUNNING_JOBS_MAX_PROJECT` int(10) NOT NULL COMMENT '单项目默认最大并发JOB数',
+	`RUNNING_TIME_JOB_MAX` int(10) NOT NULL COMMENT '系统默认所有单个JOB最大执行时间',
+  `RUNNING_TIME_JOB_MAX_PROJECT` int(10) NOT NULL COMMENT '默认单项目所有JOB最大执行时间',
+	`RUNNING_JOBS_MAX_GITCI_SYSTEM` int(10) NOT NULL COMMENT '工蜂CI系统总最大并发JOB数量',
+  `RUNNING_JOBS_MAX_GITCI_PROJECT` int(10) NOT NULL COMMENT '工蜂CI单项目最大并发JOB数量',
+	`RUNNING_TIME_JOB_MAX_GITCI` int(10) NOT NULL COMMENT '工蜂CI单JOB最大执行时间',
+  `RUNNING_TIME_JOB_MAX_PROJECT_GITCI` int(10) NOT NULL COMMENT '工蜂CI单项目最大执行时间',
+	`PROJECT_RUNNING_JOB_THRESHOLD` int(10) NOT NULL COMMENT '项目执行job数量告警阈值',
+	`PROJECT_RUNNING_TIME_THRESHOLD` int(10) NOT NULL COMMENT '项目执行job时间告警阈值',
+	`SYSTEM_RUNNING_JOB_THRESHOLD` int(10) NOT NULL COMMENT '系统执行job数量告警阈值',
+	`CREATED_TIME` datetime NOT NULL COMMENT '创建时间',
+  `UPDATED_TIME` datetime NOT NULL COMMENT '更新时间',
+	`OPERATOR` varchar(128) NOT NULL COMMENT '操作人',
   PRIMARY KEY (`VM_TYPE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统配额';
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_QUOTA_PROJECT` (
-  `PROJECT_ID` varchar(128) NOT NULL,
-  `VM_TYPE` varchar(128) NOT NULL,
-  `RUNNING_JOBS_MAX` int(10) NOT NULL,
-	`RUNNING_TIME_JOB_MAX` int(10) NOT NULL,
-  `RUNNING_TIME_PROJECT_MAX` int(10) NOT NULL,
-	`CREATED_TIME` datetime NOT NULL,
-  `UPDATED_TIME` datetime NOT NULL,
-	`OPERATOR` varchar(128) NOT NULL,
+  `PROJECT_ID` varchar(128) NOT NULL COMMENT '项目ID',
+  `VM_TYPE` varchar(128) NOT NULL COMMENT 'VM 类型',
+  `RUNNING_JOBS_MAX` int(10) NOT NULL COMMENT '项目最大并发JOB数',
+	`RUNNING_TIME_JOB_MAX` int(10) NOT NULL COMMENT '项目单JOB最大执行时间',
+  `RUNNING_TIME_PROJECT_MAX` int(10) NOT NULL COMMENT '项目所有JOB最大执行时间',
+	`CREATED_TIME` datetime NOT NULL COMMENT '创建时间',
+  `UPDATED_TIME` datetime NOT NULL COMMENT '更新时间',
+	`OPERATOR` varchar(128) NOT NULL COMMENT '操作人',
   PRIMARY KEY (`PROJECT_ID`, `VM_TYPE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目配额';
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_RUNNING_JOBS` (
-	`ID` int(20) NOT NULL AUTO_INCREMENT,
-  `PROJECT_ID` varchar(128) NOT NULL,
-  `VM_TYPE` varchar(128) NOT NULL,
-	`BUILD_ID` varchar(128) NOT NULL,
-	`VM_SEQ_ID` varchar(128) NOT NULL,
-	`EXECUTE_COUNT` int(11) NOT NULL,
-	`CREATED_TIME` datetime NOT NULL,
-	`AGENT_START_TIME` datetime NULL,
+	`ID` int(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `PROJECT_ID` varchar(128) NOT NULL COMMENT '项目ID',
+  `VM_TYPE` varchar(128) NOT NULL COMMENT 'VM 类型',
+	`BUILD_ID` varchar(128) NOT NULL COMMENT '构建ID',
+	`VM_SEQ_ID` varchar(128) NOT NULL COMMENT '构建序列号',
+	`EXECUTE_COUNT` int(11) NOT NULL COMMENT '执行次数',
+	`CREATED_TIME` datetime NOT NULL COMMENT '创建时间',
+	`AGENT_START_TIME` datetime NULL COMMENT '构建机启动时间',
   PRIMARY KEY (`ID`),
 	KEY `inx_project_id` (`PROJECT_ID`),
   KEY `inx_vm_type` (`VM_TYPE`),
@@ -379,10 +379,10 @@ CREATE TABLE IF NOT EXISTS `T_DISPATCH_RUNNING_JOBS` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='运行中的JOB';
 
 CREATE TABLE IF NOT EXISTS `T_DISPATCH_PROJECT_RUN_TIME` (
-  `PROJECT_ID` varchar(128) NOT NULL,
-  `VM_TYPE` varchar(128) NOT NULL,
-  `RUN_TIME` BIGINT NOT NULL,
-  `UPDATE_TIME` datetime NOT NULL,
+  `PROJECT_ID` varchar(128) NOT NULL COMMENT '项目ID',
+  `VM_TYPE` varchar(128) NOT NULL COMMENT 'VM 类型',
+  `RUN_TIME` BIGINT NOT NULL COMMENT '运行时长',
+  `UPDATE_TIME` datetime NOT NULL COMMENT '更新时间',
   PRIMARY KEY (`PROJECT_ID`, `VM_TYPE`),
   KEY `inx_project_id` (`PROJECT_ID`),
   KEY `inx_vm_type` (`VM_TYPE`),

@@ -26,9 +26,9 @@ const jobOptionConfigMixin = {
                     default: false
                 },
                 mutexGroupName: {
-                    rule: {
-                        mutualGroup: true
-                    },
+                    // rule: {
+                    //     mutualGroup: true
+                    // },
                     component: 'vuex-input',
                     label: this.$t('storeMap.mutualGroupName'),
                     placeholder: this.$t('storeMap.mutualGroupNamePlaceholder'),
@@ -43,7 +43,7 @@ const jobOptionConfigMixin = {
                     default: false
                 },
                 timeout: {
-                    rule: { 'numeric': true, 'max_value': 10080, 'min_value': 1 },
+                    rule: { numeric: true, max_value: 10080, min_value: 1 },
                     component: 'vuex-input',
                     label: this.$t('storeMap.mutualTimeout'),
                     placeholder: this.$t('storeMap.mutualTimeoutPlaceholder'),
@@ -54,7 +54,7 @@ const jobOptionConfigMixin = {
                     }
                 },
                 queue: {
-                    rule: { 'numeric': true, 'max_value': 10, 'min_value': 1 },
+                    rule: { numeric: true, max_value: 10, min_value: 1 },
                     component: 'vuex-input',
                     label: this.$t('storeMap.queueLabel'),
                     placeholder: this.$t('storeMap.queuePlaceholder'),
@@ -63,6 +63,52 @@ const jobOptionConfigMixin = {
                     isHidden: (mutexGroup) => {
                         return !(mutexGroup && mutexGroup.queueEnable)
                     }
+                }
+            },
+            JOB_MATRIX: {
+                strategyStr: {
+                    required: true,
+                    rule: {},
+                    component: 'atom-ace-editor',
+                    lang: 'yaml',
+                    defaultHeight: 100,
+                    label: this.$t('storeMap.strategy'),
+                    desc: this.$t('storeMap.strategyDesc'),
+                    default: ''
+                },
+                includeCaseStr: {
+                    rule: {},
+                    component: 'atom-ace-editor',
+                    lang: 'yaml',
+                    defaultHeight: 100,
+                    label: this.$t('storeMap.includeCase'),
+                    desc: this.$t('storeMap.includeCaseDesc'),
+                    default: ''
+                },
+                excludeCaseStr: {
+                    rule: {},
+                    component: 'atom-ace-editor',
+                    lang: 'yaml',
+                    defaultHeight: 100,
+                    label: this.$t('storeMap.excludeCase'),
+                    desc: this.$t('storeMap.excludeCaseDesc'),
+                    default: ''
+                },
+                fastKill: {
+                    rule: {},
+                    type: 'boolean',
+                    component: 'atom-checkbox',
+                    text: this.$t('storeMap.fastKill'),
+                    // desc: this.$t('storeMap.fastKillDesc'),
+                    default: true
+                },
+                maxConcurrency: {
+                    rule: { numeric: true, min_value: 1, max_value: 20 },
+                    component: 'vuex-input',
+                    required: true,
+                    label: this.$t('storeMap.maxConcurrency'),
+                    placeholder: this.$t('storeMap.maxConcurrencyDesc'),
+                    default: '5'
                 }
             },
             normalRunConditionList: [
@@ -130,7 +176,8 @@ const jobOptionConfigMixin = {
                     default: [],
                     multiSelect: true,
                     list: this.dependOnList,
-                    isHidden: (jobOption) => {
+                    isHidden: (container) => {
+                        const jobOption = container.jobControlOption || {}
                         return !(jobOption && (jobOption.dependOnType === 'ID' || !jobOption.dependOnType))
                     }
                 },
@@ -139,18 +186,32 @@ const jobOptionConfigMixin = {
                     component: 'vuex-input',
                     default: '',
                     placeholder: this.$t('storeMap.dependOnNamePlaceholder'),
-                    isHidden: (jobOption) => {
+                    isHidden: (container) => {
+                        const jobOption = container.jobControlOption || {}
                         return !(jobOption && jobOption.dependOnType === 'NAME')
                     }
                 },
                 timeout: {
-                    rule: { 'numeric': true, 'max_value': 10080 },
+                    rule: { numeric: true, max_value: 10080 },
                     component: 'vuex-input',
                     required: true,
                     label: this.$t('storeMap.jobTimeout'),
                     desc: this.$t('storeMap.timeoutDesc'),
                     placeholder: this.$t('storeMap.timeoutPlaceholder'),
                     default: '900'
+                },
+                prepareTimeout: {
+                    rule: { numeric: true, max_value: 10080 },
+                    component: 'vuex-input',
+                    required: true,
+                    label: this.$t('storeMap.prepareTimeout'),
+                    desc: this.$t('storeMap.timeoutDesc'),
+                    placeholder: this.$t('storeMap.timeoutPlaceholder'),
+                    default: '10',
+                    isHidden: (container) => {
+                        const dispatchType = container.dispatchType || {}
+                        return dispatchType.buildType !== 'THIRD_PARTY_AGENT_ENV'
+                    }
                 },
                 runCondition: {
                     rule: {},
@@ -165,7 +226,8 @@ const jobOptionConfigMixin = {
                     default: [{ key: 'param1', value: '' }],
                     label: this.$t('storeMap.customVar'),
                     allowNull: false,
-                    isHidden: (jobOption) => {
+                    isHidden: (container) => {
+                        const jobOption = container.jobControlOption || {}
                         return !(jobOption && (jobOption.runCondition === 'CUSTOM_VARIABLE_MATCH' || jobOption.runCondition === 'CUSTOM_VARIABLE_MATCH_NOT_RUN'))
                     }
                 },
@@ -178,7 +240,7 @@ const jobOptionConfigMixin = {
         dependOnList () {
             const list = []
             // if (!this.stage.containers || this.stage.containers.length <= 1) return list
-            this.stage.containers && this.stage.containers.map((container, index) => {
+            this.stage.containers && this.stage.containers.forEach((container, index) => {
                 if (index !== this.containerIndex) {
                     list.push(
                         {

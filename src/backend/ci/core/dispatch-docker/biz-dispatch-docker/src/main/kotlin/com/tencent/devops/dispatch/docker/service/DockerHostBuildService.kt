@@ -30,7 +30,7 @@ package com.tencent.devops.dispatch.docker.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -38,16 +38,14 @@ import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.docker.client.DockerHostClient
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerEnableDao
-import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostZoneDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerPoolDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskDao
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
-import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
-import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoad
 import com.tencent.devops.dispatch.docker.pojo.Load
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
+import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -67,7 +65,6 @@ class DockerHostBuildService @Autowired constructor(
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val pipelineDockerTaskDao: PipelineDockerTaskDao,
     private val pipelineDockerPoolDao: PipelineDockerPoolDao,
-    private val pipelineDockerHostZoneDao: PipelineDockerHostZoneDao,
     private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
     private val redisUtils: RedisUtils,
     private val client: Client,
@@ -78,6 +75,20 @@ class DockerHostBuildService @Autowired constructor(
 ) {
 
     private val grayFlag: Boolean = gray.isGray()
+
+    fun updateContainerId(
+        buildId: String,
+        vmSeqId: Int,
+        containerId: String
+    ) {
+        LOG.info("$buildId|$vmSeqId update containerId: $containerId")
+        pipelineDockerBuildDao.updateContainerId(
+            dslContext = dslContext,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            containerId = containerId
+        )
+    }
 
     fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean) =
         pipelineDockerEnableDao.enable(dslContext, pipelineId, vmSeqId, enable)
@@ -196,12 +207,13 @@ class DockerHostBuildService @Autowired constructor(
                     buildId = event.buildId,
                     vmSeqId = event.vmSeqId?.toInt() ?: 0,
                     containerId = record.containerId,
-                    dockerIp = record.dockerIp
+                    dockerIp = record.dockerIp,
+                    poolNo = record.poolNo
                 )
             }
 
             // 只要当容器关机成功时才会更新build_history状态
-            finishBuild(record, event.buildResult)
+            finishBuild(record = record, success = event.buildResult, executeCount = event.executeCount)
         } catch (ignore: Exception) {
             LOG.warn("${event.buildId}|finishDockerFail|vmSeqId=${event.vmSeqId}|result=${event.buildResult}", ignore)
         } finally {
@@ -219,7 +231,8 @@ class DockerHostBuildService @Autowired constructor(
     private fun finishBuild(
         record: TDispatchPipelineDockerBuildRecord,
         success: Boolean,
-        buildLessFlag: Boolean = false
+        buildLessFlag: Boolean = false,
+        executeCount: Int? = null
     ) {
         LOG.info("Finish the docker build(${record.buildId}) with result($success)")
         try {
@@ -235,7 +248,7 @@ class DockerHostBuildService @Autowired constructor(
                 record.buildId,
                 record.vmSeqId,
                 if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
-            redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString())
+            redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString(), executeCount)
 
             // 无编译环境清除redisAuth
             if (buildLessFlag) {
@@ -250,7 +263,6 @@ class DockerHostBuildService @Autowired constructor(
      * 每天执行一次，更新大于七天状态还是running的pool，以及大于七天状态还是running的build history，并主动关机
      */
     @Scheduled(initialDelay = 120 * 1000, fixedDelay = 3600 * 24 * 1000)
-    @Deprecated("this function is deprecated!")
     fun updateTimeoutPoolTask() {
         var message = ""
         val redisLock = RedisLock(redisOperation, "update_timeout_pool_task_nogkudla", 5L)
@@ -293,16 +305,19 @@ class DockerHostBuildService @Autowired constructor(
                         buildId = timeoutBuildList[i].buildId,
                         vmSeqId = timeoutBuildList[i].vmSeqId,
                         containerId = timeoutBuildList[i].containerId,
-                        dockerIp = timeoutBuildList[i].dockerIp
+                        dockerIp = timeoutBuildList[i].dockerIp,
+                        poolNo = timeoutBuildList[i].poolNo,
+                        clusterType = DockerHostClusterType.valueOf(dockerIpInfo.clusterName)
                     )
 
-                    pipelineDockerBuildDao.updateTimeOutBuild(dslContext, timeoutBuildList[i].buildId)
                     LOG.info("updateTimeoutBuild pipelineId:(${timeoutBuildList[i].pipelineId})," +
                             " buildId:(${timeoutBuildList[i].buildId}), " +
                             "poolNo:(${timeoutBuildList[i].poolNo})")
                 }
             } catch (ignore: Exception) {
                 LOG.warn("updateTimeoutBuild buildId: ${timeoutBuildList[i].buildId} failed", ignore)
+            } finally {
+                pipelineDockerBuildDao.updateTimeOutBuild(dslContext, timeoutBuildList[i].buildId)
             }
         }
     }
@@ -336,22 +351,13 @@ class DockerHostBuildService @Autowired constructor(
         )
     }
 
-    fun getHost(hostTag: String): Result<DockerHostInfo>? {
-        val hostZone = pipelineDockerHostZoneDao.getHostZone(dslContext, hostTag)
-        LOG.info("[getHost]| hostTag=$hostTag, hostZone=$hostZone")
-        return if (hostZone == null) {
-            Result(DockerHostInfo(MQ.DEFAULT_BUILD_LESS_DOCKET_HOST_ROUTE_SUFFIX))
-        } else {
-            Result(DockerHostInfo(hostZone.routeKey ?: MQ.DEFAULT_BUILD_LESS_DOCKET_HOST_ROUTE_SUFFIX))
-        }
-    }
-
     fun log(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
         LOG.info("write log from docker host, buildId: $buildId, msg: $message, tag: $tag, jobId= $jobId")
+        val executeCount = DispatchLogRedisUtils.getRedisExecuteCount(buildId)
         if (red) {
-            buildLogPrinter.addRedLine(buildId, message, tag ?: "", jobId ?: "", 1)
+            buildLogPrinter.addRedLine(buildId, message, tag ?: "", jobId ?: "", executeCount)
         } else {
-            buildLogPrinter.addLine(buildId, message, tag ?: "", jobId ?: "", 1)
+            buildLogPrinter.addLine(buildId, message, tag ?: "", jobId ?: "", executeCount)
         }
     }
 

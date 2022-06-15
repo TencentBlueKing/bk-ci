@@ -35,6 +35,7 @@ import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitApi
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -69,16 +70,19 @@ class CodeTGitScmImpl constructor(
         return RevisionInfo(
             revision = gitBranch.commit.id,
             updatedMessage = gitBranch.commit.message,
-            branchName = branch
+            branchName = branch,
+            authorName = gitBranch.commit.authorName
         )
     }
 
-    override fun getBranches(search: String?) =
+    override fun getBranches(search: String?, page: Int, pageSize: Int): List<String> =
         gitApi.listBranches(
             host = apiUrl,
             token = token,
             projectName = projectName,
-            search = search
+            search = search,
+            page = page,
+            pageSize = pageSize
         )
 
     override fun getTags(search: String?) =
@@ -246,6 +250,17 @@ class CodeTGitScmImpl constructor(
             host = apiUrl,
             token = token,
             url = url
+        )
+    }
+
+    override fun getMrCommitList(mrId: Long, page: Int, size: Int): List<GitCommit> {
+        val url = "projects/${urlEncode(projectName)}/merge_request/$mrId/commits"
+        return gitApi.getMrCommitList(
+            host = apiUrl,
+            token = token,
+            url = url,
+            page = page,
+            size = size
         )
     }
 

@@ -18,7 +18,7 @@ BEGIN
                     AND TABLE_NAME = 'T_NODE'
                     AND COLUMN_NAME = 'BIZ_ID') THEN
         ALTER TABLE `T_NODE`
-            ADD COLUMN `BIZ_ID` bigint(20) DEFAULT NULL;
+            ADD COLUMN `BIZ_ID` bigint(20) DEFAULT NULL COMMENT '所属业务';
     ELSEIF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db

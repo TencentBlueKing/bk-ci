@@ -42,7 +42,10 @@ import com.tencent.devops.dockerhost.services.container.ContainerCustomizedRunHa
 import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
 import com.tencent.devops.dockerhost.services.container.ContainerPullImageHandler
 import com.tencent.devops.dockerhost.services.container.ContainerRunHandler
-import com.tencent.devops.dockerhost.utils.SigarUtil
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil.getAverageCpuLoad
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil.getAverageDiskIOLoad
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil.getAverageDiskLoad
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil.getAverageMemLoad
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -88,6 +91,8 @@ class DockerService @Autowired constructor(
             )
         })
         buildTask[getKey(vmSeqId, buildId)] = future
+
+        logger.info("[$buildId]|projectId=$projectId|pipelineId=$pipelineId|vmSeqId=$vmSeqId|future:$future")
         return true
     }
 
@@ -107,6 +112,7 @@ class DockerService @Autowired constructor(
         pipelineId: String,
         vmSeqId: String,
         buildId: String,
+        pipelineTaskId: String?,
         dockerRunParam: DockerRunParam
     ): DockerRunResponse {
         logger.info("$buildId|dockerRun|vmSeqId=$vmSeqId|image=${dockerRunParam.imageName}|${dockerRunParam.command}")
@@ -137,7 +143,8 @@ class DockerService @Autowired constructor(
             registryUser = dockerRunParam.registryUser,
             registryPwd = dockerRunParam.registryPwd,
             dockerRunParam = dockerRunParam,
-            qpcUniquePath = qpcUniquePath
+            qpcUniquePath = qpcUniquePath,
+            pipelineTaskId = pipelineTaskId
         )
 
         containerPullImageHandler.setNextHandler(containerCustomizedRunHandler).handlerRequest(containerHandlerContext)
@@ -215,7 +222,8 @@ class DockerService @Autowired constructor(
                 customBuildEnv = customBuildEnv,
                 buildType = buildType,
                 qpcUniquePath = qpcUniquePath,
-                dockerResource = dockerResource
+                dockerResource = dockerResource,
+                specialProjectList = specialProjectList
             )
 
             containerPullImageHandler.setNextHandler(
@@ -224,24 +232,16 @@ class DockerService @Autowired constructor(
 
             return containerHandlerContext.containerId!!
         }
-/*        val containerId = dockerHostBuildService.createContainer(dockerHostBuildInfo)
-        dockerHostBuildService.log(
-            buildId = dockerHostBuildInfo.buildId,
-            message = "构建环境启动成功，等待Agent启动...",
-            tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
-            containerHashId = dockerHostBuildInfo.containerHashId
-        )
-        return containerId*/
     }
 
     fun getDockerHostLoad(): DockerHostLoad {
         return DockerHostLoad(
             usedContainerNum = dockerHostBuildService.getContainerNum(),
-            averageCpuLoad = SigarUtil.getAverageCpuLoad(),
-            averageMemLoad = SigarUtil.getAverageMemLoad(),
-            averageDiskLoad = SigarUtil.getAverageDiskLoad(),
-            averageDiskIOLoad = SigarUtil.getAverageDiskIOLoad()
-            )
+            averageCpuLoad = getAverageCpuLoad(),
+            averageMemLoad = getAverageMemLoad(),
+            averageDiskLoad = getAverageDiskLoad(),
+            averageDiskIOLoad = getAverageDiskIOLoad()
+        )
     }
 
     fun getContainerStatus(containerId: String): Boolean {
@@ -254,7 +254,7 @@ class DockerService @Autowired constructor(
             future == null -> Pair(Status.NO_EXISTS, "")
             future.isDone -> {
                 when {
-                    future.get().first -> Pair(Status.SUCCESS, "")
+                    future.get().first -> Pair(Status.SUCCESS, future.get().second ?: "")
                     else -> Pair(Status.FAILURE, future.get().second ?: "")
                 }
             }

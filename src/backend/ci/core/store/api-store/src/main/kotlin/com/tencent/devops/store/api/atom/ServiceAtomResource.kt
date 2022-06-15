@@ -28,13 +28,17 @@
 package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
+import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.pojo.common.Classify
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -76,4 +80,36 @@ interface ServiceAtomResource {
         @PathParam("version")
         version: String
     ): Result<PipelineAtom?>
+
+    @ApiOperation("获取插件真实版本号")
+    @GET
+    @Path("/projects/{projectCode}/codes/{atomCode}/versions/{version}/real")
+    fun getAtomRealVersion(
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam("版本号", required = true)
+        @PathParam("version")
+        version: String
+    ): Result<String?>
+
+    @ApiOperation("获取插件属性列表")
+    @POST
+    @Path("/prop/list")
+    fun getAtomProps(
+        @ApiParam("插件标识列表", required = true)
+        atomCodes: Set<String>
+    ): Result<Map<String, AtomProp>?>
+
+    @ApiOperation("获取插件分类信息")
+    @GET
+    @Path("/codes/{atomCode}/classify/info")
+    fun getAtomClassifyInfo(
+        @ApiParam("插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String
+    ): Result<AtomClassifyInfo?>
 }
