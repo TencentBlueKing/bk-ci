@@ -314,10 +314,10 @@ class BuildEndControl @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildFinishEvent.startNextBuild(nextBuild: BuildInfo?): Boolean {
+    private fun PipelineBuildFinishEvent.startNextBuild(nextBuild: BuildInfo?) {
         if (nextBuild == null) {
             LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|$pipelineId no queue build!")
-            return true
+            return
         }
 
         LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|next build: ${nextBuild.buildId} ${nextBuild.status}")
@@ -340,7 +340,6 @@ class BuildEndControl @Autowired constructor(
                 buildNoType = triggerContainer.buildNo?.buildNoType
             )
         )
-        return false
     }
 
     // 设置流水线执行耗时
