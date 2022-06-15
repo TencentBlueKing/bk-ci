@@ -103,38 +103,39 @@ class PipelineRuntimeExtService @Autowired constructor(
         }
     }
 
-    fun getConcurrencyQueueBuildInfo(
+    /**
+     *  获取同一个并发组内首个排队的BuildInfo
+     */
+    fun popNextConcurrencyGroupQueueCanPend2Start(
         projectId: String,
-        pipelineId: String,
         concurrencyGroup: String,
         buildStatus: BuildStatus = BuildStatus.QUEUE_CACHE
-    ): List<BuildInfo?> {
+    ): BuildInfo? {
         val redisLock = RedisLock(
             redisOperation = redisOperation,
-            lockKey = "$nextBuildKey:$pipelineId",
+            lockKey = "$nextBuildKey:$concurrencyGroup",
             expiredTimeInSeconds = expiredTimeInSeconds
         )
         try {
             redisLock.lock()
-            val buildInfo =
-                pipelineBuildDao.getAllConcurrencyQueueBuild(
+            val buildInfo = pipelineBuildDao.convert(
+                pipelineBuildDao.getOneConcurrencyQueueBuild(
                     dslContext,
                     projectId = projectId,
                     concurrencyGroup = concurrencyGroup
-                ).map {
-                    val convert = pipelineBuildDao.convert(it)
-                    if (convert != null) {
-                        pipelineBuildDao.updateStatus(
-                            dslContext = dslContext,
-                            projectId = projectId,
-                            buildId = convert.buildId,
-                            oldBuildStatus = convert.status,
-                            newBuildStatus = buildStatus
-                        )
-                    }
-                    convert
-                }
-            return buildInfo
+                )
+            )
+            if (buildInfo != null) {
+                pipelineBuildDao.updateStatus(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    buildId = buildInfo.buildId,
+                    oldBuildStatus = buildInfo.status,
+                    newBuildStatus = buildStatus
+                )
+                return buildInfo
+            }
+            return null
         } finally {
             redisLock.unlock()
         }

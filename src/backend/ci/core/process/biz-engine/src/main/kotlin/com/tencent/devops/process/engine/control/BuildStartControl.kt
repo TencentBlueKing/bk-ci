@@ -28,7 +28,6 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
@@ -50,7 +49,6 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
@@ -73,7 +71,6 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_TIME_START
-import com.tencent.devops.process.utils.PipelineVarUtil
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
@@ -248,64 +245,32 @@ class BuildStartControl @Autowired constructor(
         setting: PipelineSetting,
         executeCount: Int
     ): Boolean {
-        // #4074 锁定当前构建是队列中第一个排队待执行的
         var checkStart = true
+        val concurrencyGroup = buildInfo.concurrencyGroup ?: return true
         if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
-            checkStart = pipelineRuntimeExtService.queuePend2Start(projectId, pipelineId, buildId = buildId)
-        }
-        if (checkStart) {
-
-            val concurrencyGroup = setting.concurrencyGroup?.let {
-                val varMap = buildVariableService.getAllVariable(projectId, buildId)
-                EnvUtils.parseEnv(it, PipelineVarUtil.fillContextVarMap(varMap))
-            } ?: return true
-            // 对同并发组其余构建（可能不在同一流水线）都再发起一遍BuildStartEvent
-            pipelineRuntimeExtService.getConcurrencyQueueBuildInfo(projectId, pipelineId, concurrencyGroup).forEach {
-                if (it == null) return@forEach
-                val model = buildDetailService.getBuildModel(it.projectId, it.buildId)
-                    ?: throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                        params = arrayOf(it.buildId)
-                    )
-                val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-                pipelineEventDispatcher.dispatch(
-                    PipelineBuildStartEvent(
-                        source = "start_concurrency_group",
-                        projectId = it.projectId,
-                        pipelineId = it.pipelineId,
-                        userId = it.startUser,
-                        buildId = it.buildId,
-                        taskId = it.firstTaskId,
-                        status = it.status,
-                        actionType = ActionType.START,
-                        buildNoType = triggerContainer.buildNo?.buildNoType
-                    )
-                )
-            }
-            // #6521 并发组中需要等待其他流水线
-            val concurrencyGroupRunningCount = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+            checkStart = pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(
                 projectId = projectId,
-                concurrencyGroup = concurrencyGroup,
-                status = listOf(BuildStatus.RUNNING)
-            ).size
+                concurrencyGroup = concurrencyGroup
+            )?.buildId == buildId
+        }
+        // #6521 并发组中需要等待其他流水线
+        val concurrencyGroupRunningCount = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            status = listOf(BuildStatus.RUNNING)
+        ).size
 
-            LOG.info("ENGINE|$buildId|$source|CHECK_GROUP_TYPE|$concurrencyGroup|$concurrencyGroupRunningCount")
-            if (concurrencyGroupRunningCount > 0) {
-                // 需要重新入队等待
-                pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
-                buildLogPrinter.addLine(
-                    message = "Mode: ${setting.runLockType}," +
-                        "concurrency for group(${setting.concurrencyGroup}) " +
-                        "and queue: $concurrencyGroupRunningCount",
-                    buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
-                )
-                checkStart = false
-            }
-        } else {
+        LOG.info("ENGINE|$buildId|$source|CHECK_GROUP_TYPE|$concurrencyGroup|$concurrencyGroupRunningCount")
+        if (concurrencyGroupRunningCount > 0) {
+            // 需要重新入队等待
+            pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
             buildLogPrinter.addLine(
-                message = "Waiting build #${buildInfo.buildNum - 1}",
+                message = "Mode: ${setting.runLockType}," +
+                    "concurrency for group(${setting.concurrencyGroup}[$concurrencyGroup]) " +
+                    "and queue: $concurrencyGroupRunningCount",
                 buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
             )
+            checkStart = false
         }
         return checkStart
     }

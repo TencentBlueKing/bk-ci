@@ -320,18 +320,18 @@ class PipelineBuildDao {
         }
     }
 
-    fun getAllConcurrencyQueueBuild(
+    fun getOneConcurrencyQueueBuild(
         dslContext: DSLContext,
         projectId: String,
         concurrencyGroup: String
-    ): List<TPipelineBuildHistoryRecord?> {
+    ): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
                 .and(STATUS.eq(BuildStatus.QUEUE.ordinal))
-                .orderBy(BUILD_NUM.asc())
-            select.fetch()
+                .orderBy(QUEUE_TIME.asc()).limit(1)
+            select.fetchAny()
         }
     }
 
