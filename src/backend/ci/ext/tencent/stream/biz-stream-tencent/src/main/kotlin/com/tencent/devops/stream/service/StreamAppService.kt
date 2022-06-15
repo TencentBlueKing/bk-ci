@@ -46,7 +46,8 @@ class StreamAppService @Autowired constructor(
     private val streamScmService: StreamScmService,
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val oauthService: StreamOauthService
+    private val oauthService: StreamOauthService,
+    private val streamProjectService: StreamProjectService
 ) {
 
     fun getGitCIProjectList(
@@ -55,6 +56,21 @@ class StreamAppService @Autowired constructor(
         pageSize: Int,
         searchName: String?
     ): Pagination<AppProjectVO> {
+        if (searchName.isNullOrEmpty()) {
+            val cacheList = streamProjectService.cacheProjectList(userId).filter { it.enabledCi == true }.map {
+                AppProjectVO(
+                    projectCode = it.projectCode ?: ("git_" + it.id),
+                    // 使用 pathWithPathSpace唯一标识App 中项目名称
+                    projectName = it.pathWithNamespace ?: "",
+                    logoUrl = it.avatarUrl,
+                    projectSource = ProjectSourceEnum.GIT_CI.id
+                )
+            }
+            val hasNext = cacheList.size >= pageSize * page
+            val start = ((page - 1) * pageSize).takeIf { it < cacheList.size && it >= 0 } ?: cacheList.size
+            val end = (page * pageSize).takeIf { it < cacheList.size && it >= 0 } ?: cacheList.size
+            return Pagination(hasNext, cacheList.subList(start, end))
+        }
         val token = oauthService.getAndCheckOauthToken(userId).accessToken
         val projectIdMap = streamScmService.getProjectList(
             accessToken = token,
@@ -75,7 +91,7 @@ class StreamAppService @Autowired constructor(
                 projectCode = it.projectCode,
                 // 使用 pathWithPathSpace唯一标识App 中项目名称
                 projectName = gitCodeInfo?.pathWithNamespace ?: gitCodeInfo?.nameWithNamespace ?: it.pathWithNameSpace
-                    ?: it.nameWithNameSpace ?: it.name,
+                ?: it.nameWithNameSpace ?: it.name,
                 logoUrl = gitCodeInfo?.avatarUrl,
                 projectSource = ProjectSourceEnum.GIT_CI.id
             )
