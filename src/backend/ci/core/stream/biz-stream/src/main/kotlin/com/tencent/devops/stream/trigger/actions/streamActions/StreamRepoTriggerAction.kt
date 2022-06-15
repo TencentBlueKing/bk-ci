@@ -23,6 +23,7 @@ import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.util.CommonCredentialUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
 class StreamRepoTriggerAction(
@@ -30,6 +31,10 @@ class StreamRepoTriggerAction(
     private val baseAction: BaseAction,
     private val client: Client
 ) : BaseAction {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(StreamRepoTriggerAction::class.java)
+    }
     override val metaData: ActionMetaData = baseAction.metaData
     override var data: ActionData = baseAction.data
     override val api: StreamGitApiService = baseAction.api
@@ -168,6 +173,7 @@ class StreamRepoTriggerAction(
         }
         // 增加远程仓库时所使用权限的userId
         this.data.context.repoTrigger?.buildUserID = repoTriggerUserId
+        logger.info("after check repoTrigger credentials |repoTrigger=${this.data.context.repoTrigger}")
         return repoTriggerUserId
     }
 
