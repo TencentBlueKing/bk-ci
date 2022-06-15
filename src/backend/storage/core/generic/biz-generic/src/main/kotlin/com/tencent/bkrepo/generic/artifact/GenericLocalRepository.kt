@@ -30,13 +30,16 @@ package com.tencent.bkrepo.generic.artifact
 import com.tencent.bkrepo.common.api.constant.CharPool
 import com.tencent.bkrepo.common.api.constant.MediaTypes
 import com.tencent.bkrepo.common.api.constant.StringPool
+import com.tencent.bkrepo.common.api.exception.BadRequestException
 import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.bkrepo.common.artifact.constant.PARAM_PREVIEW
 import com.tencent.bkrepo.common.artifact.constant.X_CHECKSUM_MD5
 import com.tencent.bkrepo.common.artifact.constant.X_CHECKSUM_SHA256
+import com.tencent.bkrepo.common.artifact.exception.ArtifactNotFoundException
 import com.tencent.bkrepo.common.artifact.exception.NodeNotFoundException
 import com.tencent.bkrepo.common.artifact.message.ArtifactMessageCode
+import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactDownloadContext
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactRemoveContext
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactUploadContext
@@ -44,6 +47,7 @@ import com.tencent.bkrepo.common.artifact.repository.local.LocalRepository
 import com.tencent.bkrepo.common.artifact.resolve.response.ArtifactChannel
 import com.tencent.bkrepo.common.artifact.resolve.response.ArtifactResource
 import com.tencent.bkrepo.common.service.util.HeaderUtils
+import com.tencent.bkrepo.common.service.util.HttpContextHolder
 import com.tencent.bkrepo.common.service.util.ResponseBuilder
 import com.tencent.bkrepo.generic.constant.BKREPO_META
 import com.tencent.bkrepo.generic.constant.BKREPO_META_PREFIX
@@ -54,8 +58,10 @@ import com.tencent.bkrepo.generic.constant.HEADER_OVERWRITE
 import com.tencent.bkrepo.generic.constant.HEADER_SEQUENCE
 import com.tencent.bkrepo.generic.constant.HEADER_SHA256
 import com.tencent.bkrepo.generic.constant.HEADER_UPLOAD_ID
+import com.tencent.bkrepo.repository.constant.NODE_DETAIL_LIST_KEY
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
+import com.tencent.bkrepo.repository.pojo.node.NodeListOption
 import com.tencent.bkrepo.repository.pojo.node.service.NodeCreateRequest
 import com.tencent.bkrepo.repository.pojo.node.service.NodeDeleteRequest
 import org.slf4j.LoggerFactory
@@ -127,13 +133,26 @@ class GenericLocalRepository : LocalRepository() {
     }
 
     /**
-     * 支持目录下载
+     * 支持单文件、目录、批量文件下载
      * 目录下载会以zip包形式将目录下的文件打包下载
+     * 批量文件下载会以zip包形式将文件打包下载
      */
     override fun onDownload(context: ArtifactDownloadContext): ArtifactResource? {
+        return if (context.artifacts.isNullOrEmpty()) {
+            downloadSingleNode(context)
+        } else {
+            downloadMultiNode(context)
+        }
+    }
+
+    /**
+     * 单节点下载，支持目录下载
+     */
+    private fun downloadSingleNode(context: ArtifactDownloadContext): ArtifactResource? {
         with(context) {
-            val node =
-                nodeClient.getNodeDetail(projectId, repoName, artifactInfo.getArtifactFullPath()).data ?: return null
+            val node = getNodeDetailsFromReq(true)?.firstOrNull()
+                ?: nodeClient.getNodeDetail(projectId, repoName, artifactInfo.getArtifactFullPath()).data
+                ?: return null
             if (node.folder) {
                 return downloadFolder(this, node)
             }
@@ -143,6 +162,71 @@ class GenericLocalRepository : LocalRepository() {
 
             return ArtifactResource(inputStream, responseName, node, ArtifactChannel.LOCAL, useDisposition)
         }
+    }
+
+    /**
+     * 多节点下载， 节点不允许为目录
+     */
+    private fun downloadMultiNode(context: ArtifactDownloadContext): ArtifactResource? {
+        with(context) {
+            var prefix = artifacts!!.first().getArtifactFullPath()
+            val fullPathList = artifacts!!.map { it.getArtifactFullPath() }
+            fullPathList.forEach {
+                prefix = PathUtils.getCommonPath(prefix, it)
+            }
+            val nodes = getNodeDetailsFromReq(false)
+                ?: queryNodeDetailList(
+                    projectId = artifacts!!.first().projectId,
+                    repoName = artifacts!!.first().repoName,
+                    paths = fullPathList,
+                    prefix = prefix
+                )
+            val notExistNodes = fullPathList.subtract(nodes.map { it.fullPath })
+            if (notExistNodes.isNotEmpty()) {
+                throw NodeNotFoundException(notExistNodes.joinToString(StringPool.COMMA))
+            }
+            nodes.forEach { downloadIntercept(this, it) }
+            val nodeMap = nodes.associate {
+                val name = it.fullPath.removePrefix(prefix)
+                val inputStream = storageManager.loadArtifactInputStream(it, context.storageCredentials)
+                    ?: throw ArtifactNotFoundException(it.fullPath)
+                name to inputStream
+            }
+            return ArtifactResource(nodeMap, useDisposition = true)
+        }
+    }
+
+    private fun queryNodeDetailList(
+        projectId: String,
+        repoName: String,
+        paths: List<String>,
+        prefix: String
+    ): List<NodeDetail> {
+        var pageNumber = 1
+        val nodeDetailList = mutableListOf<NodeDetail>()
+        do {
+            val option = NodeListOption(
+                pageNumber = pageNumber,
+                pageSize = 1000,
+                includeFolder = true,
+                includeMetadata = true,
+                deep = true
+            )
+            val records = nodeClient.listNodePage(projectId, repoName, prefix, option).data?.records
+            if (records.isNullOrEmpty()) {
+                break
+            }
+            nodeDetailList.addAll(
+                records.filter { paths.contains(it.fullPath) }.map {
+                    if (it.folder) {
+                        throw BadRequestException(GenericMessageCode.DOWNLOAD_DIR_NOT_ALLOWED)
+                    }
+                    NodeDetail(it)
+                }
+            )
+            pageNumber ++
+        } while (nodeDetailList.size < paths.size)
+        return nodeDetailList
     }
 
     /**
@@ -182,6 +266,15 @@ class GenericLocalRepository : LocalRepository() {
         interceptors.forEach { it.intercept(nodeDetail) }
     }
 
+    private fun getNodeDetailsFromReq(allowFolder: Boolean): List<NodeDetail>? {
+        val nodeDetailList = HttpContextHolder.getRequest().getAttribute(NODE_DETAIL_LIST_KEY) as? List<NodeDetail>
+        nodeDetailList?.forEach {
+            if (!allowFolder && it.folder) {
+                throw BadRequestException(GenericMessageCode.DOWNLOAD_DIR_NOT_ALLOWED)
+            }
+        }
+        return nodeDetailList
+    }
     /**
      * 检查文件数量是否超过阈值
      * @throws ErrorCodeException 超过阈值抛出NODE_LIST_TOO_LARGE类型ErrorCodeException

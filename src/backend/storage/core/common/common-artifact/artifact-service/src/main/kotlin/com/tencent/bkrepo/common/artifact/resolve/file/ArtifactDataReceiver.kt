@@ -29,6 +29,8 @@ package com.tencent.bkrepo.common.artifact.resolve.file
 
 import com.tencent.bkrepo.common.artifact.exception.ArtifactReceiveException
 import com.tencent.bkrepo.common.artifact.hash.sha256
+import com.tencent.bkrepo.common.artifact.metrics.ArtifactMetrics
+import com.tencent.bkrepo.common.artifact.metrics.TrafficHandler
 import com.tencent.bkrepo.common.artifact.stream.DigestCalculateListener
 import com.tencent.bkrepo.common.artifact.stream.rateLimit
 import com.tencent.bkrepo.common.artifact.util.http.IOExceptionUtils
@@ -51,15 +53,18 @@ import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.security.SecureRandom
+import java.time.Duration
 import kotlin.math.abs
+import kotlin.system.measureTimeMillis
 
 /**
  * artifact数据接收类，作用：
  * 1. 负责接收输入数据
- * 2. 根据动态阈值将不同大小文件的存储链路进行分离，小文件内存缓存，大文件落磁盘
+ * 2. 根据动态阈值将不同大小文件的存储链路进行分离，小文件内存缓存，中文件落本地磁盘，大文件落CFS
  * 3. 利用观察者模式，当存储降级时，自动切换到本地磁盘
  * 4. 接收数据同时计算md5和sha256，节省io操作
  * 5. 统计接收速率
+ * 6. 度量采集
  *
  */
 class ArtifactDataReceiver(
@@ -152,6 +157,8 @@ class ArtifactDataReceiver(
      * 接收是否完成
      */
     var finished = false
+
+    var trafficHandler: TrafficHandler? = null
 
     init {
         initPath()
@@ -253,10 +260,10 @@ class ArtifactDataReceiver(
         if (inMemory) {
             val filePath = this.filePath.apply { this.createFile() }
             val fileOutputStream = Files.newOutputStream(filePath)
-            contentBytes.writeTo(fileOutputStream)
+            val millis = measureTimeMillis { contentBytes.writeTo(fileOutputStream) }
             outputStream = fileOutputStream
             inMemory = false
-
+            recordQuiet(contentBytes.size(), Duration.ofMillis(millis), true)
             if (closeStream) {
                 cleanOriginalOutputStream()
             }
@@ -298,7 +305,8 @@ class ArtifactDataReceiver(
      */
     private fun writeData(buffer: ByteArray, offset: Int, length: Int) {
         checkFallback()
-        outputStream.write(buffer, offset, length)
+        val millis = measureTimeMillis { outputStream.write(buffer, offset, length) }
+        recordQuiet(length, Duration.ofMillis(millis))
         listener.data(buffer, offset, length)
         received += length
         checkThreshold()
@@ -352,6 +360,9 @@ class ArtifactDataReceiver(
             }
         }
         hasTransferred = true
+        if (path == fallBackPath) {
+            refreshTrafficHandler()
+        }
     }
 
     /**
@@ -428,6 +439,31 @@ class ArtifactDataReceiver(
     private fun initPath() {
         if (randomPath) {
             path = generateRandomPath(path, filename)
+        }
+    }
+
+    /**
+     * 刷新流量处理器
+     * 当文件冲刷到本地时，需要更新流量处理器，以进行正确的度量计算
+     * */
+    private fun refreshTrafficHandler() {
+        trafficHandler = TrafficHandler(
+            ArtifactMetrics.getUploadingCounters(this),
+            ArtifactMetrics.getUploadingTimer(this)
+        )
+    }
+
+    /**
+     * 静默采集metrics
+     * */
+    private fun recordQuiet(size: Int, elapse: Duration, refresh: Boolean = false) {
+        try {
+            if (refresh || trafficHandler == null) {
+                refreshTrafficHandler()
+            }
+            trafficHandler?.record(size, elapse)
+        } catch (e: Exception) {
+            logger.error("Record upload metrics error", e)
         }
     }
 

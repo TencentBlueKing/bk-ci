@@ -34,4 +34,7 @@ dependencies {
     api(project(":common:common-job"))
     api(project(":common:common-stream"))
     api(project(":common:common-artifact:artifact-service"))
+
+    testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo")
+    testImplementation("org.mockito.kotlin:mockito-kotlin")
 }

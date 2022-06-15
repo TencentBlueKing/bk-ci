@@ -31,15 +31,16 @@
 
 package com.tencent.bkrepo.auth.interceptor
 
-import com.tencent.bkrepo.auth.constant.AUTH_REPO_SUFFIX
 import com.tencent.bkrepo.auth.constant.AUTHORIZATION
-import com.tencent.bkrepo.auth.constant.AUTH_FAILED_RESPONSE
-import com.tencent.bkrepo.auth.constant.BASIC_AUTH_HEADER_PREFIX
-import com.tencent.bkrepo.auth.constant.PLATFORM_AUTH_HEADER_PREFIX
-import com.tencent.bkrepo.auth.constant.AUTH_PROJECT_SUFFIX
 import com.tencent.bkrepo.auth.constant.AUTH_API_ACCOUNT_PREFIX
+import com.tencent.bkrepo.auth.constant.AUTH_API_EXT_PERMISSION_PREFIX
 import com.tencent.bkrepo.auth.constant.AUTH_API_KEY_PREFIX
 import com.tencent.bkrepo.auth.constant.AUTH_API_OAUTH_PREFIX
+import com.tencent.bkrepo.auth.constant.AUTH_FAILED_RESPONSE
+import com.tencent.bkrepo.auth.constant.AUTH_PROJECT_SUFFIX
+import com.tencent.bkrepo.auth.constant.AUTH_REPO_SUFFIX
+import com.tencent.bkrepo.auth.constant.BASIC_AUTH_HEADER_PREFIX
+import com.tencent.bkrepo.auth.constant.PLATFORM_AUTH_HEADER_PREFIX
 import com.tencent.bkrepo.auth.service.AccountService
 import com.tencent.bkrepo.auth.service.UserService
 import com.tencent.bkrepo.common.api.constant.HttpStatus
@@ -119,7 +120,8 @@ class AuthInterceptor : HandlerInterceptor {
             AUTH_PROJECT_SUFFIX,
             AUTH_API_ACCOUNT_PREFIX,
             AUTH_API_KEY_PREFIX,
-            AUTH_API_OAUTH_PREFIX
+            AUTH_API_OAUTH_PREFIX,
+            AUTH_API_EXT_PERMISSION_PREFIX
         )
     }
 }

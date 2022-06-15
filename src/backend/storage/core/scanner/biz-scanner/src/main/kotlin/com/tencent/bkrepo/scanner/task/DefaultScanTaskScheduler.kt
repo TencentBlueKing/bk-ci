@@ -39,6 +39,7 @@ import com.tencent.bkrepo.common.scanner.pojo.scanner.Scanner
 import com.tencent.bkrepo.common.scanner.pojo.scanner.SubScanTaskStatus
 import com.tencent.bkrepo.repository.api.RepositoryClient
 import com.tencent.bkrepo.repository.pojo.repo.RepositoryInfo
+import com.tencent.bkrepo.scanner.configuration.ScannerProperties
 import com.tencent.bkrepo.scanner.dao.FileScanResultDao
 import com.tencent.bkrepo.scanner.dao.PlanArtifactLatestSubScanTaskDao
 import com.tencent.bkrepo.scanner.dao.ProjectScanConfigurationDao
@@ -57,11 +58,13 @@ import com.tencent.bkrepo.scanner.pojo.ScanTaskStatus.SCANNING_SUBMITTED
 import com.tencent.bkrepo.scanner.pojo.ScanTaskStatus.SCANNING_SUBMITTING
 import com.tencent.bkrepo.scanner.pojo.SubScanTask
 import com.tencent.bkrepo.scanner.service.ScannerService
+import com.tencent.bkrepo.scanner.task.ScanTaskSchedulerConfiguration.Companion.SCAN_TASK_SCHEDULER_THREAD_POOL_BEAN_NAME
 import com.tencent.bkrepo.scanner.task.iterator.IteratorManager
 import com.tencent.bkrepo.scanner.task.queue.SubScanTaskQueue
 import com.tencent.bkrepo.scanner.utils.Converter
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.stereotype.Component
@@ -81,10 +84,12 @@ class DefaultScanTaskScheduler @Autowired constructor(
     private val scanTaskDao: ScanTaskDao,
     private val fileScanResultDao: FileScanResultDao,
     private val projectScanConfigurationDao: ProjectScanConfigurationDao,
+    @Qualifier(SCAN_TASK_SCHEDULER_THREAD_POOL_BEAN_NAME)
     private val executor: ThreadPoolTaskExecutor,
     private val scannerMetrics: ScannerMetrics,
     private val redisOperation: RedisOperation,
-    private val publisher: ApplicationEventPublisher
+    private val publisher: ApplicationEventPublisher,
+    private val scannerProperties: ScannerProperties
 ) : ScanTaskScheduler {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -117,7 +122,7 @@ class DefaultScanTaskScheduler @Autowired constructor(
         lock.use {
             it.lock()
             val subtaskCountLimit = projectScanConfigurationDao.findByProjectId(projectId)?.subScanTaskCountLimit
-                ?: TProjectScanConfiguration.DEFAULT_SUB_SCAN_TASK_COUNT_LIMIT
+                ?: scannerProperties.defaultProjectSubScanTaskCountLimit
             val countToUpdate = (subtaskCountLimit - subScanTaskDao.scanningCount(projectId)).toInt()
             return if (countToUpdate > 0) {
                 val notifiedCount = subScanTaskDao.notify(projectId, countToUpdate)?.modifiedCount?.toInt() ?: 0
@@ -183,16 +188,21 @@ class DefaultScanTaskScheduler @Autowired constructor(
     private fun submit(scanTask: ScanTask): Pair<Long, Long> {
         val scanner = scannerService.get(scanTask.scanner)
         val projectId = scanTask.scanPlan?.projectId
-        val projectScanConfiguration = projectId?.let { projectScanConfigurationDao.findByProjectId(it) }
+        var projectScanConfiguration = projectId?.let { projectScanConfigurationDao.findByProjectId(it) }
         logger.info("submitting sub tasks of task[${scanTask.taskId}], scanner: [${scanner.name}]")
 
-        var scanningCount = projectId?.let { subScanTaskDao.scanningCount(it) } ?: 0L
+        var scanningCount = projectId?.let { subScanTaskDao.scanningCount(it) }
         var submittedSubTaskCount = 0L
         var reuseResultTaskCount = 0L
         val subScanTasks = ArrayList<TSubScanTask>()
         val finishedSubScanTasks = ArrayList<TPlanArtifactLatestSubScanTask>()
         val nodeIterator = iteratorManager.createNodeIterator(scanTask, false)
         for (node in nodeIterator) {
+            // 未使用扫描方案的情况直接取node的projectId
+            projectScanConfiguration = projectScanConfiguration
+                ?: projectScanConfigurationDao.findByProjectId(node.projectId)
+            scanningCount = scanningCount ?: subScanTaskDao.scanningCount(node.projectId)
+
             val storageCredentialsKey = repoInfoCache
                 .get(generateKey(node.projectId, node.repoName))
                 .storageCredentialsKey
@@ -206,8 +216,8 @@ class DefaultScanTaskScheduler @Autowired constructor(
                 finishedSubScanTasks.add(finishedSubtask)
             } else {
                 // 添加到扫描任务队列
-                val status = status(scanningCount, projectId, projectScanConfiguration)
-                subScanTasks.add(createSubTask(scanTask, node, storageCredentialsKey, status))
+                val status = status(scanningCount, projectScanConfiguration)
+                subScanTasks.add(createSubTask(scanTask, scanner, node, storageCredentialsKey, status))
                 if (status == SubScanTaskStatus.CREATED) {
                     scanningCount++
                 }
@@ -274,6 +284,7 @@ class DefaultScanTaskScheduler @Autowired constructor(
 
     fun createSubTask(
         scanTask: ScanTask,
+        scanner: Scanner,
         node: Node,
         credentialKey: String? = null,
         status: SubScanTaskStatus = SubScanTaskStatus.CREATED
@@ -433,18 +444,16 @@ class DefaultScanTaskScheduler @Autowired constructor(
      * 根据扫描数量是否超过限制返回扫描状态
      *
      * @param scanningCount 正在扫描的任务数量
-     * @param projectId 扫描配置的项目id，为null时表示无限制
      * @param projectConfiguration 项目扫描配置
      *
      */
     private fun status(
         scanningCount: Long,
-        projectId: String?,
         projectConfiguration: TProjectScanConfiguration?
     ): SubScanTaskStatus {
         val limitSubScanTaskCount = projectConfiguration?.subScanTaskCountLimit
-            ?: TProjectScanConfiguration.DEFAULT_SUB_SCAN_TASK_COUNT_LIMIT
-        if (projectId != null && scanningCount >= limitSubScanTaskCount.toLong()) {
+            ?: scannerProperties.defaultProjectSubScanTaskCountLimit
+        if (scanningCount >= limitSubScanTaskCount.toLong()) {
             return SubScanTaskStatus.BLOCKED
         }
         return SubScanTaskStatus.CREATED

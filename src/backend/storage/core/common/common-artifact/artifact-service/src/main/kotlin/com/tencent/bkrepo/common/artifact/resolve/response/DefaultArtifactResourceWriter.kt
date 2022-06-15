@@ -35,6 +35,7 @@ import com.tencent.bkrepo.common.artifact.constant.CONTENT_DISPOSITION_TEMPLATE
 import com.tencent.bkrepo.common.artifact.constant.X_CHECKSUM_MD5
 import com.tencent.bkrepo.common.artifact.constant.X_CHECKSUM_SHA256
 import com.tencent.bkrepo.common.artifact.exception.ArtifactResponseException
+import com.tencent.bkrepo.common.artifact.metrics.RecordAbleInputStream
 import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.bkrepo.common.artifact.stream.ArtifactInputStream
 import com.tencent.bkrepo.common.artifact.stream.Range
@@ -89,8 +90,9 @@ open class DefaultArtifactResourceWriter(
             ?: StringPool.NO_CACHE
 
         response.bufferSize = getBufferSize(range.length.toInt())
-        response.characterEncoding = resource.characterEncoding
-        response.contentType = resource.contentType ?: determineMediaType(name)
+        val mediaType = resource.contentType ?: determineMediaType(name)
+        response.characterEncoding = determineCharset(mediaType, resource.characterEncoding)
+        response.contentType = mediaType
         response.status = resource.status?.value ?: resolveStatus(request)
         response.setContentLengthLong(range.length)
         response.setHeader(HttpHeaders.ACCEPT_RANGES, StringPool.BYTES)
@@ -181,9 +183,10 @@ open class DefaultArtifactResourceWriter(
         if (request.method == HttpMethod.HEAD.name) {
             return Throughput.EMPTY
         }
+        val recordAbleInputStream = RecordAbleInputStream(inputStream)
         try {
             return measureThroughput {
-                inputStream.rateLimit(storageProperties.response.rateLimit.toBytes()).use {
+                recordAbleInputStream.rateLimit(storageProperties.response.rateLimit.toBytes()).use {
                     it.copyTo(
                         out = response.outputStream,
                         bufferSize = getBufferSize(inputStream.range.length.toInt())
@@ -218,8 +221,9 @@ open class DefaultArtifactResourceWriter(
                 zipOutput.setMethod(ZipOutputStream.DEFLATED)
                 zipOutput.use {
                     resource.artifactMap.forEach { (name, inputStream) ->
+                        val recordAbleInputStream = RecordAbleInputStream(inputStream)
                         zipOutput.putNextEntry(generateZipEntry(name, inputStream))
-                        inputStream.rateLimit(storageProperties.response.rateLimit.toBytes()).use {
+                        recordAbleInputStream.rateLimit(storageProperties.response.rateLimit.toBytes()).use {
                             it.copyTo(
                                 out = zipOutput,
                                 bufferSize = getBufferSize(inputStream.range.length.toInt())
@@ -244,7 +248,18 @@ open class DefaultArtifactResourceWriter(
      */
     private fun determineMediaType(name: String): String {
         val extension = PathUtils.resolveExtension(name)
-        return mimeMappings.get(extension) ?: MediaTypes.APPLICATION_OCTET_STREAM
+        return mimeMappings.get(extension) ?: storageProperties.response.mimeMappings[extension]
+            ?: MediaTypes.APPLICATION_OCTET_STREAM
+    }
+
+    /**
+     * 判断charset,一些媒体类型设置了charset会影响其表现，如application/vnd.android.package-archive
+     * */
+    private fun determineCharset(mediaType: String, defaultCharset: String): String? {
+        return if (binaryMediaTypes.contains(mediaType) ||
+            storageProperties.response.binaryMediaTypes.contains(mediaType)
+        ) null
+        else defaultCharset
     }
 
     /**
@@ -288,6 +303,8 @@ open class DefaultArtifactResourceWriter(
             add("yaml", MediaTypes.APPLICATION_YAML)
             add("tgz", MediaTypes.APPLICATION_TGZ)
             add("ico", MediaTypes.APPLICATION_ICO)
+            add("apk", MediaTypes.APPLICATION_APK)
         }
+        private val binaryMediaTypes = setOf(MediaTypes.APPLICATION_APK)
     }
 }

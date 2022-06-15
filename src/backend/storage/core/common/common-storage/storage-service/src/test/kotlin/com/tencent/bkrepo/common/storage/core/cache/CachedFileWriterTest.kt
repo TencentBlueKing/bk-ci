@@ -65,10 +65,9 @@ internal class CachedFileWriterTest {
         val expectedSha256 = randomString.sha256()
         val count = 100
         val readers = Runtime.getRuntime().availableProcessors()
-        val threadList = mutableListOf<Thread>()
         measureTimeMillis {
             repeat(readers) {
-                val thread = thread {
+                thread {
                     repeat(count) {
                         val inputStream = randomString.byteInputStream().artifactStream(Range.full(size))
                         val out = ByteArrayOutputStream()
@@ -80,11 +79,11 @@ internal class CachedFileWriterTest {
                         Assertions.assertEquals(expectedSha256, toString.sha256())
                     }
                 }
-                threadList.add(thread)
             }
-            threadList.forEach { it.join() }
-        }.apply { println("duration: $this ms") }
+        }
 
+        // 等待任务执行结束
+        Thread.sleep(3000)
         val sha256 = cachePath.resolve(filename).toFile().sha256()
         Assertions.assertEquals(expectedSha256, sha256)
     }
