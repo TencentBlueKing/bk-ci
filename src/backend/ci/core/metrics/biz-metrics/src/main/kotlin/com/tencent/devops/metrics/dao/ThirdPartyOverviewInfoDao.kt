@@ -38,7 +38,6 @@ import com.tencent.devops.model.metrics.tables.TProjectThirdPlatformData
 import com.tencent.devops.metrics.pojo.qo.ThirdPartyOverviewInfoQO
 import org.jooq.DSLContext
 import org.jooq.Record5
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 
@@ -56,7 +55,7 @@ class ThirdPartyOverviewInfoDao {
                 sum<Int>(RESOLVED_DEFECT_NUM).`as`(BK_RESOLVED_DEFECT_NUM),
                 sum<Int>(QUALITY_PIPELINE_INTERCEPTION_NUM).`as`(BK_QUALITY_PIPELINE_INTERCEPTION_NUM),
                 sum<Int>(QUALITY_PIPELINE_EXECUTE_NUM).`as`(BK_QUALITY_PIPELINE_EXECUTE_NUM),
-                sum<Long>(TURBO_SAVE_TIME).`as`(BK_TURBO_SAVE_TIME)
+                sum<BigDecimal>(TURBO_SAVE_TIME).`as`(BK_TURBO_SAVE_TIME)
             ).from(this)
                 .where(PROJECT_ID.eq(thirdPartyOverviewInfoQO.projectId))
                 .and(STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
