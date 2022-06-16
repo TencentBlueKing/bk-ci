@@ -37,5 +37,5 @@ data class TurboReportEvent(
     @ApiModelProperty("项目ID")
     val projectId: String,
     @ApiModelProperty("编译加速节省时间，单位：秒")
-    val turboSaveTime: Long
+    val turboSaveTime: Double
 )

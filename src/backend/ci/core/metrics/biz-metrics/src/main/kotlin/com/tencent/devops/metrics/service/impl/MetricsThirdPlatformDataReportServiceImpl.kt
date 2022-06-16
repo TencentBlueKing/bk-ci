@@ -140,7 +140,7 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                     repoCodeccAvgScore = null,
                     qualityPipelineExecuteNum = null,
                     qualityPipelineInterceptionNum = null,
-                    turboSaveTime = turboReportMessage.turboSaveTime,
+                    turboSaveTime = BigDecimal(turboReportMessage.turboSaveTime),
                     createTime = currentTime,
                     updateTime = currentTime
                 )
@@ -157,7 +157,7 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                     repoCodeccAvgScore = metricsThirdPlatformRecord.repoCodeccAvgScore,
                     qualityPipelineExecuteNum = metricsThirdPlatformRecord.qualityPipelineExecuteNum,
                     qualityPipelineInterceptionNum = metricsThirdPlatformRecord.qualityPipelineInterceptionNum,
-                    turboSaveTime = turboReportMessage.turboSaveTime,
+                    turboSaveTime = BigDecimal(turboReportMessage.turboSaveTime),
                     createTime = metricsThirdPlatformRecord.createTime,
                     updateTime = currentTime
                 )

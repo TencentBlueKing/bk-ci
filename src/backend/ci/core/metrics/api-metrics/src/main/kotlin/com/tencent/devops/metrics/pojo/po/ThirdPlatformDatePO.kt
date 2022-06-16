@@ -20,7 +20,7 @@ data class ThirdPlatformDatePO(
     @ApiModelProperty("使用质量红线的流水线执行总次数")
     val qualityPipelineExecuteNum: Int?,
     @ApiModelProperty("编译加速节省时间，单位：秒")
-    val turboSaveTime: Long?,
+    val turboSaveTime: BigDecimal?,
     @ApiModelProperty("统计时间")
     val statisticsTime: LocalDateTime,
     @ApiModelProperty("创建者")
