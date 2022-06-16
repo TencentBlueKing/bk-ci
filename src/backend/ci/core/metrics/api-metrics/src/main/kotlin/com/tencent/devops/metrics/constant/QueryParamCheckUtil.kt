@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 
 object QueryParamCheckUtil {
+    // 查询时间区间限制，当天的前一天至前六个月
     private const val QUERY_MAX_MONTHS: Long = 6
     private const val QUERY_MIN_DAYS: Long = 1
 
