@@ -65,5 +65,5 @@ data class AtomFailDetailInfoDO(
     @ApiModelProperty("错误的标识码")
     val errorCode: Int,
     @ApiModelProperty("错误描述")
-    val errorMsg: String,
+    val errorMsg: String?,
 )

@@ -40,6 +40,6 @@ data class QueryProjectPipelineLabelDTO(
     val page: Int,
     @ApiModelProperty("页数")
     val pageSize: Int,
-    @ApiModelProperty("keyword")
+    @ApiModelProperty("搜索关键字")
     val keyword: String?,
 )

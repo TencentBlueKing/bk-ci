@@ -33,7 +33,7 @@ object Constants {
     const val BK_RESOLVED_DEFECT_NUM = "resolvedDefectNum"
     const val BK_QUALITY_PIPELINE_INTERCEPTION_NUM = "qualityPipelineInterceptionNum"
     const val BK_QUALITY_PIPELINE_EXECUTE_NUM = "qualityPipelineExecuteNum"
-    const val BK_TURBO_SAVE_TIME = "TurboSaveTime"
+    const val BK_TURBO_SAVE_TIME = "turboSaveTime"
 
     const val BK_PIPELINE_NAME = "pipelineName"
     const val BK_STATISTICS_TIME = "statisticsTime"

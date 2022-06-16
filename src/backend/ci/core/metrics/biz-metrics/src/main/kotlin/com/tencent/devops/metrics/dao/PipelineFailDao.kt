@@ -63,8 +63,7 @@ class PipelineFailDao {
                 queryPipelineFailQo.projectId,
                 queryPipelineFailQo.baseQueryReq,
                 pipelineIds,
-                tProjectPipelineLabelInfo,
-                mutableListOf()
+                tProjectPipelineLabelInfo
             )
             val step = dslContext.select(PIPELINE_ID).from(this)
             val conditionStep =
@@ -91,8 +90,7 @@ class PipelineFailDao {
                 queryPipelineFailTrendQo.projectId,
                 queryPipelineFailTrendQo.baseQueryReq,
                 pipelineIds,
-                tProjectPipelineLabelInfo,
-                mutableListOf()
+                tProjectPipelineLabelInfo
             )
             val step = dslContext.select(
                 this.STATISTICS_TIME.`as`(BK_STATISTICS_TIME),
@@ -123,8 +121,7 @@ class PipelineFailDao {
                 queryPipelineFailTrendQo.projectId,
                 queryPipelineFailTrendQo.baseQueryReq,
                 pipelineIds,
-                tProjectPipelineLabelInfo,
-                mutableListOf()
+                tProjectPipelineLabelInfo
             )
             val step = dslContext.select(this.ERROR_TYPE)
                 .from(this)
@@ -156,8 +153,7 @@ class PipelineFailDao {
                     queryPipelineFailQo.projectId,
                     queryPipelineFailQo.baseQueryReq,
                     pipelineIds,
-                    labelInfo,
-                    mutableListOf()
+                    labelInfo
                 )
             if (!queryPipelineFailQo.errorTypes.isNullOrEmpty()) {
                 conditions.add(ERROR_TYPE.`in`(queryPipelineFailQo.errorTypes))
@@ -282,9 +278,9 @@ class PipelineFailDao {
         projectId: String,
         baseQueryReq: BaseQueryReqVO,
         pipelineIds: List<String>?,
-        tProjectPipelineLabelInfo: TProjectPipelineLabelInfo,
-        conditions: MutableList<Condition>
+        tProjectPipelineLabelInfo: TProjectPipelineLabelInfo
     ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
         conditions.add(PROJECT_ID.eq(projectId))
         if (!pipelineIds.isNullOrEmpty()) {
             conditions.add(this.PIPELINE_ID.`in`(pipelineIds))

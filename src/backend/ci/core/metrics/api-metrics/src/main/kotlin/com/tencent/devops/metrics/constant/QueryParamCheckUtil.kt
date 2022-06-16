@@ -38,6 +38,8 @@ import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 
 object QueryParamCheckUtil {
+    private const val QUERY_MAX_MONTHS: Long = 6
+    private const val QUERY_MIN_DAYS: Long = 1
 
     fun getIntervalTime(
         fromDate: LocalDateTime,
@@ -80,7 +82,7 @@ object QueryParamCheckUtil {
         val endDate = DateTimeUtil.stringToLocalDate(endTime)
         val firstDate = LocalDate.now()
 //            .minusDays(1)
-        val secondDate = firstDate.minusMonths(6)
+        val secondDate = firstDate.minusMonths(QUERY_MAX_MONTHS)
         if (startDate!!.isBefore(secondDate)) {
             throw ErrorCodeException(
                 errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,

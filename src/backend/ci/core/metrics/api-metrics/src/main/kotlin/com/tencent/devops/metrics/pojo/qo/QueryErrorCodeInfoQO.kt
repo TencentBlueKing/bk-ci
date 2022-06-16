@@ -34,10 +34,10 @@ import io.swagger.annotations.ApiModelProperty
 data class QueryErrorCodeInfoQO(
     @ApiModelProperty("错误类型")
     val errorTypes: List<Int>?,
+    @ApiModelProperty("搜索关键字")
+    val keyword: String?,
     @ApiModelProperty("页码")
     val page: Int = 1,
-    @ApiModelProperty
-    val keyword: String?,
     @ApiModelProperty("页数")
     val pageSize: Int = 10
 )
