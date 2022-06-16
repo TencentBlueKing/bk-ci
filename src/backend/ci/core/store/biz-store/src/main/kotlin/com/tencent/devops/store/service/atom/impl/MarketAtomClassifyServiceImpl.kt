@@ -35,7 +35,6 @@ import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomClassifyDao
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.MarketAtomClassify
-import com.tencent.devops.store.pojo.common.Classify
 import com.tencent.devops.store.service.atom.MarketAtomClassifyService
 import com.tencent.devops.store.service.common.AbstractClassifyService
 import com.tencent.devops.store.service.common.ClassifyService

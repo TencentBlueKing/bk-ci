@@ -59,7 +59,7 @@ data class BuildInfo(
     val webhookInfo: WebhookInfo? = null,
     val errorType: Int? = null,
     val errorCode: Int? = null,
-    val errorMsg: String? = null,
+    val errorMsg: String? = null
 ) {
 
     fun isFinish() = when {

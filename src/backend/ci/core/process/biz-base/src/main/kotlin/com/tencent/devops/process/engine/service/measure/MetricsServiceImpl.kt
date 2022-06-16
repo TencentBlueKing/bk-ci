@@ -181,7 +181,7 @@ class MetricsServiceImpl constructor(
                 pipelineId = pipelineId,
                 projectId = projectId,
                 buildId = buildId,
-                buildEndPipelineMetricsData = buildEndPipelineMetricsData,
+                buildEndPipelineMetricsData = buildEndPipelineMetricsData
             )
         )
     }
