@@ -98,6 +98,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
                 enableCi = enabled
             )
         }
+        logger.info("dispatch stream enable event")
         pipelineEventDispatcher.dispatch(
             PipelineStreamEnabledEvent(
                 source = "stream_enabled",
