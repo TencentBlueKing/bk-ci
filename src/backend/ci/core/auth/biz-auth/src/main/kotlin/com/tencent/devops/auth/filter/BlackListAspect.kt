@@ -42,7 +42,6 @@ import org.springframework.stereotype.Component
 class BlackListAspect @Autowired constructor(
     val authUserBlackListService: AuthUserBlackListService
 ) {
-
     @Before("execution (* com.tencent.devops.auth.api..*.*(..))")
     fun beforeMethod(jp: JoinPoint) {
         // 参数value
