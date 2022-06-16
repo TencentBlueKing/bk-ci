@@ -20,7 +20,7 @@
         render (h) {
             const { value, readOnly, handleInput, name, handleBlur, title, clickUnfold, placeholder } = this
             return (
-                <textarea placeholder={placeholder} title={title} onBlur={handleBlur} onInput={handleInput} class={['bk-form-textarea pointer-events-auto', clickUnfold ? 'textarea-styles' : '']} name={name} disabled={readOnly} value={value} />
+                <textarea placeholder={placeholder} title={title} onBlur={handleBlur} onInput={handleInput} class={['bk-form-textarea pointer-events-auto', clickUnfold ? 'textarea-styles' : '', readOnly ? 'hover-textarea-styles' : '']} name={name} disabled={readOnly} value={value} />
             )
         }
     }
@@ -37,6 +37,12 @@
         line-height: 20px !important;
         margin-top: 1px;
         &:focus {
+            height: 100px!important;
+            z-index: 10;
+        }
+    }
+    .hover-textarea-styles {
+        &:hover {
             height: 100px!important;
             z-index: 10;
         }
