@@ -24,7 +24,12 @@ class MQPipelineStreamEnabledListener @Autowired constructor(
         val watcher = Watcher(id = "${event.traceId}|StreamEnabled#${event.pipelineId}|${event.userId}")
         try {
             watcher.start("callback")
-            callBackControl.piplineStreamEnabledEvent(projectId = event.projectId, pipelineId = event.pipelineId)
+            callBackControl.piplineStreamEnabledEvent(
+                projectId = event.projectId,
+                repoId = event.repoId,
+                repoUrl = event.repoUrl,
+                userId = event.userId
+            )
             watcher.stop()
         } finally {
             watcher.stop()

@@ -17,7 +17,7 @@ data class PipelineStreamEnabledEvent(
     override val pipelineId: String,
     override val userId: String,
     override var actionType: ActionType = ActionType.START,
-    override var delayMills: Int = 0
-    // 之后添加上 repoId、repoUrl两个信息
-    // 之后可能不会继承这个pipelineEvent了
+    override var delayMills: Int = 0,
+    val repoId: String,
+    val repoUrl: String
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

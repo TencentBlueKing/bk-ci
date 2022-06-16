@@ -94,6 +94,8 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = "",
                 userId = userId,
+                repoId = setting!!.gitProjectId.toString(),
+                repoUrl = setting!!.url
             )
         )
         return Result(result)
