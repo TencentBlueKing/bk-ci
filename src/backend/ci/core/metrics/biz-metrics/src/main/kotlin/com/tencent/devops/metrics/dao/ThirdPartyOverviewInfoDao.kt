@@ -56,7 +56,7 @@ class ThirdPartyOverviewInfoDao {
                 sum<Int>(RESOLVED_DEFECT_NUM).`as`(BK_RESOLVED_DEFECT_NUM),
                 sum<Int>(QUALITY_PIPELINE_INTERCEPTION_NUM).`as`(BK_QUALITY_PIPELINE_INTERCEPTION_NUM),
                 sum<Int>(QUALITY_PIPELINE_EXECUTE_NUM).`as`(BK_QUALITY_PIPELINE_EXECUTE_NUM),
-                sum<Long>(TURBO_SAVE_TIME).`as`(BK_TURBO_SAVE_TIME)
+                sum<BigDecimal>(TURBO_SAVE_TIME).`as`(BK_TURBO_SAVE_TIME)
             ).from(this)
                 .where(PROJECT_ID.eq(thirdPartyOverviewInfoQO.projectId))
                 .and(STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
