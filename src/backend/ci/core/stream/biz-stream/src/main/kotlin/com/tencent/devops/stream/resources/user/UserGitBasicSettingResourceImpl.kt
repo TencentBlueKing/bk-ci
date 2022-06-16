@@ -90,7 +90,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         }
         pipelineEventDispatcher.dispatch(
             PipelineStreamEnabledEvent(
-                source = "update_pipeline",
+                source = "stream_enabled",
                 projectId = projectId,
                 pipelineId = "",
                 userId = userId,
