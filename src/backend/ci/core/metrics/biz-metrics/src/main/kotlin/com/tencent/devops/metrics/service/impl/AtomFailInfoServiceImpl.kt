@@ -37,6 +37,7 @@ import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_QUERY_COUNT_MAX
 import com.tencent.devops.metrics.constant.MetricsMessageCode
 import com.tencent.devops.metrics.dao.AtomFailInfoDao
+import com.tencent.devops.metrics.dao.ErrorCodeInfoDao
 import com.tencent.devops.metrics.service.AtomFailInfoManageService
 import com.tencent.devops.metrics.pojo.`do`.AtomErrorCodeStatisticsInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomFailDetailInfoDO
@@ -52,7 +53,8 @@ import org.springframework.stereotype.Service
 @Service
 class AtomFailInfoServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val atomFailInfoDao: AtomFailInfoDao
+    private val atomFailInfoDao: AtomFailInfoDao,
+    private val errorCodeInfoDao: ErrorCodeInfoDao
 ): AtomFailInfoManageService {
 
     override fun queryAtomErrorCodeStatisticsInfo(
@@ -98,12 +100,16 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 pageSize = queryAtomFailInfoDTO.pageSize
             )
         )
+        val errorDict = mutableMapOf<Int, String>()
+        errorCodeInfoDao.getErrorTypeDict(dslContext).map { errorDict.put(it.value1(), it.value2()) }
         // 对查询结果处理封装
         val atomErrorCodeStatisticsInfos = result.map {
+            val errorType = it[BK_ERROR_TYPE] as Int
             AtomErrorCodeStatisticsInfoDO(
+
                 ErrorCodeInfoDO(
-                    errorType = it[BK_ERROR_TYPE] as Int,
-                    errorTypeName = it[BK_ERROR_TYPE_NAME] as String,
+                    errorType = errorType,
+                    errorTypeName = errorDict[errorType],
                     errorCode = it[BK_ERROR_CODE] as Int,
                     errorMsg = it[BK_ERROR_MSG] as String
                 ),
@@ -137,6 +143,8 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
             )
         }
+        val errorDict = mutableMapOf<Int, String>()
+        errorCodeInfoDao.getErrorTypeDict(dslContext).map { errorDict.put(it.value1(), it.value2()) }
         //  查询详情数据
         val result = atomFailInfoDao.queryAtomFailDetailInfo(
             dslContext,
@@ -155,6 +163,7 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 pageSize = queryAtomFailInfoDTO.pageSize
             )
         )
+        result.forEach { it.errorTypeName =  errorDict[it.errorType]}
         return Page(
             page = queryAtomFailInfoDTO.page,
             pageSize = queryAtomFailInfoDTO.pageSize,

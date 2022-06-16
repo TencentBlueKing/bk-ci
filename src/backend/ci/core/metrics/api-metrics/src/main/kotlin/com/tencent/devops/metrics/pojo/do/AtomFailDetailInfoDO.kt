@@ -61,7 +61,7 @@ data class AtomFailDetailInfoDO(
     @ApiModelProperty("错误的类型标识")
     val errorType: Int,
     @ApiModelProperty("错误的类型标识名称")
-    val errorTypeName: String,
+    var errorTypeName: String? = null,
     @ApiModelProperty("错误的标识码")
     val errorCode: Int,
     @ApiModelProperty("错误描述")

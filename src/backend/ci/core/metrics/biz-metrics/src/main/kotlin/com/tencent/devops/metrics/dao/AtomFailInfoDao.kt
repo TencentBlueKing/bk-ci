@@ -54,6 +54,7 @@ import com.tencent.devops.model.metrics.tables.TErrorTypeDict
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
+import org.jooq.Record4
 import org.jooq.Record5
 import org.jooq.Result
 import org.jooq.SelectJoinStep
@@ -66,10 +67,9 @@ class AtomFailInfoDao {
     fun queryAtomErrorCodeStatisticsInfo(
         dslContext: DSLContext,
         queryCondition: QueryAtomFailInfoQO
-    ): Result<Record5<Int, String, Int, String, Int>> {
+    ): Result<Record4<Int, Int, String, Int>> {
         with(TAtomFailDetailData.T_ATOM_FAIL_DETAIL_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            val tErrorTypeDict = TErrorTypeDict.T_ERROR_TYPE_DICT
             val pipelineLabelIds = queryCondition.baseQueryReq.pipelineLabelIds
             val conditions = getConditions(
                 queryCondition,
@@ -78,7 +78,6 @@ class AtomFailInfoDao {
             val errorCount = count<Int>(ERROR_CODE).`as`(BK_ERROR_COUNT)
             val step = dslContext.select(
                 this.ERROR_TYPE.`as`(BK_ERROR_TYPE),
-                tErrorTypeDict.NAME.`as`(BK_ERROR_TYPE_NAME),
                 this.ERROR_CODE.`as`(BK_ERROR_CODE),
                 this.ERROR_MSG.`as`(BK_ERROR_MSG),
                 errorCount
@@ -86,15 +85,10 @@ class AtomFailInfoDao {
             val conditionStep = if (!pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                    .join(tErrorTypeDict)
-                    .on(this.ERROR_TYPE.eq(tErrorTypeDict.ERROR_TYPE))
-                    .where(conditions)
             } else {
-                step.join(tErrorTypeDict)
-                    .on(this.ERROR_TYPE.eq(tErrorTypeDict.ERROR_TYPE))
-                    .where(conditions)
+                step
             }
-            return conditionStep
+            return conditionStep.where(conditions)
                 .groupBy(this.ERROR_CODE)
                 .orderBy(errorCount.desc())
                 .offset((queryCondition.page - 1) * queryCondition.pageSize)
@@ -171,7 +165,6 @@ class AtomFailInfoDao {
     ): List<AtomFailDetailInfoDO> {
         with(TAtomFailDetailData.T_ATOM_FAIL_DETAIL_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            val tErrorTypeDict = TErrorTypeDict.T_ERROR_TYPE_DICT
             val conditions = getConditions(
                 queryCondition,
                 tProjectPipelineLabelInfo
@@ -188,7 +181,6 @@ class AtomFailInfoDao {
                 this.START_USER.`as`(BK_START_USER),
                 this.START_TIME.`as`(BK_START_TIME),
                 this.END_TIME.`as`(BK_END_TIME),
-                tErrorTypeDict.NAME.`as`(BK_ERROR_TYPE_NAME),
                 this.ERROR_TYPE.`as`(BK_ERROR_TYPE),
                 this.ERROR_CODE.`as`(BK_ERROR_CODE),
                 this.ERROR_MSG.`as`(BK_ERROR_MSG)
@@ -197,14 +189,10 @@ class AtomFailInfoDao {
                     = if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                    .join(tErrorTypeDict)
-                    .on(this.ERROR_TYPE.eq(tErrorTypeDict.ERROR_TYPE))
-                    .where(conditions)
             } else {
-                step.join(tErrorTypeDict)
-                    .on(this.ERROR_TYPE.eq(tErrorTypeDict.ERROR_TYPE)).where(conditions)
+                step
             }
-            return conditionStep
+            return conditionStep.where(conditions)
                 .groupBy(this.PIPELINE_ID, this.BUILD_NUM)
                 .offset((queryCondition.page - 1) * queryCondition.pageSize)
                 .limit(queryCondition.pageSize)

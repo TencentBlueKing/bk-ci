@@ -38,7 +38,6 @@ import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME_FIELD_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
-import com.tencent.devops.metrics.constant.Constants.BK_ERROR_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
 import com.tencent.devops.metrics.constant.Constants.BK_QUERY_COUNT_MAX
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
@@ -58,6 +57,7 @@ import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getIntervalTime
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.AtomDisplayConfigDao
 import com.tencent.devops.metrics.dao.AtomStatisticsDao
+import com.tencent.devops.metrics.dao.ErrorCodeInfoDao
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseTrendInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomExecutionStatisticsInfoDO
@@ -80,7 +80,8 @@ import java.util.stream.Collectors
 class AtomStatisticsServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val atomStatisticsDao: AtomStatisticsDao,
-    private val atomDisplayConfigDao: AtomDisplayConfigDao
+    private val atomDisplayConfigDao: AtomDisplayConfigDao,
+    private val errorCodeInfoDao: ErrorCodeInfoDao
 ): AtomStatisticsManageService {
     override fun queryAtomTrendInfo(queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO): AtomTrendInfoVO {
         // 未选择查询的插件时读取插件显示配置
@@ -250,14 +251,18 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 atomCodes = atomCodes
             )
         )
+        val errorDict = mutableMapOf<Int, String>()
+        errorCodeInfoDao.getErrorTypeDict(dslContext).map { errorDict.put(it.value1(), it.value2()) }
         //  获取表头固定字段
         val headerInfo = getHeaderInfo()
         val atomFailInfos = mutableMapOf<String, MutableMap<String, String>>()
         queryAtomFailStatisticsInfo.map {
             val atomCode = it[BK_ATOM_CODE].toString()
+            val errorType = it[BK_ERROR_TYPE] as Int
+
             //  动态扩展表头
             if (!headerInfo.containsKey(getHeaderFieldName(it[BK_ERROR_TYPE].toString()))) {
-                headerInfo[getHeaderFieldName(it[BK_ERROR_TYPE].toString())] = it[BK_ERROR_NAME].toString()
+                headerInfo[getHeaderFieldName("$errorType")] = errorDict[errorType]?: ""
             }
             if (!atomFailInfos.containsKey(atomCode)) {
                 atomFailInfos.put(

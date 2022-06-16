@@ -29,28 +29,22 @@ package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.JooqUtils.sum
-import com.tencent.devops.model.metrics.tables.TErrorTypeDict
 import com.tencent.devops.model.metrics.tables.TPipelineFailDetailData
 import com.tencent.devops.model.metrics.tables.TPipelineFailSummaryData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
-import com.tencent.devops.metrics.constant.Constants.BK_ERROR_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
-import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
 import com.tencent.devops.metrics.constant.Constants.DEFAULT_LIMIT_NUM
 import com.tencent.devops.metrics.pojo.po.PipelineFailDetailDataPO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineFailQO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
-import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record1
 import org.jooq.Record2
 import org.springframework.stereotype.Repository
 import org.jooq.Result
-import org.jooq.SelectConditionStep
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
