@@ -16,4 +16,6 @@ abstract class Function : Container() {
 
         return "$name(${parameters.joinToString(", ") { it.convertToExpression() }})"
     }
+
+    abstract fun createNode(): Function
 }

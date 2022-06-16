@@ -18,7 +18,7 @@ class Contains : Function() {
             val right = parameters[1].evaluate(context)
             if (right.isPrimitive) {
                 val rightString = right.convertToString()
-                return Pair(null, leftString.indexOf(rightString, ignoreCase = true) >= 0)
+                return Pair(null, leftString.indexOf(rightString, ignoreCase = false) >= 0)
             }
         } else {
             val (collection, ok) = left.tryGetCollectionInterface()
@@ -34,5 +34,9 @@ class Contains : Function() {
         }
 
         return Pair(null, false)
+    }
+
+    override fun createNode(): Function {
+        return Contains()
     }
 }

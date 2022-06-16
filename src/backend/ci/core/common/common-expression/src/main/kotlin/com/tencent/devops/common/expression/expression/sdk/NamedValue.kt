@@ -13,4 +13,6 @@ abstract class NamedValue : ExpressionNode() {
 
         return name
     }
+
+    abstract fun createNode(): NamedValue
 }

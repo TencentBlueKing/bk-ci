@@ -9,6 +9,6 @@ class FunctionInfo(
     private val f: Function
 ) : IFunctionInfo {
     override fun createNode(): Function {
-        return f
+        return f.createNode()
     }
 }

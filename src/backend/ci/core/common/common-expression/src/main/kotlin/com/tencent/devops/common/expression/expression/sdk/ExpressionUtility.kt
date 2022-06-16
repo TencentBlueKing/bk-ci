@@ -4,6 +4,7 @@ import com.tencent.devops.common.expression.NotSupportedException
 import com.tencent.devops.common.expression.expression.EvaluationResult
 import com.tencent.devops.common.expression.expression.ExpressionConstants
 import com.tencent.devops.common.expression.expression.ValueKind
+import com.tencent.devops.common.expression.utils.FormatUtil
 
 object ExpressionUtility {
 
@@ -89,7 +90,7 @@ object ExpressionUtility {
                 ExpressionConstants.FALSE
             }
 
-            ValueKind.Number -> return (value as Double).toString()
+            ValueKind.Number -> return FormatUtil.doubleToString(value as Double)
 
             ValueKind.String -> return "'${stringEscape(value as String)}'"
 

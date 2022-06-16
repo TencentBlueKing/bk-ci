@@ -44,7 +44,7 @@ class CaseSensitiveDictionaryContextData :
 
     override val values: Iterable<Any?>
         get() {
-            if (mList.isEmpty()) {
+            if (mList.isNotEmpty()) {
                 return mList.map { it.value }
             }
             return emptyList()

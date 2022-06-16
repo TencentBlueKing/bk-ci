@@ -25,19 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.pipeline.contextData
+package com.tencent.devops.common.expression.utils
 
-import com.tencent.devops.common.expression.ExecutionContext
-import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
-import com.tencent.devops.common.expression.expression.sdk.NamedValue
-import com.tencent.devops.common.expression.expression.sdk.ResultMemory
+import java.text.DecimalFormat
 
-class ContextValueNode : NamedValue() {
-    override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
-        return Pair(null, (context.state as ExecutionContext).expressionValues[name])
-    }
+object FormatUtil {
 
-    override fun createNode(): NamedValue {
-        return ContextValueNode()
-    }
+    private val decimalFormat = DecimalFormat("###################.###########")
+
+    /**
+     * 从double转为string
+     * 如 12.0 -> '12'
+     */
+    fun doubleToString(double: Double): String = decimalFormat.format(double)
 }

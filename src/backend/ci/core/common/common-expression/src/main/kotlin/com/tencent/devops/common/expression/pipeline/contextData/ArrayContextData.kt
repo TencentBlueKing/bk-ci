@@ -30,8 +30,6 @@ package com.tencent.devops.common.expression.pipeline.contextData
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.expression.expression.sdk.IReadOnlyArray
-import com.tencent.devops.common.expression.pipeline.contextData.PipelineContextData
-import com.tencent.devops.common.expression.pipeline.contextData.PipelineContextDataType
 
 class ArrayContextData : PipelineContextData(PipelineContextDataType.ARRAY), IReadOnlyArray<PipelineContextData> {
 

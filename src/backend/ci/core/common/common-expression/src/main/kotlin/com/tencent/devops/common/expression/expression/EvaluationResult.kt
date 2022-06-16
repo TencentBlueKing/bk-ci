@@ -4,6 +4,7 @@ import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
 import com.tencent.devops.common.expression.expression.sdk.ExpressionUtility
 import com.tencent.devops.common.expression.expression.sdk.IReadOnlyArray
 import com.tencent.devops.common.expression.expression.sdk.IReadOnlyObject
+import com.tencent.devops.common.expression.utils.FormatUtil
 
 class EvaluationResult(
     val context: EvaluationContext?,
@@ -104,7 +105,7 @@ class EvaluationResult(
                 } else {
                     ExpressionConstants.FALSE
                 }
-            ValueKind.Number -> (value as Double).toString()
+            ValueKind.Number -> FormatUtil.doubleToString(value as Double)
             ValueKind.String -> value as String
             else -> kind.toString()
         }

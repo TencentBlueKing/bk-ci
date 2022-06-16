@@ -8,6 +8,6 @@ class NamedValueInfo(
 ) : INamedValueInfo {
 
     override fun createNode(): NamedValue {
-        return ob
+        return ob.createNode()
     }
 }

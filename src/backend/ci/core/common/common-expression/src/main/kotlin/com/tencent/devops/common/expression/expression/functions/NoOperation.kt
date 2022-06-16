@@ -8,4 +8,8 @@ class NoOperation : Function() {
     override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
         return Pair(null, null)
     }
+
+    override fun createNode(): Function {
+        return NoOperation()
+    }
 }

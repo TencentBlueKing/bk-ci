@@ -16,10 +16,14 @@ class EndsWith : Function() {
             val right = parameters[1].evaluate(context)
             if (right.isPrimitive) {
                 val rightString = right.convertToString()
-                return Pair(null, leftString.endsWith(rightString, ignoreCase = true))
+                return Pair(null, leftString.endsWith(rightString, ignoreCase = false))
             }
         }
 
         return Pair(null, false)
+    }
+
+    override fun createNode(): Function {
+        return EndsWith()
     }
 }
