@@ -27,16 +27,47 @@
 
 package com.tencent.devops.metrics.service
 
-import com.tencent.devops.metrics.pojo.dto.SaveAtomDisplayConfigDTO
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
+import com.tencent.devops.metrics.pojo.dto.AtomDisplayConfigDTO
+import com.tencent.devops.metrics.pojo.vo.AtomDisplayConfigVO
 
 interface AtomDisplayConfigManageService {
 
     /**
-     * 保存项目下需要展示的插件的配置
+     * 新增项目下需要展示的插件配置
      * @param saveAtomDisplayConfigDTO 保存项目下展示插件配置传输对象
      * @return 布尔值
      */
-    fun saveAtomDisplayConfig(
-        saveAtomDisplayConfigDTO: SaveAtomDisplayConfigDTO
+    fun addAtomDisplayConfig(
+        saveAtomDisplayConfigDTO: AtomDisplayConfigDTO
     ): Boolean
+
+    /**
+     * 更新项目下需要展示的插件配置
+     * @return 布尔值
+     */
+    fun deleteAtomDisplayConfig(
+        projectId: String,
+        userId: String,
+        atomCodes: List<String>
+    ): Boolean
+
+    /**
+     * 获取项目下需要展示的插件
+     * @return 项目下展示插件配置报文
+     */
+    fun getAtomDisplayConfig(projectId: String, userId: String, keyword: String?): AtomDisplayConfigVO
+
+    /**
+     * 获取项目下可供选择展示的插件
+     * @return 项目下展示插件配置报文
+     */
+    fun getOptionalAtomDisplayConfig(
+        projectId: String,
+        userId: String,
+        keyword: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Page<AtomBaseInfoDO>
 }

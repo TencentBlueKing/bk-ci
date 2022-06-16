@@ -33,6 +33,8 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -51,6 +53,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineFavorDao
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
@@ -109,7 +112,8 @@ class PipelineListFacadeService @Autowired constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
-    private val pipelineFavorDao: PipelineFavorDao
+    private val pipelineFavorDao: PipelineFavorDao,
+    private val pipelineLabelPipelineDao: PipelineLabelPipelineDao
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -1388,6 +1392,57 @@ class PipelineListFacadeService @Autowired constructor(
         )
     }
 
+    fun searchByProjectIdAndName(
+        projectId: String,
+        keyword: String?,
+        page: Int,
+        pageSize: Int,
+        channelCodes: List<ChannelCode>?
+    ): Page<PipelineIdAndName> {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val pipelineRecords =
+            pipelineInfoDao.searchByProjectId(
+                dslContext = dslContext,
+                pipelineName = keyword,
+                projectCode = projectId,
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset,
+                channelCodes = channelCodes
+            )
+        val pipelineInfos = mutableListOf<PipelineIdAndName>()
+        pipelineRecords?.map {
+            pipelineInfos.add(
+                PipelineIdAndName(it.pipelineId, it.pipelineName))
+        }
+        val count = pipelineInfoDao.countByProjectIds(
+            dslContext = dslContext,
+            projectIds = listOf(projectId),
+            keyword = keyword
+        )
+        return Page(
+            page = page,
+            pageSize = pageSize,
+            count = count.toLong(),
+            records = pipelineInfos
+        )
+    }
+
+    fun searchByPipeline(
+        projectId: String,
+        pipelineId: String
+    ): PipelineIdAndName? {
+        val pipelineRecords = pipelineInfoDao.getPipelineId(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: return null
+        return PipelineIdAndName(
+            pipelineId = pipelineRecords.pipelineId,
+            pipelineName = pipelineRecords.pipelineName,
+            channelCode = ChannelCode.getChannel(pipelineRecords.channel)
+        )
+    }
+
     fun searchIdAndName(
         projectId: String,
         pipelineName: String?,
@@ -1667,5 +1722,21 @@ class PipelineListFacadeService @Autowired constructor(
             logger.info("listViewPipelines|[$projectId]|$userId|watch=$watch")
             processJmxApi.execute(ProcessJmxApi.LIST_NEW_PIPELINES, watch.totalTimeMillis)
         }
+    }
+
+    fun getProjectPipelineLabelInfos(
+        page: Int,
+        pageSize: Int
+    ): Page<PipelineLabelRelateInfo> {
+        return Page(
+            page = page,
+            pageSize = pageSize,
+            count = pipelineLabelPipelineDao.getPipelineLabelRelateInfoCount(dslContext),
+            records = pipelineLabelPipelineDao.getPipelineLabelRelateInfos(
+                dslContext = dslContext,
+                page = page,
+                pageSize = if (pageSize > 500) 500 else pageSize
+            )
+        )
     }
 }
