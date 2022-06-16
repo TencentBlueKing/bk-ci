@@ -20,6 +20,7 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -28,7 +29,9 @@ import org.springframework.context.annotation.Configuration
 class TurboRecordMqConfig {
 
     @Bean
-    fun rabbitAdmin(@Autowired connectionFactory: ConnectionFactory): RabbitAdmin {
+    fun rabbitAdmin(
+        @Qualifier("rabbitConnectionFactory") @Autowired connectionFactory: ConnectionFactory
+    ): RabbitAdmin {
         return RabbitAdmin(connectionFactory)
     }
 
@@ -54,7 +57,7 @@ class TurboRecordMqConfig {
 
     @Bean
     fun turboRecordCreateListenerContainer(
-        connectionFactory: ConnectionFactory,
+        @Qualifier("rabbitConnectionFactory") connectionFactory: ConnectionFactory,
         turboRecordCreateQueue: Queue,
         rabbitAdmin: RabbitAdmin,
         turboRecordConsumer: TurboRecordConsumer,
@@ -87,7 +90,7 @@ class TurboRecordMqConfig {
 
     @Bean
     fun turboRecordUpdateListenerContainer(
-        connectionFactory: ConnectionFactory,
+        @Qualifier("") connectionFactory: ConnectionFactory,
         turboRecordUpdateQueue: Queue,
         rabbitAdmin: RabbitAdmin,
         turboRecordConsumer: TurboRecordConsumer,
