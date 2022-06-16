@@ -48,4 +48,5 @@ object Versions {
     const val beanUtils = "1.9.4"
     const val jersey = "2.34"
     const val guava = "30.0-jre"
+    const val fastjson = "1.2.83"
 }

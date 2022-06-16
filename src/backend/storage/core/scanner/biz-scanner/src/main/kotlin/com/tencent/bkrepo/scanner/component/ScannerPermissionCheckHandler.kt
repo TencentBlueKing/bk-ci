@@ -71,7 +71,14 @@ class ScannerPermissionCheckHandler(
         anonymous: Boolean = false
     ) {
         val repoDetail = repoDetail(projectId, repoName)
-        permissionManager.checkNodePermission(action, projectId, repoName, fullPath, repoDetail.public, anonymous)
+        permissionManager.checkNodePermission(
+            action,
+            projectId,
+            repoName,
+            fullPath,
+            public = repoDetail.public,
+            anonymous = anonymous
+        )
     }
 
     fun checkSubtaskPermission(subtask: SubScanTaskDefinition, action: PermissionAction) {

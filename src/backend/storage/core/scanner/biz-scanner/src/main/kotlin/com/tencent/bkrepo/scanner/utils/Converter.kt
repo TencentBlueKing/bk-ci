@@ -36,17 +36,18 @@ import com.tencent.bkrepo.common.query.model.PageLimit
 import com.tencent.bkrepo.common.scanner.pojo.scanner.Scanner
 import com.tencent.bkrepo.common.scanner.pojo.scanner.arrowhead.ArrowheadScanner
 import com.tencent.bkrepo.common.scanner.pojo.scanner.arrowhead.CveSecItem
-import com.tencent.bkrepo.scanner.pojo.request.LoadResultArguments
-import com.tencent.bkrepo.scanner.pojo.request.ArrowheadLoadResultArguments
+import com.tencent.bkrepo.scanner.model.TProjectScanConfiguration
 import com.tencent.bkrepo.scanner.model.TScanPlan
 import com.tencent.bkrepo.scanner.model.TScanTask
 import com.tencent.bkrepo.scanner.model.TSubScanTask
+import com.tencent.bkrepo.scanner.pojo.ProjectScanConfiguration
 import com.tencent.bkrepo.scanner.pojo.ScanTask
 import com.tencent.bkrepo.scanner.pojo.ScanTriggerType
 import com.tencent.bkrepo.scanner.pojo.SubScanTask
+import com.tencent.bkrepo.scanner.pojo.request.ArrowheadLoadResultArguments
 import com.tencent.bkrepo.scanner.pojo.request.ArtifactVulnerabilityRequest
 import com.tencent.bkrepo.scanner.pojo.request.BatchScanRequest
-import com.tencent.bkrepo.scanner.pojo.request.MatchPlanSingleScanRequest
+import com.tencent.bkrepo.scanner.pojo.request.LoadResultArguments
 import com.tencent.bkrepo.scanner.pojo.request.ScanRequest
 import com.tencent.bkrepo.scanner.pojo.request.SingleScanRequest
 import com.tencent.bkrepo.scanner.pojo.response.ArtifactVulnerabilityInfo
@@ -88,13 +89,9 @@ object Converter {
         )
     }
 
-    fun convert(request: BatchScanRequest): ScanRequest {
+    fun convert(request: BatchScanRequest, planType: String): ScanRequest {
         with(request) {
-            val rule = if (repoNames.isEmpty() && artifactRules.isEmpty()) {
-                null
-            } else {
-                RuleConverter.convert(projectId, repoNames, artifactRules)
-            }
+            val rule = RuleConverter.convert(projectId, repoNames, artifactRules, planType)
             return ScanRequest(null, request.planId, rule)
         }
     }
@@ -114,15 +111,15 @@ object Converter {
         }
     }
 
-    fun convert(request: MatchPlanSingleScanRequest, scanPlan: TScanPlan): ScanRequest {
-        with(request) {
-            // 创建rule
-            val rule = if (fullPath != null) {
-                RuleConverter.convert(projectId, repoName, fullPath!!)
-            } else {
-                RuleConverter.convert(projectId, repoName, packageKey!!, version!!)
-            }
-            return ScanRequest(planId = scanPlan.id, rule = rule)
+    fun convert(projectScanConfiguration: TProjectScanConfiguration): ProjectScanConfiguration {
+        return with(projectScanConfiguration) {
+            ProjectScanConfiguration(
+                projectId = projectId,
+                priority = priority,
+                scanTaskCountLimit = scanTaskCountLimit,
+                subScanTaskCountLimit = subScanTaskCountLimit,
+                autoScanConfiguration = autoScanConfiguration
+            )
         }
     }
 

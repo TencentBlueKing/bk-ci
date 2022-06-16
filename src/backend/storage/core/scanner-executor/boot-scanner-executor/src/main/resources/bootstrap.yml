@@ -1,7 +1,8 @@
-service.name: scanner-executor
 server.port: 25812
 
 spring:
+  application:
+    name: scanner-executor
   task:
     execution:
       pool:

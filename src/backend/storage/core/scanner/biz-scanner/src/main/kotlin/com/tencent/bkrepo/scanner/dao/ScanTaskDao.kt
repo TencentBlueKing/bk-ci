@@ -30,6 +30,7 @@ package com.tencent.bkrepo.scanner.dao
 import com.mongodb.client.result.UpdateResult
 import com.tencent.bkrepo.scanner.model.TScanTask
 import com.tencent.bkrepo.scanner.pojo.ScanTaskStatus
+import org.springframework.data.mongodb.core.FindAndModifyOptions
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
@@ -84,9 +85,14 @@ class ScanTaskDao(private val scanPlanDao: ScanPlanDao) : ScannerSimpleMongoDao<
     }
 
     /**
-     * 重制扫描任务状态
+     * 重置扫描任务状态
+     *
+     * @param taskId 扫描任务ID
+     * @param lastModifiedDate 扫描任务最后修改时间
+     *
+     * @return 更新结果
      */
-    fun resetTask(taskId: String, lastModifiedDate: LocalDateTime): UpdateResult {
+    fun resetTask(taskId: String, lastModifiedDate: LocalDateTime): TScanTask? {
         val query = Query(
             Criteria.where(ID).isEqualTo(taskId).and(TScanTask::lastModifiedDate.name).isEqualTo(lastModifiedDate)
         )
@@ -99,7 +105,9 @@ class ScanTaskDao(private val scanPlanDao: ScanPlanDao) : ScannerSimpleMongoDao<
             .set(TScanTask::scanning.name, 0L)
             .set(TScanTask::failed.name, 0L)
             .set(TScanTask::scanned.name, 0L)
-        return updateFirst(query, update)
+
+        val options = FindAndModifyOptions().returnNew(true)
+        return determineMongoTemplate().findAndModify(query, update, options, TScanTask::class.java)
     }
 
     fun updateStartedDateTimeIfNotExists(taskId: String, startDateTime: LocalDateTime): UpdateResult {

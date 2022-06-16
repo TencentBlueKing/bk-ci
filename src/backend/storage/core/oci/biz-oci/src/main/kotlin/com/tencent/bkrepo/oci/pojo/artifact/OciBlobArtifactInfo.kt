@@ -42,8 +42,8 @@ class OciBlobArtifactInfo(
     repoName: String,
     packageName: String,
     version: String,
-    val digest: String?,
-    val uuid: String?,
+    val digest: String? = null,
+    val uuid: String? = null,
     val mount: String? = null,
     val from: String? = null
 ) : OciArtifactInfo(projectId, repoName, packageName, version) {

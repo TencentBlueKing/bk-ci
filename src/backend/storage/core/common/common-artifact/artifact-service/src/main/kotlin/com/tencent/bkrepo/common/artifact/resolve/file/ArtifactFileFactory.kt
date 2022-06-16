@@ -33,7 +33,7 @@ import com.tencent.bkrepo.common.artifact.resolve.file.bksync.BkSyncArtifactFile
 import com.tencent.bkrepo.common.artifact.resolve.file.chunk.ChunkedArtifactFile
 import com.tencent.bkrepo.common.artifact.resolve.file.multipart.MultipartArtifactFile
 import com.tencent.bkrepo.common.artifact.resolve.file.stream.StreamArtifactFile
-import com.tencent.bkrepo.common.bksync.BlockInputStream
+import com.tencent.bkrepo.common.bksync.BlockChannel
 import com.tencent.bkrepo.common.storage.core.StorageProperties
 import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
 import com.tencent.bkrepo.common.storage.monitor.StorageHealthMonitor
@@ -69,11 +69,15 @@ class ArtifactFileFactory(
          * 构建使用BkSync的增量传输文件
          * */
         fun buildBkSync(
-            blockInputStream: BlockInputStream,
+            blockChannel: BlockChannel,
             deltaInputStream: InputStream,
             blockSize: Int
         ): BkSyncArtifactFile {
-            return BkSyncArtifactFile(blockInputStream, deltaInputStream, blockSize).apply {
+            return BkSyncArtifactFile(
+                blockChannel,
+                deltaInputStream,
+                blockSize
+            ).apply {
                 track(this)
             }
         }

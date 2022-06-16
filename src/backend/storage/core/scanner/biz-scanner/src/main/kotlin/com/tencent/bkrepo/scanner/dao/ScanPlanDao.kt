@@ -44,6 +44,7 @@ import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
 import org.springframework.data.mongodb.core.query.inValues
 import org.springframework.data.mongodb.core.query.isEqualTo
+import org.springframework.data.mongodb.core.query.size
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -59,15 +60,27 @@ class ScanPlanDao : ScannerSimpleMongoDao<TScanPlan>() {
         return findOne(Query(criteria))
     }
 
-    fun findByProjectIdAndRepoNames(
+    fun findByProjectIdAndRepoName(
         projectId: String,
-        repoNames: List<String>,
-        scanOnNewArtifact: Boolean = true
+        repoName: String,
+        planType: String,
+        scanOnNewArtifact: Boolean = true,
+        includeEmptyRepoNames: Boolean = true
     ): List<TScanPlan> {
         val criteria = Criteria
             .where(TScanPlan::projectId.name).isEqualTo(projectId)
-            .and(TScanPlan::repoNames.name).all(repoNames)
             .and(TScanPlan::scanOnNewArtifact.name).isEqualTo(scanOnNewArtifact)
+            .and(TScanPlan::type.name).isEqualTo(planType)
+        if (!includeEmptyRepoNames) {
+            criteria.and(TScanPlan::repoNames.name).isEqualTo(repoName)
+        } else {
+            val repoNamesCriteria = Criteria().orOperator(
+                TScanPlan::repoNames.size(0),
+                TScanPlan::repoNames.isEqualTo(repoName)
+            )
+            criteria.andOperator(repoNamesCriteria)
+        }
+
         return find(Query(criteria))
     }
 

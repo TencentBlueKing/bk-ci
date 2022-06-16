@@ -36,9 +36,6 @@ import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContextHold
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactDownloadContext
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactRemoveContext
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactUploadContext
-import com.tencent.bkrepo.oci.constant.TAG_INVALID_CODE
-import com.tencent.bkrepo.oci.constant.TAG_INVALID_DESCRIPTION
-import com.tencent.bkrepo.oci.exception.OciBadRequestException
 import com.tencent.bkrepo.oci.pojo.artifact.OciManifestArtifactInfo
 import com.tencent.bkrepo.oci.service.OciManifestService
 import org.slf4j.LoggerFactory
@@ -71,9 +68,6 @@ class OciManifestServiceImpl : OciManifestService {
         logger.info(
             "Handling delete manifest request for package [${artifactInfo.packageName}] " +
                 "with digest [${artifactInfo.reference}] in repo [${artifactInfo.getRepoIdentify()}]"
-        )
-        if (!artifactInfo.isValidDigest) throw OciBadRequestException(
-            "Manifest file only can be deleted by digest..", TAG_INVALID_CODE, TAG_INVALID_DESCRIPTION
         )
         val context = ArtifactRemoveContext()
         ArtifactContextHolder.getRepository().remove(context)

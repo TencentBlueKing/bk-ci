@@ -6,5 +6,5 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp-sse")
 }
 plugins {
-    id("me.champeau.gradle.jmh") version "0.5.3"
+    id("me.champeau.gradle.jmh") version Versions.JMH
 }

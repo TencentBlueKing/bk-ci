@@ -35,9 +35,9 @@ import com.tencent.bkrepo.common.artifact.message.ArtifactMessageCode
  * 构件禁止下载异常
  */
 class ArtifactDownloadForbiddenException(
-    reason: String
+    projectId: String
 ) : ErrorCodeException(
     ArtifactMessageCode.ARTIFACT_DOWNLOAD_FORBIDDEN,
-    reason,
+    projectId,
     status = HttpStatus.FORBIDDEN
 )
