@@ -65,6 +65,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
+import java.time.LocalTime
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
@@ -104,7 +105,8 @@ class CallBackControl @Autowired constructor(
     fun piplineStreamEnabledEvent(projectId: String, pipelineId: String) {
         logger.info("$projectId|$pipelineId|STREAM_ENABLED|callback pipeline event")
         val list = projectPipelineCallBackService.listProjectCallBack(
-            projectId = projectId,
+            // stream不知道回调绑定那个project，目前先发给ljltestproject项目做测试
+            projectId = "ljltestproject",
             events = CallBackEvent.STREAM_ENABLED.name
         )
 
