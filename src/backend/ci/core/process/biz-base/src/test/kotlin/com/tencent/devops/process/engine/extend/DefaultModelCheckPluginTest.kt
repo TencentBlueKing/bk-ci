@@ -73,7 +73,8 @@ class DefaultModelCheckPluginTest : TestBase() {
     private val serviceAtomResource: ServiceAtomResource = mock()
     private val serviceMarketAtomEnvResource: ServiceMarketAtomEnvResource = mock()
 
-    private fun genAtomVersion() = AtomVersion(atomId = "1",
+    private fun genAtomVersion() = AtomVersion(
+        atomId = "1",
         atomCode = "atomCode",
         name = "name",
         logoUrl = "logoUrl",
@@ -200,9 +201,12 @@ class DefaultModelCheckPluginTest : TestBase() {
     @Test
     fun beforeDeleteElementInExistsModel() {
         val existsModel = genModel(stageSize = 4, jobSize = 2, elementSize = 2)
-        checkPlugin.beforeDeleteElementInExistsModel(existsModel, null, BeforeDeleteParam(
-            userId, projectId, pipelineId
-        ))
+        checkPlugin.beforeDeleteElementInExistsModel(
+            existsModel, null,
+            BeforeDeleteParam(
+                userId, projectId, pipelineId
+            )
+        )
     }
 
     @Test
@@ -227,7 +231,7 @@ class DefaultModelCheckPluginTest : TestBase() {
 
     fun checkModelIntegrityEmptyElement() {
         val model = genModel(stageSize = 4, jobSize = 2, elementSize = 0)
-        Assertions.assertThrows(ErrorCodeException::class.java) {checkPlugin.checkModelIntegrity(model, projectId)}
+        Assertions.assertThrows(ErrorCodeException::class.java) { checkPlugin.checkModelIntegrity(model, projectId) }
     }
 
     @Test

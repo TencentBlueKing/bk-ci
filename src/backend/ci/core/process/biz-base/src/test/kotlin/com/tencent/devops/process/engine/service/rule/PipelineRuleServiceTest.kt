@@ -62,6 +62,9 @@ class PipelineRuleServiceTest {
     fun getRuleNameList() {
         val ruleStr = "\${{YEAR}}_\${{DAY_OF_MONTH}}-\${{FORMAT_DATE:\"yyyy-MM-dd HH:mm:ss\"}}}"
         val ruleValue = JsonUtil.toJson(pipelineRuleService.getRuleNameList(ruleStr))
-        Assertions.assertEquals(ruleValue, "[ \"YEAR\", \"DAY_OF_MONTH\", \"FORMAT_DATE:\\\"yyyy-MM-dd HH:mm:ss\\\"\" ]")
+        Assertions.assertEquals(
+            ruleValue,
+            "[ \"YEAR\", \"DAY_OF_MONTH\", \"FORMAT_DATE:\\\"yyyy-MM-dd HH:mm:ss\\\"\" ]"
+        )
     }
 }

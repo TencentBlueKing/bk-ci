@@ -143,21 +143,23 @@ open class BaseBuildDetailService constructor(
     protected fun fetchHistoryStageStatus(
         model: Model,
         buildStatus: BuildStatus,
+        reviewers: List<String>? = null,
+        errorMsg: String? = null,
         cancelUser: String? = null
     ): List<BuildStageStatus> {
         val stageTagMap: Map<String, String>
             by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } }
         // 更新Stage状态至BuildHistory
-        val statusMessage = if (buildStatus == BuildStatus.REVIEWING) {
-            BUILD_REVIEWING
+        val (statusMessage, reason) = if (buildStatus == BuildStatus.REVIEWING) {
+            Pair(BUILD_REVIEWING, reviewers?.joinToString(","))
         } else if (buildStatus.isFailure()) {
-            BUILD_FAILED
+            Pair(BUILD_FAILED, errorMsg ?: buildStatus.name)
         } else if (buildStatus.isCancel()) {
-            BUILD_CANCELED
+            Pair(BUILD_CANCELED, cancelUser)
         } else if (buildStatus.isSuccess()) {
-            BUILD_COMPLETED
+            Pair(BUILD_COMPLETED, null)
         } else {
-            BUILD_RUNNING
+            Pair(BUILD_RUNNING, null)
         }
         return model.stages.map {
             BuildStageStatus(
@@ -171,8 +173,7 @@ open class BaseBuildDetailService constructor(
                 },
                 // #6655 利用stageStatus中的第一个stage传递构建的状态信息
                 showMsg = if (it.id == STATUS_STAGE) {
-                    MessageCodeUtil.getCodeLanMessage(statusMessage) +
-                        (cancelUser?.let { "by $cancelUser" } ?: "")
+                    MessageCodeUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
                 } else null
             )
         }

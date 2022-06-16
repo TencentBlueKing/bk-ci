@@ -97,7 +97,7 @@ class DependOnUtilTest {
             id = "1",
             containers = listOf(container1, container2)
         )
-        Assertions.assertThrows(ErrorCodeException::class.java) {DependOnUtils.checkRepeatedJobId(stage)}
+        Assertions.assertThrows(ErrorCodeException::class.java) { DependOnUtils.checkRepeatedJobId(stage) }
     }
 
     @Test
@@ -297,7 +297,7 @@ class DependOnUtilTest {
             containers = listOf(container1, container2)
         )
         val params = mapOf<String, String>()
-        Assertions.assertThrows(ErrorCodeException::class.java) {DependOnUtils.initDependOn(stage, params)}
+        Assertions.assertThrows(ErrorCodeException::class.java) { DependOnUtils.initDependOn(stage, params) }
     }
 
     @Test

@@ -136,31 +136,43 @@ class ControlUtilsTest : TestBase() {
     fun pauseBeforeExec() {
         var pauseFlag: String? = null
         Assertions.assertFalse(ControlUtils.pauseBeforeExec(null, pauseFlag))
-        Assertions.assertTrue(ControlUtils.pauseBeforeExec(
-            additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_FAILED_ONLY)
-                .copy(pauseBeforeExec = true), alreadyPauseFlag = pauseFlag
-        ))
+        Assertions.assertTrue(
+            ControlUtils.pauseBeforeExec(
+                additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_FAILED_ONLY)
+                    .copy(pauseBeforeExec = true),
+                alreadyPauseFlag = pauseFlag
+            )
+        )
         pauseFlag = ""
-        Assertions.assertTrue(ControlUtils.pauseBeforeExec(
-            additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_FAILED_ONLY)
-                .copy(pauseBeforeExec = true), alreadyPauseFlag = pauseFlag
-        ))
+        Assertions.assertTrue(
+            ControlUtils.pauseBeforeExec(
+                additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_FAILED_ONLY)
+                    .copy(pauseBeforeExec = true),
+                alreadyPauseFlag = pauseFlag
+            )
+        )
         pauseFlag = "true"
-        Assertions.assertFalse(ControlUtils.pauseBeforeExec(
-            additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_FAILED_ONLY)
-                .copy(pauseBeforeExec = true),
-            alreadyPauseFlag = pauseFlag
-        ))
-        Assertions.assertFalse(ControlUtils.pauseBeforeExec(
-            additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_FAILED_ONLY)
-                .copy(pauseBeforeExec = true),
-            alreadyPauseFlag = pauseFlag
-        ))
-        Assertions.assertFalse(ControlUtils.pauseBeforeExec(
-            additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_FAILED_ONLY)
-                .copy(pauseBeforeExec = null),
-            alreadyPauseFlag = pauseFlag
-        ))
+        Assertions.assertFalse(
+            ControlUtils.pauseBeforeExec(
+                additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_FAILED_ONLY)
+                    .copy(pauseBeforeExec = true),
+                alreadyPauseFlag = pauseFlag
+            )
+        )
+        Assertions.assertFalse(
+            ControlUtils.pauseBeforeExec(
+                additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_FAILED_ONLY)
+                    .copy(pauseBeforeExec = true),
+                alreadyPauseFlag = pauseFlag
+            )
+        )
+        Assertions.assertFalse(
+            ControlUtils.pauseBeforeExec(
+                additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_FAILED_ONLY)
+                    .copy(pauseBeforeExec = null),
+                alreadyPauseFlag = pauseFlag
+            )
+        )
     }
 
     @Test
@@ -171,7 +183,8 @@ class ControlUtilsTest : TestBase() {
         Assertions.assertFalse(
             ControlUtils.retryWhenFailure(
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_FAILED_ONLY)
-                    .copy(retryWhenFailed = false), retryCount = retryCount
+                    .copy(retryWhenFailed = false),
+                retryCount = retryCount
             )
         )
 
@@ -179,7 +192,8 @@ class ControlUtilsTest : TestBase() {
             ControlUtils.retryWhenFailure(
                 additionalOptions = elementAdditionalOptions(
                     enable = false, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
-                ), retryCount = retryCount
+                ),
+                retryCount = retryCount
             )
         )
 
@@ -190,7 +204,8 @@ class ControlUtilsTest : TestBase() {
                 ControlUtils.retryWhenFailure(
                     additionalOptions = elementAdditionalOptions(
                         retryCount = setRetryCount, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
-                    ).copy(retryWhenFailed = true), retryCount = retryCount
+                    ).copy(retryWhenFailed = true),
+                    retryCount = retryCount
                 )
             )
             retryCount++
@@ -201,7 +216,8 @@ class ControlUtilsTest : TestBase() {
             ControlUtils.retryWhenFailure(
                 additionalOptions = elementAdditionalOptions(
                     retryCount = setRetryCount, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
-                ).copy(retryWhenFailed = true), retryCount = retryCount
+                ).copy(retryWhenFailed = true),
+                retryCount = retryCount
             )
         )
 
@@ -213,7 +229,8 @@ class ControlUtilsTest : TestBase() {
                 ControlUtils.retryWhenFailure(
                     additionalOptions = elementAdditionalOptions(
                         retryCount = setRetryCount, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
-                    ).copy(retryWhenFailed = true), retryCount = retryCount
+                    ).copy(retryWhenFailed = true),
+                    retryCount = retryCount
                 )
             )
             retryCount++
@@ -224,7 +241,8 @@ class ControlUtilsTest : TestBase() {
             ControlUtils.retryWhenFailure(
                 additionalOptions = elementAdditionalOptions(
                     retryCount = setRetryCount, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
-                ).copy(retryWhenFailed = true), retryCount = retryCount
+                ).copy(retryWhenFailed = true),
+                retryCount = retryCount
             )
         )
     }
@@ -235,67 +253,83 @@ class ControlUtilsTest : TestBase() {
         val customeVarabiles = mutableListOf(NameAndValue("a", "1"))
         // 自定义变量全部满足时不运行
         Assertions.assertTrue(
-            ControlUtils.checkCustomVariableSkip(buildId = buildId, variables = variables,
+            ControlUtils.checkCustomVariableSkip(
+                buildId = buildId, variables = variables,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN, customVariables = customeVarabiles
-                ))
+                )
+            )
         )
         // 自定义变量全部满足时不运行, 不满足，运行。。。
         variables["a"] = "2"
         Assertions.assertFalse(
-            ControlUtils.checkCustomVariableSkip(buildId = buildId, variables = variables,
+            ControlUtils.checkCustomVariableSkip(
+                buildId = buildId, variables = variables,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN, customVariables = customeVarabiles
-                ))
+                )
+            )
         )
         // 自定义变量全部满足时运行
         variables["a"] = "1"
         Assertions.assertFalse(
-            ControlUtils.checkCustomVariableSkip(buildId = buildId, variables = variables,
+            ControlUtils.checkCustomVariableSkip(
+                buildId = buildId, variables = variables,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH, customVariables = customeVarabiles
-                ))
+                )
+            )
         )
         // 自定义变量全部满足时运行, 不满足不运行。。。
         variables["a"] = "2"
         Assertions.assertTrue(
-            ControlUtils.checkCustomVariableSkip(buildId = buildId, variables = variables,
+            ControlUtils.checkCustomVariableSkip(
+                buildId = buildId, variables = variables,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH, customVariables = customeVarabiles
-                ))
+                )
+            )
         )
         // 支持变量
         variables["a"] = "1"; variables["var_1"] = "1"
         customeVarabiles.add(NameAndValue("a", "\${var_1}"))
         Assertions.assertFalse(
-            ControlUtils.checkCustomVariableSkip(buildId = buildId, variables = variables,
+            ControlUtils.checkCustomVariableSkip(
+                buildId = buildId, variables = variables,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH, customVariables = customeVarabiles
-                ))
+                )
+            )
         )
         variables["a"] = "1"; variables["var_1"] = "1"
         customeVarabiles.add(NameAndValue("a", "\${var_1}"))
         Assertions.assertTrue(
-            ControlUtils.checkCustomVariableSkip(buildId = buildId, variables = variables,
+            ControlUtils.checkCustomVariableSkip(
+                buildId = buildId, variables = variables,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN, customVariables = customeVarabiles
-                ))
+                )
+            )
         )
         variables["a"] = "2"; variables["var_1"] = "1"
         customeVarabiles.add(NameAndValue("a", "\${var_1}"))
         Assertions.assertFalse(
-            ControlUtils.checkCustomVariableSkip(buildId = buildId, variables = variables,
+            ControlUtils.checkCustomVariableSkip(
+                buildId = buildId, variables = variables,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN, customVariables = customeVarabiles
-                ))
+                )
+            )
         )
         variables["a"] = "2"; variables["var_1"] = "1"
         customeVarabiles.add(NameAndValue("a", "\${var_1}"))
         Assertions.assertTrue(
-            ControlUtils.checkCustomVariableSkip(buildId = buildId, variables = variables,
+            ControlUtils.checkCustomVariableSkip(
+                buildId = buildId, variables = variables,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH, customVariables = customeVarabiles
-                ))
+                )
+            )
         )
     }
 
@@ -364,32 +398,37 @@ class ControlUtilsTest : TestBase() {
         val fail = BuildStatus.FAILED
         val failed = true
         Assertions.assertTrue(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_SUCCESS),
                 containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
             )
         )
         Assertions.assertTrue(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.CUSTOM_VARIABLE_MATCH),
                 containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
             )
         )
 
         Assertions.assertTrue(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN),
                 containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
             )
         )
         Assertions.assertTrue(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.CUSTOM_CONDITION_MATCH),
                 containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
             )
         )
         Assertions.assertTrue(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.OTHER_TASK_RUNNING),
                 containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
             )
@@ -403,14 +442,16 @@ class ControlUtilsTest : TestBase() {
         val failed = false
         // 成功不跳过
         Assertions.assertFalse(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_SUCCESS),
                 containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
             )
         )
         // 满足执行条件 而不跳过
         Assertions.assertFalse(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
                     customVariables = mutableListOf(NameAndValue(key = "a", value = "b"))
@@ -420,7 +461,8 @@ class ControlUtilsTest : TestBase() {
         )
         // 不满足执行条件 而跳过
         Assertions.assertTrue(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
                     customVariables = mutableListOf(NameAndValue(key = "a", value = "a"))
@@ -430,7 +472,8 @@ class ControlUtilsTest : TestBase() {
         )
         // 满足不执行的条件 而跳过
         Assertions.assertTrue(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
                     customVariables = mutableListOf(NameAndValue(key = "a", value = "b"))
@@ -440,7 +483,8 @@ class ControlUtilsTest : TestBase() {
         )
         // 不满足不执行的条件 而不跳过
         Assertions.assertFalse(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
                     customVariables = mutableListOf(NameAndValue(key = "a", value = "a"))
@@ -457,14 +501,16 @@ class ControlUtilsTest : TestBase() {
         val failed = false
         // 成功不跳过
         Assertions.assertFalse(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_SUCCESS),
                 containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
             )
         )
         // 满足执行条件 而不跳过
         Assertions.assertFalse(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
                     customVariables = mutableListOf(NameAndValue(key = "a", value = "b"))
@@ -474,7 +520,8 @@ class ControlUtilsTest : TestBase() {
         )
         // 不满足执行条件 而跳过
         Assertions.assertTrue(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
                     customVariables = mutableListOf(NameAndValue(key = "a", value = "a"))
@@ -484,7 +531,8 @@ class ControlUtilsTest : TestBase() {
         )
         // 满足不执行的条件 而跳过
         Assertions.assertTrue(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
                     customVariables = mutableListOf(NameAndValue(key = "a", value = "b"))
@@ -494,7 +542,8 @@ class ControlUtilsTest : TestBase() {
         )
         // 不满足不执行的条件 而不跳过
         Assertions.assertFalse(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
                     customVariables = mutableListOf(NameAndValue(key = "a", value = "a"))
@@ -510,64 +559,76 @@ class ControlUtilsTest : TestBase() {
 
         // null check
         Assertions.assertFalse(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = null,
                 containerFinalStatus = BuildStatus.RUNNING,
                 variables = variables,
-                hasFailedTaskInSuccessContainer = true)
+                hasFailedTaskInSuccessContainer = true
+            )
         )
 
         // RunCondition.PRE_TASK_FAILED_ONLY & RUNNING
         Assertions.assertFalse(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
                 ),
                 containerFinalStatus = BuildStatus.RUNNING,
                 variables = variables,
-                hasFailedTaskInSuccessContainer = true)
+                hasFailedTaskInSuccessContainer = true
+            )
         )
         // RunCondition.PRE_TASK_FAILED_ONLY & FAIL
         Assertions.assertFalse(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
                 ),
                 containerFinalStatus = BuildStatus.FAILED,
                 variables = variables,
-                hasFailedTaskInSuccessContainer = true)
+                hasFailedTaskInSuccessContainer = true
+            )
         )
         // RunCondition.PRE_TASK_FAILED_ONLY & FAIL
         Assertions.assertFalse(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
                 ),
                 containerFinalStatus = BuildStatus.FAILED,
                 variables = variables,
-                hasFailedTaskInSuccessContainer = false)
+                hasFailedTaskInSuccessContainer = false
+            )
         )
 
         // RunCondition.PRE_TASK_FAILED_ONLY & disable
         Assertions.assertTrue(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     enable = false, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
                 ),
                 containerFinalStatus = BuildStatus.FAILED,
                 variables = variables,
-                hasFailedTaskInSuccessContainer = false)
+                hasFailedTaskInSuccessContainer = false
+            )
         )
 
         // RunCondition.PRE_TASK_FAILED_ONLY & SUCCEED
         Assertions.assertTrue(
-            ControlUtils.checkTaskSkip(buildId = buildId,
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
                 additionalOptions = elementAdditionalOptions(
                     enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
                 ),
                 containerFinalStatus = BuildStatus.SUCCEED,
                 variables = variables,
-                hasFailedTaskInSuccessContainer = false)
+                hasFailedTaskInSuccessContainer = false
+            )
         )
     }
 }

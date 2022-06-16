@@ -48,19 +48,17 @@ class LogServiceImpl(
 
     override fun listLog(webHookId: String, option: ListWebHookLogOption): Page<WebHookLog> {
         with(option) {
+            val startDateTime = LocalDateTime.parse(
+                startDate ?: LocalDateTime.now().minusMonths(1).toString()
+            )
+            val endDateTime = LocalDateTime.parse(startDate ?: LocalDateTime.now().toString())
             val query = Query(
                 Criteria.where(TWebHookLog::webHookId.name).isEqualTo(webHookId)
                     .apply {
                         status?.let { and(TWebHookLog::status.name).isEqualTo(it) }
-                        if (startDate != null && endDate != null) {
-                            and(TWebHookLog::requestTime.name)
-                                .gte(LocalDateTime.parse(startDate))
-                                .lte(LocalDateTime.parse(endDate))
-                        } else if (startDate != null) {
-                            and(TWebHookLog::requestTime.name).gte(LocalDateTime.parse(startDate))
-                        } else if (endDate != null) {
-                            and(TWebHookLog::requestTime.name).lte(LocalDateTime.parse(endDate))
-                        }
+                        and(TWebHookLog::requestTime.name)
+                            .gte(endDateTime)
+                            .lte(startDateTime)
                     }
             )
             val pageRequest = Pages.ofRequest(pageNumber, pageSize)
@@ -69,10 +67,6 @@ class LogServiceImpl(
             val records = webHookLogDao.find(query.with(sort).with(pageRequest)).map { transfer(it) }
             return Pages.ofResponse(pageRequest, totalRecords, records)
         }
-    }
-
-    override fun deleteLogBeforeDate(date: LocalDateTime): Long {
-        return webHookLogDao.deleteByRequestTimeBefore(date).deletedCount
     }
 
     private fun transfer(tWebHookLog: TWebHookLog): WebHookLog {

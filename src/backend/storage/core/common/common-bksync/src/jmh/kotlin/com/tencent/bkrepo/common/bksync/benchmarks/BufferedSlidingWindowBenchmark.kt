@@ -24,7 +24,8 @@ open class BufferedSlidingWindowBenchmark {
     lateinit var bsw: BufferedSlidingWindow
 
     companion object {
-        const val GB = 1024 * 1024 * 1024
+        private const val MB = 1024 * 1024
+        private const val GB = 1024 * MB
     }
 
     @Setup
@@ -34,7 +35,7 @@ open class BufferedSlidingWindowBenchmark {
             ZeroInputStream(GB).copyTo(it)
         }
         raf = RandomAccessFile(file, "r")
-        bsw = BufferedSlidingWindow(2000, 500, raf)
+        bsw = BufferedSlidingWindow(2000, 16 * MB, file.inputStream(), file.length())
     }
 
     @TearDown
