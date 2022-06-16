@@ -209,7 +209,7 @@ interface UserRepositoryResource {
         @QueryParam("pageSize")
         pageSize: Int?,
         @ApiParam("别名", required = false)
-        @QueryParam("pageSize")
+        @QueryParam("aliasName")
         aliasName: String? = null
     ): Result<Page<RepositoryInfo>>
 
