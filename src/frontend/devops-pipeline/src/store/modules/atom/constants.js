@@ -88,6 +88,7 @@ export const SET_SAVE_STATUS = 'SET_SAVE_STATUS'
 
 export const SET_PIPELINE_STAGE = 'SET_PIPELINE_STAGE'
 export const SET_PIPELINE_CONTAINER = 'SET_PIPELINE_CONTAINER'
+export const SET_COMMEND_ATOM_PAGE_OVER = 'SET_COMMEND_ATOM_PAGE_OVER'
 
 export const buildNoRules = [
     {
@@ -119,5 +120,6 @@ export const defaultBuildNo = {
     buildNoType: buildNoRules[2].value
 }
 
+export const SET_AUTH_EDITING = 'SET_AUTH_EDITING'
 export const TOGGLE_STAGE_REVIEW_PANEL = 'TOGGLE_STAGE_REVIEW_PANEL'
 export const SET_IMPORTED_JSON = 'SET_IMPORTED_JSON'

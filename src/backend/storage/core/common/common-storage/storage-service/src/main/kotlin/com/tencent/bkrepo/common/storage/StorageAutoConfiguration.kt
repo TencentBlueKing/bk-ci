@@ -31,6 +31,8 @@
 
 package com.tencent.bkrepo.common.storage
 
+import com.tencent.bkrepo.common.api.exception.SystemErrorException
+import com.tencent.bkrepo.common.api.message.CommonMessageCode
 import com.tencent.bkrepo.common.storage.core.FileStorage
 import com.tencent.bkrepo.common.storage.core.StorageProperties
 import com.tencent.bkrepo.common.storage.core.StorageService
@@ -40,7 +42,6 @@ import com.tencent.bkrepo.common.storage.core.locator.HashFileLocator
 import com.tencent.bkrepo.common.storage.core.simple.SimpleStorageService
 import com.tencent.bkrepo.common.storage.credentials.StorageType
 import com.tencent.bkrepo.common.storage.filesystem.FileSystemStorage
-import com.tencent.bkrepo.common.storage.hdfs.HDFSStorage
 import com.tencent.bkrepo.common.storage.innercos.InnerCosFileStorage
 import com.tencent.bkrepo.common.storage.monitor.StorageHealthMonitor
 import com.tencent.bkrepo.common.storage.monitor.StorageHealthMonitorHelper
@@ -71,7 +72,7 @@ class StorageAutoConfiguration {
         val fileStorage = when (properties.type) {
             StorageType.FILESYSTEM -> FileSystemStorage()
             StorageType.INNERCOS -> InnerCosFileStorage()
-            StorageType.HDFS -> HDFSStorage()
+            StorageType.HDFS -> throw SystemErrorException(CommonMessageCode.SYSTEM_ERROR)
             StorageType.S3 -> S3Storage(executor)
             else -> FileSystemStorage()
         }

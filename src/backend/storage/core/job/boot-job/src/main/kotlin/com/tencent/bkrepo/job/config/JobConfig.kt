@@ -28,10 +28,14 @@
 package com.tencent.bkrepo.job.config
 
 import com.tencent.bkrepo.common.storage.core.StorageService
-import com.tencent.bkrepo.common.stream.event.supplier.EventSupplier
+import com.tencent.bkrepo.helm.api.HelmClient
 import com.tencent.bkrepo.job.batch.FileReferenceCleanupJob
+import com.tencent.bkrepo.job.batch.FileSynchronizeJob
+import com.tencent.bkrepo.job.batch.RemoteRepoInitJob
 import com.tencent.bkrepo.job.batch.RemoteRepoRefreshJob
+import com.tencent.bkrepo.job.batch.SignFileCleanupJob
 import com.tencent.bkrepo.job.executor.BlockThreadPoolTaskExecutorDecorator
+import com.tencent.bkrepo.repository.api.NodeClient
 import com.tencent.bkrepo.repository.api.StorageCredentialsClient
 import org.springframework.boot.autoconfigure.task.TaskExecutionProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -76,12 +80,50 @@ class JobConfig {
     @Bean
     fun remoteRepoRefreshJob(
         mongoTemplate: MongoTemplate,
-        eventSupplier: EventSupplier,
-        jobProperties: JobProperties
+        jobProperties: JobProperties,
+        helmClient: HelmClient
     ): RemoteRepoRefreshJob {
         return RemoteRepoRefreshJob(
             properties = jobProperties.repoRefreshJobProperties,
-            eventSupplier = eventSupplier
+            helmClient = helmClient
+        )
+    }
+
+    @Bean
+    fun remoteRepoInitJob(
+        mongoTemplate: MongoTemplate,
+        jobProperties: JobProperties,
+        helmClient: HelmClient
+    ): RemoteRepoInitJob {
+        return RemoteRepoInitJob(
+            properties = jobProperties.repoInitJobProperties,
+            helmClient = helmClient
+        )
+    }
+
+    @Bean
+    fun signFileCleanupJob(
+        mongoTemplate: MongoTemplate,
+        nodeClient: NodeClient,
+        jobProperties: JobProperties
+    ): SignFileCleanupJob {
+        return SignFileCleanupJob(
+            nodeClient = nodeClient,
+            mongoTemplate = mongoTemplate,
+            properties = jobProperties.signFileCleanupJobProperties
+        )
+    }
+
+    @Bean
+    fun fileSynchronizeJob(
+        jobProperties: JobProperties,
+        storageCredentialsClient: StorageCredentialsClient,
+        storageService: StorageService
+    ): FileSynchronizeJob {
+        return FileSynchronizeJob(
+            properties = jobProperties.fileSynchronizeJobProperties,
+            storageService = storageService,
+            storageCredentialsClient = storageCredentialsClient
         )
     }
 }

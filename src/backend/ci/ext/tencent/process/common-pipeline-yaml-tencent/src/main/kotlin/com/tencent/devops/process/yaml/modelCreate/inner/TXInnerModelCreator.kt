@@ -28,6 +28,9 @@
 package com.tencent.devops.process.yaml.modelCreate.inner
 
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
+import com.tencent.devops.common.pipeline.matrix.DispatchInfo
+import com.tencent.devops.process.yaml.v2.models.Resources
+import com.tencent.devops.process.yaml.v2.models.job.Job
 
 /**
  * ModelCreate的内部类，用来放一些不同使用者的不同方法和参数
@@ -48,4 +51,20 @@ interface TXInnerModelCreator : InnerModelCreator {
         imageTag: String,
         params: String
     ): ServiceJobDevCloudInput?
+
+    /**
+     * 获取不同业务场景下的dispatch信息
+     * @param name 名称
+     * @param job job信息
+     * @param projectCode 项目ID
+     * @param defaultImage 默认镜像
+     * @param resources 资源信息
+     */
+    fun getDispatchInfo(
+        name: String,
+        job: Job,
+        projectCode: String,
+        defaultImage: String,
+        resources: Resources? = null
+    ): DispatchInfo
 }

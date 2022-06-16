@@ -204,6 +204,14 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         return Result(projectLocalService.getOrCreatePreProject(userId, accessToken))
     }
 
+    override fun getOrCreateRdsProject(
+        userId: String,
+        projectId: String,
+        projectName: String
+    ): Result<ProjectVO?> {
+        return Result(projectLocalService.getOrCreateRdsProject(userId, projectId, projectName))
+    }
+
     override fun create(
         userId: String,
         accessToken: String,
@@ -291,10 +299,17 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         checkManager: Boolean,
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean> {
+        val userIds = mutableSetOf<String>()
+        if (!createInfo.userIds.isNullOrEmpty()) {
+            userIds.addAll(createInfo.userIds!!)
+        }
+        if (!createInfo.userId.isNullOrEmpty()) {
+            userIds.add(createInfo.userId!!)
+        }
         return Result(
             projectExtPermissionService.createUser2Project(
                 createUser = createUser ?: "",
-                userIds = createInfo.userIds ?: emptyList(),
+                userIds = userIds.toList(),
                 projectCode = createInfo.projectId,
                 roleId = createInfo.roleId,
                 roleName = createInfo.roleName,

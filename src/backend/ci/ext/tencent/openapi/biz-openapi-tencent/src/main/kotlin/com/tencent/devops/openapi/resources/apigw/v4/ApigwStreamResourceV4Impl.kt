@@ -22,6 +22,7 @@ import com.tencent.devops.stream.pojo.openapi.GitCIUpdateSetting
 import com.tencent.devops.stream.pojo.openapi.GitUserValidateRequest
 import com.tencent.devops.stream.pojo.openapi.GitUserValidateResult
 import com.tencent.devops.stream.pojo.openapi.ProjectCIInfo
+import com.tencent.devops.stream.pojo.openapi.StreamYamlCheck
 import com.tencent.devops.stream.v1.pojo.V1GitCIBuildHistory
 import com.tencent.devops.stream.v1.pojo.V1GitCIModelDetail
 import com.tencent.devops.stream.v1.pojo.V1GitProjectPipeline
@@ -264,5 +265,9 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
             orderBy = orderBy,
             sort = sort
         )
+    }
+
+    override fun checkYaml(userId: String, gitProjectId: String?, yamlCheck: StreamYamlCheck): Result<String> {
+        return client.get(ServiceStreamTriggerResource::class).checkYaml(userId, yamlCheck)
     }
 }

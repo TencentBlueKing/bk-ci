@@ -44,6 +44,7 @@ export default {
     },
     
     isAtomDisabled: state => ({ os, atom, category }) => {
+        if (atom.category === 'TRIGGER') return atom.category !== category
         return (!os && atom.os.length > 0 && category !== 'TRIGGER') || (os && atom.os.length > 0 && !atom.os.includes(os)) || (os && atom.os.length === 0 && !atom.buildLessRunFlag) || false
     },
     getAtomModal: state => ({ atomCode, version }) => {
@@ -257,6 +258,12 @@ export default {
         }
         return container
     },
+    getRealSeqId: state => (stages, stageIndex, containerIndex) => {
+        return stages.slice(0, stageIndex).reduce((acc, stage) => {
+            acc += stage.containers.length
+            return acc
+        }, 0) + containerIndex
+    },
     isDockerBuildResource: state => container => {
         return container && ((container.dispatchType && container.dispatchType.buildType === 'DOCKER') || container.dockerBuildVersion)
     },
@@ -265,6 +272,19 @@ export default {
     },
     isPublicResource: state => container => {
         return container && container.dispatchType && container.dispatchType.buildType === 'ESXi'
+    },
+    isPublicDevCloudContainer: state => container => { // 是否是第三方构建机
+        return container && container.dispatchType && typeof container.dispatchType.buildType === 'string' && container.dispatchType.buildType === 'PUBLIC_DEVCLOUD'
+    },
+    isBcsContainer: state => container => { // 是否是第三方构建机
+        return container && container.dispatchType && typeof container.dispatchType.buildType === 'string' && container.dispatchType.buildType === 'PUBLIC_BCS'
+    },
+    checkShowDebugDockerBtn: (state, getters) => (container, routeName, execDetail) => {
+        const isDocker = getters.isDockerBuildResource(container)
+        const isPublicDevCloud = getters.isPublicDevCloudContainer(container)
+        const isBcsContainer = getters.isBcsContainer(container)
+        const isLatestExecDetail = execDetail && execDetail.buildNum === execDetail.latestBuildNum && execDetail.curVersion === execDetail.latestVersion
+        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer) && (routeName === 'pipelinesEdit' || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
     },
     getElements: state => container => {
         return container && Array.isArray(container.elements)

@@ -23,7 +23,7 @@ public interface CodeRepoInfoRepository extends MongoRepository<CodeRepoInfoEnti
      * @param buildId
      * @return
      */
-    CodeRepoInfoEntity findByTaskIdAndBuildId(long taskId, String buildId);
+    CodeRepoInfoEntity findFirstByTaskIdAndBuildId(long taskId, String buildId);
 
     /**
      * 按任务ID查询

@@ -52,6 +52,10 @@ import org.springframework.context.annotation.Configuration
 class OciRegistryArtifactConfigurer : ArtifactConfigurerSupport() {
     override fun getRepositoryType(): RepositoryType = RepositoryType.OCI
 
+    override fun getRepositoryTypes(): List<RepositoryType> {
+        return mutableListOf(RepositoryType.DOCKER)
+    }
+
     override fun getLocalRepository(): LocalRepository = SpringContextUtils.getBean<OciRegistryLocalRepository>()
 
     override fun getRemoteRepository(): RemoteRepository = SpringContextUtils.getBean<OciRegistryRemoteRepository>()
@@ -61,8 +65,10 @@ class OciRegistryArtifactConfigurer : ArtifactConfigurerSupport() {
     override fun getAuthSecurityCustomizer(): HttpAuthSecurityCustomizer = object : HttpAuthSecurityCustomizer {
         override fun customize(httpAuthSecurity: HttpAuthSecurity) {
             val authenticationManager = httpAuthSecurity.authenticationManager!!
-            val ociLoginAuthHandler = OciLoginAuthHandler(authenticationManager)
-            httpAuthSecurity.withPrefix("/oci").addHttpAuthHandler(ociLoginAuthHandler)
+            val jwtAuthProperties = httpAuthSecurity.jwtAuthProperties!!
+            val ociLoginAuthHandler = OciLoginAuthHandler(authenticationManager, jwtAuthProperties)
+            httpAuthSecurity.withPrefix("/oci")
+                .addHttpAuthHandler(ociLoginAuthHandler)
         }
     }
 }

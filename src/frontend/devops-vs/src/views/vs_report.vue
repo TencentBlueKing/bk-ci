@@ -6,7 +6,7 @@
         }">
         <content-header>
             <div slot="left" class="title">
-                <i class="bk-icon icon-arrows-left" @click="toVsList"></i>
+                <i class="devops-icon icon-arrows-left" @click="toVsList"></i>
                 <span>查看报告</span>
                 <span v-if="reportDetail.id">
                     <span>{{ reportDetail.fileName }}</span>&nbsp;<span>（{{ reportDetail.version }}）</span>
@@ -26,7 +26,7 @@
                         <div class="report-info">
                             <div class="item-card">
                                 <div class="card-title">
-                                    <i class="bk-icon icon-vs-result"></i><span>报告结论</span>
+                                    <i class="devops-icon icon-vs-result"></i><span>报告结论</span>
                                 </div>
                                 <div class="card-content">
                                     <div class="item-info-inner">
@@ -47,7 +47,7 @@
                             </div>
                             <div class="item-card">
                                 <div class="card-title">
-                                    <i class="bk-icon icon-txt"></i><span>基本信息</span>
+                                    <i class="devops-icon icon-txt"></i><span>基本信息</span>
                                 </div>
                                 <div class="card-content">
                                     <div class="item-info-inner">
@@ -74,15 +74,15 @@
                             </div>
                             <div class="item-card">
                                 <div class="card-title">
-                                    <i class="bk-icon icon-exclamation-triangle"></i><span>漏洞详情</span>
+                                    <i class="devops-icon icon-exclamation-triangle"></i><span>漏洞详情</span>
                                 </div>
                                 <div class="card-content hole-content">
                                     <div class="steps-item" v-for="(entry, index) in vulnerabilityDetail" :key="index">
                                         <div class="steps-item-header">
                                             <div class="header-info">
-                                                <i class="bk-icon icon-plus-square" v-if="!entry.isDisplayMsg"
+                                                <i class="devops-icon icon-plus-square" v-if="!entry.isDisplayMsg"
                                                     @click="toggleDisplay(entry, 'vulnerability')"></i>
-                                                <i class="bk-icon icon-minus-square" v-else
+                                                <i class="devops-icon icon-minus-square" v-else
                                                     @click="toggleDisplay(entry, 'vulnerability')"></i>
                                                 <label @click="toggleDisplay(entry, 'vulnerability')">{{ entry.name }}</label>
                                             </div>
@@ -112,15 +112,15 @@
                             </div>
                             <div class="item-card">
                                 <div class="card-title">
-                                    <i class="bk-icon icon-risk"></i><span>风险详情</span>
+                                    <i class="devops-icon icon-risk"></i><span>风险详情</span>
                                 </div>
                                 <div class="card-content hole-content">
                                     <div class="steps-item" v-for="(entry, index) in riskDetails" :key="index">
                                         <div class="steps-item-header">
                                             <div class="header-info">
-                                                <i class="bk-icon icon-plus-square" v-if="!entry.isDisplayMsg"
+                                                <i class="devops-icon icon-plus-square" v-if="!entry.isDisplayMsg"
                                                     @click="toggleDisplay(entry, 'detail')"></i>
-                                                <i class="bk-icon icon-minus-square" v-else
+                                                <i class="devops-icon icon-minus-square" v-else
                                                     @click="toggleDisplay(entry , 'detail')"></i>
                                                 <label @click="toggleDisplay(entry , 'detail')">{{ entry.name }}</label>
                                             </div>
@@ -150,15 +150,15 @@
                             </div>
                             <div class="item-card">
                                 <div class="card-title">
-                                    <i class="bk-icon icon-safety"></i><span>安全提示</span>
+                                    <i class="devops-icon icon-safety"></i><span>安全提示</span>
                                 </div>
                                 <div class="card-content hole-content">
                                     <div class="steps-item" v-for="(entry, index) in riskWarn" :key="index">
                                         <div class="steps-item-header">
                                             <div class="header-info">
-                                                <i class="bk-icon icon-plus-square" v-if="!entry.isDisplayMsg"
+                                                <i class="devops-icon icon-plus-square" v-if="!entry.isDisplayMsg"
                                                     @click="toggleDisplay(entry, 'tips')"></i>
-                                                <i class="bk-icon icon-minus-square" v-else
+                                                <i class="devops-icon icon-minus-square" v-else
                                                     @click="toggleDisplay(entry, 'tips')"></i>
                                                 <label @click="toggleDisplay(entry, 'tips')">{{ entry.name }}</label>
                                             </div>

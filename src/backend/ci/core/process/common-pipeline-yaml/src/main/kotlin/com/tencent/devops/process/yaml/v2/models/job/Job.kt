@@ -122,6 +122,7 @@ enum class JobRunsOnType(val type: String) {
     DOCKER("docker"),
     AGENT_LESS("agentless"),
     DEV_CLOUD("docker-on-devcloud"),
+    BCS("docker-on-bcs"),
     LOCAL("local")
 }
 

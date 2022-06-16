@@ -31,7 +31,7 @@
 
 package com.tencent.bkrepo.auth.extension
 
-import com.tencent.bkrepo.common.plugin.api.ExtensionPoint
+import com.tencent.devops.plugin.api.ExtensionPoint
 
 /**
  * git项目校验权限

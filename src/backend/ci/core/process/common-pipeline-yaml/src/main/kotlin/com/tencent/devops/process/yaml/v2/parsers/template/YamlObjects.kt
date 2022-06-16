@@ -37,8 +37,8 @@ import com.tencent.devops.process.yaml.v2.models.TemplateInfo
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.job.Container
 import com.tencent.devops.process.yaml.v2.models.job.Credentials
-import com.tencent.devops.process.yaml.v2.models.job.PreJob
 import com.tencent.devops.process.yaml.v2.models.job.Mutex
+import com.tencent.devops.process.yaml.v2.models.job.PreJob
 import com.tencent.devops.process.yaml.v2.models.job.Service
 import com.tencent.devops.process.yaml.v2.models.job.ServiceWith
 import com.tencent.devops.process.yaml.v2.models.job.Strategy
@@ -81,6 +81,7 @@ object YamlObjects {
                 transValue<Map<String, Any?>>(fromPath, "env", step["env"])
             },
             run = step["run"]?.toString(),
+            shell = step["shell"]?.toString(),
             checkout = step["checkout"]?.toString(),
             yamlMetaData = if (step["yamlMetaData"] == null) {
                 MetaData(templateInfo = repo)

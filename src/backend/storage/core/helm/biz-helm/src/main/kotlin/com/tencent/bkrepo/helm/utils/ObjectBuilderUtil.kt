@@ -35,6 +35,8 @@ import com.tencent.bkrepo.common.api.util.toYamlString
 import com.tencent.bkrepo.common.artifact.api.ArtifactFile
 import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
 import com.tencent.bkrepo.common.artifact.constant.ARTIFACT_INFO_KEY
+import com.tencent.bkrepo.common.artifact.event.repo.RepoCreatedEvent
+import com.tencent.bkrepo.common.artifact.event.repo.RepoRefreshedEvent
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactDownloadContext
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactUploadContext
 import com.tencent.bkrepo.common.artifact.resolve.file.ArtifactFileFactory
@@ -58,6 +60,36 @@ import com.tencent.bkrepo.repository.pojo.packages.request.PackageUpdateRequest
 import com.tencent.bkrepo.repository.pojo.packages.request.PackageVersionCreateRequest
 
 object ObjectBuilderUtil {
+
+    /**
+     * 仓库创建事件
+     */
+    fun buildCreatedEvent(
+        projectId: String,
+        repoName: String,
+        operator: String
+    ): RepoCreatedEvent {
+        return RepoCreatedEvent(
+            projectId = projectId,
+            repoName = repoName,
+            userId = operator
+        )
+    }
+
+    /**
+     * 仓库刷新事件
+     */
+    fun buildRefreshEvent(
+        projectId: String,
+        repoName: String,
+        userId: String
+    ): RepoRefreshedEvent {
+        return RepoRefreshedEvent(
+            projectId = projectId,
+            repoName = repoName,
+            userId = userId
+        )
+    }
 
     fun buildPackageUpdateRequest(
         projectId: String,

@@ -18,34 +18,13 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-// import Vue from 'vue'
 import eventBus from '../../utils/eventBus'
 import { isObject } from '../../utils/util'
-// import AskPermissionDialog from './AskPermissionDialog'
-
-// const DialogCreator = Vue.extend(AskPermissionDialog)
-// const instance = null
 
 export default function showAskPermissionDialog (props) {
     if (!isObject(props)) {
         console.warn('权限弹窗需要传入一个对象')
         return
     }
-    console.log('emit')
     eventBus.$emit('update-permission-props', props)
-    // instance = new DialogCreator({
-    //   propsData: props,
-    //   data: {
-    //     showDialog: true
-    //   },
-    //   methods: {
-    //     close,
-    //     $t (key) {
-    //       return key
-    //     }
-    //   }
-    // })
-    // console.log(instance.$setLocale, instance)
-    // instance.viewmodel = instance.$mount()
-    // document.body.appendChild(instance.viewmodel.$el)
 }

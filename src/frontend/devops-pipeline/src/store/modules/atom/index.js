@@ -30,6 +30,7 @@ export default {
         fetchingAtmoModal: false,
         fetchingContainer: false,
         commendAtomCount: 0,
+        isCommendAtomPageOver: false,
         isAtomPageOver: false,
         atomList: [],
         requestAtomData: {
@@ -63,6 +64,7 @@ export default {
         globalEnvs: null,
         executeStatus: false,
         saveStatus: false,
+        authSettingEditing: false,
         stageTagList: [],
         defaultStageTags: [],
         showReviewDialog: false,

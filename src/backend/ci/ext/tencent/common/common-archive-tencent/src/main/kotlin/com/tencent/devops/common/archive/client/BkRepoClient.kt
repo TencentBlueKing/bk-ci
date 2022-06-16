@@ -520,6 +520,25 @@ class BkRepoClient constructor(
         }
     }
 
+    fun deleteNode(userName: String, projectId: String, repoName: String, path: String, authorization: String) {
+        logger.info("delete,  projectId: $projectId, repoName: $repoName, path: $path")
+        val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/delete/$projectId/$repoName/$path"
+        val request = Request.Builder()
+            .url(url)
+            .header("Authorization", authorization)
+            .header(BK_REPO_UID, userName)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .delete()
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            if (!response.isSuccessful) {
+                val responseContent = response.body()!!.string()
+                logger.error("delete node file failed, responseContent: $responseContent")
+                throw RemoteServiceException("delete node file failed: $responseContent", response.code())
+            }
+        }
+    }
+
     fun move(userId: String, projectId: String, repoName: String, fromPath: String, toPath: String) {
         // todo 校验path参数
         logger.info(

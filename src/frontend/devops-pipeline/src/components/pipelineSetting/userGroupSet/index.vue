@@ -4,12 +4,13 @@
             <label class="bk-label label">{{ $t('settings.authType') }}：</label>
             <div class="bk-form-content">
                 <label class="bk-form-radio" v-for="type in powerTypeList" :key="type.value">
-                    <input type="radio"
+                    <input
+                        type="radio"
                         :value="type.value"
                         :name="type.name"
                         :checked="powerType === type.value"
                         @change="handlePowerRadio"
-                    >
+                    />
                     <i class="bk-radio-text">{{type.label}}</i>
                 </label>
             </div>
@@ -68,7 +69,8 @@
 <script>
     import UserGroupings from '@/components/pipelineSetting/UserGroupings'
     import { mapActions, mapState } from 'vuex'
-    import cookie from 'cookie'
+    import { HttpError } from '@/utils/util'
+    import * as cookie from 'js-cookie'
 
     export default {
         components: {
@@ -118,6 +120,10 @@
             }
         },
         computed: {
+            ...mapState('common', [
+                'pipelineSetting',
+                'projectGroupAndUsers'
+            ]),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -126,11 +132,7 @@
             },
             longProjectId () {
                 return this.$store.state.curProject.projectId || ''
-            },
-            ...mapState('soda', [
-                'pipelineSetting',
-                'projectGroupAndUsers'
-            ])
+            }
         },
         watch: {
             '$route.params.pipelineId': async function (pipelineId, oldId) {
@@ -149,7 +151,7 @@
             await this.requestRoleList()
         },
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('pipelines', [
                 'requestProjectGroupAndUsers'
             ]),
             dataChange (data) {
@@ -211,16 +213,10 @@
                     item.group_list = item.selected
                 })
                 try {
-                    const res = await this.$ajax.put(`/backend/api/perm/service/pipeline/mgr_resource/permission/`, data, { headers: { 'X-CSRFToken': cookie.parse(document.cookie).backend_csrftoken } })
+                    const res = await this.$ajax.put(`/backend/api/perm/service/pipeline/mgr_resource/permission/`, data, { headers: { 'X-CSRFToken': cookie.get('paas_perm_csrftoken') } })
                     if (res) {
                         if (res.code === 403) {
-                            this.$showAskPermissionDialog({
-                                noPermissionList: [{
-                                    resource: `${this.$t('pipeline')}: ${this.pipelineSetting.pipelineName}`,
-                                    option: this.$t('settings.owner')
-                                }],
-                                applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_manager=pipeline:${this.pipelineId}`
-                            })
+                            throw new HttpError(403, res.message)
                         } else {
                             this.$showTips({
                                 message: `${this.pipelineSetting.pipelineName}${this.$t('updateSuc')}`,
@@ -231,13 +227,7 @@
                     }
                 } catch (err) {
                     if (err.code === 403) { // 没有权限执行
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: `${this.$t('pipeline')}: ${this.pipelineSetting.pipelineName}`,
-                                option: this.$t('settings.owner')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_manager=pipeline:${this.pipelineId}`
-                        })
+                        this.askManagePermission()
                     } else {
                         this.$showTips({
                             message: err.message || err,
@@ -253,6 +243,20 @@
             },
             exit () {
                 this.$emit('cancel')
+            },
+            askManagePermission () {
+                this.$showAskPermissionDialog({
+                    noPermissionList: [{
+                        actionId: this.$permissionActionMap.manage,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.pipelineId,
+                            name: this.pipelineSetting.pipelineName
+                        }],
+                        projectId: this.projectId
+                    }],
+                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_manager=pipeline:${this.pipelineId}`
+                })
             }
         }
     }

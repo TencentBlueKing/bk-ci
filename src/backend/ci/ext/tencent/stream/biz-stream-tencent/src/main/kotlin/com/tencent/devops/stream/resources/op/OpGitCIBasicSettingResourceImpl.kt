@@ -37,4 +37,18 @@ class OpGitCIBasicSettingResourceImpl @Autowired constructor(
     override fun fixProjectNameSpace(): Result<Int> {
         return Result(txStreamBasicSettingService.fixProjectNameSpace())
     }
+
+    override fun updateEnableUserIdByNewUser(
+        oldUserId: String,
+        newUserId: String,
+        limitNumber: Int
+    ): Result<Boolean> {
+        return Result(
+            txStreamBasicSettingService.updateEnableUserIdByNewUser(
+                oldUserId = oldUserId,
+                newUserId = newUserId,
+                limitNumber = limitNumber
+            )
+        )
+    }
 }

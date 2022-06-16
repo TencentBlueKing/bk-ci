@@ -108,13 +108,19 @@ class BuildEndControl @Autowired constructor(
         val watcher = Watcher(id = "ENGINE|BuildEnd|${event.traceId}|${event.buildId}|Job#${event.status}")
         try {
             with(event) {
-
+                val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
+                // 当前构建整体的状态，可能是运行中，也可能已经失败
+                // 已经结束的构建，不再受理，抛弃消息 #5090 STAGE_SUCCESS 状态的也可能是已经处理完成
+                if (buildInfo == null || buildInfo.isFinish()) {
+                    LOG.info("ENGINE|$buildId|$source|BUILD_FINISH_REPEAT_EVENT|STATUS=${buildInfo?.status}| abandon!")
+                    return
+                }
                 val buildIdLock = BuildIdLock(redisOperation, buildId)
                 try {
                     watcher.start("BuildIdLock")
                     buildIdLock.lock()
                     watcher.start("finish")
-                    finish()
+                    finish(buildInfo)
                     watcher.stop()
                 } catch (ignored: Exception) {
                     LOG.warn("ENGINE|$buildId|$source|BUILD_FINISH_ERR|build finish fail: $ignored", ignored)
@@ -127,7 +133,7 @@ class BuildEndControl @Autowired constructor(
                     watcher.start("PipelineBuildStartLock")
                     buildStartLock.lock()
                     watcher.start("popNextBuild")
-                    popNextBuild()
+                    popNextBuild(buildInfo)
                     watcher.stop()
                 } finally {
                     buildStartLock.unlock()
@@ -139,19 +145,10 @@ class BuildEndControl @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildFinishEvent.finish() {
+    private fun PipelineBuildFinishEvent.finish(buildInfo: BuildInfo) {
 
         // 将状态设置正确
         val buildStatus = BuildStatusSwitcher.pipelineStatusMaker.finish(status)
-
-        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
-
-        // 当前构建整体的状态，可能是运行中，也可能已经失败
-        // 已经结束的构建，不再受理，抛弃消息 #5090 STAGE_SUCCESS 状态的也可能是已经处理完成
-        if (buildInfo == null || buildInfo.isFinish()) {
-            LOG.info("ENGINE|$buildId|$source|BUILD_FINISH_REPEAT_EVENT|STATUS=${buildInfo?.status}| abandon!")
-            return
-        }
 
         LOG.info("ENGINE|$buildId|$source|BUILD_FINISH|$pipelineId|es=$status|bs=${buildInfo.status}")
 
@@ -178,16 +175,17 @@ class BuildEndControl @Autowired constructor(
         val (model, allStageStatus) = pipelineBuildDetailService.buildEnd(
             projectId = projectId,
             buildId = buildId,
-            buildStatus = buildStatus
+            buildStatus = buildStatus,
+            errorMsg = errorMsg
         )
 
         pipelineRuntimeService.updateBuildHistoryStageState(projectId, buildId, allStageStatus)
 
         // 上报SLA数据
         if (buildStatus.isSuccess() || buildStatus == BuildStatus.STAGE_SUCCESS) {
-            successPipelineCount(this)
+            successPipelineCount()
         } else if (buildStatus.isFailure()) {
-            failPipelineCount(this)
+            failPipelineCount()
         }
         buildInfo.endTime = endTime.timestampmilli()
         buildInfo.status = buildStatus
@@ -290,15 +288,18 @@ class BuildEndControl @Autowired constructor(
             }
             // 将插件出错信息逐一加入构建错误信息
             if (it.errorType != null) {
-                errorInfos.add(ErrorInfo(
-                    taskId = it.taskId,
-                    taskName = it.taskName,
-                    atomCode = it.atomCode ?: it.taskParams["atomCode"] as String? ?: it.taskType,
-                    errorType = it.errorType?.num ?: ErrorType.USER.num,
-                    errorCode = it.errorCode ?: PLUGIN_DEFAULT_ERROR,
-                    errorMsg = CommonUtils.interceptStringInLength(
-                        string = it.errorMsg, length = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX) ?: ""
-                ))
+                errorInfos.add(
+                    ErrorInfo(
+                        taskId = it.taskId,
+                        taskName = it.taskName,
+                        atomCode = it.atomCode ?: it.taskParams["atomCode"] as String? ?: it.taskType,
+                        errorType = it.errorType?.num ?: ErrorType.USER.num,
+                        errorCode = it.errorCode ?: PLUGIN_DEFAULT_ERROR,
+                        errorMsg = CommonUtils.interceptStringInLength(
+                            string = it.errorMsg, length = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+                        ) ?: ""
+                    )
+                )
                 // 做入库长度保护，假设超过上限则抛弃该错误信息
                 if (JsonUtil.toJson(errorInfos).toByteArray().size > PIPELINE_MESSAGE_STRING_LENGTH_MAX) {
                     errorInfos.removeAt(errorInfos.lastIndex)
@@ -308,14 +309,21 @@ class BuildEndControl @Autowired constructor(
         if (errorInfos.isNotEmpty()) buildInfo.errorInfoList = errorInfos
     }
 
-    private fun PipelineBuildFinishEvent.popNextBuild() {
+    private fun PipelineBuildFinishEvent.popNextBuild(buildInfo: BuildInfo) {
         if (pipelineRedisService.getBuildRestartValue(this.buildId) != null) {
             // 删除buildId占用的refresh锁
             pipelineRedisService.deleteRestartBuild(this.buildId)
         }
 
-        // 获取下一个排队的
-        val nextBuild = pipelineRuntimeExtService.popNextQueueBuildInfo(projectId = projectId, pipelineId = pipelineId)
+        // 获取同流水线的下一个队首
+        startNextBuild(pipelineRuntimeExtService.popNextQueueBuildInfo(projectId = projectId, pipelineId = pipelineId))
+        // 获取同并发组的下一个队首
+        buildInfo.concurrencyGroup?.let {
+            startNextBuild(pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(projectId, it))
+        }
+    }
+
+    private fun PipelineBuildFinishEvent.startNextBuild(nextBuild: BuildInfo?) {
         if (nextBuild == null) {
             LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|$pipelineId no queue build!")
             return
@@ -400,32 +408,26 @@ class BuildEndControl @Autowired constructor(
         )
     }
 
-    private fun successPipelineCount(event: PipelineBuildFinishEvent) {
+    private fun successPipelineCount() {
         Counter
             .builder("success_pipeline_count")
-            .tag("projectId", event.projectId)
-            .tag("pipelineId", event.pipelineId)
             .register(meterRegistry)
             .increment()
 
-        finishPipelineCount(event)
+        finishPipelineCount()
     }
 
-    private fun failPipelineCount(event: PipelineBuildFinishEvent) {
+    private fun failPipelineCount() {
         Counter
             .builder("fail_pipeline_count")
-            .tag("projectId", event.projectId)
-            .tag("pipelineId", event.pipelineId)
             .register(meterRegistry)
             .increment()
-        finishPipelineCount(event)
+        finishPipelineCount()
     }
 
-    private fun finishPipelineCount(event: PipelineBuildFinishEvent) {
+    private fun finishPipelineCount() {
         Counter
             .builder("finish_pipeline_count")
-            .tag("projectId", event.projectId)
-            .tag("pipelineId", event.pipelineId)
             .register(meterRegistry)
             .increment()
     }

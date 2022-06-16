@@ -6,10 +6,9 @@
                     <h3>{{ $t('editPage.chooseAtom') }}<i @click="freshAtomList(searchKey)" class="devops-icon icon-refresh atom-fresh" :class="fetchingAtomList ? &quot;spin-icon&quot; : &quot;&quot;" /></h3>
                     <bk-input class="atom-search-input" ref="searchStr" :clearable="true" :placeholder="$t('editPage.searchTips')" right-icon="icon-search" :value="searchKey" @input="handleClear" @enter="handleSearch"></bk-input>
                 </header>
-                <bk-tab v-if="!searchKey" class="atom-tab" size="small" ref="tab" :active.sync="classifyCode" type="unborder-card">
+                <bk-tab v-if="!searchKey" class="atom-tab" size="small" ref="tab" :active.sync="classifyCode" type="unborder-card" v-bkloading="{ isLoading: fetchingAtomList }">
                     <bk-tab-panel
                         ref="atomListDom"
-                        v-bkloading="{ isLoading: fetchingAtomList }"
                         v-for="classify in classifyCodeList"
                         :key="classify"
                         :name="classify"
@@ -63,6 +62,7 @@
                         :element-index="elementIndex"
                         :atom-code="atomCode"
                         :active-atom-code="activeAtomCode"
+                        @installAtomSuccess="installAtomSuccess"
                         @close="close"
                         @click="activeAtom(atom.atomCode)"
                         :class="{
@@ -127,7 +127,8 @@
                 'atomMap',
                 'atomList',
                 'fetchingAtomMoreLoading',
-                'isAtomPageOver'
+                'isAtomPageOver',
+                'isCommendAtomPageOver'
             ]),
 
             atomCode () {
@@ -207,6 +208,16 @@
                     }
                 },
                 immediate: true
+            },
+
+            fetchingAtomList: {
+                handler () {
+                    // 如果获取完可用插件, 就请求一页不可用插件数据
+                    if (this.isCommendAtomPageOver) {
+                        this.fetchAtomList()
+                    }
+                },
+                immediate: true
             }
         },
 
@@ -246,7 +257,7 @@
                             searchKey: this.searchKey,
                             queryProjectAtomFlag
                         })
-                    }, 300)
+                    }, 100)
                 }
             },
 
@@ -262,7 +273,6 @@
             },
             handleSearch (value) {
                 this.searchKey = value.trim()
-                this.setAtomPageOver()
                 this.freshRequestAtomData()
                 this.fetchAtomList()
             },
@@ -312,6 +322,12 @@
                 const target = event.target
                 const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
                 if (bottomDis <= 600) this.fetchAtomList()
+            },
+
+            installAtomSuccess (atom) {
+                const curAtom = this.curTabList.find(item => item.atomCode === atom.atomCode)
+                this.installArr.push(curAtom)
+                this.uninstallArr = this.uninstallArr.filter(item => item.atomCode !== atom.atomCode)
             }
         }
     }

@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
+import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig.Companion.MATRIX_CONTEXT_KEY_PREFIX
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
@@ -113,7 +114,7 @@ class ModelContainer @Autowired(required = false) constructor(
 
     protected fun getMatrixControlOption(
         job: Job,
-        dispatchInfo: StreamDispatchInfo?
+        dispatchInfo: DispatchInfo?
     ): MatrixControlOption? {
 
         val strategy = job.strategy ?: return null

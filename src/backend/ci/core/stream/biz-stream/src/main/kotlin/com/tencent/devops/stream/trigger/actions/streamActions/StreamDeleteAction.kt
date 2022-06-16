@@ -69,7 +69,7 @@ class StreamDeleteAction(
     }
 
     override fun getChangeSet(): Set<String>? {
-        return gitAction.getChangeSet()
+        return null
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
@@ -111,5 +111,9 @@ class StreamDeleteAction(
 
     override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) {
         gitAction.registerCheckRepoTriggerCredentials(repoHook)
+    }
+
+    override fun updateLastBranch(pipelineId: String, branch: String) {
+        gitAction.updateLastBranch(pipelineId, branch)
     }
 }

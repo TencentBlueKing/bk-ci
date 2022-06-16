@@ -47,8 +47,8 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -109,7 +109,8 @@ class TxProjectServiceImpl @Autowired constructor(
     private val tokenService: ClientTokenService,
     private val bsAuthTokenApi: BSAuthTokenApi,
     private val projectExtPermissionService: ProjectExtPermissionService,
-    private val projectTagService: ProjectTagService
+    private val projectTagService: ProjectTagService,
+    private val bkTag: BkTag
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -308,8 +309,10 @@ class TxProjectServiceImpl @Autowired constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.warn("Fail to request($request) with code ${response.code()}, " +
-                    "message ${response.message()} and response $responseContent")
+                logger.warn(
+                    "Fail to request($request) with code ${response.code()}, " +
+                            "message ${response.message()} and response $responseContent"
+                )
                 throw OperationException(errorMessage)
             }
             return responseContent
@@ -376,15 +379,20 @@ class TxProjectServiceImpl @Autowired constructor(
         return projectVO
     }
 
-    override fun organizationMarkUp(projectCreateInfo: ProjectCreateInfo, userDeptDetail: UserDeptDetail): ProjectCreateInfo {
+    override fun organizationMarkUp(
+        projectCreateInfo: ProjectCreateInfo,
+        userDeptDetail: UserDeptDetail
+    ): ProjectCreateInfo {
         val bgId = if (projectCreateInfo.bgId == 0L) userDeptDetail.bgId.toLong() else projectCreateInfo.bgId
         val deptId = if (projectCreateInfo.deptId == 0L) userDeptDetail.deptId.toLong() else projectCreateInfo.deptId
         val centerId = if (projectCreateInfo.centerId == 0L) {
             userDeptDetail.centerId.toLong()
         } else projectCreateInfo.centerId
         val bgName = if (projectCreateInfo.bgName.isNullOrEmpty()) userDeptDetail.bgName else projectCreateInfo.bgName
-        val deptName = if (projectCreateInfo.deptName.isNullOrEmpty()) userDeptDetail.deptName else projectCreateInfo.deptName
-        val centerName = if (projectCreateInfo.centerName.isNullOrEmpty()) userDeptDetail.centerName else projectCreateInfo.centerName
+        val deptName =
+            if (projectCreateInfo.deptName.isNullOrEmpty()) userDeptDetail.deptName else projectCreateInfo.deptName
+        val centerName =
+            if (projectCreateInfo.centerName.isNullOrEmpty()) userDeptDetail.centerName else projectCreateInfo.centerName
 
         return ProjectCreateInfo(
             projectName = projectCreateInfo.projectName,
@@ -432,7 +440,7 @@ class TxProjectServiceImpl @Autowired constructor(
         }
         logger.info("getV3userProject tag: $v3Tag")
         try {
-            return ConsulContent.invokeByTag(v3Tag) {
+            return bkTag.invokeByTag(v3Tag) {
                 try {
                     // 请求V3的项目,流量必须指向到v3,需指定项目头
                     client.get(ServiceProjectAuthResource::class).getUserProjects(

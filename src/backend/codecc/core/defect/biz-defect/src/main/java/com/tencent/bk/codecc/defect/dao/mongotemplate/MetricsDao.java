@@ -20,7 +20,7 @@ public class MetricsDao {
     public MetricsEntity findLastByTaskId(Long taskId) {
         Criteria criteria = Criteria.where("task_id").is(taskId);
         Query query = Query.query(criteria);
-        Sort sort = new Sort(Direction.DESC, "_id");
+        Sort sort = Sort.by(Direction.DESC, "_id");
         query.with(sort);
         query.limit(1);
         List<MetricsEntity> metricsEntityList = mongoTemplate.find(query, MetricsEntity.class);

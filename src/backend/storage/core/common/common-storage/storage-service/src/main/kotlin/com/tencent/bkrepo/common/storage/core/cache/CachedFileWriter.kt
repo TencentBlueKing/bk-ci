@@ -62,12 +62,13 @@ class CachedFileWriter(
 ) : StreamReadListener {
 
     private var tempFilePath: Path = tempPath.resolve(filename)
+    private var cacheFilePath = cachePath.resolve(filename)
     private var outputStream: OutputStream? = null
 
     init {
         try {
-            if (Files.exists(tempFilePath)) {
-                logger.debug("Path[$tempFilePath] exists, ignore caching")
+            if (Files.exists(tempFilePath) || Files.exists(cacheFilePath)) {
+                logger.debug("Path[$tempFilePath] or [$cacheFilePath] exists, ignore caching")
             } else {
                 outputStream = tempFilePath.createNewOutputStream()
             }

@@ -36,12 +36,14 @@ data class BuildStageStatus(
     val stageId: String,
     @ApiModelProperty("阶段名称", required = true)
     val name: String,
-    @ApiModelProperty("阶段状态", required = false, hidden = true)
+    @ApiModelProperty("阶段状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var status: String? = null,
-    @ApiModelProperty("阶段标签", required = false, hidden = true)
+    @ApiModelProperty("阶段标签", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var tag: List<String>? = null,
-    @ApiModelProperty("阶段启动时间", required = false, hidden = true)
+    @ApiModelProperty("阶段启动时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var startEpoch: Long? = null,
-    @ApiModelProperty("容器运行时间", required = false, hidden = true)
-    var elapsed: Long? = null
+    @ApiModelProperty("容器运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    var elapsed: Long? = null,
+    @ApiModelProperty("前端", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    var showMsg: String? = null
 )

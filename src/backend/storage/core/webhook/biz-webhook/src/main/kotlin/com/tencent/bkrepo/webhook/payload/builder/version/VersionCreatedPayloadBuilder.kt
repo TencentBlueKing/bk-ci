@@ -30,7 +30,6 @@ package com.tencent.bkrepo.webhook.payload.builder.version
 import com.tencent.bkrepo.common.api.exception.NotFoundException
 import com.tencent.bkrepo.common.artifact.event.base.ArtifactEvent
 import com.tencent.bkrepo.common.artifact.event.base.EventType
-import com.tencent.bkrepo.common.artifact.event.packages.VersionCreatedEvent
 import com.tencent.bkrepo.repository.api.PackageClient
 import com.tencent.bkrepo.repository.pojo.packages.PackageVersion
 import com.tencent.bkrepo.webhook.exception.WebHookMessageCode
@@ -46,10 +45,10 @@ class VersionCreatedPayloadBuilder(
 ) {
 
     override fun build(event: ArtifactEvent): VersionCreatedEventPayload {
-        require(event is VersionCreatedEvent)
         return VersionCreatedEventPayload(
             user = getUser(event.userId),
-            packageVersion = getPackageVersion(event.projectId, event.repoName, event.packageKey, event.packageVersion)
+            packageVersion = getPackageVersion(event.projectId, event.repoName,
+                event.data["packageKey"].toString(), event.data["packageVersion"].toString())
         )
     }
 

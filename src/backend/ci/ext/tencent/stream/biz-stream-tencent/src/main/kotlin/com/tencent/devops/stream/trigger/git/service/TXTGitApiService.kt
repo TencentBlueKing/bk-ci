@@ -110,9 +110,42 @@ class TXTGitApiService @Autowired constructor(
                 to = to,
                 straight = straight,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                useAccessToken = cred.useAccessToken
             ).data ?: emptyList()
         }.map { TGitChangeFileInfo(it) }
+    }
+
+    override fun getFileContent(
+        cred: StreamGitCred,
+        gitProjectId: String,
+        fileName: String,
+        ref: String,
+        retry: ApiRequestRetryInfo
+    ): String {
+        cred as TGitCred
+        return doRetryFun(
+            retry = retry,
+            log = "$gitProjectId get yaml $fileName from $ref fail",
+            apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR
+        ) {
+            // 针对工蜂超时时间可能超过30s使用特供接口
+            client.getScm(ServiceGitCiResource::class).getGitCIFileContent(
+                gitProjectId = gitProjectId,
+                filePath = fileName,
+                token = cred.toToken(),
+                ref = getTriggerBranch(ref),
+                useAccessToken = cred.useAccessToken
+            ).data!!
+        }
+    }
+
+    private fun getTriggerBranch(branch: String): String {
+        return when {
+            branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
+            branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
+            else -> branch
+        }
     }
 
     override fun addMrComment(cred: TGitCred, gitProjectId: String, mrId: Long, mrBody: MrCommentBody) {

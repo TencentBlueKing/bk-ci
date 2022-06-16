@@ -15,12 +15,14 @@ import org.quartz.impl.matchers.GroupMatcher
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.client.ServiceInstance
-import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
+import org.springframework.cloud.client.discovery.DiscoveryClient
+import org.springframework.cloud.client.serviceregistry.Registration
 import org.springframework.stereotype.Service
 
 @Service
 class ShardingRouterServiceImpl @Autowired constructor(
-    private val consulDiscoveryClient: ConsulDiscoveryClient,
+    private val discoveryClient: DiscoveryClient,
+    private val registration: Registration,
     private val profile: Profile,
     private val scheduler : Scheduler,
     private val jobManageService: JobManageService
@@ -37,18 +39,18 @@ class ShardingRouterServiceImpl @Autowired constructor(
         val serviceName = profile.getApplicationName()
         //取该服务名的所有服务实例
         val instances =
-            consulDiscoveryClient.getInstances(serviceName)
+            discoveryClient.getInstances(serviceName)
         //取本地服务
-        val localInstance = consulDiscoveryClient.localServiceInstance
         logger.info("successfully get instance list and local instance!")
-        getInstanceList(instances, localInstance)
+        getInstanceList(instances, registration)
         //按照特定分片算法计算分片信息
-        val shardingResult = enumShardingStrategy.getShardingStrategy().shardInstances(instances, localInstance)
+        val shardingResult = enumShardingStrategy.getShardingStrategy().shardInstances(instances, registration)
         logger.info("shard info: ${shardingResult.currentShard}, node info: ${shardingResult.currentNode}")
         //缓存分片信息
         enumShardingStrategy.getShardingStrategy().setPreviousShardingResultIfNull(shardingResult)
         return shardingResult
     }
+
 
     /**
      * job实例初始化
@@ -88,12 +90,11 @@ class ShardingRouterServiceImpl @Autowired constructor(
         val serviceName = profile.getApplicationName()
         //取该服务名的所有服务实例
         val instances =
-            consulDiscoveryClient.getInstances(serviceName)
+            discoveryClient.getInstances(serviceName)
         //取本地服务
-        val localInstance = consulDiscoveryClient.localServiceInstance
-        getInstanceList(instances, localInstance)
+        getInstanceList(instances, registration)
         val oldShardingResult = enumShardingStrategy.getShardingStrategy().getShardingResult()!!
-        val newShardingResult = enumShardingStrategy.getShardingStrategy().shardInstances(instances, localInstance)
+        val newShardingResult = enumShardingStrategy.getShardingStrategy().shardInstances(instances, registration)
         val jobsNeedToAdd = mutableListOf<JobInstanceEntity>()
         val jobsNeedToRemove = mutableListOf<JobInstanceEntity>()
         var shardChangeFlag = 0
@@ -157,7 +158,7 @@ class ShardingRouterServiceImpl @Autowired constructor(
         }
         logger.info(
             "re-shard and re-router finish! new shard info: $newShardingResult, " +
-                "jobs to add num: ${jobsNeedToAdd.size}, jobs to remove num: ${jobsNeedToRemove.size}"
+                    "jobs to add num: ${jobsNeedToAdd.size}, jobs to remove num: ${jobsNeedToRemove.size}"
         )
         if (shardChangeFlag == 1) {
             logger.info("sharding result has changed!")
@@ -170,7 +171,6 @@ class ShardingRouterServiceImpl @Autowired constructor(
         instances: MutableList<ServiceInstance>,
         localInstance: ServiceInstance
     ) {
-
         val specificInstance = instances.find { it.host == localInstance.host && it.port == localInstance.port }
         if (null == specificInstance) {
             instances.add(localInstance)

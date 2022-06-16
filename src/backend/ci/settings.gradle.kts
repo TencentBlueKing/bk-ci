@@ -35,6 +35,13 @@ pluginManagement {
             maven(url = "https://mirrors.tencent.com/nexus/repository/maven-public")
             maven(url = "https://mirrors.tencent.com/nexus/repository/gradle-plugins/")
         } else { // GitHub Action 环境
+            maven {
+                name = "MavenSnapshot"
+                url = java.net.URI("https://oss.sonatype.org/content/repositories/snapshots/")
+                mavenContent {
+                    snapshotsOnly()
+                }
+            }
             mavenCentral()
             gradlePluginPortal()
         }
@@ -77,6 +84,12 @@ include(":core:common:common-security")
 include(":core:common:common-dispatch-sdk")
 include(":core:common:common-webhook:api-common-webhook")
 include(":core:common:common-webhook:biz-common-webhook")
+
+include(":core:common:common-third-sdk")
+include(":core:common:common-third-sdk:common-sdk-util")
+include("core:common:common-third-sdk:common-tapd-sdk")
+include("core:common:common-third-sdk:common-github-sdk")
+include("core:common:common-third-sdk:common-tgit-sdk")
 
 include(":core:project")
 include(":core:project:api-project")
@@ -144,6 +157,7 @@ include(":core:repository:biz-repository")
 include(":core:repository:biz-repository-sample")
 include(":core:repository:boot-repository")
 include(":core:repository:model-repository")
+include(":core:repository:plugin-tapd")
 
 include(":core:ticket")
 include(":core:ticket:api-ticket")
@@ -203,6 +217,16 @@ include(":core:dispatch-docker:biz-dispatch-docker")
 include(":core:dispatch-docker:biz-dispatch-docker-sample")
 include(":core:dispatch-docker:boot-dispatch-docker")
 include(":core:dispatch-docker:model-dispatch-docker")
+include(":core:dispatch-kubernetes:api-dispatch-kubernetes")
+include(":core:dispatch-kubernetes:biz-dispatch-kubernetes")
+include(":core:dispatch-kubernetes:boot-dispatch-kubernetes")
+include(":core:dispatch-kubernetes:model-dispatch-kubernetes")
+
+include(":core:dispatch-bcs")
+include(":core:dispatch-bcs:api-dispatch-bcs")
+include(":core:dispatch-bcs:biz-dispatch-bcs")
+include(":core:dispatch-bcs:boot-dispatch-bcs")
+include(":core:dispatch-bcs:model-dispatch-bcs")
 
 include(":core:plugin")
 include(":core:plugin:api-plugin")
@@ -214,7 +238,6 @@ include(":core:plugin:codecc-plugin")
 include(":core:plugin:codecc-plugin:common-codecc")
 include(":core:plugin:codecc-plugin:api-codecc")
 include(":core:plugin:codecc-plugin:biz-codecc")
-include(":core:plugin:codecc-plugin:worker-plugin-codecc")
 
 include(":core:worker")
 include(":core:worker:worker-agent")
@@ -384,6 +407,9 @@ include(":ext:tencent:dispatch:biz-dispatch-bcs")
 include(":ext:tencent:dispatch:biz-dispatch-tencent")
 include(":ext:tencent:dispatch:boot-dispatch-tencent")
 
+include(":ext:tencent:dispatch-kubernetes")
+include(":ext:tencent:dispatch-kubernetes:boot-dispatch-kubernetes-tencent")
+
 include(":ext:tencent:plugin")
 include(":ext:tencent:plugin:api-plugin-tencent")
 include(":ext:tencent:plugin:biz-plugin-tencent")
@@ -463,6 +489,9 @@ include(":ext:tencent:buildless:boot-buildless-tencent")
 include(":ext:tencent:dispatch-docker")
 include(":ext:tencent:dispatch-docker:biz-dispatch-docker-tencent")
 include(":ext:tencent:dispatch-docker:boot-dispatch-docker-tencent")
+
+include(":ext:tencent:dispatch-bcs")
+include(":ext:tencent:dispatch-bcs:boot-dispatch-bcs-tencent")
 
 include(":ext:tencent:sign")
 include(":ext:tencent:sign:api-sign-tencent")

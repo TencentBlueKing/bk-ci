@@ -248,10 +248,7 @@ class TriggerMatcher @Autowired constructor(
                 if (it == StreamPushActionType.NEW_BRANCH.value && checkCreateAndUpdate != null) {
                     return true
                 }
-                if (it == StreamPushActionType.PUSH_FILE.value && checkCreateAndUpdate == null) {
-                    return true
-                }
-                if (it == StreamPushActionType.NEW_BRANCH_AND_PUSH_FILE.value && checkCreateAndUpdate == true) {
+                if (it == StreamPushActionType.PUSH_FILE.value && checkCreateAndUpdate != false) {
                     return true
                 }
             }

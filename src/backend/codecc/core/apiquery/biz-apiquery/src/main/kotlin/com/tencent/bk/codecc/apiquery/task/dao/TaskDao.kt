@@ -141,7 +141,7 @@ class TaskDao @Autowired constructor(
         gongfengIds: List<Int>,
         pageable: Pageable?
     ): List<GongfengPublicProjModel> {
-        val query = BasicQuery(BasicDBObject())
+        val query = Query()
         query.addCriteria(
             Criteria.where("id").`in`(gongfengIds)
         )
@@ -160,7 +160,7 @@ class TaskDao @Autowired constructor(
         fieldsObj["tool_name"] = true
         fieldsObj["task_id"] = true
         fieldsObj["follow_status"] = true
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         query.addCriteria(
             Criteria.where("task_id").`in`(taskIds)
         )
@@ -179,7 +179,7 @@ class TaskDao @Autowired constructor(
      * 根据任务id查询个性化项目信息
      */
     fun findCustomProjByTaskId(taskId: Long): CustomProjModel? {
-        val query = BasicQuery(BasicDBObject())
+        val query = Query()
         query.addCriteria(
             Criteria.where("task_id").`is`(taskId)
         )
@@ -192,7 +192,7 @@ class TaskDao @Autowired constructor(
     fun findTegSecurityByBgId(bgId: Int): List<TaskInfoModel> {
         val fieldsObj = BasicDBObject()
         fieldsObj["task_id"] = true
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         query.addCriteria(
             // todo 要通用化
             Criteria.where("bg_id").`is`(bgId).and("create_from").`is`("gongfeng_scan").and("project_id").nin(
@@ -207,7 +207,7 @@ class TaskDao @Autowired constructor(
      * 根据任务id查询详情信息
      */
     fun findTaskById(taskId: Long): TaskInfoModel? {
-        val query = BasicQuery(BasicDBObject())
+        val query = Query()
         query.addCriteria(
             Criteria.where("task_id").`is`(taskId)
         )
@@ -221,7 +221,7 @@ class TaskDao @Autowired constructor(
         val fieldsObj = BasicDBObject()
         fieldsObj["logo"] = false
         fieldsObj["graphic_details"] = false
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         query.addCriteria(
             Criteria.where("name").`is`(toolName)
         )
@@ -235,7 +235,7 @@ class TaskDao @Autowired constructor(
         taskIds: List<Long>
     ): List<TaskInfoModel> {
         val fieldsObj = BasicDBObject()
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         query.addCriteria(
             Criteria.where("task_id").`in`(taskIds)
         )
@@ -253,7 +253,7 @@ class TaskDao @Autowired constructor(
         fieldsObj["custom_proj_info"] = false
         fieldsObj["gongfeng_stat_proj_info"] = false
 
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         if (CollectionUtils.isNotEmpty(taskIdSet)) {
             query.addCriteria(Criteria.where("task_id").`in`(taskIdSet))
         }
@@ -565,7 +565,7 @@ class TaskDao @Autowired constructor(
     fun findByBgIdAndDeptId(taskToolInfoReqVO: TaskToolInfoReqVO): List<Long> {
         val fieldsObj = BasicDBObject()
         fieldsObj["task_id"] = true
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         // 1.事业群
         val bgId = taskToolInfoReqVO.bgId
         if (bgId != null && bgId != 0) {
@@ -628,7 +628,7 @@ class TaskDao @Autowired constructor(
     fun findTaskIdsByBgCreateFrom(createFromReq: MutableSet<String>, excludeUserList: MutableList<String>): MutableList<TaskInfoModel> {
         val fieldsObj = BasicDBObject()
         fieldsObj["task_id"] = true
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         // 3.来源 多选
         if (!createFromReq.isNullOrEmpty()) {
             query.addCriteria(Criteria.where("create_from").`in`(createFromReq))
