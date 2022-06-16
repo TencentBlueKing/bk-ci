@@ -46,10 +46,12 @@ class AuthUserBlackListDao {
                 this,
                 USER_ID,
                 REMARK,
+                STATUS,
                 CREATE_TIME
             ).values(
                 userId,
                 remark,
+                true,
                 LocalDateTime.now()
             ).execute()
         }
@@ -60,7 +62,7 @@ class AuthUserBlackListDao {
         userId: String
     ): TAuthUserBlacklistRecord? {
         with(TAuthUserBlacklist.T_AUTH_USER_BLACKLIST) {
-            return dslContext.selectFrom(this).where(USER_ID.eq(userId)).fetchAny()
+            return dslContext.selectFrom(this).where(USER_ID.eq(userId).and(STATUS.eq(true))).fetchAny()
         }
     }
 
@@ -69,7 +71,7 @@ class AuthUserBlackListDao {
         userId: String
     ): Int {
         with(TAuthUserBlacklist.T_AUTH_USER_BLACKLIST) {
-            return dslContext.delete(this).where(USER_ID.eq(userId)).execute()
+            return dslContext.update(this).set(STATUS, false).where(USER_ID.eq(userId)).execute()
         }
     }
 }
