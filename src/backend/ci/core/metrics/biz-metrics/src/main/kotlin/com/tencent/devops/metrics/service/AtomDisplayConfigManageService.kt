@@ -36,11 +36,11 @@ interface AtomDisplayConfigManageService {
 
     /**
      * 新增项目下需要展示的插件配置
-     * @param saveAtomDisplayConfigDTO 保存项目下展示插件配置传输对象
+     * @param atomDisplayConfigDTO 保存项目下展示插件配置传输对象
      * @return 布尔值
      */
     fun addAtomDisplayConfig(
-        saveAtomDisplayConfigDTO: AtomDisplayConfigDTO
+        atomDisplayConfigDTO: AtomDisplayConfigDTO
     ): Boolean
 
     /**
