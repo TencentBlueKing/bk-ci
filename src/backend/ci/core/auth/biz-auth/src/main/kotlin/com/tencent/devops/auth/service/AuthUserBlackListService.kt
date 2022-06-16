@@ -27,7 +27,6 @@
 
 package com.tencent.devops.auth.service
 
-import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.dao.AuthUserBlackListDao
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisOperation
@@ -35,7 +34,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class AuthUserBlackListService @Autowired constructor(

@@ -35,8 +35,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceUserBlackListResourceImpl @Autowired constructor(
-    val authUserBlackListService: AuthUserBlackListService
-): ServiceUserBlackListResource {
+    val authUserBlackListService: AuthUserBlackListService,
+) : ServiceUserBlackListResource {
 
     override fun createBlackListUser(userId: String, remark: String?): Result<Boolean> {
         return Result(authUserBlackListService.createBlackListUser(userId, remark))
