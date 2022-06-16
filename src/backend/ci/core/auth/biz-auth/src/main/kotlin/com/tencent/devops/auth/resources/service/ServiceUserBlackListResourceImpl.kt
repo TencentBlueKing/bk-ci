@@ -36,13 +36,16 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceUserBlackListResourceImpl @Autowired constructor(
     val authUserBlackListService: AuthUserBlackListService
-): ServiceUserBlackListResource {
+) : ServiceUserBlackListResource {
 
     override fun createBlackListUser(userId: String, remark: String?): Result<Boolean> {
         return Result(authUserBlackListService.createBlackListUser(userId, remark))
     }
 
-    override fun removeBlackListUser(userId: String): Result<Boolean> {
-        return Result(authUserBlackListService.removeBlackListUser(userId))
+    /**
+     * 因有过滤器会处理userId相关的请求，若为黑名单内用户使用userId传参请求会被拦截
+     */
+    override fun removeBlackListUser(removeUserId: String): Result<Boolean> {
+        return Result(authUserBlackListService.removeBlackListUser(removeUserId))
     }
 }

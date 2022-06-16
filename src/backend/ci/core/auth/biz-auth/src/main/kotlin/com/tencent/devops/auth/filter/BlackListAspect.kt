@@ -28,43 +28,45 @@
 package com.tencent.devops.auth.filter
 
 import com.tencent.devops.auth.service.AuthUserBlackListService
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import org.aspectj.lang.JoinPoint
+import org.aspectj.lang.annotation.Aspect
+import org.aspectj.lang.annotation.Before
+import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import javax.servlet.Filter
-import javax.servlet.FilterChain
-import javax.servlet.ServletRequest
-import javax.servlet.ServletResponse
-import javax.servlet.http.HttpServletRequest
 
+@Aspect
 @Component
-class BlackListFilter @Autowired constructor(
+class BlackListAspect @Autowired constructor(
     val authUserBlackListService: AuthUserBlackListService
-) : Filter{
-    override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
-        if (request == null || chain == null) {
-            return
-        }
-        val httpServletRequest = request as HttpServletRequest
-        val userId = httpServletRequest.getHeader(AUTH_HEADER_USER_ID)
-            ?: httpServletRequest.getParameter("userId")
+) {
 
-        if (userId.isNullOrEmpty()) {
-            chain.doFilter(request, response)
+    @Before("execution (* com.tencent.devops.auth.api..*.*(..))")
+    fun beforeMethod(jp: JoinPoint) {
+        // 参数value
+        val parameterValue = jp.args
+        var userId: String? = null
+        // 参数key
+        val parameterNames = (jp.signature as MethodSignature).parameterNames
+        for (index in parameterValue.indices) {
+            when (parameterNames[index]) {
+                "userId" -> userId = parameterValue[index]?.toString()
+                else -> Unit
+            }
         }
-
-        val checkBlackUser = authUserBlackListService.checkBlackListUser(userId!!)
-
-        if (checkBlackUser) {
-            logger.warn("blackList user $userId call ${httpServletRequest.pathInfo}")
-            throw PermissionForbiddenException("blackList user $userId")
+        if (!userId.isNullOrEmpty()) {
+            logger.info("BlackListAspect userId: $userId")
+            val checkBlackList = authUserBlackListService.checkBlackListUser(userId)
+            if (checkBlackList) {
+                logger.warn("blackList user $userId call ${jp.signature.name}")
+                throw PermissionForbiddenException("blackList user $userId")
+            }
         }
-        chain.doFilter(request, response)
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(BlackListFilter::class.java)
+        val logger = LoggerFactory.getLogger(BlackListAspect::class.java)
     }
 }
