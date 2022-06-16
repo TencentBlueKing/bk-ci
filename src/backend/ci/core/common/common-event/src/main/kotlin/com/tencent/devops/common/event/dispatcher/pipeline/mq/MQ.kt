@@ -255,6 +255,8 @@ object MQ {
 
     // 蓝盾构建结束后metrics数据上报事件广播
     const val EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT = "e.engine.build.end.metrics.data.report.fanout"
+    // 流水线标签变化metrics数据同步广播
+    const val EXCHANGE_PIPELINELABEL_CHANGE_METRICS_DATA_SYNC_FANOUT = "e.pipeline.label.change.metrics.data.sync.fanout"
 
     // webhook锁
     const val EXCHANGE_GIT_WEBHOOK_UNLOCK_EVENT = "e.webhook.unlock.event"
@@ -268,4 +270,7 @@ object MQ {
 
     // 流水线webhook commit记录
     const val EXCHANGE_PIPELINE_BUILD_COMMIT_FINISH_FANOUT = "e.engine.pipeline.build.commits.finish.fanout"
+
+    // 质量红线每日数据上报队列
+    const val EXCHANGE_QUALITY_DAILY_FANOUT = "e.metrics.quality.daily.exchange.fanout"
 }

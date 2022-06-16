@@ -32,5 +32,6 @@ dependencies {
     api(project(":core:common:common-db-sharding"))
     api(project(":core:metrics:api-metrics"))
     api(project(":core:project:api-project"))
+    api(project(":core:process:api-process"))
     api(project(":core:metrics:model-metrics"))
 }
