@@ -58,10 +58,10 @@ class UserThirdPartyResourceImpl @Autowired constructor(
         return Result(
             thirdPartyManageService.queryPipelineSummaryInfo(
                 QueryPipelineSummaryInfoDTO(
-                    projectId,
-                    userId,
-                    startDateTime,
-                    endDateTime
+                    projectId = projectId,
+                    userId = userId,
+                    startTime = startDateTime,
+                    endTime = endDateTime
                 )
             )
         )

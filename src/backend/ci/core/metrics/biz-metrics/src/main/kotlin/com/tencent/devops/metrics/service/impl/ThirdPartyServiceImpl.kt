@@ -56,17 +56,17 @@ class ThirdPartyServiceImpl @Autowired constructor(
     ): ThirdPlatformOverviewInfoVO {
         val result = thirdPartyOverviewInfoDao.queryPipelineSummaryInfo(
             ThirdPartyOverviewInfoQO(
-                queryPipelineSummaryInfoDTO.projectId,
-                queryPipelineSummaryInfoDTO.startTime,
-                queryPipelineSummaryInfoDTO.endTime
+                projectId = queryPipelineSummaryInfoDTO.projectId,
+                startTime = queryPipelineSummaryInfoDTO.startTime,
+                endTime = queryPipelineSummaryInfoDTO.endTime
             ),
             dslContext
         )
         val totalExecuteCount = thirdPartyOverviewInfoDao.queryPipelineSummaryCount(
             ThirdPartyOverviewInfoQO(
-                queryPipelineSummaryInfoDTO.projectId,
-                queryPipelineSummaryInfoDTO.startTime,
-                queryPipelineSummaryInfoDTO.endTime
+                projectId = queryPipelineSummaryInfoDTO.projectId,
+                startTime = queryPipelineSummaryInfoDTO.startTime,
+                endTime = queryPipelineSummaryInfoDTO.endTime
             ),
             dslContext
         )
@@ -81,18 +81,18 @@ class ThirdPartyServiceImpl @Autowired constructor(
             else String.format("%.2f", interceptionCount.toDouble() / executeNum.toDouble()).toDouble()
         }
             return ThirdPlatformOverviewInfoVO(
-                CodeCheckInfoDO(
+                codeCheckInfo = CodeCheckInfoDO(
                     resolvedDefectNum = result?.get(BK_RESOLVED_DEFECT_NUM, Int::class.java),
                     repoCodeccAvgScore = if (repoCodeccAvgScore == null || totalExecuteCount == 0) null
                     else repoCodeccAvgScore / totalExecuteCount.toDouble()
                 ),
-                QualityInfoDO(
+                qualityInfo = QualityInfoDO(
                     qualityInterceptionRate = qualityInterceptionRate
                     ,
                     totalExecuteCount = executeNum,
                     interceptionCount = interceptionCount
                         ),
-                TurboInfoDO(result?.get(BK_TURBO_SAVE_TIME, BigDecimal::class.java)?.toDouble())
+                turboInfo = TurboInfoDO(result?.get(BK_TURBO_SAVE_TIME, BigDecimal::class.java)?.toDouble())
             )
         }
 

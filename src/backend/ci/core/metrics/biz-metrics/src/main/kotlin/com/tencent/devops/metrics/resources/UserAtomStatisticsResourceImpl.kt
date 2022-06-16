@@ -60,13 +60,13 @@ class UserAtomStatisticsResourceImpl @Autowired constructor(
         return Result(
             atomStatisticsManageService.queryAtomTrendInfo(
                 QueryAtomStatisticsInfoDTO(
-                    projectId,
-                    atomStatisticsInfoReq.pipelineIds,
-                    atomStatisticsInfoReq.pipelineLabelIds,
-                    startTime,
-                    endTime,
-                    atomStatisticsInfoReq.errorTypes,
-                    atomStatisticsInfoReq.atomCodes
+                    projectId = projectId,
+                    pipelineIds = atomStatisticsInfoReq.pipelineIds,
+                    pipelineLabelIds = atomStatisticsInfoReq.pipelineLabelIds,
+                    startTime = startTime,
+                    endTime = endTime,
+                    errorTypes = atomStatisticsInfoReq.errorTypes,
+                    atomCodes = atomStatisticsInfoReq.atomCodes
                 )
             )
         )
@@ -89,13 +89,13 @@ class UserAtomStatisticsResourceImpl @Autowired constructor(
         return Result(
             atomStatisticsManageService.queryAtomExecuteStatisticsInfo(
                 QueryAtomStatisticsInfoDTO(
-                    projectId,
-                    atomStatisticsInfoReq.pipelineIds,
-                    atomStatisticsInfoReq.pipelineLabelIds,
-                    startTime,
-                    endTime,
-                    atomStatisticsInfoReq.errorTypes,
-                    atomStatisticsInfoReq.atomCodes,
+                    projectId = projectId,
+                    pipelineIds = atomStatisticsInfoReq.pipelineIds,
+                    pipelineLabelIds = atomStatisticsInfoReq.pipelineLabelIds,
+                    startTime = startTime,
+                    endTime = endTime,
+                    errorTypes = atomStatisticsInfoReq.errorTypes,
+                    atomCodes = atomStatisticsInfoReq.atomCodes,
                     page,
                     pageSize
                 )

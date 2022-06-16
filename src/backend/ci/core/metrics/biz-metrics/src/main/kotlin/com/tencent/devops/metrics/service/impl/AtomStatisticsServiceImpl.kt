@@ -110,10 +110,10 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             QueryAtomStatisticsQO(
                 projectId = queryAtomTrendInfoDTO.projectId,
                 baseQueryReq = BaseQueryReqVO(
-                    queryAtomTrendInfoDTO.pipelineIds,
-                    queryAtomTrendInfoDTO.pipelineLabelIds,
-                    queryAtomTrendInfoDTO.startTime,
-                    queryAtomTrendInfoDTO.endTime
+                    pipelineIds = queryAtomTrendInfoDTO.pipelineIds,
+                    pipelineLabelIds = queryAtomTrendInfoDTO.pipelineLabelIds,
+                    startTime = queryAtomTrendInfoDTO.startTime,
+                    endTime = queryAtomTrendInfoDTO.endTime
                 ),
                 errorTypes = queryAtomTrendInfoDTO.errorTypes,
                 atomCodes = atomCodes
@@ -205,10 +205,10 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 QueryAtomStatisticsQO(
                     projectId = queryAtomTrendInfoDTO.projectId,
                     baseQueryReq = BaseQueryReqVO(
-                        queryAtomTrendInfoDTO.pipelineIds,
-                        queryAtomTrendInfoDTO.pipelineLabelIds,
-                        queryAtomTrendInfoDTO.startTime,
-                        queryAtomTrendInfoDTO.endTime
+                        pipelineIds = queryAtomTrendInfoDTO.pipelineIds,
+                        pipelineLabelIds = queryAtomTrendInfoDTO.pipelineLabelIds,
+                        startTime = queryAtomTrendInfoDTO.startTime,
+                        endTime = queryAtomTrendInfoDTO.endTime
                     ),
                     errorTypes = queryAtomTrendInfoDTO.errorTypes,
                     atomCodes = atomCodes
@@ -226,10 +226,10 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             QueryAtomStatisticsQO(
                 projectId = queryAtomTrendInfoDTO.projectId,
                 baseQueryReq = BaseQueryReqVO(
-                    queryAtomTrendInfoDTO.pipelineIds,
-                    queryAtomTrendInfoDTO.pipelineLabelIds,
-                    queryAtomTrendInfoDTO.startTime,
-                    queryAtomTrendInfoDTO.endTime
+                    pipelineIds = queryAtomTrendInfoDTO.pipelineIds,
+                    pipelineLabelIds = queryAtomTrendInfoDTO.pipelineLabelIds,
+                    startTime = queryAtomTrendInfoDTO.startTime,
+                    endTime = queryAtomTrendInfoDTO.endTime
                 ),
                 errorTypes = queryAtomTrendInfoDTO.errorTypes,
                 atomCodes = atomCodes,
@@ -242,10 +242,10 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             QueryAtomStatisticsQO(
                 projectId = queryAtomTrendInfoDTO.projectId,
                 baseQueryReq = BaseQueryReqVO(
-                    queryAtomTrendInfoDTO.pipelineIds,
-                    queryAtomTrendInfoDTO.pipelineLabelIds,
-                    queryAtomTrendInfoDTO.startTime,
-                    queryAtomTrendInfoDTO.endTime
+                    pipelineIds = queryAtomTrendInfoDTO.pipelineIds,
+                    pipelineLabelIds = queryAtomTrendInfoDTO.pipelineLabelIds,
+                    startTime = queryAtomTrendInfoDTO.startTime,
+                    endTime = queryAtomTrendInfoDTO.endTime
                 ),
                 errorTypes = queryAtomTrendInfoDTO.errorTypes,
                 atomCodes = atomCodes

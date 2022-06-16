@@ -55,9 +55,9 @@ class UserPipelineStageResourceImpl @Autowired constructor(
         return Result(
             pipelineStageManageService.queryPipelineStageTrendInfo(
                 QueryPipelineOverviewDTO(
-                    projectId,
-                    userId,
-                    queryReq
+                   projectId = projectId,
+                    userId = userId,
+                    baseQueryReq = queryReq
                 )
             )
         )

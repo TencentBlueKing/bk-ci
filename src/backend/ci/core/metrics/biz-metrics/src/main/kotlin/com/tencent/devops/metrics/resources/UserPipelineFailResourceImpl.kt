@@ -82,10 +82,10 @@ class UserPipelineFailResourceImpl @Autowired constructor(
                 pipelineFailManageService.queryPipelineFailSumInfo(
                     QueryPipelineFailDTO(
                         projectId = projectId,
-                        pipelineFailInfoQueryReq.pipelineIds,
-                        pipelineFailInfoQueryReq.pipelineLabelIds,
-                        startTime,
-                        endTime,
+                        pipelineIds = pipelineFailInfoQueryReq.pipelineIds,
+                        pipelineLabelIds = pipelineFailInfoQueryReq.pipelineLabelIds,
+                        startTime = startTime,
+                        endTime = endTime,
                         errorTypes = pipelineFailInfoQueryReq.errorTypes
                     )
                 )
@@ -112,10 +112,10 @@ class UserPipelineFailResourceImpl @Autowired constructor(
             pipelineFailManageService.queryPipelineFailDetailInfo(
                 QueryPipelineFailDTO(
                     projectId = projectId,
-                    pipelineFailInfoQueryReq.pipelineIds,
-                    pipelineFailInfoQueryReq.pipelineLabelIds,
-                    startTime,
-                    endTime,
+                    pipelineIds = pipelineFailInfoQueryReq.pipelineIds,
+                    pipelineLabelIds = pipelineFailInfoQueryReq.pipelineLabelIds,
+                    startTime = startTime,
+                    endTime = endTime,
                     errorTypes = pipelineFailInfoQueryReq.errorTypes,
                     page = page,
                     pageSize = pageSize

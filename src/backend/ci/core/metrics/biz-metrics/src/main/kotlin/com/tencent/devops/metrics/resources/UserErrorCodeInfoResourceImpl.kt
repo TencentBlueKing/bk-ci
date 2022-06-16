@@ -50,10 +50,10 @@ class UserErrorCodeInfoResourceImpl constructor(
         return Result(
             errorCodeInfoManageService.getErrorCodeInfo(
                 QueryErrorCodeInfoDTO(
-                    errorTypes,
-                    keyword,
-                    page,
-                    pageSize
+                    errorTypes = errorTypes,
+                    keyword = keyword,
+                    page = page,
+                    pageSize = pageSize
                 )
             )
         )

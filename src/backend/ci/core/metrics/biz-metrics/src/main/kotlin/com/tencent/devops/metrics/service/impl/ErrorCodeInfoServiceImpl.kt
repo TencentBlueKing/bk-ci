@@ -50,20 +50,20 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
             count = errorCodeInfoDao.getErrorCodeInfoCount(
                 dslContext,
                 QueryErrorCodeInfoQO(
-                    queryErrorCodeInfoDTO.errorTypes,
-                    queryErrorCodeInfoDTO.page,
-                    queryErrorCodeInfoDTO.keyword,
-                    queryErrorCodeInfoDTO.pageSize
+                    errorTypes = queryErrorCodeInfoDTO.errorTypes,
+                    keyword = queryErrorCodeInfoDTO.keyword,
+                    page = queryErrorCodeInfoDTO.page,
+                    pageSize = queryErrorCodeInfoDTO.pageSize
                 )
             ),
             records = errorCodeInfoDao.getErrorCodeInfo(
                     dslContext,
-                    QueryErrorCodeInfoQO(
-                        queryErrorCodeInfoDTO.errorTypes,
-                        queryErrorCodeInfoDTO.page,
-                        queryErrorCodeInfoDTO.keyword,
-                        queryErrorCodeInfoDTO.pageSize
-                    )
+                QueryErrorCodeInfoQO(
+                    errorTypes = queryErrorCodeInfoDTO.errorTypes,
+                    keyword = queryErrorCodeInfoDTO.keyword,
+                    page = queryErrorCodeInfoDTO.page,
+                    pageSize = queryErrorCodeInfoDTO.pageSize
+                )
                 )
             )
     }

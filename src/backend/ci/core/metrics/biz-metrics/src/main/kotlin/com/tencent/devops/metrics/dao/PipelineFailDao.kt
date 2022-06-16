@@ -60,10 +60,10 @@ class PipelineFailDao {
             val pipelineIds = queryPipelineFailQo.baseQueryReq.pipelineIds
             val pipelineLabelIds = queryPipelineFailQo.baseQueryReq.pipelineLabelIds
             val conditions = getConditions(
-                queryPipelineFailQo.projectId,
-                queryPipelineFailQo.baseQueryReq,
-                pipelineIds,
-                tProjectPipelineLabelInfo
+                projectId = queryPipelineFailQo.projectId,
+                baseQueryReq = queryPipelineFailQo.baseQueryReq,
+                pipelineIds = pipelineIds,
+                tProjectPipelineLabelInfo = tProjectPipelineLabelInfo
             )
             val step = dslContext.select(PIPELINE_ID).from(this)
             val conditionStep =
@@ -87,10 +87,10 @@ class PipelineFailDao {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             var pipelineIds = queryPipelineFailTrendQo.baseQueryReq.pipelineIds
             val conditions = getConditions(
-                queryPipelineFailTrendQo.projectId,
-                queryPipelineFailTrendQo.baseQueryReq,
-                pipelineIds,
-                tProjectPipelineLabelInfo
+                projectId = queryPipelineFailTrendQo.projectId,
+                baseQueryReq = queryPipelineFailTrendQo.baseQueryReq,
+                pipelineIds = pipelineIds,
+                tProjectPipelineLabelInfo = tProjectPipelineLabelInfo
             )
             val step = dslContext.select(
                 this.STATISTICS_TIME.`as`(BK_STATISTICS_TIME),
@@ -118,10 +118,10 @@ class PipelineFailDao {
             var pipelineIds = queryPipelineFailTrendQo.baseQueryReq.pipelineIds
             val pipelineLabelIds = queryPipelineFailTrendQo.baseQueryReq.pipelineLabelIds
             val conditions = getConditions(
-                queryPipelineFailTrendQo.projectId,
-                queryPipelineFailTrendQo.baseQueryReq,
-                pipelineIds,
-                tProjectPipelineLabelInfo
+                projectId = queryPipelineFailTrendQo.projectId,
+                baseQueryReq = queryPipelineFailTrendQo.baseQueryReq,
+                pipelineIds = pipelineIds,
+                tProjectPipelineLabelInfo = tProjectPipelineLabelInfo
             )
             val step = dslContext.select(this.ERROR_TYPE)
                 .from(this)
@@ -150,10 +150,10 @@ class PipelineFailDao {
             }
             val conditions =
                 getConditions(
-                    queryPipelineFailQo.projectId,
-                    queryPipelineFailQo.baseQueryReq,
-                    pipelineIds,
-                    labelInfo
+                    projectId = queryPipelineFailQo.projectId,
+                    baseQueryReq = queryPipelineFailQo.baseQueryReq,
+                    pipelineIds = pipelineIds,
+                    tProjectPipelineLabelInfo = labelInfo
                 )
             if (!queryPipelineFailQo.errorTypes.isNullOrEmpty()) {
                 conditions.add(ERROR_TYPE.`in`(queryPipelineFailQo.errorTypes))
@@ -181,10 +181,9 @@ class PipelineFailDao {
         with(TPipelineFailDetailData.T_PIPELINE_FAIL_DETAIL_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val conditions = getConditions(
-                queryPipelineFailQo.projectId,
-                queryPipelineFailQo.baseQueryReq,
-                tProjectPipelineLabelInfo,
-                mutableListOf()
+                projectId = queryPipelineFailQo.projectId,
+                baseQuery = queryPipelineFailQo.baseQueryReq,
+                tProjectPipelineLabelInfo = tProjectPipelineLabelInfo
             )
             if (!queryPipelineFailQo.errorTypes.isNullOrEmpty()) {
                 conditions.add(ERROR_TYPE.`in`(queryPipelineFailQo.errorTypes))
@@ -229,10 +228,9 @@ class PipelineFailDao {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val pipelineLabelIds = queryPipelineFailQo.baseQueryReq.pipelineLabelIds
             val conditions = getConditions(
-                queryPipelineFailQo.projectId,
-                queryPipelineFailQo.baseQueryReq,
-                tProjectPipelineLabelInfo,
-                mutableListOf()
+                projectId = queryPipelineFailQo.projectId,
+                baseQuery = queryPipelineFailQo.baseQueryReq,
+                tProjectPipelineLabelInfo = tProjectPipelineLabelInfo
             )
             if (!queryPipelineFailQo.errorTypes.isNullOrEmpty()) {
                 conditions.add(ERROR_TYPE.`in`(queryPipelineFailQo.errorTypes))
@@ -254,20 +252,20 @@ class PipelineFailDao {
 
     private fun TPipelineFailDetailData.getConditions(
         projectId: String,
-        pipelineFailDetailDataBaseQuery: BaseQueryReqVO,
+        baseQuery: BaseQueryReqVO,
         tProjectPipelineLabelInfo: TProjectPipelineLabelInfo,
-        conditions: MutableList<Condition>
     ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
         conditions.add(this.PROJECT_ID.eq(projectId))
-        if (!pipelineFailDetailDataBaseQuery.pipelineIds.isNullOrEmpty()) {
-            conditions.add(this.PIPELINE_ID.`in`(pipelineFailDetailDataBaseQuery.pipelineIds))
+        if (!baseQuery.pipelineIds.isNullOrEmpty()) {
+            conditions.add(this.PIPELINE_ID.`in`(baseQuery.pipelineIds))
         }
         val startTimeDateTime =
-            DateTimeUtil.stringToLocalDate(pipelineFailDetailDataBaseQuery.startTime!!)!!.atStartOfDay()
+            DateTimeUtil.stringToLocalDate(baseQuery.startTime!!)!!.atStartOfDay()
         val endTimeDateTime =
-            DateTimeUtil.stringToLocalDate(pipelineFailDetailDataBaseQuery.endTime!!)!!.atStartOfDay()
-        if (!pipelineFailDetailDataBaseQuery.pipelineLabelIds.isNullOrEmpty()) {
-            conditions.add(tProjectPipelineLabelInfo.LABEL_ID.`in`(pipelineFailDetailDataBaseQuery.pipelineLabelIds))
+            DateTimeUtil.stringToLocalDate(baseQuery.endTime!!)!!.atStartOfDay()
+        if (!baseQuery.pipelineLabelIds.isNullOrEmpty()) {
+            conditions.add(tProjectPipelineLabelInfo.LABEL_ID.`in`(baseQuery.pipelineLabelIds))
         }
         conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
         return conditions

@@ -43,6 +43,7 @@ import com.tencent.devops.metrics.pojo.dto.QueryProjectPipelineLabelDTO
 import com.tencent.devops.metrics.pojo.qo.QueryProjectInfoQO
 import com.tencent.devops.model.metrics.tables.records.TProjectPipelineLabelInfoRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -125,9 +126,9 @@ class ProjectInfoServiceImpl @Autowired constructor(
             count = projectInfoDao.queryPipelineErrorTypeCount(dslContext, keyword),
             records = projectInfoDao.queryPipelineErrorTypes(
                 dslContext,
-                page,
-                pageSize,
-                keyword
+                page = page,
+                pageSize = pageSize,
+                keyWord = keyword
             )
         )
     }
@@ -147,7 +148,8 @@ class ProjectInfoServiceImpl @Autowired constructor(
                 val records = it.records
                 val pipelineLabelRelateInfos = records.map { record ->
                     TProjectPipelineLabelInfoRecord(
-                        SnowFlakeUtils.getId(SystemModuleEnum.METRICS.code),
+                        client.get(ServiceAllocIdResource::class)
+                            .generateSegmentId("METRICS_PROJECT_PIPELINE_LABEL_INFO").data?: 0,
                         record.projectId,
                         record.pipelineId,
                         record.labelId,

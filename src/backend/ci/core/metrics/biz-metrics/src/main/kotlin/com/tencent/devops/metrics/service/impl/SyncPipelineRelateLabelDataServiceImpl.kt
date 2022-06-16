@@ -29,12 +29,14 @@ package com.tencent.devops.metrics.service.impl
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.utils.SnowFlakeUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.ProjectInfoDao
 import com.tencent.devops.metrics.service.SyncPipelineRelateLabelDataService
 import com.tencent.devops.model.metrics.tables.records.TProjectPipelineLabelInfoRecord
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,7 +47,8 @@ import java.time.LocalDateTime
 class SyncPipelineRelateLabelDataServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
-    private val projectInfoDao: ProjectInfoDao
+    private val projectInfoDao: ProjectInfoDao,
+    private val client: Client
 ): SyncPipelineRelateLabelDataService {
     companion object {
         private val logger = LoggerFactory.getLogger(SyncPipelineRelateLabelDataServiceImpl::class.java)
@@ -64,7 +67,8 @@ class SyncPipelineRelateLabelDataServiceImpl @Autowired constructor(
             val pipelineLabelInfoRecords = pipelineLabelRelateInfos.map {
                 val createTime = it.createTime!!
                 val pipelineLabelInfoRecord = TProjectPipelineLabelInfoRecord(
-                    SnowFlakeUtils.getId(SystemModuleEnum.METRICS.code),
+                    client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("METRICS_PROJECT_PIPELINE_LABEL_INFO").data?: 0,
                     it.projectId,
                     it.pipelineId,
                     it.labelId,
