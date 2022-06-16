@@ -47,6 +47,11 @@ class AuthUserBlackListService @Autowired constructor(
         remark: String?
     ): Boolean {
         logger.info("create $userId blackList with $remark")
+        if (authUserBlackListDao.get(dslContext, userId) != null) {
+            logger.warn("user $userId is blackList user")
+            return true
+        }
+
         redisOperation.delete(BLACKLIST_REDIS_KEY + userId)
         return authUserBlackListDao.create(
             dslContext = dslContext,

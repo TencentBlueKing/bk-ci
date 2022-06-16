@@ -71,7 +71,7 @@ class AuthUserBlackListDao {
         userId: String
     ): Int {
         with(TAuthUserBlacklist.T_AUTH_USER_BLACKLIST) {
-            return dslContext.update(this).set(STATUS, false).where(USER_ID.eq(userId)).execute()
+            return dslContext.update(this).set(STATUS, false).where(USER_ID.eq(userId).and(STATUS.eq(true))).execute()
         }
     }
 }
