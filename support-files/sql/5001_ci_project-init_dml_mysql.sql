@@ -572,3 +572,6 @@ REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESS
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES('7de3e39cb84f4e6cb7c175a2c5b193ba','2102010','02','用户{0}在项目{1}下没有流水线{2}分享构件权限','用戶{0}在項目{1}下沒有流水綫{2}分享構件權限','User {0} does not have pipeline {2} share permission in project {1}');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES ('914e9d7049cc4509af562b2b6a419bf9', '2101318', '01', '不同的构建环境有不同的解决方案，待补充:可替换devops_ci_project数据库T_MESSAGE_CODE_DETAIL表 MESSAGE_CODE 为 2101318的内容替换成你的内容', '', 'To be continue');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES ('2ec6174a92ea40aa85b74534324c7fb7', '2101319', '01', '<a href="/console/environment/{0}/nodeDetail/{1}">查看Agent详情/Agent Detail</a>', '', '<a href="/console/environment/{0}/nodeDetail/{1}">Agent Detail</a>');
+
+-- 数据源初始化
+REPLACE INTO `T_DATA_SOURCE`(`ID`, `MODULE_CODE`, `DATA_SOURCE_NAME`, `FULL_FLAG`, `CLUSTER_NAME`) VALUES ('eae3670d3716427881c93fde46e28534', 'PROCESS', 'ds_0', b'0', 'prod');
