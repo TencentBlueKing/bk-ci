@@ -58,7 +58,12 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import io.swagger.annotations.ApiModelProperty
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "@type",
+    defaultImpl = EmptyElement::class
+)
 @JsonSubTypes(
     JsonSubTypes.Type(value = MatrixStatusElement::class, name = MatrixStatusElement.classType),
     JsonSubTypes.Type(value = CodeGitWebHookTriggerElement::class, name = CodeGitWebHookTriggerElement.classType),
@@ -82,8 +87,10 @@ import io.swagger.annotations.ApiModelProperty
     JsonSubTypes.Type(value = QualityGateInElement::class, name = QualityGateInElement.classType),
     JsonSubTypes.Type(value = QualityGateOutElement::class, name = QualityGateOutElement.classType),
     JsonSubTypes.Type(value = CodeTGitWebHookTriggerElement::class, name = CodeTGitWebHookTriggerElement.classType),
-    JsonSubTypes.Type(value = CodeGitGenericWebHookTriggerElement::class,
-        name = CodeGitGenericWebHookTriggerElement.classType),
+    JsonSubTypes.Type(
+        value = CodeGitGenericWebHookTriggerElement::class,
+        name = CodeGitGenericWebHookTriggerElement.classType
+    ),
     JsonSubTypes.Type(value = CodeP4WebHookTriggerElement::class, name = CodeP4WebHookTriggerElement.classType)
 )
 @Suppress("ALL")

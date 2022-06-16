@@ -32,5 +32,6 @@ package com.tencent.bkrepo.webhook.constant
  */
 enum class WebHookRequestStatus {
     SUCCESS,
-    FAIL
+    FAIL,
+    ERROR
 }

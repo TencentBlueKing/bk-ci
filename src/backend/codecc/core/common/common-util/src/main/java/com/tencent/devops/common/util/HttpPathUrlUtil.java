@@ -21,8 +21,7 @@ public class HttpPathUrlUtil {
         String route = urlRouterMap.get(toolName);
         if (route == null) route = "lint/";
 
-        sb.append("http://")
-            .append(devopsHost)
+        sb.append(devopsHost)
             .append("/console/codecc/")
             .append(projectId)
             .append("/task/")
@@ -40,8 +39,7 @@ public class HttpPathUrlUtil {
         String route = urlRouterMap.get(toolName);
         if (route == null) route = "lint/";
 
-        sb.append("http://")
-            .append(devopsHost)
+        sb.append(devopsHost)
             .append("/console/codecc/")
             .append(projectId)
             .append("/task/")
@@ -60,8 +58,7 @@ public class HttpPathUrlUtil {
         String route = urlRouterMap.get(toolName);
         if (route == null) route = "lint/";
 
-        sb.append("http://")
-            .append(devopsHost)
+        sb.append(devopsHost)
             .append("/console/codecc/")
             .append(projectId)
             .append("/task/")
@@ -76,8 +73,7 @@ public class HttpPathUrlUtil {
 
     public static String getCodeccTargetUrl(String codeccHost, String projectId, long taskId) {
         StringBuilder sb = new StringBuilder();
-        sb.append("http://")
-                .append(codeccHost)
+        sb.append(codeccHost)
                 .append("/codecc/")
                 .append(projectId)
                 .append("/task/")

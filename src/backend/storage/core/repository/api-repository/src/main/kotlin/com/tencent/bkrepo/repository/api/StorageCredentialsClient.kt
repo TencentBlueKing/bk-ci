@@ -52,4 +52,10 @@ interface StorageCredentialsClient {
      */
     @GetMapping("/detail")
     fun findByKey(@RequestParam key: String? = null): Response<StorageCredentials?>
+
+    /**
+     * 根据region获取凭证信息
+     * */
+    @GetMapping("/list")
+    fun list(@RequestParam region: String? = null): Response<List<StorageCredentials>>
 }

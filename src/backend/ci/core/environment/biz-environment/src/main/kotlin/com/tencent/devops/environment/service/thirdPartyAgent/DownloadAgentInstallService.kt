@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
+import com.tencent.devops.environment.model.AgentArchType
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
@@ -110,14 +111,14 @@ class DownloadAgentInstallService @Autowired constructor(
             .build()
     }
 
-    fun downloadGoAgent(agentId: String, record: TEnvironmentThirdpartyAgentRecord): Response {
-        logger.info("Trying to download the agent($agentId)")
+    fun downloadGoAgent(agentId: String, record: TEnvironmentThirdpartyAgentRecord, arch: AgentArchType?): Response {
+        logger.info("Trying to download the agent($agentId) arch($arch)")
 
-        val jarFiles = getGoAgentJarFiles(record.os)
-        val goDaemonFile = getGoFile(record.os, "devopsDaemon")
-        val goAgentFile = getGoFile(record.os, "devopsAgent")
-        val goInstallerFile = getGoFile(record.os, "installer")
-        val goUpgraderFile = getGoFile(record.os, "upgrader")
+        val jarFiles = getGoAgentJarFiles(record.os, arch)
+        val goDaemonFile = getGoFile(record.os, "devopsDaemon", arch)
+        val goAgentFile = getGoFile(record.os, "devopsAgent", arch)
+        val goInstallerFile = getGoFile(record.os, "installer", arch)
+        val goUpgraderFile = getGoFile(record.os, "upgrader", arch)
         val packageFiles = getAgentPackageFiles(record.os)
         val scriptFiles = getGoAgentScriptFiles(record)
         val propertyFile = getPropertyFile(record)
@@ -185,25 +186,30 @@ class DownloadAgentInstallService @Autowired constructor(
         zipOut.closeArchiveEntry()
     }
 
-    fun downloadAgent(agentId: String): Response {
+    fun downloadAgent(agentId: String, arch: AgentArchType?): Response {
         val agentRecord = getAgentRecord(agentId)
-        return downloadGoAgent(agentId, agentRecord)
+        return downloadGoAgent(agentId, agentRecord, arch)
     }
 
     private fun getAgentPackageFiles(os: String) =
         File(agentPackage, "packages/${os.toLowerCase()}/").listFiles()
 
-    private fun getGoAgentJarFiles(os: String): List<File> {
+    private fun getGoAgentJarFiles(os: String, arch: AgentArchType?): List<File> {
         val agentJar = getAgentJarFile()
-        val jreFile = getJreZipFile(os)
+        val jreFile = getJreZipFile(os, arch)
         return listOf(agentJar, jreFile)
     }
 
-    private fun getGoFile(os: String, fileName: String): File {
+    private fun getGoFile(os: String, fileName: String, arch: AgentArchType?): File {
+        val archStr = if (arch == null) {
+            ""
+        } else {
+            "_${arch.arch}"
+        }
         val daemonFileName = when (os) {
             OS.WINDOWS.name -> "upgrade/$fileName.exe"
-            OS.MACOS.name -> "upgrade/${fileName}_macos"
-            else -> "upgrade/${fileName}_linux"
+            OS.MACOS.name -> "upgrade/${fileName}_macos$archStr"
+            else -> "upgrade/${fileName}_linux$archStr"
         }
         val daemonFile = File(agentPackage, daemonFileName)
         if (!daemonFile.exists()) {
@@ -233,10 +239,10 @@ class DownloadAgentInstallService @Autowired constructor(
         } ?: emptyMap()
     }
 
-    fun downloadJre(agentId: String, eTag: String?): Response {
+    fun downloadJre(agentId: String, eTag: String?, arch: AgentArchType?): Response {
         logger.info("downloadJre, agentId: $agentId, eTag: $eTag")
         val record = getAgentRecord(agentId)
-        val file = getJreZipFile(record.os)
+        val file = getJreZipFile(record.os, arch)
 
         if (!eTag.isNullOrBlank()) {
             if (eTag == getFileMD5(file)) {
@@ -284,8 +290,13 @@ class DownloadAgentInstallService @Autowired constructor(
         return agentJar
     }
 
-    fun getJreZipFile(os: String): File {
-        val file = File(agentPackage, "/jre/${os.toLowerCase()}/jre.zip")
+    fun getJreZipFile(os: String, arch: AgentArchType?): File {
+        val archStr = if (arch == null) {
+            ""
+        } else {
+            "_${arch.arch}"
+        }
+        val file = File(agentPackage, "/jre/${os.toLowerCase()}$archStr/jre.zip")
         if (!file.exists()) {
             logger.warn("The jre file(${file.absolutePath}) is not exist")
             throw FileNotFoundException("The jre file is not exist")

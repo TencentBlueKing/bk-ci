@@ -39,7 +39,10 @@ import com.tencent.bkrepo.common.artifact.exception.RepoNotFoundException
 import com.tencent.bkrepo.common.artifact.manager.StorageManager
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
+import com.tencent.bkrepo.common.artifact.pojo.configuration.composite.CompositeConfiguration
+import com.tencent.bkrepo.common.artifact.pojo.configuration.composite.ProxyChannelSetting
 import com.tencent.bkrepo.common.artifact.pojo.configuration.remote.RemoteConfiguration
+import com.tencent.bkrepo.common.artifact.repository.composite.CompositeRepository
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContext
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContextHolder
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactQueryContext
@@ -89,6 +92,7 @@ import com.tencent.bkrepo.helm.utils.TimeFormatUtil
 import com.tencent.bkrepo.repository.api.MetadataClient
 import com.tencent.bkrepo.repository.api.NodeClient
 import com.tencent.bkrepo.repository.api.PackageClient
+import com.tencent.bkrepo.repository.api.ProxyChannelClient
 import com.tencent.bkrepo.repository.api.RepositoryClient
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
@@ -100,11 +104,11 @@ import com.tencent.bkrepo.repository.pojo.repo.RepositoryDetail
 import com.tencent.bkrepo.repository.pojo.search.NodeQueryBuilder
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.SortedSet
 import java.util.concurrent.ThreadPoolExecutor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.ApplicationEventPublisher
 
 // LateinitUsage: 抽象类中使用构造器注入会造成不便
 @Suppress("LateinitUsage")
@@ -122,9 +126,6 @@ open class AbstractChartService : ArtifactService() {
     lateinit var packageClient: PackageClient
 
     @Autowired
-    lateinit var eventPublisher: ApplicationEventPublisher
-
-    @Autowired
     lateinit var artifactResourceWriter: ArtifactResourceWriter
 
     @Autowired
@@ -132,6 +133,9 @@ open class AbstractChartService : ArtifactService() {
 
     @Autowired
     lateinit var lockOperation: LockOperation
+
+    @Autowired
+    lateinit var proxyChannelClient: ProxyChannelClient
 
     val threadPoolExecutor: ThreadPoolExecutor = HelmThreadPoolExecutor.instance
 
@@ -235,7 +239,7 @@ open class AbstractChartService : ArtifactService() {
     }
 
     /**
-     * 当helm 本地文件上传后，创建或更新包/包版本信息
+     * 当helm 本地文件上传后/或从远程代理下载后，创建或更新包/包版本信息
      */
     fun initPackageInfo(context: ArtifactContext) {
         with(context) {
@@ -304,13 +308,6 @@ open class AbstractChartService : ArtifactService() {
      */
     fun packageExist(projectId: String, repoName: String, key: String): Boolean {
         return packageClient.findPackageByKey(projectId, repoName, key).data?.let { true } ?: false
-    }
-
-    /**
-     * 发布事件
-     */
-    fun publishEvent(any: Any) {
-        eventPublisher.publishEvent(any)
     }
 
     /**
@@ -405,8 +402,9 @@ open class AbstractChartService : ArtifactService() {
     fun findRemoteArtifactFullPath(name: String): String {
         logger.info("get remote url for downloading...")
         val helmIndexYamlMetadata = queryOriginalIndexYaml()
-        val chartName = ChartParserUtil.parseNameAndVersion(name)[NAME]
-        val chartVersion = ChartParserUtil.parseNameAndVersion(name)[VERSION]
+        val map = ChartParserUtil.parseNameAndVersion(name)
+        val chartName = map[NAME]
+        val chartVersion = map[VERSION]
         val chartList =
             helmIndexYamlMetadata.entries[chartName]
                 ?: throw HelmFileNotFoundException("File [$name] can not be found.")
@@ -429,41 +427,144 @@ open class AbstractChartService : ArtifactService() {
     }
 
     /**
-     * 针对remote仓库：下载index.yaml文件到本地存储
+     * 针对代理仓库：下载index.yaml文件到本地存储
      */
     fun initIndexYaml(
         projectId: String,
         repoName: String,
         userId: String = SecurityUtils.getUserId()
     ): HelmIndexYamlMetadata? {
-        logger.info("repo [$projectId/$repoName] has been created, will download index.yaml...")
-        val repoDetail = repositoryClient.getRepoDetail(projectId, repoName, REPO_TYPE).data ?: run {
-            logger.warn("check repository [$repoName] in projectId [$projectId] failed!")
-            throw HelmRepoNotFoundException("repository [$repoName] in projectId [$projectId] not existed.")
-        }
-        if (RepositoryCategory.LOCAL == repoDetail.category) {
-            logger.warn("repo [$projectId/$repoName] does not need to download index.yaml")
-            return null
-        }
-        require(repoDetail.configuration is RemoteConfiguration)
-        try {
-            val config = repoDetail.configuration as RemoteConfiguration
-            val inputStream = RemoteDownloadUtil.doHttpRequest(config, HelmUtils.getIndexYamlFullPath())
-            val originalIndexYamlMetadata = (inputStream as ArtifactInputStream).use {
-                it.readYamlString() as HelmIndexYamlMetadata
-            }
-            val (artifactFile, nodeCreateRequest) = ObjectBuilderUtil.buildFileAndNodeCreateRequest(
+        logger.info("Will start to get index.yaml for repo [$projectId/$repoName]...")
+        val repoDetail = checkRepo(projectId, repoName) ?: return null
+        val originalIndexYamlMetadata = getIndex(repoDetail)
+        originalIndexYamlMetadata?.let {
+            storeIndex(
                 indexYamlMetadata = originalIndexYamlMetadata,
                 projectId = projectId,
                 repoName = repoName,
-                operator = userId
+                userId = userId
             )
-            uploadIndexYamlMetadata(artifactFile, nodeCreateRequest)
-            return originalIndexYamlMetadata
-        } catch (e: Exception) {
-            logger.warn("Error occurred while cache index-cache.yaml, error: ${e.message}")
-            throw e
         }
+        return originalIndexYamlMetadata
+    }
+
+    /**
+     * 根据仓库类型获取对应index文件
+     */
+    fun getIndex(repoDetail: RepositoryDetail): HelmIndexYamlMetadata? {
+        return when (repoDetail.configuration) {
+            is CompositeConfiguration -> {
+                val config = repoDetail.configuration as CompositeConfiguration
+                forEachProxyRepo(config.proxy.channelList, repoDetail)
+            }
+            is RemoteConfiguration -> {
+                val config = repoDetail.configuration as RemoteConfiguration
+                try {
+                    val inputStream = RemoteDownloadUtil.doHttpRequest(config, HelmUtils.getIndexYamlFullPath())
+                    (inputStream as ArtifactInputStream).use {
+                        it.readYamlString() as HelmIndexYamlMetadata
+                    }
+                } catch (e: Exception) {
+                    logger.warn(
+                        "Error occurred while caching the index-cache.yaml from remote repository, error: ${e.message}"
+                    )
+                    throw e
+                }
+            }
+            else -> {
+                null
+            }
+        }
+    }
+
+    /**
+     * 存储获取的index文件
+     */
+    fun storeIndex(
+        indexYamlMetadata: HelmIndexYamlMetadata,
+        projectId: String,
+        repoName: String,
+        userId: String = SecurityUtils.getUserId()
+    ) {
+        logger.info("Index file will be stored in repo $projectId|$repoName")
+        val (artifactFile, nodeCreateRequest) = ObjectBuilderUtil.buildFileAndNodeCreateRequest(
+            indexYamlMetadata = indexYamlMetadata,
+            projectId = projectId,
+            repoName = repoName,
+            operator = userId
+        )
+        uploadIndexYamlMetadata(artifactFile, nodeCreateRequest)
+    }
+
+    /**
+     * 检查该仓库是否remote仓库或者composite仓库
+     */
+    fun checkRepo(projectId: String, repoName: String): RepositoryDetail? {
+        val repoDetail = repositoryClient.getRepoDetail(projectId, repoName, REPO_TYPE).data ?: run {
+            throw HelmRepoNotFoundException("Could not find helm repository named [$repoName] in project [$projectId].")
+        }
+        if (RepositoryCategory.LOCAL == repoDetail.category) {
+            logger.warn(
+                "The local repo [$projectId/$repoName] does not need to do some operations on index.yaml"
+            )
+            return null
+        }
+        return repoDetail
+    }
+
+    /**
+     * 遍历代理仓库列表，获取对应index.yaml文件
+     */
+    private fun forEachProxyRepo(
+        channelList: List<ProxyChannelSetting>,
+        repositoryDetail: RepositoryDetail
+    ): HelmIndexYamlMetadata {
+        val oldIndex = HelmUtils.initIndexYamlMetadata()
+        for (proxyChannel in channelList) {
+            try {
+                val config = getRemoteConfigFromProxyChannel(repositoryDetail, proxyChannel)
+                val inputStream = RemoteDownloadUtil.doHttpRequest(config, HelmUtils.getIndexYamlFullPath())
+                val newIndex = (inputStream as ArtifactInputStream).use {
+                    it.readYamlString() as HelmIndexYamlMetadata
+                }
+                val (_, addedSet) = ChartParserUtil.compareIndexYamlMetadata(
+                    oldEntries = oldIndex.entries,
+                    newEntries = newIndex.entries
+                )
+                mergeMap(oldIndex.entries, addedSet)
+            } catch (ignored: Exception) {
+                logger.warn("Failed to execute action with channel ${proxyChannel.name}", ignored)
+            }
+        }
+        return oldIndex
+    }
+
+    /**
+     * 合并
+     */
+    private fun mergeMap(
+        old: MutableMap<String, SortedSet<HelmChartMetadata>>,
+        new: MutableMap<String, SortedSet<HelmChartMetadata>>
+    ) {
+        new.forEach { (key, values) ->
+            old[key]?.let {
+                old[key]?.addAll(values)
+            } ?: run { old.put(key, values) }
+        }
+    }
+
+    private fun getRemoteConfigFromProxyChannel(
+        repositoryDetail: RepositoryDetail,
+        setting: ProxyChannelSetting
+    ): RemoteConfiguration {
+        val proxyChannel = proxyChannelClient.getByUniqueId(
+            projectId = repositoryDetail.projectId,
+            repoName = repositoryDetail.name,
+            repoType = repositoryDetail.type.name,
+            name = setting.name
+        ).data!!
+        // 构造RemoteConfiguration
+        return (CompositeRepository.convertConfig(proxyChannel) as RemoteConfiguration)
     }
 
     companion object {

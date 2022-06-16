@@ -27,14 +27,32 @@
 
 package com.tencent.bkrepo.oci.service.impl
 
-import com.tencent.bkrepo.oci.pojo.artifact.OciArtifactInfo
+import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContextHolder
+import com.tencent.bkrepo.common.artifact.repository.context.ArtifactQueryContext
+import com.tencent.bkrepo.oci.constant.LAST_TAG
+import com.tencent.bkrepo.oci.constant.N
+import com.tencent.bkrepo.oci.pojo.artifact.OciTagArtifactInfo
 import com.tencent.bkrepo.oci.pojo.tags.TagsInfo
 import com.tencent.bkrepo.oci.service.OciTagService
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class OciTagServiceImpl : OciTagService {
-    override fun getTagList(artifactInfo: OciArtifactInfo, size: Int?, name: String?): TagsInfo {
-        TODO("Not yet implemented")
+    override fun getTagList(artifactInfo: OciTagArtifactInfo, n: Int?, last: String?): TagsInfo {
+        logger.info(
+            "Handling search tags request for package [${artifactInfo.packageName}] " +
+                "with n $n and last $last in repo [${artifactInfo.getRepoIdentify()}]"
+        )
+        val context = ArtifactQueryContext()
+        last?.let { context.putAttribute(LAST_TAG, last) }
+        n?.let { context.putAttribute(N, n) }
+        val tags = ArtifactContextHolder.getRepository().query(context)
+            ?: return TagsInfo(artifactInfo.packageName, emptyList())
+        return tags as TagsInfo
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(OciTagServiceImpl::class.java)
     }
 }

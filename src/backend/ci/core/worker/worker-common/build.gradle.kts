@@ -26,6 +26,7 @@
  */
 
 dependencies {
+    api("org.reflections:reflections")
     api(project(":core:process:api-process"))
     api(project(":core:log:api-log"))
     api(project(":core:store:api-store"))

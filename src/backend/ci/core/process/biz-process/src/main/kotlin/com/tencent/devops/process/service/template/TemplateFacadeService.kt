@@ -29,6 +29,7 @@ package com.tencent.devops.process.service.template
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -49,7 +50,6 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
@@ -166,6 +166,9 @@ class TemplateFacadeService @Autowired constructor(
 
     @Value("\${template.maxSaveVersionNum:300}")
     private val maxSaveVersionNum: Int = 300
+
+    @Value("\${template.maxUpdateInstanceNum:100}")
+    private val maxUpdateInstanceNum: Int = 100
 
     @Value("\${template.maxSaveVersionRecordNum:2}")
     private val maxSaveVersionRecordNum: Int = 2
@@ -1121,15 +1124,15 @@ class TemplateFacadeService @Autowired constructor(
             return true
         }
 
-        val v1Map = v1Properties.map {
+        val v1Map = v1Properties.associate {
             it.isAccessible = true
             it.name to it.get(e1)
-        }.toMap()
+        }
 
-        val v2Map = v2Properties.map {
+        val v2Map = v2Properties.associate {
             it.isAccessible = true
             it.name to it.get(e2)
-        }.toMap()
+        }
 
         if (v1Map.size != v2Map.size) {
             return true
@@ -1318,42 +1321,57 @@ class TemplateFacadeService @Autowired constructor(
         projectId: String,
         userId: String,
         templateId: String,
-        version: Long,
+        version: Long? = null,
+        versionName: String? = null,
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
         logger.info("UPDATE_TEMPLATE_INST[$projectId|$userId|$templateId|$version|$instances|$useTemplateSettings]")
-
+        if (instances.size > maxUpdateInstanceNum) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.FAIL_TEMPLATE_UPDATE_NUM_TOO_BIG,
+                params = arrayOf("${instances.size}", "$maxUpdateInstanceNum")
+            )
+        }
         val successPipelines = ArrayList<String>()
         val failurePipelines = ArrayList<String>()
         val messages = HashMap<String, String>()
-
-        val template = templateDao.getTemplate(dslContext = dslContext, version = version)
-
-        instances.forEach {
-            try {
-                updateTemplateInstanceInfo(
-                    userId = userId,
-                    useTemplateSettings = useTemplateSettings,
-                    projectId = projectId,
-                    templateId = templateId,
-                    templateVersion = template.version,
-                    versionName = template.versionName,
-                    templateContent = template.template,
-                    templateInstanceUpdate = it
-                )
-                successPipelines.add(it.pipelineName)
-            } catch (t: DuplicateKeyException) {
-                logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", t)
-                failurePipelines.add(it.pipelineName)
-                messages[it.pipelineName] = "流水线已经存在"
-            } catch (t: Throwable) {
-                logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", t)
-                failurePipelines.add(it.pipelineName)
-                messages[it.pipelineName] = t.message ?: "更新流水线失败"
-            }
+        if (version == null && versionName.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                params = arrayOf("version or versionName")
+            )
         }
-
+        val template = templateDao.getTemplate(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            versionName = versionName,
+            version = version
+        )
+            instances.forEach {
+                    try {
+                        updateTemplateInstanceInfo(
+                            userId = userId,
+                            useTemplateSettings = useTemplateSettings,
+                            projectId = projectId,
+                            templateId = templateId,
+                            templateVersion = template.version,
+                            versionName = template.versionName,
+                            templateContent = template.template,
+                            templateInstanceUpdate = it
+                        )
+                        successPipelines.add(it.pipelineName)
+                    } catch (t: DuplicateKeyException) {
+                        logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", t)
+                        failurePipelines.add(it.pipelineName)
+                        messages[it.pipelineName] = "流水线已经存在"
+                    } catch (t: Throwable) {
+                        logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", t)
+                        failurePipelines.add(it.pipelineName)
+                        messages[it.pipelineName] = t.message ?: "更新流水线失败"
+                    }
+            }
         return TemplateOperationRet(0, TemplateOperationMessage(successPipelines, failurePipelines, messages), "")
     }
 
@@ -1404,15 +1422,17 @@ class TemplateFacadeService @Autowired constructor(
             }
             tmpLabels
         }
-        val instanceModel = getInstanceModel(
-            projectId = projectId,
-            pipelineId = templateInstanceUpdate.pipelineId,
+
+        val instanceModel = PipelineUtils.instanceModel(
             templateModel = templateModel,
             pipelineName = templateInstanceUpdate.pipelineName,
             buildNo = templateInstanceUpdate.buildNo,
             param = templateInstanceUpdate.param,
-            labels = labels
+            instanceFromTemplate = true,
+            labels = labels,
+            defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
         )
+
         instanceModel.templateId = templateId
         pipelineInfoFacadeService.editPipeline(
             userId = userId,
@@ -1530,63 +1550,6 @@ class TemplateFacadeService @Autowired constructor(
             }
         }
         return true
-    }
-
-    /**
-     *  实例内有codeccId则用实例内的数据
-     */
-    private fun getInstanceModel(
-        projectId: String,
-        pipelineId: String,
-        templateModel: Model,
-        pipelineName: String,
-        buildNo: BuildNo?,
-        param: List<BuildFormProperty>?,
-        labels: List<String>? = null
-    ): Model {
-
-        val model = PipelineUtils.instanceModel(
-            templateModel = templateModel,
-            pipelineName = pipelineName,
-            buildNo = buildNo,
-            param = param,
-            instanceFromTemplate = true,
-            labels = labels,
-            defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
-        )
-
-        val instanceModelStr = pipelineResDao.getLatestVersionModelString(dslContext, projectId, pipelineId)
-        val instanceModel = objectMapper.readValue(instanceModelStr, Model::class.java)
-        var codeCCTaskId: String? = null
-        var codeCCTaskCnName: String? = null
-        var codeCCTaskName: String? = null
-
-        instanceModel.stages.forEach outer@{ stage ->
-            stage.containers.forEach { container ->
-                container.elements.forEach { element ->
-                    if (element is LinuxPaasCodeCCScriptElement) {
-                        codeCCTaskId = element.codeCCTaskId
-                        codeCCTaskCnName = element.codeCCTaskCnName
-                        codeCCTaskName = element.codeCCTaskName
-                        return@outer
-                    }
-                }
-            }
-        }
-        if (codeCCTaskId != null) {
-            model.stages.forEach { stage ->
-                stage.containers.forEach { container ->
-                    container.elements.forEach { element ->
-                        if (element is LinuxPaasCodeCCScriptElement) {
-                            element.codeCCTaskId = codeCCTaskId
-                            element.codeCCTaskName = codeCCTaskName
-                            element.codeCCTaskCnName = codeCCTaskCnName
-                        }
-                    }
-                }
-            }
-        }
-        return model
     }
 
     fun copySetting(setting: PipelineSetting, pipelineId: String, templateName: String): PipelineSetting {

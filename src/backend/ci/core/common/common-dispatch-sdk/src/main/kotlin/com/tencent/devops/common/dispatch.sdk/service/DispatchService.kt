@@ -224,7 +224,7 @@ class DispatchService constructor(
             redisOperation.delete(redisKey(secretInfo.hashId, secretInfo.secretKey))
             logger.warn("$buildId|$vmSeqId finishBuild success.")
         } else {
-            logger.error("$buildId|$vmSeqId finishBuild failed, secretInfo is null.")
+            logger.warn("$buildId|$vmSeqId finishBuild failed, secretInfo is null.")
         }
     }
 

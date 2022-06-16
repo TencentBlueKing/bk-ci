@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.common.api.constant.BUILD_QUEUE
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -66,9 +67,13 @@ import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
@@ -191,6 +196,7 @@ class PipelineRuntimeService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
+        private const val STATUS_STAGE = "stage-1"
     }
 
     fun deletePipelineBuilds(projectId: String, pipelineId: String) {
@@ -1152,7 +1158,10 @@ class PipelineRuntimeService @Autowired constructor(
                 },
                 webhookCommitId = params[PIPELINE_WEBHOOK_REVISION] as String?,
                 webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] as String?,
-                webhookSourceBranch = params[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] as String?
+                webhookSourceBranch = params[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] as String?,
+                mrId = params[BK_REPO_GIT_WEBHOOK_MR_ID] as String?,
+                mrIid = params[BK_REPO_GIT_WEBHOOK_MR_NUMBER] as String?,
+                mrUrl = params[BK_REPO_GIT_WEBHOOK_MR_URL] as String?
             ),
             formatted = false
         )
@@ -1567,10 +1576,15 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun updateBuildInfoStatus2Queue(projectId: String, buildId: String, oldStatus: BuildStatus) {
-        pipelineBuildDao.updateStatus(
+        pipelineBuildDao.updateBuildStageStatus(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
+            stageStatus = listOf(BuildStageStatus(
+                stageId = STATUS_STAGE,
+                name = STATUS_STAGE,
+                status = MessageCodeUtil.getCodeLanMessage(BUILD_QUEUE)
+            )),
             oldBuildStatus = oldStatus,
             newBuildStatus = BuildStatus.QUEUE
         )

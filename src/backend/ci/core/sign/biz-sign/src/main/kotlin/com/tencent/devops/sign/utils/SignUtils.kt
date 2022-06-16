@@ -37,7 +37,7 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 object SignUtils {
 
     private val logger = LoggerFactory.getLogger(SignUtils::class.java)
@@ -146,7 +146,7 @@ object SignUtils {
      *  @return 本层app包签名结果
      *
      */
-    @Suppress("ComplexMethod", "NestedBlockDepth", "ReturnCount", "LongParameterList")
+    @Suppress("ComplexMethod", "NestedBlockDepth", "ReturnCount", "LongMethod")
     fun resignApp(
         appDir: File,
         certId: String,
@@ -155,7 +155,7 @@ object SignUtils {
         codeSignPath: String,
         replaceBundleId: Boolean,
         replaceKeyList: Map<String, String>?,
-        keychainAccessGroups: List<String>? = null,
+        securityApplicationGroupList: List<String>? = null,
         universalLinks: List<String>? = null,
         codesignExternalStr: String? = null
     ): Boolean {
@@ -171,7 +171,9 @@ object SignUtils {
         return try {
             // 先将entitlements文件中补充所有ul和group
             if (universalLinks != null) addUniversalLink(universalLinks, info.entitlementFile)
-            if (keychainAccessGroups != null) addApplicationGroups(keychainAccessGroups, info.entitlementFile)
+            if (securityApplicationGroupList != null) {
+                addSecurityApplicationGroups(securityApplicationGroupList, info.entitlementFile)
+            }
 
             // 用主描述文件对外层app进行信息替换
             overwriteInfo(appDir, info, replaceBundleId, replaceKeyList)
@@ -189,7 +191,7 @@ object SignUtils {
                                 infoMap = infoMap,
                                 appName = subFile.nameWithoutExtension,
                                 replaceBundleId = replaceBundleId,
-                                keychainAccessGroups = keychainAccessGroups,
+                                securityApplicationGroupList = securityApplicationGroupList,
                                 replaceKeyList = replaceKeyList,
                                 codeSignPath = codeSignPath,
                                 codesignExternalStr = codesignExternalStr
@@ -451,7 +453,7 @@ object SignUtils {
         }
     }
 
-    private fun addApplicationGroups(groups: List<String>, entitlementsFile: File) {
+    private fun addSecurityApplicationGroups(groups: List<String>, entitlementsFile: File) {
         // 如果存在com.apple.security.application-groups字段则可以添加UL
         val rootDict = PropertyListParser.parse(entitlementsFile) as NSDictionary
         if (rootDict.containsKey("com.apple.security.application-groups")) {

@@ -72,7 +72,7 @@ public class DUPCFilterPathBizServiceImpl extends AbstractFilterPathBizService
                 defectEntity.setStatus(getUpdateStatus(filterPathInputVO, defectEntity.getStatus()));
                 defectEntity.setExcludeTime(currTime);
             });
-            dupcDefectRepository.save(needUpdateDefectList);
+            dupcDefectRepository.saveAll(needUpdateDefectList);
         }
         return new Result(CommonMessageCode.SUCCESS);
     }

@@ -34,6 +34,7 @@ import com.perforce.p4java.core.file.IFileSpec
 import com.perforce.p4java.core.file.IObliterateResult
 import com.perforce.p4java.impl.generic.admin.TriggerEntry
 import com.perforce.p4java.impl.generic.core.Depot
+import com.perforce.p4java.impl.generic.core.file.FileSpec
 import com.perforce.p4java.option.server.GetDepotFilesOptions
 import com.perforce.p4java.option.server.ObliterateFilesOptions
 import com.perforce.p4java.option.server.TrustOptions
@@ -140,6 +141,14 @@ class P4Server(
 
     fun getShelvedFiles(change: Int): List<IFileSpec> {
         return server.getShelvedFiles(change)
+    }
+
+    fun getFileContent(filePath: String, reversion: Int): String {
+        val fileSpec = FileSpec(filePath)
+        fileSpec.startRevision = reversion
+        fileSpec.endRevision = reversion
+        return server.getFileContents(listOf(fileSpec), false, true)
+            .bufferedReader().use { it.readText() }
     }
 
     override fun close() {

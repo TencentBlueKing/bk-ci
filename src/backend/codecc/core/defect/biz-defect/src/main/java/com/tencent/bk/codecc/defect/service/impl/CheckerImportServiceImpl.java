@@ -48,7 +48,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -162,7 +162,7 @@ public class CheckerImportServiceImpl implements CheckerImportService {
                     it.getCheckerLanguage().stream().map(codeLangParamsMap::get).collect(Collectors.toSet());
             it.setCheckerLanguage(checkerLanguage);
         });
-        checkerRepository.save(newCheckerDetailEntityList);
+        checkerRepository.saveAll(newCheckerDetailEntityList);
 
         // 4.创建或更新全量规则集
         Set<String> checkerSetIds = createCheckerSetMap.keySet();

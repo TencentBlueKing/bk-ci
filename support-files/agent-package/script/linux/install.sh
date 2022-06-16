@@ -5,6 +5,16 @@ workspace=`pwd`
 user=${USER}
 agent_id='##agentId##'
 
+function initArch() {
+  ARCH=$(uname -m)
+  case $ARCH in
+    aarch64) ARCH="arm64";;
+    arm64) ARCH="arm64";;
+    mips64) ARCH="mips64";;
+    *) ARCH="";;
+  esac
+}
+
 function getServiceName()
 {
   echo "devops_agent_"${agent_id}
@@ -33,13 +43,13 @@ function download_agent()
     return
   fi
   if exists curl; then
-    curl -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip '##agent_url##'
+    curl -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip "##agent_url##?arch=${ARCH}"
     if [[ $? -ne 0 ]]; then
       echo "Fail to use curl to download the agent, use wget"
-      wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip '##agent_url##'
+      wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##?arch=${ARCH}"
     fi
   elif exists wget; then
-    wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip '##agent_url##'
+    wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##?arch=${ARCH}"
   else
     echo "Curl & wget command don't exist, download fail"
     exit 1
@@ -96,6 +106,7 @@ function writeSSHConfig()
 cd ${workspace}
 
 if [[ ! -f "agent.zip" ]]; then
+  initArch
   download_agent
   unzip -o agent.zip
 fi
@@ -103,7 +114,9 @@ fi
 unzip_jre
 
 os=`uname`
+arch1=`uname -m`
 echo "OS: $os"
+echo "ARCH: ${arch1}"
 
 echo "check java version"
 jre/bin/java -version

@@ -65,16 +65,17 @@ import java.util.concurrent.TimeUnit
 class PipelineBuildDetailService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
-    private val stageTagService: StageTagService,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
     redisOperation: RedisOperation,
+    stageTagService: StageTagService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseBuildDetailService(
     dslContext,
     pipelineBuildDao,
     buildDetailDao,
+    stageTagService,
     pipelineEventDispatcher,
     redisOperation
 ) {
@@ -155,6 +156,7 @@ class PipelineBuildDetailService @Autowired constructor(
             pipelineId = buildInfo.pipelineId,
             pipelineName = model.name,
             userId = record.startUser ?: "",
+            triggerUser = buildInfo.triggerUser,
             trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
             startTime = record.startTime?.timestampmilli() ?: LocalDateTime.now().timestampmilli(),
             endTime = record.endTime?.timestampmilli(),
@@ -213,7 +215,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
                 // #3138 状态实时刷新
                 val refreshFlag = status.isRunning() && container.elements[0].status.isNullOrBlank() &&
-                    container.containPostTaskFlag != true
+                        container.containPostTaskFlag != true
                 if (status == BuildStatus.PREPARE_ENV || refreshFlag) {
                     ContainerUtils.clearQueueContainerName(container)
                     container.status = buildStatus.name
@@ -267,7 +269,8 @@ class PipelineBuildDetailService @Autowired constructor(
     fun buildEnd(
         projectId: String,
         buildId: String,
-        buildStatus: BuildStatus
+        buildStatus: BuildStatus,
+        errorMsg: String?
     ): Pair<Model, List<BuildStageStatus>> {
         logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
         var allStageStatus: List<BuildStageStatus> = emptyList()
@@ -290,7 +293,11 @@ class PipelineBuildDetailService @Autowired constructor(
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
                 if (allStageStatus.isEmpty()) {
-                    allStageStatus = fetchHistoryStageStatus(model)
+                    allStageStatus = fetchHistoryStageStatus(
+                        model = model,
+                        buildStatus = buildStatus,
+                        errorMsg = errorMsg
+                    )
                 }
                 if (BuildStatus.parse(stage.status).isRunning()) {
                     stage.status = buildStatus.name
@@ -341,24 +348,6 @@ class PipelineBuildDetailService @Autowired constructor(
             buildId = buildId,
             cancelUser = cancelUserId
         )
-    }
-
-    private fun fetchHistoryStageStatus(model: Model): List<BuildStageStatus> {
-        val stageTagMap: Map<String, String>
-            by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } }
-        // 更新Stage状态至BuildHistory
-        return model.stages.map {
-            BuildStageStatus(
-                stageId = it.id!!,
-                name = it.name ?: it.id!!,
-                status = it.status,
-                startEpoch = it.startEpoch,
-                elapsed = it.elapsed,
-                tag = it.tag?.map { _it ->
-                    stageTagMap.getOrDefault(_it, "null")
-                }
-            )
-        }
     }
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {

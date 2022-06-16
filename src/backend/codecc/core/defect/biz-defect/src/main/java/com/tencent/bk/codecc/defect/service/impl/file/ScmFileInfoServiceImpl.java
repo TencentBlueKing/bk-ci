@@ -1,13 +1,11 @@
 package com.tencent.bk.codecc.defect.service.impl.file;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.tencent.bk.codecc.defect.component.ScmJsonComponent;
 import com.tencent.bk.codecc.defect.dao.mongorepository.CodeRepoInfoRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildStackRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.file.ScmFileInfoCacheRepository;
-import com.tencent.bk.codecc.defect.dao.mongotemplate.ToolBuildStackDao;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.file.ScmFileInfoCacheDao;
 import com.tencent.bk.codecc.defect.model.file.ScmFileInfoCacheEntity;
 import com.tencent.bk.codecc.defect.model.incremental.CodeRepoEntity;
@@ -19,12 +17,10 @@ import com.tencent.bk.codecc.defect.service.file.ScmFileInfoService;
 import com.tencent.bk.codecc.defect.vo.customtool.ScmBlameChangeRecordVO;
 import com.tencent.bk.codecc.defect.vo.customtool.ScmBlameVO;
 import com.tencent.bk.codecc.defect.vo.file.ScmFileMd5Info;
-import com.tencent.devops.common.constant.ComConstants;
-import com.tencent.devops.common.util.PathUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -55,7 +51,7 @@ public class ScmFileInfoServiceImpl implements ScmFileInfoService {
         // 如果前后两次分析的仓库地址或者分支发生了变化，则缓存失效
         boolean isCodeRepoChange = false;
         ToolBuildStackEntity toolBuildStack =
-                toolBuildStackRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+                toolBuildStackRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
         if (toolBuildStack != null) {
             String lastBuildId = toolBuildStack.getBaseBuildId();
             if (StringUtils.isNotEmpty(lastBuildId)) {

@@ -105,9 +105,7 @@ open class PermissionServiceImpl constructor(
         logger.info("create  permission request : [$request]")
         // todo check request
         val permission = permissionRepository.findOneByPermNameAndProjectIdAndResourceType(
-            request.permName,
-            request.projectId,
-            request.resourceType
+            request.permName, request.projectId, request.resourceType
         )
         permission?.let {
             logger.warn("create permission  [$request] is exist.")
@@ -220,7 +218,7 @@ open class PermissionServiceImpl constructor(
 
     private fun checkProjectAdmin(request: CheckPermissionRequest, roles: List<String>): Boolean {
         if (roles.isNotEmpty() && request.projectId != null) {
-            roles.filter { it.isNotEmpty() }.forEach {
+            roles.filter { !it.isNullOrEmpty() }.forEach {
                 val role = roleRepository.findFirstByIdAndProjectIdAndType(it, request.projectId!!, RoleType.PROJECT)
                 if (role != null && role.admin) return true
             }
@@ -231,12 +229,12 @@ open class PermissionServiceImpl constructor(
     private fun checkRepoAdmin(request: CheckPermissionRequest, roles: List<String>): Boolean {
         // check role repo admin
         if (roles.isNotEmpty() && request.projectId != null && request.repoName != null) {
-            roles.filter { it.isNotEmpty() }.forEach {
+            roles.filter { !it.isNullOrEmpty() }.forEach {
                 val rRole = roleRepository.findFirstByIdAndProjectIdAndTypeAndRepoName(
-                    it,
-                    request.projectId!!,
-                    RoleType.REPO,
-                    request.repoName!!
+                    id = it,
+                    projectId = request.projectId!!,
+                    type = RoleType.REPO,
+                    repoName = request.repoName!!
                 )
                 if (rRole != null && rRole.admin) return true
             }
@@ -307,12 +305,10 @@ open class PermissionServiceImpl constructor(
         val roles = user.roles
 
         // 用户为项目管理员
-        if (roles.isNotEmpty() &&
-            roleRepository.findByProjectIdAndTypeAndAdminAndIdIn(
-                projectId,
-                RoleType.PROJECT,
-                true,
-                roles
+        if (roles.isNotEmpty() && roleRepository.findByProjectIdAndTypeAndAdminAndIdIn(
+                projectId = projectId,
+                type = RoleType.PROJECT,
+                admin = true, roles = roles
             ).isNotEmpty()
         ) {
             return getAllRepoByProjectId(projectId)
@@ -347,6 +343,13 @@ open class PermissionServiceImpl constructor(
 
     fun getAllRepoByProjectId(projectId: String): List<String> {
         return repositoryClient.listRepo(projectId).data?.map { it.name } ?: emptyList()
+    }
+
+    fun isUserLocalAdmin(userId: String): Boolean {
+        val user = userRepository.findFirstByUserId(userId) ?: run {
+            return false
+        }
+        return user.admin
     }
 
     private fun getNoAdminUserProject(userId: String): List<String> {
@@ -405,16 +408,10 @@ open class PermissionServiceImpl constructor(
     }
 
     private fun getOnePermission(
-        projectId: String,
-        repoName: String,
-        permName: String,
-        actions: List<PermissionAction>
+        projectId: String, repoName: String, permName: String, actions: List<PermissionAction>
     ): TPermission {
         permissionRepository.findOneByProjectIdAndReposAndPermNameAndResourceType(
-            projectId,
-            repoName,
-            permName,
-            ResourceType.REPO
+            projectId, repoName, permName, ResourceType.REPO
         ) ?: run {
             val request = TPermission(
                 projectId = projectId,
@@ -431,10 +428,10 @@ open class PermissionServiceImpl constructor(
             permissionRepository.insert(request)
         }
         return permissionRepository.findOneByProjectIdAndReposAndPermNameAndResourceType(
-            projectId,
-            repoName,
-            permName,
-            ResourceType.REPO
+            projectId = projectId,
+            repoName = repoName,
+            permName = permName,
+            resourceType = ResourceType.REPO
         )!!
     }
 

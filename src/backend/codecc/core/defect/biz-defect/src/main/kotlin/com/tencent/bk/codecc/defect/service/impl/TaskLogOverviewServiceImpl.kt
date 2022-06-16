@@ -61,7 +61,7 @@ class TaskLogOverviewServiceImpl @Autowired constructor(
     override fun saveActualExeTools(taskLogOverviewVO: TaskLogOverviewVO): Boolean {
         logger.info("save task log overview actual tools: ${taskLogOverviewVO.taskId} | ${taskLogOverviewVO.buildId} | ${taskLogOverviewVO.tools.size}")
         var taskLogOverviewEntity: TaskLogOverviewEntity? =
-                taskLogOverviewRepository.findByTaskIdAndBuildId(taskLogOverviewVO.taskId, taskLogOverviewVO.buildId)
+                taskLogOverviewRepository.findFirstByTaskIdAndBuildId(taskLogOverviewVO.taskId, taskLogOverviewVO.buildId)
         if (taskLogOverviewEntity == null) {
             taskLogOverviewEntity = TaskLogOverviewEntity(
                     ObjectId.get().toString(),
@@ -86,7 +86,7 @@ class TaskLogOverviewServiceImpl @Autowired constructor(
      * @param buildId
      */
     override fun getActualExeTools(taskId: Long, buildId: String): List<String>? {
-        return taskLogOverviewRepository.findByTaskIdAndBuildId(taskId, buildId)?.toolList
+        return taskLogOverviewRepository.findFirstByTaskIdAndBuildId(taskId, buildId)?.toolList
     }
 
     /**
@@ -100,7 +100,7 @@ class TaskLogOverviewServiceImpl @Autowired constructor(
         val taskId = uploadTaskLogStepVO.taskId
         val toolName = uploadTaskLogStepVO.toolName
         val buildId = uploadTaskLogStepVO.pipelineBuildId
-        val taskLogEntity = taskLogRepository.findByTaskIdAndToolNameAndBuildId(
+        val taskLogEntity = taskLogRepository.findFirstByTaskIdAndToolNameAndBuildId(
                 taskId,
                 toolName,
                 buildId
@@ -121,7 +121,7 @@ class TaskLogOverviewServiceImpl @Autowired constructor(
             logger.info("cal status, get lock success: $taskId $toolName $buildId")
             // 不存在说明是第一个上报的工具触发的，记录还不存在，新建一条记录
             var taskLogOverviewEntity: TaskLogOverviewEntity? =
-                    taskLogOverviewRepository.findByTaskIdAndBuildId(taskId, buildId)
+                    taskLogOverviewRepository.findFirstByTaskIdAndBuildId(taskId, buildId)
 
             if (taskLogOverviewEntity == null) {
                 logger.info("task log overview entity is null")
@@ -213,9 +213,9 @@ class TaskLogOverviewServiceImpl @Autowired constructor(
             }
         } else {
             if (status == null) {
-                taskLogOverviewRepository.findByTaskIdAndBuildId(taskId, buildId)
+                taskLogOverviewRepository.findFirstByTaskIdAndBuildId(taskId, buildId)
             } else {
-                taskLogOverviewRepository.findByTaskIdAndBuildIdAndStatus(taskId, buildId, status)
+                taskLogOverviewRepository.findFirstByTaskIdAndBuildIdAndStatus(taskId, buildId, status)
             }
         } ?: return null
 
@@ -241,7 +241,7 @@ class TaskLogOverviewServiceImpl @Autowired constructor(
             taskLogOverviewEntityList = convertTaskLog2TaskLogOverview(taskId)
             logger.info("${taskLogOverviewEntityList.map { it.buildNum }}")
             if (taskLogOverviewEntityList.isNotEmpty()) {
-                taskLogOverviewRepository.save(taskLogOverviewEntityList)
+                taskLogOverviewRepository.saveAll(taskLogOverviewEntityList)
             }
         }
 
@@ -281,7 +281,7 @@ class TaskLogOverviewServiceImpl @Autowired constructor(
                 taskLogOverviewVO.endTime - (taskLogOverviewVO.startTime?:0)
             }
             taskLogOverviewVO.buildUser =
-                    buildRepository.findByBuildId(taskLogOverviewVO.buildId)?.buildUser?:"获取失败"
+                    buildRepository.findFirstByBuildId(taskLogOverviewVO.buildId)?.buildUser?:"获取失败"
             taskLogOverviewVOList.add(taskLogOverviewVO)
         }
         val totalCount = taskLogOverviewRepository.countByTaskId(taskId)
@@ -317,7 +317,7 @@ class TaskLogOverviewServiceImpl @Autowired constructor(
             queryByBuildId -> {
                 logger.info("query by buildId: $taskId $buildId")
                 taskLogOverviewEntity =
-                        taskLogOverviewRepository.findByTaskIdAndBuildId(taskId, buildId)
+                        taskLogOverviewRepository.findFirstByTaskIdAndBuildId(taskId, buildId)
                                 ?: return null
                 setAnalyzeList(taskLogOverviewVO, taskLogOverviewEntity)
                 BeanUtils.copyProperties(taskLogOverviewVO, taskLogOverviewEntity)
@@ -325,7 +325,7 @@ class TaskLogOverviewServiceImpl @Autowired constructor(
             queryByBuildNum -> {
                 logger.info("query by buildNum: $taskId $buildNum")
                 taskLogOverviewEntity =
-                        taskLogOverviewRepository.findByTaskIdAndBuildNum(taskId, buildNum)
+                        taskLogOverviewRepository.findFirstByTaskIdAndBuildNum(taskId, buildNum)
                                 ?: return null
                 setAnalyzeList(taskLogOverviewVO, taskLogOverviewEntity)
                 BeanUtils.copyProperties(taskLogOverviewVO, taskLogOverviewEntity)
@@ -379,7 +379,7 @@ class TaskLogOverviewServiceImpl @Autowired constructor(
 
         confirmNum = redisTemplate.opsForValue()
                 .increment("${RedisKeyConstants.TOOL_FINISH_CONFIRM}:$taskId:$buildId", -1)
-                .toInt()
+                ?.toInt()
 
         if (confirmNum == 0) {
             redisTemplate.delete("${RedisKeyConstants.TOOL_FINISH_CONFIRM}:$taskId:$buildId")
@@ -423,7 +423,7 @@ class TaskLogOverviewServiceImpl @Autowired constructor(
         if (CollectionUtils.isNotEmpty(taskLogGroupEntities)) {
             for (taskLogGroupEntity in taskLogGroupEntities) {
                 val toolLastAnalysisResultVO = ToolLastAnalysisResultVO()
-                org.springframework.beans.BeanUtils.copyProperties(taskLogGroupEntity, toolLastAnalysisResultVO)
+                BeanUtils.copyProperties(taskLogGroupEntity, toolLastAnalysisResultVO)
                 val queryStatisticBizService: IQueryStatisticBizService = taskLogAndDefectFactory
                         .createBizService(toolLastAnalysisResultVO.toolName,
                                 ComConstants.BusinessType.QUERY_STATISTIC.value(), IQueryStatisticBizService::class.java)
@@ -495,8 +495,8 @@ class TaskLogOverviewServiceImpl @Autowired constructor(
                     taskLogOverviewEntity.taskId = taskId
                     taskLogOverviewEntity.buildId = buildId
                     taskLogOverviewEntity.buildNum = taskLogGroup.firstOrNull()?.buildNum
-                    taskLogOverviewEntity.startTime = taskLogGroup.map { it.startTime }.min()
-                    taskLogOverviewEntity.endTime = taskLogGroup.map { it.endTime }.max()
+                    taskLogOverviewEntity.startTime = taskLogGroup.map { it.startTime }.minOrNull ()
+                    taskLogOverviewEntity.endTime = taskLogGroup.map { it.endTime }.maxOrNull ()
                     taskLogOverviewEntity.taskLogEntityList = taskLogGroup
                     taskLogOverviewEntity.status = calTaskStatus(taskLogGroup)
                     taskLogOverviewEntityList.add(taskLogOverviewEntity)

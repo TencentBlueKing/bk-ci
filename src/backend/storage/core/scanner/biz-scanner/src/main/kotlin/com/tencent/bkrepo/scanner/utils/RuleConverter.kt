@@ -73,7 +73,7 @@ object RuleConverter {
             val isArtifactRule = isArtifactRule(innerRule)
 
             if (isArtifactRule && innerRule is Rule.QueryRule) {
-                return listOf(artifactRule(innerRule))
+                return listOf(artifactRule(rule))
             }
 
             if (isArtifactRule && innerRule is NestedRule && innerRule.relation == AND) {

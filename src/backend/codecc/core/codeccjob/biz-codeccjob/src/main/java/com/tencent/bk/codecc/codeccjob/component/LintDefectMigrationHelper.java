@@ -35,7 +35,7 @@ import com.tencent.devops.common.constant.RedisKeyConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.bson.types.ObjectId;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -184,7 +184,7 @@ public class LintDefectMigrationHelper
 
         if (!CollectionUtils.isEmpty(allDefects))
         {
-            lintDefectV2Repository.save(allDefects);
+            lintDefectV2Repository.saveAll(allDefects);
         }
         log.info("success migration lint defect, taskId: {}, toolName:{}, defectCount: {}", taskId, toolName, allDefects.size());
     }

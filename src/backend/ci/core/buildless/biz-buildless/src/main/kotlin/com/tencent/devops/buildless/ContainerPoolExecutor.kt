@@ -92,8 +92,8 @@ class ContainerPoolExecutor @Autowired constructor(
     fun clearTimeoutContainers() {
         val containerList = buildLessContainerService.getDockerRunTimeoutContainers()
         containerList.forEach {
-            synchronized(stringPool.intern(CommonUtils.formatContainerId(it.id))) {
-                buildLessContainerService.stopContainer("clear timeout", "", it.id)
+            synchronized(stringPool.intern(CommonUtils.formatContainerId(it))) {
+                buildLessContainerService.stopContainer("clear timeout", "", it)
             }
         }
     }

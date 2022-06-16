@@ -44,8 +44,8 @@ public class CodeRepoStatisticDao {
      */
     public int getUrlCountByEndTimeAndCreateFrom(long endTime, String createFrom) {
         Criteria criteria = getCodeRepoStatTrendCriteria(endTime, createFrom, "url_first_scan");
-        return mongoTemplate.getCollection("t_code_repo_statistic")
-                .distinct("url", new Query(criteria).getQueryObject()).size();
+        return mongoTemplate.findDistinct(new Query(criteria),"url","t_code_repo_statistic",String.class)
+                .size();
     }
 
     /**
