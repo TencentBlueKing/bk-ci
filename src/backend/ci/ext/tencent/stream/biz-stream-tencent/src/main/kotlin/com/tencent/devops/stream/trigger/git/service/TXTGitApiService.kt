@@ -60,13 +60,10 @@ class TXTGitApiService @Autowired constructor(
             log = "$gitProjectId get project $gitProjectId fail",
             apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR
         ) {
-            // 使用超级token
-            val streamCred = streamTriggerTokenService.getGitProjectToken(gitProjectId)
-                ?.let { TGitCred(userId = null, accessToken = it) } ?: cred
             client.getScm(ServiceGitCiResource::class).getProjectInfo(
-                accessToken = streamCred.toToken(),
+                accessToken = cred.toToken(),
                 gitProjectId = gitProjectId,
-                useAccessToken = streamCred.toTokenType() == TokenTypeEnum.OAUTH
+                useAccessToken = cred.toTokenType() == TokenTypeEnum.OAUTH
             ).data
         }?.let {
             TGitProjectInfo(
@@ -106,18 +103,15 @@ class TXTGitApiService @Autowired constructor(
             log = "getCommitChangeFileListRetry from: $from to: $to error",
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR
         ) {
-            // 使用超级token
-            val streamCred = streamTriggerTokenService.getGitProjectToken(gitProjectId)
-                ?.let { TGitCred(userId = null, accessToken = it) } ?: cred
             client.getScm(ServiceGitCiResource::class).getCommitChangeFileList(
-                token = streamCred.toToken(),
+                token = cred.toToken(),
                 gitProjectId = gitProjectId,
                 from = from,
                 to = to,
                 straight = straight,
                 page = page,
                 pageSize = pageSize,
-                useAccessToken = streamCred.useAccessToken
+                useAccessToken = cred.useAccessToken
             ).data ?: emptyList()
         }.map { TGitChangeFileInfo(it) }
     }
@@ -135,16 +129,13 @@ class TXTGitApiService @Autowired constructor(
             log = "$gitProjectId get yaml $fileName from $ref fail",
             apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR
         ) {
-            // 使用超级token
-            val streamCred = streamTriggerTokenService.getGitProjectToken(gitProjectId)
-                ?.let { TGitCred(userId = null, accessToken = it) } ?: cred
             // 针对工蜂超时时间可能超过30s使用特供接口
             client.getScm(ServiceGitCiResource::class).getGitCIFileContent(
                 gitProjectId = gitProjectId,
                 filePath = fileName,
-                token = streamCred.toToken(),
+                token = cred.toToken(),
                 ref = getTriggerBranch(ref),
-                useAccessToken = streamCred.useAccessToken
+                useAccessToken = cred.useAccessToken
             ).data!!
         }
     }
