@@ -31,8 +31,10 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.JooqUtils.count
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_NAME
+import com.tencent.devops.metrics.constant.Constants.BK_ATOM_POSITION
 import com.tencent.devops.metrics.constant.Constants.BK_BUILD_ID
 import com.tencent.devops.metrics.constant.Constants.BK_BUILD_NUM
+import com.tencent.devops.metrics.constant.Constants.BK_CHANNEL_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_END_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_CODE
@@ -167,10 +169,12 @@ class AtomFailInfoDao {
                 this.PROJECT_ID.`as`(BK_PROJECT_ID),
                 this.PIPELINE_ID.`as`(BK_PIPELINE_ID),
                 this.PIPELINE_NAME.`as`(BK_PIPELINE_NAME),
+                this.CHANNEL_CODE.`as`(BK_CHANNEL_CODE),
                 this.BUILD_ID.`as`(BK_BUILD_ID),
                 this.BUILD_NUM.`as`(BK_BUILD_NUM),
                 this.ATOM_CODE.`as`(BK_ATOM_CODE),
                 this.ATOM_NAME.`as`(BK_ATOM_NAME),
+                this.ATOM_POSITION.`as`(BK_ATOM_POSITION),
                 this.CLASSIFY_CODE.`as`(BK_CLASSIFY_CODE),
                 this.START_USER.`as`(BK_START_USER),
                 this.START_TIME.`as`(BK_START_TIME),

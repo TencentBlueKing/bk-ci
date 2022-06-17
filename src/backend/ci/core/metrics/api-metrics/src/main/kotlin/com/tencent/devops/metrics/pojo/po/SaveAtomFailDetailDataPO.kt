@@ -41,6 +41,8 @@ data class SaveAtomFailDetailDataPO(
     val pipelineId: String,
     @ApiModelProperty("流水线名称")
     val pipelineName: String,
+    @ApiModelProperty("渠道代码")
+    val channelCode: String,
     @ApiModelProperty("构建ID")
     val buildId: String,
     @ApiModelProperty("构建序号")
@@ -49,6 +51,8 @@ data class SaveAtomFailDetailDataPO(
     val atomCode: String,
     @ApiModelProperty("插件名称")
     val atomName: String,
+    @ApiModelProperty("插件在model中的位置")
+    val atomPosition: String,
     @ApiModelProperty("插件分类代码")
     val classifyCode: String,
     @ApiModelProperty("插件分类名称")
