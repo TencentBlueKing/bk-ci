@@ -65,7 +65,9 @@ class ThirdPartyAgentBuildDao {
         thirdPartyAgentWorkspace: String,
         pipelineName: String,
         buildNum: Int,
-        taskName: String
+        taskName: String,
+        agentIp: String,
+        nodeId: Long
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val now = LocalDateTime.now()
@@ -81,6 +83,8 @@ class ThirdPartyAgentBuildDao {
                     .set(WORKSPACE, thirdPartyAgentWorkspace)
                     .set(UPDATED_TIME, now)
                     .set(STATUS, PipelineTaskStatus.QUEUE.status)
+                    .set(AGENT_IP, agentIp)
+                    .set(NODE_ID, nodeId)
                     .where(ID.eq(preRecord.id)).execute()
             }
             return dslContext.insertInto(
@@ -96,7 +100,9 @@ class ThirdPartyAgentBuildDao {
                 WORKSPACE,
                 PIPELINE_NAME,
                 BUILD_NUM,
-                TASK_NAME
+                TASK_NAME,
+                AGENT_IP,
+                NODE_ID
             ).values(
                 projectId,
                 agentId,
@@ -109,7 +115,9 @@ class ThirdPartyAgentBuildDao {
                 thirdPartyAgentWorkspace,
                 pipelineName,
                 buildNum,
-                taskName
+                taskName,
+                agentIp,
+                nodeId
             ).execute()
         }
     }

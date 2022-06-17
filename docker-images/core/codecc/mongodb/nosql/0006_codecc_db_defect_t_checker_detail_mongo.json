@@ -1,0 +1,2849 @@
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1343"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "anyobject_protocol",
+  "checker_name" : "anyobject_protocol",
+  "checker_desc" : "Prefer using AnyObject over class for class-only protocols.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1344"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "array_init",
+  "checker_name" : "array_init",
+  "checker_desc" : "Prefer using Array(seq) over seq.map { $0 } to convert a sequence into an Array.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "API使用"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1346"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "block_based_kvo",
+  "checker_name" : "block_based_kvo",
+  "checker_desc" : "Prefer the new block based KVO API with keypaths when using Swift 3.2 or later.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1348"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "closing_brace",
+  "checker_name" : "closing_brace",
+  "checker_desc" : "Closing brace with closing parenthesis should not have any whitespaces in the middle.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1345"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "attributes",
+  "checker_name" : "attributes",
+  "checker_desc" : "Attributes should be on their own lines in functions and types, but on the same line as variables and imports.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d134e"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "colon",
+  "checker_name" : "colon",
+  "checker_desc" : "Colons should be next to the identifier when specifying a type and next to the key in dictionary literals.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1357"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "convenience_type",
+  "checker_name" : "convenience_type",
+  "checker_desc" : "Types used for hosting only static members should be implemented as a caseless enum to avoid instantiation.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1362"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "empty_collection_literal",
+  "checker_name" : "empty_collection_literal",
+  "checker_desc" : "Prefer checking isEmpty over comparing collection to an empty array or dictionary literal.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1349"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "closure_body_length",
+  "checker_name" : "closure_body_length",
+  "checker_desc" : "Closure bodies should not span too many lines.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1354"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "contains_over_first_not_nil",
+  "checker_name" : "contains_over_first_not_nil",
+  "checker_desc" : "Prefer contains over first(where:) != nil and firstIndex(where:) != nil.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1353"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "contains_over_filter_is_empty",
+  "checker_name" : "contains_over_filter_is_empty",
+  "checker_desc" : "Prefer contains over using filter(where:).isEmpty",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d135f"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "duplicate_enum_cases",
+  "checker_name" : "duplicate_enum_cases",
+  "checker_desc" : "Enum can’t contain multiple cases with the same name.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1347"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "class_delegate_protocol",
+  "checker_name" : "class_delegate_protocol",
+  "checker_desc" : "Delegate protocols should be class-only so they can be weakly referenced.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1366"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "empty_parentheses_with_trailing_closure",
+  "checker_name" : "empty_parentheses_with_trailing_closure",
+  "checker_desc" : "When using trailing closures, empty parentheses should be avoided after the method call.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d134a"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "closure_end_indentation",
+  "checker_name" : "closure_end_indentation",
+  "checker_desc" : "Closure end should have the same indentation as the line that started it.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d135a"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "discarded_notification_center_observer",
+  "checker_name" : "discarded_notification_center_observer",
+  "checker_desc" : "When registering for a notification using a block, the opaque observer that is returned should be stored so it can be removed later.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "代码可维护性"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d135e"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "discouraged_optional_collection",
+  "checker_name" : "discouraged_optional_collection",
+  "checker_desc" : "Prefer empty collection over optional collection.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d136d"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "explicit_init",
+  "checker_name" : "explicit_init",
+  "checker_desc" : "Explicitly calling .init() should be avoided.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1361"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "dynamic_inline",
+  "checker_name" : "dynamic_inline",
+  "checker_desc" : "Avoid using ‘dynamic’ and ‘@inline(__always)’ together.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1381"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "function_parameter_count",
+  "checker_name" : "function_parameter_count",
+  "checker_desc" : "Number of function parameters should be low.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d136a"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "expiring_todo",
+  "checker_name" : "expiring_todo",
+  "checker_desc" : "TODOs and FIXMEs should be resolved prior to their expiry date.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d137d"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "force_try",
+  "checker_name" : "force_try",
+  "checker_desc" : "Force tries should be avoided.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1356"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "control_statement",
+  "checker_name" : "control_statement",
+  "checker_desc" : "if, for, guard, switch, while, and catch statements shouldn’t unnecessarily wrap their conditionals or arguments in parentheses.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1359"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "deployment_target",
+  "checker_name" : "deployment_target",
+  "checker_desc" : "Availability checks or attributes shouldn’t be using older versions that are satisfied by the deployment target.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1369"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "enum_case_associated_values_count",
+  "checker_name" : "enum_case_associated_values_count",
+  "checker_desc" : "Number of associated values in an enum case should be low",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1379"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "first_where",
+  "checker_name" : "first_where",
+  "checker_desc" : "Prefer using .first(where:) over .filter { }.first in collections.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d137b"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "for_where",
+  "checker_name" : "for_where",
+  "checker_desc" : "where clauses are preferred over a single if inside a for.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d134d"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "collection_alignment",
+  "checker_name" : "collection_alignment",
+  "checker_desc" : "All elements in a collection literal should be vertically aligned",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d135c"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "discouraged_object_literal",
+  "checker_name" : "discouraged_object_literal",
+  "checker_desc" : "Prefer initializers over object literals.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1365"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "empty_parameters",
+  "checker_name" : "empty_parameters",
+  "checker_desc" : "Prefer () -> over Void ->.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1382"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "generic_type_name",
+  "checker_name" : "generic_type_name",
+  "checker_desc" : "Generic type name should only contain alphanumeric characters, start with an uppercase character and span between 1 and 20 characters in length.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1355"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "contains_over_range_nil_comparison",
+  "checker_name" : "contains_over_range_nil_comparison",
+  "checker_desc" : "Prefer contains over range(of:) != nil and range(of:) == nil.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d137a"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "flatmap_over_map_reduce",
+  "checker_name" : "flatmap_over_map_reduce",
+  "checker_desc" : "Prefer flatMap over map followed by reduce([], +).",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d134b"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "closure_parameter_position",
+  "checker_name" : "closure_parameter_position",
+  "checker_desc" : "Closure parameters should be on the same line as opening brace.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d134c"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "closure_spacing",
+  "checker_name" : "closure_spacing",
+  "checker_desc" : "Closure expressions should have a single space inside each brace.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d134f"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "comma",
+  "checker_name" : "comma",
+  "checker_desc" : "There should be no space before and one after any comma.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1351"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "conditional_returns_on_newline",
+  "checker_name" : "conditional_returns_on_newline",
+  "checker_desc" : "Conditional statements should always return on the next line",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1358"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "cyclomatic_complexity",
+  "checker_name" : "cyclomatic_complexity",
+  "checker_desc" : "Complexity of function bodies should be limited.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d136f"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "explicit_top_level_acl",
+  "checker_name" : "explicit_top_level_acl",
+  "checker_desc" : "Top-level declarations should specify Access Control Level keywords explicitly.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d137e"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "force_unwrapping",
+  "checker_name" : "force_unwrapping",
+  "checker_desc" : "Force unwrapping should be avoided.",
+  "severity" : 1,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1370"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "explicit_type_interface",
+  "checker_name" : "explicit_type_interface",
+  "checker_desc" : "Properties should have a type interface",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1377"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "file_name_no_space",
+  "checker_name" : "file_name_no_space",
+  "checker_desc" : "File name should not contain any whitespace.",
+  "severity" : 1,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d135b"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "discouraged_direct_init",
+  "checker_name" : "discouraged_direct_init",
+  "checker_desc" : "Discouraged direct initialization of types that can be harmful.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1360"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "duplicate_imports",
+  "checker_name" : "duplicate_imports",
+  "checker_desc" : "Imports should be unique.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1367"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "empty_string",
+  "checker_name" : "empty_string",
+  "checker_desc" : "Prefer checking isEmpty over comparing string to an empty string literal.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1374"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "file_header",
+  "checker_name" : "file_header",
+  "checker_desc" : "Header comments should be consistent with project patterns. The SWIFTLINT_CURRENT_FILENAME placeholder can optionally be used in the required and forbidden patterns. It will be replaced by the real file name.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1375"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "file_length",
+  "checker_name" : "file_length",
+  "checker_desc" : "Files should not span too many lines.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "props" : "[{\"propName\":\"warning\",\"propValue\":\"500\",\"displayValue\":\"500\"}]",
+  "standard" : 0,
+  "editable" : true,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1376"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "file_name",
+  "checker_name" : "file_name",
+  "checker_desc" : "File name should match a type or extension declared in the file (if any).",
+  "severity" : 1,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d137f"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "function_body_length",
+  "checker_name" : "function_body_length",
+  "checker_desc" : "Functions bodies should not span too many lines.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339514,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"60424b1bb137062f791d1350"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "SWIFTLINT",
+  "checker_key" : "compiler_protocol_init",
+  "checker_name" : "compiler_protocol_init",
+  "checker_desc" : "The initializers declared in compiler protocols such as ExpressibleByArrayLiteral shouldn’t be called directly.",
+  "severity" : 2,
+  "language" : 1024,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "Swift"
+  ],
+  "checker_category" : "CODE_FORMAT",
+  "checker_tag" : [
+    "风格规范"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "checker_version" : 0,
+  "create_date" : 1614957339513,
+  "created_by" : "admin"
+}
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a7a"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "varargs",
+  "checker_name" : "varargs",
+  "checker_desc" : "second argument to ‘va_start’ is not the last named parameter",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a5e"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "shadow",
+  "checker_name" : "shadow",
+  "checker_desc" : "declaration shadows a local variable",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517609,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a06"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "block-capture-autoreleasing",
+  "checker_name" : "block-capture-autoreleasing",
+  "checker_desc" : "block captures an autoreleasing out-parameter, which may result in use-after-free bugs",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a16"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "documentation",
+  "checker_name" : "documentation",
+  "checker_desc" : "command should not be used in a comment attached to a non-container declaration",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a70"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "unneeded-internal-declaration",
+  "checker_name" : "unneeded-internal-declaration",
+  "checker_desc" : "function is not needed and will not be emitted",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a18"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "documentation-html",
+  "checker_name" : "documentation-html",
+  "checker_desc" : "HTML end tag ‘A’ is forbidden; HTML end tag does not match any start tag; HTML tag ‘A’ requires an end tag",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a60"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "sometimes-uninitialized",
+  "checker_name" : "sometimes-uninitialized",
+  "checker_desc" : "variable A is used/captured uninitialized whenever some condition",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517609,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a65"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "tautological-pointer-compare",
+  "checker_name" : "tautological-pointer-compare",
+  "checker_desc" : "comparison of nonnull function call/parameter ‘B’ not equal to a null pointer is true/false on first encounter",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517609,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a04"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "atomic-property-with-user-defined-accessor",
+  "checker_name" : "atomic-property-with-user-defined-accessor",
+  "checker_desc" : "writable atomic property A cannot pair a synthesized getter/setter with a user defined getter/setter",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a20"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "format-extra-args",
+  "checker_name" : "format-extra-args",
+  "checker_desc" : "data argument not used by format string",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a28"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "incompatible-property-type",
+  "checker_name" : "incompatible-property-type",
+  "checker_desc" : "property type A is incompatible with type B inherited from C",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a32"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "invalid-source-encoding",
+  "checker_name" : "invalid-source-encoding",
+  "checker_desc" : "illegal character encoding in character literal/string literal",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a56"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "pragma-pack",
+  "checker_name" : "pragma-pack",
+  "checker_desc" : "the current #pragma pack alignment value is modified in the included file; unterminated ‘#pragma pack (push, …)’ at end of file",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a3c"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "missing-selector-name",
+  "checker_name" : "missing-selector-name",
+  "checker_desc" : "A used as the name of the previous parameter rather than as part of the selector",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a72"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "unreachable-code-loop-increment",
+  "checker_name" : "unreachable-code-loop-increment",
+  "checker_desc" : "loop will run at most once (loop increment never executed)",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a3a"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "missing-noescape",
+  "checker_name" : "missing-noescape",
+  "checker_desc" : "parameter of overriding method should be annotated with __attribute__((noescape))",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a0e"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "compare-distinct-pointer-types",
+  "checker_name" : "compare-distinct-pointer-types",
+  "checker_desc" : "comparison of distinct pointer types",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a68"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "undeclared-selector",
+  "checker_name" : "undeclared-selector",
+  "checker_desc" : "undeclared selector A",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a4c"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "objc-property-implementation",
+  "checker_name" : "objc-property-implementation",
+  "checker_desc" : "(class) property A requires method B to be defined",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a0b"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "c99-extensions",
+  "checker_name" : "c99-extensions",
+  "checker_desc" : "c99-extensions产生的告警如 ’A’ is a C99 extension; compound literals are a C99-specific feature等",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a1d"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "extern-initializer",
+  "checker_name" : "extern-initializer",
+  "checker_desc" : "‘extern’ variable has an initializer",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a2f"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "int-to-void-pointer-cast",
+  "checker_name" : "int-to-void-pointer-cast",
+  "checker_desc" : "cast integer type to void",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a77"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "unused-getter-return-value",
+  "checker_name" : "unused-getter-return-value",
+  "checker_desc" : "property access result unused - getters should not be used for side effects",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a44"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "nullability-completeness-on-arrays",
+  "checker_name" : "nullability-completeness-on-arrays",
+  "checker_desc" : "array parameter is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified)",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a2a"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "incomplete-umbrella",
+  "checker_name" : "incomplete-umbrella",
+  "checker_desc" : "missing submodule ‘A’; umbrella directory ‘A’ not found; umbrella header for module ‘A’ does not include header ‘B’",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a41"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "null-arithmetic",
+  "checker_name" : "null-arithmetic",
+  "checker_desc" : "use of NULL in arithmetic operation; comparison between NULL and non-pointer",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a53"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "parentheses",
+  "checker_name" : "parentheses",
+  "checker_desc" : "using the result of an assignment as a condition without parentheses; A has lower precedence than B",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a4e"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "objc-property-no-attribute",
+  "checker_name" : "objc-property-no-attribute",
+  "checker_desc" : "default property attribute ‘assign’ not appropriate for object",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a00"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "arc-performSelector-leaks",
+  "checker_name" : "arc-performSelector-leaks",
+  "checker_desc" : "performSelector may cause a leak because its selector is unknown",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a62"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "switch",
+  "checker_name" : "switch",
+  "checker_desc" : "overflow converting case value to switch condition type (A to B); case value not in enumerated type A",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a64"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "tautological-constant-out-of-range-compare",
+  "checker_name" : "tautological-constant-out-of-range-compare",
+  "checker_desc" : "result of comparison of constant A/true/false with boolean expression is always B",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a11"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "dangling-else",
+  "checker_name" : "dangling-else",
+  "checker_desc" : "add explicit braces to avoid dangling else",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a1b"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "empty-body",
+  "checker_name" : "empty-body",
+  "checker_desc" : "for loop/while loop/statement/range-based has empty body",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a48"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "objc-literal-conversion",
+  "checker_name" : "objc-literal-conversion",
+  "checker_desc" : "implicit boolean conversion of Objective-C object literal always evaluates to true; type not compatible",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a6c"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "unicode-whitespace",
+  "checker_name" : "unicode-whitespace",
+  "checker_desc" : "treating Unicode character as whitespace",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a05"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "availability",
+  "checker_name" : "availability",
+  "checker_desc" : "unknown platform A in availability macro; availability does not match previous declaration",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a5f"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "shorten-64-to-32",
+  "checker_name" : "shorten-64-to-32",
+  "checker_desc" : "implicit conversion loses integer precision: A to B",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a7c"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "writable-strings",
+  "checker_name" : "writable-strings",
+  "checker_desc" : "ISO C++11 does not allow conversion from string literal to A",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a66"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "typedef-redefinition",
+  "checker_name" : "typedef-redefinition",
+  "checker_desc" : "redefinition of typedef A is a C11 feature",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a15"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "division-by-zero",
+  "checker_name" : "division-by-zero",
+  "checker_desc" : "remainder/division by zero is undefined",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a57"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "property-attribute-mismatch",
+  "checker_name" : "property-attribute-mismatch",
+  "checker_desc" : "property attribute in class extension does not match the primary class",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a6b"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "unicode-homoglyph",
+  "checker_name" : "unicode-homoglyph",
+  "checker_desc" : "treating Unicode character <U+A> as identifier character rather than as ‘B’ symbol",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a3e"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "non-literal-null-conversion",
+  "checker_name" : "non-literal-null-conversion",
+  "checker_desc" : "expression which evaluates to zero treated as a null pointer constant of type A",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a01"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "arc-repeated-use-of-weak",
+  "checker_name" : "arc-repeated-use-of-weak",
+  "checker_desc" : "weak variable/property/implicit property/instance variable B is accessed multiple times in this function/method/block/lambda but may be unpredictably set to nil; assign to a strong variable to keep the object alive",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a0d"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "comment",
+  "checker_name" : "comment",
+  "checker_desc" : "// comments are not allowed in this language or multi-line // comment or ’/*’ within block comment",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a43"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "nullability-completeness",
+  "checker_name" : "nullability-completeness",
+  "checker_desc" : "pointer/block pointer/member pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified)",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a61"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "strict-prototypes",
+  "checker_name" : "strict-prototypes",
+  "checker_desc" : "this function/block declaration is not a prototype",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a75"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "unused-const-variable",
+  "checker_name" : "unused-const-variable",
+  "checker_desc" : "unused variable A",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517612,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a2e"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "int-to-pointer-cast",
+  "checker_name" : "int-to-pointer-cast",
+  "checker_desc" : "cast integer type to pointer type",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid":"5ef1793d8892bf04aaa81a0f"},
+  "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity",
+  "tool_name" : "CLANGWARNING",
+  "checker_key" : "conditional-uninitialized",
+  "checker_name" : "conditional-uninitialized",
+  "checker_desc" : "variable A may be uninitialized when used here/captured by block",
+  "severity" : 1,
+  "language" : 16,
+  "status" : 0,
+  "standard" : 0,
+  "editable" : false,
+  "cov_property" : 0,
+  "native_checker" : true,
+  "checker_language" : [
+    "OC/OC++"
+  ],
+  "checker_category" : "CODE_DEFECT",
+  "checker_tag" : [
+    "编译器警告"
+  ],
+  "checker_recommend" : "SYSTEM_DEFAULT",
+  "err_example" : "",
+  "create_date" : 1592883517608,
+  "created_by" : "admin"
+}

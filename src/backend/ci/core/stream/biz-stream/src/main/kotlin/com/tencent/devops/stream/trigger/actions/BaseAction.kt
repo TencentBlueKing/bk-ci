@@ -142,4 +142,9 @@ interface BaseAction {
     fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook)
 
     fun needAddWebhookParams() = false
+
+    fun updateLastBranch(
+        pipelineId: String,
+        branch: String
+    )
 }

@@ -34,7 +34,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/astaxie/beego/logs"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"io"
 	"io/ioutil"
 	"net/http"

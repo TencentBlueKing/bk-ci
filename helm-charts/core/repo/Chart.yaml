@@ -1,0 +1,19 @@
+apiVersion: v2
+name: bkrepo
+description: A Helm chart for BlueKing Repository
+type: application
+version: 1.0.25
+appVersion: 1.0.25
+
+dependencies:
+- name: common
+  version: 1.4.1
+  repository: https://charts.bitnami.com/bitnami
+- name: nginx-ingress-controller
+  version: 7.4.8
+  repository: https://charts.bitnami.com/bitnami
+  condition: nginx-ingress-controller.enabled
+- name: mongodb
+  version: 10.10.2
+  repository: https://charts.bitnami.com/bitnami
+  condition: mongodb.enabled

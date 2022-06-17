@@ -75,7 +75,7 @@ class StreamRequestListener @Autowired constructor(
                 event = streamRequestEvent.event
             )
         } catch (ignore: Throwable) {
-            logger.error("Fail to start the git ci build($streamRequestEvent)", ignore)
+            logger.warn("Fail to request stream $streamRequestEvent", ignore)
         } finally {
             MDC.remove(TraceTag.BIZID)
         }

@@ -74,7 +74,7 @@ import com.tencent.devops.common.util.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -637,7 +637,7 @@ public class RedLineReportServiceImpl implements RedLineReportService
                     redLineEntity.setBuildId(buildId);
                     redLineEntities.add(redLineEntity);
                 }
-                redLineRepository.save(redLineEntities);
+                redLineRepository.saveAll(redLineEntities);
             }
         }
     }

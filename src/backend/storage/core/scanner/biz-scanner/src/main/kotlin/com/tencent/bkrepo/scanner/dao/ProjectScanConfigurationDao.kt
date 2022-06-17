@@ -27,15 +27,29 @@
 
 package com.tencent.bkrepo.scanner.dao
 
+import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.scanner.model.TProjectScanConfiguration
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.stereotype.Repository
 
 @Repository
 class ProjectScanConfigurationDao : ScannerSimpleMongoDao<TProjectScanConfiguration>() {
+    fun existsByProjectId(projectId: String): Boolean {
+        return exists(Query(TProjectScanConfiguration::projectId.isEqualTo(projectId)))
+    }
+
     fun findByProjectId(projectId: String): TProjectScanConfiguration? {
         val criteria = TProjectScanConfiguration::projectId.isEqualTo(projectId)
         return findOne(Query(criteria))
+    }
+
+    fun page(projectId: String?, pageRequest: PageRequest): Page<TProjectScanConfiguration> {
+        val criteria = Criteria()
+        projectId?.let { criteria.and(TProjectScanConfiguration::projectId.name).regex("$projectId.*") }
+        val query = Query(criteria)
+        return page(query, pageRequest)
     }
 }

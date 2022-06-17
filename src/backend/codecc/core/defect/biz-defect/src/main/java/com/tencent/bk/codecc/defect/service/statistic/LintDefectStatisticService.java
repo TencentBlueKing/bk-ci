@@ -16,16 +16,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.tencent.bk.codecc.defect.dao.mongorepository.CheckerRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.LintStatisticRepository;
-import com.tencent.bk.codecc.defect.dao.mongorepository.TaskLogRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildInfoRepository;
 import com.tencent.bk.codecc.defect.model.*;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildInfoEntity;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildStackEntity;
 import com.tencent.bk.codecc.defect.service.newdefectjudge.NewDefectJudgeService;
-import com.tencent.bk.codecc.task.api.ServiceGrayToolProjectResource;
-import com.tencent.bk.codecc.task.vo.GrayTaskStatVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
-import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -206,7 +202,7 @@ public class LintDefectStatisticService
         String baseBuildId;
         if (toolBuildStackEntity == null)
         {
-            ToolBuildInfoEntity toolBuildINfoEntity = toolBuildInfoRepository.findByTaskIdAndToolName(taskId, toolName);
+            ToolBuildInfoEntity toolBuildINfoEntity = toolBuildInfoRepository.findFirstByTaskIdAndToolName(taskId, toolName);
             baseBuildId = toolBuildINfoEntity != null && StringUtils.isNotEmpty(toolBuildINfoEntity.getDefectBaseBuildId()) ? toolBuildINfoEntity.getDefectBaseBuildId() : "";
         }
         else

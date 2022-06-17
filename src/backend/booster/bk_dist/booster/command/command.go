@@ -82,6 +82,8 @@ const (
 	FlagResourceTimeoutSecs  = "resource_timeout_secs"
 	FlagLocalIdleCPUPercent  = "use_local_cpu_percent"
 	FlagDisableFileLock      = "disable_file_lock"
+	FlagAutoResourceMgr      = "auto_resource_mgr"
+	FlagResIdleSecsForFree   = "res_idle_secs_for_free"
 
 	EnvBuildIDOld  = "TURBO_PLAN_BUILD_ID"
 	EnvBuildID     = "TBS_BUILD_ID"
@@ -330,6 +332,14 @@ var (
 		commandCli.BoolFlag{
 			Name:  "disable_file_lock",
 			Usage: "whether need disable file lock when launch program, false by default",
+		},
+		commandCli.BoolFlag{
+			Name:  "auto_resource_mgr",
+			Usage: "whether auto free and apply resource while task is running",
+		},
+		commandCli.IntFlag{
+			Name:  "res_idle_secs_for_free",
+			Usage: "free this resource if oever this idle seconds, only used when auto_resource_mgr is true",
 		},
 	}
 )

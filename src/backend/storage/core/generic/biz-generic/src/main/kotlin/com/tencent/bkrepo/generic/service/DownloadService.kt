@@ -35,6 +35,7 @@ import com.tencent.bkrepo.common.api.constant.HttpStatus
 import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.bkrepo.common.artifact.constant.PARAM_DOWNLOAD
 import com.tencent.bkrepo.common.artifact.exception.NodeNotFoundException
+import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContextHolder
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactDownloadContext
 import com.tencent.bkrepo.common.artifact.repository.core.ArtifactService
 import com.tencent.bkrepo.common.artifact.view.ViewModelService
@@ -59,7 +60,7 @@ class DownloadService(
     private val viewModelService: ViewModelService
 ) : ArtifactService() {
 
-    @Value("\${service.name}")
+    @Value("\${spring.application.name}")
     private var applicationName: String = "generic"
 
     fun download(artifactInfo: GenericArtifactInfo) {
@@ -85,6 +86,15 @@ class DownloadService(
                 repository.download(context)
             }
         }
+    }
+
+    fun batchDownload(artifactInfoList: List<GenericArtifactInfo>) {
+        val context = ArtifactDownloadContext(
+            artifact = artifactInfoList.first(),
+            artifacts = artifactInfoList,
+            repo = ArtifactContextHolder.getRepoDetail()
+        )
+        repository.download(context)
     }
 
     private fun renderListView(node: NodeDetail, artifactInfo: GenericArtifactInfo) {

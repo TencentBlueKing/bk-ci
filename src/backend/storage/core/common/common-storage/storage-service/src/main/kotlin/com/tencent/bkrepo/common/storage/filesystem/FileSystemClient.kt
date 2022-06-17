@@ -97,16 +97,19 @@ class FileSystemClient(private val root: String) {
         if (overwrite) {
             Files.deleteIfExists(target)
         }
+        val parent = target.parent
+        if (!Files.exists(parent)) {
+            Files.createDirectories(parent)
+        }
         if (!Files.exists(target)) {
             try {
                 // 不能使用REPLACE_EXISTING/ATOMIC_MOVE，因为会删除其他客户端move的文件，
                 // 且由于NFS的非强一致性，即使本客户端move成功，也会导致其他客户端发生文件找不到错误
                 Files.move(source, target)
             } catch (ignore: FileAlreadyExistsException) {
-                logger.info("File[$file] already exists")
+                logger.info("File[$target] already exists")
             } catch (ex: IOException) {
-                val message = ex.message.orEmpty()
-                logger.warn("Failed to move file by Files.move(source, target), fallback to use file channel: $message")
+                logger.warn("Failed to move file by Files.move(source, target), fallback to use file channel", ex)
                 copyByChannel(source, target)
                 Files.deleteIfExists(source)
             }
@@ -114,10 +117,29 @@ class FileSystemClient(private val root: String) {
         return target.toFile()
     }
 
+    fun createLink(dir: String, filename: String, file: File): Path {
+        val source = file.toPath()
+        val target = Paths.get(this.root, dir, filename)
+        val parent = target.parent
+        if (!Files.exists(parent)) {
+            Files.createDirectories(parent)
+        }
+        try {
+            Files.createLink(target, source)
+        } catch (e: FileAlreadyExistsException) {
+            logger.info("File[$target] already exists")
+        } catch (ex: IOException) {
+            logger.warn("Failed to create link by Files.createLink(source, target), fallback to use file channel", ex)
+            copyByChannel(source, target)
+        }
+        return target
+    }
+
     /**
      * 使用channel拷贝
      * */
     private fun copyByChannel(src: Path, target: Path) {
+
         if (!Files.exists(src)) {
             throw IOException("src[$src] file not exist")
         }

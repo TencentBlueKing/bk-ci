@@ -1,4 +1,4 @@
-service.name: npm
+spring.application.name: npm
 server.port: 25804
 
 npm:

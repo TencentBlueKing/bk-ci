@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.exception.TurboException
 import com.tencent.devops.common.api.exception.code.TURBO_NO_DATA_FOUND
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.db.PageUtils
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.util.IOUtil
 import com.tencent.devops.common.util.JsonUtil
 import com.tencent.devops.common.util.MathUtil
@@ -236,6 +237,7 @@ class TurboRecordService @Autowired constructor(
     /**
      * 获取加速历史列表
      */
+    @BkTimed("api_get_turbo_record_history_page")
     fun getTurboRecordHistoryList(pageNum: Int?,
                                   pageSize: Int?,
                                   sortField: String?,
@@ -302,6 +304,7 @@ class TurboRecordService @Autowired constructor(
     /**
      * 获取编译加速记录显示信息
      */
+    @BkTimed("get_turbo_record_detail")
     @Suppress("ComplexMethod")
     fun getTurboRecordDisplayInfo(turboRecordEntity: TTurboRecordEntity, turboPlanEntity: TTurboPlanEntity): TurboRecordDisplayVO {
         val displayFields = mutableListOf(

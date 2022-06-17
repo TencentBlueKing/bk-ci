@@ -42,6 +42,10 @@ class RedisAtomicLong(
         return addAndGet(-1L)
     }
 
+    fun set(value: Long) {
+        redisOperation.set(key, value.toString())
+    }
+
     fun addAndGet(delta: Long): Long {
         return redisOperation.increment(key, delta)!!
     }

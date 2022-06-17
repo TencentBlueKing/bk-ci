@@ -31,21 +31,35 @@
 package com.tencent.bkrepo.oci.constant
 
 const val OCI_API_PREFIX = "v2/"
-const val OCI_FILTER_ENDPOINT = "/v2/"
+const val OCI_FILTER_ENDPOINT = "/v2"
+const val OCI_API_SUFFIX = "/auth"
 
-const val PROJECT_TYPE = "OCI"
+const val REPO_TYPE = "OCI"
 
 const val DOCKER_HEADER_API_VERSION = "Docker-Distribution-Api-Version"
 const val DOCKER_API_VERSION = "registry/2.0"
 const val DOCKER_CONTENT_DIGEST = "Docker-Content-Digest"
 const val DOCKER_UPLOAD_UUID = "Docker-Upload-Uuid"
+const val BLOB_UPLOAD_SESSION_ID = "Blob-Upload-Session-ID"
 
 const val HTTP_FORWARDED_PROTO = "X-Forwarded-Proto"
 const val HTTP_PROTOCOL_HTTP = "http"
 const val HTTP_PROTOCOL_HTTPS = "https"
+const val HOST = "Host"
+const val BEARER_REALM = "Bearer realm"
+const val SERVICE = "service"
+const val SCOPE = "scope"
+const val PATCH = "PATCH"
+const val POST = "POST"
+const val NODE_FULL_PATH = "fullPath"
+const val LAST_TAG = "last"
+const val N = "n"
+
+const val PROXY_URL = "proxyUrl"
 
 const val MANIFEST = "manifest.json"
 const val MEDIA_TYPE = "mediaType"
+const val OLD_DOCKER_MEDIA_TYPE = "docker.manifest.type"
 const val DIGEST = "oci_digest"
 const val SIZE = "size"
 const val SCHEMA_VERSION = "schemaVersion"
@@ -60,6 +74,30 @@ const val DESCRIPTION = "description"
 const val NAME = "name"
 const val PACKAGE_KEY = "packageKey"
 const val VERSION = "version"
+
+const val USER_API_PREFIX = "/ext"
+const val OCI_PROJECT_ID = "projectId"
+const val OCI_REPO_NAME = "repoName"
+const val OCI_NODE_PATH = "path"
+const val OCI_PACKAGE_VERSION_NAME = "name"
+const val OCI_PACKAGE_NAME = "name"
+
+const val OCI_NODE_SIZE = "size"
+const val OCI_NODE_FULL_PATH = "fullPath"
+const val DOCKER_DIGEST = "digest"
+const val OCI_REFERENCE = "reference"
+const val OCI_UUID = "uuid"
+const val OCI_TAG = "tag"
+const val PAGE_NUMBER = "pageNumber"
+const val PAGE_SIZE = "pageSize"
+const val OCI_CREATE_BY = "createdBy"
+const val OCI_CREATE_DATE = "createdDate"
+const val LAST_MODIFIED_BY = "lastModifiedBy"
+const val LAST_MODIFIED_DATE = "lastModifiedDate"
+const val DOWNLOADS = "downloads"
+
+const val OCI_MANIFEST = "manifest.json"
+const val STAGE_TAG = "stageTag"
 
 // OCIScheme is the URL scheme for OCI-based requests
 const val OCI_SCHEME = "oci"
@@ -110,3 +148,5 @@ const val LAYER_TAR_GZIP_DISTRIBUTION_MEDIA_TYPE = "application/vnd.oci.image.la
 
 // "Layer", as a tar archive with distribution restrictions compressed with zstd
 const val LAYER_TAR_ZSTD_DISTRIBUTION_MEDIA_TYPE = "application/vnd.oci.image.layer.nondistributable.v1.tar+zstd"
+
+const val DOCKER_IMAGE_MANIFEST_MEDIA_TYPE_V1 = "application/vnd.docker.distribution.manifest.v1+json"
