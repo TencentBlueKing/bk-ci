@@ -33,5 +33,5 @@ abstract class PipelineContextData(val type: Int) {
 
     abstract fun clone(): PipelineContextData
 
-    abstract fun toJToken(): JsonNode
+    abstract fun toJson(): JsonNode
 }

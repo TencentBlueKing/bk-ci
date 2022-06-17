@@ -36,7 +36,7 @@ class BooleanContextData(val value: Boolean) : PipelineContextData(PipelineConte
 
     override fun clone(): PipelineContextData = BooleanContextData(value)
 
-    override fun toJToken(): JsonNode {
+    override fun toJson(): JsonNode {
         return if (value) {
             BooleanNode.TRUE
         } else {

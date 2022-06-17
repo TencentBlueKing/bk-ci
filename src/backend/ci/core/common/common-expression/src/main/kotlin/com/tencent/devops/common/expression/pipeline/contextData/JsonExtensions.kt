@@ -28,42 +28,52 @@
 package com.tencent.devops.common.expression.pipeline.contextData
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.tencent.devops.common.expression.expression.sdk.IReadOnlyArray
-import com.tencent.devops.common.expression.utils.JsonUtil
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.JsonNodeType
+import com.fasterxml.jackson.databind.node.ObjectNode
 
-class ArrayContextData : PipelineContextData(PipelineContextDataType.ARRAY), IReadOnlyArray<PipelineContextData?> {
+object JsonExtensions {
 
-    private var mItems = mutableListOf<PipelineContextData?>()
-
-    override fun iterator(): Iterator<PipelineContextData?> = mItems.iterator()
-
-    override val count: Int
-        get() = mItems.count()
-
-    fun add(item: PipelineContextData?) {
-        mItems.add(item)
+    fun JsonNode.toPipelineContextData(): PipelineContextData? {
+        return toPipelineContextData(1, 100)
     }
 
-    override fun get(index: Int): Any? = mItems[index]
+    fun JsonNode?.toPipelineContextData(
+        depth: Int,
+        maxDepth: Int
+    ): PipelineContextData? {
+        val value = this
+        if (depth < maxDepth) {
+            return when (value?.nodeType) {
+                JsonNodeType.STRING -> StringContextData(value.textValue())
 
-    override fun clone(): PipelineContextData {
-        val result = ArrayContextData()
-        if (mItems.isNotEmpty()) {
-            result.mItems = mutableListOf()
-            mItems.forEach {
-                result.mItems.add(it)
+                JsonNodeType.BOOLEAN -> BooleanContextData(value.booleanValue())
+
+                JsonNodeType.NUMBER -> NumberContextData(value.doubleValue())
+
+                JsonNodeType.OBJECT -> DictionaryContextData().also { dict ->
+                    value as ObjectNode
+                    value.fieldNames().forEach { name ->
+                        val v = value.get(name)
+                        dict[name] = v.toPipelineContextData(depth + 1, maxDepth)
+                    }
+                }
+
+                JsonNodeType.ARRAY -> ArrayContextData().apply {
+                    value as ArrayNode
+                    value.forEach { node ->
+                        add(node.toPipelineContextData(depth + 1, maxDepth))
+                    }
+                }
+
+                JsonNodeType.NULL -> null
+
+                // We don't understand the type
+                else -> StringContextData(value.toString())
             }
         }
-        return result
-    }
 
-    override fun toJson(): JsonNode {
-        val json = JsonUtil.createArrayNode()
-        if (mItems.isNotEmpty()) {
-            mItems.forEach {
-                json.add(it?.toJson())
-            }
-        }
-        return json
+        // have reached our max, return as string
+        return StringContextData(value.toString())
     }
 }

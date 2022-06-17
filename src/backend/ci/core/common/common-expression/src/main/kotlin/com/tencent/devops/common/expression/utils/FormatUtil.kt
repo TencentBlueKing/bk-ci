@@ -31,11 +31,11 @@ import java.text.DecimalFormat
 
 object FormatUtil {
 
-    private val decimalFormat = DecimalFormat("###################.###########")
-
     /**
      * 从double转为string
      * 如 12.0 -> '12'
+     *
+     * DecimalFormat not thread safe
      */
-    fun doubleToString(double: Double): String = decimalFormat.format(double)
+    fun doubleToString(double: Double): String = DecimalFormat("###################.###########").format(double)
 }

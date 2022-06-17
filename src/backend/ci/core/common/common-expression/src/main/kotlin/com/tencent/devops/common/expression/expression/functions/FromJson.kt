@@ -25,34 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.pipeline.contextData
+package com.tencent.devops.common.expression.expression.functions
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.DoubleNode
-import com.fasterxml.jackson.databind.node.IntNode
-import com.fasterxml.jackson.databind.node.LongNode
-import com.tencent.devops.common.expression.expression.sdk.INumber
-import kotlin.math.floor
+import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
+import com.tencent.devops.common.expression.expression.sdk.Function
+import com.tencent.devops.common.expression.expression.sdk.ResultMemory
+import com.tencent.devops.common.expression.pipeline.contextData.JsonExtensions.toPipelineContextData
+import com.tencent.devops.common.expression.utils.JsonUtil
 
-class NumberContextData(val value: Double) : PipelineContextData(PipelineContextDataType.NUMBER), INumber {
-    override fun getNumber() = value
-
-    override fun clone(): PipelineContextData = NumberContextData(value)
-
-    override fun toJson(): JsonNode {
-        if (value.isNaN() || value == Double.POSITIVE_INFINITY || value == Double.NEGATIVE_INFINITY) {
-            return DoubleNode(value)
-        }
-
-        val floored = floor(value)
-        return if (value == floored && value <= Int.MAX_VALUE && value >= Int.MIN_VALUE) {
-            val flooredInt = floored.toInt()
-            IntNode(flooredInt)
-        } else if (value == floored && value <= Long.MAX_VALUE && value >= Long.MIN_VALUE) {
-            val flooredInt = floored.toLong()
-            LongNode(flooredInt)
-        } else {
-            DoubleNode(value)
-        }
+class FromJson : Function() {
+    override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
+        val jsonStr = parameters[0].evaluate(context).convertToString()
+        val token = JsonUtil.read(jsonStr.reader())
+        return Pair(null, token.toPipelineContextData())
     }
+
+    override fun createNode(): Function = FromJson()
 }

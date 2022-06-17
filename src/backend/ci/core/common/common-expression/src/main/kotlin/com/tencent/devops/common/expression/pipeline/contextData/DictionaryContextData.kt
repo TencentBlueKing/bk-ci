@@ -28,8 +28,8 @@
 package com.tencent.devops.common.expression.pipeline.contextData
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.expression.expression.sdk.IReadOnlyObject
+import com.tencent.devops.common.expression.utils.JsonUtil
 import java.util.TreeMap
 
 class DictionaryContextData :
@@ -75,7 +75,7 @@ class DictionaryContextData :
             return mList
         }
 
-    operator fun set(k: String, value: PipelineContextData) {
+    operator fun set(k: String, value: PipelineContextData?) {
         // Existing
         val index = indexLookup[k]
         if (index != null) {
@@ -131,11 +131,11 @@ class DictionaryContextData :
         return result
     }
 
-    override fun toJToken(): JsonNode {
-        val json = ObjectMapper().createObjectNode()
+    override fun toJson(): JsonNode {
+        val json = JsonUtil.createObjectNode()
         if (mList.isNotEmpty()) {
             mList.forEach {
-                json.set<JsonNode>(it.key, it.value?.toJToken())
+                json.set<JsonNode>(it.key, it.value?.toJson())
             }
         }
         return json

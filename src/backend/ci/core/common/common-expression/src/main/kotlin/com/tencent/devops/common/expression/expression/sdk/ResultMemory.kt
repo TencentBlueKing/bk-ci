@@ -8,7 +8,7 @@ class ResultMemory {
      * 2) 结果是一个新创建的对象。
      *
      * 例如，考虑一个接受字符串参数的函数 jsonParse()，
-     * 并返回一个 JToken 对象。 JToken 对象是新创建的，并且是一个粗略的
+     * 并返回一个 Json 对象。 Json 对象是新创建的，并且是一个粗略的
      * 测量应该返回它在内存中消耗的字节数。
      *
      * 再举一个例子，考虑一个从
@@ -28,7 +28,7 @@ class ResultMemory {
      * 对于 <c ref="EvaluationOptions.Converters" />，此值当前被忽略。
      *
      * 例如，考虑一个接受字符串参数的函数 jsonParse()，
-     * 并返回一个 JToken 对象。 JToken 对象是新创建的，并且是一个粗略的
+     * 并返回一个 Json 对象。 Json 对象是新创建的，并且是一个粗略的
      * 测量值应该返回它在内存中消耗的字节数。
      * 将 <c ref="IsTotal" /> 设置为 true，因为新对象不包含引用
      * 到之前分配的内存。

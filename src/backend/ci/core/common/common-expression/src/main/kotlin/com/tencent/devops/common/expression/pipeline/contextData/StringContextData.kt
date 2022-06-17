@@ -36,7 +36,7 @@ class StringContextData(val value: String) : PipelineContextData(PipelineContext
 
     override fun clone(): PipelineContextData = StringContextData(value)
 
-    override fun toJToken(): JsonNode = TextNode(value)
+    override fun toJson(): JsonNode = TextNode(value)
 
     override fun toString(): String = value
 }

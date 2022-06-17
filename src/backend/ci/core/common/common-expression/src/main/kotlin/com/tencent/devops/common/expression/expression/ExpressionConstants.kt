@@ -2,6 +2,7 @@ package com.tencent.devops.common.expression.expression
 
 import com.tencent.devops.common.expression.expression.functions.Contains
 import com.tencent.devops.common.expression.expression.functions.EndsWith
+import com.tencent.devops.common.expression.expression.functions.FromJson
 import com.tencent.devops.common.expression.expression.functions.StartsWith
 import com.tencent.devops.common.expression.expression.sdk.Function
 import java.util.TreeMap
@@ -14,6 +15,7 @@ object ExpressionConstants {
         addFunction("contains", 2, 2, Contains())
         addFunction("endsWith", 2, 2, EndsWith())
         addFunction("startsWith", 2, 2, StartsWith())
+        addFunction("fromJson", 1, 1, FromJson())
     }
 
     private fun addFunction(name: String, minParameters: Int, maxParameters: Int, f: Function) {

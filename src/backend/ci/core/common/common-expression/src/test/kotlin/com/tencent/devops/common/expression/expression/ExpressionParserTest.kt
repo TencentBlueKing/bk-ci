@@ -40,7 +40,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import kotlin.math.exp
 
 @DisplayName("表达式解析类综合测试")
 class ExpressionParserTest {
@@ -125,10 +124,16 @@ class ExpressionParserTest {
                 add(StringContextData("roots"))
                 add(StringContextData("stalks"))
             }
+            val jsonTest = DictionaryContextData().apply {
+                add("strJson", StringContextData("[\"manager\", \"webhook\"]"))
+                add("boolJson", StringContextData("true"))
+                add("numJson", StringContextData("1"))
+            }
             val fContextData = DictionaryContextData().apply {
                 add("array", fArrayContextData)
                 add("arrayA", farrayA)
                 add("dict", fDictContextData)
+                add("json", jsonTest)
             }
             ev.expressionValues.add("funcTest", fContextData)
         }
@@ -359,9 +364,47 @@ class ExpressionParserTest {
         valuesTest(startAndEnd)
     }
 
+    @DisplayName("测试函数: fromJson(str)")
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "1 => fromJson('{\"include\":[{\"project\":\"foo\",\"config\":\"Debug\"},{\"project\":\"bar\"," +
+                "\"config\":\"Release\"}]}')",
+            "2 => fromJson(funcTest.json.strJson)",
+            "3 => fromJson(funcTest.json.boolJson)",
+            "4 => fromJson(funcTest.json.numJson)"
+        ]
+    )
+    fun functionFromJsonTest(fromJson: String) {
+        val (index, exp) = fromJson.split(" => ")
+        val res = ex.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
+        when (index.toInt()) {
+            1 -> {
+                Assertions.assertTrue(res is DictionaryContextData)
+                val t1 = (res as DictionaryContextData)["include"]
+                Assertions.assertTrue(t1 is ArrayContextData)
+                val t2 = (t1 as ArrayContextData)[1]
+                Assertions.assertTrue(t2 is DictionaryContextData)
+                Assertions.assertEquals(
+                    ((t2 as DictionaryContextData)["config"] as StringContextData).value, "Release"
+                )
+            }
+            2 -> {
+                Assertions.assertTrue(res is ArrayContextData)
+                Assertions.assertEquals(((res as ArrayContextData)[0] as StringContextData).value, "manager")
+            }
+            3 -> {
+                Assertions.assertEquals(res, true)
+            }
+            4 -> {
+                Assertions.assertEquals(res, 1.0)
+            }
+        }
+    }
+
     private fun valuesTest(param: String) {
         val (exp, result) = param.split(" => ")
-        val res = ex.createTree(exp, null, nameValue, null)!!.evaluate(null, Companion.ev, null).value
+        val res = ex.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
         Assertions.assertEquals(
             when (result) {
                 "true", "false" -> {
