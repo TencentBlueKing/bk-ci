@@ -35,14 +35,13 @@ import com.tencent.devops.metrics.constant.QueryParamCheckUtil
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.DATE_FORMATTER
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.PipelineStageDao
-import com.tencent.devops.metrics.service.PipelineStageManageService
 import com.tencent.devops.metrics.pojo.`do`.PipelineStageCostTimeInfoDO
 import com.tencent.devops.metrics.pojo.`do`.StageAvgCostTimeInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineStageTrendInfoQO
 import com.tencent.devops.metrics.pojo.vo.StageTrendSumInfoVO
+import com.tencent.devops.metrics.service.PipelineStageManageService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -57,7 +56,6 @@ class PipelineStageServiceImpl @Autowired constructor(
     override fun queryPipelineStageTrendInfo(
         queryPipelineOverviewDTO: QueryPipelineOverviewDTO
     ): List<StageTrendSumInfoVO> {
-
         var stageTrendSumInfos: MutableMap<String, List<StageAvgCostTimeInfoDO>>
         val tags = pipelineStageDao.getStageTag(dslContext, queryPipelineOverviewDTO.projectId)
         val startTime = queryPipelineOverviewDTO.baseQueryReq.startTime
@@ -94,7 +92,7 @@ class PipelineStageServiceImpl @Autowired constructor(
                     stageTrendSumInfos[pipelineName] = listOf
                 }
                 pipelineNames.add(pipelineName)
-                betweenDate.removeIf{ s -> s == statisticsTime.format(DATE_FORMATTER) }
+                betweenDate.removeIf { s -> s == statisticsTime.format(DATE_FORMATTER) }
             }
             //  对每组流水线数据中无数据的日期添加占位数据
             pipelineNames.forEach { pipelineName ->

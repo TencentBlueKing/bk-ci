@@ -90,7 +90,7 @@ object QueryParamCheckUtil {
         }
         if (endDate!!.isAfter(firstDate)) {
             throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
+                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND
             )
         }
     }
