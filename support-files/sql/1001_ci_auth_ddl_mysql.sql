@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_USER_BLACKLIST` (
    `USER_ID` varchar(32) NOT NULL COMMENT '用户ID',
    `REMARK` varchar(255) NOT NULL COMMENT '拉黑原因',
    `CREATE_TIME` datetime NOT NULL COMMENT '拉黑时间',
-   `STATUS` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否生效 0生效 1不生效',
+   `STATUS` bit(1) NOT NULL DEFAULT b'1' COMMENT '是否生效 1生效 0不生效',
    PRIMARY KEY (`ID`),
    KEY `bk_userId` (`USER_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
