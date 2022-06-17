@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -1085,7 +1086,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     slaveVersion = "",
                     AgentStatus = AgentStatus.DELETE.name,
                     ParallelTaskCount = -1,
-                    envs = mapOf()
+                    envs = mapOf(), props = mapOf()
                 )
             }
 
@@ -1171,7 +1172,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                                 slaveVersion = "",
                                 AgentStatus = AgentStatus.DELETE.name,
                                 ParallelTaskCount = -1,
-                                envs = mapOf()
+                                envs = mapOf(), props = mapOf()
                             )
                         }
                         if (nodeRecord.nodeIp != newHeartbeatInfo.agentIp ||
@@ -1205,7 +1206,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     envVar.associate { it.name to it.value }
                 },
                 gateway = agentRecord.gateway,
-                fileGateway = agentRecord.fileGateway
+                fileGateway = agentRecord.fileGateway,
+                props = try {
+                    agentRecord.agentProps?.let { self -> JsonUtil.to(self) } ?: mapOf()
+                } catch (ignore: Exception) {
+                    mapOf()
+                }
             )
         }
     }
@@ -1378,6 +1384,34 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             nodeDao.updateLastBuildTime(context, agent.nodeId, now)
             agentPipelineRefDao.updateLastBuildTime(context, projectId, pipelineId, vmSeqId, agentLongId, now)
         }
+    }
+
+    fun saveAgentProps(userId: String, projectId: String, nodeHashId: String, props: Map<String, Any>) {
+        val nodeId = HashUtil.decodeIdToLong(nodeHashId)
+        checkEditPermmission(userId, projectId, nodeId)
+
+        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
+            ?: throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(nodeHashId)
+            )
+
+        thirdPartyAgentDao.saveAgentProps(
+            dslContext = dslContext,
+            agentId = agentRecord.id,
+            propsJsonStr = JsonUtil.toJson(props, formatted = false)
+        )
+    }
+
+    fun getAgentProps(projectId: String, nodeHashId: String): Map<String, Any> {
+        val nodeId = HashUtil.decodeIdToLong(nodeHashId)
+        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
+            ?: throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(nodeHashId)
+            )
+
+        return agentRecord.agentProps?.let { self -> JsonUtil.to(self) } ?: mapOf()
     }
 
     companion object {

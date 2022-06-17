@@ -28,6 +28,7 @@
 package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -261,8 +262,8 @@ class OpAtomServiceImpl @Autowired constructor(
             }
         val atomReleaseRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
         val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomReleaseRecord.releaseType.toInt())!!
-        val latestFlag = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
-            // 历史大版本下的小版本更新不把latestFlag置为true
+        val latestFlag = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE || atom.version == INIT_VERSION) {
+            // 历史大版本下的小版本更新或者插件首个版本上架审核时不更新latestFlag
             null
         } else {
             approveReq.result == PASS

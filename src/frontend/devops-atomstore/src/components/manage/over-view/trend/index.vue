@@ -4,10 +4,12 @@
 
 <script>
     import atom from './atom'
+    import service from './service'
 
     export default {
         components: {
-            atom
+            atom,
+            service
         },
 
         props: {

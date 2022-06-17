@@ -93,6 +93,7 @@ const optionConfigMixin = {
                     type: 'boolean',
                     component: 'atom-checkbox',
                     text: this.$t('storeMap.customEnv'),
+                    hidden: true,
                     default: false
                 },
 
@@ -117,7 +118,6 @@ const optionConfigMixin = {
                         return !(element.data && element.data.config && (element.data.config.canPauseBeforeRun === true))
                     }
                 },
-
                 timeout: {
                     rule: { numeric: true, max_value: 10080 },
                     component: 'vuex-input',
@@ -172,9 +172,9 @@ const optionConfigMixin = {
                     default: [{ key: 'param1', value: '' }],
                     allowNull: false,
                     label: this.$t('storeMap.customVar'),
-                    isHidden: (element) => {
+                    isHidden: `function (element) {
                         return !(element.additionalOptions && (element.additionalOptions.runCondition === 'CUSTOM_VARIABLE_MATCH' || element.additionalOptions.runCondition === 'CUSTOM_VARIABLE_MATCH_NOT_RUN'))
-                    }
+                    }`
                 },
                 customEnv: {
                     rule: {},
@@ -182,9 +182,10 @@ const optionConfigMixin = {
                     default: [{ key: 'param1', value: '' }],
                     allowNull: false,
                     label: this.$t('storeMap.customEnv'),
-                    isHidden (element) {
-                        return !(element.additionalOptions && element.additionalOptions.enableCustomEnv === true)
-                    }
+                    hidden: true
+                    // isHidden (element) {
+                    //     return !(element.additionalOptions && element.additionalOptions.enableCustomEnv === true)
+                    // }
                 },
                 customCondition: {
                     rule: {},

@@ -229,7 +229,7 @@ object PackageKeys {
      *
      * 例子: {schema}://test
      */
-    private fun ofName(schema: String, name: String): String {
+    fun ofName(schema: String, name: String): String {
         return StringBuilder(schema).append(SEPARATOR).append(name).toString()
     }
 

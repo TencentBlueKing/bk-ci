@@ -2,14 +2,14 @@
     <section>
         <section v-if="!connectError" style="height: 100%" v-bkloading="{
             isLoading,
-            title: $t('editPage.docker.loadingTitle')
+            title: loadingTitle
         }">
             <div class="console-header">
-                <bk-button class="debug-btn" theme="danger" @click="stopDebugDocker">{{ $t('editPage.docker.exitDebug') }}</bk-button>
+                <bk-button class="debug-btn" theme="danger" @click="stopDebug">{{ $t('editPage.docker.exitDebug') }}</bk-button>
                 <p class="debug-tips" v-show="isRunning">{{ $t('editPage.docker.fromRunningTips') }}</p>
             </div>
             <div class="container">
-                <my-terminal v-if="!isLoading" :url="url" :resize-url="resizeUrl" :exec-id="execId"></my-terminal>
+                <my-terminal v-if="!isLoading" :url="url" :resize-url="resizeUrl" :exec-id="execId" :console-type="realDispatchType"></my-terminal>
             </div>
             <div class="footer"></div>
         </section>
@@ -41,15 +41,21 @@
                 resizeUrl: '',
                 execId: '',
                 isRunning: false,
+                isExiting: false,
                 config: {
                     title: this.$t('editPage.docker.failTitle'),
                     desc: this.$t('editPage.docker.failDesc')
-                }
+                },
+                containerName: '',
+                realDispatchType: ''
             }
         },
         computed: {
             isLoading () {
-                return !this.url
+                return !this.url || this.isExiting
+            },
+            loadingTitle () {
+                return !this.isExiting ? this.$t('editPage.docker.loadingTitle') : this.$t('editPage.docker.exiting')
             },
             projectId () {
                 return this.$route.params.projectId
@@ -57,24 +63,18 @@
             pipelineId () {
                 return this.$route.query.pipelineId
             },
-            targetIp () {
-                return this.$route.query.targetIp
+            buildId () {
+                return this.$route.query.buildId
             },
             vmSeqId () {
                 return this.$route.query.vmSeqId
             },
-            containerId () {
-                return this.$route.query.containerId
+            dispatchType () {
+                return this.$route.query.dispatchType
             }
         },
         async created () {
-            if (this.targetIp && this.pipelineId && this.containerId) {
-                this.isRunning = true
-                this.getLinkDetail(this.containerId, this.targetIp)
-                // this.url = `ws://${PROXY_URL_PREFIX}/docker-console?pipelineId=${this.pipelineId}&containerId=${this.containerId}&projectId=${this.projectId}&targetIP=${this.targetIp}`
-            } else {
-                await this.getContainerInfo()
-            }
+            this.linkConsole()
         },
         mounted () {
             this.addLeaveListenr()
@@ -83,46 +83,37 @@
             this.removeLeaveListenr()
         },
         methods: {
-            async getContainerInfo () {
-                clearTimeout(this.timer)
+            async linkConsole () {
                 try {
-                    const res = await this.$store.dispatch('soda/getContainerInfo', {
-                        projectId: this.projectId,
-                        pipelineId: this.pipelineId,
-                        vmSeqId: this.vmSeqId
+                    const { projectId, pipelineId, buildId, vmSeqId, dispatchType } = this
+                    const res = await this.$store.dispatch('common/startDebugDocker', {
+                        projectId,
+                        pipelineId,
+                        buildId,
+                        vmSeqId,
+                        dispatchType
                     })
-                    if (res && res.status === 2 && res.containerId && res.address) {
-                        this.getLinkDetail(res.containerId, res.address)
-                        // this.url = `ws://${PROXY_URL_PREFIX}/docker-console?pipelineId=${this.pipelineId}&containerId=${res.containerId}&projectId=${this.projectId}&targetIP=${res.address}`
-                    } else {
-                        this.timer = setTimeout(async () => {
-                            await this.getContainerInfo()
-                        }, 5000)
+                    let { websocketUrl } = res
+                    this.realDispatchType = res.dispatchType || this.dispatchType
+                    if (this.realDispatchType === 'PUBLIC_BCS') {
+                        websocketUrl = websocketUrl + '?hide_banner=true'
                     }
+                    this.url = websocketUrl
                 } catch (err) {
                     console.log(err)
-                    if (err && err.code === 1) {
-                        this.connectError = true
-                        this.config.desc = err.message || this.$t('editPage.docker.failDesc')
-                    } else {
-                        this.$showTips({
-                            theme: 'error',
-                            message: err.message || err
-                        })
-                    }
+                    this.connectError = true
+                    this.config.desc = err.message || this.$t('editPage.docker.failDesc')
                 }
             },
-            async stopDebugDocker () {
+            async stopDebug () {
                 const content = this.$t('editPage.docker.stopTips')
 
                 navConfirm({ title: this.$t('editPage.docker.confirmStop'), content })
                     .then(async () => {
                         try {
-                            await this.$store.dispatch('soda/stopDebugDocker', {
-                                projectId: this.projectId,
-                                pipelineId: this.pipelineId,
-                                vmSeqId: this.vmSeqId
-                            })
+                            this.isExiting = true
+                            const { projectId, pipelineId, vmSeqId, realDispatchType } = this
+                            await this.$store.dispatch('common/stopDebugDocker', { projectId, pipelineId, vmSeqId, dispatchType: realDispatchType })
                             this.$router.push({
                                 name: 'pipelinesEdit',
                                 params: {
@@ -130,34 +121,13 @@
                                 }
                             })
                         } catch (err) {
+                            this.isExiting = false
                             this.$showTips({
                                 theme: 'error',
                                 message: err.message || err
                             })
                         }
                     }).catch(() => {})
-            },
-            async getLinkDetail (containerId, targetIp) {
-                if (!containerId || !targetIp) {
-                    this.showTips({
-                        theme: 'error',
-                        message: this.$t('editPage.docker.abnormalParams')
-                    })
-                }
-                try {
-                    const execId = await this.$store.dispatch('soda/getDockerExecId', {
-                        targetIp,
-                        containerId,
-                        projectId: this.projectId,
-                        pipelineId: this.pipelineId,
-                        cmd: ['/bin/bash']
-                    })
-                    this.execId = execId
-                    this.resizeUrl = `docker-console-resize?pipelineId=${this.pipelineId}&projectId=${this.projectId}&targetIp=${targetIp}`
-                    this.url = `ws://${PROXY_URL_PREFIX}/docker-console-new?eventId=${execId}&pipelineId=${this.pipelineId}&projectId=${this.projectId}&targetIP=${targetIp}&containerId=${containerId}`
-                } catch (err) {
-                    this.$showTips(err.message || err)
-                }
             },
             addLeaveListenr () {
                 window.addEventListener('beforeunload', this.leaveSure)

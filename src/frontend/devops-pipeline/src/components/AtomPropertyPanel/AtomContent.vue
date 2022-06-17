@@ -119,22 +119,39 @@
     import NormalAtom from './NormalAtom'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import Selector from '@/components/atomFormField/Selector'
+    import Gcloud from './Gcloud'
+    import JobExecuteTaskExt from './JobExecuteTaskExt'
     import FormField from './FormField'
     import BuildArchiveGet from './BuildArchiveGet'
+    import Codecc from './Codecc'
     import { isObject } from '@/utils/util'
     import { bus } from '@/utils/bus'
+    import JobDevopsFastExecuteScript from './JobDevopsFastExecuteScript'
+    import Tcls from './Tcls'
+    import JobDevOpsFastPushFile from './JobDevOpsFastPushFile'
+    import JobDevopsExecuteTaskExt from './JobDevopsExecuteTaskExt'
+    import ZhiyunInstanceMaintenance from './ZhiyunInstanceMaintenance'
     import TimerTrigger from './TimerTrigger'
+    import Tcm from './Tcm'
     import CodePullGitX from './CodePullGitX'
     import CodePullSvn from './CodePullSvn'
+    import ZhiyunUpdateAsyncEX from './ZhiyunUpdateAsyncEX'
     import IosCertInstall from './IosCertInstall'
+    import BcsContainerOp from './BcsContainerOp'
+    import NewBcsContainerOp from './NewBcsContainerOp'
     import CrossDistribute from './CrossDistribute'
+    import VersionExperience from './VersionExperience'
     import SendWechatNotify from './SendWechatNotify'
+    import WeTest from './WeTest'
+    import jobCloudsFastPush from './jobCloudsFastPush'
+    import jobCloudsFastExecuteScript from './jobCloudsFastExecuteScript'
     import CodeSvnWebHookTrigger from './CodeSvnWebHookTrigger'
     import ReportArchive from './ReportArchive'
     import PullGithub from './PullGithub'
     import CodeGithubWebHookTrigger from './CodeGithubWebHookTrigger'
     import PushImageToThirdRepo from './PushImageToThirdRepo'
     import ReferenceVariable from './ReferenceVariable'
+    import AtomFormWithAppID from './AtomFormWithAppID'
     import NormalAtomV2 from './NormalAtomV2'
     import CodeGitWebHookTrigger from './CodeGitWebHookTrigger'
     import CodeGitlabWebHookTrigger from './CodeGitlabWebHookTrigger'
@@ -150,18 +167,35 @@
             AtomOption,
             VuexInput,
             Selector,
+            Gcloud,
+            JobExecuteTaskExt,
             FormField,
             BuildArchiveGet,
+            Codecc,
+            JobDevopsFastExecuteScript,
+            Tcls,
+            JobDevOpsFastPushFile,
+            JobDevopsExecuteTaskExt,
+            ZhiyunInstanceMaintenance,
             CodePullGitX,
             CodePullSvn,
+            ZhiyunUpdateAsyncEX,
+            Tcm,
             IosCertInstall,
+            BcsContainerOp,
+            NewBcsContainerOp,
             CrossDistribute,
+            VersionExperience,
             SendWechatNotify,
             QualitygateTips,
+            WeTest,
             CodeGithubWebHookTrigger,
+            jobCloudsFastPush,
+            jobCloudsFastExecuteScript,
             ReportArchive,
             CodeSvnWebHookTrigger,
             PullGithub,
+            AtomFormWithAppID,
             NormalAtomV2,
             PushImageToThirdRepo,
             CodeGitWebHookTrigger,
@@ -382,6 +416,27 @@
                     CODE_SVN: CodePullSvn,
                     iosCertInstall: IosCertInstall,
                     acrossProjectDistribution: CrossDistribute,
+                    comDistribution: AtomFormWithAppID,
+                    cloudStone: AtomFormWithAppID,
+                    openStatePushFile: AtomFormWithAppID,
+                    gseKitProcRunCmdDev: AtomFormWithAppID,
+                    gseKitProcRunCmdProd: AtomFormWithAppID,
+                    linuxPaasCodeCCScript: Codecc,
+                    gcloud: Gcloud,
+                    jobExecuteTaskExt: JobExecuteTaskExt,
+                    jobDevOpsFastExecuteScript: JobDevopsFastExecuteScript,
+                    tclsAddVersion: Tcls,
+                    jobDevOpsFastPushFile: JobDevOpsFastPushFile,
+                    jobDevOpsExecuteTaskExt: JobDevopsExecuteTaskExt,
+                    zhiyunInstanceMaintenance: ZhiyunInstanceMaintenance,
+                    zhiyunUpdateAsyncEX: ZhiyunUpdateAsyncEX,
+                    tcmElement: Tcm,
+                    bcsContainerOp: BcsContainerOp,
+                    bcsContainerOpByName: NewBcsContainerOp,
+                    experience: VersionExperience,
+                    wetestElement: WeTest,
+                    jobCloudsFastPush: jobCloudsFastPush,
+                    jobCloudsFastExecuteScript: jobCloudsFastExecuteScript,
                     sendRTXNotify: SendWechatNotify,
                     reportArchive: ReportArchive,
                     reportArchiveService: ReportArchive,

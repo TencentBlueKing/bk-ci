@@ -96,7 +96,7 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
+    import { mapState, mapActions, mapGetters } from 'vuex'
     import webSocketMessage from '@/utils/webSocketMessage'
     import viewPart from '@/components/viewPart'
     import codeRecord from '@/components/codeRecord'
@@ -113,7 +113,9 @@
     import { convertMStoStringByRule } from '@/utils/util'
     import Logo from '@/components/Logo'
     import MiniMap from '@/components/MiniMap'
+    import customExtMixin from '@/mixins/custom-extension-mixin'
     import AtomPropertyPanel from '@/components/AtomPropertyPanel'
+    import { ExecuteDetailTabHooks } from '@/components/Hooks/'
     import CheckAtomDialog from '@/components/CheckAtomDialog'
 
     export default {
@@ -133,7 +135,7 @@
             AtomPropertyPanel,
             CheckAtomDialog
         },
-        mixins: [pipelineOperateMixin, pipelineConstMixin],
+        mixins: [pipelineOperateMixin, pipelineConstMixin, customExtMixin],
 
         data () {
             return {
@@ -160,10 +162,11 @@
                             theme: 'success',
                             size: 'normal',
                             handler: () => {
-                                this.toApplyPermission(this.$permissionActionMap.execute, {
-                                    id: this.routerParams.pipelineId,
-                                    type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT
-                                })
+                                // this.toApplyPermission(this.$permissionActionMap.execute, {
+                                //     id: this.routerParams.pipelineId,
+                                //     name: this.routerParams.pipelineId
+                                // })
+                                this.toApplyPermission(this.roleMap.executor)
                             },
                             text: this.$t('applyPermission')
                         }
@@ -190,53 +193,80 @@
             ...mapState([
                 'fetchError'
             ]),
+            ...mapGetters('atom', [
+                'getRealSeqId'
+            ]),
+            hooks () {
+                return this.extensionExecuteDetailTabsHooks
+            },
             userName () {
                 return this.$userInfo && this.$userInfo.username ? this.$userInfo.username : ''
             },
+            extensionTabs () {
+                return this.extensions.map(ext => ({
+                    name: ext.serviceName,
+                    label: ext.serviceName,
+                    component: ExecuteDetailTabHooks,
+                    bindData: {
+                        tabData: {
+                            ...ext.props.data,
+                            projectId: this.routerParams.projectId,
+                            pipelineId: this.routerParams.pipelineId,
+                            buildId: this.routerParams.buildNo,
+                            userInfo: this.$userInfo
+                        },
+                        hookIframeUrl: this.getResUrl(ext.props.entryResUrl || 'index.html', ext.baseUrl)
+                    }
+                }))
+            },
             panels () {
                 return [{
-                    name: 'executeDetail',
-                    label: this.$t('details.executeDetail'),
-                    component: 'bk-pipeline',
-                    className: 'exec-pipeline',
-                    bindData: {
-                        editable: false,
-                        isExecDetail: true,
-                        userName: this.userName,
-                        cancelUserId: this.execDetail && this.execDetail.cancelUserId,
-                        pipeline: this.execDetail && this.execDetail.model,
-                        matchRules: this.curMatchRules
-                    },
-                    listeners: {
-                        click: this.handlePiplineClick,
-                        'stage-check': this.handleStageCheck,
-                        'stage-retry': this.handleRetry,
-                        'atom-quality-check': this.qualityCheck,
-                        'atom-review': this.reviewAtom,
-                        'atom-continue': this.handleContinue,
-                        'atom-exec': this.handleExec
-                    }
-                }, {
-                    name: 'partView',
-                    label: this.$t('details.partView'),
-                    className: '',
-                    component: 'view-part',
-                    bindData: {}
-                }, {
-                    name: 'codeRecords',
-                    label: this.$t('details.codeRecords'),
-                    className: '',
-                    component: 'code-record',
-                    bindData: {}
-                }, {
-                    name: 'output',
-                    label: this.$t('details.outputReport'),
-                    className: '',
-                    component: 'output-option',
-                    bindData: {
-                        curPipeline: this.execDetail && this.execDetail.model
-                    }
-                }]
+                            name: 'executeDetail',
+                            label: this.$t('details.executeDetail'),
+                            component: 'bk-pipeline',
+                            className: 'exec-pipeline',
+                            bindData: {
+                                editable: false,
+                                isExecDetail: true,
+                                userName: this.userName,
+                                cancelUserId: this.execDetail && this.execDetail.cancelUserId,
+                                isLatestBuild: this.isLatestBuild,
+                                pipeline: this.execDetail && this.execDetail.model,
+                                matchRules: this.curMatchRules
+                            },
+                            listeners: {
+                                click: this.handlePiplineClick,
+                                'stage-check': this.handleStageCheck,
+                                'stage-retry': this.handleRetry,
+                                'atom-quality-check': this.qualityCheck,
+                                'atom-review': this.reviewAtom,
+                                'atom-continue': this.handleContinue,
+                                'atom-exec': this.handleExec,
+                                'debug-container': this.debugDocker
+                            }
+                        }, {
+                            name: 'partView',
+                            label: this.$t('details.partView'),
+                            className: '',
+                            component: 'view-part',
+                            bindData: {}
+                        }, {
+                            name: 'codeRecords',
+                            label: this.$t('details.codeRecords'),
+                            className: '',
+                            component: 'code-record',
+                            bindData: {}
+                        }, {
+                            name: 'output',
+                            label: this.$t('details.outputReport'),
+                            className: '',
+                            component: 'output-option',
+                            bindData: {
+                                curPipeline: this.execDetail && this.execDetail.model
+                            }
+                        },
+                        ...this.extensionTabs
+                ]
             },
             showLog: {
                 get () {
@@ -309,6 +339,10 @@
             },
             curMatchRules () {
                 return this.$route.path.indexOf('template') > 0 ? this.templateRuleList : this.isInstanceEditable ? this.templateRuleList.concat(this.ruleList) : this.ruleList
+            },
+            isLatestBuild () {
+                const { execDetail } = this
+                return execDetail && execDetail.buildNum === execDetail.latestBuildNum && execDetail.curVersion === execDetail.latestVersion
             }
         },
 
@@ -422,6 +456,7 @@
                 await this.retryPipeline()
                 done()
             },
+
             async handleExec ({
                 stageIndex,
                 containerIndex,
@@ -445,7 +480,7 @@
                         isContinue,
                         element: atom
                     }
-                    
+
                     try {
                         await this.pausePlugin(postData)
                         this.requestPipelineExecDetail(this.routerParams)
@@ -513,6 +548,16 @@
                     this.retryTaskId = ''
                     this.skipTask = false
                 }
+            },
+            async debugDocker ({ stageIndex, containerIndex, container }) {
+                const vmSeqId = container.containerId || this.getRealSeqId(this.execDetail.model.stages, stageIndex, containerIndex)
+                const { projectId, pipelineId, buildNo: buildId } = this.$route.params
+                const buildResourceType = container.dispatchType?.buildType
+                const buildIdStr = buildId ? `&buildId=${buildId}` : ''
+
+                const tab = window.open('about:blank')
+                const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
+                tab.location = url
             },
             switchTab (tabType = 'executeDetail') {
                 this.$router.push({

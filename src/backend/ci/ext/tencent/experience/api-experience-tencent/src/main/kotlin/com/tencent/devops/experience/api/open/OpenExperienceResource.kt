@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_APP_VERSION
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.experience.pojo.outer.OuterLoginParam
 import com.tencent.devops.experience.pojo.outer.OuterProfileVO
 import io.swagger.annotations.Api
@@ -55,9 +56,11 @@ interface OpenExperienceResource {
     fun appStoreRedirect(
         @ApiParam("公开体验ID", required = true)
         @QueryParam("id")
+        @BkField(maxLength = 15)
         id: String,
         @ApiParam("用户ID", required = true)
         @QueryParam("userId")
+        @BkField(maxLength = 15)
         userId: String
     ): Response
 }

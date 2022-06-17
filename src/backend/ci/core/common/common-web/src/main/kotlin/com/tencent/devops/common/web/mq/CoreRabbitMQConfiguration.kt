@@ -28,6 +28,7 @@
 package com.tencent.devops.common.web.mq
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.web.mq.property.CoreRabbitMQProperties
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
@@ -54,20 +55,28 @@ class CoreRabbitMQConfiguration {
 
     @Value("\${spring.rabbitmq.core.virtual-host}")
     private val virtualHost: String? = null
+
     @Value("\${spring.rabbitmq.core.username}")
     private val username: String? = null
+
     @Value("\${spring.rabbitmq.core.password}")
     private val password: String? = null
+
     @Value("\${spring.rabbitmq.core.addresses}")
     private val addresses: String? = null
+
     @Value("\${spring.rabbitmq.core.listener.simple.concurrency:#{null}}")
     private var concurrency: Int? = null
+
     @Value("\${spring.rabbitmq.core.listener.simple.max-concurrency:#{null}}")
     private var maxConcurrency: Int? = null
+
     @Value("\${spring.rabbitmq.core.cache.channel.size:#{null}}")
     private var channelCacheSize: Int? = null
+
     @Value("\${spring.rabbitmq.listener.simple.prefetch:#{null}}")
     private val preFetchCount: Int? = null
+
     @Value("\${spring.rabbitmq.core.channel-rpc-timeout:#{null}}")
     private val channelRpcTimeout: Int? = null
 
@@ -79,7 +88,7 @@ class CoreRabbitMQConfiguration {
         connectionFactory.port = config.port
         connectionFactory.username = username!!
         connectionFactory.setPassword(password!!)
-        connectionFactory.virtualHost = virtualHost!!
+        connectionFactory.virtualHost = getVirtualHost()
         connectionFactory.setAddresses(addresses!!)
         if (channelCacheSize != null && channelCacheSize!! > 0) {
             connectionFactory.channelCacheSize = channelCacheSize!!
@@ -136,4 +145,8 @@ class CoreRabbitMQConfiguration {
     @Bean
     fun messageConverter(objectMapper: ObjectMapper) =
         Jackson2JsonMessageConverter(objectMapper)
+
+    fun getVirtualHost(): String {
+        return virtualHost + if (KubernetesUtils.isMultiCluster()) "-k8s" else ""
+    }
 }

@@ -179,4 +179,5 @@ class StreamManualAction(
     }
 
     override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) {}
+    override fun updateLastBranch(pipelineId: String, branch: String) {}
 }

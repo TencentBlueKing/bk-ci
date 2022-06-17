@@ -35,5 +35,11 @@ data class JobProperties(
     @NestedConfigurationProperty
     var fileReferenceCleanupJobProperties: MongodbJobProperties = MongodbJobProperties(),
     @NestedConfigurationProperty
-    var repoRefreshJobProperties: RepoRefreshJobProperties = RepoRefreshJobProperties()
+    var repoRefreshJobProperties: RepoRefreshJobProperties = RepoRefreshJobProperties(),
+    @NestedConfigurationProperty
+    var repoInitJobProperties: RepoRefreshJobProperties = RepoRefreshJobProperties(),
+    @NestedConfigurationProperty
+    var signFileCleanupJobProperties: SignFileCleanupJobProperties = SignFileCleanupJobProperties(),
+    @NestedConfigurationProperty
+    var fileSynchronizeJobProperties: FileSynchronizeJobProperties = FileSynchronizeJobProperties()
 )

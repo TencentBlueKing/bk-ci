@@ -34,7 +34,7 @@ package com.tencent.bkrepo.maven.util
 import com.tencent.bkrepo.maven.artifact.MavenArtifactInfo
 import com.tencent.bkrepo.maven.pojo.MavenGAVC
 import com.tencent.bkrepo.maven.util.MavenStringUtils.resolverName
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 
 object MavenGAVCUtils {
 

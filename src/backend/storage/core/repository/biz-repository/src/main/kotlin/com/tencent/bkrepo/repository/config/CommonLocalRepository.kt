@@ -31,7 +31,6 @@
 
 package com.tencent.bkrepo.repository.config
 
-import com.tencent.bkrepo.common.artifact.exception.NodeNotFoundException
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactDownloadContext
 import com.tencent.bkrepo.common.artifact.repository.local.LocalRepository
 import com.tencent.bkrepo.common.artifact.resolve.response.ArtifactChannel
@@ -47,8 +46,7 @@ class CommonLocalRepository : LocalRepository() {
     override fun onDownload(context: ArtifactDownloadContext): ArtifactResource? {
         with(context) {
             val node = nodeClient.getNodeDetail(projectId, repoName, artifactInfo.getArtifactFullPath()).data
-                ?: throw NodeNotFoundException(artifactInfo.getArtifactFullPath())
-            getInterceptors().forEach { it.intercept(node) }
+            node?.let { getInterceptors().forEach { it.intercept(node) } }
             val inputStream = storageManager.loadArtifactInputStream(node, storageCredentials) ?: return null
             val responseName = artifactInfo.getResponseName()
             return ArtifactResource(inputStream, responseName, node, ArtifactChannel.LOCAL, useDisposition)

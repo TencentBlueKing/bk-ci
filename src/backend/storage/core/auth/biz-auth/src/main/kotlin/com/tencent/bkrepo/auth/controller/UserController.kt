@@ -31,7 +31,6 @@
 
 package com.tencent.bkrepo.auth.controller
 
-import cn.hutool.crypto.CryptoException
 import com.tencent.bkrepo.auth.constant.AUTH_API_USER_PREFIX
 import com.tencent.bkrepo.auth.constant.BKREPO_TICKET
 import com.tencent.bkrepo.auth.message.AuthMessageCode
@@ -51,30 +50,31 @@ import com.tencent.bkrepo.auth.service.RoleService
 import com.tencent.bkrepo.auth.service.UserService
 import com.tencent.bkrepo.auth.util.RequestUtil.buildProjectAdminRequest
 import com.tencent.bkrepo.auth.util.RequestUtil.buildRepoAdminRequest
-import com.tencent.bkrepo.auth.util.RsaUtils
 import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.common.security.exception.AuthenticationException
 import com.tencent.bkrepo.common.security.http.jwt.JwtAuthProperties
 import com.tencent.bkrepo.common.security.util.JwtUtils
+import com.tencent.bkrepo.common.security.util.RsaUtils
 import com.tencent.bkrepo.common.service.util.HttpContextHolder
 import com.tencent.bkrepo.common.service.util.ResponseBuilder
 import io.swagger.annotations.ApiOperation
+import javax.servlet.http.Cookie
+import org.bouncycastle.crypto.CryptoException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.CookieValue
-import javax.servlet.http.Cookie
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping(AUTH_API_USER_PREFIX)
@@ -257,8 +257,14 @@ class UserController @Autowired constructor(
 
     @ApiOperation("获取用户信息")
     @GetMapping("/info")
-    fun userInfo(@CookieValue(value = "bkrepo_ticket") bkrepoToken: String?): Response<Map<String, Any>> {
+    fun userInfo(
+        @CookieValue(value = "bkrepo_ticket") bkrepoToken: String?,
+        @CookieValue(value = "bk_uid") bkUserId: String?
+    ): Response<Map<String, Any>> {
         try {
+            bkUserId?.let {
+                return ResponseBuilder.success(mapOf("userId" to bkUserId))
+            }
             bkrepoToken ?: run {
                 throw IllegalArgumentException("ticket can not be null")
             }

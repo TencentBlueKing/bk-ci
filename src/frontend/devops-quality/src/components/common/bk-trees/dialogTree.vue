@@ -1,34 +1,36 @@
 <template>
-    <ul class='bk-trees-list'>
-        <li class='bk-trees-item' :key='index' v-for='(item, index) of list' v-if="item.folder">
-            <div class='bk-tree-title'
-                :class='{open: item.isOpen, selected: isActive(index)}'
-                :style='{ "padding-left": 23 * _deepCount + "px"}'
-                @dblclick.stop="itemDbClickHandler({
-                    index,
-                    deepCount,
-                    item,
-                })"
-                @click.stop="itemClickHandler({
-                    index,
-                    deepCount,
-                    item
-                })">
-                <i @click.stop="itemDbClickHandler({index, deepCount, item})" class='devops-icon arrow-icon' :class='item.isOpen ? item.arrowOpenIcon : item.arrowIcon'></i>
-                <i class='devops-icon title-icon' :class='item.isOpen ? item.openIcon : item.icon'></i>
-                <span class='title-text pr15'>{{ item.name }}</span>
-            </div>
-            <CollapseTransition>
-                <bk-trees
-                    v-if='item.children && item.children.length'
-                    v-show='item.isOpen'
-                    :list.sync='item.children'
-                    :deep-count='_deepCount'
-                    :is-root='false'
-                    :road-map='index'>
-                </bk-trees>
-            </CollapseTransition>
-        </li>
+    <ul class="bk-trees-list">
+        <template v-for="(item, index) of list">
+            <li class="bk-trees-item" :key="index" v-if="item.folder">
+                <div class="bk-tree-title"
+                    :class="{ open: item.isOpen, selected: isActive(index) }"
+                    :style="{ 'padding-left': 23 * _deepCount + 'px' }"
+                    @dblclick.stop="itemDbClickHandler({
+                        index,
+                        deepCount,
+                        item
+                    })"
+                    @click.stop="itemClickHandler({
+                        index,
+                        deepCount,
+                        item
+                    })">
+                    <i @click.stop="itemDbClickHandler({ index, deepCount, item })" class="devops-icon arrow-icon" :class="item.isOpen ? item.arrowOpenIcon : item.arrowIcon"></i>
+                    <i class="devops-icon title-icon" :class="item.isOpen ? item.openIcon : item.icon"></i>
+                    <span class="title-text pr15">{{ item.name }}</span>
+                </div>
+                <CollapseTransition>
+                    <bk-trees
+                        v-if="item.children && item.children.length"
+                        v-show="item.isOpen"
+                        :list.sync="item.children"
+                        :deep-count="_deepCount"
+                        :is-root="false"
+                        :road-map="index">
+                    </bk-trees>
+                </CollapseTransition>
+            </li>
+        </template>
     </ul>
 </template>
 
@@ -38,6 +40,9 @@
     import { bus } from '../../../utils/bus'
     export default {
         name: 'bk-trees',
+        components: {
+            CollapseTransition
+        },
         props: {
             list: {
                 type: Array,
@@ -87,14 +92,14 @@
                 }, 300)
             },
             // src参数: right,表示右侧出发  click，表示单击菜单，dbClick，表示双击菜单或点击箭头
-            changeRoadMap ({index, deepCount, item, src = 'click', roadMap = ''}) {
+            changeRoadMap ({ index, deepCount, item, src = 'click', roadMap = '' }) {
                 item.isOpen = !item.isOpen
-                let map = this.getRoadMap(index)
+                const map = this.getRoadMap(index)
                 bus.$emit('dialog-tree-click', map)
             },
             handleClick ({ index, deepCount, item }) {
-                let roadMap = this.getRoadMap(index)
-                let fullPath = item.fullPath || '/'
+                const roadMap = this.getRoadMap(index)
+                const fullPath = item.fullPath || '/'
                 this.$store.commit('artifactory/updateDialogTree', {
                     roadMap,
                     fullPath
@@ -114,18 +119,12 @@
             isActive (index) {
                 return this.getRoadMap(index) === this.curNodeOnDialogTree.roadMap
             }
-        },
-        components: {
-            CollapseTransition
         }
     }
 </script>
 
 <style lang="scss">
     @import './../../../scss/conf';
-
-    .bk-trees-list {
-    }
     .bk-tree-title {
         position: relative;
         height: 37px;

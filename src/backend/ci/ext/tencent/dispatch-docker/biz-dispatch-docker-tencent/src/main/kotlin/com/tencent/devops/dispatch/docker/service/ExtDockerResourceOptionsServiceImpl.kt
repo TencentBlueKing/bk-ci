@@ -8,6 +8,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
@@ -19,19 +20,16 @@ import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOption
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig,
+    private val bkTag: BkTag
 ) : ExtDockerResourceOptionsService {
 
     private val logger = LoggerFactory.getLogger(ExtDockerResourceOptionsServiceImpl::class.java)
-
-    @Value("\${spring.cloud.consul.discovery.tags:prod}")
-    private val consulTag: String = "prod"
 
     override fun getDockerResourceConfigList(
         userId: String,
@@ -58,7 +56,7 @@ class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .addHeader(AUTH_HEADER_DEVOPS_USER_ID, userId)
-            .addHeader(AUTH_HEADER_GATEWAY_TAG, consulTag)
+            .addHeader(AUTH_HEADER_GATEWAY_TAG, bkTag.getLocalTag())
             .get()
             .build()
 

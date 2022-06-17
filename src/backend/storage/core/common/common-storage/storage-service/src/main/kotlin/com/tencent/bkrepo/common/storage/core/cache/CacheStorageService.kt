@@ -42,6 +42,8 @@ import com.tencent.bkrepo.common.storage.filesystem.cleanup.CleanupResult
 import com.tencent.bkrepo.common.storage.monitor.StorageHealthMonitor
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+import java.io.File
+import java.nio.file.Path
 import java.nio.file.Paths
 
 /**
@@ -60,13 +62,15 @@ class CacheStorageService(
                 fileStorage.store(path, filename, artifactFile.flushToFile(), credentials)
             }
             else -> {
-                val cachedFile = getCacheClient(credentials).move(path, filename, artifactFile.flushToFile())
+                val cacheFile = getCacheClient(credentials).move(path, filename, artifactFile.flushToFile())
                 threadPoolTaskExecutor.execute {
                     try {
-                        fileStorage.store(path, filename, cachedFile, credentials)
+                        fileStorage.store(path, filename, cacheFile, credentials)
                     } catch (ignored: Exception) {
                         // 此处为异步上传，失败后异常不会被外层捕获，所以单独捕获打印error日志
                         logger.error("Failed to async store file [$filename] on [${credentials.key}]", ignored)
+                        // 失败时把文件放入暂存区，后台任务会进行补偿。
+                        stagingFile(credentials, path, filename, cacheFile)
                     }
                 }
             }
@@ -114,16 +118,17 @@ class CacheStorageService(
         val credentials = getCredentialsOrDefault(storageCredentials)
         val rootPath = Paths.get(credentials.cache.path)
         val tempPath = getTempPath(credentials)
-        val visitor = CleanupFileVisitor(rootPath, tempPath, fileStorage, fileLocator, credentials)
+        val stagingPath = getStagingPath(credentials)
+        val visitor = CleanupFileVisitor(rootPath, tempPath, stagingPath, fileStorage, fileLocator, credentials)
         getCacheClient(credentials).walk(visitor)
         return visitor.result
     }
 
     override fun synchronizeFile(storageCredentials: StorageCredentials?): SynchronizeResult {
         val credentials = getCredentialsOrDefault(storageCredentials)
-        val tempPath = Paths.get(credentials.cache.path, TEMP)
-        val visitor = FileSynchronizeVisitor(tempPath, fileLocator, fileStorage, credentials)
-        getCacheClient(credentials).walk(visitor)
+        val rootPath = Paths.get(credentials.cache.path, STAGING)
+        val visitor = FileSynchronizeVisitor(rootPath, fileLocator, fileStorage, credentials)
+        getStagingClient(credentials).walk(visitor)
         return visitor.result
     }
 
@@ -155,7 +160,24 @@ class CacheStorageService(
         return FileSystemClient(credentials.cache.path)
     }
 
+    private fun getStagingClient(credentials: StorageCredentials): FileSystemClient {
+        return FileSystemClient(getStagingPath(credentials))
+    }
+
+    private fun getStagingPath(credentials: StorageCredentials): Path {
+        return Paths.get(credentials.cache.path, STAGING)
+    }
+
+    private fun stagingFile(credentials: StorageCredentials, path: String, filename: String, file: File) {
+        try {
+            getStagingClient(credentials).createLink(path, filename, file)
+        } catch (e: Exception) {
+            logger.error("Create staging file link failed.", e)
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(CacheStorageService::class.java)
+        private const val STAGING = "staging"
     }
 }

@@ -41,7 +41,7 @@ import com.tencent.bkrepo.maven.exception.MavenArtifactFormatException
 import com.tencent.bkrepo.maven.pojo.MavenRepoConf
 import com.tencent.bkrepo.maven.pojo.MavenVersion
 import org.apache.commons.lang3.StringUtils
-import org.apache.http.HttpStatus
+import org.springframework.http.HttpStatus
 import java.util.regex.Pattern
 
 object MavenStringUtils {
@@ -69,10 +69,10 @@ object MavenStringUtils {
         return if (this.endsWith(MAVEN_METADATA_FILE_NAME) && this.isSnapshotUri() &&
             repoConf.mavenSnapshotVersionBehavior != SnapshotBehaviorType.DEPLOYER
         ) {
-            HttpStatus.SC_ACCEPTED
+            HttpStatus.ACCEPTED.value()
         } else if (this.endsWith("maven-metadata.xml.md5") || this.endsWith("maven-metadata.xml.sha1")) {
-            HttpStatus.SC_OK
-        } else HttpStatus.SC_CREATED
+            HttpStatus.OK.value()
+        } else HttpStatus.CREATED.value()
     }
 
     /**

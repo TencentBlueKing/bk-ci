@@ -1,0 +1,29 @@
+{{- if .Values.bkLogConfig.turbo.enabled }}
+# Service Log
+apiVersion: bk.tencent.com/v1alpha1
+kind: BkLogConfig
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-bklog-service
+spec:
+  dataId: {{ .Values.bkLogConfig.turbo.dataId }}
+  logConfigType: container_log_config
+  namespace: {{ .Release.Namespace }}
+  labelSelector:
+    matchLabels:
+      {{- if .Values.commonLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 6 }}
+      {{- end }}
+      app.kubernetes.io/name: turbo
+      app.kubernetes.io/component: microservice-turbo
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/managed-by: Helm
+  path:
+    - /data/workspace/logs/*/*.log
+  encoding: 'utf-8'
+  multiline:
+    pattern: '^[0-2][0-9][0-9][0-9].[0-1][0-9].[0-3][0-9]'
+    maxLines: 200
+    timeout: '2s'
+  extMeta:
+    logSourceType: "file"
+{{- end }}

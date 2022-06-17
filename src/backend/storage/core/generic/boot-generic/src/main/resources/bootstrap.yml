@@ -1,4 +1,4 @@
-service.name: generic
+spring.application.name: generic
 server.port: 25801
 
 generic:

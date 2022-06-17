@@ -9,7 +9,7 @@
             :target="entry.target"
         >
             <icon
-                class="bk-icon"
+                class="devops-icon"
                 :name="entry.icon"
                 size="13"
             />
@@ -44,7 +44,7 @@
                 {
                     icon: 'service',
                     label: this.$t('contactUs'),
-                    href: 'javascript:;',
+                    href: 'wxwork://message?username=DevOps-helper',
                     id: 'contactUs',
                     target: ''
                 },
@@ -52,28 +52,27 @@
                     icon: 'feedback',
                     id: 'feedback',
                     label: this.$t('feedback'),
-                    href: 'http://tapd.oa.com/PaaS/prong/stories/stories_list',
+                    href: '//tapd.oa.com/PaaS/prong/stories/stories_list',
                     target: '_blank'
                 }
             ]
         }
-
-        mounted () {
-            // 参数说明
-            // sign：公司渠道唯一标识，复制即可，无需改动
-            // uid：用户唯一标识，如果没有则不填写，默认为空
-            // data：用于传递用户信息，最多支持5个，参数名分别为c1,c2,c3,c4,c5；默认为空
-            // selector：css选择器(document.querySelector, 如#btnid .chat-btn等)，用于替换默认的常驻客服入口
-            // callback(type, data): 回调函数,type表示事件类型， data表示事件相关数据
-            // type支持的类型：newmsg有新消息，error云智服页面发生错误， close聊天窗口关闭
-            // @ts-ignore
-            window.yzf && window.yzf.init({
-                sign: '37ef9b97d1210ac42416cce84db7b56b934ef302f69e6f6494d847d943e00fa4c8c24c7fbff6003642099e2260e29aeaecbfe7',
-                uid: this.user ? this.user.username : '',
-                selector: '#contactUs',
-                callback: function (type, data) {}
-            })
-        }
+    // mounted () {
+    //     // 参数说明
+    //     // sign：公司渠道唯一标识，复制即可，无需改动
+    //     // uid：用户唯一标识，如果没有则不填写，默认为空
+    //     // data：用于传递用户信息，最多支持5个，参数名分别为c1,c2,c3,c4,c5；默认为空
+    //     // selector：css选择器(document.querySelector, 如#btnid .chat-btn等)，用于替换默认的常驻客服入口
+    //     // callback(type, data): 回调函数,type表示事件类型， data表示事件相关数据
+    //     // type支持的类型：newmsg有新消息，error云智服页面发生错误， close聊天窗口关闭
+    //     // @ts-ignore
+    //     window.yzf && window.yzf.init({
+    //         sign: '37ef9b97d1210ac42416cce84db7b56b934ef302f69e6f6494d847d943e00fa4c8c24c7fbff6003642099e2260e29aeaecbfe7',
+    //         uid: this.user ? this.user.username : '',
+    //         selector: '#contactUs',
+    //         callback: function () {}
+    //     })
+    // }
     }
 </script>
 
@@ -139,7 +138,7 @@
                 opacity: 1;
             }
         }
-        .bk-icon {
+        .devops-icon {
             display: inline-block;
             margin-top: 6px;
             color: #fff;

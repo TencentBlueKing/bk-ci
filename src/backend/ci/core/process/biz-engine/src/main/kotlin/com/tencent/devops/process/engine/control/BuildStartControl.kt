@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
@@ -65,6 +66,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.BUILD_NO
@@ -195,41 +197,21 @@ class BuildStartControl @Autowired constructor(
             val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
             // #4074 LOCK 不会进入到这里，在启动API已经拦截
             if (setting?.runLockType == PipelineRunLockType.SINGLE ||
-                setting?.runLockType == PipelineRunLockType.SINGLE_LOCK) {
-                // #4074 锁定当前构建是队列中第一个排队待执行的
-                if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
-                    canStart = pipelineRuntimeExtService.queueCanPend2Start(projectId, pipelineId, buildId = buildId)
-                }
-                if (canStart) {
-                    val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
-                    // #6521 并发组中需要等待其他流水线
-                    val concurrencyGroupRunningCount = setting.concurrencyGroup?.let {
-                        pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
-                            projectId = projectId,
-                            concurrencyGroup = it,
-                            status = listOf(BuildStatus.RUNNING)
-                        ).size
-                    } ?: 0
+                setting?.runLockType == PipelineRunLockType.SINGLE_LOCK
+            ) {
+                canStart = checkSingleType(
+                    buildInfo = buildInfo,
+                    setting = setting,
+                    executeCount = executeCount
+                )
+            }
 
-                    if (buildSummaryRecord!!.runningCount > 0 || concurrencyGroupRunningCount > 0) {
-                        // 需要重新入队等待
-                        pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
-
-                        buildLogPrinter.addLine(
-                            message = "Mode: ${setting.runLockType}," + if (concurrencyGroupRunningCount > 0)
-                                "concurrency for group(${setting.concurrencyGroup}) " +
-                                    "and queue: $concurrencyGroupRunningCount"
-                            else " queue: ${buildSummaryRecord.runningCount}",
-                            buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
-                        )
-                        canStart = false
-                    }
-                } else {
-                    buildLogPrinter.addLine(
-                        message = "Waiting build #${buildInfo.buildNum - 1}",
-                        buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
-                    )
-                }
+            if (setting?.runLockType == PipelineRunLockType.GROUP_LOCK) {
+                canStart = checkGroupType(
+                    buildInfo = buildInfo,
+                    setting = setting,
+                    executeCount = executeCount
+                )
             }
 
             if (canStart) {
@@ -256,6 +238,73 @@ class BuildStartControl @Autowired constructor(
             pipelineBuildLock.unlock()
         }
         return canStart
+    }
+
+    private fun PipelineBuildStartEvent.checkGroupType(
+        buildInfo: BuildInfo,
+        setting: PipelineSetting,
+        executeCount: Int
+    ): Boolean {
+        var checkStart = true
+        val concurrencyGroup = buildInfo.concurrencyGroup ?: return true
+        if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
+            checkStart = pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(
+                projectId = projectId,
+                concurrencyGroup = concurrencyGroup
+            )?.buildId == buildId
+        }
+        // #6521 并发组中需要等待其他流水线
+        val concurrencyGroupRunningCount = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            status = listOf(BuildStatus.RUNNING)
+        ).size
+
+        LOG.info("ENGINE|$buildId|$source|CHECK_GROUP_TYPE|$concurrencyGroup|$concurrencyGroupRunningCount")
+        if (concurrencyGroupRunningCount > 0) {
+            // 需要重新入队等待
+            pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
+            buildLogPrinter.addLine(
+                message = "Mode: ${setting.runLockType}," +
+                    "concurrency for group(${setting.concurrencyGroup}[$concurrencyGroup]) " +
+                    "and queue: $concurrencyGroupRunningCount",
+                buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
+            )
+            checkStart = false
+        }
+        return checkStart
+    }
+
+    private fun PipelineBuildStartEvent.checkSingleType(
+        buildInfo: BuildInfo,
+        setting: PipelineSetting,
+        executeCount: Int
+    ): Boolean {
+        // #4074 锁定当前构建是队列中第一个排队待执行的
+        var checkStart = true
+        if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
+            checkStart = pipelineRuntimeExtService.queueCanPend2Start(projectId, pipelineId, buildId = buildId)
+        }
+        if (checkStart) {
+            val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
+
+            if (buildSummaryRecord!!.runningCount > 0) {
+                // 需要重新入队等待
+                pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
+
+                buildLogPrinter.addLine(
+                    message = "Mode: ${setting.runLockType}, queue: ${buildSummaryRecord.runningCount}",
+                    buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
+                )
+                checkStart = false
+            }
+        } else {
+            buildLogPrinter.addLine(
+                message = "Waiting build #${buildInfo.buildNum - 1}",
+                buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
+            )
+        }
+        return checkStart
     }
 
     private fun PipelineBuildStartEvent.handleBuildNo() {
@@ -326,6 +375,7 @@ class BuildStartControl @Autowired constructor(
                         buildStatus = BuildStatus.SUCCEED
                     )
                     it.status = BuildStatus.SUCCEED.name
+                    buildLogPrinter.stopLog(buildInfo.buildId, taskId, jobId = JOB_ID, executeCount)
                     return@lit
                 }
             }
@@ -343,6 +393,7 @@ class BuildStartControl @Autowired constructor(
         stage.status = BuildStatus.SUCCEED.name
         stage.elapsed = max(0, System.currentTimeMillis() - buildInfo.queueTime)
         container.status = BuildStatus.SUCCEED.name
+        container.startEpoch = now.timestampmilli()
         container.systemElapsed = stage.elapsed // 修复可能导致负数的情况
         container.elementElapsed = 0
         container.executeCount = executeCount

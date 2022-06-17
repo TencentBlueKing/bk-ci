@@ -37,6 +37,7 @@ import com.tencent.devops.common.notify.utils.ChineseStringUtil
 import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.common.notify.utils.TOFConfiguration
 import com.tencent.devops.common.notify.utils.TOFService
+import com.tencent.devops.common.notify.utils.TOFService.Companion.SMS_URL
 import com.tencent.devops.model.notify.tables.records.TNotifySmsRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_SMS
@@ -46,7 +47,6 @@ import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.notify.service.SmsService
-import com.tencent.devops.common.notify.utils.TOFService.Companion.SMS_URL
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -69,7 +69,11 @@ class SmsServiceImpl @Autowired constructor(
     private lateinit var defaultSmsSender: String
 
     override fun sendMqMsg(message: SmsNotifyMessage) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_SMS, message)
+        logger.info("sms channel has been closed , message is $message")
+        return
+        // 短信渠道下架
+        // 后续容器化之后 , 不会再有这份代码
+        // rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_SMS, message)
     }
 
     override fun sendMessage(smsNotifyMessageWithOperation: SmsNotifyMessageWithOperation) {
@@ -85,7 +89,8 @@ class SmsServiceImpl @Autowired constructor(
         for (notifyPost in smsNotifyPosts) {
             val id = smsNotifyMessageWithOperation.id ?: UUIDUtil.generate()
             val result = tofService.post(
-                SMS_URL, notifyPost, tofConfs!!)
+                SMS_URL, notifyPost, tofConfs!!
+            )
             if (result.Ret == 0) {
                 // 成功
                 smsNotifyDao.insertOrUpdateSmsNotifyRecord(
@@ -294,13 +299,15 @@ class SmsServiceImpl @Autowired constructor(
             addAllReceivers(receivers)
         }
 
-        return NotificationResponse(record.id, record.success,
+        return NotificationResponse(
+            record.id, record.success,
             if (record.createdTime == null) null
             else
                 DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
             if (record.updatedTime == null) null
             else
                 DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
-            record.contentMd5, message)
+            record.contentMd5, message
+        )
     }
 }
