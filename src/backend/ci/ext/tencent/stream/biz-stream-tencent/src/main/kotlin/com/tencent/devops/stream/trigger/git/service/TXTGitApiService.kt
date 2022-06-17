@@ -110,7 +110,8 @@ class TXTGitApiService @Autowired constructor(
                 to = to,
                 straight = straight,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                useAccessToken = cred.useAccessToken
             ).data ?: emptyList()
         }.map { TGitChangeFileInfo(it) }
     }

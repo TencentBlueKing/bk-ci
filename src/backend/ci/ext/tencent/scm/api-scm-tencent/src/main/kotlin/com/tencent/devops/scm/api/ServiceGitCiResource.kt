@@ -326,7 +326,10 @@ interface ServiceGitCiResource {
         page: Int,
         @ApiParam(value = "每页大小")
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int,
+        @ApiParam("是否使用accessToken", required = true)
+        @QueryParam("useAccessToken")
+        useAccessToken: Boolean
     ): Result<List<ChangeFileInfo>>
 
     @ApiOperation("添加mr评论")
