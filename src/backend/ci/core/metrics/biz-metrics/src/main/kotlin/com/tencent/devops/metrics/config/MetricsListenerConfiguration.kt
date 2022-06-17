@@ -95,7 +95,7 @@ class MetricsListenerConfiguration {
      */
     @Bean
     fun pipelineLabelChangeMetricsDataSyncFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINELABEL_CHANGE_METRICS_DATA_SYNC_FANOUT, true, false)
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC_FANOUT, true, false)
         fanoutExchange.isDelayed = true
         return fanoutExchange
     }
