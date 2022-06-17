@@ -79,7 +79,6 @@ interface UserAtomDisplayConfigResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("要删除的插件配置插件Code列表", required = true)
-        @QueryParam("atomCodes")
         atomCodes: List<String>
     ): Result<Boolean>
 
