@@ -107,13 +107,6 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
                 userId = userId,
                 repoId = setting!!.gitProjectId.toString(),
                 repoUrl = setting!!.gitHttpUrl
-            ),
-            PipelineUpdateEvent(
-                source = "update_pipeline",
-                projectId = "ljltestproject",
-                pipelineId = "p-c8383b7a18f04a2ead8c490c1a511b9f",
-                version = 2,
-                userId = userId
             )
         )
         return Result(result)
