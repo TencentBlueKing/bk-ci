@@ -159,10 +159,16 @@ object JsonUtil {
 
         javaTimeModule.addSerializer(LocalTime::class.java, LocalTimeSerializer(DateTimeFormatter.ISO_TIME))
         javaTimeModule.addSerializer(LocalDate::class.java, LocalDateSerializer(DateTimeFormatter.ISO_DATE))
-        javaTimeModule.addSerializer(LocalDateTime::class.java, LocalDateTimeSerializer(DateTimeFormatter.ISO_DATE_TIME))
+        javaTimeModule.addSerializer(
+            LocalDateTime::class.java,
+            LocalDateTimeSerializer(DateTimeFormatter.ISO_DATE_TIME)
+        )
         javaTimeModule.addDeserializer(LocalTime::class.java, LocalTimeDeserializer(DateTimeFormatter.ISO_TIME))
         javaTimeModule.addDeserializer(LocalDate::class.java, LocalDateDeserializer(DateTimeFormatter.ISO_DATE))
-        javaTimeModule.addDeserializer(LocalDateTime::class.java, LocalDateTimeDeserializer(DateTimeFormatter.ISO_DATE_TIME))
+        javaTimeModule.addDeserializer(
+            LocalDateTime::class.java,
+            LocalDateTimeDeserializer(DateTimeFormatter.ISO_DATE_TIME)
+        )
         return javaTimeModule
     }
 
