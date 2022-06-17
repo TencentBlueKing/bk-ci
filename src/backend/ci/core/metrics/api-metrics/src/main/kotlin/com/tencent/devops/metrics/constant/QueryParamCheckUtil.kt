@@ -27,7 +27,6 @@
 
 package com.tencent.devops.metrics.constant
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import java.time.LocalDate
@@ -38,9 +37,9 @@ import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 
 object QueryParamCheckUtil {
+
     // 查询时间区间限制，当天的前一天至前六个月
     private const val QUERY_MAX_MONTHS: Long = 6
-    private const val QUERY_MIN_DAYS: Long = 1
 
     fun getIntervalTime(
         fromDate: LocalDateTime,
@@ -82,7 +81,6 @@ object QueryParamCheckUtil {
         val startDate = DateTimeUtil.stringToLocalDate(startTime)
         val endDate = DateTimeUtil.stringToLocalDate(endTime)
         val firstDate = LocalDate.now()
-//            .minusDays(1)
         val secondDate = firstDate.minusMonths(QUERY_MAX_MONTHS)
         if (startDate!!.isBefore(secondDate)) {
             throw ErrorCodeException(

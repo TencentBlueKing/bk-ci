@@ -57,8 +57,7 @@ class PipelineStageServiceImpl @Autowired constructor(
     override fun queryPipelineStageTrendInfo(
         queryPipelineOverviewDTO: QueryPipelineOverviewDTO
     ): List<StageTrendSumInfoVO> {
-
-        var stageTrendSumInfos : MutableMap<String, List<StageAvgCostTimeInfoDO>>
+        var stageTrendSumInfos: MutableMap<String, List<StageAvgCostTimeInfoDO>>
         val tags = pipelineStageDao.getStageTag(dslContext, queryPipelineOverviewDTO.projectId)
         val startTime = queryPipelineOverviewDTO.baseQueryReq.startTime
         val endTime = queryPipelineOverviewDTO.baseQueryReq.endTime
@@ -93,7 +92,7 @@ class PipelineStageServiceImpl @Autowired constructor(
                     stageTrendSumInfos[pipelineName] = listOf
                 }
                 pipelineNames.add(pipelineName)
-                betweenDate.removeIf{s -> s == statisticsTime.format(DATE_FORMATTER) }
+                betweenDate.removeIf { s -> s == statisticsTime.format(DATE_FORMATTER) }
             }
             //  对每组流水线数据中无数据的日期添加占位数据
             pipelineNames.forEach { pipelineName ->
@@ -111,9 +110,5 @@ class PipelineStageServiceImpl @Autowired constructor(
             }
             StageTrendSumInfoVO(tag, pipelineStageCostTimeInfoDOs)
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PipelineStageServiceImpl::class.java)
     }
 }
