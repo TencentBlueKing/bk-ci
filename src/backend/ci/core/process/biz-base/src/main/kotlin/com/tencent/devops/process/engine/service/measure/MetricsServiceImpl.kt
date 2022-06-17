@@ -193,7 +193,12 @@ class MetricsServiceImpl constructor(
             }
             containerAtomCodes.add(element.getAtomCode())
             val elementPosition = "$stageIndex-$containerIndex-$elementIndex"
-            addTaskMetricsData(taskMetricsDatas, element, elementStatus)
+            addTaskMetricsData(
+                taskMetricsDatas = taskMetricsDatas,
+                element = element,
+                elementPosition = elementPosition,
+                elementStatus = elementStatus
+            )
         }
     }
 
