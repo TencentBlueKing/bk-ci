@@ -31,7 +31,6 @@ import com.tencent.devops.model.auth.tables.TAuthUserBlacklist
 import com.tencent.devops.model.auth.tables.records.TAuthUserBlacklistRecord
 import org.jooq.DSLContext
 import org.jooq.Result
-import org.jooq.SelectConditionStep
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 
