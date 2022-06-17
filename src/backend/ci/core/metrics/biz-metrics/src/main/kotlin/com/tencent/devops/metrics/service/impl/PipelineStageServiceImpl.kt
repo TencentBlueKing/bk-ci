@@ -94,7 +94,7 @@ class PipelineStageServiceImpl @Autowired constructor(
                     stageTrendSumInfos[pipelineName] = listOf
                 }
                 pipelineNames.add(pipelineName)
-                betweenDate.removeIf{s -> s == statisticsTime.format(DATE_FORMATTER) }
+                betweenDate.removeIf{ s -> s == statisticsTime.format(DATE_FORMATTER) }
             }
             //  对每组流水线数据中无数据的日期添加占位数据
             pipelineNames.forEach { pipelineName ->

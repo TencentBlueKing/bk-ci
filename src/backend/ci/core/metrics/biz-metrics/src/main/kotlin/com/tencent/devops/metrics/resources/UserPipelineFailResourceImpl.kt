@@ -106,8 +106,9 @@ class UserPipelineFailResourceImpl @Autowired constructor(
         val startTime = if (pipelineFailInfoQueryReq.startTime.isNullOrBlank()) {
             getStartDateTime()
         } else pipelineFailInfoQueryReq.startTime
-        val endTime = if (pipelineFailInfoQueryReq.endTime.isNullOrBlank()) { getEndDateTime() }
-            else pipelineFailInfoQueryReq.endTime
+        val endTime = if (pipelineFailInfoQueryReq.endTime.isNullOrBlank()) {
+            getEndDateTime()
+        } else pipelineFailInfoQueryReq.endTime
         checkDateInterval(startTime!!, endTime!!)
         return Result(
             pipelineFailManageService.queryPipelineFailDetailInfo(

@@ -112,7 +112,7 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                     errorType = errorType,
                     errorTypeName = errorDict[errorType],
                     errorCode = it[BK_ERROR_CODE] as Int,
-                    errorMsg =  if (errorMsg != null) errorMsg as String else ""
+                    errorMsg = if (errorMsg != null) errorMsg as String else ""
                 ),
                 errorCount = (it[BK_ERROR_COUNT] as Int).toLong()
             )

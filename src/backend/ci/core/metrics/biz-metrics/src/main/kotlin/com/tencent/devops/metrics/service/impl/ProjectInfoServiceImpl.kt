@@ -172,7 +172,6 @@ class ProjectInfoServiceImpl @Autowired constructor(
                 }
                 labelInfosPage += 1
                 labelInfosTotalPages = labelInfosResult?.totalPages ?: labelInfosTotalPages
-
             } while (labelInfosPage <= labelInfosTotalPages)
 
             projectIdPage += 1

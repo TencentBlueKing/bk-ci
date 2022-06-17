@@ -195,7 +195,7 @@ class ProjectInfoDao {
         val conditions = mutableListOf<Condition>()
         with(TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO) {
             return dslContext.batched {
-               pipelineLabelRelateInfos.forEach {pipelineLabelRelateInfo ->
+                pipelineLabelRelateInfos.forEach { pipelineLabelRelateInfo ->
                    if (!pipelineLabelRelateInfo.pipelineId.isNullOrBlank()) {
                        conditions.add(this.PIPELINE_ID.eq(pipelineLabelRelateInfo.pipelineId))
                    }

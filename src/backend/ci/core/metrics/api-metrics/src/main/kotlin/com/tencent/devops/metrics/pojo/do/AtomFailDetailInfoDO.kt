@@ -52,10 +52,10 @@ data class AtomFailDetailInfoDO(
     val classifyCode: String,
     @ApiModelProperty("启动用户")
     val startUser: String,
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty("启动时间")
     val startTime: LocalDateTime,
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty("结束时间")
     val endTime: LocalDateTime,
     @ApiModelProperty("错误的类型标识")

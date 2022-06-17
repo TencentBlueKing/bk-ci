@@ -141,7 +141,7 @@ class MetricsServiceImpl constructor(
                     )
                 )
             }
-            var stageTagNames:MutableList<String> ? = null
+            var stageTagNames: MutableList<String> ? = null
             stage.tag?.forEach { stageTagId ->
                 if (stageTagNames == null) {
                     stageTagNames = mutableListOf()

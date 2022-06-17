@@ -27,7 +27,6 @@
 
 package com.tencent.devops.metrics.pojo.qo
 
-import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

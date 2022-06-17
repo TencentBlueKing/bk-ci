@@ -87,7 +87,7 @@ object QueryParamCheckUtil {
         val secondDate = firstDate.minusMonths(maximumQueryMonths)
         if (startDate!!.isBefore(secondDate)) {
             throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
+                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND
             )
         }
         if (endDate!!.isAfter(firstDate)) {
