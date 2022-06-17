@@ -53,10 +53,10 @@ class QualityReportDailyMessageListener @Autowired constructor(
                 )
             )
         } catch (ignored: Throwable) {
-            logger.warn("Fail to insert the metrics CodeCC data", ignored)
+            logger.warn("Fail to insert the metrics QualityReport data", ignored)
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.SYSTEM_ERROR,
-                defaultMessage = "Fail to insert the metrics CodeCC data"
+                defaultMessage = "Fail to insert the metrics QualityReport data"
             )
         }
     }

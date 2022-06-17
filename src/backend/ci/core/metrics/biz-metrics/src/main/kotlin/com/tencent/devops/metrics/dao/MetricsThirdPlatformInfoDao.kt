@@ -68,24 +68,13 @@ class MetricsThirdPlatformInfoDao {
                 .set(MODIFIER, defaultValue(MODIFIER))
                 .set(UPDATE_TIME, thirdPlatformDate.updateTime)
                 .set(CREATE_TIME, thirdPlatformDate.createTime)
-                .execute()
-        }
-    }
-
-    fun updateMetricsThirdPlatformData(
-        dslContext: DSLContext,
-        thirdPlatformDate: ThirdPlatformDatePO
-    ) {
-        with(TProjectThirdPlatformData.T_PROJECT_THIRD_PLATFORM_DATA) {
-            dslContext.update(this)
+                .onDuplicateKeyUpdate(field(PROJECT_ID).eq(thirdPlatformDate.projectId))
                 .set(REPO_CODECC_AVG_SCORE, thirdPlatformDate.repoCodeccAvgScore)
                 .set(RESOLVED_DEFECT_NUM, thirdPlatformDate.resolvedDefectNum)
                 .set(QUALITY_PIPELINE_EXECUTE_NUM, thirdPlatformDate.qualityPipelineExecuteNum)
                 .set(QUALITY_PIPELINE_INTERCEPTION_NUM, thirdPlatformDate.qualityPipelineInterceptionNum)
                 .set(TURBO_SAVE_TIME, thirdPlatformDate.turboSaveTime)
-                .set(STATISTICS_TIME, thirdPlatformDate.statisticsTime)
                 .set(UPDATE_TIME, thirdPlatformDate.updateTime)
-                .where(PROJECT_ID.eq(thirdPlatformDate.projectId).and(STATISTICS_TIME.eq(STATISTICS_TIME)))
                 .execute()
         }
     }

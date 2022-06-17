@@ -188,7 +188,9 @@ class PipelineFailServiceImpl @Autowired constructor(
                     pageSize = queryPipelineFailDTO.pageSize
             )
         )
-        val detailInfos = if (!result.isNullOrEmpty()) {
+        val errorDict = mutableMapOf<Int, String>()
+        errorCodeInfoDao.getErrorTypeDict(dslContext).map { errorDict.put(it.value1(), it.value2()) }
+        val detailInfos = if (result.isNotEmpty()) {
             result.map {
                 PipelineFailDetailInfoDO(
                     pipelineBuildInfo =
@@ -206,7 +208,7 @@ class PipelineFailServiceImpl @Autowired constructor(
                     errorInfo =
                     ErrorCodeInfoDO(
                         errorType = it.errorType,
-                        errorTypeName = it.errorTypeName,
+                        errorTypeName = errorDict[it.errorType],
                         errorCode = it.errorCode!!,
                         errorMsg = it.errorMsg
                     )
