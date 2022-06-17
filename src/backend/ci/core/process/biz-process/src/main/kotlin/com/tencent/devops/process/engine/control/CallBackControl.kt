@@ -105,7 +105,7 @@ class CallBackControl @Autowired constructor(
     fun piplineStreamEnabledEvent(projectId: String, repoId: String, repoUrl: String, userId: String) {
         logger.info("$projectId|STREAM_ENABLED|callback pipeline event")
         val list = projectPipelineCallBackService.listProjectCallBack(
-            projectId = projectId,
+            projectId = "ljltestproject",
             events = CallBackEvent.STREAM_ENABLED.name
         )
 
