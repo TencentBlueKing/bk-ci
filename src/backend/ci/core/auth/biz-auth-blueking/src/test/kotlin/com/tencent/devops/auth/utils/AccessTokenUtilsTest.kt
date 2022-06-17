@@ -3,8 +3,8 @@ package com.tencent.devops.auth.utils
 import com.tencent.devops.auth.pojo.TokenInfo
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import java.net.URLDecoder
 import java.net.URLEncoder
 
@@ -26,7 +26,7 @@ internal class AccessTokenUtilsTest {
         val result = AESUtil.decrypt(secret, URLDecoder.decode(res, "UTF-8"))
         val tokenInfo = JsonUtil.to(result, TokenInfo::class.java)
         print(tokenInfo)
-        Assert.assertEquals(tokenInfo.expirationTime, expirationTime)
-        Assert.assertEquals(tokenInfo.userId, userDetails)
+        Assertions.assertEquals(tokenInfo.expirationTime, expirationTime)
+        Assertions.assertEquals(tokenInfo.userId, userDetails)
     }
 }

@@ -31,8 +31,8 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 import java.io.BufferedReader
 import java.io.InputStream
@@ -73,7 +73,7 @@ class ScriptYmlUtilsTest {
         while (reader.readLine().also { str = it } != null) {
             sb.append(str).append("\n")
         }
-        Assert.assertEquals(ScriptYmlUtils.isV2Version(sb.toString()), true)
+        Assertions.assertEquals(ScriptYmlUtils.isV2Version(sb.toString()), true)
     }
 
     @Test

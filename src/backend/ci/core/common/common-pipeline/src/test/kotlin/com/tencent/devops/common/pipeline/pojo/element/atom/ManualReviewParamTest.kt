@@ -1,6 +1,6 @@
 package com.tencent.devops.common.pipeline.pojo.element.atom
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 internal class ManualReviewParamTest {
 
