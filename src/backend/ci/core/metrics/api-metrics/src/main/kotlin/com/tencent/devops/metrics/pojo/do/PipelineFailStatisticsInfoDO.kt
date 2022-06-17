@@ -35,7 +35,7 @@ import java.time.LocalDate
 @ApiModel("流水线错误每日统计信息")
 data class PipelineFailStatisticsInfoDO(
     @ApiModelProperty("统计时间")
-    @JsonFormat(pattern="yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     val statisticsTime: LocalDate,
     @ApiModelProperty("错误次数")
     val errorCount: Int

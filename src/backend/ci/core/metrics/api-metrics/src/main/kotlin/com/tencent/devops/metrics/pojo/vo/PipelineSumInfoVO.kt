@@ -34,5 +34,5 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("流水线汇总信息视图")
 data class PipelineSumInfoVO(
     @ApiModelProperty("流水线汇总信息")
-    val pipelineSumInfoDO: PipelineSumInfoDO?,
+    val pipelineSumInfoDO: PipelineSumInfoDO?
 )

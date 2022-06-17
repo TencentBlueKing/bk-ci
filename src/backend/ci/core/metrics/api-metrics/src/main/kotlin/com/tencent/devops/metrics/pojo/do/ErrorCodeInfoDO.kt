@@ -39,5 +39,5 @@ data class ErrorCodeInfoDO(
     @ApiModelProperty("错误的标识码")
     val errorCode: Int,
     @ApiModelProperty("错误描述信息")
-    val errorMsg: String?,
+    val errorMsg: String?
 )

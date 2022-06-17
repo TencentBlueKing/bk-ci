@@ -35,7 +35,7 @@ import java.time.LocalDateTime
 @ApiModel("流水线趋势信息")
 data class PipelineTrendInfoDO(
     @ApiModelProperty("统计时间")
-    @JsonFormat(pattern="yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     val statisticsTime: LocalDateTime,
     @ApiModelProperty("流水线总执行次数")
     val totalExecuteCount: Long,

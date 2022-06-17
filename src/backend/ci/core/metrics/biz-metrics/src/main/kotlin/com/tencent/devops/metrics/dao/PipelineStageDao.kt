@@ -52,7 +52,7 @@ class PipelineStageDao {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val conditions = getConditions(queryInfo, tProjectPipelineLabelInfo)
             val step = dslContext.select(PIPELINE_ID).from(this)
-            val conditionStep = if (!queryInfo.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+            val conditionStep = if (!queryInfo.pipelineLabelIds.isNullOrEmpty()) {
                 step.join(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
                     .where(conditions)
@@ -85,7 +85,7 @@ class PipelineStageDao {
                     AVG_COST_TIME.`as`(BK_AVG_COST_TIME)
                     ).from(this)
             val conditionStep =
-                if (!queryInfo.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+                if (!queryInfo.pipelineLabelIds.isNullOrEmpty()) {
                 step.join(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
                     .where(conditions)
@@ -95,7 +95,6 @@ class PipelineStageDao {
                     .groupBy(PIPELINE_ID, STATISTICS_TIME)
             }
             return conditionStep.fetch()
-
         }
     }
 
@@ -116,16 +115,16 @@ class PipelineStageDao {
         tProjectPipelineLabelInfo: TProjectPipelineLabelInfo
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        val pipelineIds = queryCondition.baseQueryReq.pipelineIds
+        val pipelineIds = queryCondition.pipelineIds
         conditions.add(this.PROJECT_ID.eq(queryCondition.projectId))
         if (!pipelineIds.isNullOrEmpty()) {
             conditions.add(this.PIPELINE_ID.`in`(pipelineIds))
         }
-        if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
-            conditions.add(tProjectPipelineLabelInfo.LABEL_ID.`in`(queryCondition.baseQueryReq.pipelineLabelIds))
+        if (!queryCondition.pipelineLabelIds.isNullOrEmpty()) {
+            conditions.add(tProjectPipelineLabelInfo.LABEL_ID.`in`(queryCondition.pipelineLabelIds))
         }
-        val startTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime!!)!!.atStartOfDay()
-        val endTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime!!)!!.atStartOfDay()
+        val startTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.startTime)!!.atStartOfDay()
+        val endTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.endTime)!!.atStartOfDay()
         conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
         conditions.add(this.STAGE_TAG_NAME.eq(queryCondition.stageTag))
         return conditions

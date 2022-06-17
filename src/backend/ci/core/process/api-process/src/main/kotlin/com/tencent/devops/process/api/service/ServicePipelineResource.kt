@@ -530,4 +530,17 @@ interface ServicePipelineResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<PipelineLabelRelateInfo>>
+
+    fun getPipelineLabelProjectId(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("页码", required = true, defaultValue = "1")
+        @QueryParam("page")
+        page: Int,
+        @ApiParam("每页大小", required = true, defaultValue = "100")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Page<String>>
 }

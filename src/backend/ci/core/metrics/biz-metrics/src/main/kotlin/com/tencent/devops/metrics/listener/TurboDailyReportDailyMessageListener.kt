@@ -41,10 +41,9 @@ import org.springframework.stereotype.Component
 @Component
 class TurboDailyReportDailyMessageListener @Autowired constructor(
     private val thirdPlatformDataReportService: MetricsThirdPlatformDataReportService
-): Listener<String> {
+) : Listener<String> {
 
     override fun execute(event: String) {
-        logger.info("TurboDailyReportDailyMessageListener-event: $event")
         try {
             thirdPlatformDataReportService.metricsTurboDataReport(
                 JsonUtil.to(event, object : TypeReference<TurboReportEvent>() {})

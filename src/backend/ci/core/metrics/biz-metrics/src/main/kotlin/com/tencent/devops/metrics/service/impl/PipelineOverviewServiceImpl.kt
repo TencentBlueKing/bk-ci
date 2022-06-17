@@ -53,7 +53,7 @@ import java.time.LocalDateTime
 class PipelineOverviewServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineOverviewDao: PipelineOverviewDao
-): PipelineOverviewManageService {
+) : PipelineOverviewManageService {
     override fun queryPipelineSumInfo(queryPipelineOverviewDTO: QueryPipelineOverviewDTO): PipelineSumInfoDO? {
         val result = pipelineOverviewDao.queryPipelineSumInfo(
             dslContext,
@@ -69,8 +69,8 @@ class PipelineOverviewServiceImpl @Autowired constructor(
             return PipelineSumInfoDO(
                 totalSuccessRate = if (successExecuteCountSum == null || successExecuteCountSum == 0L) 0.0
                 else String.format("%.2f", successExecuteCountSum.toDouble() * 100 / totalExecuteCountSum).toDouble(),
-                totalAvgCostTime = String.format("%.2f",totalAvgCostTimeSum / totalExecuteCountSum).toDouble(),
-                successExecuteCount = successExecuteCountSum?: 0,
+                totalAvgCostTime = String.format("%.2f", totalAvgCostTimeSum / totalExecuteCountSum).toDouble(),
+                successExecuteCount = successExecuteCountSum ?: 0,
                 totalExecuteCount = totalExecuteCountSum,
                 totalCostTime = totalAvgCostTimeSum.toDouble()
             )
@@ -91,13 +91,13 @@ class PipelineOverviewServiceImpl @Autowired constructor(
             val failAvgCostTime = (it.get(BK_FAIL_AVG_COST_TIME, BigDecimal::class.java))?.toLong()
             PipelineTrendInfoDO(
                 statisticsTime = it.get(BK_STATISTICS_TIME, LocalDateTime::class.java),
-                totalExecuteCount = (it.get(BK_TOTAL_EXECUTE_COUNT, BigDecimal::class.java))?.toLong()?: 0L,
-                failedExecuteCount = (it.get(BK_FAIL_EXECUTE_COUNT, BigDecimal::class.java))?.toLong()?: 0L,
-                totalAvgCostTime = toMinutes(totalAvgCostTime?: 0L),
-                failAvgCostTime = toMinutes(failAvgCostTime?: 0L)
+                totalExecuteCount = (it.get(BK_TOTAL_EXECUTE_COUNT, BigDecimal::class.java))?.toLong() ?: 0L,
+                failedExecuteCount = (it.get(BK_FAIL_EXECUTE_COUNT, BigDecimal::class.java))?.toLong() ?: 0L,
+                totalAvgCostTime = toMinutes(totalAvgCostTime ?: 0L),
+                failAvgCostTime = toMinutes(failAvgCostTime ?: 0L)
             )
         }
-        return trendInfos?: emptyList()
+        return trendInfos ?: emptyList()
     }
 
     companion object {

@@ -57,7 +57,7 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
             atomDisplayConfigPOS.add(
                 AtomDisplayConfigPO(
                     id = client.get(ServiceAllocIdResource::class)
-                        .generateSegmentId("ATOM_DISPLAY_CONFIG").data?: 0,
+                        .generateSegmentId("ATOM_DISPLAY_CONFIG").data ?: 0,
                     projectId = atomDisplayConfigDTO.projectId,
                     userId = atomDisplayConfigDTO.userId,
                     atomCode = atomBaseInfo.atomCode,
@@ -103,8 +103,8 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
             keyword
         ).map { it.atomCode }
         return Page(
-            page = page?: 1,
-            pageSize = pageSize?: 10,
+            page = page ?: 1,
+            pageSize = pageSize ?: 10,
             count = atomDisplayConfigDao.getOptionalAtomDisplayConfigCount(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -116,8 +116,8 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
                 projectId = projectId,
                 atomCodes = atomCodes,
                 keyword = keyword,
-                page = page?: 1,
-                pageSize = pageSize?: 10
+                page = page ?: 1,
+                pageSize = pageSize ?: 10
             )
         )
     }

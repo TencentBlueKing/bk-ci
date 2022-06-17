@@ -40,10 +40,9 @@ import org.springframework.stereotype.Component
 @Component
 class QualityReportDailyMessageListener @Autowired constructor(
     private val thirdPlatformDataReportService: MetricsThirdPlatformDataReportService
-): Listener<QualityReportEvent> {
+) : Listener<QualityReportEvent> {
 
     override fun execute(event: QualityReportEvent) {
-        logger.info("QualityReportDailyMessageListener-QualityReportEvent: $event")
         try {
             thirdPlatformDataReportService.metricsQualityDataReport(
                 QualityReportMessage(

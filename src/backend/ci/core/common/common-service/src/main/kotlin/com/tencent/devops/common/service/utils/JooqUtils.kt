@@ -72,14 +72,14 @@ object JooqUtils {
         }
     }
 
-    fun <T>sum(data: Field<T>): Field<BigDecimal> {
+    fun <T> sum(data: Field<T>): Field<BigDecimal> {
         return DSL.field(
             "sum(${data.name})",
             BigDecimal::class.java
         )
     }
 
-    fun <T>count(data: Field<T>): Field<Int> {
+    fun <T> count(data: Field<T>): Field<Int> {
         return DSL.field(
             "count(${data.name})",
             Int::class.java

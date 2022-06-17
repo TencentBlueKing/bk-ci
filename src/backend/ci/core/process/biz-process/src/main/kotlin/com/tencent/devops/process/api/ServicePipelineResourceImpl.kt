@@ -448,6 +448,10 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getPipelineLabelProjectId(userId: String, page: Int, pageSize: Int): Result<Page<String>> {
+        TODO("Not yet implemented")
+    }
+
     private fun checkParams(userId: String, projectId: String) {
         checkUserId(userId)
         checkProjectId(projectId)

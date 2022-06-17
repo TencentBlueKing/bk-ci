@@ -38,5 +38,5 @@ interface ErrorCodeInfoManageService {
      *@param queryErrorCodeInfoDTO 查询错误码信息传输对象
      * @return 错误码信息列表视图
      */
-    fun getErrorCodeInfo(queryErrorCodeInfoDTO: QueryErrorCodeInfoDTO) : Page<ErrorCodeInfoDO>
+    fun getErrorCodeInfo(queryErrorCodeInfoDTO: QueryErrorCodeInfoDTO): Page<ErrorCodeInfoDO>
 }
