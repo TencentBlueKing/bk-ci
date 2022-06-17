@@ -35,14 +35,13 @@ import com.tencent.devops.metrics.constant.QueryParamCheckUtil
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.DATE_FORMATTER
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.PipelineStageDao
-import com.tencent.devops.metrics.service.PipelineStageManageService
 import com.tencent.devops.metrics.pojo.`do`.PipelineStageCostTimeInfoDO
 import com.tencent.devops.metrics.pojo.`do`.StageAvgCostTimeInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineStageTrendInfoQO
 import com.tencent.devops.metrics.pojo.vo.StageTrendSumInfoVO
+import com.tencent.devops.metrics.service.PipelineStageManageService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -52,13 +51,12 @@ import java.util.stream.Collectors
 class PipelineStageServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineStageDao: PipelineStageDao
-): PipelineStageManageService {
+) : PipelineStageManageService {
 
     override fun queryPipelineStageTrendInfo(
         queryPipelineOverviewDTO: QueryPipelineOverviewDTO
     ): List<StageTrendSumInfoVO> {
-
-        var stageTrendSumInfos : MutableMap<String, List<StageAvgCostTimeInfoDO>>
+        var stageTrendSumInfos: MutableMap<String, List<StageAvgCostTimeInfoDO>>
         val tags = pipelineStageDao.getStageTag(dslContext, queryPipelineOverviewDTO.projectId)
         val startTime = queryPipelineOverviewDTO.baseQueryReq.startTime
         val endTime = queryPipelineOverviewDTO.baseQueryReq.endTime
@@ -70,9 +68,12 @@ class PipelineStageServiceImpl @Autowired constructor(
             val result = pipelineStageDao.queryPipelineStageTrendInfo(
                 dslContext,
                 QueryPipelineStageTrendInfoQO(
-                    queryPipelineOverviewDTO.projectId,
-                    queryPipelineOverviewDTO.baseQueryReq,
-                    tag
+                    projectId = queryPipelineOverviewDTO.projectId,
+                    pipelineIds = queryPipelineOverviewDTO.baseQueryReq.pipelineIds,
+                    pipelineLabelIds = queryPipelineOverviewDTO.baseQueryReq.pipelineLabelIds,
+                    startTime = startTime,
+                    endTime = endTime,
+                    stageTag = tag
                 )
             )
             //  将查询结果根据流水线分组封装
@@ -87,13 +88,11 @@ class PipelineStageServiceImpl @Autowired constructor(
                     stageTrendSumInfos[pipelineName] = listOf
                 } else {
                     val listOf = stageTrendSumInfos[pipelineName]!!.toMutableList()
-                    listOf.add(
-                        StageAvgCostTimeInfoDO(statisticsTime, avgCostTime)
-                    )
+                    listOf.add(StageAvgCostTimeInfoDO(statisticsTime, avgCostTime))
                     stageTrendSumInfos[pipelineName] = listOf
                 }
                 pipelineNames.add(pipelineName)
-                betweenDate.removeIf{s -> s == statisticsTime.format(DATE_FORMATTER) }
+                betweenDate.removeIf { s -> s == statisticsTime.format(DATE_FORMATTER) }
             }
             //  对每组流水线数据中无数据的日期添加占位数据
             pipelineNames.forEach { pipelineName ->
@@ -111,9 +110,5 @@ class PipelineStageServiceImpl @Autowired constructor(
             }
             StageTrendSumInfoVO(tag, pipelineStageCostTimeInfoDOs)
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PipelineStageServiceImpl::class.java)
     }
 }

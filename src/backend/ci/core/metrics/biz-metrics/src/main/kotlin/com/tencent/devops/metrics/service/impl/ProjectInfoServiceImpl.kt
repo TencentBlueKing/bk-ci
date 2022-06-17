@@ -28,10 +28,8 @@
 package com.tencent.devops.metrics.service.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.db.utils.SnowFlakeUtils
 import com.tencent.devops.metrics.constant.Constants.MAX_CREATE_COUNT
 import com.tencent.devops.metrics.dao.ProjectInfoDao
 import com.tencent.devops.metrics.service.ProjectInfoManageService
@@ -55,7 +53,7 @@ class ProjectInfoServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectInfoDao: ProjectInfoDao,
     private val client: Client
-): ProjectInfoManageService {
+) : ProjectInfoManageService {
 
     private val atomCodeCache = Caffeine.newBuilder()
         .maximumSize(5000)
@@ -64,7 +62,7 @@ class ProjectInfoServiceImpl @Autowired constructor(
 
     override fun queryProjectAtomList(queryProjectInfoDTO: QueryProjectAtomListDTO): Page<AtomBaseInfoDO> {
         val projectId = queryProjectInfoDTO.projectId
-        val page =queryProjectInfoDTO.page
+        val page = queryProjectInfoDTO.page
         val pageSize = queryProjectInfoDTO.pageSize
         val records = if (queryProjectInfoDTO.keyword.isNullOrBlank()) {
             // 从缓存中查找插件属性信息
@@ -116,7 +114,6 @@ class ProjectInfoServiceImpl @Autowired constructor(
                 )
             )
         )
-
     }
 
     override fun queryPipelineErrorTypes(page: Int, pageSize: Int, keyword: String?): Page<PipelineErrorTypeInfoDO> {
@@ -134,41 +131,54 @@ class ProjectInfoServiceImpl @Autowired constructor(
     }
 
     override fun syncPipelineLabelData(userId: String): Int {
-        var page = 1
-        var totalPages = 1
-        var createCount = 0
+        var projectIdPage = 1
+        var projectIdTotalPages = 1
+        var projectIdCreateCount = 0
         do {
-            val result = client.get(ServicePipelineResource::class)
-                .getPipelineLabelInfos(
-                userId,
-                page,
-                MAX_CREATE_COUNT
+            val projectIdResult = client.get(ServicePipelineResource::class).getPipelineLabelProjectId(
+                userId = userId,
+                page = projectIdPage,
+                pageSize = MAX_CREATE_COUNT
             ).data
-            result?.let {
-                val records = it.records
-                val pipelineLabelRelateInfos = records.map { record ->
-                    TProjectPipelineLabelInfoRecord(
-                        client.get(ServiceAllocIdResource::class)
-                            .generateSegmentId("METRICS_PROJECT_PIPELINE_LABEL_INFO").data?: 0,
-                        record.projectId,
-                        record.pipelineId,
-                        record.labelId,
-                        record.name,
-                        record.createUser,
-                        record.createUser,
-                        record.createTime!!,
-                        record.createTime!!
+            do {
+                var labelInfosPage = 1
+                var labelInfosTotalPages = 1
+                val labelInfosResult = client.get(ServicePipelineResource::class)
+                    .getPipelineLabelInfos(
+                        userId = userId,
+                        page = labelInfosPage,
+                        pageSize = MAX_CREATE_COUNT
+                    ).data
+                labelInfosResult?.let {
+                    val records = it.records
+                    val pipelineLabelRelateInfos = records.map { record ->
+                        TProjectPipelineLabelInfoRecord(
+                            client.get(ServiceAllocIdResource::class)
+                                .generateSegmentId("METRICS_PROJECT_PIPELINE_LABEL_INFO").data ?: 0,
+                            record.projectId,
+                            record.pipelineId,
+                            record.labelId,
+                            record.name,
+                            record.createUser,
+                            record.createUser,
+                            record.createTime!!,
+                            record.createTime!!
+                        )
+                    }
+                    projectIdCreateCount += projectInfoDao.batchCreatePipelineLabelData(
+                        dslContext,
+                        pipelineLabelRelateInfos
                     )
                 }
-                createCount += projectInfoDao.batchCreatePipelineLabelData(
-                    dslContext,
-                    pipelineLabelRelateInfos
-                )
-            }
-            page += 1
-            totalPages = result?.totalPages?: totalPages
-        } while (page <= totalPages)
-        return createCount
+                labelInfosPage += 1
+                labelInfosTotalPages = labelInfosResult?.totalPages ?: labelInfosTotalPages
+            } while (labelInfosPage <= labelInfosTotalPages)
+
+            projectIdPage += 1
+            projectIdTotalPages = projectIdResult?.totalPages ?: projectIdTotalPages
+        } while (projectIdPage <= projectIdTotalPages)
+
+        return projectIdCreateCount
     }
 
     companion object {

@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.resources;
+package com.tencent.devops.metrics.resources
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -44,7 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserAtomFailInfoResourceImpl @Autowired constructor(
     private val atomFailInfoManageService: AtomFailInfoManageService
-): UserAtomFailInfoResource {
+) : UserAtomFailInfoResource {
     override fun queryAtomErrorCodeStatisticsInfo(
         projectId: String,
         userId: String,

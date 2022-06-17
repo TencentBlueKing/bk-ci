@@ -54,7 +54,6 @@ class MetricsThirdPartyListenerConfiguration {
     @Bean
     fun receiveCodeCheckDailyMessageQueue() = Queue(QUEUE_METRICS_STATISTIC_CODECC_DAILY)
 
-
     @Bean
     fun receiveCodeCheckDailyMessageFanoutExchange(): FanoutExchange {
         val fanoutExchange = FanoutExchange(EXCHANGE_METRICS_STATISTIC_CODECC_DAILY, true, false)

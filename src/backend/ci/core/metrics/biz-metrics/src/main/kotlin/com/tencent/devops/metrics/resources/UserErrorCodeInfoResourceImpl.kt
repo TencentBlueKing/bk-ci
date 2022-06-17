@@ -38,7 +38,7 @@ import com.tencent.devops.metrics.pojo.dto.QueryErrorCodeInfoDTO
 @RestResource
 class UserErrorCodeInfoResourceImpl constructor(
     private val errorCodeInfoManageService: ErrorCodeInfoManageService
-): UserErrorCodeInfoResource {
+) : UserErrorCodeInfoResource {
     override fun getErrorCodeInfo(
         projectId: String,
         userId: String,

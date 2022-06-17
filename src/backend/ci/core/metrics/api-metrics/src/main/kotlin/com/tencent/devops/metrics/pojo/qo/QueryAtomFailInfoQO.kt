@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("插件失败信息查询条件对象")
-class QueryAtomFailInfoQO (
+class QueryAtomFailInfoQO(
     @ApiModelProperty("项目ID", required = true)
     val projectId: String,
     @ApiModelProperty("基本查询条件", required = true)

@@ -52,7 +52,6 @@ interface ProjectInfoManageService {
      */
     fun queryPipelineErrorTypes(page: Int, pageSize: Int, keyword: String?): Page<PipelineErrorTypeInfoDO>
 
-
     /**
      * 同步流水线标签数据
      * @return 同步的数据量

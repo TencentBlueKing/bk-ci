@@ -87,7 +87,6 @@ class MetricsListenerConfiguration {
         return container
     }
 
-
     @Bean
     fun pipelineLabelChangeMetricsDataSyncQueue() = Queue(QUEUE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC)
 
@@ -143,7 +142,7 @@ class MetricsListenerConfiguration {
 
     companion object {
         private const val QUEUE_BUILD_END_METRICS_DATA_REPORT = "q.build.end.metrics.data.report.queue"
-        private const val QUEUE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC
-        = "q.pipeline.label.change.metrics.data.sync.queue"
+        private const val QUEUE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC =
+            "q.pipeline.label.change.metrics.data.sync.queue"
     }
 }

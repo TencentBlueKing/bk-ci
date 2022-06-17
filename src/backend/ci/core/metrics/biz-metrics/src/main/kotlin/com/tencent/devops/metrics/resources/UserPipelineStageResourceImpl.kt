@@ -42,20 +42,20 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserPipelineStageResourceImpl @Autowired constructor(
     private val pipelineStageManageService: PipelineStageManageService
-): UserPipelineStageResource {
+) : UserPipelineStageResource {
     override fun queryPipelineStageTrendInfo(
         projectId: String,
         userId: String,
         baseQueryReq: BaseQueryReqVO?
     ): Result<List<StageTrendSumInfoVO>> {
-        val queryReq = baseQueryReq?: BaseQueryReqVO()
+        val queryReq = baseQueryReq ?: BaseQueryReqVO()
         if (queryReq.startTime.isNullOrBlank()) { queryReq.startTime = getStartDateTime() }
         if (queryReq.endTime.isNullOrBlank()) { queryReq.endTime = getEndDateTime() }
         checkDateInterval(queryReq.startTime!!, queryReq.endTime!!)
         return Result(
             pipelineStageManageService.queryPipelineStageTrendInfo(
                 QueryPipelineOverviewDTO(
-                   projectId = projectId,
+                    projectId = projectId,
                     userId = userId,
                     baseQueryReq = queryReq
                 )

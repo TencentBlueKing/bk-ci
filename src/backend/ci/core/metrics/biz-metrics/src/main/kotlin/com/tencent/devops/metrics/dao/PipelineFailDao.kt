@@ -53,7 +53,7 @@ class PipelineFailDao {
 
     fun getPipelineIdByTotalExecuteCount(
         dslContext: DSLContext,
-        queryPipelineFailQo: QueryPipelineFailQO,
+        queryPipelineFailQo: QueryPipelineFailQO
     ): List<String> {
         with(TPipelineFailSummaryData.T_PIPELINE_FAIL_SUMMARY_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
@@ -85,7 +85,7 @@ class PipelineFailDao {
     ): Result<Record2<LocalDateTime, BigDecimal>> {
         with(TPipelineFailSummaryData.T_PIPELINE_FAIL_SUMMARY_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            var pipelineIds = queryPipelineFailTrendQo.baseQueryReq.pipelineIds
+            val pipelineIds = queryPipelineFailTrendQo.baseQueryReq.pipelineIds
             val conditions = getConditions(
                 projectId = queryPipelineFailTrendQo.projectId,
                 baseQueryReq = queryPipelineFailTrendQo.baseQueryReq,
@@ -115,7 +115,7 @@ class PipelineFailDao {
     ): List<Int> {
         with(TPipelineFailSummaryData.T_PIPELINE_FAIL_SUMMARY_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            var pipelineIds = queryPipelineFailTrendQo.baseQueryReq.pipelineIds
+            val pipelineIds = queryPipelineFailTrendQo.baseQueryReq.pipelineIds
             val pipelineLabelIds = queryPipelineFailTrendQo.baseQueryReq.pipelineLabelIds
             val conditions = getConditions(
                 projectId = queryPipelineFailTrendQo.projectId,
@@ -253,7 +253,7 @@ class PipelineFailDao {
     private fun TPipelineFailDetailData.getConditions(
         projectId: String,
         baseQuery: BaseQueryReqVO,
-        tProjectPipelineLabelInfo: TProjectPipelineLabelInfo,
+        tProjectPipelineLabelInfo: TProjectPipelineLabelInfo
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(this.PROJECT_ID.eq(projectId))
@@ -270,7 +270,6 @@ class PipelineFailDao {
         conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
         return conditions
     }
-
 
     private fun TPipelineFailSummaryData.getConditions(
         projectId: String,

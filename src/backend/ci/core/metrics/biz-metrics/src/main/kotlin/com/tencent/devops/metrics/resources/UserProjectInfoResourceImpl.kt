@@ -42,7 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserProjectInfoResourceImpl @Autowired constructor(
     private val projectInfoManageService: ProjectInfoManageService
-): UserProjectInfoResource {
+) : UserProjectInfoResource {
 
     override fun queryProjectAtomList(
         projectId: String,

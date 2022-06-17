@@ -248,7 +248,7 @@ class PipelineGroupService @Autowired constructor(
                     pipelineLabelRelateInfos = listOf(
                         PipelineLabelRelateInfo(
                             projectId = projectId,
-                            labelId = id,
+                            labelId = id
                         )
                     )
                 )
@@ -343,14 +343,14 @@ class PipelineGroupService @Autowired constructor(
                 pipelineLabelRels = pipelineLabelRels,
                 userId = userId)
 
-            val createData = pipelineLabelDao.getByIds(dslContext, projectId ,labelIdArr)
+            val createData = pipelineLabelDao.getByIds(dslContext, projectId, labelIdArr)
             measureEventDispatcher.dispatch(
                 LabelChangeMetricsBroadCastEvent(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     userId = userId,
                     type = PipelineLabelChangeTypeEnum.CREATE,
-                    pipelineLabelRelateInfos = createData.map{
+                    pipelineLabelRelateInfos = createData.map {
                         PipelineLabelRelateInfo(
                             projectId = projectId,
                             pipelineId = pipelineId,
@@ -402,7 +402,7 @@ class PipelineGroupService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
-        val createData = pipelineLabelDao.getByIds(dslContext, projectId ,labelIdArr)
+        val createData = pipelineLabelDao.getByIds(dslContext, projectId, labelIdArr)
         measureEventDispatcher.dispatch(
             LabelChangeMetricsBroadCastEvent(
                 projectId = projectId,
@@ -418,7 +418,7 @@ class PipelineGroupService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 type = PipelineLabelChangeTypeEnum.CREATE,
-                pipelineLabelRelateInfos = createData.map{
+                pipelineLabelRelateInfos = createData.map {
                     PipelineLabelRelateInfo(
                         projectId = projectId,
                         pipelineId = pipelineId,

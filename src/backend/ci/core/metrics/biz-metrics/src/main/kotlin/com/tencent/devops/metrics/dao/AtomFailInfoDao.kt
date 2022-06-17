@@ -39,7 +39,6 @@ import com.tencent.devops.metrics.constant.Constants.BK_ERROR_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_MSG
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
-import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_ID
 import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_PROJECT_ID
@@ -50,15 +49,12 @@ import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.pojo.`do`.AtomFailDetailInfoDO
 import com.tencent.devops.metrics.pojo.qo.QueryAtomFailInfoQO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
-import com.tencent.devops.model.metrics.tables.TErrorTypeDict
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Record4
-import org.jooq.Record5
 import org.jooq.Result
 import org.jooq.SelectJoinStep
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -95,7 +91,6 @@ class AtomFailInfoDao {
                 .limit(queryCondition.pageSize)
                 .fetch()
         }
-
     }
 
     fun queryAtomErrorCodeOverviewCount(
@@ -115,7 +110,6 @@ class AtomFailInfoDao {
                 .groupBy(this.ERROR_CODE)
                 .execute()
         }
-
     }
 
     private fun TAtomFailDetailData.getConditions(
@@ -146,7 +140,7 @@ class AtomFailInfoDao {
         return conditions
     }
 
-    private fun<T> TAtomFailDetailData.getConditionStep(
+    private fun <T> TAtomFailDetailData.getConditionStep(
         baseQueryReq: BaseQueryReqVO,
         step: SelectJoinStep<Record1<T>>,
         tProjectPipelineLabelInfo: TProjectPipelineLabelInfo
@@ -185,8 +179,8 @@ class AtomFailInfoDao {
                 this.ERROR_CODE.`as`(BK_ERROR_CODE),
                 this.ERROR_MSG.`as`(BK_ERROR_MSG)
             ).from(this)
-            val conditionStep
-                    = if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+            val conditionStep =
+                if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
             } else {

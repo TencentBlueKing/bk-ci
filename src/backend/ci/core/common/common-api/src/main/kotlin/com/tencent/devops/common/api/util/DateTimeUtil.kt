@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.api.util
 
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.Duration

@@ -38,11 +38,10 @@ import com.tencent.devops.metrics.pojo.dto.QueryPipelineSummaryInfoDTO
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
 import org.springframework.beans.factory.annotation.Autowired
 
-
 @RestResource
 class UserThirdPartyResourceImpl @Autowired constructor(
     private val thirdPartyManageService: ThirdPartyManageService
-): UserThirdPartyResource {
+) : UserThirdPartyResource {
     override fun queryPipelineSummaryInfo(
         projectId: String,
         userId: String,
@@ -51,10 +50,7 @@ class UserThirdPartyResourceImpl @Autowired constructor(
     ): Result<ThirdPlatformOverviewInfoVO> {
         val startDateTime = if (!startTime.isNullOrBlank()) startTime else getStartDateTime()
         val endDateTime = if (!endTime.isNullOrBlank()) endTime else getEndDateTime()
-
         checkDateInterval(startDateTime, endDateTime)
-
-
         return Result(
             thirdPartyManageService.queryPipelineSummaryInfo(
                 QueryPipelineSummaryInfoDTO(

@@ -43,13 +43,13 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserPipelineOverviewResourceImpl @Autowired constructor(
     private val pipelineOverviewManageService: PipelineOverviewManageService
-    ): UserPipelineOverviewResource {
+) : UserPipelineOverviewResource {
     override fun queryPipelineSumInfo(
         projectId: String,
         userId: String,
         baseQueryReq: BaseQueryReqVO?
     ): Result<PipelineSumInfoVO> {
-        val queryReq = baseQueryReq?: BaseQueryReqVO()
+        val queryReq = baseQueryReq ?: BaseQueryReqVO()
         if (queryReq.startTime.isNullOrBlank()) { queryReq.startTime = getStartDateTime() }
         if (queryReq.endTime.isNullOrBlank()) { queryReq.endTime = getEndDateTime() }
         checkDateInterval(queryReq.startTime!!, queryReq.endTime!!)
@@ -71,7 +71,7 @@ class UserPipelineOverviewResourceImpl @Autowired constructor(
         userId: String,
         baseQueryReq: BaseQueryReqVO?
     ): Result<PipelineTrendInfoVO> {
-        val queryReq = baseQueryReq?: BaseQueryReqVO()
+        val queryReq = baseQueryReq ?: BaseQueryReqVO()
         if (queryReq.startTime.isNullOrBlank()) { queryReq.startTime = getStartDateTime() }
         if (queryReq.endTime.isNullOrBlank()) { queryReq.endTime = getEndDateTime() }
         checkDateInterval(queryReq.startTime!!, queryReq.endTime!!)

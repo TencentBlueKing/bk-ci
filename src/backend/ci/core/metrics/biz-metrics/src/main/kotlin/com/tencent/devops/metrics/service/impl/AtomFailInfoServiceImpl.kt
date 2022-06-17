@@ -29,12 +29,11 @@ package com.tencent.devops.metrics.service.impl
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_MSG
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
-import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE_NAME
-import com.tencent.devops.metrics.constant.Constants.BK_QUERY_COUNT_MAX
 import com.tencent.devops.metrics.constant.MetricsMessageCode
 import com.tencent.devops.metrics.dao.AtomFailInfoDao
 import com.tencent.devops.metrics.dao.ErrorCodeInfoDao
@@ -54,8 +53,9 @@ import org.springframework.stereotype.Service
 class AtomFailInfoServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val atomFailInfoDao: AtomFailInfoDao,
-    private val errorCodeInfoDao: ErrorCodeInfoDao
-): AtomFailInfoManageService {
+    private val errorCodeInfoDao: ErrorCodeInfoDao,
+    private val metricsConfig: MetricsConfig
+) : AtomFailInfoManageService {
 
     override fun queryAtomErrorCodeStatisticsInfo(
         queryAtomFailInfoDTO: QueryAtomFailInfoDTO
@@ -77,7 +77,7 @@ class AtomFailInfoServiceImpl @Autowired constructor(
             )
         )
         // 查询记录过多，提醒用户缩小查询范围
-        if (atomErrorCodeCount > BK_QUERY_COUNT_MAX) {
+        if (atomErrorCodeCount > metricsConfig.queryCountMax) {
             throw ErrorCodeException(
                 errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
             )
@@ -105,13 +105,14 @@ class AtomFailInfoServiceImpl @Autowired constructor(
         // 对查询结果处理封装
         val atomErrorCodeStatisticsInfos = result.map {
             val errorType = it[BK_ERROR_TYPE] as Int
+            val errorMsg = it[BK_ERROR_MSG]
             AtomErrorCodeStatisticsInfoDO(
 
                 ErrorCodeInfoDO(
                     errorType = errorType,
                     errorTypeName = errorDict[errorType],
                     errorCode = it[BK_ERROR_CODE] as Int,
-                    errorMsg = it[BK_ERROR_MSG] as String
+                    errorMsg = if (errorMsg != null) errorMsg as String else ""
                 ),
                 errorCount = (it[BK_ERROR_COUNT] as Int).toLong()
             )
@@ -138,7 +139,7 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 atomCodes = queryAtomFailInfoDTO.atomCodes
             )
         )
-        if (pipelineFailDetailCount > BK_QUERY_COUNT_MAX) {
+        if (pipelineFailDetailCount > metricsConfig.queryCountMax) {
             throw ErrorCodeException(
                 errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
             )
@@ -163,7 +164,7 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 pageSize = queryAtomFailInfoDTO.pageSize
             )
         )
-        result.forEach { it.errorTypeName =  errorDict[it.errorType]}
+        result.forEach { it.errorTypeName = errorDict[it.errorType] }
         return Page(
             page = queryAtomFailInfoDTO.page,
             pageSize = queryAtomFailInfoDTO.pageSize,

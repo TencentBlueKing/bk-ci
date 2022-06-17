@@ -30,9 +30,9 @@ package com.tencent.devops.metrics.service.impl
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
-import com.tencent.devops.metrics.constant.Constants.BK_QUERY_COUNT_MAX
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
 import com.tencent.devops.metrics.constant.MetricsMessageCode
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.DATE_FORMATTER
@@ -62,8 +62,9 @@ import java.time.LocalDateTime
 class PipelineFailServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineFailDao: PipelineFailDao,
-    private val errorCodeInfoDao: ErrorCodeInfoDao
-): PipelineFailManageService {
+    private val errorCodeInfoDao: ErrorCodeInfoDao,
+    private val metricsConfig: MetricsConfig
+) : PipelineFailManageService {
 
     override fun queryPipelineFailTrendInfo(
         queryPipelineFailTrendDTO: QueryPipelineFailTrendInfoDTO
@@ -99,7 +100,7 @@ class PipelineFailServiceImpl @Autowired constructor(
                         )
             }
             //  当时间区间内存在某一天有某种错误类型数据不存在，返回数据设为0
-            val betweenDates = if(startTime.equals(endTime)) listOf(startTime)
+            val betweenDates = if (startTime.equals(endTime)) listOf(startTime)
                 else getBetweenDate(startTime!!, endTime!!)
             val failStatisticsInfos = betweenDates.map {
                 if (failStatisticsInfoMap.containsKey(it)) {
@@ -146,7 +147,6 @@ class PipelineFailServiceImpl @Autowired constructor(
                 errorCount = (it[BK_ERROR_COUNT_SUM] as BigDecimal).toLong()
             )
         }
-
     }
 
     override fun queryPipelineFailDetailInfo(
@@ -168,7 +168,7 @@ class PipelineFailServiceImpl @Autowired constructor(
             )
         )
         // 查询记录过多，提醒用户缩小查询范围
-        if (queryPipelineFailDetailCount > BK_QUERY_COUNT_MAX) {
+        if (queryPipelineFailDetailCount > metricsConfig.queryCountMax) {
             throw ErrorCodeException(
                 errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
             )

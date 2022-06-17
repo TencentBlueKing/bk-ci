@@ -52,7 +52,7 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val client: Client,
     private val metricsThirdPlatformInfoDao: MetricsThirdPlatformInfoDao
-): MetricsThirdPlatformDataReportService {
+) : MetricsThirdPlatformDataReportService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(MetricsThirdPlatformDataReportServiceImpl::class.java)
@@ -79,7 +79,7 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
             if (metricsThirdPlatformRecord == null) {
                 val thirdPlatformDatePO = ThirdPlatformDatePO(
                     id = client.get(ServiceAllocIdResource::class)
-                        .generateSegmentId("METRICS_PROJECT_THIRD_PLATFORM_DATA").data?: 0,
+                        .generateSegmentId("METRICS_PROJECT_THIRD_PLATFORM_DATA").data ?: 0,
                     projectId = projectId,
                     statisticsTime = statisticsTime,
                     resolvedDefectNum = codeCheckReportEvent.resolvedDefectNum,
@@ -133,7 +133,7 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
             if (metricsThirdPlatformRecord == null) {
                 val thirdPlatformDatePO = ThirdPlatformDatePO(
                     id = client.get(ServiceAllocIdResource::class)
-                        .generateSegmentId("METRICS_PROJECT_THIRD_PLATFORM_DATA").data?: 0,
+                        .generateSegmentId("METRICS_PROJECT_THIRD_PLATFORM_DATA").data ?: 0,
                     projectId = projectId,
                     statisticsTime = statisticsTime,
                     resolvedDefectNum = null,
@@ -191,7 +191,7 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
             if (metricsThirdPlatformRecord == null) {
                 val thirdPlatformDatePO = ThirdPlatformDatePO(
                     id = client.get(ServiceAllocIdResource::class)
-                        .generateSegmentId("METRICS_PROJECT_THIRD_PLATFORM_DATA").data?: 0,
+                        .generateSegmentId("METRICS_PROJECT_THIRD_PLATFORM_DATA").data ?: 0,
                     projectId = projectId,
                     statisticsTime = statisticsTime,
                     resolvedDefectNum = null,
