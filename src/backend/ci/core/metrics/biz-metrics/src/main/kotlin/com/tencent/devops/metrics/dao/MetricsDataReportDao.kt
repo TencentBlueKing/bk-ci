@@ -333,6 +333,7 @@ class MetricsDataReportDao {
                     .set(BUILD_NUM, saveAtomFailDetailDataPO.buildNum)
                     .set(ATOM_CODE, saveAtomFailDetailDataPO.atomCode)
                     .set(ATOM_NAME, saveAtomFailDetailDataPO.atomName)
+                    .set(ATOM_POSITION, saveAtomFailDetailDataPO.atomPosition)
                     .set(CLASSIFY_CODE, saveAtomFailDetailDataPO.classifyCode)
                     .set(CLASSIFY_NAME, saveAtomFailDetailDataPO.classifyName)
                     .set(START_USER, saveAtomFailDetailDataPO.startUser)
