@@ -37,13 +37,12 @@ import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.PipelineOverviewDao
-import com.tencent.devops.metrics.service.PipelineOverviewManageService
 import com.tencent.devops.metrics.pojo.`do`.PipelineSumInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineTrendInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
+import com.tencent.devops.metrics.service.PipelineOverviewManageService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -98,9 +97,5 @@ class PipelineOverviewServiceImpl @Autowired constructor(
             )
         }
         return trendInfos ?: emptyList()
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PipelineOverviewServiceImpl::class.java)
     }
 }

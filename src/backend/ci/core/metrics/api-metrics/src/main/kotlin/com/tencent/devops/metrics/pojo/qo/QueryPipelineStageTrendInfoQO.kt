@@ -35,13 +35,13 @@ data class QueryPipelineStageTrendInfoQO(
     @ApiModelProperty("项目ID")
     val projectId: String,
     @ApiModelProperty("流水线ID")
-    open val pipelineIds: List<String>? = null,
+    val pipelineIds: List<String>? = null,
     @ApiModelProperty("流水线标签")
-    open val pipelineLabelIds: List<Long>? = null,
+    val pipelineLabelIds: List<Long>? = null,
     @ApiModelProperty("开始时间")
-    open var startTime: String,
+    var startTime: String,
     @ApiModelProperty("结束时间")
-    open var endTime: String,
+    var endTime: String,
     @ApiModelProperty("stage标签")
     val stageTag: String
 )

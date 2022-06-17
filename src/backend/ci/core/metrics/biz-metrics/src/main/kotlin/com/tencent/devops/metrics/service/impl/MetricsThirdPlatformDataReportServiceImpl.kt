@@ -121,7 +121,8 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
     override fun metricsTurboDataReport(turboReportMessage: TurboReportEvent): Boolean {
         val projectId = turboReportMessage.projectId
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(turboReportMessage.statisticsDate, YYYY_MM_DD)
-        val lock = RedisLock(redisOperation, metricsThirdPlatformDataReportKey(projectId, statisticsTime.toString()), 10)
+        val key = metricsThirdPlatformDataReportKey(projectId, statisticsTime.toString())
+        val lock = RedisLock(redisOperation, key, 10)
         val currentTime = LocalDateTime.now()
         try {
             lock.lock()

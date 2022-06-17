@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserThirdPartyResourceImpl @Autowired constructor(
     private val thirdPartyManageService: ThirdPartyManageService
 ) : UserThirdPartyResource {
+
     override fun queryPipelineSummaryInfo(
         projectId: String,
         userId: String,

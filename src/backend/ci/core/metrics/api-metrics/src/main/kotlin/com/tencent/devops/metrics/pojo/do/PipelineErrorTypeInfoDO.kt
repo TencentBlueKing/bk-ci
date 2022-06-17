@@ -37,3 +37,4 @@ data class PipelineErrorTypeInfoDO(
     @ApiModelProperty("错误名称")
     val errorName: String
 )
+
