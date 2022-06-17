@@ -41,6 +41,8 @@ data class SavePipelineStageOverviewDataPO(
     val pipelineId: String,
     @ApiModelProperty("流水线名称")
     val pipelineName: String,
+    @ApiModelProperty("渠道代码")
+    val channelCode: String,
     @ApiModelProperty("stage标签名称")
     val stageTagName: String,
     @ApiModelProperty("平均耗时，单位：毫秒")

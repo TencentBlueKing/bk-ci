@@ -38,6 +38,8 @@ data class BuildEndTaskMetricsData(
     val atomName: String,
     @ApiModelProperty("插件标识", required = true)
     val atomCode: String,
+    @ApiModelProperty("插件在model中的位置", required = true)
+    val atomPosition: String,
     @ApiModelProperty("插件分类代码", required = true)
     val classifyCode: String,
     @ApiModelProperty("插件分类名称", required = true)

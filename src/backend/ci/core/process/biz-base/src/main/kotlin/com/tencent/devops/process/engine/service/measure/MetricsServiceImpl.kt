@@ -104,7 +104,8 @@ class MetricsServiceImpl constructor(
             costTime = (buildInfo.endTime ?: 0L) - (buildInfo.startTime ?: 0L),
             successFlag = buildInfo.status.isSuccess(),
             errorInfos = buildInfo.errorInfoList,
-            stages = stageMetricsDatas
+            stages = stageMetricsDatas,
+            channelCode = buildInfo.channelCode.name
         )
         measureEventDispatcher.dispatch(
             BuildEndMetricsBroadCastEvent(
@@ -117,14 +118,14 @@ class MetricsServiceImpl constructor(
     }
 
     private fun handleMetricsData(model: Model, stageMetricsDatas: MutableList<BuildEndStageMetricsData>) {
-        model.stages.forEach nextStage@{ stage ->
+        model.stages.forEachIndexed nextStage@{ stageIndex, stage ->
             // 判断stage是否执行过,未执行过的stage无需上报数据
             val stageStatus = stage.status
             if (!checkMetricsReportCondition(stageStatus)) {
                 return@nextStage
             }
             val containerMetricsDatas = mutableListOf<BuildEndContainerMetricsData>()
-            handleContainer(stage, containerMetricsDatas)
+            handleContainer(stage = stage, stageIndex = stageIndex, containerMetricsDatas = containerMetricsDatas)
             var stageTagNames: MutableList<String>? = null
             stage.tag?.forEach { stageTagId ->
                 if (stageTagNames == null) {
@@ -145,8 +146,12 @@ class MetricsServiceImpl constructor(
         }
     }
 
-    private fun handleContainer(stage: Stage, containerMetricsDatas: MutableList<BuildEndContainerMetricsData>) {
-        stage.containers.forEach nextContainer@{ container ->
+    private fun handleContainer(
+        stage: Stage,
+        stageIndex: Int,
+        containerMetricsDatas: MutableList<BuildEndContainerMetricsData>
+    ) {
+        stage.containers.forEachIndexed nextContainer@{ containerIndex, container ->
             // 判断container是否执行过,未执行过的container无需上报数据
             val containerStatus = container.status
             if (!checkMetricsReportCondition(containerStatus)) {
@@ -154,7 +159,13 @@ class MetricsServiceImpl constructor(
             }
             val taskMetricsDatas = mutableListOf<BuildEndTaskMetricsData>()
             val containerAtomCodes = mutableListOf<String>()
-            handleElement(container, containerAtomCodes, taskMetricsDatas)
+            handleElement(
+                container = container,
+                stageIndex = stageIndex,
+                containerIndex = containerIndex,
+                containerAtomCodes = containerAtomCodes,
+                taskMetricsDatas = taskMetricsDatas
+            )
             containerMetricsDatas.add(
                 BuildEndContainerMetricsData(
                     containerId = container.containerId ?: "",
@@ -169,16 +180,19 @@ class MetricsServiceImpl constructor(
 
     private fun handleElement(
         container: Container,
+        stageIndex: Int,
+        containerIndex: Int,
         containerAtomCodes: MutableList<String>,
         taskMetricsDatas: MutableList<BuildEndTaskMetricsData>
     ) {
-        container.elements.forEach nextElement@{ element ->
+        container.elements.forEachIndexed nextElement@{ elementIndex, element ->
             // 判断插件是否执行过,未执行过的插件无需上报数据
             val elementStatus = element.status
             if (!checkMetricsReportCondition(elementStatus)) {
                 return@nextElement
             }
             containerAtomCodes.add(element.getAtomCode())
+            val elementPosition = "$stageIndex-$containerIndex-$elementIndex"
             addTaskMetricsData(taskMetricsDatas, element, elementStatus)
         }
     }
@@ -186,6 +200,7 @@ class MetricsServiceImpl constructor(
     private fun addTaskMetricsData(
         taskMetricsDatas: MutableList<BuildEndTaskMetricsData>,
         element: Element,
+        elementPosition: String,
         elementStatus: String?
     ) {
         taskMetricsDatas.add(
@@ -193,6 +208,7 @@ class MetricsServiceImpl constructor(
                 taskId = element.id ?: "",
                 atomName = element.atomName ?: element.name,
                 atomCode = element.getAtomCode(),
+                atomPosition = elementPosition,
                 classifyCode = element.classifyCode ?: "",
                 classifyName = element.classifyName ?: "",
                 startTime = element.startEpoch?.let {

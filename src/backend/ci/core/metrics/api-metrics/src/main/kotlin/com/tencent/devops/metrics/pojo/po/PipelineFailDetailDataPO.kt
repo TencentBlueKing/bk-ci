@@ -39,6 +39,8 @@ data class PipelineFailDetailDataPO(
     val pipelineId: String,
     @ApiModelProperty("流水线名称")
     val pipelineName: String,
+    @ApiModelProperty("渠道代码")
+    val channelCode: String,
     @ApiModelProperty("构建ID")
     val buildId: String,
     @ApiModelProperty("构建序号")

@@ -192,6 +192,7 @@ class PipelineFailDao {
                 PROJECT_ID,
                 PIPELINE_ID,
                 PIPELINE_NAME,
+                CHANNEL_CODE,
                 BUILD_ID,
                 BUILD_NUM,
                 REPO_URL,

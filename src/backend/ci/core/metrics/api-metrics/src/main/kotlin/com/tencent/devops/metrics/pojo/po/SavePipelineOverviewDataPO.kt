@@ -41,6 +41,8 @@ data class SavePipelineOverviewDataPO(
     val pipelineId: String,
     @ApiModelProperty("流水线名称")
     val pipelineName: String,
+    @ApiModelProperty("渠道代码")
+    val channelCode: String,
     @ApiModelProperty("总平均耗时，单位：毫秒")
     val totalAvgCostTime: Long,
     @ApiModelProperty("成功平均耗时，单位：毫秒")
