@@ -41,4 +41,5 @@ object Versions {
     const val Leaf = "1.0.1-RELEASE"
     const val p4 = "2021.1.2163843"
     const val log4j = "2.17.1"
+    const val JacksonDatatypeJsr = "2.11.4"
 }
