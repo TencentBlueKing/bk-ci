@@ -29,7 +29,7 @@ package com.tencent.devops.common.expression.pipeline.contextData
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.tencent.devops.common.expression.expression.sdk.IReadOnlyArray
-import com.tencent.devops.common.expression.utils.JsonUtil
+import com.tencent.devops.common.expression.utils.ExpJsonUtil
 
 class ArrayContextData : PipelineContextData(PipelineContextDataType.ARRAY), IReadOnlyArray<PipelineContextData?> {
 
@@ -58,7 +58,7 @@ class ArrayContextData : PipelineContextData(PipelineContextDataType.ARRAY), IRe
     }
 
     override fun toJson(): JsonNode {
-        val json = JsonUtil.createArrayNode()
+        val json = ExpJsonUtil.createArrayNode()
         if (mItems.isNotEmpty()) {
             mItems.forEach {
                 json.add(it?.toJson())

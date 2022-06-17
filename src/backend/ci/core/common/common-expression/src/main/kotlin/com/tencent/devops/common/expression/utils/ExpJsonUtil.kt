@@ -33,7 +33,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import java.io.Reader
 
-object JsonUtil {
+object ExpJsonUtil {
 
     private val objectMapper = ObjectMapper()
 

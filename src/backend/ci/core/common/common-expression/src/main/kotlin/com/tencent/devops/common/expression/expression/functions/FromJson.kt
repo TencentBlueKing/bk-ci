@@ -31,14 +31,14 @@ import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
 import com.tencent.devops.common.expression.expression.sdk.Function
 import com.tencent.devops.common.expression.expression.sdk.ResultMemory
 import com.tencent.devops.common.expression.pipeline.contextData.JsonExtensions.toPipelineContextData
-import com.tencent.devops.common.expression.utils.JsonUtil
+import com.tencent.devops.common.expression.utils.ExpJsonUtil
 
 class FromJson : Function() {
     override fun createNode(): Function = FromJson()
 
     override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
         val jsonStr = parameters[0].evaluate(context).convertToString()
-        val token = JsonUtil.read(jsonStr.reader())
+        val token = ExpJsonUtil.read(jsonStr.reader())
         return Pair(null, token.toPipelineContextData())
     }
 }

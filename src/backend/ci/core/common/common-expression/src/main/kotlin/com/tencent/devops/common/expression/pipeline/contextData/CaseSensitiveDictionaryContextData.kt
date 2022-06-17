@@ -29,7 +29,7 @@ package com.tencent.devops.common.expression.pipeline.contextData
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.tencent.devops.common.expression.expression.sdk.IReadOnlyObject
-import com.tencent.devops.common.expression.utils.JsonUtil
+import com.tencent.devops.common.expression.utils.ExpJsonUtil
 
 /**
  * 区分大小写的字段类型
@@ -134,7 +134,7 @@ class CaseSensitiveDictionaryContextData :
     }
 
     override fun toJson(): JsonNode {
-        val json = JsonUtil.createObjectNode()
+        val json = ExpJsonUtil.createObjectNode()
         if (mList.isNotEmpty()) {
             mList.forEach {
                 json.set<JsonNode>(it.key, it.value?.toJson())
