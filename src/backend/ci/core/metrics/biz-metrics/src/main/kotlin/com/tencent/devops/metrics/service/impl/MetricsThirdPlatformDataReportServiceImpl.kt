@@ -76,8 +76,8 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                 projectId,
                 statisticsTime
             )
-            if (metricsThirdPlatformRecord == null) {
-                val thirdPlatformDatePO = ThirdPlatformDatePO(
+            val thirdPlatformDatePO = if (metricsThirdPlatformRecord == null) {
+                ThirdPlatformDatePO(
                     id = client.get(ServiceAllocIdResource::class)
                         .generateSegmentId("METRICS_PROJECT_THIRD_PLATFORM_DATA").data ?: 0,
                     projectId = projectId,
@@ -90,12 +90,8 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                     createTime = currentTime,
                     updateTime = currentTime
                 )
-                metricsThirdPlatformInfoDao.saveMetricsThirdPlatformData(
-                    dslContext,
-                    thirdPlatformDatePO
-                )
             } else {
-                val thirdPlatformDatePO = ThirdPlatformDatePO(
+                ThirdPlatformDatePO(
                     id = metricsThirdPlatformRecord.id,
                     projectId = metricsThirdPlatformRecord.projectId,
                     statisticsTime = statisticsTime,
@@ -107,11 +103,11 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                     createTime = metricsThirdPlatformRecord.createTime,
                     updateTime = currentTime
                 )
-                metricsThirdPlatformInfoDao.updateMetricsThirdPlatformData(
-                    dslContext,
-                    thirdPlatformDatePO
-                )
             }
+            metricsThirdPlatformInfoDao.saveMetricsThirdPlatformData(
+                dslContext,
+                thirdPlatformDatePO
+            )
         } finally {
             lock.unlock()
         }
@@ -134,8 +130,8 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                 projectId,
                 statisticsTime
             )
-            if (metricsThirdPlatformRecord == null) {
-                val thirdPlatformDatePO = ThirdPlatformDatePO(
+            val thirdPlatformDatePO = if (metricsThirdPlatformRecord == null) {
+                ThirdPlatformDatePO(
                     id = client.get(ServiceAllocIdResource::class)
                         .generateSegmentId("METRICS_PROJECT_THIRD_PLATFORM_DATA").data ?: 0,
                     projectId = projectId,
@@ -148,12 +144,8 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                     createTime = currentTime,
                     updateTime = currentTime
                 )
-                metricsThirdPlatformInfoDao.saveMetricsThirdPlatformData(
-                    dslContext,
-                    thirdPlatformDatePO
-                )
             } else {
-                val thirdPlatformDatePO = ThirdPlatformDatePO(
+                ThirdPlatformDatePO(
                     id = metricsThirdPlatformRecord.id,
                     projectId = metricsThirdPlatformRecord.projectId,
                     statisticsTime = statisticsTime,
@@ -165,11 +157,11 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                     createTime = metricsThirdPlatformRecord.createTime,
                     updateTime = currentTime
                 )
-                metricsThirdPlatformInfoDao.updateMetricsThirdPlatformData(
-                    dslContext,
-                    thirdPlatformDatePO
-                )
             }
+            metricsThirdPlatformInfoDao.saveMetricsThirdPlatformData(
+                dslContext,
+                thirdPlatformDatePO
+            )
         } finally {
             lock.unlock()
         }
@@ -192,8 +184,8 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                 projectId,
                 statisticsTime
             )
-            if (metricsThirdPlatformRecord == null) {
-                val thirdPlatformDatePO = ThirdPlatformDatePO(
+            val thirdPlatformDatePO = if (metricsThirdPlatformRecord == null) {
+                ThirdPlatformDatePO(
                     id = client.get(ServiceAllocIdResource::class)
                         .generateSegmentId("METRICS_PROJECT_THIRD_PLATFORM_DATA").data ?: 0,
                     projectId = projectId,
@@ -206,13 +198,8 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                     createTime = currentTime,
                     updateTime = currentTime
                 )
-                logger.info("metricsCodeCheckDataReport thirdPlatformDatePO：$thirdPlatformDatePO")
-                metricsThirdPlatformInfoDao.saveMetricsThirdPlatformData(
-                    dslContext,
-                    thirdPlatformDatePO
-                )
             } else {
-                val thirdPlatformDatePO = ThirdPlatformDatePO(
+                ThirdPlatformDatePO(
                     id = metricsThirdPlatformRecord.id,
                     projectId = metricsThirdPlatformRecord.projectId,
                     statisticsTime = statisticsTime,
@@ -224,11 +211,11 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                     createTime = metricsThirdPlatformRecord.createTime,
                     updateTime = currentTime
                 )
-                metricsThirdPlatformInfoDao.updateMetricsThirdPlatformData(
-                    dslContext,
-                    thirdPlatformDatePO
-                )
             }
+            metricsThirdPlatformInfoDao.saveMetricsThirdPlatformData(
+                dslContext,
+                thirdPlatformDatePO
+            )
         } finally {
             lock.unlock()
         }
