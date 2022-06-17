@@ -524,7 +524,7 @@ class LexicalAnalyzer(private val expression: String) {
                 '<', // "<" and "<="
                 '=', // "=="
                 '&', // "&&"
-                '|', // "||"
+                '|' // "||"
                 -> return true
                 else -> return c.isWhitespace()
             }

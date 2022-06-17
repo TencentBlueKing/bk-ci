@@ -228,7 +228,7 @@ class EvaluationResult(
          */
         private fun abstractGreaterThan(
             leftValue: Any?,
-            rightValue: Any?,
+            rightValue: Any?
         ): Boolean {
 
             val (v, k) = coerceTypes(leftValue, rightValue)

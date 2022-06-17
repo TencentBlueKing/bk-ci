@@ -229,7 +229,7 @@ class ExpressionParserTest {
             "'0' >= '0' => true",
             "'str' >= 'stt' => false",
             "'str' >= 'strt' => false",
-            "'str' >= 'str' => true",
+            "'str' >= 'str' => true"
         ]
     )
     fun operatorLessAndGreaterAndThan(lagat: String) {
