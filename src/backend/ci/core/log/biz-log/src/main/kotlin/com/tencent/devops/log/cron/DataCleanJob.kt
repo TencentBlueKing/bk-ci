@@ -49,7 +49,6 @@ import java.util.concurrent.TimeUnit
 @Suppress("ReturnCount")
 @Component
 class DataCleanJob @Autowired constructor(
-    storageProperties: StorageProperties,
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
     private val storageProperties: StorageProperties,
