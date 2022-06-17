@@ -276,7 +276,7 @@ class EvaluationResult(
          */
         private fun abstractLessThan(
             leftValue: Any?,
-            rightValue: Any?,
+            rightValue: Any?
         ): Boolean {
 
             val (v, k) = coerceTypes(leftValue, rightValue)
@@ -322,7 +322,7 @@ class EvaluationResult(
         // / Except objects are not coerced to primitives.
         private fun coerceTypes(
             leftValue: Any?,
-            rightValue: Any?,
+            rightValue: Any?
         ): Pair<Pair<Any?, Any?>, Pair<ValueKind, ValueKind>> {
             var canonicalLeftValue = leftValue
             var canonicalRightValue = rightValue
