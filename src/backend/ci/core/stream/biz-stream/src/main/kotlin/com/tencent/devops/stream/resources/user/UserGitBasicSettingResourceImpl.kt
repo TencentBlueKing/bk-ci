@@ -55,7 +55,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
     private val streamBasicSettingService: StreamBasicSettingService,
     private val permissionService: StreamPermissionService,
     private val streamGitTransferService: StreamGitTransferService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : UserGitBasicSettingResource {
 
     @BkTimed
