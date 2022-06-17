@@ -34,6 +34,7 @@ import com.tencent.devops.common.expression.expression.sdk.IReadOnlyArray
 import com.tencent.devops.common.expression.expression.sdk.MemoryCounter
 import com.tencent.devops.common.expression.expression.sdk.ResultMemory
 
+@Suppress("NestedBlockDepth")
 class Join : Function() {
     override fun createNode(): Function = Join()
 

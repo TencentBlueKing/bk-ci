@@ -19,6 +19,7 @@ import com.tencent.devops.common.expression.expression.tokens.Token
 import com.tencent.devops.common.expression.expression.tokens.TokenKind
 import java.util.TreeMap
 
+@Suppress("NestedBlockDepth", "ComplexCondition", "EmptyFunctionBlock")
 class ExpressionParser {
 
     fun createTree(

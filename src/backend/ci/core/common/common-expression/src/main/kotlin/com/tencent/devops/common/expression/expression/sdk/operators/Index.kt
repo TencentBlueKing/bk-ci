@@ -13,6 +13,7 @@ import com.tencent.devops.common.expression.expression.sdk.ResultMemory
 import com.tencent.devops.common.expression.expression.sdk.Wildcard
 import kotlin.math.floor
 
+@Suppress("NestedBlockDepth")
 class Index : Container() {
 
     override val traceFullyRealized = true

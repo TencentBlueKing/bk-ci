@@ -17,6 +17,7 @@ import com.tencent.devops.common.expression.expression.sdk.operators.NotEqual
 import com.tencent.devops.common.expression.expression.sdk.operators.Or
 
 // 词法分析中的 标记，是一个字符串，也是构成源代码的最小单位
+@Suppress("ComplexMethod")
 class Token(
     val kind: TokenKind,
     val rawValue: String,

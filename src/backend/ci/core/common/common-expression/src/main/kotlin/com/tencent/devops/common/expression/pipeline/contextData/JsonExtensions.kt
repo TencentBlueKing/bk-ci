@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.fasterxml.jackson.databind.node.ObjectNode
 
+@Suppress("NestedBlockDepth")
 object JsonExtensions {
 
     fun JsonNode.toPipelineContextData(): PipelineContextData? {

@@ -41,6 +41,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
+@Suppress("ComplexMethod")
 @DisplayName("表达式解析类综合测试")
 class ExpressionParserTest {
 

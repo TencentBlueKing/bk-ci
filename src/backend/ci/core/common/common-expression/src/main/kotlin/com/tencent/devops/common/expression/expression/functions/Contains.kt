@@ -6,6 +6,7 @@ import com.tencent.devops.common.expression.expression.sdk.Function
 import com.tencent.devops.common.expression.expression.sdk.IReadOnlyArray
 import com.tencent.devops.common.expression.expression.sdk.ResultMemory
 
+@Suppress("NestedBlockDepth")
 class Contains : Function() {
     override val traceFullyRealized: Boolean
         get() = false

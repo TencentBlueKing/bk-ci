@@ -9,6 +9,7 @@ import com.tencent.devops.common.expression.resources.ExpressionResources
  * 此类用于跟踪当前内存消耗
  * 跨越整个表达式求值。
  */
+@Suppress("NestedBlockDepth")
 class EvaluationMemory(private val maxBytes: Int, private val node: ExpressionNode?) {
     private val mDepths = mutableListOf<Int>()
     private var mMaxActiveDepth: Int = -1

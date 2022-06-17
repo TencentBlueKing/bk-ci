@@ -6,6 +6,7 @@ import com.tencent.devops.common.expression.expression.Stack.Companion.pop
 import com.tencent.devops.common.expression.expression.Stack.Companion.push
 import com.tencent.devops.common.expression.expression.sdk.ExpressionUtility
 
+@Suppress("ComplexCondition", "ComplexMethod")
 class LexicalAnalyzer(private val expression: String) {
     private val mUnclosedTokens = ArrayDeque<Token?>()
     val unclosedTokens: Iterable<Token?>

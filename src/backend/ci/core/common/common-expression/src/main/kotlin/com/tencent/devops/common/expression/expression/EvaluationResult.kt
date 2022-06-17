@@ -6,6 +6,7 @@ import com.tencent.devops.common.expression.expression.sdk.IReadOnlyArray
 import com.tencent.devops.common.expression.expression.sdk.IReadOnlyObject
 import com.tencent.devops.common.expression.utils.FormatUtil
 
+@Suppress("EmptyIfBlock")
 class EvaluationResult(
     val context: EvaluationContext?,
     private val level: Int,

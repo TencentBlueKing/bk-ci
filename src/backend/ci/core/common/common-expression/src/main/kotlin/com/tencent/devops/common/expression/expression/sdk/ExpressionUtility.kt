@@ -6,6 +6,7 @@ import com.tencent.devops.common.expression.expression.ExpressionConstants
 import com.tencent.devops.common.expression.expression.ValueKind
 import com.tencent.devops.common.expression.utils.FormatUtil
 
+@Suppress("ComplexMethod", "ComplexCondition")
 object ExpressionUtility {
 
     fun convertToCanonicalValue(
