@@ -42,6 +42,10 @@ class ServiceUserBlackListResourceImpl @Autowired constructor(
         return Result(authUserBlackListService.createBlackListUser(userId, remark))
     }
 
+    override fun blackList(): Result<Set<String>> {
+        return Result(authUserBlackListService.blackList())
+    }
+
     /**
      * 因有过滤器会处理userId相关的请求，若为黑名单内用户使用userId传参请求会被拦截
      */

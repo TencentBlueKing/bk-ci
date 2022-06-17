@@ -30,6 +30,8 @@ package com.tencent.devops.auth.dao
 import com.tencent.devops.model.auth.tables.TAuthUserBlacklist
 import com.tencent.devops.model.auth.tables.records.TAuthUserBlacklistRecord
 import org.jooq.DSLContext
+import org.jooq.Result
+import org.jooq.SelectConditionStep
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 
@@ -63,6 +65,14 @@ class AuthUserBlackListDao {
     ): TAuthUserBlacklistRecord? {
         with(TAuthUserBlacklist.T_AUTH_USER_BLACKLIST) {
             return dslContext.selectFrom(this).where(USER_ID.eq(userId).and(STATUS.eq(true))).fetchAny()
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext
+    ): Result<TAuthUserBlacklistRecord>? {
+        with(TAuthUserBlacklist.T_AUTH_USER_BLACKLIST) {
+            return dslContext.selectFrom(this).where(STATUS.eq(true)).fetch()
         }
     }
 

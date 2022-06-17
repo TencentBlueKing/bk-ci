@@ -67,6 +67,12 @@ class AuthUserBlackListService @Autowired constructor(
         return authUserBlackListDao.delete(dslContext, userId) == 1
     }
 
+    fun blackList(): Set<String> {
+        val blackList = mutableSetOf<String>()
+        authUserBlackListDao.list(dslContext)?.map { blackList.add(it.userId) }
+        return blackList
+    }
+
     fun checkBlackListUser(
         userId: String
     ): Boolean {
