@@ -216,6 +216,9 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                 dslContext,
                 thirdPlatformDatePO
             )
+            logger.info("metricsQualityDataReport thirdPlatformDatePO: $thirdPlatformDatePO")
+        } catch (e: Exception) {
+            logger.error("metricsQualityDataReport Exception e:$e   qualityReportMessage: $qualityReportMessage")
         } finally {
             lock.unlock()
         }
