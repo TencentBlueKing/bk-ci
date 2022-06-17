@@ -30,7 +30,6 @@ package com.tencent.devops.store.service.atom
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.MarketAtomClassify
-import com.tencent.devops.store.pojo.common.Classify
 
 /**
  * 插件市场-插件分类业务逻辑类

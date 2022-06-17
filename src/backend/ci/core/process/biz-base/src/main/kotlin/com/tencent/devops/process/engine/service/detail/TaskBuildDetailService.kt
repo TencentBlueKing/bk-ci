@@ -53,7 +53,6 @@ import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
-import com.tencent.devops.store.pojo.common.Classify
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
