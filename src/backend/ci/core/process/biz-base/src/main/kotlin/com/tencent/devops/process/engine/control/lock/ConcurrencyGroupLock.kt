@@ -25,33 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.api.pojo
+package com.tencent.devops.process.engine.control.lock
 
-import com.tencent.devops.common.api.util.JsonUtil
-import org.junit.jupiter.api.Test
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-class BkResourceUserResponseTest {
-
-    @Test
-    fun showJson() {
-        val bk = BkResourceUserResponse(
-            code = 3,
-            data = listOf(
-                BkResourceUserResponse.Data(
-                    actionId = "3", principals = listOf(
-                        BkResourceUserResponse.Principal(
-                            principalId = "p1", principalType = "type"
-                        )
-                    ), resourceType = "t", resourceId =
-                    listOf(
-                        BkResourceUserResponse.ResourceId(
-                            resourceId = "r11",
-                            resourceType = "t2"
-                        )
-                    )
-                )
-            ), requestId = "323", result = true, message = "dd"
-        )
-        println(JsonUtil.toJson(bk))
-    }
-}
+class ConcurrencyGroupLock(redisOperation: RedisOperation, concurrencyGroup: String) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "lock:build:concurrency:group:$concurrencyGroup",
+        expiredTimeInSeconds = 30L
+    )

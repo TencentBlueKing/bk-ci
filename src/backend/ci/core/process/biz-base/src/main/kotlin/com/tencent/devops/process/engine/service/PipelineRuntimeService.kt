@@ -1146,22 +1146,22 @@ class PipelineRuntimeService @Autowired constructor(
         }
         return JsonUtil.toJson(
             bean = WebhookInfo(
-                webhookMessage = params[PIPELINE_WEBHOOK_COMMIT_MESSAGE] as String?,
-                webhookRepoUrl = params[BK_REPO_WEBHOOK_REPO_URL] as String?,
-                webhookType = params[PIPELINE_WEBHOOK_TYPE] as String?,
-                webhookBranch = params[PIPELINE_WEBHOOK_BRANCH] as String?,
+                webhookMessage = params[PIPELINE_WEBHOOK_COMMIT_MESSAGE]?.toString(),
+                webhookRepoUrl = params[BK_REPO_WEBHOOK_REPO_URL]?.toString(),
+                webhookType = params[PIPELINE_WEBHOOK_TYPE]?.toString(),
+                webhookBranch = params[PIPELINE_WEBHOOK_BRANCH]?.toString(),
                 // GIT事件分为MR和MR accept,但是PIPELINE_WEBHOOK_EVENT_TYPE值只有MR
                 webhookEventType = if (params[PIPELINE_WEBHOOK_TYPE] == CodeType.GIT.name) {
-                    params[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] as String?
+                    params[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]?.toString()
                 } else {
-                    params[PIPELINE_WEBHOOK_EVENT_TYPE] as String?
+                    params[PIPELINE_WEBHOOK_EVENT_TYPE]?.toString()
                 },
                 webhookCommitId = params[PIPELINE_WEBHOOK_REVISION] as String?,
-                webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] as String?,
-                webhookSourceBranch = params[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] as String?,
-                mrId = params[BK_REPO_GIT_WEBHOOK_MR_ID] as String?,
-                mrIid = params[BK_REPO_GIT_WEBHOOK_MR_NUMBER] as String?,
-                mrUrl = params[BK_REPO_GIT_WEBHOOK_MR_URL] as String?
+                webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA]?.toString(),
+                webhookSourceBranch = params[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH]?.toString(),
+                mrId = params[BK_REPO_GIT_WEBHOOK_MR_ID]?.toString(),
+                mrIid = params[BK_REPO_GIT_WEBHOOK_MR_NUMBER]?.toString(),
+                mrUrl = params[BK_REPO_GIT_WEBHOOK_MR_URL]?.toString()
             ),
             formatted = false
         )
