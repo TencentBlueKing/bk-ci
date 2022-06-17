@@ -1740,4 +1740,13 @@ class PipelineListFacadeService @Autowired constructor(
             )
         )
     }
+
+    fun getPipelineLabelProjectId(userId: String, page: Int, pageSize: Int): Page<String> {
+        return Page(
+            page = page,
+            pageSize = pageSize,
+            count = pipelineLabelPipelineDao.getPipelineLabelRelateInfoCount(dslContext, ""),
+            records = emptyList()
+        )
+    }
 }
