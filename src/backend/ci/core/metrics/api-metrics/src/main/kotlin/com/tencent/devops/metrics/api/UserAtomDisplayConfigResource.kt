@@ -93,7 +93,7 @@ interface UserAtomDisplayConfigResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("keyword", required = false)
-        @QueryParam("atomCode")
+        @QueryParam("keyword")
         keyword: String?
     ): Result<AtomDisplayConfigVO>
 
