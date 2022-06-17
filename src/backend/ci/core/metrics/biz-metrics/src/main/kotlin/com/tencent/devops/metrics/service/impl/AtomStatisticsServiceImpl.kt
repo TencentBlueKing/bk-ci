@@ -88,22 +88,15 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         // 未选择查询的插件时读取插件显示配置
         val atomCodes =
             if (queryAtomTrendInfoDTO.atomCodes.isNullOrEmpty()) {
-                val configs = atomDisplayConfigDao.getAtomDisplayConfig(
-                    dslContext,
-                    queryAtomTrendInfoDTO.projectId,
-                    null
+                // 插件配置为空择读取项目下插件
+                atomDisplayConfigDao.getOptionalAtomDisplayConfig(
+                    dslContext = dslContext,
+                    projectId = queryAtomTrendInfoDTO.projectId,
+                    atomCodes = emptyList(),
+                    keyword = null,
+                    page = 1,
+                    pageSize = 10
                 ).map { it.atomCode }
-                configs.ifEmpty {
-                    // 插件配置为空择读取项目下插件
-                    atomDisplayConfigDao.getOptionalAtomDisplayConfig(
-                        dslContext = dslContext,
-                        projectId = queryAtomTrendInfoDTO.projectId,
-                        atomCodes = emptyList(),
-                        keyword = null,
-                        page = 1,
-                        pageSize = 10
-                    ).map { it.atomCode }
-                }
         } else queryAtomTrendInfoDTO.atomCodes!!
         //  查询插件趋势信息
         val result = atomStatisticsDao.queryAtomTrendInfo(
@@ -182,21 +175,14 @@ class AtomStatisticsServiceImpl @Autowired constructor(
     ): ListPageVO<AtomExecutionStatisticsInfoDO> {
         // 未选择查询的插件时读取插件显示配置
         val atomCodes = if (queryAtomTrendInfoDTO.atomCodes.isNullOrEmpty()) {
-                val configs = atomDisplayConfigDao.getAtomDisplayConfig(
-                    dslContext = dslContext,
-                    projectId = queryAtomTrendInfoDTO.projectId,
-                    null
-                ).map { it.atomCode }
-            configs.ifEmpty {
-                atomDisplayConfigDao.getOptionalAtomDisplayConfig(
-                    dslContext = dslContext,
-                    projectId = queryAtomTrendInfoDTO.projectId,
-                    atomCodes = emptyList(),
-                    keyword = null,
-                    page = 1,
-                    pageSize = 10
-                ).map { it.atomCode }
-            }
+            atomDisplayConfigDao.getOptionalAtomDisplayConfig(
+                dslContext = dslContext,
+                projectId = queryAtomTrendInfoDTO.projectId,
+                atomCodes = emptyList(),
+                keyword = null,
+                page = 1,
+                pageSize = 10
+            ).map { it.atomCode }
         } else queryAtomTrendInfoDTO.atomCodes!!
         // 查询符合查询条件的记录数
         val queryAtomExecuteStatisticsCount =

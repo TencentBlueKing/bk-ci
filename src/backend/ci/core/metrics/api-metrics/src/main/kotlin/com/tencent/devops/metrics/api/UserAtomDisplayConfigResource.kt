@@ -70,7 +70,7 @@ interface UserAtomDisplayConfigResource {
 
     @ApiOperation("删除项目下需要展示的插件配置")
     @Path("/delete")
-    @DELETE
+    @POST
     fun deleteAtomDisplayConfig(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
