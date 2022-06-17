@@ -30,25 +30,23 @@ package com.tencent.devops.websocket.servcie
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.websocket.keys.WebsocketKeys
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class TencentProjectProxyServiceImpl @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val bkTag: BkTag
 ) : ProjectProxyService {
-
-    @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
-    private val tag: String? = null
-
     override fun checkProject(projectId: String, userId: String): Boolean {
-        if (!tag.isNullOrBlank() && tag.contains(IGNORETAG)) {
+        val tag = bkTag.getLocalTag()
+        if (tag.isNotBlank() && tag.contains(IGNORETAG)) {
             return true
         }
 
@@ -76,8 +74,10 @@ class TencentProjectProxyServiceImpl @Autowired constructor(
             return if (privilegeProjectCodeList.contains(projectId)) {
                 true
             } else {
-                logger.warn("changePage checkProject fail:" +
-                    " user:$userId,projectId:$projectId,projectList:$privilegeProjectCodeList")
+                logger.warn(
+                    "changePage checkProject fail:" +
+                            " user:$userId,projectId:$projectId,projectList:$privilegeProjectCodeList"
+                )
                 false
             }
         } catch (e: Exception) {

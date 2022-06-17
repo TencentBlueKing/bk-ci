@@ -83,8 +83,13 @@ class TXStreamYamlService @Autowired constructor(
                 }
             }
             else -> {
-                yamlSchemaCheck.check(yaml.yaml, null, true)
-                Result("OK")
+                return try {
+                    yamlSchemaCheck.check(yaml.yaml, null, true)
+                    Result("OK")
+                } catch (e: Exception) {
+                    logger.warn("Check yaml schema failed.", e)
+                    Result(1, "Invalid yaml: ${e.message}")
+                }
             }
         }
     }

@@ -125,6 +125,11 @@ class IndexService @Autowired constructor(
         return lineNum!! - size
     }
 
+    fun getLastLineNum(buildId: String): Long {
+        return redisOperation.get(getLineNumRedisKey(buildId))?.toLong()
+            ?: indexDao.getBuild(dslContext, buildId)?.lastLineNum ?: 0
+    }
+
     fun flushLineNum2DB(buildId: String) {
         val lineNum = redisOperation.get(getLineNumRedisKey(buildId))
         if (lineNum.isNullOrBlank()) {

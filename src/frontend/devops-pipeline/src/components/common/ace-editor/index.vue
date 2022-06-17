@@ -103,6 +103,9 @@
                 minimap: {
                     enabled: false
                 },
+                scrollbar: {
+                    alwaysConsumeMouseWheel: false
+                },
                 readOnly: this.readOnly
             })
             this.isLoading = false

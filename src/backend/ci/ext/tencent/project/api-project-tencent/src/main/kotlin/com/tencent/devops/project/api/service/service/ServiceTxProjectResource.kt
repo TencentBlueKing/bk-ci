@@ -223,6 +223,21 @@ interface ServiceTxProjectResource {
         accessToken: String
     ): Result<ProjectVO?>
 
+    @GET
+    @Path("/rds/getOrCreate")
+    @ApiOperation("查询用户项目")
+    fun getOrCreateRdsProject(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("蓝盾项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("蓝盾项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String
+    ): Result<ProjectVO?>
+
     @POST
     @Path("/newProject")
     @ApiOperation("创建项目")

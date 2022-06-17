@@ -291,12 +291,13 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             serviceScope = serviceScope,
             jobType = jobType,
             os = os,
-            projectCode = if (queryProjectAtomFlag || !keyword.isNullOrBlank()) projectCode else null,
+            projectCode = projectCode,
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
             keyword = keyword,
             fitOsFlag = fitOsFlag,
+            queryProjectAtomFlag = queryProjectAtomFlag,
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
             page = page,
             pageSize = pageSize
@@ -409,12 +410,13 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             serviceScope = serviceScope,
             jobType = jobType,
             os = os,
-            projectCode = if (queryProjectAtomFlag || !keyword.isNullOrBlank()) projectCode else null,
+            projectCode = projectCode,
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
             keyword = keyword,
             fitOsFlag = fitOsFlag,
+            queryProjectAtomFlag = queryProjectAtomFlag,
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
         )
         val totalPage = PageUtil.calTotalPage(pageSize, totalSize)

@@ -44,7 +44,8 @@ data class StreamTriggerPipeline(
     val filePath: String,
     var displayName: String,
     val enabled: Boolean,
-    val creator: String?
+    val creator: String?,
+    val lastUpdateBranch: String? = ""
 ) {
     constructor(pipeline: StreamGitProjectPipeline) : this(
         gitProjectId = pipeline.gitProjectId.toString(),
@@ -52,7 +53,8 @@ data class StreamTriggerPipeline(
         filePath = pipeline.filePath,
         displayName = pipeline.displayName,
         enabled = pipeline.enabled,
-        creator = pipeline.creator
+        creator = pipeline.creator,
+        lastUpdateBranch = pipeline.lastUpdateBranch
     )
 
     constructor(pipeline: TGitPipelineResourceRecord) : this(
@@ -61,7 +63,8 @@ data class StreamTriggerPipeline(
         filePath = pipeline.filePath,
         displayName = pipeline.displayName,
         enabled = pipeline.enabled,
-        creator = pipeline.creator
+        creator = pipeline.creator,
+        lastUpdateBranch = pipeline.lastUpdateBranch
     )
 
     fun toGitPipeline(): StreamGitProjectPipeline {
@@ -74,7 +77,8 @@ data class StreamTriggerPipeline(
                 enabled = enabled,
                 creator = creator,
                 null,
-                null
+                null,
+                lastUpdateBranch = lastUpdateBranch
             )
         }
     }

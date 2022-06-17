@@ -15,6 +15,7 @@ import com.tencent.devops.scm.code.p4.api.P4FileSpec
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.net.URLDecoder
+import java.net.URLEncoder
 
 @Service
 @Primary
@@ -33,7 +34,7 @@ class TencentP4Service(
         return client.getScm(ServiceP4Resource::class).getChangelistFiles(
             p4Port = repository.url,
             username = username,
-            password = password,
+            password = URLEncoder.encode(password, "UTF-8"),
             change = change
         ).data!!
     }
@@ -48,8 +49,24 @@ class TencentP4Service(
         return client.getScm(ServiceP4Resource::class).getShelvedFiles(
             p4Port = repository.url,
             username = username,
-            password = password,
+            password = URLEncoder.encode(password, "UTF-8"),
             change = change
+        ).data!!
+    }
+
+    override fun getFileContent(
+        p4Port: String,
+        filePath: String,
+        reversion: Int,
+        username: String,
+        password: String
+    ): String {
+        return client.getScm(ServiceP4Resource::class).getFileContent(
+            p4Port = p4Port,
+            username = username,
+            password = URLEncoder.encode(password, "UTF-8"),
+            filePath = filePath,
+            reversion = reversion
         ).data!!
     }
 

@@ -29,7 +29,7 @@ package com.tencent.devops.openapi.resources.apigw.v2
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v2.ApigwProjectResourceV2
 import com.tencent.devops.openapi.service.apigw.ApigwProjectService
@@ -46,7 +46,8 @@ import org.springframework.beans.factory.annotation.Value
 @RestResource
 class ApigwProjectResourceV2Impl @Autowired constructor(
     private val client: Client,
-    private val apigwProjectService: ApigwProjectService
+    private val apigwProjectService: ApigwProjectService,
+    private val bkTag: BkTag
 ) : ApigwProjectResourceV2 {
 
     @Value("\${project.route.tag:#{null}}")
@@ -81,14 +82,16 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
 
         // 创建项目需要指定对接的主集群。 不同集群可能共用同一个套集群
         if (!projectRouteTag.isNullOrEmpty()) {
-            ConsulContent.setConsulContent(projectRouteTag)
+            bkTag.setGatewayTag(projectRouteTag)
         }
-        return Result(client.get(ServiceTxProjectResource::class).create(
-            userId = userId,
-            accessToken = accessToken,
-            projectCreateInfo = projectCreateInfo,
-            routerTag = routerTag
-        ).data!!)
+        return Result(
+            client.get(ServiceTxProjectResource::class).create(
+                userId = userId,
+                accessToken = accessToken,
+                projectCreateInfo = projectCreateInfo,
+                routerTag = routerTag
+            ).data!!
+        )
     }
 
     override fun listProjectByOrganizationId(

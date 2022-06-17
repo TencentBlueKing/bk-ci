@@ -121,7 +121,10 @@ class ModelElement @Autowired(required = false) constructor(
     ): Element {
         return if (inner!!.marketRunTask) {
             val data = mutableMapOf<String, Any>()
-            data["input"] = mapOf("script" to step.run)
+            data["input"] = mapOf(
+                "script" to step.run,
+                "shell" to (step.runAdditionalOptions?.get("shell") ?: "")
+            )
             MarketBuildAtomElement(
                 id = step.taskId,
                 name = step.name ?: "run",

@@ -327,6 +327,7 @@ class BuildStartControl @Autowired constructor(
                         buildStatus = BuildStatus.SUCCEED
                     )
                     it.status = BuildStatus.SUCCEED.name
+                    buildLogPrinter.stopLog(buildInfo.buildId, taskId, jobId = JOB_ID, executeCount)
                     return@lit
                 }
             }

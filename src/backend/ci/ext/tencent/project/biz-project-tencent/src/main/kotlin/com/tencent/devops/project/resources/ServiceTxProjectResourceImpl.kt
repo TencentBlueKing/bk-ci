@@ -204,6 +204,14 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         return Result(projectLocalService.getOrCreatePreProject(userId, accessToken))
     }
 
+    override fun getOrCreateRdsProject(
+        userId: String,
+        projectId: String,
+        projectName: String
+    ): Result<ProjectVO?> {
+        return Result(projectLocalService.getOrCreateRdsProject(userId, projectId, projectName))
+    }
+
     override fun create(
         userId: String,
         accessToken: String,
