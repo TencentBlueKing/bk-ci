@@ -33,12 +33,10 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
-import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.stream.api.user.UserGitBasicSettingResource
@@ -97,13 +95,6 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
                 userId = userId,
                 repoId = setting!!.gitProjectId.toString(),
                 repoUrl = setting!!.url
-            ),
-            PipelineUpdateEvent(
-                source = "update_pipeline",
-                projectId = "ljltestproject",
-                pipelineId = "p-c8383b7a18f04a2ead8c490c1a511b9f",
-                version = 2,
-                userId = userId
             )
         )
         return Result(result)
