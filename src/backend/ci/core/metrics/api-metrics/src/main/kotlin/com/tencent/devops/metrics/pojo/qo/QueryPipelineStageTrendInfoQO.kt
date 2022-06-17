@@ -27,7 +27,6 @@
 
 package com.tencent.devops.metrics.pojo.qo
 
-import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -35,8 +34,14 @@ import io.swagger.annotations.ApiModelProperty
 data class QueryPipelineStageTrendInfoQO(
     @ApiModelProperty("项目ID")
     val projectId: String,
-    @ApiModelProperty("查询条件信息")
-    val baseQueryReq: BaseQueryReqVO,
-    @ApiModelProperty("stage标签", required = true)
+    @ApiModelProperty("流水线ID")
+    open val pipelineIds: List<String>? = null,
+    @ApiModelProperty("流水线标签")
+    open val pipelineLabelIds: List<Long>? = null,
+    @ApiModelProperty("开始时间")
+    open var startTime: String,
+    @ApiModelProperty("结束时间")
+    open var endTime: String,
+    @ApiModelProperty("stage标签")
     val stageTag: String
 )

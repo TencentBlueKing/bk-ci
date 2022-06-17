@@ -73,7 +73,7 @@ class ThirdPartyOverviewInfoDao {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(thirdPartyOverviewInfoQO.projectId))
                 .and(STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
-                .fetchOne(0, Int::class.java)?: 0
+                .fetchOne(0, Int::class.java) ?: 0
         }
     }
 }

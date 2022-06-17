@@ -1731,12 +1731,22 @@ class PipelineListFacadeService @Autowired constructor(
         return Page(
             page = page,
             pageSize = pageSize,
-            count = pipelineLabelPipelineDao.getPipelineLabelRelateInfoCount(dslContext),
+            count = pipelineLabelPipelineDao.getPipelineLabelRelateInfoCount(dslContext, ""),
             records = pipelineLabelPipelineDao.getPipelineLabelRelateInfos(
                 dslContext = dslContext,
+                projectId = "",
                 page = page,
-                pageSize = if (pageSize > 500) 500 else pageSize
+                pageSize = pageSize
             )
+        )
+    }
+
+    fun getPipelineLabelProjectId(userId: String, page: Int, pageSize: Int): Page<String> {
+        return Page(
+            page = page,
+            pageSize = pageSize,
+            count = pipelineLabelPipelineDao.getPipelineLabelRelateInfoCount(dslContext, ""),
+            records = emptyList()
         )
     }
 }

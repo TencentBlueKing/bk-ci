@@ -27,7 +27,6 @@
 
 package com.tencent.devops.metrics.pojo.vo
 
-import com.tencent.devops.metrics.pojo.`vo`.BaseQueryReqVO
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiParam
 
@@ -44,5 +43,5 @@ data class PipelineFailInfoQueryReqVO(
     @ApiParam("错误类型", required = false)
     val errorTypes: List<Int>? = null,
     @ApiParam("插件代码", required = false)
-    val atomCodes: List<String>? = null,
-): BaseQueryReqVO(pipelineIds, pipelineLabelIds, startTime, endTime)
+    val atomCodes: List<String>? = null
+) : BaseQueryReqVO(pipelineIds, pipelineLabelIds, startTime, endTime)

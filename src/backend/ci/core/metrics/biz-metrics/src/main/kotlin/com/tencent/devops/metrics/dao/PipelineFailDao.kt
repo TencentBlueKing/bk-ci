@@ -53,7 +53,7 @@ class PipelineFailDao {
 
     fun getPipelineIdByTotalExecuteCount(
         dslContext: DSLContext,
-        queryPipelineFailQo: QueryPipelineFailQO,
+        queryPipelineFailQo: QueryPipelineFailQO
     ): List<String> {
         with(TPipelineFailSummaryData.T_PIPELINE_FAIL_SUMMARY_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
@@ -253,7 +253,7 @@ class PipelineFailDao {
     private fun TPipelineFailDetailData.getConditions(
         projectId: String,
         baseQuery: BaseQueryReqVO,
-        tProjectPipelineLabelInfo: TProjectPipelineLabelInfo,
+        tProjectPipelineLabelInfo: TProjectPipelineLabelInfo
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(this.PROJECT_ID.eq(projectId))

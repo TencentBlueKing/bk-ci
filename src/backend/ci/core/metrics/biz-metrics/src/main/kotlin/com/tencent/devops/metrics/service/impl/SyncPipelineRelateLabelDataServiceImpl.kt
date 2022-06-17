@@ -27,10 +27,8 @@
 
 package com.tencent.devops.metrics.service.impl
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.db.utils.SnowFlakeUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.ProjectInfoDao
@@ -49,7 +47,7 @@ class SyncPipelineRelateLabelDataServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val projectInfoDao: ProjectInfoDao,
     private val client: Client
-): SyncPipelineRelateLabelDataService {
+) : SyncPipelineRelateLabelDataService {
     companion object {
         private val logger = LoggerFactory.getLogger(SyncPipelineRelateLabelDataServiceImpl::class.java)
         private fun metricsDataReportKey(projectId: String, pipelineId: String): String {
@@ -68,7 +66,7 @@ class SyncPipelineRelateLabelDataServiceImpl @Autowired constructor(
                 val createTime = it.createTime!!
                 val pipelineLabelInfoRecord = TProjectPipelineLabelInfoRecord(
                     client.get(ServiceAllocIdResource::class)
-                        .generateSegmentId("METRICS_PROJECT_PIPELINE_LABEL_INFO").data?: 0,
+                        .generateSegmentId("METRICS_PROJECT_PIPELINE_LABEL_INFO").data ?: 0,
                     it.projectId,
                     it.pipelineId,
                     it.labelId,

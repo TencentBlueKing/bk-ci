@@ -42,7 +42,7 @@ import org.springframework.stereotype.Service
 class ErrorCodeInfoServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val errorCodeInfoDao: ErrorCodeInfoDao
-): ErrorCodeInfoManageService {
+) : ErrorCodeInfoManageService {
     override fun getErrorCodeInfo(queryErrorCodeInfoDTO: QueryErrorCodeInfoDTO): Page<ErrorCodeInfoDO> {
         return Page(
             page = queryErrorCodeInfoDTO.page,

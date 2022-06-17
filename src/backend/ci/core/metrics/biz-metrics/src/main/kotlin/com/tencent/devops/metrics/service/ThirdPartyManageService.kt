@@ -40,5 +40,4 @@ interface ThirdPartyManageService {
     fun queryPipelineSummaryInfo(
         queryPipelineSummaryInfoDTO: QueryPipelineSummaryInfoDTO
     ): ThirdPlatformOverviewInfoVO
-
 }

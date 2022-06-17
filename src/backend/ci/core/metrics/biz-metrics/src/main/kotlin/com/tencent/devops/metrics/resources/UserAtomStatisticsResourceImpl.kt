@@ -44,7 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserAtomStatisticsResourceImpl @Autowired constructor(
     private val atomStatisticsManageService: AtomStatisticsManageService
-): UserAtomStatisticsResource {
+) : UserAtomStatisticsResource {
     override fun queryAtomTrendInfo(
         projectId: String,
         userId: String,
@@ -80,7 +80,7 @@ class UserAtomStatisticsResourceImpl @Autowired constructor(
         pageSize: Int
     ): Result<ListPageVO<AtomExecutionStatisticsInfoDO>> {
         val startTime =
-            if (atomStatisticsInfoReq.startTime.isNullOrBlank())  getStartDateTime()
+            if (atomStatisticsInfoReq.startTime.isNullOrBlank()) getStartDateTime()
             else atomStatisticsInfoReq.startTime
         val endTime =
             if (atomStatisticsInfoReq.endTime.isNullOrBlank()) getEndDateTime()

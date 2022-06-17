@@ -44,6 +44,7 @@ import java.time.LocalDateTime
 
 @Repository
 class ProjectInfoDao {
+
     fun queryProjectAtomList(
         dslContext: DSLContext,
         projectId: String,
@@ -128,8 +129,8 @@ class ProjectInfoDao {
     ): List<PipelineErrorTypeInfoDO> {
         with(TErrorTypeDict.T_ERROR_TYPE_DICT) {
             val conditions = mutableListOf<Condition>()
-            if (!keyWord.isNullOrBlank()){
-                conditions.add(this.NAME.like("%${keyWord}%"))
+            if (!keyWord.isNullOrBlank()) {
+                conditions.add(this.NAME.like("%$keyWord%"))
             }
             val step = dslContext.select(
                 ERROR_TYPE,
@@ -138,15 +139,15 @@ class ProjectInfoDao {
                 .where(conditions)
                 .groupBy(ERROR_TYPE)
                 .limit((page - 1) * pageSize, pageSize)
-            return  step.fetchInto(PipelineErrorTypeInfoDO::class.java)
+            return step.fetchInto(PipelineErrorTypeInfoDO::class.java)
         }
     }
 
     fun queryPipelineErrorTypeCount(dslContext: DSLContext, keyWord: String?): Long {
         with(TErrorTypeDict.T_ERROR_TYPE_DICT) {
             val conditions = mutableListOf<Condition>()
-            if (!keyWord.isNullOrBlank()){
-                conditions.add(this.NAME.like("%${keyWord}%"))
+            if (!keyWord.isNullOrBlank()) {
+                conditions.add(this.NAME.like("%$keyWord%"))
             }
             return dslContext.selectDistinct(ERROR_TYPE)
                 .from(this)

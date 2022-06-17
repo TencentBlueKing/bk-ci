@@ -30,6 +30,7 @@ package com.tencent.devops.metrics.service.impl
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_NAME
@@ -39,7 +40,6 @@ import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
-import com.tencent.devops.metrics.constant.Constants.BK_QUERY_COUNT_MAX
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME_ENGLISH
@@ -81,8 +81,9 @@ class AtomStatisticsServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val atomStatisticsDao: AtomStatisticsDao,
     private val atomDisplayConfigDao: AtomDisplayConfigDao,
-    private val errorCodeInfoDao: ErrorCodeInfoDao
-): AtomStatisticsManageService {
+    private val errorCodeInfoDao: ErrorCodeInfoDao,
+    private val metricsConfig: MetricsConfig
+) : AtomStatisticsManageService {
     override fun queryAtomTrendInfo(queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO): AtomTrendInfoVO {
         // 未选择查询的插件时读取插件显示配置
         val atomCodes =
@@ -137,7 +138,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 )
                 val atomTrendInfoDO = AtomTrendInfoDO(
                     atomCode = atomCode,
-                   atomName = record[BK_ATOM_NAME] as String,
+                    atomName = record[BK_ATOM_NAME] as String,
                     atomTrendInfos = atomTrendInfoList
                 )
                 atomTrendInfoMap[atomCode] = atomTrendInfoDO
@@ -156,7 +157,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         }
         logger.info("queryAtomTrendInfo atomTrendInfoDateMap：$atomTrendInfoDateMap")
         //  对查询区间中没有数据的时间添加占位数据
-        atomTrendInfoDateMap.forEach{
+        atomTrendInfoDateMap.forEach {
             val atomCode = it.key
             val atomTrendInfos = atomTrendInfoMap[atomCode]?.atomTrendInfos
             //  将查询的时间区间减去存在数据的时间，对没有数据的时间添加占位数据
@@ -196,8 +197,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                     pageSize = 10
                 ).map { it.atomCode }
             }
-
-            } else queryAtomTrendInfoDTO.atomCodes!!
+        } else queryAtomTrendInfoDTO.atomCodes!!
         // 查询符合查询条件的记录数
         val queryAtomExecuteStatisticsCount =
             atomStatisticsDao.queryAtomExecuteStatisticsInfoCount(
@@ -215,7 +215,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 )
             )
         // 查询记录过多，提醒用户缩小查询范围
-        if (queryAtomExecuteStatisticsCount > BK_QUERY_COUNT_MAX) {
+        if (queryAtomExecuteStatisticsCount > metricsConfig.queryCountMax) {
             throw ErrorCodeException(
                 errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
             )
@@ -262,7 +262,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
 
             //  动态扩展表头
             if (!headerInfo.containsKey(getHeaderFieldName(it[BK_ERROR_TYPE].toString()))) {
-                headerInfo[getHeaderFieldName("$errorType")] = errorDict[errorType]?: ""
+                headerInfo[getHeaderFieldName("$errorType")] = errorDict[errorType] ?: ""
             }
             if (!atomFailInfos.containsKey(atomCode)) {
                 atomFailInfos.put(
@@ -301,7 +301,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 successRate = if (successExecuteCount <= 0L || totalExecuteCount <= 0L) 0.0
                 else String.format("%.2f", (successExecuteCount.toDouble() * 100 / totalExecuteCount.toDouble()))
                     .toDouble(),
-                atomFailInfos = atomFailInfos[it[BK_ATOM_CODE]]?.toMap()?: emptyMap()
+                atomFailInfos = atomFailInfos[it[BK_ATOM_CODE]]?.toMap() ?: emptyMap()
             )
         }
         logger.info("query atom executeStatisticsInfo headerInfo: $headerInfo")
@@ -323,7 +323,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         headerInfo[BK_CLASSIFY_CODE] = MessageCodeUtil.getCodeLanMessage(BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH)
         headerInfo[BK_SUCCESS_RATE] = MessageCodeUtil.getCodeLanMessage(BK_SUCCESS_RATE_FIELD_NAME_ENGLISH)
         headerInfo[BK_AVG_COST_TIME] = MessageCodeUtil.getCodeLanMessage(BK_AVG_COST_TIME_FIELD_NAME_ENGLISH)
-        headerInfo[BK_TOTAL_EXECUTE_COUNT]= MessageCodeUtil
+        headerInfo[BK_TOTAL_EXECUTE_COUNT] = MessageCodeUtil
             .getCodeLanMessage(BK_TOTAL_EXECUTE_COUNT_FIELD_NAME_ENGLISH)
         headerInfo[BK_SUCCESS_EXECUTE_COUNT] = MessageCodeUtil
             .getCodeLanMessage(BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME_ENGLISH)

@@ -45,7 +45,6 @@ import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.pojo.qo.QueryAtomStatisticsQO
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record4
 import org.jooq.Record5
 import org.jooq.Record6
 import org.jooq.Result
@@ -83,7 +82,6 @@ class AtomStatisticsDao {
                 step.where(conditions)
             }
             return conditionStep.groupBy(ATOM_CODE, STATISTICS_TIME).fetch()
-
         }
     }
 
@@ -108,7 +106,7 @@ class AtomStatisticsDao {
         return conditions
     }
 
-    fun getAtomCodesByErrorType(dslContext: DSLContext, queryCondition: QueryAtomStatisticsQO,): List<String> {
+    fun getAtomCodesByErrorType(dslContext: DSLContext, queryCondition: QueryAtomStatisticsQO): List<String> {
         with(TAtomFailSummaryData.T_ATOM_FAIL_SUMMARY_DATA) {
             val conditions = mutableListOf<Condition>()
             val pipelineIds = queryCondition.baseQueryReq.pipelineIds

@@ -29,6 +29,7 @@ package com.tencent.devops.metrics.constant
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
+import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -39,7 +40,8 @@ import java.util.stream.Stream
 object QueryParamCheckUtil {
 
     // 查询时间区间限制，当天的前一天至前六个月
-    private const val QUERY_MAX_MONTHS: Long = 6
+    @Value("\${metrics.maximumQueryMonths:6}")
+    private val maximumQueryMonths: Long = 6
 
     fun getIntervalTime(
         fromDate: LocalDateTime,
@@ -77,14 +79,13 @@ object QueryParamCheckUtil {
     }
 
     fun checkDateInterval(startTime: String, endTime: String) {
-
         val startDate = DateTimeUtil.stringToLocalDate(startTime)
         val endDate = DateTimeUtil.stringToLocalDate(endTime)
         val firstDate = LocalDate.now()
-        val secondDate = firstDate.minusMonths(QUERY_MAX_MONTHS)
+        val secondDate = firstDate.minusMonths(maximumQueryMonths)
         if (startDate!!.isBefore(secondDate)) {
             throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
+                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND
             )
         }
         if (endDate!!.isAfter(firstDate)) {

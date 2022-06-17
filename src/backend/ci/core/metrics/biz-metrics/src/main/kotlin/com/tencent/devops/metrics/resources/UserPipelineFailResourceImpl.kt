@@ -47,15 +47,15 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserPipelineFailResourceImpl @Autowired constructor(
     private val pipelineFailManageService: PipelineFailManageService
-): UserPipelineFailResource {
+) : UserPipelineFailResource {
     override fun queryPipelineFailTrendInfo(
         projectId: String,
         userId: String,
         baseQueryReq: BaseQueryReqVO?
     ): Result<List<PipelineFailTrendInfoVO>> {
-        val queryReq = baseQueryReq?: BaseQueryReqVO()
+        val queryReq = baseQueryReq ?: BaseQueryReqVO()
             if (queryReq.startTime.isNullOrBlank()) { queryReq.startTime = getStartDateTime() }
-            if (queryReq.endTime.isNullOrBlank()) { queryReq.endTime = getEndDateTime()}
+            if (queryReq.endTime.isNullOrBlank()) { queryReq.endTime = getEndDateTime() }
 
         checkDateInterval(queryReq.startTime!!, queryReq.endTime!!)
         return Result(
@@ -71,11 +71,13 @@ class UserPipelineFailResourceImpl @Autowired constructor(
         pipelineFailInfoQueryReq: PipelineFailInfoQueryReqVO
     ): Result<PipelineFailSumInfoVO> {
         val startTime =
-            if (pipelineFailInfoQueryReq.startTime.isNullOrBlank()) { getStartDateTime() }
-            else pipelineFailInfoQueryReq.startTime
+            if (pipelineFailInfoQueryReq.startTime.isNullOrBlank()) {
+                getStartDateTime()
+            } else pipelineFailInfoQueryReq.startTime
         val endTime =
-            if (pipelineFailInfoQueryReq.endTime.isNullOrBlank()) { getEndDateTime() }
-            else pipelineFailInfoQueryReq.endTime
+            if (pipelineFailInfoQueryReq.endTime.isNullOrBlank()) {
+                getEndDateTime()
+            } else pipelineFailInfoQueryReq.endTime
         checkDateInterval(startTime!!, endTime!!)
         return Result(
             PipelineFailSumInfoVO(
@@ -101,12 +103,12 @@ class UserPipelineFailResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<Page<PipelineFailDetailInfoDO>> {
-        val startTime =
-            if (pipelineFailInfoQueryReq.startTime.isNullOrBlank()) { getStartDateTime() }
-            else pipelineFailInfoQueryReq.startTime
-        val endTime =
-            if (pipelineFailInfoQueryReq.endTime.isNullOrBlank()) { getEndDateTime() }
-            else pipelineFailInfoQueryReq.endTime
+        val startTime = if (pipelineFailInfoQueryReq.startTime.isNullOrBlank()) {
+            getStartDateTime()
+        } else pipelineFailInfoQueryReq.startTime
+        val endTime = if (pipelineFailInfoQueryReq.endTime.isNullOrBlank()) {
+            getEndDateTime()
+        } else pipelineFailInfoQueryReq.endTime
         checkDateInterval(startTime!!, endTime!!)
         return Result(
             pipelineFailManageService.queryPipelineFailDetailInfo(
