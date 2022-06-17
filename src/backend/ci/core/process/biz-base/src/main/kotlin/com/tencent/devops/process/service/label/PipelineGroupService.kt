@@ -248,7 +248,7 @@ class PipelineGroupService @Autowired constructor(
                     pipelineLabelRelateInfos = listOf(
                         PipelineLabelRelateInfo(
                             projectId = projectId,
-                            labelId = id,
+                            labelId = id
                         )
                     )
                 )

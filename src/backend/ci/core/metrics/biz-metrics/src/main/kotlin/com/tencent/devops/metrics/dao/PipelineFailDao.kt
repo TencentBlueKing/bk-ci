@@ -53,7 +53,7 @@ class PipelineFailDao {
 
     fun getPipelineIdByTotalExecuteCount(
         dslContext: DSLContext,
-        queryPipelineFailQo: QueryPipelineFailQO,
+        queryPipelineFailQo: QueryPipelineFailQO
     ): List<String> {
         with(TPipelineFailSummaryData.T_PIPELINE_FAIL_SUMMARY_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO

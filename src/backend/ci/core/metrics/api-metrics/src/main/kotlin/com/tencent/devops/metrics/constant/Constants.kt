@@ -27,7 +27,6 @@
 
 package com.tencent.devops.metrics.constant
 
-
 object Constants {
     const val BK_REPO_CODECC_AVG_SCORE = "repoCodeccAvgScore"
     const val BK_RESOLVED_DEFECT_NUM = "resolvedDefectNum"
@@ -48,7 +47,6 @@ object Constants {
     const val BK_PROJECT_ID = "projectId"
     const val BK_PIPELINE_ID = "pipelineId"
     const val BK_ERROR_TYPE = "errorType"
-    const val BK_ERROR_TYPE_NAME = "errorTypeName"
     const val BK_ERROR_NAME = "errorName"
     const val BK_CLASSIFY_CODE = "classifyCode"
     const val BK_SUCCESS_EXECUTE_COUNT = "successExecuteCount"
@@ -66,16 +64,15 @@ object Constants {
     const val BK_SUCCESS_EXECUTE_COUNT_SUM = "successExecuteCountSum"
     const val BK_TOTAL_AVG_COST_TIME_SUM = "totalAvgCostTimeSum"
 
-    const val BK_QUERY_COUNT_MAX = 10000
     const val MAX_CREATE_COUNT = 100
     const val DEFAULT_LIMIT_NUM = 10
 
     // 常量标志对应code
-    const val BK_ATOM_CODE_FIELD_NAME_ENGLISH = "METRICS_ATOM_STATISTICS_HEADER_PLUG"// 插件
-    const val BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH = "METRICS_ATOM_STATISTICS_HEADER_TYPE"// 类型
-    const val BK_SUCCESS_RATE_FIELD_NAME_ENGLISH = "METRICS_ATOM_STATISTICS_HEADER_SUCCESS_RATE"// 成功率
-    const val BK_AVG_COST_TIME_FIELD_NAME_ENGLISH = "METRICS_ATOM_STATISTICS_HEADER_AVERAGE_TIME"// 平均耗时
-    const val BK_TOTAL_EXECUTE_COUNT_FIELD_NAME_ENGLISH = "METRICS_ATOM_STATISTICS_HEADER_EXECUTE_COUNT"// 执行次数
-    const val BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME_ENGLISH = "METRICS_ATOM_STATISTICS_HEADER_SUCCESS_EXECUTE_COUNT"// 成功执行次数
-
+    const val BK_ATOM_CODE_FIELD_NAME_ENGLISH = "METRICS_ATOM_STATISTICS_HEADER_PLUG" // 插件
+    const val BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH = "METRICS_ATOM_STATISTICS_HEADER_TYPE" // 类型
+    const val BK_SUCCESS_RATE_FIELD_NAME_ENGLISH = "METRICS_ATOM_STATISTICS_HEADER_SUCCESS_RATE" // 成功率
+    const val BK_AVG_COST_TIME_FIELD_NAME_ENGLISH = "METRICS_ATOM_STATISTICS_HEADER_AVERAGE_TIME" // 平均耗时
+    const val BK_TOTAL_EXECUTE_COUNT_FIELD_NAME_ENGLISH = "METRICS_ATOM_STATISTICS_HEADER_EXECUTE_COUNT" // 执行次数
+    // 成功执行次数
+    const val BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME_ENGLISH = "METRICS_ATOM_STATISTICS_HEADER_SUCCESS_EXECUTE_COUNT"
 }

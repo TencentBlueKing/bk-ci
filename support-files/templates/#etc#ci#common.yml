@@ -289,7 +289,12 @@ bkci:
     enable: false
     
 process:
-  deletedPipelineStoreDays: 30    
+  deletedPipelineStoreDays: 30
+
+metrics:
+  maximumQueryMonths: 6
+  minimumQueryDays: 1
+  queryCountMax: 10000
 
 net:
   proxy:

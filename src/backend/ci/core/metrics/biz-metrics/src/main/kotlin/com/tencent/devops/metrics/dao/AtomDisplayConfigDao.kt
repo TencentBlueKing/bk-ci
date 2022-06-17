@@ -67,12 +67,16 @@ class AtomDisplayConfigDao {
         projectId: String,
         userId: String,
         atomCodes: List<String>
-    ): Boolean {
+    ) {
         with(TAtomDisplayConfig.T_ATOM_DISPLAY_CONFIG) {
-            return dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(ATOM_CODE.`in`(atomCodes))
-                .execute() != 0
+            dslContext.batched {
+                atomCodes.forEach { atomCode ->
+                    it.dsl().deleteFrom(this)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(ATOM_CODE.eq(atomCode))
+                        .execute()
+                }
+            }
         }
     }
 

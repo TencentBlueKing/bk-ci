@@ -43,7 +43,6 @@ import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record1
 import org.jooq.Record3
 import org.jooq.Record5
 import org.jooq.Result
@@ -71,7 +70,9 @@ class PipelineOverviewDao {
                 } else {
                     step.where(conditions)
                 }
-            return conditionStep.orderBy(TOTAL_EXECUTE_COUNT.desc()).limit(DEFAULT_LIMIT_NUM).fetchInto(String::class.java)
+            return conditionStep.orderBy(TOTAL_EXECUTE_COUNT.desc())
+                .limit(DEFAULT_LIMIT_NUM)
+                .fetchInto(String::class.java)
         }
     }
 
@@ -94,7 +95,7 @@ class PipelineOverviewDao {
             ).from(this)
             val conditionStep =
                 if (!queryPipelineOverview.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
-                 step.join(tProjectPipelineLabelInfo)
+                    step.join(tProjectPipelineLabelInfo)
                      .on(PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
                      .where(conditions)
             } else {
@@ -136,7 +137,7 @@ class PipelineOverviewDao {
 
     private fun TPipelineOverviewData.getConditions(
         queryCondition: QueryPipelineOverviewQO,
-        tProjectPipelineLabelInfo:  TProjectPipelineLabelInfo,
+        tProjectPipelineLabelInfo: TProjectPipelineLabelInfo,
         pipelineIds: List<String>?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()

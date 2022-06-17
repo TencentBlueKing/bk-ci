@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("插件失败信息查询传输对象")
-class QueryAtomFailInfoDTO (
+class QueryAtomFailInfoDTO(
     @ApiModelProperty("项目ID")
     val projectId: String,
     @ApiModelProperty("流水线ID")

@@ -52,13 +52,13 @@ import java.util.stream.Collectors
 class PipelineStageServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineStageDao: PipelineStageDao
-): PipelineStageManageService {
+) : PipelineStageManageService {
 
     override fun queryPipelineStageTrendInfo(
         queryPipelineOverviewDTO: QueryPipelineOverviewDTO
     ): List<StageTrendSumInfoVO> {
 
-        var stageTrendSumInfos : MutableMap<String, List<StageAvgCostTimeInfoDO>>
+        var stageTrendSumInfos: MutableMap<String, List<StageAvgCostTimeInfoDO>>
         val tags = pipelineStageDao.getStageTag(dslContext, queryPipelineOverviewDTO.projectId)
         val startTime = queryPipelineOverviewDTO.baseQueryReq.startTime
         val endTime = queryPipelineOverviewDTO.baseQueryReq.endTime
@@ -70,9 +70,12 @@ class PipelineStageServiceImpl @Autowired constructor(
             val result = pipelineStageDao.queryPipelineStageTrendInfo(
                 dslContext,
                 QueryPipelineStageTrendInfoQO(
-                    queryPipelineOverviewDTO.projectId,
-                    queryPipelineOverviewDTO.baseQueryReq,
-                    tag
+                    projectId = queryPipelineOverviewDTO.projectId,
+                    pipelineIds = queryPipelineOverviewDTO.baseQueryReq.pipelineIds,
+                    pipelineLabelIds = queryPipelineOverviewDTO.baseQueryReq.pipelineLabelIds,
+                    startTime = startTime,
+                    endTime = endTime,
+                    stageTag = tag
                 )
             )
             //  将查询结果根据流水线分组封装
@@ -87,9 +90,7 @@ class PipelineStageServiceImpl @Autowired constructor(
                     stageTrendSumInfos[pipelineName] = listOf
                 } else {
                     val listOf = stageTrendSumInfos[pipelineName]!!.toMutableList()
-                    listOf.add(
-                        StageAvgCostTimeInfoDO(statisticsTime, avgCostTime)
-                    )
+                    listOf.add(StageAvgCostTimeInfoDO(statisticsTime, avgCostTime))
                     stageTrendSumInfos[pipelineName] = listOf
                 }
                 pipelineNames.add(pipelineName)

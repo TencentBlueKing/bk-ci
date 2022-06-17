@@ -81,5 +81,4 @@ interface UserPipelineOverviewResource {
         @ApiParam("查询条件", required = false)
         baseQueryReq: BaseQueryReqVO?
     ): Result<PipelineTrendInfoVO>
-
 }

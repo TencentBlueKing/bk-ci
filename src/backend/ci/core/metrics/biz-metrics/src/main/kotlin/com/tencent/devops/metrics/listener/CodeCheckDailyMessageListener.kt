@@ -41,10 +41,9 @@ import org.springframework.stereotype.Component
 @Component
 class CodeCheckDailyMessageListener @Autowired constructor(
     private val thirdPlatformDataReportService: MetricsThirdPlatformDataReportService
-): Listener<String> {
+) : Listener<String> {
 
     override fun execute(event: String) {
-        logger.info("receiveCodeCheckDailyMessage: $event")
         try {
             thirdPlatformDataReportService.metricsCodeCheckDataReport(
                 JsonUtil.to(event, object : TypeReference<CodeCheckReportEvent>() {})

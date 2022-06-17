@@ -50,7 +50,7 @@ import java.math.BigDecimal
 class ThirdPartyServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val thirdPartyOverviewInfoDao: ThirdPartyOverviewInfoDao
-): ThirdPartyManageService {
+) : ThirdPartyManageService {
     override fun queryPipelineSummaryInfo(
         queryPipelineSummaryInfoDTO: QueryPipelineSummaryInfoDTO
     ): ThirdPlatformOverviewInfoVO {
@@ -87,8 +87,7 @@ class ThirdPartyServiceImpl @Autowired constructor(
                     else repoCodeccAvgScore / totalExecuteCount.toDouble()
                 ),
                 qualityInfo = QualityInfoDO(
-                    qualityInterceptionRate = qualityInterceptionRate
-                    ,
+                    qualityInterceptionRate = qualityInterceptionRate,
                     totalExecuteCount = executeNum,
                     interceptionCount = interceptionCount
                         ),
