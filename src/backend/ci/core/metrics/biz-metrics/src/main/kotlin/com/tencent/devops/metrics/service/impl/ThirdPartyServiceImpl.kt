@@ -33,15 +33,14 @@ import com.tencent.devops.metrics.constant.Constants.BK_REPO_CODECC_AVG_SCORE
 import com.tencent.devops.metrics.constant.Constants.BK_RESOLVED_DEFECT_NUM
 import com.tencent.devops.metrics.constant.Constants.BK_TURBO_SAVE_TIME
 import com.tencent.devops.metrics.dao.ThirdPartyOverviewInfoDao
-import com.tencent.devops.metrics.service.ThirdPartyManageService
 import com.tencent.devops.metrics.pojo.`do`.CodeCheckInfoDO
 import com.tencent.devops.metrics.pojo.`do`.QualityInfoDO
 import com.tencent.devops.metrics.pojo.`do`.TurboInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineSummaryInfoDTO
 import com.tencent.devops.metrics.pojo.qo.ThirdPartyOverviewInfoQO
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
+import com.tencent.devops.metrics.service.ThirdPartyManageService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -51,6 +50,7 @@ class ThirdPartyServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val thirdPartyOverviewInfoDao: ThirdPartyOverviewInfoDao
 ) : ThirdPartyManageService {
+
     override fun queryPipelineSummaryInfo(
         queryPipelineSummaryInfoDTO: QueryPipelineSummaryInfoDTO
     ): ThirdPlatformOverviewInfoVO {
@@ -76,26 +76,22 @@ class ThirdPartyServiceImpl @Autowired constructor(
         val interceptionCount = result?.get(BK_QUALITY_PIPELINE_INTERCEPTION_NUM, BigDecimal::class.java)?.toInt()
         val qualityInterceptionRate =
             if (executeNum == null || interceptionCount == null || executeNum == 0) null
-        else {
-            if (executeNum == interceptionCount) 0.0
-            else String.format("%.2f", interceptionCount.toDouble() / executeNum.toDouble()).toDouble()
-        }
-            return ThirdPlatformOverviewInfoVO(
-                codeCheckInfo = CodeCheckInfoDO(
-                    resolvedDefectNum = result?.get(BK_RESOLVED_DEFECT_NUM, Int::class.java),
-                    repoCodeccAvgScore = if (repoCodeccAvgScore == null || totalExecuteCount == 0) null
-                    else repoCodeccAvgScore / totalExecuteCount.toDouble()
-                ),
-                qualityInfo = QualityInfoDO(
-                    qualityInterceptionRate = qualityInterceptionRate,
-                    totalExecuteCount = executeNum,
-                    interceptionCount = interceptionCount
-                        ),
-                turboInfo = TurboInfoDO(result?.get(BK_TURBO_SAVE_TIME, BigDecimal::class.java)?.toDouble())
-            )
-        }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ThirdPartyServiceImpl::class.java)
+            else {
+                if (executeNum == interceptionCount) 0.0
+                else String.format("%.2f", interceptionCount.toDouble() / executeNum.toDouble()).toDouble()
+            }
+        return ThirdPlatformOverviewInfoVO(
+            codeCheckInfo = CodeCheckInfoDO(
+                resolvedDefectNum = result?.get(BK_RESOLVED_DEFECT_NUM, Int::class.java),
+                repoCodeccAvgScore = if (repoCodeccAvgScore == null || totalExecuteCount == 0) null
+                else repoCodeccAvgScore / totalExecuteCount.toDouble()
+            ),
+            qualityInfo = QualityInfoDO(
+                qualityInterceptionRate = qualityInterceptionRate,
+                totalExecuteCount = executeNum,
+                interceptionCount = interceptionCount
+            ),
+            turboInfo = TurboInfoDO(result?.get(BK_TURBO_SAVE_TIME, BigDecimal::class.java)?.toDouble())
+        )
     }
 }

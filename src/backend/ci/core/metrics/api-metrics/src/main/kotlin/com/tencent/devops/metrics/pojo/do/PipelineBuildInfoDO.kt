@@ -45,3 +45,4 @@ data class PipelineBuildInfoDO(
     @ApiModelProperty("构建代码库分支")
     val branch: String?
 )
+

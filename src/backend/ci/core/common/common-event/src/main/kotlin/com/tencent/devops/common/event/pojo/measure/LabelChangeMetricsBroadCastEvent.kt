@@ -6,7 +6,7 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import java.time.LocalDateTime
 
-@Event(exchange = MQ.EXCHANGE_PIPELINELABEL_CHANGE_METRICS_DATA_SYNC_FANOUT)
+@Event(exchange = MQ.EXCHANGE_PIPELINE_LABEL_CHANGE_SYNC_FANOUT)
 data class LabelChangeMetricsBroadCastEvent(
     override val projectId: String,
     override val pipelineId: String = "",

@@ -36,8 +36,11 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.dao.PipelineStageTagDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
@@ -85,80 +88,7 @@ class MetricsServiceImpl constructor(
         )?.pipelineName
         val webhookInfo = buildInfo.webhookInfo
         val stageMetricsDatas = mutableListOf<BuildEndStageMetricsData>()
-        model.stages.forEach nextStage@{ stage ->
-            // 判断stage是否执行过,未执行过的stage无需上报数据
-            val stageStatus = stage.status
-            if (!checkMetricsReportCondition(stageStatus)) {
-                return@nextStage
-            }
-            val containerMetricsDatas = mutableListOf<BuildEndContainerMetricsData>()
-            stage.containers.forEach nextContainer@{ container ->
-                // 判断container是否执行过,未执行过的container无需上报数据
-                val containerStatus = container.status
-                if (!checkMetricsReportCondition(containerStatus)) {
-                    return@nextContainer
-                }
-                val taskMetricsDatas = mutableListOf<BuildEndTaskMetricsData>()
-                val containerAtomCodes = mutableListOf<String>()
-                container.elements.forEach nextElement@{ element ->
-                    // 判断插件是否执行过,未执行过的插件无需上报数据
-                    val elementStatus = element.status
-                    if (!checkMetricsReportCondition(elementStatus)) {
-                        return@nextElement
-                    }
-                    containerAtomCodes.add(element.getAtomCode())
-                    taskMetricsDatas.add(
-                        BuildEndTaskMetricsData(
-                            taskId = element.id ?: "",
-                            atomName = element.atomName ?: element.name,
-                            atomCode = element.getAtomCode(),
-                            classifyCode = element.classifyCode ?: "",
-                            classifyName = element.classifyName ?: "",
-                            startTime = element.startEpoch?.let {
-                                DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS)
-                            },
-                            endTime = element.startEpoch?.let {
-                                DateTimeUtil.formatMilliTime(
-                                    time = it + (element.elapsed ?: 0L),
-                                    format = DateTimeUtil.YYYY_MM_DD_HH_MM_SS
-                                )
-                            },
-                            costTime = element.elapsed ?: 0L,
-                            successFlag = BuildStatus.valueOf(elementStatus!!).isSuccess(),
-                            errorType = element.errorType?.let { ErrorType.getErrorType(it)?.num },
-                            errorCode = element.errorCode,
-                            errorMsg = element.errorMsg
-                        )
-                    )
-                }
-                containerMetricsDatas.add(
-                    BuildEndContainerMetricsData(
-                        containerId = container.containerId ?: "",
-                        successFlag = BuildStatus.valueOf(containerStatus!!).isSuccess(),
-                        costTime = (container.systemElapsed ?: 0L) + (container.elementElapsed ?: 0L),
-                        atomCodes = containerAtomCodes,
-                        tasks = taskMetricsDatas
-                    )
-                )
-            }
-            var stageTagNames: MutableList<String> ? = null
-            stage.tag?.forEach { stageTagId ->
-                if (stageTagNames == null) {
-                    stageTagNames = mutableListOf()
-                }
-                val stageTagName = getStageTagName(stageTagId)
-                stageTagName?.let { stageTagNames?.add(stageTagName) }
-            }
-            stageMetricsDatas.add(
-                BuildEndStageMetricsData(
-                    stageId = stage.id ?: "",
-                    stageTagNames = stageTagNames,
-                    successFlag = BuildStatus.valueOf(stageStatus!!).isSuccess(),
-                    costTime = stage.elapsed ?: 0L,
-                    containers = containerMetricsDatas
-                )
-            )
-        }
+        handleMetricsData(model, stageMetricsDatas)
         val buildEndPipelineMetricsData = BuildEndPipelineMetricsData(
             statisticsTime = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD),
             projectId = projectId,
@@ -182,6 +112,103 @@ class MetricsServiceImpl constructor(
                 projectId = projectId,
                 buildId = buildId,
                 buildEndPipelineMetricsData = buildEndPipelineMetricsData
+            )
+        )
+    }
+
+    private fun handleMetricsData(model: Model, stageMetricsDatas: MutableList<BuildEndStageMetricsData>) {
+        model.stages.forEach nextStage@{ stage ->
+            // 判断stage是否执行过,未执行过的stage无需上报数据
+            val stageStatus = stage.status
+            if (!checkMetricsReportCondition(stageStatus)) {
+                return@nextStage
+            }
+            val containerMetricsDatas = mutableListOf<BuildEndContainerMetricsData>()
+            handleContainer(stage, containerMetricsDatas)
+            var stageTagNames: MutableList<String>? = null
+            stage.tag?.forEach { stageTagId ->
+                if (stageTagNames == null) {
+                    stageTagNames = mutableListOf()
+                }
+                val stageTagName = getStageTagName(stageTagId)
+                stageTagName?.let { stageTagNames?.add(stageTagName) }
+            }
+            stageMetricsDatas.add(
+                BuildEndStageMetricsData(
+                    stageId = stage.id ?: "",
+                    stageTagNames = stageTagNames,
+                    successFlag = BuildStatus.valueOf(stageStatus!!).isSuccess(),
+                    costTime = stage.elapsed ?: 0L,
+                    containers = containerMetricsDatas
+                )
+            )
+        }
+    }
+
+    private fun handleContainer(stage: Stage, containerMetricsDatas: MutableList<BuildEndContainerMetricsData>) {
+        stage.containers.forEach nextContainer@{ container ->
+            // 判断container是否执行过,未执行过的container无需上报数据
+            val containerStatus = container.status
+            if (!checkMetricsReportCondition(containerStatus)) {
+                return@nextContainer
+            }
+            val taskMetricsDatas = mutableListOf<BuildEndTaskMetricsData>()
+            val containerAtomCodes = mutableListOf<String>()
+            handleElement(container, containerAtomCodes, taskMetricsDatas)
+            containerMetricsDatas.add(
+                BuildEndContainerMetricsData(
+                    containerId = container.containerId ?: "",
+                    successFlag = BuildStatus.valueOf(containerStatus!!).isSuccess(),
+                    costTime = (container.systemElapsed ?: 0L) + (container.elementElapsed ?: 0L),
+                    atomCodes = containerAtomCodes,
+                    tasks = taskMetricsDatas
+                )
+            )
+        }
+    }
+
+    private fun handleElement(
+        container: Container,
+        containerAtomCodes: MutableList<String>,
+        taskMetricsDatas: MutableList<BuildEndTaskMetricsData>
+    ) {
+        container.elements.forEach nextElement@{ element ->
+            // 判断插件是否执行过,未执行过的插件无需上报数据
+            val elementStatus = element.status
+            if (!checkMetricsReportCondition(elementStatus)) {
+                return@nextElement
+            }
+            containerAtomCodes.add(element.getAtomCode())
+            addTaskMetricsData(taskMetricsDatas, element, elementStatus)
+        }
+    }
+
+    private fun addTaskMetricsData(
+        taskMetricsDatas: MutableList<BuildEndTaskMetricsData>,
+        element: Element,
+        elementStatus: String?
+    ) {
+        taskMetricsDatas.add(
+            BuildEndTaskMetricsData(
+                taskId = element.id ?: "",
+                atomName = element.atomName ?: element.name,
+                atomCode = element.getAtomCode(),
+                classifyCode = element.classifyCode ?: "",
+                classifyName = element.classifyName ?: "",
+                startTime = element.startEpoch?.let {
+                    DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS)
+                },
+                endTime = element.startEpoch?.let {
+                    DateTimeUtil.formatMilliTime(
+                        time = it + (element.elapsed ?: 0L),
+                        format = DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+                    )
+                },
+                costTime = element.elapsed ?: 0L,
+                successFlag = BuildStatus.valueOf(elementStatus!!).isSuccess(),
+                errorType = element.errorType?.let { ErrorType.getErrorType(it)?.num },
+                errorCode = element.errorCode,
+                errorMsg = element.errorMsg
             )
         )
     }
