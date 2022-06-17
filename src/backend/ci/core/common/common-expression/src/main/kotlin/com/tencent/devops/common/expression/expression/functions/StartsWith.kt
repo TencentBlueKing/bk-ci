@@ -5,9 +5,10 @@ import com.tencent.devops.common.expression.expression.sdk.Function
 import com.tencent.devops.common.expression.expression.sdk.ResultMemory
 
 class StartsWith : Function() {
-
     override val traceFullyRealized: Boolean
         get() = false
+
+    override fun createNode(): Function = StartsWith()
 
     override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
         val left = parameters[0].evaluate(context)
@@ -22,9 +23,5 @@ class StartsWith : Function() {
         }
 
         return Pair(null, false)
-    }
-
-    override fun createNode(): Function {
-        return StartsWith()
     }
 }

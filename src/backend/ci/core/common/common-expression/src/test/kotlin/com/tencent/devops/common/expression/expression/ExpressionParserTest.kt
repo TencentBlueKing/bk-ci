@@ -386,18 +386,51 @@ class ExpressionParserTest {
                 val t2 = (t1 as ArrayContextData)[1]
                 Assertions.assertTrue(t2 is DictionaryContextData)
                 Assertions.assertEquals(
-                    ((t2 as DictionaryContextData)["config"] as StringContextData).value, "Release"
+                    "Release", ((t2 as DictionaryContextData)["config"] as StringContextData).value
                 )
             }
             2 -> {
                 Assertions.assertTrue(res is ArrayContextData)
-                Assertions.assertEquals(((res as ArrayContextData)[0] as StringContextData).value, "manager")
+                Assertions.assertEquals("manager", ((res as ArrayContextData)[0] as StringContextData).value)
             }
             3 -> {
-                Assertions.assertEquals(res, true)
+                Assertions.assertEquals(true, res)
             }
             4 -> {
-                Assertions.assertEquals(res, 1.0)
+                Assertions.assertEquals(1.0, res)
+            }
+        }
+    }
+
+    @DisplayName("测试函数: join(arr, selector)")
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "1 => join(funcTest.array, '|')",
+            "2 => join(funcTest.array)",
+            "3 => join(funcTest.json.strJson)",
+            "4 => join('123')",
+            "5 => join(fromJson(funcTest.json.strJson))"
+        ]
+    )
+    fun functionJoinTest(join: String) {
+        val (index, exp) = join.split(" => ")
+        val res = ex.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
+        when (index.toInt()) {
+            1 -> {
+                Assertions.assertEquals("push|mr|tag", res)
+            }
+            2 -> {
+                Assertions.assertEquals("push,mr,tag", res)
+            }
+            3 -> {
+                Assertions.assertEquals("[\"manager\", \"webhook\"]", res)
+            }
+            4 -> {
+                Assertions.assertEquals("123", res)
+            }
+            5 -> {
+                Assertions.assertEquals("manager,webhook", res)
             }
         }
     }

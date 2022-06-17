@@ -10,6 +10,8 @@ class Contains : Function() {
     override val traceFullyRealized: Boolean
         get() = false
 
+    override fun createNode(): Function = Contains()
+
     override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
         val left = parameters[0].evaluate(context)
         if (left.isPrimitive) {
@@ -34,9 +36,5 @@ class Contains : Function() {
         }
 
         return Pair(null, false)
-    }
-
-    override fun createNode(): Function {
-        return Contains()
     }
 }

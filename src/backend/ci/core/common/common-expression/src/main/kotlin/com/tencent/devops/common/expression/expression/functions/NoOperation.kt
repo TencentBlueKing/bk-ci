@@ -5,11 +5,9 @@ import com.tencent.devops.common.expression.expression.sdk.Function
 import com.tencent.devops.common.expression.expression.sdk.ResultMemory
 
 class NoOperation : Function() {
+    override fun createNode(): Function = NoOperation()
+
     override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
         return Pair(null, null)
-    }
-
-    override fun createNode(): Function {
-        return NoOperation()
     }
 }

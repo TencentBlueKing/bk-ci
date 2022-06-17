@@ -8,6 +8,8 @@ class EndsWith : Function() {
     override val traceFullyRealized: Boolean
         get() = false
 
+    override fun createNode(): Function = EndsWith()
+
     override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
         val left = parameters[0].evaluate(context)
         if (left.isPrimitive) {
@@ -21,9 +23,5 @@ class EndsWith : Function() {
         }
 
         return Pair(null, false)
-    }
-
-    override fun createNode(): Function {
-        return EndsWith()
     }
 }

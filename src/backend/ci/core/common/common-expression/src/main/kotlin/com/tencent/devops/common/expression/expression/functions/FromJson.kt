@@ -34,11 +34,11 @@ import com.tencent.devops.common.expression.pipeline.contextData.JsonExtensions.
 import com.tencent.devops.common.expression.utils.JsonUtil
 
 class FromJson : Function() {
+    override fun createNode(): Function = FromJson()
+
     override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
         val jsonStr = parameters[0].evaluate(context).convertToString()
         val token = JsonUtil.read(jsonStr.reader())
         return Pair(null, token.toPipelineContextData())
     }
-
-    override fun createNode(): Function = FromJson()
 }
