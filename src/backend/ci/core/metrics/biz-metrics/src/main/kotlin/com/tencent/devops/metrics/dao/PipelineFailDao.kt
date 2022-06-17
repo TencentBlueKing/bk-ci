@@ -253,7 +253,7 @@ class PipelineFailDao {
     private fun TPipelineFailDetailData.getConditions(
         projectId: String,
         baseQuery: BaseQueryReqVO,
-        tProjectPipelineLabelInfo: TProjectPipelineLabelInfo,
+        tProjectPipelineLabelInfo: TProjectPipelineLabelInfo
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(this.PROJECT_ID.eq(projectId))

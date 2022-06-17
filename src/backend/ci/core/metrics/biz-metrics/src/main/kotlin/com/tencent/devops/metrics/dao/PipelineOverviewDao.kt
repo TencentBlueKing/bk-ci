@@ -95,13 +95,11 @@ class PipelineOverviewDao {
             ).from(this)
             val conditionStep =
                 if (!queryPipelineOverview.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
-                    step.join(tProjectPipelineLabelInfo)
-                     .on(PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                     .where(conditions)
+                    step.join(tProjectPipelineLabelInfo).on(PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
             } else {
-                step.where(conditions)
+                step
             }
-            return conditionStep.fetchOne()
+            return conditionStep.where(conditions).fetchOne()
         }
     }
 

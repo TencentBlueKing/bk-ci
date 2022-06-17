@@ -69,14 +69,10 @@ class AtomDisplayConfigDao {
         atomCodes: List<String>
     ) {
         with(TAtomDisplayConfig.T_ATOM_DISPLAY_CONFIG) {
-            dslContext.batched {
-                atomCodes.forEach { atomCode ->
-                    it.dsl().deleteFrom(this)
-                        .where(PROJECT_ID.eq(projectId))
-                        .and(ATOM_CODE.eq(atomCode))
-                        .execute()
-                }
-            }
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ATOM_CODE.`in`(atomCodes))
+                .execute()
         }
     }
 
