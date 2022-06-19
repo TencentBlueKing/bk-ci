@@ -199,11 +199,11 @@ class AtomStatisticsDao {
             val conditionStep = if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                    .where(conditions)
+
             } else {
-                step.where(conditions)
+                step
             }
-            return conditionStep.fetchOne(0, Long::class.java) ?: 0L
+            return conditionStep.where(conditions).fetchOne(0, Long::class.java) ?: 0L
         }
     }
 }

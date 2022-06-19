@@ -30,7 +30,6 @@ package com.tencent.devops.metrics.service.impl
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.metrics.constant.Constants.MAX_CREATE_COUNT
 import com.tencent.devops.metrics.dao.ProjectInfoDao
 import com.tencent.devops.metrics.service.ProjectInfoManageService
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
@@ -42,8 +41,8 @@ import com.tencent.devops.metrics.pojo.qo.QueryProjectInfoQO
 import com.tencent.devops.model.metrics.tables.records.TProjectPipelineLabelInfoRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -78,7 +77,6 @@ class ProjectInfoServiceImpl @Autowired constructor(
         } else {
             projectInfoDao.queryProjectAtomList(dslContext, projectId, page, pageSize, queryProjectInfoDTO.keyword)
         }
-        logger.info("queryProjectAtomList: $queryProjectInfoDTO,  $records")
         return Page(
             page = queryProjectInfoDTO.page,
             pageSize = queryProjectInfoDTO.pageSize,
@@ -131,57 +129,40 @@ class ProjectInfoServiceImpl @Autowired constructor(
     }
 
     override fun syncPipelineLabelData(userId: String): Int {
-        var projectIdPage = 1
-        var projectIdTotalPages = 1
+
+        var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
+        val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
+        val pipelineLabelSyncsNumber = 100
         var projectIdCreateCount = 0
-        do {
-            val projectIdResult = client.get(ServicePipelineResource::class).getPipelineLabelProjectId(
-                userId = userId,
-                page = projectIdPage,
-                pageSize = MAX_CREATE_COUNT
-            ).data
+        if (projectMinId != null && projectMaxId != null) {
             do {
-                var labelInfosPage = 1
-                var labelInfosTotalPages = 1
+                val projectIds = client.get(ServiceProjectResource::class)
+                    .getProjectListById(projectMinId, projectMinId + pipelineLabelSyncsNumber).data?.map { it.id }
                 val labelInfosResult = client.get(ServicePipelineResource::class)
-                    .getPipelineLabelInfos(
-                        userId = userId,
-                        page = labelInfosPage,
-                        pageSize = MAX_CREATE_COUNT
-                    ).data
-                labelInfosResult?.let {
-                    val records = it.records
-                    val pipelineLabelRelateInfos = records.map { record ->
-                        TProjectPipelineLabelInfoRecord(
-                            client.get(ServiceAllocIdResource::class)
-                                .generateSegmentId("METRICS_PROJECT_PIPELINE_LABEL_INFO").data ?: 0,
-                            record.projectId,
-                            record.pipelineId,
-                            record.labelId,
-                            record.name,
-                            record.createUser,
-                            record.createUser,
-                            record.createTime!!,
-                            record.createTime!!
-                        )
+                    .getPipelineLabelInfos(userId, projectIds ?: emptyList()).data
+                val pipelineLabelRelateInfos = labelInfosResult?.map {
+                        val tProjectPipelineLabelInfoRecord = TProjectPipelineLabelInfoRecord()
+                        tProjectPipelineLabelInfoRecord.id = client.get(ServiceAllocIdResource::class)
+                            .generateSegmentId("METRICS_PROJECT_PIPELINE_LABEL_INFO").data ?: 0
+                        tProjectPipelineLabelInfoRecord.projectId = it.projectId
+                        tProjectPipelineLabelInfoRecord.pipelineId = it.pipelineId
+                        tProjectPipelineLabelInfoRecord.labelId = it.labelId
+                        tProjectPipelineLabelInfoRecord.labelName = it.name
+                        tProjectPipelineLabelInfoRecord.creator = it.createUser
+                        tProjectPipelineLabelInfoRecord.modifier = it.createUser
+                        tProjectPipelineLabelInfoRecord.updateTime = it.createTime!!
+                        tProjectPipelineLabelInfoRecord.createTime = it.createTime!!
+                        tProjectPipelineLabelInfoRecord
                     }
+                if (!pipelineLabelRelateInfos.isNullOrEmpty()) {
                     projectIdCreateCount += projectInfoDao.batchCreatePipelineLabelData(
                         dslContext,
                         pipelineLabelRelateInfos
                     )
                 }
-                labelInfosPage += 1
-                labelInfosTotalPages = labelInfosResult?.totalPages ?: labelInfosTotalPages
-            } while (labelInfosPage <= labelInfosTotalPages)
-
-            projectIdPage += 1
-            projectIdTotalPages = projectIdResult?.totalPages ?: projectIdTotalPages
-        } while (projectIdPage <= projectIdTotalPages)
-
+                projectMinId += (pipelineLabelSyncsNumber + 1)
+            } while (projectMinId <= projectMaxId)
+        }
         return projectIdCreateCount
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ProjectInfoServiceImpl::class.java)
     }
 }

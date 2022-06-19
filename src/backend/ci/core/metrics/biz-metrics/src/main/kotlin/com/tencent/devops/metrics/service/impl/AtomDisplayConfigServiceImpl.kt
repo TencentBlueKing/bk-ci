@@ -72,12 +72,11 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
     }
 
     override fun deleteAtomDisplayConfig(projectId: String, userId: String, atomCodes: List<String>): Boolean {
-        logger.info("deleteAtomDisplayConfig atomCodes: $atomCodes")
         return atomDisplayConfigDao.batchDeleteAtomDisplayConfig(
-            dslContext,
-            projectId,
-            userId,
-            atomCodes
+            dslContext = dslContext,
+            projectId = projectId,
+            userId = userId,
+            atomCodes = atomCodes
         ) > 0
     }
 
@@ -98,6 +97,7 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Page<AtomBaseInfoDO> {
+        // 获取已配置的插件进行排除
         val atomCodes = atomDisplayConfigDao.getAtomDisplayConfig(
             dslContext,
             projectId,
@@ -121,9 +121,5 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
                 pageSize = pageSize ?: 10
             )
         )
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(AtomDisplayConfigServiceImpl::class.java)
     }
 }

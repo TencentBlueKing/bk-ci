@@ -80,8 +80,7 @@ class PipelineFailServiceImpl @Autowired constructor(
         )
         val errorDict = mutableMapOf<Int, String>()
         errorCodeInfoDao.getErrorTypeDict(dslContext).map { errorDict.put(it.value1(), it.value2()) }
-        logger.info("queryPipelineFailTrendInfo:$typeInfos")
-        val failTrendInfos = typeInfos.map { typeInfo ->
+        return typeInfos.map { typeInfo ->
             val result = pipelineFailDao.queryPipelineFailTrendInfo(
                 dslContext = dslContext,
                 queryPipelineFailTrendQo = QueryPipelineOverviewQO(
@@ -112,18 +111,15 @@ class PipelineFailServiceImpl @Autowired constructor(
                     )
                 }
             }
-            logger.info("queryPipelineFailTrendInfo failStatisticsInfos:$failStatisticsInfos")
             PipelineFailTrendInfoVO(
                 errorType = typeInfo,
                 name = errorDict[typeInfo],
                 failInfos = failStatisticsInfos
             )
         }
-        return failTrendInfos
     }
 
     override fun queryPipelineFailSumInfo(queryPipelineFailDTO: QueryPipelineFailDTO): List<PipelineFailInfoDO> {
-        logger.info("queryPipelineFailTrendInfoDTO: $queryPipelineFailDTO")
         val errorDict = mutableMapOf<Int, String>()
         errorCodeInfoDao.getErrorTypeDict(dslContext).map { errorDict.put(it.value1(), it.value2()) }
         val result = pipelineFailDao.queryPipelineFailSumInfo(
@@ -136,7 +132,7 @@ class PipelineFailServiceImpl @Autowired constructor(
                     startTime = queryPipelineFailDTO.startTime,
                     endTime = queryPipelineFailDTO.endTime
                 ),
-                queryPipelineFailDTO.errorTypes
+                errorTypes = queryPipelineFailDTO.errorTypes
             )
         )
         return result.map {

@@ -49,7 +49,6 @@ class SyncPipelineRelateLabelDataServiceImpl @Autowired constructor(
     private val client: Client
 ) : SyncPipelineRelateLabelDataService {
     companion object {
-        private val logger = LoggerFactory.getLogger(SyncPipelineRelateLabelDataServiceImpl::class.java)
         private fun metricsDataReportKey(projectId: String, pipelineId: String): String {
             return "SyncPipelineRelateLabel:$projectId::$pipelineId"
         }

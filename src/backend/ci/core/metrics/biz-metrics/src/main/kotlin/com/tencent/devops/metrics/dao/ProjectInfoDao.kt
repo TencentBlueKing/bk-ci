@@ -61,6 +61,7 @@ class ProjectInfoDao {
                 .from(this)
                 .where(conditions)
                 .groupBy(ATOM_CODE)
+                .orderBy(TOTAL_EXECUTE_COUNT.desc())
                 .limit((page - 1) * pageSize, pageSize)
                 .fetchInto(AtomBaseInfoDO::class.java)
         }

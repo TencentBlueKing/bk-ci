@@ -56,7 +56,6 @@ class UserPipelineFailResourceImpl @Autowired constructor(
         val queryReq = baseQueryReq ?: BaseQueryReqVO()
             if (queryReq.startTime.isNullOrBlank()) { queryReq.startTime = getStartDateTime() }
             if (queryReq.endTime.isNullOrBlank()) { queryReq.endTime = getEndDateTime() }
-
         checkDateInterval(queryReq.startTime!!, queryReq.endTime!!)
         return Result(
             pipelineFailManageService.queryPipelineFailTrendInfo(

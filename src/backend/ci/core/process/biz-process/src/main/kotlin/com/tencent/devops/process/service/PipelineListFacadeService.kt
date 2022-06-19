@@ -1725,28 +1725,8 @@ class PipelineListFacadeService @Autowired constructor(
     }
 
     fun getProjectPipelineLabelInfos(
-        page: Int,
-        pageSize: Int
-    ): Page<PipelineLabelRelateInfo> {
-        return Page(
-            page = page,
-            pageSize = pageSize,
-            count = pipelineLabelPipelineDao.getPipelineLabelRelateInfoCount(dslContext, ""),
-            records = pipelineLabelPipelineDao.getPipelineLabelRelateInfos(
-                dslContext = dslContext,
-                projectId = "",
-                page = page,
-                pageSize = pageSize
-            )
-        )
-    }
-
-    fun getPipelineLabelProjectId(userId: String, page: Int, pageSize: Int): Page<String> {
-        return Page(
-            page = page,
-            pageSize = pageSize,
-            count = pipelineLabelPipelineDao.getPipelineLabelRelateInfoCount(dslContext, ""),
-            records = emptyList()
-        )
+        projectIds: List<Long>
+    ): List<PipelineLabelRelateInfo> {
+        return pipelineLabelPipelineDao.getPipelineLabelRelateInfos(dslContext, projectIds)
     }
 }
