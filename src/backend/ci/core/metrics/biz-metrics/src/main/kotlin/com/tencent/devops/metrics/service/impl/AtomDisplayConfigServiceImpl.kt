@@ -70,12 +70,12 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun deleteAtomDisplayConfig(projectId: String, userId: String, atomCodes: List<String>): Boolean {
+    override fun deleteAtomDisplayConfig(projectId: String, userId: String, atomCodes: List<AtomBaseInfoDO>): Boolean {
         return atomDisplayConfigDao.batchDeleteAtomDisplayConfig(
             dslContext = dslContext,
             projectId = projectId,
             userId = userId,
-            atomCodes = atomCodes
+            atomCodes = atomCodes.map { it.atomCode }
         ) > 0
     }
 

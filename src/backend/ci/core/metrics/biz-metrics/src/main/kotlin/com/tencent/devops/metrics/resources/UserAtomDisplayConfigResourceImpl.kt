@@ -60,13 +60,13 @@ class UserAtomDisplayConfigResourceImpl @Autowired constructor(
     override fun deleteAtomDisplayConfig(
         projectId: String,
         userId: String,
-        atomCodes: List<String>
+        atomDisplayConfig: AtomDisplayConfigVO
     ): Result<Boolean> {
         return Result(
             atomDisplayConfigManageService.deleteAtomDisplayConfig(
                     projectId = projectId,
                     userId = userId,
-                    atomCodes = atomCodes
+                    atomCodes = atomDisplayConfig.atomBaseInfos
             )
         )
     }
