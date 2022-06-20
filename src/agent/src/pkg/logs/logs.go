@@ -14,13 +14,18 @@ var logs *logrus.Logger
 func Init(filepath string) error {
 	logInfo := logrus.New()
 
-	logInfo.Out = &lumberjack.Logger{
-		Filename:  filepath,
-		MaxAge:    7,
-		LocalTime: true,
+	lumLog := &lumberjack.Logger{
+		Filename:   filepath,
+		MaxAge:     7,
+		MaxBackups: 7,
+		LocalTime:  true,
 	}
 
+	logInfo.Out = lumLog
+
 	logInfo.SetFormatter(&MyFormatter{})
+
+	go DoDailySplitLog(filepath, lumLog)
 
 	logs = logInfo
 

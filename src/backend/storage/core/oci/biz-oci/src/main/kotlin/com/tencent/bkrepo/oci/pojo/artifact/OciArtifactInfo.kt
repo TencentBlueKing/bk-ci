@@ -68,5 +68,10 @@ open class OciArtifactInfo(
         // 额外的package或者version 删除接口
         const val OCI_PACKAGE_DELETE_URL = "/package/delete/{projectId}/{repoName}"
         const val OCI_VERSION_DELETE_URL = "/version/delete/{projectId}/{repoName}"
+        const val OCI_USER_MANIFEST_SUFFIX = "/manifest/{projectId}/{repoName}/**/{tag}"
+        const val OCI_USER_LAYER_SUFFIX = "/layer/{projectId}/{repoName}/**/{id}"
+        const val OCI_USER_REPO_SUFFIX = "/repo/{projectId}/{repoName}"
+        const val OCI_USER_TAG_SUFFIX = "/tag/{projectId}/{repoName}/**"
+        const val DOCKER_CATALOG_SUFFIX = "_catalog"
     }
 }

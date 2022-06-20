@@ -48,6 +48,7 @@ import java.time.Duration
 class CleanupFileVisitor(
     private val rootPath: Path,
     private val tempPath: Path,
+    private val stagingPath: Path,
     private val fileStorage: FileStorage,
     private val fileLocator: FileLocator,
     private val credentials: StorageCredentials
@@ -80,10 +81,17 @@ class CleanupFileVisitor(
         return FileVisitResult.CONTINUE
     }
 
+    override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes?): FileVisitResult {
+        if (dir == stagingPath) {
+            return FileVisitResult.SKIP_SUBTREE
+        }
+        return FileVisitResult.CONTINUE
+    }
+
     @Throws(IOException::class)
     override fun postVisitDirectory(dirPath: Path, exc: IOException?): FileVisitResult {
-        // 当目录不为根目录，且目录下不存在子文件时，删除当前目录
-        if (dirPath == rootPath || dirPath == tempPath) {
+        // 当目录不为根目录，且目录下不存在子文件时，删除当前目录。临时目录和暂存目录不删除。
+        if (dirPath == rootPath || dirPath == tempPath || dirPath == stagingPath) {
             return FileVisitResult.CONTINUE
         }
         Files.newDirectoryStream(dirPath).use {

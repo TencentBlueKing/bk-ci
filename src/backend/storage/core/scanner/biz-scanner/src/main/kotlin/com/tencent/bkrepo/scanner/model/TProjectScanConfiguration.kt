@@ -27,6 +27,10 @@
 
 package com.tencent.bkrepo.scanner.model
 
+import com.tencent.bkrepo.scanner.configuration.ScannerProperties.Companion.DEFAULT_PROJECT_SCAN_PRIORITY
+import com.tencent.bkrepo.scanner.configuration.ScannerProperties.Companion.DEFAULT_SCAN_TASK_COUNT_LIMIT
+import com.tencent.bkrepo.scanner.configuration.ScannerProperties.Companion.DEFAULT_SUB_SCAN_TASK_COUNT_LIMIT
+import com.tencent.bkrepo.scanner.pojo.AutoScanConfiguration
 import org.springframework.data.mongodb.core.index.CompoundIndex
 import org.springframework.data.mongodb.core.index.CompoundIndexes
 import org.springframework.data.mongodb.core.mapping.Document
@@ -40,11 +44,11 @@ import java.time.LocalDateTime
     CompoundIndex(name = "projectId_idx", def = "{'projectId': 1}", background = true, unique = true)
 )
 data class TProjectScanConfiguration(
-    val id: String? = null,
-    val createdBy: String,
-    val createdDate: LocalDateTime,
-    val lastModifiedBy: String,
-    val lastModifiedDate: LocalDateTime,
+    var id: String? = null,
+    var createdBy: String,
+    var createdDate: LocalDateTime,
+    var lastModifiedBy: String,
+    var lastModifiedDate: LocalDateTime,
 
     val projectId: String,
     /**
@@ -58,11 +62,9 @@ data class TProjectScanConfiguration(
     /**
      * 项目扫描子任务数量限制
      */
-    val subScanTaskCountLimit: Int = DEFAULT_SUB_SCAN_TASK_COUNT_LIMIT
-) {
-    companion object {
-        const val DEFAULT_PROJECT_SCAN_PRIORITY = 0
-        const val DEFAULT_SCAN_TASK_COUNT_LIMIT = 1
-        const val DEFAULT_SUB_SCAN_TASK_COUNT_LIMIT = 20
-    }
-}
+    val subScanTaskCountLimit: Int = DEFAULT_SUB_SCAN_TASK_COUNT_LIMIT,
+    /**
+     * 自动扫描配置,key为scannerName,value为扫描器对应的自动扫描配置
+     */
+    val autoScanConfiguration: Map<String, AutoScanConfiguration> = emptyMap()
+)

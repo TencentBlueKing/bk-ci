@@ -8,18 +8,22 @@ enum class SubScanTaskStatus {
      * 从未扫描过
      */
     NEVER_SCANNED,
+
     /**
      * 因项目配额不足任务阻塞
      */
     BLOCKED,
+
     /**
      * 子任务已创建
      */
     CREATED,
+
     /**
      * 已被拉取
      */
     PULLED,
+
     /**
      * 子任务已入队
      */
@@ -36,13 +40,20 @@ enum class SubScanTaskStatus {
     STOPPED,
 
     /**
+     * 阻塞超时
+     */
+    BLOCK_TIMEOUT,
+
+    /**
      * 扫描超时
      */
     TIMEOUT,
+
     /**
      * 扫描失败
      */
     FAILED,
+
     /**
      * 扫描成功
      */
@@ -50,11 +61,16 @@ enum class SubScanTaskStatus {
 
     companion object {
         val RUNNING_STATUS = listOf(CREATED.name, PULLED.name, ENQUEUED.name, EXECUTING.name)
+
         /**
          * 判断[status]是否是已结束的状态
          */
         fun finishedStatus(status: SubScanTaskStatus): Boolean {
-            return status == TIMEOUT || status == FAILED || status == STOPPED || status == SUCCESS
+            return status == BLOCK_TIMEOUT
+                || status == TIMEOUT
+                || status == FAILED
+                || status == STOPPED
+                || status == SUCCESS
         }
 
         /**

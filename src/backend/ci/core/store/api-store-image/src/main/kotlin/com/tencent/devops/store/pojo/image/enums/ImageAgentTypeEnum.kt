@@ -32,13 +32,18 @@ package com.tencent.devops.store.pojo.image.enums
 enum class ImageAgentTypeEnum(val type: Int) {
     DOCKER(0), // Docker on Devnet 物理机
     IDC(1), // Docker on IDC CVM
-    PUBLIC_DEVCLOUD(2); // Docker on DevCloud
+    PUBLIC_DEVCLOUD(2), // Docker on DevCloud
+    KUBERNETES(3); // Kubernetes
 
     companion object {
 
         fun getImageAgentType(name: String): ImageAgentTypeEnum? {
+            if (name.equals(KUBERNETES.name, ignoreCase = true)) {
+                return DOCKER
+            }
+
             values().forEach { enumObj ->
-                if (enumObj.name.toLowerCase() == name.toLowerCase()) {
+                if (enumObj.name.equals(name, ignoreCase = true)) {
                     return enumObj
                 }
             }
@@ -50,6 +55,7 @@ enum class ImageAgentTypeEnum(val type: Int) {
                 0 -> DOCKER.name
                 1 -> IDC.name
                 2 -> PUBLIC_DEVCLOUD.name
+                3 -> KUBERNETES.name
                 else -> DOCKER.name
             }
         }
@@ -58,7 +64,8 @@ enum class ImageAgentTypeEnum(val type: Int) {
             return mutableListOf(
                 DOCKER,
                 IDC,
-                PUBLIC_DEVCLOUD
+                PUBLIC_DEVCLOUD,
+                KUBERNETES
             )
         }
     }

@@ -61,7 +61,7 @@ class MavenServiceImpl(
     private val viewModelService: ViewModelService
 ) : ArtifactService(), MavenService {
 
-    @Value("\${service.name}")
+    @Value("\${spring.application.name}")
     private var applicationName: String = "maven"
 
     @Permission(type = ResourceType.REPO, action = PermissionAction.WRITE)

@@ -26,10 +26,12 @@
  */
 package com.tencent.devops.project.resources
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OPShardingRoutingRuleResource
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -54,8 +56,20 @@ class OPShardingRoutingRuleResourceImpl @Autowired constructor(
         return Result(shardingRoutingRuleService.getShardingRoutingRuleById(id))
     }
 
-    override fun getShardingRoutingRuleByName(routingName: String): Result<ShardingRoutingRule?> {
-        return Result(shardingRoutingRuleService.getShardingRoutingRuleByName(routingName))
+    override fun getShardingRoutingRuleByName(
+        routingName: String,
+        moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum,
+        tableName: String?
+    ): Result<ShardingRoutingRule?> {
+        return Result(
+            shardingRoutingRuleService.getShardingRoutingRuleByName(
+                moduleCode = moduleCode,
+                ruleType = ruleType,
+                routingName = routingName,
+                tableName = tableName
+            )
+        )
     }
 
     override fun deleteShardingRoutingRuleById(userId: String, id: String): Result<Boolean> {

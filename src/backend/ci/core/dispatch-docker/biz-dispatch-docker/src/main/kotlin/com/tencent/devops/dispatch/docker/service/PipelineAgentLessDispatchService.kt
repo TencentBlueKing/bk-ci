@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.docker.service
 
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.dispatch.docker.client.BuildLessClient
@@ -52,7 +51,6 @@ import org.springframework.stereotype.Service
 class PipelineAgentLessDispatchService @Autowired constructor(
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
-    private val jobQuotaService: JobQuotaService,
     private val dockerHostClient: DockerHostClient,
     private val buildLessClient: BuildLessClient,
     private val dockerHostUtils: DockerHostUtils,

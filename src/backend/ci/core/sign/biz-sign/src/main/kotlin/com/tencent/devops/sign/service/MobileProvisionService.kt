@@ -32,6 +32,11 @@ import java.io.File
 
 interface MobileProvisionService {
 
+    companion object {
+        const val TEAM_IDENTIFIER_KEY = "com.apple.developer.team-identifier"
+        const val KEYCHAIN_ACCESS_GROUPS_KEY = "keychain-access-groups"
+    }
+
     fun downloadMobileProvision(
         mobileProvisionDir: File,
         projectId: String,
@@ -39,7 +44,8 @@ interface MobileProvisionService {
     ): File
 
     fun handleEntitlement(
-        entitlementFile: File
+        entitlementFile: File,
+        keyChainGroupsList: List<String>?
     )
 
     fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): File?

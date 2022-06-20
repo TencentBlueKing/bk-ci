@@ -658,7 +658,8 @@ class QualityRuleCheckService @Autowired constructor(
 
     private fun getDetailMsg(record: QualityRuleInterceptRecord, params: Map<String, String>): String {
         // codecc跳到独立入口页面
-        return if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
+        return if (CodeccUtils.isCodeccAtom(record.indicatorType) ||
+            CodeccUtils.isCodeccCommunityAtom(record.indicatorType)) {
             val projectId = params["projectId"] ?: ""
             val pipelineId = params["pipelineId"] ?: ""
             val buildId = params["buildId"] ?: ""

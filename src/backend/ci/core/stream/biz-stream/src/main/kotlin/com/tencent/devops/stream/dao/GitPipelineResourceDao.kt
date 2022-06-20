@@ -62,7 +62,8 @@ class GitPipelineResourceDao {
                 VERSION,
                 CREATE_TIME,
                 UPDATE_TIME,
-                DIRECTORY
+                DIRECTORY,
+                LAST_UPDATE_BRANCH
             ).values(
                 pipeline.pipelineId,
                 gitProjectId,
@@ -74,7 +75,8 @@ class GitPipelineResourceDao {
                 version,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
-                pipeline.filePath.let { it.substring(0, it.indexOfLast { c -> c == '/' } + 1) }
+                pipeline.filePath.let { it.substring(0, it.indexOfLast { c -> c == '/' } + 1) },
+                pipeline.lastUpdateBranch
             ).execute()
         }
     }
@@ -110,6 +112,20 @@ class GitPipelineResourceDao {
                 .set(VERSION, version)
                 .where(GIT_PROJECT_ID.eq(pipeline.gitProjectId))
                 .and(FILE_PATH.eq(pipeline.filePath))
+                .execute()
+        }
+    }
+
+    fun updatePipelineLastBranch(
+        dslContext: DSLContext,
+        pipelineId: String,
+        branch: String
+    ) {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            dslContext.update(this)
+                .set(LAST_UPDATE_BRANCH, branch)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }
     }
@@ -334,6 +350,19 @@ class GitPipelineResourceDao {
                 .where(conditions)
                 .orderBy(ID.asc())
                 .limit(limit)
+                .fetch()
+        }
+    }
+
+    fun getLastUpdateBranchByIds(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineIds: Set<String>
+    ): Result<Record2<String, String>> {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.select(PIPELINE_ID, LAST_UPDATE_BRANCH).from(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(PIPELINE_ID.`in`(pipelineIds))
                 .fetch()
         }
     }

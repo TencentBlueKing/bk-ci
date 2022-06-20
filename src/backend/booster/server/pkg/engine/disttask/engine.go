@@ -10,6 +10,7 @@
 package disttask
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -841,7 +842,10 @@ func (de *disttaskEngine) releaseDirectTask(task *distTask) error {
 
 func (de *disttaskEngine) releaseCRMTask(task *distTask) error {
 	crmMgr := de.getCrMgr(task.InheritSetting.QueueName)
-
+	if crmMgr == nil {
+		blog.Errorf("engine(%s) try releasing crm task, release task(%s) failed: crmMgr is null", EngineName, task.ID)
+		return errors.New("crmMgr is null")
+	}
 	blog.Infof("engine(%s) try to release crm task(%s)", EngineName, task.ID)
 	if err := crmMgr.Release(task.ID); err != nil && err != crm.ErrorResourceNoExist {
 		blog.Errorf("engine(%s) try releasing crm task, release task(%s) failed: %v", EngineName, task.ID, err)
