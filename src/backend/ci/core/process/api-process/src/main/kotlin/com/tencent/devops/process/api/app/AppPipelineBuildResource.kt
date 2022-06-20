@@ -164,8 +164,8 @@ interface AppPipelineBuildResource {
         @ApiParam("动作", required = true)
         @PathParam("action")
         action: ManualReviewAction,
-        @ApiParam("红线ID", required = true)
-        request: QualityReviewRequest
+        @ApiParam("红线ID", required = false)
+        request: QualityReviewRequest? = null
     ): Result<Boolean>
 
     @ApiOperation("人工审核")
