@@ -74,9 +74,9 @@ object WorkRunner {
                     val replaceWorkspace = if (workspace.isNotBlank()) {
                         ReplacementUtils.replace(
                             workspace, object : ReplacementUtils.KeyReplacement {
-                            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
+                            override fun getReplacement(key: String): String? {
                                 return variables[key]
-                                    ?: throw FileNotFoundException("工作空间存在未定义变量(undefined variable): $workspace")
+                                    ?: throw IllegalArgumentException("工作空间未定义变量(undefined variable): $workspace")
                             }
                         }, mapOf(
                             WORKSPACE_CONTEXT to workspace,
