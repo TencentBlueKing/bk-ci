@@ -89,6 +89,5 @@ class V2BuildParametersCompatibilityTransformerTest {
         assertNotNull(startBuildParameter[PIPELINE_WEBHOOK_BRANCH]) // 新参数仍然存在，并且值变为传入的值替换默认值
         assertEquals("master", startBuildParameter[PIPELINE_WEBHOOK_BRANCH]!!.value) // 并且值变为传入的值替换默认值
         Assertions.assertNull(startBuildParameter["hookBranch"]) // 旧参数被转换为新参数，如上
-        assertEquals("success", startBuildParameter["password"]!!.value) // 合法的启动参数保留下来了，并且被解密
     }
 }
