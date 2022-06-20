@@ -56,7 +56,7 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
         keyword: String?,
         page: Int,
         pageSize: Int,
-        channelCodes: List<ChannelCode>?
+        channelCodes: List<String>?
     ): Result<Page<PipelineIdAndName>> {
         checkParam(userId, projectId)
         val result = pipelineListFacadeService.searchByProjectIdAndName(

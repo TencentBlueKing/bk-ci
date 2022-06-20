@@ -548,7 +548,7 @@ class PipelineInfoDao {
         projectCode: String,
         limit: Int,
         offset: Int,
-        channelCodes: List<ChannelCode>?
+        channelCodes: List<String>?
     ): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()

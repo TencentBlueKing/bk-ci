@@ -93,7 +93,7 @@ interface UserPipelineInfoResource {
         @QueryParam("pageSize")
         pageSize: Int,
         @ApiParam("渠道来源", required = false)
-        channelCodes: List<ChannelCode>?
+        channelCodes: List<String>?
     ): Result<Page<PipelineIdAndName>>
 
     @ApiOperation("根据流水线名称搜索")
