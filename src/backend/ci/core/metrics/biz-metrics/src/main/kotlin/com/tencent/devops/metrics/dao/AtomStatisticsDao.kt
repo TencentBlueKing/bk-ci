@@ -152,6 +152,7 @@ class AtomStatisticsDao {
             }
             return step.where(conditions)
                 .groupBy(ATOM_CODE)
+                .orderBy(TOTAL_EXECUTE_COUNT)
                 .offset((queryCondition.page - 1) * queryCondition.pageSize)
                 .limit(queryCondition.pageSize)
                 .fetch()
@@ -174,7 +175,6 @@ class AtomStatisticsDao {
                 .where(PROJECT_ID.eq(queryCondition.projectId))
                 .and(STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
                 .groupBy(ATOM_CODE, ERROR_TYPE)
-                .orderBy(ATOM_CODE)
                 .fetch()
         }
     }
