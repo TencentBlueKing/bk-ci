@@ -152,14 +152,15 @@ class MetricsServiceImpl constructor(
         containerMetricsDatas: MutableList<BuildEndContainerMetricsData>
     ) {
         stage.containers.forEachIndexed nextContainer@{ containerIndex, container ->
-            if (container.matrixGroupFlag == true) {
-                container.fetchGroupContainers()?.forEachIndexed { groupContainerIndex, groupContainer ->
+            val groupContainers = container.fetchGroupContainers()
+            if (!groupContainers.isNullOrEmpty()) {
+                groupContainers.forEachIndexed { groupContainerIndex, groupContainer ->
                     val groupContainerStatus = groupContainer.status
                     if (!checkMetricsReportCondition(groupContainerStatus)) {
                         return@nextContainer
                     }
                     doContainerBus(
-                        container = container,
+                        container = groupContainer,
                         stageIndex = stageIndex,
                         containerIndex = containerIndex,
                         groupContainerIndex = groupContainerIndex,
