@@ -31,6 +31,7 @@ import com.tencent.devops.common.sdk.github.request.CreateOrUpdateFileContentsRe
 import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
+import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
 import org.junit.jupiter.api.Test
 
 class GithubRepositoryApiTest {
@@ -113,5 +114,19 @@ class GithubRepositoryApiTest {
             request = updateRequest
         )
         println(updateResponse)
+    }
+
+    @Test
+    fun listRepositoryCollaborators() {
+        val request = ListRepositoryCollaboratorsRequest(
+            owner = owner,
+            repo = repo
+        )
+
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
     }
 }
