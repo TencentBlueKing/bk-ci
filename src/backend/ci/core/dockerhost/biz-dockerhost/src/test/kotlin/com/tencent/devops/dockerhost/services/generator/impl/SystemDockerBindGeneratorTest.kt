@@ -27,8 +27,8 @@
 
 package com.tencent.devops.dockerhost.services.generator.impl
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -52,7 +52,7 @@ class SystemDockerBindGeneratorTest {
             val end = System.currentTimeMillis()
             println(start)
             println(end)
-            Assert.assertTrue(end - start >= 1000)
+            Assertions.assertTrue(end - start >= 1000)
         }
     }
 }

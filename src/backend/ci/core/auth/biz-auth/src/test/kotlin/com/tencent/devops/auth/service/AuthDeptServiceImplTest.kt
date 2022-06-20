@@ -30,8 +30,8 @@ package com.tencent.devops.auth.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.redis.RedisOperation
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class AuthDeptServiceImplTest {
 
@@ -136,7 +136,7 @@ class AuthDeptServiceImplTest {
         val mockUsers = mutableListOf<String>()
         mockUsers.add("abc")
         mockUsers.add("def")
-        Assert.assertEquals(users, mockUsers)
+        Assertions.assertEquals(users, mockUsers)
     }
 
     @Test
@@ -173,6 +173,6 @@ class AuthDeptServiceImplTest {
         mockUsers.add("12345")
         mockUsers.add("456")
         mockUsers.add("9878")
-        Assert.assertEquals(users, mockUsers)
+        Assertions.assertEquals(users, mockUsers)
     }
 }

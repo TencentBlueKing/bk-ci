@@ -25,36 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.util
+package com.tencent.devops.common.db.pojo
 
-import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.AESUtil
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
-
-/**
- * password参数类型工具类
- */
-@Suppress("ALL")
-@Component
-class PswParameterUtils {
-
-    @Value("\${parameter.password.pswKey}")
-    private val pswKey: String = ""
-
-    fun decrypt(content: String): String {
-        try {
-            return AESUtil.decrypt(pswKey, content)
-        } catch (e: Exception) {
-            throw OperationException("password: $content decrypt error.")
-        }
-    }
-
-    fun encrypt(content: String): String {
-        try {
-            return AESUtil.encrypt(pswKey, content)
-        } catch (e: Exception) {
-            throw OperationException("password: $content encrypt error.")
-        }
-    }
-}
+data class TableRuleConfig(
+    val index: Int, // 序号
+    val name: String, // 表名
+    val shardingNum: Int = 1, // 分表数量
+    val broadcastFlag: Boolean? = null, // 是否为广播表
+    val databaseShardingStrategy: DatabaseShardingStrategyEnum? = null, // 分库策略
+    val tableShardingStrategy: TableShardingStrategyEnum? = null // 分表策略
+)
