@@ -152,7 +152,7 @@ class AtomStatisticsDao {
             }
             return step.where(conditions)
                 .groupBy(ATOM_CODE)
-                .orderBy(TOTAL_EXECUTE_COUNT)
+                .orderBy(TOTAL_EXECUTE_COUNT.desc())
                 .offset((queryCondition.page - 1) * queryCondition.pageSize)
                 .limit(queryCondition.pageSize)
                 .fetch()
