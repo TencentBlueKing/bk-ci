@@ -119,8 +119,8 @@ class GithubRepositoryApiTest {
     @Test
     fun listRepositoryCollaborators() {
         val request = ListRepositoryCollaboratorsRequest(
-            owner = owner,
-            repo = repo
+            owner = "guyuedumingx",
+            repo = "pai"
         )
 
         val response = client.execute(
