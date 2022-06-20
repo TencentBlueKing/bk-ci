@@ -60,10 +60,10 @@ class GithubRepositoryApiTest {
     @Test
     fun getRepositeryContent() {
         val request = GetRepositoryContentRequest(
-            repo = repo,
+            repo = "chatroom",
             owner = owner,
             ref = "master",
-            path = "README.md"
+            path = "README5555.md"
         )
         val response = client.execute(
             oauthToken = token,
@@ -71,8 +71,6 @@ class GithubRepositoryApiTest {
         )
         println(response)
     }
-
-
     @Test
     fun listRepositoriesRequest() {
         val request = ListRepositoriesRequest()
@@ -82,22 +80,38 @@ class GithubRepositoryApiTest {
         )
         println(response)
     }
-
-
     @Test
     fun createOrUpdateFileContents() {
-        val request = CreateOrUpdateFileContentsRequest(
+        // create
+//        val createRequest = CreateOrUpdateFileContentsRequest(
+//            owner = owner,
+//            repo = "chatroom",
+//            path = "README5555.md",
+//            message = "test",
+//            content = "bXkgbmV3IGZpbGUgY29udGVudHM=",
+//            branch = defaultBranch
+//        )
+//        val createResponse = client.execute(
+//            oauthToken = token,
+//            request = createRequest
+//        )
+//        println(createResponse)
+        // update
+        val updateRequest = CreateOrUpdateFileContentsRequest(
             owner = owner,
             repo = "chatroom",
             path = "README5555.md",
-            message = "test",
-            content = "bXkgbmV3IGZpbGUgY29udGVudHM=",
+            message = "update",
+            // (update in new file) encoding by base64
+            content = "YWRhc2Rhc2Rhcw==",
+            sha = "0d5a690c8fad5e605a6e8766295d9d459d65de42",
             branch = defaultBranch
         )
-        val response = client.execute(
+
+        val updateResponse = client.execute(
             oauthToken = token,
-            request = request
+            request = updateRequest
         )
-        println(response)
+        println(updateResponse)
     }
 }

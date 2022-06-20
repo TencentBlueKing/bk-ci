@@ -33,5 +33,6 @@ data class RepositoryContent(
     val size: String,
     val name: String,
     val path: String,
-    val content: String?
+    val content: String?,
+    val sha: String?
 )
