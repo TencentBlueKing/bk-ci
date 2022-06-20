@@ -46,4 +46,4 @@ data class AtomFailInfoReqVO(
     val errorCodes: List<Int>?,
     @ApiParam("插件code", required = false)
     val atomCodes: List<String>?
-): BaseQueryReqVO(pipelineIds, pipelineLabelIds, startTime, endTime)
+) : BaseQueryReqVO(pipelineIds, pipelineLabelIds, startTime, endTime)

@@ -38,11 +38,10 @@ import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 
 object QueryParamCheckUtil {
+
     // 查询时间区间限制，当天的前一天至前六个月
     @Value("\${metrics.maximumQueryMonths:6}")
     private val maximumQueryMonths: Long = 6
-    @Value("\${metrics.minimumQueryDays:1}")
-    private val minimumQueryDays: Long = 1
 
     fun getIntervalTime(
         fromDate: LocalDateTime,
@@ -80,7 +79,6 @@ object QueryParamCheckUtil {
     }
 
     fun checkDateInterval(startTime: String, endTime: String) {
-
         val startDate = DateTimeUtil.stringToLocalDate(startTime)
         val endDate = DateTimeUtil.stringToLocalDate(endTime)
         val firstDate = LocalDate.now()
@@ -92,7 +90,7 @@ object QueryParamCheckUtil {
         }
         if (endDate!!.isAfter(firstDate)) {
             throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
+                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND
             )
         }
     }

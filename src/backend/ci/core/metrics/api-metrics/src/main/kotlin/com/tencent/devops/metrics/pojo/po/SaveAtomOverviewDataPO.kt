@@ -42,6 +42,8 @@ data class SaveAtomOverviewDataPO(
     val pipelineId: String,
     @ApiModelProperty("流水线名称")
     val pipelineName: String,
+    @ApiModelProperty("渠道代码")
+    val channelCode: String,
     @ApiModelProperty("插件代码")
     val atomCode: String,
     @ApiModelProperty("插件名称")

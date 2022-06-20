@@ -180,7 +180,7 @@ class MeasureServiceImpl constructor(
                     pipelineId = pipelineId,
                     projectId = projectId,
                     buildId = buildId,
-                    monitorData = atomMonitorData,
+                    monitorData = atomMonitorData
                 )
             )
         } catch (ignored: Throwable) { // MK = Monitor Key

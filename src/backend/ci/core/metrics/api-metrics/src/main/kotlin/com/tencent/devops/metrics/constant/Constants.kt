@@ -35,10 +35,12 @@ object Constants {
     const val BK_TURBO_SAVE_TIME = "turboSaveTime"
 
     const val BK_PIPELINE_NAME = "pipelineName"
+    const val BK_CHANNEL_CODE = "channelCode"
     const val BK_STATISTICS_TIME = "statisticsTime"
     const val BK_AVG_COST_TIME = "avgCostTime"
     const val BK_ATOM_CODE = "atomCode"
     const val BK_ATOM_NAME = "atomName"
+    const val BK_ATOM_POSITION = "atomPosition"
     const val BK_SUCCESS_RATE = "successRate"
     const val BK_TOTAL_EXECUTE_COUNT = "totalExecuteCount"
     const val BK_FAIL_EXECUTE_COUNT = "failExecuteCount"

@@ -44,6 +44,7 @@ import java.time.LocalDateTime
 
 @Repository
 class ProjectInfoDao {
+
     fun queryProjectAtomList(
         dslContext: DSLContext,
         projectId: String,
@@ -197,20 +198,20 @@ class ProjectInfoDao {
         with(TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO) {
             return dslContext.batched {
                 pipelineLabelRelateInfos.forEach { pipelineLabelRelateInfo ->
-                   if (!pipelineLabelRelateInfo.pipelineId.isNullOrBlank()) {
-                       conditions.add(this.PIPELINE_ID.eq(pipelineLabelRelateInfo.pipelineId))
-                   }
-                   conditions.add(this.PROJECT_ID.eq(pipelineLabelRelateInfo.projectId))
-                   if (pipelineLabelRelateInfo.labelId != null) {
-                       conditions.add(LABEL_ID.eq(pipelineLabelRelateInfo.labelId))
-                   }
-                   it.dsl().update(this)
-                       .set(this.LABEL_NAME, pipelineLabelRelateInfo.name)
-                       .set(MODIFIER, userId)
-                       .set(UPDATE_TIME, statisticsTime)
-                       .where(conditions)
-                       .execute()
-               }
+                    if (!pipelineLabelRelateInfo.pipelineId.isNullOrBlank()) {
+                        conditions.add(this.PIPELINE_ID.eq(pipelineLabelRelateInfo.pipelineId))
+                    }
+                    conditions.add(this.PROJECT_ID.eq(pipelineLabelRelateInfo.projectId))
+                    if (pipelineLabelRelateInfo.labelId != null) {
+                        conditions.add(LABEL_ID.eq(pipelineLabelRelateInfo.labelId))
+                    }
+                    it.dsl().update(this)
+                        .set(this.LABEL_NAME, pipelineLabelRelateInfo.name)
+                        .set(MODIFIER, userId)
+                        .set(UPDATE_TIME, statisticsTime)
+                        .where(conditions)
+                        .execute()
+                }
             }
         }
     }

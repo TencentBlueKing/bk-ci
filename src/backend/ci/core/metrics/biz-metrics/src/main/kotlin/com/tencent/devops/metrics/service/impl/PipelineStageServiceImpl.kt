@@ -32,17 +32,15 @@ import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.DATE_FORMATTER
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.PipelineStageDao
-import com.tencent.devops.metrics.service.PipelineStageManageService
 import com.tencent.devops.metrics.pojo.`do`.PipelineStageCostTimeInfoDO
 import com.tencent.devops.metrics.pojo.`do`.StageAvgCostTimeInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineStageTrendInfoQO
 import com.tencent.devops.metrics.pojo.vo.StageTrendSumInfoVO
+import com.tencent.devops.metrics.service.PipelineStageManageService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -57,7 +55,6 @@ class PipelineStageServiceImpl @Autowired constructor(
     override fun queryPipelineStageTrendInfo(
         queryPipelineOverviewDTO: QueryPipelineOverviewDTO
     ): List<StageTrendSumInfoVO> {
-
         var stageTrendSumInfos: MutableMap<String, MutableMap<String, StageAvgCostTimeInfoDO>>
         val tags = pipelineStageDao.getStageTag(dslContext, queryPipelineOverviewDTO.projectId)
         val startTime = queryPipelineOverviewDTO.baseQueryReq.startTime

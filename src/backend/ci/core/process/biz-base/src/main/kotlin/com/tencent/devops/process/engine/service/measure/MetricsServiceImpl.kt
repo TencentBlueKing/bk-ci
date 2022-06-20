@@ -36,8 +36,11 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.dao.PipelineStageTagDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
@@ -85,63 +88,45 @@ class MetricsServiceImpl constructor(
         )?.pipelineName
         val webhookInfo = buildInfo.webhookInfo
         val stageMetricsDatas = mutableListOf<BuildEndStageMetricsData>()
-        model.stages.forEach nextStage@{ stage ->
+        handleMetricsData(model, stageMetricsDatas)
+        val buildEndPipelineMetricsData = BuildEndPipelineMetricsData(
+            statisticsTime = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD),
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineName = pipelineName ?: "",
+            buildId = buildId,
+            buildNum = buildInfo.buildNum,
+            repoUrl = webhookInfo?.webhookRepoUrl,
+            branch = webhookInfo?.webhookBranch,
+            startUser = buildInfo.startUser,
+            startTime = buildInfo.startTime?.let { DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS) },
+            endTime = buildInfo.endTime?.let { DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS) },
+            costTime = (buildInfo.endTime ?: 0L) - (buildInfo.startTime ?: 0L),
+            successFlag = buildInfo.status.isSuccess(),
+            errorInfos = buildInfo.errorInfoList,
+            stages = stageMetricsDatas,
+            channelCode = buildInfo.channelCode.name
+        )
+        measureEventDispatcher.dispatch(
+            BuildEndMetricsBroadCastEvent(
+                pipelineId = pipelineId,
+                projectId = projectId,
+                buildId = buildId,
+                buildEndPipelineMetricsData = buildEndPipelineMetricsData
+            )
+        )
+    }
+
+    private fun handleMetricsData(model: Model, stageMetricsDatas: MutableList<BuildEndStageMetricsData>) {
+        model.stages.forEachIndexed nextStage@{ stageIndex, stage ->
             // 判断stage是否执行过,未执行过的stage无需上报数据
             val stageStatus = stage.status
             if (!checkMetricsReportCondition(stageStatus)) {
                 return@nextStage
             }
             val containerMetricsDatas = mutableListOf<BuildEndContainerMetricsData>()
-            stage.containers.forEach nextContainer@{ container ->
-                // 判断container是否执行过,未执行过的container无需上报数据
-                val containerStatus = container.status
-                if (!checkMetricsReportCondition(containerStatus)) {
-                    return@nextContainer
-                }
-                val taskMetricsDatas = mutableListOf<BuildEndTaskMetricsData>()
-                val containerAtomCodes = mutableListOf<String>()
-                container.elements.forEach nextElement@{ element ->
-                    // 判断插件是否执行过,未执行过的插件无需上报数据
-                    val elementStatus = element.status
-                    if (!checkMetricsReportCondition(elementStatus)) {
-                        return@nextElement
-                    }
-                    containerAtomCodes.add(element.getAtomCode())
-                    taskMetricsDatas.add(
-                        BuildEndTaskMetricsData(
-                            taskId = element.id ?: "",
-                            atomName = element.atomName ?: element.name,
-                            atomCode = element.getAtomCode(),
-                            classifyCode = element.classifyCode ?: "",
-                            classifyName = element.classifyName ?: "",
-                            startTime = element.startEpoch?.let {
-                                DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS)
-                            },
-                            endTime = element.startEpoch?.let {
-                                DateTimeUtil.formatMilliTime(
-                                    time = it + (element.elapsed ?: 0L),
-                                    format = DateTimeUtil.YYYY_MM_DD_HH_MM_SS
-                                )
-                            },
-                            costTime = element.elapsed ?: 0L,
-                            successFlag = BuildStatus.valueOf(elementStatus!!).isSuccess(),
-                            errorType = element.errorType?.let { ErrorType.getErrorType(it)?.num },
-                            errorCode = element.errorCode,
-                            errorMsg = element.errorMsg
-                        )
-                    )
-                }
-                containerMetricsDatas.add(
-                    BuildEndContainerMetricsData(
-                        containerId = container.containerId ?: "",
-                        successFlag = BuildStatus.valueOf(containerStatus!!).isSuccess(),
-                        costTime = (container.systemElapsed ?: 0L) + (container.elementElapsed ?: 0L),
-                        atomCodes = containerAtomCodes,
-                        tasks = taskMetricsDatas
-                    )
-                )
-            }
-            var stageTagNames: MutableList<String> ? = null
+            handleContainer(stage = stage, stageIndex = stageIndex, containerMetricsDatas = containerMetricsDatas)
+            var stageTagNames: MutableList<String>? = null
             stage.tag?.forEach { stageTagId ->
                 if (stageTagNames == null) {
                     stageTagNames = mutableListOf()
@@ -159,29 +144,92 @@ class MetricsServiceImpl constructor(
                 )
             )
         }
-        val buildEndPipelineMetricsData = BuildEndPipelineMetricsData(
-            statisticsTime = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD),
-            projectId = projectId,
-            pipelineId = pipelineId,
-            pipelineName = pipelineName ?: "",
-            buildId = buildId,
-            buildNum = buildInfo.buildNum,
-            repoUrl = webhookInfo?.webhookRepoUrl,
-            branch = webhookInfo?.webhookBranch,
-            startUser = buildInfo.startUser,
-            startTime = buildInfo.startTime?.let { DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS) },
-            endTime = buildInfo.endTime?.let { DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS) },
-            costTime = (buildInfo.endTime ?: 0L) - (buildInfo.startTime ?: 0L),
-            successFlag = buildInfo.status.isSuccess(),
-            errorInfos = buildInfo.errorInfoList,
-            stages = stageMetricsDatas
-        )
-        measureEventDispatcher.dispatch(
-            BuildEndMetricsBroadCastEvent(
-                pipelineId = pipelineId,
-                projectId = projectId,
-                buildId = buildId,
-                buildEndPipelineMetricsData = buildEndPipelineMetricsData,
+    }
+
+    private fun handleContainer(
+        stage: Stage,
+        stageIndex: Int,
+        containerMetricsDatas: MutableList<BuildEndContainerMetricsData>
+    ) {
+        stage.containers.forEachIndexed nextContainer@{ containerIndex, container ->
+            // 判断container是否执行过,未执行过的container无需上报数据
+            val containerStatus = container.status
+            if (!checkMetricsReportCondition(containerStatus)) {
+                return@nextContainer
+            }
+            val taskMetricsDatas = mutableListOf<BuildEndTaskMetricsData>()
+            val containerAtomCodes = mutableListOf<String>()
+            handleElement(
+                container = container,
+                stageIndex = stageIndex,
+                containerIndex = containerIndex,
+                containerAtomCodes = containerAtomCodes,
+                taskMetricsDatas = taskMetricsDatas
+            )
+            containerMetricsDatas.add(
+                BuildEndContainerMetricsData(
+                    containerId = container.containerId ?: "",
+                    successFlag = BuildStatus.valueOf(containerStatus!!).isSuccess(),
+                    costTime = (container.systemElapsed ?: 0L) + (container.elementElapsed ?: 0L),
+                    atomCodes = containerAtomCodes,
+                    tasks = taskMetricsDatas
+                )
+            )
+        }
+    }
+
+    private fun handleElement(
+        container: Container,
+        stageIndex: Int,
+        containerIndex: Int,
+        containerAtomCodes: MutableList<String>,
+        taskMetricsDatas: MutableList<BuildEndTaskMetricsData>
+    ) {
+        container.elements.forEachIndexed nextElement@{ elementIndex, element ->
+            // 判断插件是否执行过,未执行过的插件无需上报数据
+            val elementStatus = element.status
+            if (!checkMetricsReportCondition(elementStatus)) {
+                return@nextElement
+            }
+            containerAtomCodes.add(element.getAtomCode())
+            val elementPosition = "$stageIndex-$containerIndex-$elementIndex"
+            addTaskMetricsData(
+                taskMetricsDatas = taskMetricsDatas,
+                element = element,
+                elementPosition = elementPosition,
+                elementStatus = elementStatus
+            )
+        }
+    }
+
+    private fun addTaskMetricsData(
+        taskMetricsDatas: MutableList<BuildEndTaskMetricsData>,
+        element: Element,
+        elementPosition: String,
+        elementStatus: String?
+    ) {
+        taskMetricsDatas.add(
+            BuildEndTaskMetricsData(
+                taskId = element.id ?: "",
+                atomName = element.atomName ?: element.name,
+                atomCode = element.getAtomCode(),
+                atomPosition = elementPosition,
+                classifyCode = element.classifyCode ?: "",
+                classifyName = element.classifyName ?: "",
+                startTime = element.startEpoch?.let {
+                    DateTimeUtil.formatMilliTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS)
+                },
+                endTime = element.startEpoch?.let {
+                    DateTimeUtil.formatMilliTime(
+                        time = it + (element.elapsed ?: 0L),
+                        format = DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+                    )
+                },
+                costTime = element.elapsed ?: 0L,
+                successFlag = BuildStatus.valueOf(elementStatus!!).isSuccess(),
+                errorType = element.errorType?.let { ErrorType.getErrorType(it)?.num },
+                errorCode = element.errorCode,
+                errorMsg = element.errorMsg
             )
         )
     }

@@ -41,6 +41,8 @@ data class SavePipelineFailSummaryDataPO(
     val pipelineId: String,
     @ApiModelProperty("流水线名称")
     val pipelineName: String,
+    @ApiModelProperty("渠道代码")
+    val channelCode: String,
     @ApiModelProperty("错误类型")
     val errorType: Int,
     @ApiModelProperty("错误次数")

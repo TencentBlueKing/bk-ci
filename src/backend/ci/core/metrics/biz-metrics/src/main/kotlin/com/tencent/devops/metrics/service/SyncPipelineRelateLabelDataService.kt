@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
 import java.time.LocalDateTime
 
 interface SyncPipelineRelateLabelDataService {
+
     /**
      * 同步新增流水线关联标签数据
      * @param pipelineLabelRelateInfos 流水线关联标签数据列表

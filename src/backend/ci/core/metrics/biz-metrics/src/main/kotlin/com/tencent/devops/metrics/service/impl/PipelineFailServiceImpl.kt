@@ -194,6 +194,7 @@ class PipelineFailServiceImpl @Autowired constructor(
                         projectId = it.projectId,
                         pipelineId = it.pipelineId,
                         pipelineName = it.pipelineName,
+                        channelCode = it.channelCode,
                         buildId = it.buildId,
                         buildNum = it.buildNum,
                         branch = it.branch

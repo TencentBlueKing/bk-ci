@@ -61,5 +61,7 @@ data class BuildEndPipelineMetricsData(
     @ApiModelProperty("错误信息列表", required = false)
     var errorInfos: List<ErrorInfo>? = null,
     @ApiModelProperty("stage指标数据列表", required = true)
-    val stages: List<BuildEndStageMetricsData>
+    val stages: List<BuildEndStageMetricsData>,
+    @ApiModelProperty("渠道代码", required = true)
+    val channelCode: String
 )

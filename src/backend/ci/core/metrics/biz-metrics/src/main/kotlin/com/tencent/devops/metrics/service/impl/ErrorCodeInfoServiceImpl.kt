@@ -29,12 +29,11 @@ package com.tencent.devops.metrics.service.impl
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.metrics.dao.ErrorCodeInfoDao
-import com.tencent.devops.metrics.service.ErrorCodeInfoManageService
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryErrorCodeInfoDTO
 import com.tencent.devops.metrics.pojo.qo.QueryErrorCodeInfoQO
+import com.tencent.devops.metrics.service.ErrorCodeInfoManageService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -43,6 +42,7 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val errorCodeInfoDao: ErrorCodeInfoDao
 ) : ErrorCodeInfoManageService {
+
     override fun getErrorCodeInfo(queryErrorCodeInfoDTO: QueryErrorCodeInfoDTO): Page<ErrorCodeInfoDO> {
         return Page(
             page = queryErrorCodeInfoDTO.page,
@@ -57,17 +57,14 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                 )
             ),
             records = errorCodeInfoDao.getErrorCodeInfo(
-                    dslContext,
+                dslContext,
                 QueryErrorCodeInfoQO(
                     errorTypes = queryErrorCodeInfoDTO.errorTypes,
                     keyword = queryErrorCodeInfoDTO.keyword,
                     page = queryErrorCodeInfoDTO.page,
                     pageSize = queryErrorCodeInfoDTO.pageSize
                 )
-                )
             )
-    }
-    companion object {
-        private val logger = LoggerFactory.getLogger(ErrorCodeInfoServiceImpl::class.java)
+        )
     }
 }

@@ -33,7 +33,6 @@ import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
-import com.tencent.devops.store.pojo.common.Classify
 import com.tencent.devops.store.service.atom.AtomPropService
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomClassifyService

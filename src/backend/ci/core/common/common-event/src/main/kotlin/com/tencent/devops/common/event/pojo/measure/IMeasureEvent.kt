@@ -30,5 +30,5 @@ package com.tencent.devops.common.event.pojo.measure
 open class IMeasureEvent(
     open val projectId: String,
     open val pipelineId: String,
-    open val buildId: String,
+    open val buildId: String
 )

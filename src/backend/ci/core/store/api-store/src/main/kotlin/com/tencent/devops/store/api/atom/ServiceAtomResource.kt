@@ -32,7 +32,6 @@ import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
-import com.tencent.devops.store.pojo.common.Classify
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

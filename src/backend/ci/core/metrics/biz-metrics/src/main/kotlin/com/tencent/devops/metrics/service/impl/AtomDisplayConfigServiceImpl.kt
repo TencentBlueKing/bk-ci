@@ -31,13 +31,12 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.metrics.dao.AtomDisplayConfigDao
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
-import com.tencent.devops.metrics.service.AtomDisplayConfigManageService
 import com.tencent.devops.metrics.pojo.dto.AtomDisplayConfigDTO
 import com.tencent.devops.metrics.pojo.po.AtomDisplayConfigPO
 import com.tencent.devops.metrics.pojo.vo.AtomDisplayConfigVO
+import com.tencent.devops.metrics.service.AtomDisplayConfigManageService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime

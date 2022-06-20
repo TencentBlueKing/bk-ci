@@ -60,7 +60,7 @@ data class ActionData(
      *
      *  buildUserID只会是远程仓库触发时才会存在，并且是在校验token后塞入了。此后触发逻辑使用userId为配置凭证对应的userId
      *  其余情况使用触发event的userId
-     *  @see com.tencent.devops.stream.trigger.actions.tgit.TGitPushActionGit.triggerCheckRepoTriggerCredentials
+     *  @see com.tencent.devops.stream.trigger.actions.streamActions.StreamRepoTriggerAction.triggerCheckRepoTriggerCredentials
      */
     fun getUserId() = context.repoTrigger?.buildUserID ?: eventCommon.userId
 }
