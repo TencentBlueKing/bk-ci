@@ -32,8 +32,18 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class Organization(
     @JsonProperty("login")
     val name: String,
-    val id: Int,
+    val id: Long,
     @JsonProperty("avatar_url")
     val avatarUrl: String,
     val description: String? = null
+    // TODO: 2022/6/20  以下属性api没有
+//    val path: String,
+//    @JsonProperty("full_name")
+//    val fullName: String?,
+//    @JsonProperty("full_path")
+//    val fullPath: String?,
+//    @JsonProperty("web_url")
+//    val webUrl: String?,
+//    @JsonProperty("parent_id")
+//    val parentId: Long?
 )

@@ -83,7 +83,7 @@ class GithubRepositoryApiTest {
         )
         println(response)
     }
-    @Test
+//    @Test
     fun createOrUpdateFileContents() {
         // create
 //        val createRequest = CreateOrUpdateFileContentsRequest(
