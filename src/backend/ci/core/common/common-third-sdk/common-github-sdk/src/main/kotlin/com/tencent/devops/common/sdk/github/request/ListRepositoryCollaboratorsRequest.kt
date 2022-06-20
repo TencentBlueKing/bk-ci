@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.pojo.Collaborator
-
+@Suppress("all")
 class ListRepositoryCollaboratorsRequest(
     @JsonIgnore
     val owner: String,
