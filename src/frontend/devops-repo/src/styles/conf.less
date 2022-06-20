@@ -1,0 +1,105 @@
+@defaultBgColor: #f5f7fa;
+@defaultColor: #63656e;
+@primaryColor: #3c96ff;
+@successColor: #34d97b;
+@dangerColor: #ff5252;
+@warningColor: #ff9c01;
+@lightGray: #dcdee5;
+@borderColor: #e5eaf0;
+@bgColor: #F9FBFF;
+@gray: #c4c6cc;
+@lightBlue: #EBF2FF;
+@deepFontColor: #081E40;
+@weightGray: #8797AA;
+@lightBgColor: #fafbfd;
+
+.text-overflow {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bk-repo-flex {
+  display: flex;
+  align-items: center;
+}
+
+.common-border-shadow-mixin (@borderRadius: 4px) {
+  border-radius: @borderRadius;
+  border: 1px solid @lightGray;
+  transition: 0.3s;
+
+  &:hover {
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  }
+}
+
+html,
+body,
+#bk-repo-app {
+  height: 100%;
+}
+
+html,
+body,
+fieldset,
+p,
+h1,
+h2,
+h3,
+h4,
+h5 {
+  margin: 0;
+  padding: 0;
+  font-weight: normal;
+  color: @defaultColor;
+  box-sizing: border-box;
+  font-family: PingFang SC, Microsoft Yahei, Helvetica, Aria;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.link {
+  color: @primaryColor;
+  cursor: pointer;
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+.warning-tip {
+  color: @warningColor;
+}
+.align-center {
+  text-align: center;
+  line-height: 1;
+}
+
+.desc {
+  color: @weightGray;
+  font-size: 12px;
+}
+.spin-icon {
+  animation: loading .8s linear infinite;
+}
+@keyframes loading {
+  from {
+      transform: rotate(0);
+  }
+  to {
+      transform: rotate(360deg);
+  }
+}
+
+.flex-center(@direction: column) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: @direction;
+}
