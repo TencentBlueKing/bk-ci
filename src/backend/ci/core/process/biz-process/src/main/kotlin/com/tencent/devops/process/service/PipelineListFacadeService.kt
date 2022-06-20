@@ -1397,7 +1397,7 @@ class PipelineListFacadeService @Autowired constructor(
         keyword: String?,
         page: Int,
         pageSize: Int,
-        channelCodes: List<String>?
+        channelCodes: List<ChannelCode>?
     ): Page<PipelineIdAndName> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val pipelineRecords =
@@ -1407,7 +1407,7 @@ class PipelineListFacadeService @Autowired constructor(
                 projectCode = projectId,
                 limit = sqlLimit.limit,
                 offset = sqlLimit.offset,
-                channelCodes = channelCodes ?: emptyList()
+                channelCodes = channelCodes
             )
         val pipelineInfos = mutableListOf<PipelineIdAndName>()
         pipelineRecords?.map {

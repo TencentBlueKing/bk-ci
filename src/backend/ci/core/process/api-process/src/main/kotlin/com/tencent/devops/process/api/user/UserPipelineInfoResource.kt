@@ -91,9 +91,7 @@ interface UserPipelineInfoResource {
         @ApiParam("每页大小", required = true, defaultValue = "10")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
-        pageSize: Int,
-        @ApiParam("渠道来源", required = false)
-        channelCodes: List<String>?
+        pageSize: Int
     ): Result<Page<PipelineIdAndName>>
 
     @ApiOperation("根据流水线名称搜索")
