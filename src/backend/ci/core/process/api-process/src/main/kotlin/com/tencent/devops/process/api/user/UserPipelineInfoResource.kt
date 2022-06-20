@@ -73,7 +73,7 @@ interface UserPipelineInfoResource {
 
     @ApiOperation("分页获取流水线名称与Id")
     @GET
-    @Path("/pagination")
+    @Path("/get/names")
     fun paginationGetIdAndName(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

@@ -66,15 +66,14 @@ class PipelineFailDao {
                 tProjectPipelineLabelInfo = tProjectPipelineLabelInfo
             )
             val step = dslContext.select(PIPELINE_ID).from(this)
-            val conditionStep =
                 if (!pipelineLabelIds.isNullOrEmpty()) {
                     step.leftJoin(tProjectPipelineLabelInfo)
                         .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                        .where(conditions)
-                } else {
-                    step.where(conditions)
                 }
-            return conditionStep.orderBy(ERROR_COUNT.desc()).limit(DEFAULT_LIMIT_NUM).fetchInto(String::class.java)
+            return step.where(conditions)
+                .orderBy(ERROR_COUNT.desc())
+                .limit(DEFAULT_LIMIT_NUM)
+                .fetchInto(String::class.java)
         }
     }
 
@@ -97,15 +96,11 @@ class PipelineFailDao {
                 sum<Int>(ERROR_COUNT).`as`(BK_ERROR_COUNT_SUM)
             ).from(this)
             conditions.add(ERROR_TYPE.eq(errorType))
-            val conditionStep =
-                if (!queryPipelineFailTrendQo.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+            if (!queryPipelineFailTrendQo.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                    .where(conditions)
-            } else {
-                step.where(conditions)
             }
-            return conditionStep.groupBy(this.STATISTICS_TIME).fetch()
+            return step.where(conditions).groupBy(this.STATISTICS_TIME).fetch()
         }
     }
 
@@ -125,15 +120,11 @@ class PipelineFailDao {
             )
             val step = dslContext.select(this.ERROR_TYPE)
                 .from(this)
-            val conditionStep =
-                if (!pipelineLabelIds.isNullOrEmpty()) {
+            if (!pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                    .where(conditions)
-            } else {
-                step.where(conditions)
             }
-            return conditionStep.groupBy(ERROR_TYPE).fetchInto(Int::class.java)
+            return step.where(conditions).groupBy(ERROR_TYPE).fetchInto(Int::class.java)
         }
     }
 
@@ -161,16 +152,11 @@ class PipelineFailDao {
             val step = dslContext.select(
                 ERROR_TYPE.`as`(BK_ERROR_TYPE),
                 sum<Int>(ERROR_COUNT).`as`(BK_ERROR_COUNT_SUM)
-            )
-                .from(this)
-            val conditionStep =
+            ).from(this)
                 if (!pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(labelInfo).on(this.PIPELINE_ID.eq(labelInfo.PIPELINE_ID))
-                    .where(conditions)
-            } else {
-                step.where(conditions)
             }
-            return conditionStep.groupBy(this.ERROR_TYPE).fetch()
+            return step.where(conditions).groupBy(this.ERROR_TYPE).fetch()
         }
     }
 
@@ -205,15 +191,11 @@ class PipelineFailDao {
                 ERROR_MSG,
                 STATISTICS_TIME
             ).from(this)
-            val conditionStep =
-                if (!queryPipelineFailQo.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+            if (!queryPipelineFailQo.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                    .where(conditions)
-            } else {
-                    step.where(conditions)
             }
-            return conditionStep
+            return step.where(conditions)
                 .groupBy(this.PIPELINE_ID, this.BUILD_NUM)
                 .orderBy(START_TIME.desc())
                 .offset((queryPipelineFailQo.page - 1) * queryPipelineFailQo.pageSize)
@@ -238,15 +220,11 @@ class PipelineFailDao {
                 conditions.add(ERROR_TYPE.`in`(queryPipelineFailQo.errorTypes))
             }
             val step = dslContext.select().from(this)
-            val conditionStep =
-                if (!pipelineLabelIds.isNullOrEmpty()) {
+            if (!pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                    .where(conditions)
-            } else {
-                step.where(conditions)
             }
-            return conditionStep
+            return step.where(conditions)
                 .groupBy(this.PIPELINE_ID, this.BUILD_NUM)
                 .execute().toLong()
         }

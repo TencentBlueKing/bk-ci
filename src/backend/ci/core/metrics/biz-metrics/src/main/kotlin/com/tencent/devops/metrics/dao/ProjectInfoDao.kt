@@ -97,6 +97,7 @@ class ProjectInfoDao {
             return dslContext.select(LABEL_ID, LABEL_NAME).from(this)
                 .where(conditions)
                 .groupBy(LABEL_ID)
+                .orderBy(LABEL_ID)
                 .limit((queryCondition.page - 1) * queryCondition.pageSize, queryCondition.pageSize)
                 .fetchInto(PipelineLabelInfo::class.java)
         }
@@ -139,6 +140,7 @@ class ProjectInfoDao {
             ).from(this)
                 .where(conditions)
                 .groupBy(ERROR_TYPE)
+                .orderBy(ERROR_TYPE)
                 .limit((page - 1) * pageSize, pageSize)
             return step.fetchInto(PipelineErrorTypeInfoDO::class.java)
         }
