@@ -31,10 +31,8 @@ import com.tencent.devops.model.metrics.tables.TAtomDisplayConfig
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.po.AtomDisplayConfigPO
-import com.tencent.devops.metrics.service.impl.AtomDisplayConfigServiceImpl
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -71,11 +69,10 @@ class AtomDisplayConfigDao {
         atomCodes: List<String>
     ): Int {
         with(TAtomDisplayConfig.T_ATOM_DISPLAY_CONFIG) {
-            val step = dslContext.deleteFrom(this)
+            return dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ATOM_CODE.`in`(atomCodes))
-            logger.info("batchDeleteAtomDisplayConfig step: $step")
-                return step.execute()
+                .execute()
         }
     }
 
@@ -116,7 +113,6 @@ class AtomDisplayConfigDao {
             val step = dslContext.select(ATOM_CODE, ATOM_NAME).from(this)
                 .where(conditions)
                 return step.groupBy(ATOM_CODE)
-                    .orderBy(SUCCESS_RATE)
                     .limit((page - 1) * pageSize, pageSize)
                     .fetchInto(AtomBaseInfoDO::class.java)
         }
@@ -138,8 +134,5 @@ class AtomDisplayConfigDao {
             return conditionStep
                 .execute().toLong()
         }
-    }
-    companion object {
-        private val logger = LoggerFactory.getLogger(AtomDisplayConfigDao::class.java)
     }
 }
