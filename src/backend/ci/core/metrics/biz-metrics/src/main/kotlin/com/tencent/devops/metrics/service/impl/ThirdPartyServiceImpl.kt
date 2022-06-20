@@ -102,18 +102,8 @@ class ThirdPartyServiceImpl @Autowired constructor(
         }
 
     override fun addPipelineSummaryInfo(projectId: String) {
-//        measureEventDispatcher.dispatch(
-//            CodeCheckReportEvent("${LocalDateTime.now()}", projectId, 99.9, 10).toString()
-//        )
         measureEventDispatcher.dispatch(
             QualityReportEvent("${LocalDateTime.now()}", projectId, 10, 10)
         )
-//        measureEventDispatcher.dispatch(
-//            TurboReportEvent("${LocalDateTime.now()}", projectId, 10)
-//        )
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ThirdPartyServiceImpl::class.java)
     }
 }
