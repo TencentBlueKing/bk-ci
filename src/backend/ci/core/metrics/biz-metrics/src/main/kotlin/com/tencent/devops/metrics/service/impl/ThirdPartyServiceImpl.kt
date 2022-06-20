@@ -27,33 +27,38 @@
 
 package com.tencent.devops.metrics.service.impl
 
+import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
 import com.tencent.devops.metrics.constant.Constants.BK_QUALITY_PIPELINE_EXECUTE_NUM
 import com.tencent.devops.metrics.constant.Constants.BK_QUALITY_PIPELINE_INTERCEPTION_NUM
 import com.tencent.devops.metrics.constant.Constants.BK_REPO_CODECC_AVG_SCORE
 import com.tencent.devops.metrics.constant.Constants.BK_RESOLVED_DEFECT_NUM
 import com.tencent.devops.metrics.constant.Constants.BK_TURBO_SAVE_TIME
 import com.tencent.devops.metrics.dao.ThirdPartyOverviewInfoDao
+import com.tencent.devops.metrics.measure.MetricsEventDispatcher
+import com.tencent.devops.metrics.service.ThirdPartyManageService
 import com.tencent.devops.metrics.pojo.`do`.CodeCheckInfoDO
 import com.tencent.devops.metrics.pojo.`do`.QualityInfoDO
 import com.tencent.devops.metrics.pojo.`do`.TurboInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineSummaryInfoDTO
 import com.tencent.devops.metrics.pojo.qo.ThirdPartyOverviewInfoQO
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
-import com.tencent.devops.metrics.service.ThirdPartyManageService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Service
 class ThirdPartyServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val thirdPartyOverviewInfoDao: ThirdPartyOverviewInfoDao
+    private val thirdPartyOverviewInfoDao: ThirdPartyOverviewInfoDao,
+    private val measureEventDispatcher: MetricsEventDispatcher
 ) : ThirdPartyManageService {
-
     override fun queryPipelineSummaryInfo(
         queryPipelineSummaryInfoDTO: QueryPipelineSummaryInfoDTO
     ): ThirdPlatformOverviewInfoVO {
+        // 查询第三方平台度量数据
         val result = thirdPartyOverviewInfoDao.queryPipelineSummaryInfo(
             ThirdPartyOverviewInfoQO(
                 projectId = queryPipelineSummaryInfoDTO.projectId,
@@ -62,6 +67,7 @@ class ThirdPartyServiceImpl @Autowired constructor(
             ),
             dslContext
         )
+        // 查询项目总执行次数
         val totalExecuteCount = thirdPartyOverviewInfoDao.queryPipelineSummaryCount(
             ThirdPartyOverviewInfoQO(
                 projectId = queryPipelineSummaryInfoDTO.projectId,
@@ -70,28 +76,34 @@ class ThirdPartyServiceImpl @Autowired constructor(
             ),
             dslContext
         )
-
+        // 计算度量数据
         val repoCodeccAvgScore = result?.get(BK_REPO_CODECC_AVG_SCORE, BigDecimal::class.java)?.toDouble()
         val executeNum = result?.get(BK_QUALITY_PIPELINE_EXECUTE_NUM, BigDecimal::class.java)?.toInt()
         val interceptionCount = result?.get(BK_QUALITY_PIPELINE_INTERCEPTION_NUM, BigDecimal::class.java)?.toInt()
         val qualityInterceptionRate =
             if (executeNum == null || interceptionCount == null || executeNum == 0) null
-            else {
-                if (executeNum == interceptionCount) 0.0
-                else String.format("%.2f", interceptionCount.toDouble() / executeNum.toDouble()).toDouble()
-            }
-        return ThirdPlatformOverviewInfoVO(
-            codeCheckInfo = CodeCheckInfoDO(
-                resolvedDefectNum = result?.get(BK_RESOLVED_DEFECT_NUM, Int::class.java),
-                repoCodeccAvgScore = if (repoCodeccAvgScore == null || totalExecuteCount == 0) null
-                else repoCodeccAvgScore / totalExecuteCount.toDouble()
-            ),
-            qualityInfo = QualityInfoDO(
-                qualityInterceptionRate = qualityInterceptionRate,
-                totalExecuteCount = executeNum,
-                interceptionCount = interceptionCount
-            ),
-            turboInfo = TurboInfoDO(result?.get(BK_TURBO_SAVE_TIME, BigDecimal::class.java)?.toDouble())
+        else {
+            if (executeNum == interceptionCount) 0.0
+            else String.format("%.2f", interceptionCount.toDouble() / executeNum.toDouble()).toDouble()
+        }
+            return ThirdPlatformOverviewInfoVO(
+                codeCheckInfo = CodeCheckInfoDO(
+                    resolvedDefectNum = result?.get(BK_RESOLVED_DEFECT_NUM, Int::class.java),
+                    repoCodeccAvgScore = if (repoCodeccAvgScore == null || totalExecuteCount == 0) null
+                    else repoCodeccAvgScore / totalExecuteCount.toDouble()
+                ),
+                qualityInfo = QualityInfoDO(
+                    qualityInterceptionRate = qualityInterceptionRate,
+                    totalExecuteCount = executeNum,
+                    interceptionCount = interceptionCount
+                        ),
+                turboInfo = TurboInfoDO(result?.get(BK_TURBO_SAVE_TIME, BigDecimal::class.java)?.toDouble())
+            )
+        }
+
+    override fun addPipelineSummaryInfo(projectId: String) {
+        measureEventDispatcher.dispatch(
+            QualityReportEvent("${LocalDateTime.now()}", projectId, 10, 10)
         )
     }
 }

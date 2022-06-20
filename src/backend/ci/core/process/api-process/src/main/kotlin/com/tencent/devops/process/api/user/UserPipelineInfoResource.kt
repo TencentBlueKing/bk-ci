@@ -44,6 +44,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -72,8 +73,8 @@ interface UserPipelineInfoResource {
     ): Result<List<Pipeline>>
 
     @ApiOperation("分页获取流水线名称与Id")
-    @GET
-    @Path("/pagination")
+    @POST
+    @Path("/get/names")
     fun paginationGetIdAndName(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -90,10 +91,7 @@ interface UserPipelineInfoResource {
         @ApiParam("每页大小", required = true, defaultValue = "10")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
-        pageSize: Int,
-        @ApiParam("渠道来源", required = false)
-        @QueryParam("channelCodes")
-        channelCodes: List<ChannelCode>?
+        pageSize: Int
     ): Result<Page<PipelineIdAndName>>
 
     @ApiOperation("根据流水线名称搜索")

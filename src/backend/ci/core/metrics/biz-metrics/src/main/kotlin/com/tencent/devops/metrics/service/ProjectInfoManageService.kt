@@ -56,5 +56,5 @@ interface ProjectInfoManageService {
      * 同步流水线标签数据
      * @return 同步的数据量
      */
-    fun syncPipelineLabelData(userId: String): Int
+    fun syncPipelineLabelData(userId: String): Boolean
 }

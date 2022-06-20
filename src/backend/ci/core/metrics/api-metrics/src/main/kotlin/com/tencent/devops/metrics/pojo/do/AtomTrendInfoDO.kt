@@ -37,5 +37,5 @@ data class AtomTrendInfoDO(
     @ApiModelProperty("插件名称")
     val atomName: String,
     @ApiModelProperty("趋势信息列表")
-    var atomTrendInfos: MutableList<AtomBaseTrendInfoDO>
+    var atomTrendInfos: MutableList<AtomBaseTrendInfoDO>?
 )

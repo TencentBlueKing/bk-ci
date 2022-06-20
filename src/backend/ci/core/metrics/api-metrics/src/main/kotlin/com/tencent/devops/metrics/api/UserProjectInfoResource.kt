@@ -124,12 +124,12 @@ interface UserProjectInfoResource {
         keyword: String?
     ): Result<Page<PipelineErrorTypeInfoDO>>
 
-    @ApiOperation("同步流水线标签数据")
+    @ApiOperation("同步流水线标签历史数据")
     @Path("/pipeline/label/sync")
     @GET
     fun syncPipelineLabelData(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
-    ): Result<String>
+    ): Result<Boolean>
 }

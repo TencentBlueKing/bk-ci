@@ -37,14 +37,15 @@ import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
 import com.tencent.devops.metrics.constant.MetricsMessageCode
 import com.tencent.devops.metrics.dao.AtomFailInfoDao
 import com.tencent.devops.metrics.dao.ErrorCodeInfoDao
+import com.tencent.devops.metrics.service.AtomFailInfoManageService
 import com.tencent.devops.metrics.pojo.`do`.AtomErrorCodeStatisticsInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomFailDetailInfoDO
+import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryAtomFailInfoDTO
 import com.tencent.devops.metrics.pojo.qo.QueryAtomFailInfoQO
-import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
-import com.tencent.devops.metrics.service.AtomFailInfoManageService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -106,7 +107,6 @@ class AtomFailInfoServiceImpl @Autowired constructor(
             val errorType = it[BK_ERROR_TYPE] as Int
             val errorMsg = it[BK_ERROR_MSG]
             AtomErrorCodeStatisticsInfoDO(
-
                 ErrorCodeInfoDO(
                     errorType = errorType,
                     errorTypeName = errorDict[errorType],
@@ -138,6 +138,7 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 atomCodes = queryAtomFailInfoDTO.atomCodes
             )
         )
+        // 查询记录过多，提醒用户缩小查询范围
         if (pipelineFailDetailCount > metricsConfig.queryCountMax) {
             throw ErrorCodeException(
                 errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
@@ -145,7 +146,7 @@ class AtomFailInfoServiceImpl @Autowired constructor(
         }
         val errorDict = mutableMapOf<Int, String>()
         errorCodeInfoDao.getErrorTypeDict(dslContext).map { errorDict.put(it.value1(), it.value2()) }
-        //  查询详情数据
+        //  查询插件失败详情数据
         val result = atomFailInfoDao.queryAtomFailDetailInfo(
             dslContext,
             QueryAtomFailInfoQO(

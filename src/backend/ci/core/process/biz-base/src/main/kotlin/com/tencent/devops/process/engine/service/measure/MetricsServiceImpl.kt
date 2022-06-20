@@ -152,36 +152,74 @@ class MetricsServiceImpl constructor(
         containerMetricsDatas: MutableList<BuildEndContainerMetricsData>
     ) {
         stage.containers.forEachIndexed nextContainer@{ containerIndex, container ->
-            // 判断container是否执行过,未执行过的container无需上报数据
-            val containerStatus = container.status
-            if (!checkMetricsReportCondition(containerStatus)) {
-                return@nextContainer
-            }
-            val taskMetricsDatas = mutableListOf<BuildEndTaskMetricsData>()
-            val containerAtomCodes = mutableListOf<String>()
-            handleElement(
-                container = container,
-                stageIndex = stageIndex,
-                containerIndex = containerIndex,
-                containerAtomCodes = containerAtomCodes,
-                taskMetricsDatas = taskMetricsDatas
-            )
-            containerMetricsDatas.add(
-                BuildEndContainerMetricsData(
-                    containerId = container.containerId ?: "",
-                    successFlag = BuildStatus.valueOf(containerStatus!!).isSuccess(),
-                    costTime = (container.systemElapsed ?: 0L) + (container.elementElapsed ?: 0L),
-                    atomCodes = containerAtomCodes,
-                    tasks = taskMetricsDatas
+            val groupContainers = container.fetchGroupContainers()
+            if (!groupContainers.isNullOrEmpty()) {
+                groupContainers.forEachIndexed { groupContainerIndex, groupContainer ->
+                    val groupContainerStatus = groupContainer.status
+                    if (!checkMetricsReportCondition(groupContainerStatus)) {
+                        return@nextContainer
+                    }
+                    doContainerBus(
+                        container = groupContainer,
+                        stageIndex = stageIndex,
+                        containerIndex = containerIndex,
+                        groupContainerIndex = groupContainerIndex,
+                        containerMetricsDatas = containerMetricsDatas,
+                        containerStatus = groupContainerStatus
+                    )
+                }
+            } else {
+                // 判断container是否执行过,未执行过的container无需上报数据
+                val containerStatus = container.status
+                if (!checkMetricsReportCondition(containerStatus)) {
+                    return@nextContainer
+                }
+                doContainerBus(
+                    container = container,
+                    stageIndex = stageIndex,
+                    containerIndex = containerIndex,
+                    groupContainerIndex = null,
+                    containerMetricsDatas = containerMetricsDatas,
+                    containerStatus = containerStatus
                 )
-            )
+            }
         }
+    }
+
+    private fun doContainerBus(
+        container: Container,
+        stageIndex: Int,
+        containerIndex: Int,
+        groupContainerIndex: Int? = null,
+        containerMetricsDatas: MutableList<BuildEndContainerMetricsData>,
+        containerStatus: String?
+    ) {
+        val taskMetricsDatas = mutableListOf<BuildEndTaskMetricsData>()
+        val containerAtomCodes = mutableListOf<String>()
+        handleElement(
+            container = container,
+            stageIndex = stageIndex,
+            groupContainerIndex = groupContainerIndex,
+            containerIndex = containerIndex,
+            containerAtomCodes = containerAtomCodes,
+            taskMetricsDatas = taskMetricsDatas
+        )
+        containerMetricsDatas.add(
+            BuildEndContainerMetricsData(
+                containerId = container.containerId ?: "",
+                successFlag = BuildStatus.valueOf(containerStatus!!).isSuccess(),
+                costTime = (container.systemElapsed ?: 0L) + (container.elementElapsed ?: 0L),
+                atomCodes = containerAtomCodes,
+                tasks = taskMetricsDatas
+            )
+        )
     }
 
     private fun handleElement(
         container: Container,
         stageIndex: Int,
         containerIndex: Int,
+        groupContainerIndex: Int? = null,
         containerAtomCodes: MutableList<String>,
         taskMetricsDatas: MutableList<BuildEndTaskMetricsData>
     ) {
@@ -192,7 +230,12 @@ class MetricsServiceImpl constructor(
                 return@nextElement
             }
             containerAtomCodes.add(element.getAtomCode())
-            val elementPosition = "$stageIndex-$containerIndex-$elementIndex"
+            val elementPosition = if (groupContainerIndex == null) {
+                "$stageIndex-$containerIndex-$elementIndex"
+            } else {
+                // 存在矩阵的情况，task在model中的位置有4级
+                "$stageIndex-$containerIndex-$groupContainerIndex-$elementIndex"
+            }
             addTaskMetricsData(
                 taskMetricsDatas = taskMetricsDatas,
                 element = element,

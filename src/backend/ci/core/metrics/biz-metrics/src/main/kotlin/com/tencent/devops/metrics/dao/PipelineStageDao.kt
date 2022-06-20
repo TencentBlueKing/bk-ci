@@ -52,14 +52,11 @@ class PipelineStageDao {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val conditions = getConditions(queryInfo, tProjectPipelineLabelInfo)
             val step = dslContext.select(PIPELINE_ID).from(this)
-            val conditionStep = if (!queryInfo.pipelineLabelIds.isNullOrEmpty()) {
+            if (!queryInfo.pipelineLabelIds.isNullOrEmpty()) {
                 step.join(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                    .where(conditions)
-            } else {
-                step.where(conditions)
             }
-            return conditionStep
+            return step.where(conditions)
                 .groupBy(PIPELINE_ID)
                 .orderBy(AVG_COST_TIME.desc())
                 .limit(DEFAULT_LIMIT_NUM)
@@ -84,17 +81,13 @@ class PipelineStageDao {
                     STATISTICS_TIME.`as`(BK_STATISTICS_TIME),
                     AVG_COST_TIME.`as`(BK_AVG_COST_TIME)
                     ).from(this)
-            val conditionStep =
-                if (!queryInfo.pipelineLabelIds.isNullOrEmpty()) {
+            if (!queryInfo.pipelineLabelIds.isNullOrEmpty()) {
                 step.join(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                    .where(conditions)
-                    .groupBy(PIPELINE_ID, STATISTICS_TIME)
-            } else {
-                step.where(conditions)
-                    .groupBy(PIPELINE_ID, STATISTICS_TIME)
             }
-            return conditionStep.fetch()
+            return step.where(conditions)
+                .groupBy(PIPELINE_ID, STATISTICS_TIME)
+                .fetch()
         }
     }
 

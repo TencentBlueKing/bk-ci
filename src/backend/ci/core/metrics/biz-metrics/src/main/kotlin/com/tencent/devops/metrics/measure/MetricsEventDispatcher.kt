@@ -25,43 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.listener
+package com.tencent.devops.metrics.measure
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.EventDispatcher
 import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
-import com.tencent.devops.metrics.pojo.message.QualityReportMessage
-import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportService
+import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
+import com.tencent.devops.metrics.pojo.message.TurboReportEvent
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Component
+import javax.annotation.Resource
 
 @Component
-class QualityReportDailyMessageListener @Autowired constructor(
-    private val thirdPlatformDataReportService: MetricsThirdPlatformDataReportService
-) : Listener<QualityReportEvent> {
+class MetricsEventDispatcher constructor(
+    @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME) private val rabbitTemplate: RabbitTemplate
+) : EventDispatcher<QualityReportEvent> {
 
-    override fun execute(event: QualityReportEvent) {
-        try {
-            thirdPlatformDataReportService.metricsQualityDataReport(
-                QualityReportMessage(
-                    projectId = event.projectId,
-                    statisticsTime = event.statisticsTime,
-                    qualityPipelineExecuteNum = event.totalCount,
-                    qualityPipelineInterceptionNum = event.interceptedCount
-                )
-            )
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to insert the metrics QualityReport data", ignored)
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.SYSTEM_ERROR,
-                defaultMessage = "Fail to insert the metrics QualityReport data"
-            )
+    override fun dispatch(vararg events: QualityReportEvent) {
+        events.forEach { event ->
+            try {
+                val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+                val routeKey = eventType.routeKey
+                rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
+                    if (eventType.delayMills > 0) {
+                        message.messageProperties.setHeader("x-delay", eventType.delayMills)
+                    }
+                    logger.info("eventType.exchange:${eventType.exchange}--routeKey:$routeKey--message:$message")
+                    message
+                }
+            } catch (ignored: Exception) {
+                logger.error("[MQ_SEVERE]Fail to dispatch the event($events)", ignored)
+            }
         }
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(QualityReportDailyMessageListener::class.java)
+        private val logger = LoggerFactory.getLogger(MetricsEventDispatcher::class.java)
     }
 }

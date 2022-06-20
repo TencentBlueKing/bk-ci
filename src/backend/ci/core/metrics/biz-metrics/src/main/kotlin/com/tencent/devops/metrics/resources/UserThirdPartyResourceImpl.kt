@@ -42,7 +42,6 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserThirdPartyResourceImpl @Autowired constructor(
     private val thirdPartyManageService: ThirdPartyManageService
 ) : UserThirdPartyResource {
-
     override fun queryPipelineSummaryInfo(
         projectId: String,
         userId: String,
@@ -62,5 +61,10 @@ class UserThirdPartyResourceImpl @Autowired constructor(
                 )
             )
         )
+    }
+
+    override fun addPipelineSummaryInfo(projectId: String, userId: String): Result<Boolean> {
+        thirdPartyManageService.addPipelineSummaryInfo(projectId)
+        return Result(true)
     }
 }
