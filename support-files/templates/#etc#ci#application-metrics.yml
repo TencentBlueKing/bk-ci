@@ -56,3 +56,8 @@ sharding:
   databaseShardingStrategy:
     shardingField: PROJECT_ID
     algorithmClassName: "com.tencent.devops.metrics.sharding.BkMetricsDatabaseShardingAlgorithm"
+
+queryParam:
+  maximumQueryMonths: 6
+  minimumQueryDays: 1
+  queryCountMax: 10000

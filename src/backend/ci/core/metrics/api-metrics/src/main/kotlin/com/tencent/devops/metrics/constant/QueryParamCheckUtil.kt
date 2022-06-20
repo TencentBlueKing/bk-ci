@@ -40,7 +40,7 @@ import java.util.stream.Stream
 object QueryParamCheckUtil {
 
     // 查询时间区间限制，当天的前一天至前六个月
-    @Value("\${metrics.maximumQueryMonths:6}")
+    @Value("\${queryParam.maximumQueryMonths:6}")
     private val maximumQueryMonths: Long = 6
 
     fun getIntervalTime(
