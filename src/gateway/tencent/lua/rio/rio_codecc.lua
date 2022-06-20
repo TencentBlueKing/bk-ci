@@ -9,7 +9,7 @@ elseif config.env == 'test' then
     target = 'v2_test_codecc'
 end
 
-local riodomain = "devcloud.esb.woa.com/CodeCC/" .. target
+local riodomain = "apidev-idc.sgw.woa.com/CodeCC/" .. target
 
 local resty_sha256 = require "resty.sha256"
 local resty_str = require "resty.string"
