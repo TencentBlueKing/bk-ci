@@ -29,6 +29,7 @@ package com.tencent.devops.common.sdk.github
 
 import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
+import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import org.junit.jupiter.api.Test
 
 class GithubRepositoryApiTest {
@@ -63,6 +64,17 @@ class GithubRepositoryApiTest {
             ref = "master",
             path = "README.md"
         )
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
+
+
+    @Test
+    fun listRepositoriesRequest(){
+        val request = ListRepositoriesRequest()
         val response = client.execute(
             oauthToken = token,
             request = request
