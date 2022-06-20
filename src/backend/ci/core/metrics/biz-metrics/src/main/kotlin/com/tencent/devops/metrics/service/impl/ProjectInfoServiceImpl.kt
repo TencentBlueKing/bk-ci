@@ -132,12 +132,13 @@ class ProjectInfoServiceImpl @Autowired constructor(
 
     override fun syncPipelineLabelData(userId: String): Boolean {
 
+        Executors.newFixedThreadPool(1).submit {
+            logger.info("begin syncPipelineLabelData")
         var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
         val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
         val pipelineLabelSyncsNumber = 100
         if (projectMinId != null && projectMaxId != null) {
-            logger.info("begin syncPipelineLabelData")
-            Executors.newFixedThreadPool(1).submit {
+
                 do {
                     val projectIds = client.get(ServiceProjectResource::class)
                         .getProjectListById(projectMinId, projectMinId + pipelineLabelSyncsNumber).data?.map { it.englishName }
