@@ -43,8 +43,10 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Service
@@ -128,19 +130,20 @@ class ProjectInfoServiceImpl @Autowired constructor(
         )
     }
 
-    override fun syncPipelineLabelData(userId: String): Int {
+    override fun syncPipelineLabelData(userId: String): Boolean {
 
         var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
         val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
         val pipelineLabelSyncsNumber = 100
-        var projectIdCreateCount = 0
         if (projectMinId != null && projectMaxId != null) {
-            do {
-                val projectIds = client.get(ServiceProjectResource::class)
-                    .getProjectListById(projectMinId, projectMinId + pipelineLabelSyncsNumber).data?.map { it.englishName }
-                val labelInfosResult = client.get(ServicePipelineResource::class)
-                    .getPipelineLabelInfos(userId, projectIds ?: emptyList()).data
-                val pipelineLabelRelateInfos = labelInfosResult?.map {
+            logger.info("begin syncPipelineLabelData")
+            Executors.newFixedThreadPool(1).submit {
+                do {
+                    val projectIds = client.get(ServiceProjectResource::class)
+                        .getProjectListById(projectMinId, projectMinId + pipelineLabelSyncsNumber).data?.map { it.englishName }
+                    val labelInfosResult = client.get(ServicePipelineResource::class)
+                        .getPipelineLabelInfos(userId, projectIds ?: emptyList()).data
+                    val pipelineLabelRelateInfos = labelInfosResult?.map {
                         val tProjectPipelineLabelInfoRecord = TProjectPipelineLabelInfoRecord()
                         tProjectPipelineLabelInfoRecord.id = client.get(ServiceAllocIdResource::class)
                             .generateSegmentId("METRICS_PROJECT_PIPELINE_LABEL_INFO").data ?: 0
@@ -154,15 +157,21 @@ class ProjectInfoServiceImpl @Autowired constructor(
                         tProjectPipelineLabelInfoRecord.createTime = it.createTime!!
                         tProjectPipelineLabelInfoRecord
                     }
-                if (!pipelineLabelRelateInfos.isNullOrEmpty()) {
-                    projectIdCreateCount += projectInfoDao.batchCreatePipelineLabelData(
-                        dslContext,
-                        pipelineLabelRelateInfos
-                    )
-                }
-                projectMinId += (pipelineLabelSyncsNumber + 1)
-            } while (projectMinId <= projectMaxId)
+                    if (!pipelineLabelRelateInfos.isNullOrEmpty()) {
+                        projectInfoDao.batchCreatePipelineLabelData(
+                            dslContext,
+                            pipelineLabelRelateInfos
+                        )
+                    }
+                    projectMinId += (pipelineLabelSyncsNumber + 1)
+                } while (projectMinId <= projectMaxId)
+                logger.info("end syncPipelineLabelData")
+            }
         }
-        return projectIdCreateCount
+        return true
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ProjectInfoServiceImpl::class.java)
     }
 }

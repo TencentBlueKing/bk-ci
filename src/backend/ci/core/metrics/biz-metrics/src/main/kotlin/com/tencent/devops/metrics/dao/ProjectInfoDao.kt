@@ -162,8 +162,26 @@ class ProjectInfoDao {
     fun batchCreatePipelineLabelData(
         dslContext: DSLContext,
         pipelineLabelRelateInfos: List<TProjectPipelineLabelInfoRecord>
-    ): Int {
-        return dslContext.batchInsert(pipelineLabelRelateInfos).execute().size
+    ){
+        with(TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO) {
+            pipelineLabelRelateInfos.forEach {
+                dslContext.insertInto(this)
+                    .set(ID, it.id)
+                    .set(PROJECT_ID, it.projectId)
+                    .set(PIPELINE_ID, it.pipelineId)
+                    .set(LABEL_ID, it.labelId)
+                    .set(LABEL_NAME, it.labelName)
+                    .set(CREATOR, it.creator)
+                    .set(MODIFIER, it.modifier)
+                    .set(UPDATE_TIME, it.updateTime)
+                    .set(CREATE_TIME, it.createTime)
+                    .onDuplicateKeyUpdate()
+                    .set(LABEL_NAME, it.labelName)
+                    .set(MODIFIER, it.modifier)
+                    .set(UPDATE_TIME, it.updateTime)
+                    .execute()
+            }
+        }
     }
 
     fun batchDeletePipelineLabelData(
