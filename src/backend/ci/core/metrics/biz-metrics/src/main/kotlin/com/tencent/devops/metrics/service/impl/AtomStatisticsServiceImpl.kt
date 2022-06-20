@@ -285,25 +285,28 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             DateTimeUtil.stringToLocalDate(queryAtomTrendInfoDTO.startTime)!!.atStartOfDay(),
             DateTimeUtil.stringToLocalDate(queryAtomTrendInfoDTO.endTime)!!.atStartOfDay()
         )
-        val records = atomStatisticResult.map {
+        val atomExecutionStatisticsInfos = mutableListOf<AtomExecutionStatisticsInfoDO>()
+        atomStatisticResult.forEach {
             val totalExecuteCount = (it[BK_TOTAL_EXECUTE_COUNT_SUM] as BigDecimal).toLong()
             val successExecuteCount = (it[BK_SUCCESS_EXECUTE_COUNT_SUM] as BigDecimal).toLong()
             val avgCostTimeSum = (it[BK_TOTAL_AVG_COST_TIME_SUM] as BigDecimal).toLong()
-            AtomExecutionStatisticsInfoDO(
-                projectId = queryAtomTrendInfoDTO.projectId,
-                atomBaseInfo = AtomBaseInfoDO(
-                    atomCode = it[BK_ATOM_CODE] as String,
-                    atomName = it[BK_ATOM_NAME] as String
-                ),
-                classifyCode = it[BK_CLASSIFY_CODE] as String,
-                avgCostTime =
+            atomExecutionStatisticsInfos.add(
+                AtomExecutionStatisticsInfoDO(
+                    projectId = queryAtomTrendInfoDTO.projectId,
+                    atomBaseInfo = AtomBaseInfoDO(
+                        atomCode = it[BK_ATOM_CODE] as String,
+                        atomName = it[BK_ATOM_NAME] as String
+                    ),
+                    classifyCode = it[BK_CLASSIFY_CODE] as String,
+                    avgCostTime =
                     String.format("%.2f", (avgCostTimeSum.toDouble() / days.toDouble())).toDouble(),
-                totalExecuteCount = totalExecuteCount,
-                successExecuteCount = successExecuteCount,
-                successRate = if (successExecuteCount <= 0L || totalExecuteCount <= 0L) 0.0
-                else String.format("%.2f", (successExecuteCount.toDouble() * 100 / totalExecuteCount.toDouble()))
-                    .toDouble(),
-                atomFailInfos = atomFailInfos[it[BK_ATOM_CODE]]?.toMap() ?: emptyMap()
+                    totalExecuteCount = totalExecuteCount,
+                    successExecuteCount = successExecuteCount,
+                    successRate = if (successExecuteCount <= 0L || totalExecuteCount <= 0L) 0.0
+                    else String.format("%.2f", (successExecuteCount.toDouble() * 100 / totalExecuteCount.toDouble()))
+                        .toDouble(),
+                    atomFailInfos = atomFailInfos[it[BK_ATOM_CODE]]?.toMap() ?: emptyMap()
+                )
             )
         }
         logger.info("query atom executeStatisticsInfo headerInfo: $headerInfo")
@@ -313,7 +316,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             page = queryAtomTrendInfoDTO.page,
             pageSize = queryAtomTrendInfoDTO.pageSize,
             headerInfo = headerInfo,
-            records = records
+            records = atomExecutionStatisticsInfos
         )
     }
 
