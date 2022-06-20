@@ -188,7 +188,7 @@ class PipelineLabelPipelineDao {
 
     fun getPipelineLabelRelateInfos(
         dslContext: DSLContext,
-        projectIds: List<Long>
+        projectIds: List<String>
     ): List<PipelineLabelRelateInfo> {
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             val pipelineLabel = TPipelineLabel.T_PIPELINE_LABEL

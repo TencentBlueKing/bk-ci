@@ -215,6 +215,7 @@ class PipelineFailDao {
             }
             return conditionStep
                 .groupBy(this.PIPELINE_ID, this.BUILD_NUM)
+                .orderBy(START_TIME.desc())
                 .offset((queryPipelineFailQo.page - 1) * queryPipelineFailQo.pageSize)
                 .limit(queryPipelineFailQo.pageSize)
                 .fetchInto(PipelineFailDetailDataPO::class.java)

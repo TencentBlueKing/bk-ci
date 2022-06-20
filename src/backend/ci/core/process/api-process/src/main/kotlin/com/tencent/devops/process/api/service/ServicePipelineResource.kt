@@ -523,6 +523,6 @@ interface ServicePipelineResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
-        projectIds: List<Long>
+        projectIds: List<String>
     ): Result<List<PipelineLabelRelateInfo>>
 }

@@ -440,7 +440,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
 
     override fun getPipelineLabelInfos(
         userId: String,
-        projectIds: List<Long>
+        projectIds: List<String>
     ): Result<List<PipelineLabelRelateInfo>> {
         return Result(
             pipelineListFacadeService.getProjectPipelineLabelInfos(projectIds)

@@ -1725,7 +1725,7 @@ class PipelineListFacadeService @Autowired constructor(
     }
 
     fun getProjectPipelineLabelInfos(
-        projectIds: List<Long>
+        projectIds: List<String>
     ): List<PipelineLabelRelateInfo> {
         return pipelineLabelPipelineDao.getPipelineLabelRelateInfos(dslContext, projectIds)
     }
