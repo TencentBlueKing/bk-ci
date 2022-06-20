@@ -66,7 +66,8 @@ class PipelineOverviewDao {
                     step.join(tProjectPipelineLabelInfo)
                         .on(PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
                 }
-            return step.where(conditions).orderBy(TOTAL_EXECUTE_COUNT.desc())
+            return step.where(conditions)
+                .orderBy(TOTAL_EXECUTE_COUNT.desc())
                 .limit(DEFAULT_LIMIT_NUM)
                 .fetchInto(String::class.java)
         }

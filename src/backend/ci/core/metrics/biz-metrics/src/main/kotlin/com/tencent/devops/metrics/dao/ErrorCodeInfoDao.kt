@@ -56,6 +56,7 @@ class ErrorCodeInfoDao {
                 .from(this)
                 .where(conditions)
                 .groupBy(ERROR_CODE)
+                .orderBy(ERROR_CODE)
                 .offset((queryCondition.page - 1) * queryCondition.pageSize)
                 .limit(queryCondition.pageSize)
                 .fetchInto(ErrorCodeInfoDO::class.java)
