@@ -58,6 +58,7 @@ class ThirdPartyServiceImpl @Autowired constructor(
     override fun queryPipelineSummaryInfo(
         queryPipelineSummaryInfoDTO: QueryPipelineSummaryInfoDTO
     ): ThirdPlatformOverviewInfoVO {
+        // 查询第三方平台度量数据
         val result = thirdPartyOverviewInfoDao.queryPipelineSummaryInfo(
             ThirdPartyOverviewInfoQO(
                 projectId = queryPipelineSummaryInfoDTO.projectId,
@@ -66,6 +67,7 @@ class ThirdPartyServiceImpl @Autowired constructor(
             ),
             dslContext
         )
+        // 查询项目总执行次数
         val totalExecuteCount = thirdPartyOverviewInfoDao.queryPipelineSummaryCount(
             ThirdPartyOverviewInfoQO(
                 projectId = queryPipelineSummaryInfoDTO.projectId,
@@ -74,7 +76,7 @@ class ThirdPartyServiceImpl @Autowired constructor(
             ),
             dslContext
         )
-
+        // 计算度量数据
         val repoCodeccAvgScore = result?.get(BK_REPO_CODECC_AVG_SCORE, BigDecimal::class.java)?.toDouble()
         val executeNum = result?.get(BK_QUALITY_PIPELINE_EXECUTE_NUM, BigDecimal::class.java)?.toInt()
         val interceptionCount = result?.get(BK_QUALITY_PIPELINE_INTERCEPTION_NUM, BigDecimal::class.java)?.toInt()

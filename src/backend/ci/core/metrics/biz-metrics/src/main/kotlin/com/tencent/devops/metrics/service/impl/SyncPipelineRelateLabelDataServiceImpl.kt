@@ -61,21 +61,21 @@ class SyncPipelineRelateLabelDataServiceImpl @Autowired constructor(
         val lock = RedisLock(redisOperation, metricsDataReportKey(projectId, pipelineId), 10)
         try {
             lock.lock()
-            val pipelineLabelInfoRecords = pipelineLabelRelateInfos.map {
-                val createTime = it.createTime!!
-                val pipelineLabelInfoRecord = TProjectPipelineLabelInfoRecord(
+            val pipelineLabelInfoRecords = pipelineLabelRelateInfos.map { pipelineLabelRelateInfo ->
+                val record = TProjectPipelineLabelInfoRecord()
+                record.id =
                     client.get(ServiceAllocIdResource::class)
-                        .generateSegmentId("METRICS_PROJECT_PIPELINE_LABEL_INFO").data ?: 0,
-                    it.projectId,
-                    it.pipelineId,
-                    it.labelId,
-                    it.name,
-                    it.createUser,
-                    it.createUser,
-                    createTime,
-                    createTime
-                )
-                pipelineLabelInfoRecord
+                        .generateSegmentId("METRICS_PROJECT_PIPELINE_LABEL_INFO")
+                        .data ?: 0
+                record.projectId = pipelineLabelRelateInfo.projectId
+                record.pipelineId = pipelineLabelRelateInfo.pipelineId
+                record.labelId = pipelineLabelRelateInfo.labelId
+                record.labelName = pipelineLabelRelateInfo.name
+                record.createTime = pipelineLabelRelateInfo.createTime
+                record.modifier = pipelineLabelRelateInfo.createUser
+                record.creator = pipelineLabelRelateInfo.createUser
+                record.updateTime = pipelineLabelRelateInfo.createTime
+                record
             }
             projectInfoDao.batchCreatePipelineLabelData(
                 dslContext,
