@@ -50,7 +50,7 @@ interface AtomDisplayConfigManageService {
     fun deleteAtomDisplayConfig(
         projectId: String,
         userId: String,
-        atomCodes: List<String>
+        atomCodes: List<AtomBaseInfoDO>
     ): Boolean
 
     /**
