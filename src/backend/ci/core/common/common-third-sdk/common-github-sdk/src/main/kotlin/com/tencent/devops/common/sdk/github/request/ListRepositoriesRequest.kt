@@ -31,17 +31,35 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.pojo.Repository
-
+@Suppress("all")
 class ListRepositoriesRequest(
+    // Limit results to repositories with the specified visibility.
+    // Default: all
+    // Can be one of: all, public, private
     val visibility: String? = null,
+    // Comma-separated list of values. Can include:
+    // * owner: Repositories that are owned by the authenticated user.
+    // * collaborator: Repositories that the user has been added to as a collaborator.
+    // * organization_member: Repositories that the user has access to through being a member of an organization. This includes every repository on every team that the user is on.
+    // Default: owner,collaborator,organization_member
     val affiliation: String? = null,
+    // Limit results to repositories of the specified type. Will cause a 422 error if used in the same request as visibility or affiliation.
+    // Default: all
+    // Can be one of: all, owner, public, private, member
     val type: String? = null,
+    // The property to sort the results by.
+    // Default: full_name
+    // Can be one of: created, updated, pushed, full_name
     val sort: String? = null,
+    // The order to sort by. Default: asc when using full_name, otherwise desc.
+    // Can be one of: asc, desc
     val direction: String? = null,
     @JsonProperty("per_page")
     val perPage: Int = 30,
     val page: Int = 1,
+    // Only show notifications updated after the given time. This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.
     val since: String? = null,
+    // Only show notifications updated before the given time. This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.
     val before: String? = null
 ) : GithubRequest<List<Repository>>() {
     override fun getHttpMethod(): HttpMethod {
