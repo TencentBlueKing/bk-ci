@@ -25,13 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.git.pojo
+package com.tencent.devops.common.sdk.github.request
 
-/**
- * Stream需要的Git平台的用户信息
- */
-interface   StreamGitUserInfo {
-    val id: String
-    // 用户名称
-    val username: String
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.tencent.devops.common.sdk.enums.HttpMethod
+import com.tencent.devops.common.sdk.github.GithubRequest
+import com.tencent.devops.common.sdk.github.pojo.Repository
+
+class GetRepositoryRquest(
+    @JsonIgnore
+    val owner: String,
+    @JsonIgnore
+    val repo: String
+) : GithubRequest<Repository>() {
+    override fun getHttpMethod(): HttpMethod {
+        return HttpMethod.GET
+    }
+
+    override fun getApiPath(): String {
+        return "/repos/$owner/$repo"
+    }
 }

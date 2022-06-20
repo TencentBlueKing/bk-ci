@@ -25,13 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.git.pojo
+package com.tencent.devops.common.sdk.github
 
-/**
- * Stream需要的Git平台的用户信息
- */
-interface   StreamGitUserInfo {
-    val id: String
-    // 用户名称
-    val username: String
+import com.tencent.devops.common.sdk.github.request.GetRepositoryRquest
+import org.junit.jupiter.api.Test
+
+class GithubRepositoryApiTest {
+    private val client = DefaultGithubClient(
+        serverUrl = "https://github.com/",
+        apiUrl = "https://api.github.com/"
+    )
+
+    private val token = "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"
+    private val repo = "bk-ci"
+    private val owner = "Florence-y"
+
+    @Test
+    fun getRepositery() {
+        val request = GetRepositoryRquest(
+            repo = repo,
+            owner = owner
+        )
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
 }
