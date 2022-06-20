@@ -108,17 +108,17 @@ abstract class ExpressionNode : IExpressionNode {
                 // Don't bother tracing the realized expression when the result is a number and the
                 // realized expresion is a precisely matching string.
             } else {
-                context.tarce?.info("Expanded: $realizedExpression")
+                context.trace?.info("Expanded: $realizedExpression")
             }
         }
 
         // Always trace the result
-        context.tarce?.info("Result: $traceValue")
+        context.trace?.info("Result: $traceValue")
     }
 
     companion object {
         private fun traceVerbose(context: EvaluationContext, level: Int, message: String?) {
-            context.tarce?.verbose("".padStart(level * 2, '.') + (message ?: ""))
+            context.trace?.verbose("".padStart(level * 2, '.') + (message ?: ""))
         }
     }
 }

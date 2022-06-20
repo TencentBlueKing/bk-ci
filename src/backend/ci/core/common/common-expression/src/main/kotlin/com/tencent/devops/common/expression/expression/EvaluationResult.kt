@@ -146,7 +146,7 @@ class EvaluationResult(
         message: String
     ) {
         if (!omitTracing) {
-            context?.tarce?.verbose("".padStart(level * 2, '.') + message)
+            context?.trace?.verbose("".padStart(level * 2, '.') + message)
         }
     }
 

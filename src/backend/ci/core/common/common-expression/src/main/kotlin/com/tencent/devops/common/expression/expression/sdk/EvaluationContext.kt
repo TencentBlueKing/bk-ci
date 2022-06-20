@@ -5,7 +5,7 @@ import com.tencent.devops.common.expression.expression.EvaluationResult
 import com.tencent.devops.common.expression.expression.ITraceWriter
 
 class EvaluationContext(
-    val tarce: ITraceWriter?,
+    val trace: ITraceWriter?,
     val state: Any?,
     ops: EvaluationOptions?,
     val node: ExpressionNode?
