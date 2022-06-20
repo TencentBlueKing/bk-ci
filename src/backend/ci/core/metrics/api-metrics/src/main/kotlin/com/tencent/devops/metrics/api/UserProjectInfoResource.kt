@@ -131,5 +131,5 @@ interface UserProjectInfoResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
-    ): Result<String>
+    ): Result<Boolean>
 }
