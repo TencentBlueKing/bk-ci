@@ -25,13 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.pojo
+package com.tencent.devops.common.sdk.github.request
 
-data class RepositoryContent(
-    val type: String,
-    val encoding: String?,
-    val size: String,
-    val name: String,
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.tencent.devops.common.sdk.enums.HttpMethod
+import com.tencent.devops.common.sdk.github.GithubRequest
+import com.tencent.devops.common.sdk.github.pojo.Committer
+import com.tencent.devops.common.sdk.github.pojo.RepositoryContent
+import com.tencent.devops.common.sdk.github.response.CreateOrUpdateFileContentsResponse
+
+class CreateOrUpdateFileContentsRequest(
+    @JsonIgnore
+    val owner: String,
+    @JsonIgnore
+    val repo: String,
+    @JsonIgnore
     val path: String,
-    val content: String?
-)
+    // The commit message
+    val message: String,
+    // The new file content, using Base64 encoding.
+    val content: String,
+    // Required if you are updating a file. The blob SHA of the file being replaced.
+    val sha: String? = null,
+    val branch: String? = null,
+    // The person that committed the file. Default: the authenticated user.
+    val committer: Committer? = null,
+    // The author of the file. Default: The committer or the authenticated user if you omit committer.
+    val author: Committer? = null,
+) : GithubRequest<CreateOrUpdateFileContentsResponse>() {
+    override fun getHttpMethod(): HttpMethod {
+        return HttpMethod.PUT
+    }
+
+    override fun getApiPath(): String {
+        return "/repos/$owner/$repo/contents/$path"
+    }
+}

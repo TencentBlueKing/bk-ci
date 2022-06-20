@@ -25,13 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.pojo
+package com.tencent.devops.common.sdk.github.response
 
-data class RepositoryContent(
-    val type: String,
-    val encoding: String?,
-    val size: String,
-    val name: String,
-    val path: String,
-    val content: String?
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.sdk.github.pojo.RepositoryContent
+
+data class CreateOrUpdateFileContentsResponse(
+    @JsonProperty("content")
+    val repositoryContent: RepositoryContent
 )

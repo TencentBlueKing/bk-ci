@@ -27,11 +27,8 @@
 
 package com.tencent.devops.common.sdk.github.pojo
 
-data class RepositoryContent(
-    val type: String,
-    val encoding: String?,
-    val size: String,
+data class Committer(
     val name: String,
-    val path: String,
-    val content: String?
+    val email: String,
+    val date: String? = null
 )

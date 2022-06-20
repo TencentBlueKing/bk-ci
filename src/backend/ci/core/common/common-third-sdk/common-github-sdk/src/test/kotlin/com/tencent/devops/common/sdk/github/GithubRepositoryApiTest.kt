@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.sdk.github
 
+import com.tencent.devops.common.sdk.github.request.CreateOrUpdateFileContentsRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
@@ -73,8 +74,26 @@ class GithubRepositoryApiTest {
 
 
     @Test
-    fun listRepositoriesRequest(){
+    fun listRepositoriesRequest() {
         val request = ListRepositoriesRequest()
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
+
+
+    @Test
+    fun createOrUpdateFileContents() {
+        val request = CreateOrUpdateFileContentsRequest(
+            owner = owner,
+            repo = "chatroom",
+            path = "README5555.md",
+            message = "test",
+            content = "bXkgbmV3IGZpbGUgY29udGVudHM=",
+            branch = defaultBranch
+        )
         val response = client.execute(
             oauthToken = token,
             request = request
