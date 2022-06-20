@@ -30,8 +30,8 @@ package com.tencent.devops.stream.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.stream.pojo.ManualTriggerReq
 import com.tencent.devops.stream.pojo.StreamGitYamlString
-import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.V2BuildYaml
 import io.swagger.annotations.Api
@@ -64,7 +64,7 @@ interface UserStreamTriggerResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam("TriggerBuild请求", required = true)
-        triggerBuildReq: TriggerBuildReq
+        triggerBuildReq: ManualTriggerReq
     ): Result<TriggerBuildResult>
 
     @ApiOperation("校验yaml格式")

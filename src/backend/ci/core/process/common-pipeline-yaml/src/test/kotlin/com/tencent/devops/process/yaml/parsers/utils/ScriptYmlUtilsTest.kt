@@ -102,21 +102,6 @@ class ScriptYmlUtilsTest {
         println(obj.variables)
     }
 
-    private fun getFileStr(fileName: String): String {
-        val classPathResource = ClassPathResource(fileName)
-        val inputStream: InputStream = classPathResource.inputStream
-        val isReader = InputStreamReader(inputStream)
-
-        val reader = BufferedReader(isReader)
-        val sb = StringBuffer()
-        var str: String?
-        while (reader.readLine().also { str = it } != null) {
-            sb.append(str).append("\n")
-        }
-
-        return sb.toString()
-    }
-
     private fun formatVariablesValue(value: String, settingMap: Map<String, String>): String {
         var newValue = value
         val pattern = Pattern.compile("\\$\\{\\{([^{}]+?)}}")

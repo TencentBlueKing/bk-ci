@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserStreamTriggerResource
 import com.tencent.devops.stream.permission.StreamPermissionService
+import com.tencent.devops.stream.pojo.ManualTriggerReq
 import com.tencent.devops.stream.pojo.StreamGitYamlString
 import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
@@ -59,12 +60,27 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
     override fun triggerStartup(
         userId: String,
         pipelineId: String,
-        triggerBuildReq: TriggerBuildReq
+        triggerBuildReq: ManualTriggerReq
     ): Result<TriggerBuildResult> {
         val gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId)
         checkParam(userId)
         permissionService.checkStreamAndOAuthAndEnable(userId, triggerBuildReq.projectId, gitProjectId)
-        return Result(manualTriggerService.triggerBuild(userId, pipelineId, triggerBuildReq))
+        return Result(
+            manualTriggerService.triggerBuild(
+                userId, pipelineId,
+                TriggerBuildReq(
+                    projectId = triggerBuildReq.projectId,
+                    branch = triggerBuildReq.branch,
+                    customCommitMsg = triggerBuildReq.customCommitMsg,
+                    yaml = triggerBuildReq.yaml,
+                    description = null,
+                    commitId = triggerBuildReq.commitId,
+                    payload = null,
+                    eventType = null,
+                    inputs = manualTriggerService.parseJsonToInputs(triggerBuildReq.inputs)
+                )
+            )
+        )
     }
 
     override fun checkYaml(userId: String, yaml: StreamGitYamlString): Result<String> {

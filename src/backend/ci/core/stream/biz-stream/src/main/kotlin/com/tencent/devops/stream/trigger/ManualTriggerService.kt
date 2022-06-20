@@ -27,7 +27,9 @@
 
 package com.tencent.devops.stream.trigger
 
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -96,5 +98,33 @@ class ManualTriggerService @Autowired constructor(
 
     override fun getStartParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String> {
         return emptyMap()
+    }
+
+    override fun getInputParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String>? {
+        return triggerBuildReq.inputs
+    }
+
+    fun parseJsonToInputs(json: Any?): Map<String, String>? {
+        if (json == null) {
+            return null
+        }
+
+        val jsonBytes = JsonUtil.getObjectMapper(false).writeValueAsBytes(json)
+        val tree = JsonUtil.getObjectMapper(false).readTree(jsonBytes)
+
+        val result = mutableMapOf<String, String>()
+
+        tree.fields().forEach { (name, node) ->
+            val value = when {
+                node.isNull -> return@forEach
+                node.isValueNode -> node.textValue()
+                node.isArray -> (node as ArrayNode).joinToString(",")
+                else -> node.toString()
+            }
+
+            result[name] = value
+        }
+
+        return result
     }
 }

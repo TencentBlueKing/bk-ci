@@ -60,7 +60,8 @@ object ModelParameters {
         yaml: ScriptBuildYaml,
         streamGitProjectInfo: StreamGitProjectCache,
         webhookParams: Map<String, String> = mapOf(),
-        yamlTransferData: YamlTransferData? = null
+        yamlTransferData: YamlTransferData? = null,
+        manualInputs: Map<String, String>?
     ): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
 
@@ -136,6 +137,28 @@ object ModelParameters {
             )
         }
         result.addAll(buildFormProperties)
+
+        // 对于额外的手动输入参数在最后处理逻辑
+        if (manualInputs != null) {
+            result.forEach manualEach@{ prop ->
+                val key = if (prop.id.startsWith(VARIABLE_PREFIX)) {
+                    prop.id.removePrefix(VARIABLE_PREFIX)
+                } else {
+                    prop.id
+                }
+
+                if (!manualInputs.containsKey(key)) {
+                    return@manualEach
+                }
+
+                if (prop.readOnly == true) {
+                    // 若variables 下定义的入参只读，则报错
+                    throw RuntimeException("variable $key is readonly, can't edit")
+                } else {
+                    prop.defaultValue = manualInputs[key]!!
+                }
+            }
+        }
 
         return result
     }

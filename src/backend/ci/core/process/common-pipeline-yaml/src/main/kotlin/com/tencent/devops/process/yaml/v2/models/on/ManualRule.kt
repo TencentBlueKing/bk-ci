@@ -27,45 +27,42 @@
 
 package com.tencent.devops.process.yaml.v2.models.on
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.process.yaml.v2.models.RepositoryHook
-import io.swagger.annotations.ApiModelProperty
-
 /**
- * model
+ * 手动触发触发器配置
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class TriggerOn(
-    val push: PushRule?,
-    val tag: TagRule?,
-    val mr: MrRule?,
-    val schedules: SchedulesRule? = null,
-    val delete: DeleteRule? = null,
-    val issue: IssueRule? = null,
-    val review: ReviewRule? = null,
-    val note: NoteRule? = null,
-    @ApiModelProperty(name = "repo_hook")
-    @JsonProperty("repo_hook")
-    val repoHook: RepositoryHook? = null,
-    val manual: ManualRule?
+data class ManualRule(
+    val enable: Boolean? = true,
+    val inputs: Map<String, ManualInputItem>?
 )
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class PreTriggerOn(
-    val push: Any?,
-    val tag: Any?,
-    val mr: Any?,
-    val schedules: SchedulesRule?,
-    val delete: DeleteRule?,
-    val issue: IssueRule? = null,
-    val review: ReviewRule? = null,
-    val note: NoteRule? = null,
-    @ApiModelProperty(name = "repo_hook")
-    @JsonProperty("repo_hook")
-    val repoHook: List<Any>? = null,
-    val manual: Any?
+data class ManualInputItem(
+    val default: Any?,
+    val label: String,
+    val type: String,
+    val values: List<Any>?,
+    val description: String?,
+    val multiple: Boolean?
 )
+
+enum class ManualInputItemType(val value: String) {
+    VUEX_INPUT("vuex-input"),
+    VUEX_TEXTAREA("vuex-textarea"),
+    SELECTOR("selector"),
+    ATOM_CHECKBOX_LIST("atom-checkbox-list"),
+    BOOLEAN("boolean"),
+    TIME_PICKER("time-picker"),
+    COMPANY_STAFF_INPUT("company-staff-input"),
+    TIPS("tips");
+
+    companion object {
+        fun findType(value: String): ManualInputItemType? {
+            values().forEach {
+                if (it.value == value) {
+                    return it
+                }
+            }
+
+            return null
+        }
+    }
+}

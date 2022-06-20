@@ -181,6 +181,8 @@ abstract class BaseManualTriggerService @Autowired constructor(
 
     abstract fun getStartParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String>
 
+    abstract fun getInputParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String>?
+
     fun handleTrigger(
         action: BaseAction,
         originYaml: String,
@@ -244,7 +246,8 @@ abstract class BaseManualTriggerService @Autowired constructor(
             yaml = yamlReplaceResult.normalYaml,
             gitBuildId = gitBuildId,
             onlySavePipeline = false,
-            yamlTransferData = yamlReplaceResult.yamlTransferData
+            yamlTransferData = yamlReplaceResult.yamlTransferData,
+            manualInputs = getInputParams(action, triggerBuildReq)
         )
     }
 }
