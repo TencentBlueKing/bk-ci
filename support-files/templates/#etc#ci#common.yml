@@ -291,11 +291,6 @@ bkci:
 process:
   deletedPipelineStoreDays: 30
 
-metrics:
-  maximumQueryMonths: 6
-  minimumQueryDays: 1
-  queryCountMax: 10000
-
 net:
   proxy:
     # 是否开启，设置为 true 才生效

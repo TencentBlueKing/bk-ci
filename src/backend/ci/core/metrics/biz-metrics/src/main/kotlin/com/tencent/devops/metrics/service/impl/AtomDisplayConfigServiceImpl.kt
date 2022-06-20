@@ -31,12 +31,13 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.metrics.dao.AtomDisplayConfigDao
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
+import com.tencent.devops.metrics.service.AtomDisplayConfigManageService
 import com.tencent.devops.metrics.pojo.dto.AtomDisplayConfigDTO
 import com.tencent.devops.metrics.pojo.po.AtomDisplayConfigPO
 import com.tencent.devops.metrics.pojo.vo.AtomDisplayConfigVO
-import com.tencent.devops.metrics.service.AtomDisplayConfigManageService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -70,14 +71,14 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun deleteAtomDisplayConfig(projectId: String, userId: String, atomCodes: List<String>): Boolean {
-        atomDisplayConfigDao.batchDeleteAtomDisplayConfig(
+    override fun deleteAtomDisplayConfig(projectId: String, userId: String, atomCodes: List<AtomBaseInfoDO>): Boolean {
+        logger.info("deleteAtomDisplayConfig atomCodes: $atomCodes")
+        return atomDisplayConfigDao.batchDeleteAtomDisplayConfig(
             dslContext,
             projectId,
             userId,
-            atomCodes
-        )
-        return true
+            atomCodes.map { it.atomCode }
+        ) > 0
     }
 
     override fun getAtomDisplayConfig(projectId: String, userId: String, keyword: String?): AtomDisplayConfigVO {
@@ -120,5 +121,9 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
                 pageSize = pageSize ?: 10
             )
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AtomDisplayConfigServiceImpl::class.java)
     }
 }

@@ -440,16 +440,11 @@ class ServicePipelineResourceImpl @Autowired constructor(
 
     override fun getPipelineLabelInfos(
         userId: String,
-        page: Int,
-        pageSize: Int
-    ): Result<Page<PipelineLabelRelateInfo>> {
+        projectIds: List<String>
+    ): Result<List<PipelineLabelRelateInfo>> {
         return Result(
-            pipelineListFacadeService.getProjectPipelineLabelInfos(page, pageSize)
+            pipelineListFacadeService.getProjectPipelineLabelInfos(projectIds)
         )
-    }
-
-    override fun getPipelineLabelProjectId(userId: String, page: Int, pageSize: Int): Result<Page<String>> {
-        return Result(pipelineListFacadeService.getPipelineLabelProjectId(userId, page, pageSize))
     }
 
     private fun checkParams(userId: String, projectId: String) {

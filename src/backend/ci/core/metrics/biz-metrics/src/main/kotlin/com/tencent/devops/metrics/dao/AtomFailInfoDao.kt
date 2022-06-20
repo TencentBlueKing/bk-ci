@@ -80,13 +80,11 @@ class AtomFailInfoDao {
                 this.ERROR_MSG.`as`(BK_ERROR_MSG),
                 errorCount
             ).from(this)
-            val conditionStep = if (!pipelineLabelIds.isNullOrEmpty()) {
+            if (!pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-            } else {
-                step
             }
-            return conditionStep.where(conditions)
+            return step.where(conditions)
                 .groupBy(this.ERROR_CODE)
                 .orderBy(errorCount.desc())
                 .offset((queryCondition.page - 1) * queryCondition.pageSize)
@@ -183,15 +181,13 @@ class AtomFailInfoDao {
                 this.ERROR_CODE.`as`(BK_ERROR_CODE),
                 this.ERROR_MSG.`as`(BK_ERROR_MSG)
             ).from(this)
-            val conditionStep =
-                if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+            if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-            } else {
-                step
             }
-            return conditionStep.where(conditions)
+            return step.where(conditions)
                 .groupBy(this.PIPELINE_ID, this.BUILD_NUM)
+                .orderBy(START_TIME.desc())
                 .offset((queryCondition.page - 1) * queryCondition.pageSize)
                 .limit(queryCondition.pageSize)
                 .fetchInto(AtomFailDetailInfoDO::class.java)

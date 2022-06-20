@@ -560,8 +560,6 @@ class PipelineInfoDao {
             }
             if (!channelCodes.isNullOrEmpty()) {
                 conditions.add(CHANNEL.`in`(channelCodes))
-            } else {
-                conditions.add(CHANNEL.`in`(listOf(ChannelCode.BS, ChannelCode.GIT)))
             }
             dslContext.selectFrom(this)
                 .where(conditions)

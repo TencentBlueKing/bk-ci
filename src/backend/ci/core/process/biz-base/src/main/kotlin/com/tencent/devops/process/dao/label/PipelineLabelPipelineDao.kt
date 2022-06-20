@@ -186,20 +186,9 @@ class PipelineLabelPipelineDao {
         }
     }
 
-    fun getPipelineLabelRelateInfoCount(dslContext: DSLContext, projectId: String): Long {
-        with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
-            return dslContext.selectCount().from(this)
-                .where(this.PROJECT_ID.eq(projectId))
-                .and(this.PROJECT_ID.isNotNull)
-                .fetchOne(0, Long::class.java) ?: 0L
-        }
-    }
-
     fun getPipelineLabelRelateInfos(
         dslContext: DSLContext,
-        projectId: String,
-        page: Int,
-        pageSize: Int
+        projectIds: List<String>
     ): List<PipelineLabelRelateInfo> {
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             val pipelineLabel = TPipelineLabel.T_PIPELINE_LABEL
@@ -213,11 +202,7 @@ class PipelineLabelPipelineDao {
             ).from(this)
                 .join(pipelineLabel)
                 .on(LABEL_ID.eq(pipelineLabel.ID))
-                .where(this.PROJECT_ID.eq(projectId))
-                .and(this.PROJECT_ID.isNotNull)
-                .orderBy(this.LABEL_ID)
-                .offset((page - 1) * pageSize)
-                .limit(pageSize)
+                .where(this.PROJECT_ID.`in`(projectIds))
                 .fetchInto(PipelineLabelRelateInfo::class.java)
         }
     }

@@ -62,15 +62,12 @@ class PipelineOverviewDao {
             val step = dslContext.select(PIPELINE_ID).from(this)
             val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo, null)
             val pipelineLabelIds = queryPipelineOverview.baseQueryReq.pipelineLabelIds
-            val conditionStep =
-                if (!pipelineLabelIds.isNullOrEmpty()) {
+            if (!pipelineLabelIds.isNullOrEmpty()) {
                     step.join(tProjectPipelineLabelInfo)
                         .on(PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                        .where(conditions)
-                } else {
-                    step.where(conditions)
                 }
-            return conditionStep.orderBy(TOTAL_EXECUTE_COUNT.desc())
+            return step.where(conditions)
+                .orderBy(TOTAL_EXECUTE_COUNT.desc())
                 .limit(DEFAULT_LIMIT_NUM)
                 .fetchInto(String::class.java)
         }
@@ -93,13 +90,10 @@ class PipelineOverviewDao {
                 sum<Long>(SUCCESS_EXECUTE_COUNT).`as`(BK_SUCCESS_EXECUTE_COUNT_SUM),
                 sum<Long>(TOTAL_AVG_COST_TIME).`as`(BK_TOTAL_AVG_COST_TIME_SUM)
             ).from(this)
-            val conditionStep =
                 if (!queryPipelineOverview.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
                     step.join(tProjectPipelineLabelInfo).on(PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-            } else {
-                step
             }
-            return conditionStep.where(conditions).fetchOne()
+            return step.where(conditions).fetchOne()
         }
     }
 
@@ -121,15 +115,11 @@ class PipelineOverviewDao {
                 sum<Long>(TOTAL_AVG_COST_TIME).`as`(BK_TOTAL_AVG_COST_TIME),
                 sum<Long>(FAIL_AVG_COST_TIME).`as`(BK_FAIL_AVG_COST_TIME)
             ).from(this)
-            val conditionStep =
-                if (!queryPipelineOverview.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+            if (!queryPipelineOverview.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
                 step.join(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                    .where(conditions)
-            } else {
-                step.where(conditions)
             }
-            return conditionStep.groupBy(this.STATISTICS_TIME).fetch()
+            return step.where(conditions).groupBy(this.STATISTICS_TIME).fetch()
         }
     }
 

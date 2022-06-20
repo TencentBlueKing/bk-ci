@@ -51,7 +51,6 @@ import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
 import com.tencent.devops.metrics.constant.MetricsMessageCode
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.DATE_FORMATTER
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getBetweenDate
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getIntervalTime
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.toMinutes
@@ -74,7 +73,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import java.util.stream.Collectors
 
 @Service
 class AtomStatisticsServiceImpl @Autowired constructor(
@@ -87,24 +85,41 @@ class AtomStatisticsServiceImpl @Autowired constructor(
     override fun queryAtomTrendInfo(queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO): AtomTrendInfoVO {
         // 未选择查询的插件时读取插件显示配置
         val atomCodes =
-            if (queryAtomTrendInfoDTO.atomCodes.isNullOrEmpty()) {
-                val configs = atomDisplayConfigDao.getAtomDisplayConfig(
-                    dslContext,
-                    queryAtomTrendInfoDTO.projectId,
-                    null
+            if (!queryAtomTrendInfoDTO.atomCodes.isNullOrEmpty()) {
+                queryAtomTrendInfoDTO.atomCodes!!
+            } else {
+                // 插件配置为空择读取项目下插件
+                atomDisplayConfigDao.getOptionalAtomDisplayConfig(
+                    dslContext = dslContext,
+                    projectId = queryAtomTrendInfoDTO.projectId,
+                    atomCodes = emptyList(),
+                    keyword = null,
+                    page = 1,
+                    pageSize = 10
                 ).map { it.atomCode }
-                configs.ifEmpty {
-                    // 插件配置为空择读取项目下插件
-                    atomDisplayConfigDao.getOptionalAtomDisplayConfig(
-                        dslContext = dslContext,
-                        projectId = queryAtomTrendInfoDTO.projectId,
-                        atomCodes = emptyList(),
-                        keyword = null,
-                        page = 1,
-                        pageSize = 10
-                    ).map { it.atomCode }
-                }
-        } else queryAtomTrendInfoDTO.atomCodes!!
+            }
+        // 查询符合查询条件的记录数
+        val queryAtomExecuteStatisticsCount =
+            atomStatisticsDao.queryAtomExecuteStatisticsInfoCount(
+                dslContext = dslContext,
+                queryCondition = QueryAtomStatisticsQO(
+                    projectId = queryAtomTrendInfoDTO.projectId,
+                    baseQueryReq = BaseQueryReqVO(
+                        pipelineIds = queryAtomTrendInfoDTO.pipelineIds,
+                        pipelineLabelIds = queryAtomTrendInfoDTO.pipelineLabelIds,
+                        startTime = queryAtomTrendInfoDTO.startTime,
+                        endTime = queryAtomTrendInfoDTO.endTime
+                    ),
+                    errorTypes = queryAtomTrendInfoDTO.errorTypes,
+                    atomCodes = atomCodes
+                )
+            )
+        // 查询记录过多，提醒用户缩小查询范围
+        if (queryAtomExecuteStatisticsCount > metricsConfig.queryCountMax) {
+            throw ErrorCodeException(
+                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
+            )
+        }
         //  查询插件趋势信息
         val result = atomStatisticsDao.queryAtomTrendInfo(
             dslContext,
@@ -120,58 +135,52 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 atomCodes = atomCodes
             )
         )
+        val atomBaseTrendInfoMap = mutableMapOf<String, MutableMap<String, AtomBaseTrendInfoDO>>()
         val atomTrendInfoMap = mutableMapOf<String, AtomTrendInfoDO>()
-        val atomTrendInfoDateMap = mutableMapOf<String, MutableList<String>>()
         //  查询的时间区间
         val betweenDate = getBetweenDate(queryAtomTrendInfoDTO.startTime, queryAtomTrendInfoDTO.endTime)
         result.forEach { record ->
             //  按插件code和统计时间分组数据
             val atomCode = record[BK_ATOM_CODE] as String
             val statisticsTime = (record[BK_STATISTICS_TIME] as LocalDateTime).toLocalDate()
+
             if (!atomTrendInfoMap.containsKey(atomCode)) {
-                val atomTrendInfoList = mutableListOf(
-                    AtomBaseTrendInfoDO(
+                val atomBaseTrendInfo = AtomBaseTrendInfoDO(
                         successRate = (record[BK_SUCCESS_RATE] as BigDecimal).toDouble(),
                         statisticsTime = statisticsTime,
                         avgCostTime = toMinutes(record[BK_AVG_COST_TIME] as Long)
                     )
-                )
                 val atomTrendInfoDO = AtomTrendInfoDO(
                     atomCode = atomCode,
                     atomName = record[BK_ATOM_NAME] as String,
-                    atomTrendInfos = atomTrendInfoList
+                    atomTrendInfos = null
                 )
+                atomBaseTrendInfoMap[atomCode] = mutableMapOf("$statisticsTime" to atomBaseTrendInfo)
                 atomTrendInfoMap[atomCode] = atomTrendInfoDO
-                atomTrendInfoDateMap[atomCode] = mutableListOf(statisticsTime.format(DATE_FORMATTER))
             } else {
-                val atomTrendInfoDO = atomTrendInfoMap[atomCode]
-                atomTrendInfoDateMap[atomCode]?.add(statisticsTime.format(DATE_FORMATTER))
-                atomTrendInfoDO!!.atomTrendInfos.add(
-                    AtomBaseTrendInfoDO(
-                        successRate = (record[BK_SUCCESS_RATE] as BigDecimal).toDouble(),
-                        avgCostTime = toMinutes(record[BK_AVG_COST_TIME] as Long),
-                        statisticsTime = (record[BK_STATISTICS_TIME] as LocalDateTime).toLocalDate()
-                    )
+                val atomBaseInfo = AtomBaseTrendInfoDO(
+                    successRate = (record[BK_SUCCESS_RATE] as BigDecimal).toDouble(),
+                    avgCostTime = toMinutes(record[BK_AVG_COST_TIME] as Long),
+                    statisticsTime = (record[BK_STATISTICS_TIME] as LocalDateTime).toLocalDate()
                 )
+                atomBaseTrendInfoMap[atomCode]?.put("$statisticsTime", atomBaseInfo)
             }
         }
-        logger.info("queryAtomTrendInfo atomTrendInfoDateMap：$atomTrendInfoDateMap")
         //  对查询区间中没有数据的时间添加占位数据
-        atomTrendInfoDateMap.forEach {
-            val atomCode = it.key
-            val atomTrendInfos = atomTrendInfoMap[atomCode]?.atomTrendInfos
-            //  将查询的时间区间减去存在数据的时间，对没有数据的时间添加占位数据
-            (betweenDate - it.value).forEach { date ->
-                atomTrendInfos?.add(
-                    AtomBaseTrendInfoDO(statisticsTime = DateTimeUtil.stringToLocalDate(date)!!)
-                )
+        atomBaseTrendInfoMap.keys.forEach{ atomCode ->
+            val atomBaseTrendInfos = atomBaseTrendInfoMap[atomCode]
+            val atomTrendInfos = mutableListOf<AtomBaseTrendInfoDO>()
+            (betweenDate).forEach { date ->
+                if (atomBaseTrendInfos!!.containsKey(date)) {
+                    atomTrendInfos.add(atomBaseTrendInfos[date]!!)
+                } else {
+                    atomTrendInfos.add(
+                        AtomBaseTrendInfoDO(statisticsTime = DateTimeUtil.stringToLocalDate(date)!!)
+                    )
+                }
+                atomTrendInfoMap[atomCode]?.atomTrendInfos = atomTrendInfos
             }
-            //  对集合按日期排序对象
-            atomTrendInfoMap[atomCode]?.atomTrendInfos =
-                atomTrendInfos?.stream()?.sorted(
-                    Comparator.comparing(AtomBaseTrendInfoDO::statisticsTime))?.collect(Collectors.toList())!!
         }
-        logger.info("atomTrendInfoMap: $atomTrendInfoMap")
         return AtomTrendInfoVO(
             atomTrendInfoMap.values.toList()
         )
@@ -182,21 +191,14 @@ class AtomStatisticsServiceImpl @Autowired constructor(
     ): ListPageVO<AtomExecutionStatisticsInfoDO> {
         // 未选择查询的插件时读取插件显示配置
         val atomCodes = if (queryAtomTrendInfoDTO.atomCodes.isNullOrEmpty()) {
-                val configs = atomDisplayConfigDao.getAtomDisplayConfig(
-                    dslContext = dslContext,
-                    projectId = queryAtomTrendInfoDTO.projectId,
-                    null
-                ).map { it.atomCode }
-            configs.ifEmpty {
-                atomDisplayConfigDao.getOptionalAtomDisplayConfig(
-                    dslContext = dslContext,
-                    projectId = queryAtomTrendInfoDTO.projectId,
-                    atomCodes = emptyList(),
-                    keyword = null,
-                    page = 1,
-                    pageSize = 10
-                ).map { it.atomCode }
-            }
+            atomDisplayConfigDao.getOptionalAtomDisplayConfig(
+                dslContext = dslContext,
+                projectId = queryAtomTrendInfoDTO.projectId,
+                atomCodes = emptyList(),
+                keyword = null,
+                page = 1,
+                pageSize = 10
+            ).map { it.atomCode }
         } else queryAtomTrendInfoDTO.atomCodes!!
         // 查询符合查询条件的记录数
         val queryAtomExecuteStatisticsCount =
@@ -211,7 +213,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                         endTime = queryAtomTrendInfoDTO.endTime
                     ),
                     errorTypes = queryAtomTrendInfoDTO.errorTypes,
-                    atomCodes = atomCodes
+                    atomCodes = atomCodes ?: emptyList()
                 )
             )
         // 查询记录过多，提醒用户缩小查询范围
@@ -232,7 +234,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                     endTime = queryAtomTrendInfoDTO.endTime
                 ),
                 errorTypes = queryAtomTrendInfoDTO.errorTypes,
-                atomCodes = atomCodes,
+                atomCodes = atomCodes ?: emptyList(),
                 page = queryAtomTrendInfoDTO.page,
                 pageSize = queryAtomTrendInfoDTO.pageSize
             )
@@ -283,25 +285,28 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             DateTimeUtil.stringToLocalDate(queryAtomTrendInfoDTO.startTime)!!.atStartOfDay(),
             DateTimeUtil.stringToLocalDate(queryAtomTrendInfoDTO.endTime)!!.atStartOfDay()
         )
-        val records = atomStatisticResult.map {
+        val atomExecutionStatisticsInfos = mutableListOf<AtomExecutionStatisticsInfoDO>()
+        atomStatisticResult.forEach {
             val totalExecuteCount = (it[BK_TOTAL_EXECUTE_COUNT_SUM] as BigDecimal).toLong()
             val successExecuteCount = (it[BK_SUCCESS_EXECUTE_COUNT_SUM] as BigDecimal).toLong()
             val avgCostTimeSum = (it[BK_TOTAL_AVG_COST_TIME_SUM] as BigDecimal).toLong()
-            AtomExecutionStatisticsInfoDO(
-                projectId = queryAtomTrendInfoDTO.projectId,
-                atomBaseInfo = AtomBaseInfoDO(
-                    atomCode = it[BK_ATOM_CODE] as String,
-                    atomName = it[BK_ATOM_NAME] as String
-                ),
-                classifyCode = it[BK_CLASSIFY_CODE] as String,
-                avgCostTime =
+            atomExecutionStatisticsInfos.add(
+                AtomExecutionStatisticsInfoDO(
+                    projectId = queryAtomTrendInfoDTO.projectId,
+                    atomBaseInfo = AtomBaseInfoDO(
+                        atomCode = it[BK_ATOM_CODE] as String,
+                        atomName = it[BK_ATOM_NAME] as String
+                    ),
+                    classifyCode = it[BK_CLASSIFY_CODE] as String,
+                    avgCostTime =
                     String.format("%.2f", (avgCostTimeSum.toDouble() / days.toDouble())).toDouble(),
-                totalExecuteCount = totalExecuteCount,
-                successExecuteCount = successExecuteCount,
-                successRate = if (successExecuteCount <= 0L || totalExecuteCount <= 0L) 0.0
-                else String.format("%.2f", (successExecuteCount.toDouble() * 100 / totalExecuteCount.toDouble()))
-                    .toDouble(),
-                atomFailInfos = atomFailInfos[it[BK_ATOM_CODE]]?.toMap() ?: emptyMap()
+                    totalExecuteCount = totalExecuteCount,
+                    successExecuteCount = successExecuteCount,
+                    successRate = if (successExecuteCount <= 0L || totalExecuteCount <= 0L) 0.0
+                    else String.format("%.2f", (successExecuteCount.toDouble() * 100 / totalExecuteCount.toDouble()))
+                        .toDouble(),
+                    atomFailInfos = atomFailInfos[it[BK_ATOM_CODE]]?.toMap() ?: emptyMap()
+                )
             )
         }
         logger.info("query atom executeStatisticsInfo headerInfo: $headerInfo")
@@ -311,7 +316,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             page = queryAtomTrendInfoDTO.page,
             pageSize = queryAtomTrendInfoDTO.pageSize,
             headerInfo = headerInfo,
-            records = records
+            records = atomExecutionStatisticsInfos
         )
     }
 

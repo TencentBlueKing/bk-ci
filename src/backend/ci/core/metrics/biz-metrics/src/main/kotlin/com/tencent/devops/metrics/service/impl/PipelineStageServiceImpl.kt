@@ -32,7 +32,6 @@ import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.DATE_FORMATTER
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.PipelineStageDao
 import com.tencent.devops.metrics.pojo.`do`.PipelineStageCostTimeInfoDO
@@ -56,7 +55,7 @@ class PipelineStageServiceImpl @Autowired constructor(
     override fun queryPipelineStageTrendInfo(
         queryPipelineOverviewDTO: QueryPipelineOverviewDTO
     ): List<StageTrendSumInfoVO> {
-        var stageTrendSumInfos: MutableMap<String, List<StageAvgCostTimeInfoDO>>
+        var stageTrendSumInfos: MutableMap<String, MutableMap<String, StageAvgCostTimeInfoDO>>
         val tags = pipelineStageDao.getStageTag(dslContext, queryPipelineOverviewDTO.projectId)
         val startTime = queryPipelineOverviewDTO.baseQueryReq.startTime
         val endTime = queryPipelineOverviewDTO.baseQueryReq.endTime
@@ -82,31 +81,30 @@ class PipelineStageServiceImpl @Autowired constructor(
                 val avgCostTime = toMinutes((it[BK_AVG_COST_TIME] as Long))
                 val statisticsTime = (it[BK_STATISTICS_TIME] as LocalDateTime).toLocalDate()
                 if (!stageTrendSumInfos.containsKey(it[BK_PIPELINE_NAME] as String)) {
-                    val listOf = mutableListOf(
-                        StageAvgCostTimeInfoDO(statisticsTime, avgCostTime)
-                    )
-                    stageTrendSumInfos[pipelineName] = listOf
+                    val mutableMapOf =
+                        mutableMapOf("$statisticsTime" to StageAvgCostTimeInfoDO(statisticsTime, avgCostTime))
+                    stageTrendSumInfos[pipelineName] = mutableMapOf
                 } else {
-                    val listOf = stageTrendSumInfos[pipelineName]!!.toMutableList()
-                    listOf.add(StageAvgCostTimeInfoDO(statisticsTime, avgCostTime))
-                    stageTrendSumInfos[pipelineName] = listOf
+                    val mutableMap = stageTrendSumInfos[pipelineName]!!
+                    mutableMap["$statisticsTime"] = StageAvgCostTimeInfoDO(statisticsTime, avgCostTime)
                 }
                 pipelineNames.add(pipelineName)
-                betweenDate.removeIf { s -> s == statisticsTime.format(DATE_FORMATTER) }
             }
+            val pipelineStageCostTimeInfoDOs = mutableListOf<PipelineStageCostTimeInfoDO>()
             //  对每组流水线数据中无数据的日期添加占位数据
             pipelineNames.forEach { pipelineName ->
-                val stageAvgCostTimeInfos = stageTrendSumInfos[pipelineName]!!.toMutableList()
+                val stageAvgCostTimeInfos = stageTrendSumInfos[pipelineName]!!
+                val pipelineStageInfos = mutableListOf<StageAvgCostTimeInfoDO>()
                 betweenDate.forEach { date ->
-                    stageAvgCostTimeInfos.add(StageAvgCostTimeInfoDO(DateTimeUtil.stringToLocalDate(date)!!, 0.0))
+                    if (stageAvgCostTimeInfos.containsKey(date)) {
+                        pipelineStageInfos.add(stageAvgCostTimeInfos[date]!!)
+                    } else {
+                        pipelineStageInfos.add(
+                            StageAvgCostTimeInfoDO(DateTimeUtil.stringToLocalDate(date)!!, 0.0)
+                        )
+                    }
                 }
-                stageTrendSumInfos[pipelineName] =
-                    stageAvgCostTimeInfos.stream().sorted(
-                        Comparator.comparing(StageAvgCostTimeInfoDO::statisticsTime)
-                    ).collect(Collectors.toList())
-            }
-            val pipelineStageCostTimeInfoDOs = stageTrendSumInfos.map {
-                PipelineStageCostTimeInfoDO(it.key, it.value)
+                pipelineStageCostTimeInfoDOs.add(PipelineStageCostTimeInfoDO(pipelineName, pipelineStageInfos))
             }
             StageTrendSumInfoVO(tag, pipelineStageCostTimeInfoDOs)
         }

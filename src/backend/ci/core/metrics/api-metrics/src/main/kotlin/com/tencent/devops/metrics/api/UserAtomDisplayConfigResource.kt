@@ -39,7 +39,6 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.GET
@@ -70,7 +69,7 @@ interface UserAtomDisplayConfigResource {
 
     @ApiOperation("删除项目下需要展示的插件配置")
     @Path("/delete")
-    @DELETE
+    @POST
     fun deleteAtomDisplayConfig(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
@@ -79,8 +78,7 @@ interface UserAtomDisplayConfigResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("要删除的插件配置插件Code列表", required = true)
-        @QueryParam("atomCodes")
-        atomCodes: List<String>
+        atomDisplayConfig: AtomDisplayConfigVO
     ): Result<Boolean>
 
     @ApiOperation("获取项目下需要展示的插件")
@@ -94,7 +92,7 @@ interface UserAtomDisplayConfigResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("keyword", required = false)
-        @QueryParam("atomCode")
+        @QueryParam("keyword")
         keyword: String?
     ): Result<AtomDisplayConfigVO>
 

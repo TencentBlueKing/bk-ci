@@ -67,9 +67,9 @@ class AtomDisplayConfigDao {
         projectId: String,
         userId: String,
         atomCodes: List<String>
-    ) {
+    ): Int {
         with(TAtomDisplayConfig.T_ATOM_DISPLAY_CONFIG) {
-            dslContext.deleteFrom(this)
+            return dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ATOM_CODE.`in`(atomCodes))
                 .execute()
@@ -113,6 +113,7 @@ class AtomDisplayConfigDao {
             val step = dslContext.select(ATOM_CODE, ATOM_NAME).from(this)
                 .where(conditions)
                 return step.groupBy(ATOM_CODE)
+                    .orderBy(TOTAL_EXECUTE_COUNT.desc())
                     .limit((page - 1) * pageSize, pageSize)
                     .fetchInto(AtomBaseInfoDO::class.java)
         }

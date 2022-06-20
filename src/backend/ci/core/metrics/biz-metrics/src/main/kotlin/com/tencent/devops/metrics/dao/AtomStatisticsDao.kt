@@ -74,14 +74,11 @@ class AtomStatisticsDao {
                 this.AVG_COST_TIME.`as`(BK_AVG_COST_TIME),
                 this.STATISTICS_TIME.`as`(BK_STATISTICS_TIME)
             ).from(this)
-            val conditionStep = if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+            if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                    .where(conditions)
-            } else {
-                step.where(conditions)
             }
-            return conditionStep.groupBy(ATOM_CODE, STATISTICS_TIME).fetch()
+            return step.where(conditions).groupBy(ATOM_CODE, STATISTICS_TIME).fetch()
         }
     }
 
@@ -149,15 +146,13 @@ class AtomStatisticsDao {
                 sum<Long>(SUCCESS_EXECUTE_COUNT).`as`(BK_SUCCESS_EXECUTE_COUNT_SUM),
                 sum<Long>(AVG_COST_TIME).`as`(BK_TOTAL_AVG_COST_TIME_SUM)
             ).from(this)
-            val conditionStep = if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+            if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                    .where(conditions)
-            } else {
-                step.where(conditions)
             }
-            return conditionStep
+            return step.where(conditions)
                 .groupBy(ATOM_CODE)
+                .orderBy(TOTAL_EXECUTE_COUNT.desc(), ATOM_CODE)
                 .offset((queryCondition.page - 1) * queryCondition.pageSize)
                 .limit(queryCondition.pageSize)
                 .fetch()
@@ -180,7 +175,6 @@ class AtomStatisticsDao {
                 .where(PROJECT_ID.eq(queryCondition.projectId))
                 .and(STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
                 .groupBy(ATOM_CODE, ERROR_TYPE)
-                .orderBy(ATOM_CODE)
                 .fetch()
         }
     }
@@ -196,14 +190,11 @@ class AtomStatisticsDao {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val conditions = getConditions(queryCondition, tProjectPipelineLabelInfo, atomCodes)
             val step = dslContext.selectCount().from(this)
-            val conditionStep = if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+            if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                    .where(conditions)
-            } else {
-                step.where(conditions)
             }
-            return conditionStep.fetchOne(0, Long::class.java) ?: 0L
+            return step.where(conditions).fetchOne(0, Long::class.java) ?: 0L
         }
     }
 }

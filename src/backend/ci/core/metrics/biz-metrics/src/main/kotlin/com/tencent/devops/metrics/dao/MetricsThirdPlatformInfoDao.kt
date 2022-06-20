@@ -68,6 +68,13 @@ class MetricsThirdPlatformInfoDao {
                 .set(MODIFIER, defaultValue(MODIFIER))
                 .set(UPDATE_TIME, thirdPlatformDate.updateTime)
                 .set(CREATE_TIME, thirdPlatformDate.createTime)
+                .onDuplicateKeyUpdate()
+                .set(REPO_CODECC_AVG_SCORE, thirdPlatformDate.repoCodeccAvgScore)
+                .set(RESOLVED_DEFECT_NUM, thirdPlatformDate.resolvedDefectNum)
+                .set(QUALITY_PIPELINE_EXECUTE_NUM, thirdPlatformDate.qualityPipelineExecuteNum)
+                .set(QUALITY_PIPELINE_INTERCEPTION_NUM, thirdPlatformDate.qualityPipelineInterceptionNum)
+                .set(TURBO_SAVE_TIME, thirdPlatformDate.turboSaveTime)
+                .set(UPDATE_TIME, thirdPlatformDate.updateTime)
                 .execute()
         }
     }
@@ -83,7 +90,6 @@ class MetricsThirdPlatformInfoDao {
                 .set(QUALITY_PIPELINE_EXECUTE_NUM, thirdPlatformDate.qualityPipelineExecuteNum)
                 .set(QUALITY_PIPELINE_INTERCEPTION_NUM, thirdPlatformDate.qualityPipelineInterceptionNum)
                 .set(TURBO_SAVE_TIME, thirdPlatformDate.turboSaveTime)
-                .set(STATISTICS_TIME, thirdPlatformDate.statisticsTime)
                 .set(UPDATE_TIME, thirdPlatformDate.updateTime)
                 .where(PROJECT_ID.eq(thirdPlatformDate.projectId).and(STATISTICS_TIME.eq(STATISTICS_TIME)))
                 .execute()
