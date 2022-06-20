@@ -30,19 +30,22 @@ package com.tencent.devops.common.sdk.github.request
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
-import com.tencent.devops.common.sdk.github.pojo.Repository
+import com.tencent.devops.common.sdk.github.pojo.RepositoryContent
 
-class GetRepositoryRquest(
+class GetRepositoryContentRequest(
     @JsonIgnore
     val owner: String,
     @JsonIgnore
-    val repo: String
-) : GithubRequest<Repository>() {
+    val repo: String,
+    @JsonIgnore
+    val path: String,
+    val ref: String
+) : GithubRequest<RepositoryContent>() {
     override fun getHttpMethod(): HttpMethod {
         return HttpMethod.GET
     }
 
     override fun getApiPath(): String {
-        return "/repos/$owner/$repo"
+        return "/repos/$owner/$repo/contents/$path"
     }
 }

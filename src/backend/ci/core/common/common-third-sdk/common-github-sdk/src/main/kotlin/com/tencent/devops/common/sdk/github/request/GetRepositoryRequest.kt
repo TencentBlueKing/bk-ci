@@ -25,48 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github
+package com.tencent.devops.common.sdk.github.request
 
-import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
-import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
-import org.junit.jupiter.api.Test
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.tencent.devops.common.sdk.enums.HttpMethod
+import com.tencent.devops.common.sdk.github.GithubRequest
+import com.tencent.devops.common.sdk.github.pojo.Repository
 
-class GithubRepositoryApiTest {
-    private val client = DefaultGithubClient(
-        serverUrl = "https://github.com/",
-        apiUrl = "https://api.github.com/"
-    )
-
-    private val token = "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"
-    private val repo = "bk-ci"
-    private val owner = "Florence-y"
-    private val defaultBranch = "master"
-
-    @Test
-    fun getRepositery() {
-        val request = GetRepositoryRequest(
-            repo = repo,
-            owner = owner
-        )
-        val response = client.execute(
-            oauthToken = token,
-            request = request
-        )
-        println(response)
+class GetRepositoryRequest(
+    @JsonIgnore
+    val owner: String,
+    @JsonIgnore
+    val repo: String
+) : GithubRequest<Repository>() {
+    override fun getHttpMethod(): HttpMethod {
+        return HttpMethod.GET
     }
 
-    @Test
-    fun getRepositeryContent() {
-        val request = GetRepositoryContentRequest(
-            repo = repo,
-            owner = owner,
-            ref = "master",
-            path = "README.md"
-        )
-        val response = client.execute(
-            oauthToken = token,
-            request = request
-        )
-        println(response)
+    override fun getApiPath(): String {
+        return "/repos/$owner/$repo"
     }
 }
