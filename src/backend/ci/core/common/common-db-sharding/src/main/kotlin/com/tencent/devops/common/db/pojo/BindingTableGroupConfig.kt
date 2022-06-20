@@ -24,25 +24,10 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.common.api.pojo
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("DB分片路由规则")
-data class ShardingRoutingRule(
-    @ApiModelProperty("集群名称")
-    val clusterName: String,
-    @ApiModelProperty("模块标识")
-    val moduleCode: SystemModuleEnum,
-    @ApiModelProperty("数据源名称")
-    val dataSourceName: String,
-    @ApiModelProperty("数据库表名称")
-    val tableName: String? = null,
-    @ApiModelProperty("规则类型")
-    val type: ShardingRuleTypeEnum,
-    @ApiModelProperty("路由规则名称")
-    val routingName: String,
-    @ApiModelProperty("路由规则值")
-    val routingRule: String
+package com.tencent.devops.common.db.pojo
+
+data class BindingTableGroupConfig(
+    val index: Int, // 序号
+    val rule: String // 绑定规则
 )
