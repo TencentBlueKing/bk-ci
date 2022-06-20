@@ -30,40 +30,26 @@ package com.tencent.devops.common.sdk.github.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class Repository (
-    // @ApiModelProperty("项目ID", name = "id")
     @JsonProperty("id")
     val gitProjectId: Long,
-    // @ApiModelProperty("项目名称", name = "name")
-    @JsonProperty("name")
     val name: String,
-    // @ApiModelProperty("页面地址", name = "html_url")
     @JsonProperty("html_url")
     val homepage: String?,
-    // @ApiModelProperty("HTTP链接", required = true, name = "http_url_to_repo")
     @JsonProperty("clone_url")
     val gitHttpUrl: String,
-    // @ApiModelProperty("HTTPS链接", name = "https_url_to_repo")
 //    @JsonProperty("clone_url")
 //    val gitHttpsUrl: String?,
-//    // @ApiModelProperty("gitSshUrl", name = "ssh_url_to_repo")
     @JsonProperty("ssh_url")
     val gitSshUrl: String?,
-    // @ApiModelProperty("带有名空间的项目名称", name = "name_with_namespace")
     @JsonProperty("full_name")
     val nameWithNamespace: String,
-    // @ApiModelProperty("带有名空间的项目路径", name = "path_with_namespace")
 //    @JsonProperty("full_name")
 //    val pathWithNamespace: String?,
-    // @ApiModelProperty("项目的默认分支", name = "default_branch")
     @JsonProperty("default_branch")
     val defaultBranch: String?,
-    // @ApiModelProperty("项目的描述信息", name = "description")
-    @JsonProperty("description")
     val description: String?,
-    // @ApiModelProperty("项目的头像信息", name = "avatar_url")
     @JsonProperty("avatar_url")
     val avatarUrl: String?,
-    // @ApiModelProperty("环境路由", name = "routerTag")
     @JsonProperty("routerTag")
     val routerTag: String?
 )
