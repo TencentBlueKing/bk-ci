@@ -131,4 +131,12 @@ class PathUtilsTest {
         assertEquals("""\.\*""", PathUtils.escapeRegex(".*"))
         assertEquals("""/\.\*\|\^/a/""", PathUtils.escapeRegex("/.*|^/a/"))
     }
+
+    @Test
+    fun testCommonPath() {
+        assertEquals("/", PathUtils.getCommonPath("/test1.txt", "/test1.txt"))
+        assertEquals("/a/", PathUtils.getCommonPath("/a/test.txt", "/a/b/test.txt"))
+        assertEquals("/", PathUtils.getCommonPath("test1.txt", "test2.txt"))
+        assertEquals("/test/", PathUtils.getCommonPath("/test/a", "/test/b"))
+    }
 }

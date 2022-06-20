@@ -51,7 +51,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGitForAppResource {
 
-    @ApiOperation("获取stream项目")
+    @ApiOperation("获取stream项目(只返回以开启ci的项目)")
     @GET
     @Path("/projectList")
     fun getGitCIProjectList(

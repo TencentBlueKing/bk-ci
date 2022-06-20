@@ -8,7 +8,6 @@ internal class TGitMrActionGitTest {
 
     private val action = TGitMrActionGit(mock(), mock(), mock(), mock(), mock())
 
-    @Test
     /**
      * 校验
      * 源有，目标无，变更有
@@ -16,7 +15,7 @@ internal class TGitMrActionGitTest {
      * 源有，目标有，变更有
      * 源有，目标有，变更无
      */
-    @org.junit.Test
+    @Test
     fun checkMrYamlPathList() {
         val sources = setOf("1", "2", "3", "4")
         val target = setOf("1", "4")
@@ -38,7 +37,7 @@ internal class TGitMrActionGitTest {
      * 源无，目标无，变更有
      * 源无，目标无，变更无
      */
-    @org.junit.Test
+    @Test
     fun checkMrYamlPathList2() {
         val sources = setOf("3")
         val target = setOf("1", "2")

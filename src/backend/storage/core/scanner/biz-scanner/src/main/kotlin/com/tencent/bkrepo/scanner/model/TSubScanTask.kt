@@ -48,6 +48,11 @@ import java.time.LocalDateTime
         background = true
     ),
     CompoundIndex(
+        name = "timeoutDateTime_idx",
+        def = "{'timeoutDateTime': 1}",
+        background = true
+    ),
+    CompoundIndex(
         name = "projectId_status_idx",
         def = "{'projectId': 1, 'status': 1}",
         background = true
@@ -65,6 +70,10 @@ class TSubScanTask(
     lastModifiedDate: LocalDateTime,
     lastModifiedBy: String,
     startDateTime: LocalDateTime? = null,
+    /**
+     * 执行超时时间点
+     */
+    val timeoutDateTime: LocalDateTime? = null,
 
     parentScanTaskId: String,
     planId: String?,

@@ -164,7 +164,7 @@
                 <div class="footer-copyright-detail">
                     <span class="copyright-content">Copyright &copy; 2012-2018 Tencent BlueKing. All Rights Reserved. 腾讯蓝鲸 版权所有</span>
                     <div class="language-toggle">
-                        简体中文 <span><i class="bk-icon icon-angle-down" /></span>
+                        简体中文 <span><i class="devops-icon icon-angle-down" /></span>
                         <div class="language-choose">
                             <a href="javascript:;">简体中文</a>
                         </div>

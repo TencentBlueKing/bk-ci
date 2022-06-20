@@ -50,31 +50,32 @@ import org.springframework.stereotype.Component
 @Component
 class ActuatorArtifactMetricsClient @Autowired constructor(
     @Qualifier(OkHttpConfiguration.OP_OKHTTP_CLIENT_NAME) private val httpClient: OkHttpClient,
-    opProperties: OpProperties
+    private val opProperties: OpProperties
 ) : ArtifactMetricsClient {
-    private val logger = LoggerFactory.getLogger(ActuatorArtifactMetricsClient::class.java)
-    private val adminUsername = opProperties.adminUsername
-    private val adminPassword = opProperties.adminPassword
-
     override fun uploadingCount(instanceInfo: InstanceInfo): Long {
         try {
             return count(instanceInfo, ARTIFACT_UPLOADING_COUNT)
         } catch (e: Exception) {
-            logger.error("get uploading count failed: $e")
+            logger.error("get uploading count failed", e)
         }
-        return -1L
+        return UNKNOWN
     }
 
     override fun downloadingCount(instanceInfo: InstanceInfo): Long {
         try {
             return count(instanceInfo, ARTIFACT_DOWNLOADING_COUNT)
         } catch (e: Exception) {
-            logger.error("get downloading count failed: $e")
+            logger.error("get downloading count failed", e)
         }
-        return -1L
+        return UNKNOWN
     }
 
     private fun count(instanceInfo: InstanceInfo, metricsName: String): Long {
+        if (!checkUsernameAndPassword()) {
+            logger.warn("get $metricsName failed, username or password is empty")
+            return UNKNOWN
+        }
+
         val req = buildRequest(instanceInfo, metricsName)
         httpClient.newCall(req).execute().use { res ->
             if (res.isSuccessful) {
@@ -86,12 +87,12 @@ class ActuatorArtifactMetricsClient @Autowired constructor(
             val resCode = res.code()
             val logMsg = "request metrics actuator $metricsName failed, code: $resCode, message: ${res.message()}"
             if (resCode == NOT_FOUND.value || resCode == UNAUTHORIZED.value || resCode == FORBIDDEN.value) {
-                logger.info(logMsg)
+                logger.warn(logMsg)
             } else {
                 logger.error(logMsg)
             }
 
-            return -1L
+            return UNKNOWN
         }
     }
 
@@ -106,14 +107,18 @@ class ActuatorArtifactMetricsClient @Autowired constructor(
 
         val reqBuilder = Request.Builder()
             .url(url)
-
-        require(adminUsername.isNotEmpty() && adminPassword.isNotEmpty())
-        reqBuilder.addHeader(AUTHORIZATION, BasicAuthUtils.encode(adminUsername, adminPassword))
+            .addHeader(AUTHORIZATION, BasicAuthUtils.encode(opProperties.adminUsername, opProperties.adminPassword))
 
         return reqBuilder.build()
     }
 
+    private fun checkUsernameAndPassword(): Boolean {
+        return opProperties.adminUsername.isNotEmpty() && opProperties.adminPassword.isNotEmpty()
+    }
+
     private companion object {
+        private val logger = LoggerFactory.getLogger(ActuatorArtifactMetricsClient::class.java)
+        private const val UNKNOWN = -1L
         private const val ACTUATOR_SCHEME = "http"
         private const val ACTUATOR_ENDPOINT_METRICS = "actuator/metrics"
     }

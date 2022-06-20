@@ -24,7 +24,6 @@
             return {
                 newModel: {},
                 list: [],
-                tmpRevision: '',
                 tips: this.$t('editPage.repoConflict')
             }
         },
@@ -33,24 +32,12 @@
                 'pipeline'
             ]),
             ...mapGetters('atom', [
-                'isTriggerContainer',
                 'getAllContainers',
                 'isCodePullAtom'
             ]),
             pipelineStages () {
                 const { getAllContainers } = this
                 return getAllContainers(this.pipeline.stages || []) || []
-            },
-            triggerContainer () {
-                let trigger = []
-                if (this.pipelineStages.length) {
-                    this.pipelineStages.forEach(stage => {
-                        if (this.isTriggerContainer(stage)) {
-                            trigger = stage
-                        }
-                    })
-                }
-                return trigger
             },
             srcTips () {
                 const srcItem = this.list.find(item => item.repositoryHashId === this.element.repositoryHashId)
@@ -92,10 +79,6 @@
             this.handleChooseCodelibType('repositoryType', this.element.repositoryType)
             if (this.element.specifyRevision) {
                 this.newModel.revision.hidden = false
-                if (this.element.revision && this.element.revision.startsWith('${') && this.element.revision.endsWith('}')) {
-                    this.tmpRevision = this.element.revision.substring(2)
-                    this.tmpRevision = this.tmpRevision.substring(0, (this.tmpRevision.length - 1))
-                }
             }
         },
         methods: {
@@ -123,15 +106,11 @@
             },
             handleUpdate (name, value) {
                 this.handleUpdateElement(name, value)
-                if (name === 'specifyRevision' && this.triggerContainer) {
-                    const params = this.triggerContainer.params
+                if (name === 'specifyRevision') {
                     if (value) {
                         this.newModel.revision.hidden = false
-                        this.handleNewRevision()
                     } else {
                         this.newModel.revision.hidden = true
-                        this.handleUpdateElement('revision', '')
-                        this.triggerContainer.params = params.filter(item => item.id !== this.tmpRevision)
                     }
                 }
                 if (name === 'repositoryType') {
@@ -147,28 +126,6 @@
                     this.newModel.repositoryName.hidden = false
                 }
                 this.handleUpdateElement(name, value)
-                if (name === 'repositoryHashId' && this.element.specifyRevision && this.triggerContainer) {
-                    this.triggerContainer.params = this.triggerContainer.params.filter(item => item.id !== this.tmpRevision)
-                    this.handleNewRevision()
-                }
-            },
-            getRevisionParam () {
-                const selectItem = this.list.find(item => item.repositoryHashId === this.element.repositoryHashId)
-                let name = (selectItem && selectItem.aliasName) || ''
-                name = name.replace(/\//g, '_')
-                return 'svn.revision_' + name
-            },
-            handleNewRevision () {
-                const paramId = this.getRevisionParam()
-                this.handleUpdateElement('revision', '${' + paramId + '}')
-                this.tmpRevision = paramId
-                this.triggerContainer.params.push({
-                    id: paramId,
-                    type: 'STRING',
-                    defaultValue: 'HEAD',
-                    desc: this.$t('editPage.svnVersionTips'),
-                    required: true
-                })
             },
             setSvnVersionState () {
                 if (this.isThirdParty) {

@@ -26,10 +26,12 @@ const actions = {
      * 校验流水线执行权限
      */
     requestHasPermission ({ commit }, { projectId, payload }) {
-        return vue.$ajax.get(`${experiencePrefix}/user/experiences/${projectId}/hasPermission`, { params: {
-            path: payload.path,
-            artifactoryType: payload.artifactoryType
-        } })
+        return vue.$ajax.get(`${experiencePrefix}/user/experiences/${projectId}/hasPermission`, {
+            params: {
+                path: payload.path,
+                artifactoryType: payload.artifactoryType
+            }
+        })
     },
     /**
      * 启动扫描

@@ -67,7 +67,7 @@ class TxNotifyUrlCmdImpl @Autowired constructor(
             "?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$processInstanceId"
 
     companion object {
-        private const val SHORT_URL_TTL = 24 * 3600 * 180
+        private const val SHORT_URL_TTL = 24 * 3600 * 30
         val logger = LoggerFactory.getLogger(TxNotifyUrlCmdImpl::class.java)
     }
 }

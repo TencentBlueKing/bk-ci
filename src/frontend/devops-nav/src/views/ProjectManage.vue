@@ -19,7 +19,7 @@
                         <bk-button
                             theme="primary"
                             icon="icon-plus"
-                            @click="hasCreatePermission ? togglePMDialog(true) : applyCreatePermission()"
+                            @click="togglePMDialog(true)"
                         >
                             {{ $t('addProject') }}
                         </bk-button>
@@ -75,15 +75,24 @@
                                             <span class="is-disabled">{{ props.row.projectName }}</span>
                                         </template>
                                         <template v-else>
-                                            <span
-                                                :class="['title-text', { 'is-disabled': !props.row.enabled }]"
-                                            >{{ props.row.projectName }}</span>
+                                            <a
+                                                href="javascript:void(0)"
+                                                :class="['bk-text-button', { 'is-disabled': !props.row.enabled }]"
+                                                :title="props.row.projectName"
+                                                @click.stop.prevent="goProject(props.row)"
+                                            >{{ props.row.projectName }}</a>
                                         </template>
                                     </p>
                                     <time class="time">{{ props.row.created_at }}</time>
                                 </div>
                             </div>
                         </template>
+                    </bk-table-column>
+                    <bk-table-column
+                        label="关联CC业务"
+                        prop="ccAppName"
+                        :formatter="(row, column, cellValue, index) => cellValue || '--'"
+                    >
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('projectDesc')"
@@ -95,7 +104,7 @@
                     />
                     <bk-table-column
                         :label="$t('projectOperation')"
-                        width="200"
+                        width="250"
                     >
                         <template slot-scope="props">
                             <!-- 状态为待审批 -->
@@ -112,6 +121,16 @@
                                     class="bk-text-button is-disabled"
                                     :title="$t('accessDeny.noOperateAccess')"
                                 >{{ $t('enableLabel') }}</a>
+                                <a
+                                    v-bk-tooltips="{ content: $t('waitforReview') }"
+                                    class="bk-text-button is-disabled"
+                                    :title="$t('accessDeny.noOperateAccess')"
+                                >{{ $t('userManage') }}</a>
+                                <a href="javascript:void(0)"
+                                    v-bk-tooltips="{ content: $t('waitforReview') }"
+                                    class="bk-text-button is-disabled"
+                                    :title="$t('accessDeny.noOperateAccess')"
+                                >{{ $t('serviceManage') }}</a>
                             </template>
                             <!-- 状态为已驳回 -->
                             <template v-else-if="props.row.approvalStatus === 3">
@@ -126,7 +145,18 @@
                                     class="bk-text-button is-disabled"
                                     :title="$t('accessDeny.noOperateAccess')"
                                 >{{ $t("enableLabel") }}</a>
-                                
+                                <a
+                                    v-bk-tooltips="{ content: $t('accessDeny.noOperateAccessTip') }"
+                                    href="javascript:void(0)"
+                                    class="bk-text-button is-disabled"
+                                    :title="$t('accessDeny.noOperateAccess')"
+                                >{{ $t('userManage') }}</a>
+                                <a
+                                    v-bk-tooltips="{ content: $t('waitforReview') }"
+                                    href="javascript:void(0)"
+                                    class="bk-text-button is-disabled"
+                                    :title="$t('accessDeny.noOperateAccess')"
+                                >{{ $t('serviceManage') }}</a>
                             </template>
 
                             <!-- 否则正常显示 -->
@@ -141,7 +171,16 @@
                                     class="bk-text-button"
                                     @click.stop.prevent="toggleProject(props.row)"
                                 >{{ props.row.enabled ? $t('disableLabel') : $t('enableLabel') }}</a>
-                                
+                                <a
+                                    v-if="props.row.enabled"
+                                    href="javascript:void(0)"
+                                    :class="['bk-text-button', { 'is-disabled': !props.row.enabled }]"
+                                    @click="goProject(props.row)"
+                                >{{ $t('userManage') }}</a>
+                                <a href="javascript:void(0)"
+                                    @click="goServiceManage(props.row)"
+                                    class="bk-text-button"
+                                >{{ $t('serviceManage') }}</a>
                             </template>
                         </template>
                     </bk-table-column>
@@ -266,14 +305,14 @@
         }
 
         @Watch('projectList', { deep: true })
-        watchProjects (val): void {
+        watchProjects (): void {
             this.initList()
             this.reloadCurPage()
         }
 
         created () {
             this.fetchAllProjects()
-            this.checkCreatePermission()
+            // this.checkCreatePermission()
         }
 
         async checkCreatePermission () {
@@ -360,25 +399,29 @@
             })
         }
 
-        // goProject ({ projectCode, enabled }): void {
-        //     if (enabled) {
-        //         window.open(`${PERM_URL_PREFIX}perm/my-project?project_code=${projectCode}`, '_blank')
-        //     }
-        // }
-
+        goProject ({ projectCode, enabled }): void {
+            if (enabled) {
+                window.open(`/console/perm/my-project?project_code=${projectCode}`, '_blank')
+            }
+        }
+        
         toApplyPermission () {
-            this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.project)
+            this.tencentPermission('/console/perm/apply-join-project')
         }
 
         applyCreatePermission () {
-            // this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.project)
             this.$showAskPermissionDialog({
                 noPermissionList: [{
                     actionId: this.$permissionActionMap.create,
                     resourceId: this.$permissionResourceMap.project,
                     instanceId: []
-                }]
+                }],
+                applyPermissionUrl: '/backend/api/perm/apply/subsystem/?client_id=project&service_code=project&role_creator=project'
             })
+        }
+
+        goServiceManage ({ projectCode }): void {
+            window.open(`/console/store/serviceManage/${projectCode}`, '_blank')
         }
 
         toggleProject (project: any): void {
@@ -404,10 +447,17 @@
                         return true
                     } catch (error) {
                         if (error.code === 403) {
-                          this.applyPermission(this.$permissionActionMap.edit, this.$permissionResourceMap.project, [{
-                            id: projectCode,
-                            type: this.$permissionResourceTypeMap.PROJECT
-                          }])
+                            this.$showAskPermissionDialog({
+                              noPermissionList: [{
+                                  actionId: this.$permissionActionMap.edit,
+                                  resourceId: this.$permissionResourceMap.project,
+                                  instanceId: [{
+                                    id: projectCode,
+                                    name: projectName
+                                  }],
+                                  applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=project&project_code=${projectCode}&service_code=project&role_manager=project`
+                              }]
+                            })
                         } else {
                             msg = error.message || ((enabled ? this.$t('disableLabel') : this.$t('enableLabel')) + projectName + this.$t('projectFail'))
                         }
@@ -509,7 +559,7 @@
                 } else {
                     const reader = new FileReader()
                     reader.readAsDataURL(file)
-                    reader.onload = evts => {
+                    reader.onload = () => {
                         this.selectedUrl = reader.result
                     }
                     this.selectedFile = e.target.files

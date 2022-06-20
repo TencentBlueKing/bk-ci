@@ -3,7 +3,7 @@
         <content-header>
             <div slot="left">
                 <router-link :to="{ name: 'experienceList' }">
-                    <i class="bk-icon icon-arrows-left"></i>
+                    <i class="devops-icon icon-arrows-left"></i>
                 </router-link>
                 <span> {{ $route.meta.title }} </span>
                 <span v-if="curReleaseDetail">
@@ -219,7 +219,7 @@
                             projectId: this.projectId,
                             experienceHashId: this.experienceHashId
                         })
-                        const url = type ? `${GW_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=` + escape(res.url) : res.url
+                        const url = type ? `${API_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=` + escape(res.url) : res.url
                         window.location.href = url
                         this.requestStatistics()
                     } catch (err) {
@@ -325,7 +325,7 @@
 
         .bk-page .page-item .page-button {
             height: 36px;
-            .bk-icon {
+            .devops-icon {
                 line-height: 2.5;
             }
         }

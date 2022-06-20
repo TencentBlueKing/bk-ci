@@ -320,6 +320,21 @@ class PipelineBuildDao {
         }
     }
 
+    fun getOneConcurrencyQueueBuild(
+        dslContext: DSLContext,
+        projectId: String,
+        concurrencyGroup: String
+    ): TPipelineBuildHistoryRecord? {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val select = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+                .and(STATUS.eq(BuildStatus.QUEUE.ordinal))
+                .orderBy(QUEUE_TIME.asc()).limit(1)
+            select.fetchAny()
+        }
+    }
+
     /**
      * 1：开始构建
      */

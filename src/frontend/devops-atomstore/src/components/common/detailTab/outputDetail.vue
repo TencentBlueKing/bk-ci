@@ -78,7 +78,6 @@
         font-size: 12px;
         .explain-info {
             font-weight: 100;
-            color: #a7a7a7;
         }
     }
     .yaml-title {

@@ -8,7 +8,7 @@
             <!-- overview start -->
             <!-- <p class="update-time">更新时间 :
                 <span>{{checkUpdateTime || '-'}}</span>
-                <i class="bk-icon icon-refresh" @click="init"></i>
+                <i class="devops-icon icon-refresh" @click="init"></i>
             </p> -->
 
             <!-- overview start -->
@@ -29,7 +29,7 @@
                                         <span class="item-active-text">{{ codeccOptions[item.tool_name_en].activeKey }}</span>
                                         <span class="item-label-change"
                                             v-if="codeccOptions[item.tool_name_en].hasChange">
-                                            <i class="bk-icon change-direction"
+                                            <i class="devops-icon change-direction"
                                                 :class="[ item[codeccOptions[item.tool_name_en].activeVal] > 0 ? 'icon-angle-up' : 'icon-angle-down']"></i>
                                         </span>
                                     </div>
@@ -77,7 +77,7 @@
                                 <label>{{ codeccOptions[tool.tool_name_en].activeKey }}</label>
                                 <span class="legend-data">{{ tool[codeccOptions[tool.tool_name_en].activeVal] }}</span>
                                 <i v-if="![&quot;KLOCWORK&quot;, &quot;COVERITY&quot;].includes(tool.tool_name_cn)"
-                                    :class="{ &quot;bk-icon&quot;: true,
+                                    :class="{ &quot;devops-icon&quot;: true,
                                               &quot;icon-arrows-up&quot;: parseFloat(tool[codeccOptions[tool.tool_name_en].activeChange]) > 0,
                                               &quot;icon-arrows-down&quot;: parseFloat(tool[codeccOptions[tool.tool_name_en].activeChange]) < 0 }"></i>
                             </div>
@@ -86,7 +86,7 @@
                                 <label>{{ codeccOptions[tool.tool_name_en].normalKey }}</label>
                                 <span class="legend-data">{{ tool[codeccOptions[tool.tool_name_en].normalVal] }}</span>
                                 <i v-if="![&quot;KLOCWORK&quot;, &quot;COVERITY&quot;].includes(tool.tool_name_cn)"
-                                    :class="{ &quot;bk-icon&quot;: true,
+                                    :class="{ &quot;devops-icon&quot;: true,
                                               &quot;icon-arrows-up&quot;: parseFloat(tool[codeccOptions[tool.tool_name_en].normalChange]) > 0,
                                               &quot;icon-arrows-down&quot;: parseFloat(tool[codeccOptions[tool.tool_name_en].normalChange]) < 0 }"></i>
                             </div>
@@ -112,8 +112,8 @@
                             v-for="(chart, index) in codeccOptions[item.tool_name_en].charts" :key="index">
                             <chart class="chart-wrapper"
                                 v-if="chart.enable !== false"
-                                :options="processOptions(chart, item)"
-                                auto-resize>
+                                :option="processOptions(chart, item)"
+                                autoresize>
                             </chart>
                             <empty v-if="chart.enable === false" :is-code-check="true"
                                 :empty-title="chart.title">
@@ -189,13 +189,16 @@
 </template>
 
 <script>
-    import ECharts from 'vue-echarts/components/ECharts.vue'
-    import 'echarts/lib/chart/line'
-    import 'echarts/lib/chart/bar'
-    import 'echarts/lib/chart/pie'
-    import 'echarts/lib/component/tooltip'
-    import 'echarts/lib/component/title'
-    import 'echarts/lib/component/legend'
+    import { use } from 'echarts/core'
+    import VChart from 'vue-echarts'
+    import { CanvasRenderer } from 'echarts/renderers'
+    import { LineChart, BarChart, PieChart } from 'echarts/charts'
+    import {
+        GridComponent,
+        TooltipComponent,
+        TitleComponent,
+        LegendComponent
+    } from 'echarts/components'
     import empty from '@/components/common/empty'
     import emptyTips from '@/components/devops/emptyTips'
     import {
@@ -207,9 +210,20 @@
     import codeccOptions from '@/utils/codecc-options'
     import { mapGetters, mapState } from 'vuex'
 
+    use([
+        CanvasRenderer,
+        LineChart,
+        BarChart,
+        PieChart,
+        GridComponent,
+        TitleComponent,
+        TooltipComponent,
+        LegendComponent
+    ])
+
     export default {
         components: {
-            chart: ECharts,
+            chart: VChart,
             empty,
             emptyTips
         },
@@ -300,7 +314,7 @@
                 return this.$route.params.buildNo
             },
             ...mapGetters({
-                'curPipeline': 'pipelines/getCurPipeline'
+                curPipeline: 'pipelines/getCurPipeline'
             }),
             ...mapState([
                 'fetchError'
@@ -423,7 +437,7 @@
 
                     options = parse(stringify(pieOption))
 
-                    opts.map(item => {
+                    opts.forEach(item => {
                         legendList.push({
                             name: item.text,
                             icon: 'circle'
@@ -474,7 +488,7 @@
 
                     if (opts instanceof Array) {
                         if (opts.length) {
-                            opts.map(item => {
+                            opts.forEach(item => {
                                 xAxisList.push(item.text)
                                 seriesList.push(data[item.key])
                             })
@@ -484,7 +498,7 @@
 
                         if (list) {
                             if (list.length) {
-                                list.map(item => {
+                                list.forEach(item => {
                                     const tempArr = []
                                     xAxisList.push(item[settings.xKey])
                                     if (settings.level) {
@@ -528,7 +542,7 @@
 
                         if (list) {
                             if (list.length) {
-                                list.map(item => {
+                                list.forEach(item => {
                                     xAxisList.push(item[settings.xKey])
                                     seriesList.push(item[settings.yKey])
                                 })
@@ -581,7 +595,7 @@
                     // }
 
                     const newSeriesList = []
-                    settings.level.map((item, index) => {
+                    settings.level.forEach((item, index) => {
                         const temp = {
                             name: item.text,
                             type: 'bar',
@@ -595,14 +609,14 @@
                             },
                             barMaxWidth: 50
                         }
-                        data[opts].map(opt => {
+                        data[opts].forEach(opt => {
                             temp.data.push(opt[item.key])
                         })
                         newSeriesList.push(temp)
                     })
 
                     options.series.splice(0, options.series.length)
-                    newSeriesList.map(series => {
+                    newSeriesList.forEach(series => {
                         options.series.push(series)
                     })
                 } else {
@@ -628,7 +642,7 @@
                 const legendList = []
                 const seriesList = []
 
-                codeccOptions[data.tool_name_en].normalLegend.map(item => {
+                codeccOptions[data.tool_name_en].normalLegend.forEach(item => {
                     legendList.push({
                         name: item.key,
                         icon: 'circle'
@@ -658,11 +672,11 @@
                 this.$toggleProjectMenu(true)
             },
             goToApplyPerm () {
-                const url = `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_manager=pipeline:${this.pipelineId}`
+                const url = `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_manager=pipeline:${this.pipelineId}`
                 window.open(url, '_blank')
             },
             toLinkCodecc (url) {
-                // const url = `${WEB_URL_PIRFIX}/codecc/${this.projectId}/procontrol/buglist?proj_id=${this.curTaskId}&toolName=COVERITY&projectId=${this.projectId}&buildId=${this.buildNo}`
+                // const url = `${WEB_URL_PREFIX}/codecc/${this.projectId}/procontrol/buglist?proj_id=${this.curTaskId}&toolName=COVERITY&projectId=${this.projectId}&buildId=${this.buildNo}`
                 window.open(url, '_blank')
             }
         },
@@ -836,7 +850,7 @@
             // .card-title {
             //     margin-bottom: 4px;
             //     font-size: 18px;
-            //     color: $fontLigtherColor;
+            //     color: $fontLighterColor;
             // }
             // .code-check-detail {
             //     display: flex;

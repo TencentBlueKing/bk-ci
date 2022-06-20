@@ -43,10 +43,11 @@ import java.time.LocalDateTime
 data class TWebHook(
     var id: String? = null,
     var url: String,
-    var token: String? = null,
+    var headers: Map<String, String>? = null,
     var triggers: List<EventType>,
     var associationType: AssociationType,
     var associationId: String,
+    var resourceKeyPattern: String? = null,
     var createdBy: String,
     var createdDate: LocalDateTime,
     var lastModifiedBy: String,

@@ -38,5 +38,5 @@ dependencies {
     api(project(":common:common-artifact:artifact-service"))
 
     testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo")
-    testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin")
 }

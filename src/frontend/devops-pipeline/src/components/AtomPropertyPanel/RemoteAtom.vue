@@ -84,7 +84,6 @@
                 }, '*')
             },
             receiveMsgFromIframe (e) {
-                // if (location.href.indexOf(e.origin) === 0) return
                 if (!e.data) return
                 if (e.data.atomValue) {
                     this.setPipelineEditing(true)
