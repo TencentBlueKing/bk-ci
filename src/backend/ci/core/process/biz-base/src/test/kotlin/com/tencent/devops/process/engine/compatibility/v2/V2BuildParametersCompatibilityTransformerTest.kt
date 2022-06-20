@@ -38,11 +38,11 @@ import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
 import com.tencent.devops.process.utils.PipelineVarUtil
-import org.junit.Assert
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class V2BuildParametersCompatibilityTransformerTest {
 
@@ -55,7 +55,7 @@ class V2BuildParametersCompatibilityTransformerTest {
     private val targetMinorValue = "2"
     private val targetFixValue = "3"
 
-    @Before
+    @BeforeEach
     fun setUp() {
         whenever(pswParameterUtils.decrypt("default")).thenReturn("fail")
         whenever(pswParameterUtils.decrypt("fake")).thenReturn("success")
@@ -200,12 +200,12 @@ class V2BuildParametersCompatibilityTransformerTest {
             map[it.key] = it
             println("${it.key}=$it")
         }
-        Assert.assertNull(map["illegalStartParam"]) // 非启动参数被过滤
+        Assertions.assertNull(map["illegalStartParam"]) // 非启动参数被过滤
         assertNotNull(map[PipelineVarUtil.oldVarToNewVar("repoName")]) // 旧参数被转换为新参数
-        Assert.assertNull(map["repoName"]) // 旧参数被转换为新参数，如上
+        Assertions.assertNull(map["repoName"]) // 旧参数被转换为新参数，如上
         assertNotNull(map[PIPELINE_WEBHOOK_BRANCH]) // 新参数仍然存在，并且值变为传入的值替换默认值
         assertEquals("master", map[PIPELINE_WEBHOOK_BRANCH]!!.value) // 并且值变为传入的值替换默认值
-        Assert.assertNull(map["hookBranch"]) // 旧参数被转换为新参数，如上
+        Assertions.assertNull(map["hookBranch"]) // 旧参数被转换为新参数，如上
         assertEquals("success", map["password"]!!.value) // 合法的启动参数保留下来了，并且被解密
     }
 }

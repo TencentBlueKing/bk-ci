@@ -2,10 +2,10 @@ package com.tencent.devops.common.sdk.tapd
 
 import com.tencent.devops.common.sdk.tapd.request.ShardIdRequest
 import com.tencent.devops.common.sdk.tapd.request.StatusMapRequest
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 
-@Ignore
+@Disabled
 class TapdApiTest {
 
     val client = DefaultTapdClient(
