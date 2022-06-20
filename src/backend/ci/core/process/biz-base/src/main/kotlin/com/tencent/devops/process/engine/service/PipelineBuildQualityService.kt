@@ -105,7 +105,7 @@ class PipelineBuildQualityService(
         elementId: String,
         action: ManualReviewAction,
         channelCode: ChannelCode,
-        ruleIds: List<String>
+        ruleIds: List<String>?
     ) {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
