@@ -34,6 +34,7 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -59,12 +60,16 @@ interface ServiceUserBlackListResource {
         remark: String?
     ): Result<Boolean>
 
+    @GET
+    @Path("/")
+    fun blackList(): Result<Set<String>>
+
     @DELETE
     @Path("/")
     @ApiOperation("移出黑名单用户")
     fun removeBlackListUser(
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @QueryParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待移出用户Id")
-        userId: String,
+        removeUserId: String
     ): Result<Boolean>
 }

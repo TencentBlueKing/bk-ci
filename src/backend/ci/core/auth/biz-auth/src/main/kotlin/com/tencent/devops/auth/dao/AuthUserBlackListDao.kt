@@ -30,6 +30,7 @@ package com.tencent.devops.auth.dao
 import com.tencent.devops.model.auth.tables.TAuthUserBlacklist
 import com.tencent.devops.model.auth.tables.records.TAuthUserBlacklistRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 
@@ -46,10 +47,12 @@ class AuthUserBlackListDao {
                 this,
                 USER_ID,
                 REMARK,
+                STATUS,
                 CREATE_TIME
             ).values(
                 userId,
                 remark,
+                true,
                 LocalDateTime.now()
             ).execute()
         }
@@ -60,7 +63,15 @@ class AuthUserBlackListDao {
         userId: String
     ): TAuthUserBlacklistRecord? {
         with(TAuthUserBlacklist.T_AUTH_USER_BLACKLIST) {
-            return dslContext.selectFrom(this).where(USER_ID.eq(userId)).fetchAny()
+            return dslContext.selectFrom(this).where(USER_ID.eq(userId).and(STATUS.eq(true))).fetchAny()
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext
+    ): Result<TAuthUserBlacklistRecord>? {
+        with(TAuthUserBlacklist.T_AUTH_USER_BLACKLIST) {
+            return dslContext.selectFrom(this).where(STATUS.eq(true)).fetch()
         }
     }
 
@@ -69,7 +80,7 @@ class AuthUserBlackListDao {
         userId: String
     ): Int {
         with(TAuthUserBlacklist.T_AUTH_USER_BLACKLIST) {
-            return dslContext.delete(this).where(USER_ID.eq(userId)).execute()
+            return dslContext.update(this).set(STATUS, false).where(USER_ID.eq(userId).and(STATUS.eq(true))).execute()
         }
     }
 }
