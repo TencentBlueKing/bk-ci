@@ -39,6 +39,12 @@ class DeltaProperties(
      * patch 超时时间
      * */
     var patchTimeout: Duration = Duration.ofMinutes(30),
-    var projectId: String? = null,
-    var repoName: String? = null
-)
+    var projectId: String = "",
+    var repoName: String = "",
+    var whiteList: List<String> = listOf(ALL),
+    var speedTestExpired: Duration = Duration.ofMinutes(10)
+) {
+    companion object {
+        const val ALL = "all"
+    }
+}

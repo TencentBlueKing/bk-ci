@@ -112,4 +112,8 @@ class StreamDeleteAction(
     override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) {
         gitAction.registerCheckRepoTriggerCredentials(repoHook)
     }
+
+    override fun updateLastBranch(pipelineId: String, branch: String) {
+        gitAction.updateLastBranch(pipelineId, branch)
+    }
 }

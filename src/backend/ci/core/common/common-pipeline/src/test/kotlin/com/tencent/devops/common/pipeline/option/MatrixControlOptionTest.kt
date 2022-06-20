@@ -3,8 +3,8 @@ package com.tencent.devops.common.pipeline.option
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import java.util.Random
 
 @Suppress("ALL")
@@ -73,7 +73,7 @@ internal class MatrixControlOptionTest {
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(
+        Assertions.assertEquals(
             contextCase.size, 21
         )
     }
@@ -89,7 +89,7 @@ internal class MatrixControlOptionTest {
         val timeBEnd = System.currentTimeMillis()
         println("loopCartesianProduct cost:${timeAEnd - timeAStart}ms")
         println("recursiveCartesianProduct cost:${timeBEnd - timeBStart}ms")
-        Assert.assertEquals(JsonUtil.toJson(a), JsonUtil.toJson(b))
+        Assertions.assertEquals(JsonUtil.toJson(a), JsonUtil.toJson(b))
     }
 
     @Test
@@ -157,7 +157,7 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(
+        Assertions.assertEquals(
             contextCase, JsonUtil.to(
                 "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\"," +
                     "\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"," +
@@ -252,7 +252,7 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(
+        Assertions.assertEquals(
             contextCase.size, 21
         )
     }
@@ -301,7 +301,7 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(
+        Assertions.assertEquals(
             contextCase.size, 7
         )
     }
@@ -347,7 +347,7 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(
+        Assertions.assertEquals(
             contextCase.size, 2
         )
     }
@@ -398,7 +398,7 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(
+        Assertions.assertEquals(
             contextCase.size, 7
         )
     }
@@ -446,7 +446,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(
+        Assertions.assertEquals(
             contextCase.size, 7
         )
     }
@@ -497,7 +497,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(
+        Assertions.assertEquals(
             contextCase.size, 7
         )
     }
@@ -568,7 +568,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(
+        Assertions.assertEquals(
             contextCase.size, 7
         )
     }
@@ -613,7 +613,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 257)
+        Assertions.assertEquals(contextCase.size, 257)
     }
 
     @Test
@@ -660,7 +660,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 0)
+        Assertions.assertEquals(contextCase.size, 0)
     }
 
     @Test
@@ -701,7 +701,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase, JsonUtil.to("[{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"}]"))
+        Assertions.assertEquals(contextCase, JsonUtil.to("[{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"}]"))
     }
 
     @Test
@@ -741,7 +741,7 @@ os:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 2)
+        Assertions.assertEquals(contextCase.size, 2)
     }
 
     @Test
@@ -797,7 +797,7 @@ os:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 2)
+        Assertions.assertEquals(contextCase.size, 2)
     }
 
     @Test
@@ -849,6 +849,6 @@ os:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 1)
+        Assertions.assertEquals(contextCase.size, 1)
     }
 }

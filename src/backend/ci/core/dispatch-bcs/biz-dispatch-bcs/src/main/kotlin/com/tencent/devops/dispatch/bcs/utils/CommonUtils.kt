@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.bcs.utils
 
+import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 
 object CommonUtils {
@@ -35,7 +36,8 @@ object CommonUtils {
 
     private const val dockerHubUrl = ""
 
-    fun getOnlyName(userId: String) = "bcs-${userId}${System.currentTimeMillis()}"
+    fun getOnlyName(userId: String) = "bcs-${userId}${System.currentTimeMillis()}-" +
+        RandomStringUtils.randomAlphabetic(16)
 
     @Suppress("ALL")
     fun parseImage(imageNameInput: String): Triple<String, String, String> {

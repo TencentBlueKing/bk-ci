@@ -55,4 +55,19 @@ interface ExternalRepoResource {
         @QueryParam("state")
         state: String
     ): Response
+
+    @ApiOperation("tapd回调重定向url")
+    @GET
+    @Path("/tapd/callback")
+    fun tapdCallback(
+        @ApiParam(value = "code")
+        @QueryParam("code")
+        code: String,
+        @ApiParam(value = "state")
+        @QueryParam("state")
+        state: String,
+        @ApiParam(value = "resource")
+        @QueryParam("resource")
+        resource: String
+    ): Response
 }

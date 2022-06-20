@@ -3,7 +3,7 @@ package com.tencent.bkrepo.maven.util
 import com.google.common.io.ByteStreams
 import com.google.common.io.CharStreams
 import com.tencent.bkrepo.common.artifact.util.PackageKeys
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets

@@ -31,10 +31,10 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.utils.PipelineVarUtil
-import org.junit.Assert
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Test
 
 class V2BuildParametersCompatibilityTransformerTest {
 
@@ -79,15 +79,16 @@ class V2BuildParametersCompatibilityTransformerTest {
             PIPELINE_WEBHOOK_BRANCH to "master",
             "illegalStartParam" to "i will be delete after call it"
         )
-        val map = buildParametersCompatibilityTransformer.parseTriggerParam(
+        val startBuildParameter = buildParametersCompatibilityTransformer.parseTriggerParam(
             paramProperties = paramProperties, paramValues = paramValues
         )
-        assertEquals(2, map.size)
-        Assert.assertNull(map["illegalStartParam"]) // 非启动参数被过滤
-        assertNotNull(map[PipelineVarUtil.oldVarToNewVar("repoName")]) // 旧参数被转换为新参数
-        Assert.assertNull(map["repoName"]) // 旧参数被转换为新参数，如上
-        assertNotNull(map[PIPELINE_WEBHOOK_BRANCH]) // 新参数仍然存在，并且值变为传入的值替换默认值
-        assertEquals("master", map[PIPELINE_WEBHOOK_BRANCH]!!.value) // 并且值变为传入的值替换默认值
-        Assert.assertNull(map["hookBranch"]) // 旧参数被转换为新参数，如上
+        assertEquals(2, startBuildParameter.size)
+        Assertions.assertNull(startBuildParameter["illegalStartParam"]) // 非启动参数被过滤
+        assertNotNull(startBuildParameter[PipelineVarUtil.oldVarToNewVar("repoName")]) // 旧参数被转换为新参数
+        Assertions.assertNull(startBuildParameter["repoName"]) // 旧参数被转换为新参数，如上
+        assertNotNull(startBuildParameter[PIPELINE_WEBHOOK_BRANCH]) // 新参数仍然存在，并且值变为传入的值替换默认值
+        assertEquals("master", startBuildParameter[PIPELINE_WEBHOOK_BRANCH]!!.value) // 并且值变为传入的值替换默认值
+        Assertions.assertNull(startBuildParameter["hookBranch"]) // 旧参数被转换为新参数，如上
+        assertEquals("success", startBuildParameter["password"]!!.value) // 合法的启动参数保留下来了，并且被解密
     }
 }

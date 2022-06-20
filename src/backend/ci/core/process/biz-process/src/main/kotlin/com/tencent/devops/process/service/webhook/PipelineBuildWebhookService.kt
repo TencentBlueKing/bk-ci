@@ -68,7 +68,7 @@ import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
 import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
-import com.tencent.devops.process.engine.utils.RepositoryUtils
+import com.tencent.devops.repository.utils.RepositoryUtils
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.service.builds.PipelineBuildCommitService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService

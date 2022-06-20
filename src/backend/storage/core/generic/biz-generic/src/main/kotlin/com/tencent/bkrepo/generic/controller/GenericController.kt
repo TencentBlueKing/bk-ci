@@ -36,28 +36,34 @@ import com.tencent.bkrepo.auth.pojo.enums.ResourceType
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.common.artifact.api.ArtifactFile
 import com.tencent.bkrepo.common.artifact.api.ArtifactPathVariable
+import com.tencent.bkrepo.common.security.manager.PermissionManager
 import com.tencent.bkrepo.common.security.permission.Permission
 import com.tencent.bkrepo.common.service.util.ResponseBuilder
 import com.tencent.bkrepo.generic.artifact.GenericArtifactInfo
+import com.tencent.bkrepo.generic.artifact.GenericArtifactInfo.Companion.BATCH_MAPPING_URI
 import com.tencent.bkrepo.generic.artifact.GenericArtifactInfo.Companion.BLOCK_MAPPING_URI
 import com.tencent.bkrepo.generic.artifact.GenericArtifactInfo.Companion.GENERIC_MAPPING_URI
 import com.tencent.bkrepo.generic.constant.HEADER_UPLOAD_ID
+import com.tencent.bkrepo.generic.pojo.BatchDownloadPaths
 import com.tencent.bkrepo.generic.pojo.BlockInfo
 import com.tencent.bkrepo.generic.pojo.UploadTransactionInfo
 import com.tencent.bkrepo.generic.service.DownloadService
 import com.tencent.bkrepo.generic.service.UploadService
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestAttribute
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class GenericController(
     private val uploadService: UploadService,
-    private val downloadService: DownloadService
+    private val downloadService: DownloadService,
+    private val permissionManager: PermissionManager
 ) {
 
     @PutMapping(GENERIC_MAPPING_URI)
@@ -121,5 +127,22 @@ class GenericController(
         @ArtifactPathVariable artifactInfo: GenericArtifactInfo
     ): Response<List<BlockInfo>> {
         return ResponseBuilder.success(uploadService.listBlock(userId, uploadId, artifactInfo))
+    }
+
+    @GetMapping(BATCH_MAPPING_URI)
+    fun batchDownload(
+        @PathVariable projectId: String,
+        @PathVariable repoName: String,
+        @RequestBody batchDownloadPaths: BatchDownloadPaths
+    ) {
+        val artifacts = batchDownloadPaths.paths.map { GenericArtifactInfo(projectId, repoName, it) }
+            .distinctBy { it.getArtifactFullPath() }
+        permissionManager.checkNodePermission(
+            action = PermissionAction.READ,
+            projectId = projectId,
+            repoName = repoName,
+            path = *artifacts.map { it.getArtifactFullPath() }.toTypedArray()
+        )
+        downloadService.batchDownload(artifacts)
     }
 }

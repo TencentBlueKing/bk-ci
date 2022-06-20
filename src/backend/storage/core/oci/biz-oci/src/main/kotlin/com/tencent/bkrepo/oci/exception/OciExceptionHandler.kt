@@ -35,8 +35,11 @@ import com.tencent.bkrepo.common.api.constant.ANONYMOUS_USER
 import com.tencent.bkrepo.common.api.constant.HttpHeaders
 import com.tencent.bkrepo.common.api.constant.MediaTypes
 import com.tencent.bkrepo.common.api.constant.USER_KEY
+import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.bkrepo.common.api.util.JsonUtils
+import com.tencent.bkrepo.common.artifact.exception.ArtifactNotFoundException
 import com.tencent.bkrepo.common.security.exception.AuthenticationException
+import com.tencent.bkrepo.common.security.exception.PermissionException
 import com.tencent.bkrepo.common.service.util.HttpContextHolder
 import com.tencent.bkrepo.oci.artifact.auth.OciLoginAuthHandler
 import com.tencent.bkrepo.oci.config.OciProperties
@@ -45,6 +48,7 @@ import com.tencent.bkrepo.oci.constant.UNAUTHORIZED_DESCRIPTION
 import com.tencent.bkrepo.oci.constant.UNAUTHORIZED_MESSAGE
 import com.tencent.bkrepo.oci.pojo.response.OciErrorResponse
 import com.tencent.bkrepo.oci.pojo.response.OciResponse
+import javax.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
@@ -52,14 +56,14 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
-import javax.servlet.http.HttpServletResponse
 
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
 @RestControllerAdvice
 class OciExceptionHandler(
     private val ociProperties: OciProperties
 ) {
-    /**
+
+/**
      * 单独处理认证失败异常，需要添加WWW_AUTHENTICATE响应头触发浏览器登录
      */
     @ExceptionHandler(AuthenticationException::class)
@@ -70,7 +74,7 @@ class OciExceptionHandler(
         response.addHeader(
             HttpHeaders.WWW_AUTHENTICATE,
             OciLoginAuthHandler.AUTH_CHALLENGE_SERVICE_SCOPE.format(
-                ociProperties.domain,
+                ociProperties.authUrl,
                 OciLoginAuthHandler.REGISTRY_SERVICE,
                 OciLoginAuthHandler.SCOPE_STR
             )
@@ -100,10 +104,38 @@ class OciExceptionHandler(
         ociResponse(responseObject, exception)
     }
 
+    @ExceptionHandler(OciForbiddenRequestException::class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    fun handleForbiddenException(exception: OciForbiddenRequestException) {
+        val responseObject = OciErrorResponse(exception.message, exception.code, exception.detail)
+        ociResponse(responseObject, exception)
+    }
+
     @ExceptionHandler(OciFileAlreadyExistsException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     fun handleException(exception: OciFileAlreadyExistsException) {
         val responseObject = OciErrorResponse(exception.message, exception.code, exception.detail)
+        ociResponse(responseObject, exception)
+    }
+
+    @ExceptionHandler(ArtifactNotFoundException::class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    fun handleException(exception: ArtifactNotFoundException) {
+        val responseObject = OciErrorResponse(exception.message, exception.messageCode, null)
+        ociResponse(responseObject, exception)
+    }
+
+    @ExceptionHandler(ErrorCodeException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    fun handleException(exception: ErrorCodeException) {
+        val responseObject = OciErrorResponse(exception.message, exception.messageCode, null)
+        ociResponse(responseObject, exception)
+    }
+
+    @ExceptionHandler(PermissionException::class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    fun handleException(exception: PermissionException) {
+        val responseObject = OciErrorResponse(exception.message, exception.messageCode, null)
         ociResponse(responseObject, exception)
     }
 

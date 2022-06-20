@@ -91,6 +91,11 @@ class QueueInterceptor @Autowired constructor(
                     runningCount = buildSummaryRecord.runningCount,
                     queueCount = buildSummaryRecord.queueCount
                 )
+            runLockType == PipelineRunLockType.GROUP_LOCK ->
+                checkRunLockWithGroupType(
+                    task = task,
+                    latestStartUser = buildSummaryRecord.latestStartUser
+                )
             setting.maxConRunningQueueSize <= (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) ->
                 Response(
                     status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
@@ -114,28 +119,10 @@ class QueueInterceptor @Autowired constructor(
                 status = PIPELINE_SETTING_NOT_EXISTS.toInt(),
                 message = "流水线设置不存在/Setting not found"
             )
-        val concurrencyGroup = setting.concurrencyGroup
         return when {
             // 如果最后一次构建被标记为refresh,则即便是串行也放行。因refresh的buildId都会被取消掉
             latestBuildId == null || pipelineRedisService.getBuildRestartValue(latestBuildId) != null ->
                 Response(data = BuildStatus.RUNNING)
-            !concurrencyGroup.isNullOrBlank() && setting.concurrencyCancelInProgress -> {
-                // cancel-in-progress: true时， 若有相同 group 的流水线正在执行，则取消正在执行的流水线，新来的触发开始执行
-                pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
-                    projectId = projectId,
-                    concurrencyGroup = concurrencyGroup,
-                    status = listOf(BuildStatus.RUNNING, BuildStatus.QUEUE)
-                ).forEach { (pipelineId, buildId) ->
-                    cancelBuildPipeline(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        userId = latestStartUser ?: task.pipelineInfo.creator,
-                        groupName = concurrencyGroup
-                    )
-                }
-                Response(data = BuildStatus.RUNNING)
-            }
             // 设置了最大排队数量限制为0，但此时没有构建正在执行
             setting.maxQueueSize == 0 && runningCount == 0 && queueCount == 0 ->
                 Response(data = BuildStatus.RUNNING)
@@ -178,6 +165,47 @@ class QueueInterceptor @Autowired constructor(
         }
     }
 
+    private fun checkRunLockWithGroupType(
+        task: InterceptData,
+        latestStartUser: String?
+    ): Response<BuildStatus> {
+        val projectId = task.pipelineInfo.projectId
+        val setting = task.setting
+            ?: return Response(
+                status = PIPELINE_SETTING_NOT_EXISTS.toInt(),
+                message = "流水线设置不存在/Setting not found"
+            )
+        val concurrencyGroup = setting.concurrencyGroup
+        return when {
+            !concurrencyGroup.isNullOrBlank() -> {
+                val status = if (setting.concurrencyCancelInProgress) {
+                    // cancel-in-progress: true时， 若有相同 group 的流水线正在执行，则取消正在执行的流水线，新来的触发开始执行
+                    listOf(BuildStatus.RUNNING, BuildStatus.QUEUE)
+                } else {
+                    // cancel-in-progress: false时， 若有相同 group 的流水线正在执行，则取消正在排队的任务，等待执行中的任务完成后再启动
+                    listOf(BuildStatus.QUEUE)
+                }
+                pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+                    projectId = projectId,
+                    concurrencyGroup = concurrencyGroup,
+                    status = status
+                ).forEach { (pipelineId, buildId) ->
+                    cancelBuildPipeline(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        userId = latestStartUser ?: task.pipelineInfo.creator,
+                        groupName = concurrencyGroup
+                    )
+                }
+                Response(data = BuildStatus.RUNNING)
+            }
+            // 满足条件
+            else ->
+                Response(data = BuildStatus.RUNNING)
+        }
+    }
+
     private fun cancelBuildPipeline(
         projectId: String,
         pipelineId: String,
@@ -204,7 +232,7 @@ class QueueInterceptor @Autowired constructor(
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "$pipelineId] because concurrency cancel in progress with group($groupName)" +
-                            ", cancel all queue build",
+                        ", cancel all queue build",
                     tag = "QueueInterceptor",
                     jobId = "",
                     executeCount = 1
