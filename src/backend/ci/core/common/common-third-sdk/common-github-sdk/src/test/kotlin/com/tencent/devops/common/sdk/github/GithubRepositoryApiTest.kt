@@ -30,6 +30,7 @@ package com.tencent.devops.common.sdk.github
 import com.tencent.devops.common.sdk.github.request.CreateOrUpdateFileContentsRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
+import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
 import org.junit.jupiter.api.Test
@@ -123,6 +124,16 @@ class GithubRepositoryApiTest {
             repo = "pai"
         )
 
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
+
+    @Test
+    fun listOrganizationsForTheAuthenticatedUser() {
+        val request = ListOrganizationsRequest()
         val response = client.execute(
             oauthToken = token,
             request = request
