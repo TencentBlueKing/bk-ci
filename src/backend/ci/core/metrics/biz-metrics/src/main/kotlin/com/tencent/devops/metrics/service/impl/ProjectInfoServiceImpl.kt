@@ -131,7 +131,6 @@ class ProjectInfoServiceImpl @Autowired constructor(
     }
 
     override fun syncPipelineLabelData(userId: String): Boolean {
-
         Executors.newFixedThreadPool(1).submit {
             logger.info("begin syncPipelineLabelData")
         var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
