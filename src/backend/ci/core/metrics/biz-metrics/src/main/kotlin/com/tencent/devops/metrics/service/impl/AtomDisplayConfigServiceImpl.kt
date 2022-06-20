@@ -31,12 +31,13 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.metrics.dao.AtomDisplayConfigDao
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
+import com.tencent.devops.metrics.service.AtomDisplayConfigManageService
 import com.tencent.devops.metrics.pojo.dto.AtomDisplayConfigDTO
 import com.tencent.devops.metrics.pojo.po.AtomDisplayConfigPO
 import com.tencent.devops.metrics.pojo.vo.AtomDisplayConfigVO
-import com.tencent.devops.metrics.service.AtomDisplayConfigManageService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -70,12 +71,13 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun deleteAtomDisplayConfig(projectId: String, userId: String, atomCodes: List<AtomBaseInfoDO>): Boolean {
+    override fun deleteAtomDisplayConfig(projectId: String, userId: String, atomCodes: List<String>): Boolean {
+        logger.info("deleteAtomDisplayConfig atomCodes: $atomCodes")
         return atomDisplayConfigDao.batchDeleteAtomDisplayConfig(
-            dslContext = dslContext,
-            projectId = projectId,
-            userId = userId,
-            atomCodes = atomCodes.map { it.atomCode }
+            dslContext,
+            projectId,
+            userId,
+            atomCodes
         ) > 0
     }
 
@@ -96,7 +98,6 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Page<AtomBaseInfoDO> {
-        // 获取已配置的插件进行排除
         val atomCodes = atomDisplayConfigDao.getAtomDisplayConfig(
             dslContext,
             projectId,
@@ -120,5 +121,9 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
                 pageSize = pageSize ?: 10
             )
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AtomDisplayConfigServiceImpl::class.java)
     }
 }
