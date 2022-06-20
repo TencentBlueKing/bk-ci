@@ -31,7 +31,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.pojo.Committer
-import com.tencent.devops.common.sdk.github.pojo.RepositoryContent
 import com.tencent.devops.common.sdk.github.response.CreateOrUpdateFileContentsResponse
 
 class CreateOrUpdateFileContentsRequest(
