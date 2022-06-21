@@ -140,7 +140,10 @@ class ProjectInfoServiceImpl @Autowired constructor(
 
                 do {
                     val projectIds = client.get(ServiceProjectResource::class)
-                        .getProjectListById(projectMinId, projectMinId + pipelineLabelSyncsNumber).data?.map { it.englishName }
+                        .getProjectListById(
+                            minId = projectMinId,
+                            maxId = projectMinId + pipelineLabelSyncsNumber
+                        ).data?.map { it.englishName }
                     val labelInfosResult = client.get(ServicePipelineResource::class)
                         .getPipelineLabelInfos(userId, projectIds ?: emptyList()).data
                     val pipelineLabelRelateInfos = labelInfosResult?.map {
