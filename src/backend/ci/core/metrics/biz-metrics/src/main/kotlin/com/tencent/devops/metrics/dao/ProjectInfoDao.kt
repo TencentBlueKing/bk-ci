@@ -70,12 +70,18 @@ class ProjectInfoDao {
 
     fun queryProjectAtomCount(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        keyWord: String? = null
     ): Long {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            if (!keyWord.isNullOrBlank()) {
+                conditions.add(ATOM_NAME.like("%$keyWord%"))
+            }
             return dslContext.select(ATOM_CODE)
                 .from(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(conditions)
                 .groupBy(ATOM_CODE)
                 .execute().toLong()
         }
