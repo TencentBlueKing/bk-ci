@@ -30,14 +30,15 @@ package com.tencent.devops.quality.config
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
 import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
+import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import javax.annotation.Resource
 
 @Component
-class QualityDailyDispatch @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate
+class QualityDailyDispatch constructor(
+    @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME) private val rabbitTemplate: RabbitTemplate
 ): EventDispatcher<QualityReportEvent>{
 
     companion object {

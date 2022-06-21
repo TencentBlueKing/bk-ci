@@ -270,7 +270,7 @@ object MQ {
     const val EXCHANGE_PIPELINE_BUILD_QUALITY_REVIEW_FANOUT = "e.quality.pipeline.build.review.fanout"
 
     // 质量红线每日数据上报队列
-    const val EXCHANGE_QUALITY_DAILY_FANOUT = "e.quality.daily.exchange.fanout"
+    const val EXCHANGE_QUALITY_DAILY_FANOUT = "e.metrics.quality.daily.exchange.fanout"
     const val ROUTE_QUALITY_DAILY_FANOUT = "r.quality.daily.exchange.fanout"
-    const val QUEUE_QUALITY_DAILY_EVENT = "q.quality.daily.exchange.queue"
+    const val QUEUE_QUALITY_DAILY_EVENT = "q.metrics.quality.daily.exchange.queue"
 }
