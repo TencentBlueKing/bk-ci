@@ -17,7 +17,9 @@
                     <div class="bk-form-item is-required">
                         <label class="bk-label">{{ $t('codelib.codelibUrl') }}:</label>
                         <div class="bk-form-content">
-                            <bk-select v-model="codelibUrl"
+                            <bk-select
+                                v-if="isGit"
+                                v-model="codelibUrl"
                                 searchable
                                 :clearable="false"
                                 v-validate="'required'"
@@ -25,6 +27,21 @@
                                 class="codelib-credential-selector"
                                 :placeholder="$t('codelib.codelibUrlPlaceholder')"
                                 :remote-method="handleSearchCodeLib"
+                            >
+                                <bk-option v-for="option in oAuth.project"
+                                    :key="option.httpUrl"
+                                    :id="option.httpUrl"
+                                    :name="option.httpUrl">
+                                </bk-option>
+                            </bk-select>
+                            <bk-select v-else
+                                v-model="codelibUrl"
+                                searchable
+                                :clearable="false"
+                                v-validate="'required'"
+                                name="name"
+                                class="codelib-credential-selector"
+                                :placeholder="$t('codelib.codelibUrlPlaceholder')"
                             >
                                 <bk-option v-for="option in oAuth.project"
                                     :key="option.httpUrl"
