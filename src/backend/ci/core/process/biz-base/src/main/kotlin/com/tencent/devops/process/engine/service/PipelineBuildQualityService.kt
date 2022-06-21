@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.service.utils.LogUtils
@@ -57,13 +58,21 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.common.quality.pojo.RuleCheckResult
+import com.tencent.devops.process.pojo.ReviewParam
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import javax.ws.rs.core.Response
 
-@Suppress("LongParameterList", "NestedBlockDepth", "LongMethod", "ComplexMethod", "ThrowsCount", "MagicNumber")
-
+@Suppress(
+    "LongParameterList",
+    "NestedBlockDepth",
+    "LongMethod",
+    "ComplexMethod",
+    "ThrowsCount",
+    "MagicNumber",
+    "ReturnCount"
+)
 @Service
 class PipelineBuildQualityService(
     private val client: Client,
@@ -109,7 +118,7 @@ class PipelineBuildQualityService(
             )
         }
 
-        val model = buildDetailService.getBuildModel(buildId)
+        val model = buildDetailService.getBuildModel(projectId, buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -119,23 +128,37 @@ class PipelineBuildQualityService(
 
         var find = false
         var taskType = ""
-        model.stages.forEachIndexed { index, s ->
+        model.stages.forEachIndexed nextStage@{ index, s ->
             if (index == 0) {
-                return@forEachIndexed
+                return@nextStage
             }
-            s.containers.forEach {
-                it.elements.forEach { element ->
+            s.containers.forEach nextContainer@{ c ->
+                c.elements.forEach nextElement@{ element ->
+                    if (element.id != elementId) return@nextElement
                     logger.info("${element.id}, ${element.name}")
-                    if ((element is QualityGateInElement ||
-                            element is QualityGateOutElement) && element.id == elementId) {
-                        find = true
-                        if (element is QualityGateInElement) {
+                    when (element) {
+                        is QualityGateInElement -> {
+                            find = true
                             taskType = element.interceptTask!!
                         }
-                        if (element is QualityGateOutElement) {
+                        is QualityGateOutElement -> {
+                            find = true
                             taskType = element.interceptTask!!
                         }
-                        return@forEachIndexed
+                    }
+                    return@nextStage
+                }
+                c.fetchGroupContainers()?.forEach {
+                    it.elements.forEach nextElement@{ element ->
+                        if (element.id != elementId || element !is MatrixStatusElement) return@nextElement
+                        logger.info("${element.id}, ${element.name}")
+                        if (element.originClassType == QualityGateInElement.classType ||
+                            element.originClassType == QualityGateOutElement.classType
+                        ) {
+                            find = true
+                            taskType = element.interceptTask!!
+                        }
+                        return@nextStage
                     }
                 }
             }
@@ -162,14 +185,23 @@ class PipelineBuildQualityService(
         }
 
         logger.info("[$buildId]|buildManualReview|taskId=$elementId|userId=$userId|action=$action")
-        pipelineRuntimeService.manualDealBuildTask(buildId, elementId, userId, action)
+        pipelineRuntimeService.manualDealReview(
+            taskId = elementId,
+            userId = userId,
+            params = ReviewParam(
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                status = action, suggest = null, desc = null
+            )
+        )
     }
 
     fun addQualityGateReviewUsers(projectId: String, pipelineId: String, buildId: String, model: Model) {
+        // TODO 逻辑过于复杂，下一版优化
         model.stages.forEach { stage ->
             stage.containers.forEach { container ->
-                container.elements.forEach { element ->
-                    if (element is QualityGateInElement && element.status == BuildStatus.REVIEWING.name) {
+                container.elements.forEach nextElement@{ element ->
+                    if (element.status != BuildStatus.REVIEWING.name) return@nextElement
+                    if (element is QualityGateInElement) {
                         element.reviewUsers = getAuditUserList(
                             projectId = projectId,
                             pipelineId = pipelineId,
@@ -177,13 +209,38 @@ class PipelineBuildQualityService(
                             taskId = element.interceptTask ?: ""
                         )
                     }
-                    if (element is QualityGateOutElement && element.status == BuildStatus.REVIEWING.name) {
+                    if (element is QualityGateOutElement) {
                         element.reviewUsers = getAuditUserList(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
                             taskId = element.interceptTask ?: ""
                         )
+                    }
+                }
+                if (container.matrixGroupFlag == true) {
+                    container.fetchGroupContainers()?.forEach {
+                        it.elements.forEach nextElement@{ element ->
+                            if (element.status != BuildStatus.REVIEWING.name) return@nextElement
+                            if (element is MatrixStatusElement && element.originClassType ==
+                                QualityGateInElement.classType) {
+                                element.reviewUsers = getAuditUserList(
+                                    projectId = projectId,
+                                    pipelineId = pipelineId,
+                                    buildId = buildId,
+                                    taskId = element.interceptTask ?: ""
+                                ).toMutableList()
+                            }
+                            if (element is MatrixStatusElement && element.originClassType ==
+                                QualityGateOutElement.classType) {
+                                element.reviewUsers = getAuditUserList(
+                                    projectId = projectId,
+                                    pipelineId = pipelineId,
+                                    buildId = buildId,
+                                    taskId = element.interceptTask ?: ""
+                                ).toMutableList()
+                            }
+                        }
                     }
                 }
             }
@@ -216,7 +273,7 @@ class PipelineBuildQualityService(
                 taskId = taskId
             ).data ?: setOf()
 
-            auditUserSet.map { buildVariableService.replaceTemplate(buildId, it) }.toSet()
+            auditUserSet.map { buildVariableService.replaceTemplate(projectId, buildId, it) }.toSet()
         } catch (ignore: Exception) {
             logger.error("quality get audit user list fail: ${ignore.message}", ignore)
             setOf()
@@ -304,7 +361,6 @@ class PipelineBuildQualityService(
                 // 产生MQ消息，等待5秒时间
                 logger.info("[$buildId]|QUALITY_$position|taskId=$elementId|quality check success wait end")
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 5000
-                task.taskParams[QUALITY_RESULT] = checkResult.success
             } else {
                 buildLogPrinter.addLine(
                     buildId = buildId,
@@ -369,8 +425,9 @@ class PipelineBuildQualityService(
                     executeCount = task.executeCount ?: 1
                 )
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = checkResult.auditTimeoutSeconds * 1000 // 15 min
-                task.taskParams[QUALITY_RESULT] = checkResult.success
             }
+
+            task.taskParams[QUALITY_RESULT] = checkResult.success
 
             pipelineEventDispatcher.dispatch(
                 PipelineBuildWebSocketPushEvent(
@@ -382,8 +439,8 @@ class PipelineBuildQualityService(
                     refreshTypes = RefreshType.DETAIL.binary
                 )
             )
+            return AtomResponse(BuildStatus.RUNNING)
         }
-        return AtomResponse(BuildStatus.RUNNING)
     }
 
     fun getCheckResult(
@@ -420,10 +477,12 @@ class PipelineBuildQualityService(
             taskId = interceptTask,
             position = position,
             templateId = templateId,
+            stageId = "",
             runtimeVariable = runVariables
         )
         val result = if (position == ControlPointPosition.AFTER_POSITION &&
-            QUALITY_CODECC_LAZY_ATOM.contains(interceptTask)) {
+            QUALITY_CODECC_LAZY_ATOM.contains(interceptTask)
+        ) {
             run loop@{
                 QUALITY_LAZY_TIME_GAP.forEachIndexed { index, gap ->
                     val hasMetadata = hasCodeccHisMetadata(buildId)

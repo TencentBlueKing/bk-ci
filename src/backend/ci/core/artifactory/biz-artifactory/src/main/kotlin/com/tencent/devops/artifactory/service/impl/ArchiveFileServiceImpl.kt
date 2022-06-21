@@ -79,7 +79,8 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         filePath: String?,
         fileType: FileTypeEnum?,
         props: Map<String, String?>?,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        logo: Boolean?
     ): String {
         val fileName = String(disposition.fileName.toByteArray(Charset.forName("ISO8859-1")), Charset.forName("UTF-8"))
         val file = DefaultPathUtils.randomFile(fileName)
@@ -93,7 +94,8 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
                 fileName = fileName,
                 fileType = fileType,
                 props = props,
-                fileChannelType = fileChannelType
+                fileChannelType = fileChannelType,
+                logo = logo
             )
         } finally {
             file.delete()
@@ -111,8 +113,9 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         disposition: FormDataContentDisposition,
         fileChannelType: FileChannelTypeEnum
     ): String {
-        val destPath = if (customFilePath?.endsWith(disposition.fileName) != true) {
-            (customFilePath ?: "") + fileSeparator + disposition.fileName
+        val fileName = URLDecoder.decode(disposition.fileName, "utf-8")
+        val destPath = if (customFilePath?.endsWith(fileName) != true) {
+            (customFilePath ?: "") + fileSeparator + fileName
         } else {
             customFilePath
         }
@@ -121,7 +124,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             projectId = projectId,
             pipelineIds = setOf(pipelineId)
         ).data!![pipelineId] ?: ""
-        val buildNum = servicePipelineResource.getBuildNoByBuildIds(setOf(buildId)).data!![buildId] ?: ""
+        val buildNum = servicePipelineResource.getBuildNoByBuildIds(setOf(buildId), projectId).data!![buildId] ?: ""
         val props: Map<String, String?> = mapOf(
             "pipelineId" to pipelineId,
             "pipelineName" to pipelineName,

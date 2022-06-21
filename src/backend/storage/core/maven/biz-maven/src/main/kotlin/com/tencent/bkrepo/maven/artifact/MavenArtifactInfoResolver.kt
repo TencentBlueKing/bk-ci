@@ -33,7 +33,9 @@ package com.tencent.bkrepo.maven.artifact
 
 import com.tencent.bkrepo.common.artifact.resolve.path.ArtifactInfoResolver
 import com.tencent.bkrepo.common.artifact.resolve.path.Resolver
-import org.apache.commons.lang.StringUtils
+import com.tencent.bkrepo.maven.constants.PACKAGE_SUFFIX_REGEX
+import com.tencent.bkrepo.maven.exception.MavenBadRequestException
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import javax.servlet.http.HttpServletRequest
@@ -47,28 +49,29 @@ class MavenArtifactInfoResolver : ArtifactInfoResolver {
         artifactUri: String,
         request: HttpServletRequest
     ): MavenArtifactInfo {
-        val mavenArtifactInfo =
-            MavenArtifactInfo(projectId, repoName, artifactUri)
-        // 仅当上传jar包时校验地址格式
+        val mavenArtifactInfo = MavenArtifactInfo(projectId, repoName, artifactUri)
         val fileName = artifactUri.substringAfterLast("/")
-        if (fileName.matches(Regex("(.)+-(.)+\\.(jar|war|tar|ear|ejb|rar|msi|rpm|tar\\.bz2|tar\\.gz|tbz|zip)\$"))) {
-            val paths = artifactUri.removePrefix("/").removeSuffix("/").split("/")
+        if (fileName.matches(Regex(PACKAGE_SUFFIX_REGEX))) {
+            val paths = artifactUri.trim('/').split("/")
             if (paths.size < pathMinLimit) {
-                logger.debug(
-                    "Cannot build MavenArtifactInfo from '{}'. The groupId, artifactId and version are unreadable.",
-                    artifactUri
-                )
-                return MavenArtifactInfo("", "", "")
+                val message = "Cannot build MavenArtifactInfo from '$artifactUri'. " +
+                    "The groupId, artifactId and version are unreadable."
+                logger.warn(message)
+                throw MavenBadRequestException(message)
             }
             var pos = paths.size - groupMark
             mavenArtifactInfo.jarName = paths.last()
+            /*以请求路径作为版本号
+            e.g. /com/apache/http/1.0/http-1.0.jar   version = 1.0
+            e.g. /com/apache/http/1.0-SNAPSHOT/http-1.0-20210928.064954-1.jar   version = 1.0-SNAPSHOT
+             */
             mavenArtifactInfo.versionId = paths[pos--]
             mavenArtifactInfo.artifactId = paths[pos]
             val groupCollection = paths.subList(0, pos)
             mavenArtifactInfo.groupId = StringUtils.join(groupCollection, ".")
 
             require(mavenArtifactInfo.isValid()) {
-                throw IllegalArgumentException("Invalid unit info for '${mavenArtifactInfo.getArtifactFullPath()}'.")
+                throw MavenBadRequestException("Invalid unit info for '${mavenArtifactInfo.getArtifactFullPath()}'.")
             }
         }
         return mavenArtifactInfo

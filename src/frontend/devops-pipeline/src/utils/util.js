@@ -20,7 +20,7 @@
 import { v4 as uuidv4 } from 'uuid'
 
 export function isVNode (node) {
-    return typeof node === 'object' && node.hasOwnProperty('componentOptions')
+    return typeof node === 'object' && Object.prototype.hasOwnProperty.call(node, 'componentOptions')
 }
 
 export function urlJoin (...args) {
@@ -170,19 +170,9 @@ export function findValByKeyValue (arr, oldKey, oldValue, key) {
  *  @return result - 找到的index值，未找到返回-1
  */
 export function findIndexByKeyValue (arr, oldKey, oldValue) {
-    let result
-
-    arr.some((v, i) => {
-        for (const _key in v) {
-            if (_key === oldKey && v[_key] === oldValue) {
-                result = i
-
-                break
-            }
-        }
+    return arr.findIndex((v, i) => {
+        return Object.prototype.hasOwnProperty.call(v, oldKey) && v[oldKey] === oldValue
     })
-
-    return result
 }
 
 export function deepClone (obj) {
@@ -387,6 +377,7 @@ export function mergeModules (target, ...modules) {
                     ...mod[key]
                 }
             }
+            return key
         })
 
         return merged
@@ -540,7 +531,7 @@ export function debounce (fn, interval = DEFAULT_TIME_INTERVAL) {
     return (...args) => {
         clearTimeout(timer)
         timer = setTimeout(() => {
-            clearTimeout(timer)
+            timer = null
             return fn(...args)
         }, interval)
     }

@@ -39,7 +39,9 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildCertResourceImpl @Autowired constructor(private val certService: CertService) : BuildCertResource {
+
     override fun queryIos(
+        projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String,
@@ -47,10 +49,11 @@ class BuildCertResourceImpl @Autowired constructor(private val certService: Cert
         publicKey: String
     ): Result<CertIOS> {
         checkParams(buildId, vmSeqId, vmName, certId, publicKey)
-        return Result(certService.queryIos(buildId, certId, publicKey))
+        return Result(certService.queryIos(projectId, buildId, certId, publicKey))
     }
 
     override fun queryAndroid(
+        projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String,
@@ -58,10 +61,11 @@ class BuildCertResourceImpl @Autowired constructor(private val certService: Cert
         publicKey: String
     ): Result<CertAndroid> {
         checkParams(buildId, vmSeqId, vmName, certId, publicKey)
-        return Result(certService.queryAndroid(buildId, certId, publicKey))
+        return Result(certService.queryAndroid(projectId, buildId, certId, publicKey))
     }
 
     override fun queryEnterprise(
+        projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String,
@@ -69,7 +73,7 @@ class BuildCertResourceImpl @Autowired constructor(private val certService: Cert
         publicKey: String
     ): Result<CertEnterprise> {
         checkParams(buildId, vmSeqId, vmName, certId, publicKey)
-        return Result(certService.queryEnterprise(buildId, certId, publicKey))
+        return Result(certService.queryEnterprise(projectId, buildId, certId, publicKey))
     }
 
     @Suppress("ALL")

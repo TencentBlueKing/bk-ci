@@ -51,9 +51,9 @@ import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class DefaultModelCheckPluginTest : TestBase() {
 
@@ -73,7 +73,8 @@ class DefaultModelCheckPluginTest : TestBase() {
     private val serviceAtomResource: ServiceAtomResource = mock()
     private val serviceMarketAtomEnvResource: ServiceMarketAtomEnvResource = mock()
 
-    private fun genAtomVersion() = AtomVersion(atomId = "1",
+    private fun genAtomVersion() = AtomVersion(
+        atomId = "1",
         atomCode = "atomCode",
         name = "name",
         logoUrl = "logoUrl",
@@ -116,7 +117,7 @@ class DefaultModelCheckPluginTest : TestBase() {
         dailyStatisticList = null
     )
 
-    @Before
+    @BeforeEach
     fun setUp2() {
         whenever(client.get(ServiceMarketAtomResource::class)).thenReturn(serviceMarketAtomResource)
         whenever(
@@ -154,6 +155,8 @@ class DefaultModelCheckPluginTest : TestBase() {
         )
         whenever(pipelineCommonSettingConfig.maxModelSize).thenReturn(16777215)
         whenever(pipelineCommonSettingConfig.maxStageNum).thenReturn(20)
+        whenever(pipelineCommonSettingConfig.maxPipelineNameSize).thenReturn(255)
+        whenever(pipelineCommonSettingConfig.maxPipelineDescSize).thenReturn(255)
         whenever(stageCommonSettingConfig.maxJobNum).thenReturn(20)
         whenever(jobCommonSettingConfig.maxTaskNum).thenReturn(20)
         whenever(taskCommonSettingConfig.maxInputNum).thenReturn(50)
@@ -198,9 +201,12 @@ class DefaultModelCheckPluginTest : TestBase() {
     @Test
     fun beforeDeleteElementInExistsModel() {
         val existsModel = genModel(stageSize = 4, jobSize = 2, elementSize = 2)
-        checkPlugin.beforeDeleteElementInExistsModel(existsModel, null, BeforeDeleteParam(
-            userId, projectId, pipelineId
-        ))
+        checkPlugin.beforeDeleteElementInExistsModel(
+            existsModel, null,
+            BeforeDeleteParam(
+                userId, projectId, pipelineId
+            )
+        )
     }
 
     @Test
@@ -223,10 +229,9 @@ class DefaultModelCheckPluginTest : TestBase() {
         checkPlugin.checkJob(linux, projectId, pipelineId, userId, false)
     }
 
-    @Test(expected = ErrorCodeException::class)
     fun checkModelIntegrityEmptyElement() {
         val model = genModel(stageSize = 4, jobSize = 2, elementSize = 0)
-        checkPlugin.checkModelIntegrity(model, projectId)
+        Assertions.assertThrows(ErrorCodeException::class.java) { checkPlugin.checkModelIntegrity(model, projectId) }
     }
 
     @Test
@@ -234,14 +239,14 @@ class DefaultModelCheckPluginTest : TestBase() {
         try {
             checkModelIntegrityEmptyElement()
         } catch (actual: ErrorCodeException) {
-            Assert.assertEquals(ProcessMessageCode.ERROR_EMPTY_JOB, actual.errorCode)
+            Assertions.assertEquals(ProcessMessageCode.ERROR_EMPTY_JOB, actual.errorCode)
         }
 
         val fulModel = genModel(stageSize = 3, jobSize = 2, elementSize = 2)
         try {
             checkPlugin.checkModelIntegrity(fulModel, projectId)
         } catch (actual: ErrorCodeException) {
-            Assert.assertEquals(ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID, actual.errorCode)
+            Assertions.assertEquals(ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID, actual.errorCode)
         }
     }
 }

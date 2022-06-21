@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,16 +30,16 @@ package systemutil
 import (
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/gofrs/flock"
 	"net"
 	"net/url"
 	"os"
 	"os/user"
 	"runtime"
 	"strings"
-
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/astaxie/beego/logs"
-	"github.com/gofrs/flock"
 )
 
 var GExecutableDir string
@@ -49,7 +50,6 @@ const (
 	osWindows = "windows"
 	osLinux   = "linux"
 	osMacos   = "darwin"
-	amd64     = "amd64"
 	osOther   = "other"
 
 	osNameWindows = "windows"
@@ -60,40 +60,49 @@ const (
 	TotalLock = "total-lock"
 )
 
+// IsWindows 是否是Windows OS
 func IsWindows() bool {
 	return runtime.GOOS == osWindows
 }
 
+// IsLinux IsLinux
 func IsLinux() bool {
 	return runtime.GOOS == osLinux
 }
 
+// IsMacos IsMacos
 func IsMacos() bool {
 	return runtime.GOOS == osMacos
 }
 
-func IsAmd64() bool {
-	return runtime.GOARCH == amd64
-}
-
+// GetCurrentUser get current process user
 func GetCurrentUser() *user.User {
 	currentUser, _ := user.Current()
 	return currentUser
 }
 
+// GetWorkDir get agent work dir
 func GetWorkDir() string {
 	dir, _ := os.Getwd()
 	return strings.Replace(dir, "\\", "/", -1)
 }
 
+// GetUpgradeDir get upgrader dir
 func GetUpgradeDir() string {
 	return GetWorkDir() + "/tmp"
 }
 
+// GetWorkerErrorMsgFile 获取worker执行错误信息的日志文件
+func GetWorkerErrorMsgFile(buildId string, vmSeqId string) string {
+	return fmt.Sprintf("%s/%s_%s_build_msg.log", fmt.Sprintf("%s/build_tmp", GetWorkDir()), buildId, vmSeqId)
+}
+
+// GetLogDir get agent logs dir
 func GetLogDir() string {
 	return GetWorkDir() + "/logs"
 }
 
+// GetRuntimeDir get agent runtime dir
 func GetRuntimeDir() string {
 	runDir := fmt.Sprintf("%s/runtime", GetWorkDir())
 	if err := os.MkdirAll(runDir, 0755); err == nil {
@@ -102,6 +111,7 @@ func GetRuntimeDir() string {
 	return GetWorkDir()
 }
 
+// GetExecutableDir get excutable jar dir
 func GetExecutableDir() string {
 	if len(GExecutableDir) == 0 {
 		executable := strings.Replace(os.Args[0], "\\", "/", -1)
@@ -111,6 +121,7 @@ func GetExecutableDir() string {
 	return GExecutableDir
 }
 
+// GetOsName GetOsName
 func GetOsName() string {
 	switch runtime.GOOS {
 	case osLinux:
@@ -124,6 +135,7 @@ func GetOsName() string {
 	}
 }
 
+// GetOs get os
 func GetOs() string {
 	switch runtime.GOOS {
 	case osLinux:
@@ -137,12 +149,14 @@ func GetOs() string {
 	}
 }
 
+// GetHostName GetHostName
 func GetHostName() string {
 	name, _ := os.Hostname()
 	return name
 }
 
-func GetAgentIp() string {
+// GetAgentIp 返回本机IP，但允许忽略指定的IP ignoreIps, 如果所有IP都命中ignoreIps，则最终会返回127.0.0.1或者真正通信的IP
+func GetAgentIp(ignoreIps []string) string {
 	defaultIp := "127.0.0.1"
 	ip, err := getLocalIp()
 	if err == nil {
@@ -178,6 +192,10 @@ func GetAgentIp() string {
 			}
 
 			logs.Info("localIp=%s|net=%s|flag=%s|ip=%s", ip, nc.Name, nc.Flags, ipNet.IP)
+			if util.Contains(ignoreIps, ipNet.IP.String()) {
+				logs.Info("skipIp=%s", ipNet.IP)
+				continue
+			}
 			if ip == ipNet.IP.String() {
 				return ip // 匹配到该通信IP是真正的网卡IP
 			} else if defaultIp == ip { // 仅限于第一次找到合法ip，做赋值
@@ -190,16 +208,19 @@ func GetAgentIp() string {
 	return defaultIp
 }
 
+// ExitProcess Exit by code
 func ExitProcess(exitCode int) {
 	os.Exit(exitCode)
 }
 
 var processLock *flock.Flock
 
+// KeepProcessAlive keep process alive
 func KeepProcessAlive() {
 	runtime.KeepAlive(*processLock)
 }
 
+// CheckProcess check process and lock
 func CheckProcess(name string) bool {
 	processLockFile := fmt.Sprintf("%s/%s.lock", GetRuntimeDir(), name)
 	pidFile := fmt.Sprintf("%s/%s.pid", GetRuntimeDir(), name)
@@ -234,7 +255,7 @@ func CheckProcess(name string) bool {
 	return true
 }
 
-// 网关初始化顺序在前, 上报与devops网关通信的网卡ip
+// getLocalIp 网关初始化顺序在前, 上报与devops网关通信的网卡ip
 func getLocalIp() (string, error) {
 	gateway := DevopsGateway
 	if !strings.HasPrefix(gateway, "http") {

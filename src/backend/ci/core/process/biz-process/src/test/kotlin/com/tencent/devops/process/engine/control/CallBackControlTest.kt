@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control
 
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -37,22 +38,24 @@ import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
-import com.tencent.devops.process.pojo.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class CallBackControlTest : TestBase() {
 
     private val pipelineBuildDetailService: PipelineBuildDetailService = mock()
     private val pipelineRepositoryService: PipelineRepositoryService = mock()
     private val projectPipelineCallBackService: ProjectPipelineCallBackService = mock()
+    private val client: Client = mock()
 
     private val callBackControl = CallBackControl(
         pipelineBuildDetailService = pipelineBuildDetailService,
         pipelineRepositoryService = pipelineRepositoryService,
-        projectPipelineCallBackService = projectPipelineCallBackService
+        projectPipelineCallBackService = projectPipelineCallBackService,
+        client = client
     )
 
     private val testUrl = "https://mock/callback"
@@ -60,7 +63,7 @@ class CallBackControlTest : TestBase() {
 
     private var callbacks: MutableList<ProjectPipelineCallBack>? = null
 
-    @Before
+    @BeforeEach
     fun setUp2() {
 
         val existsModel = genModel(stageSize = 4, jobSize = 3, elementSize = 2)
@@ -81,10 +84,11 @@ class CallBackControlTest : TestBase() {
             curVersion = 2,
             latestBuildNum = 1,
             latestVersion = 1,
+            lastModifyUser = "yongyiduan",
             executeTime = 100
         )
 
-        whenever(pipelineBuildDetailService.get(buildId = buildId, refreshStatus = false))
+        whenever(pipelineBuildDetailService.get(projectId = projectId, buildId = buildId, refreshStatus = false))
             .thenReturn(modelDetail)
     }
 
@@ -101,7 +105,7 @@ class CallBackControlTest : TestBase() {
         callBackControl.callBackBuildEvent(buildStartEvent)
 //        Thread.sleep(100)
 //        val errorTime = callBackControl.statForTest().get(testUrl)!!
-//        Assert.assertNotEquals(0L, errorTime.get())
+//        Assertions.assertNotEquals(0L, errorTime.get())
 //        println("fail time:" + DateTimeUtil.formatDate(Date(errorTime.get())))
 //        val buildEvent = callBackControl.buildEvent(buildStartEvent, modelDetail!!)
 //        val requestBody: String = ObjectMapper().writeValueAsString(buildEvent)
@@ -119,12 +123,12 @@ class CallBackControlTest : TestBase() {
 //        callBackControl.callBackBuildEvent(buildStartEvent)
 //        Thread.sleep(1000)
 //        if (System.currentTimeMillis() - startTime > (testSeconds * 1000)) {
-//            Assert.assertEquals(0L, callBackControl.statForTest().get(testUrl)!!.get())
+//            Assertions.assertEquals(0L, callBackControl.statForTest().get(testUrl)!!.get())
 //            return
 //        }
 //        callBackControl.callBackBuildEvent(buildStartEvent)
-//        Assert.assertEquals(0L, errorTime)
-//        Assert.assertNotEquals(0L, callBackControl.statForTest().get(testUrl)!!.get())
+//        Assertions.assertEquals(0L, errorTime)
+//        Assertions.assertNotEquals(0L, callBackControl.statForTest().get(testUrl)!!.get())
 //        println("end")
     }
 
@@ -183,13 +187,13 @@ class CallBackControlTest : TestBase() {
 
             println("${stage.stageName},status=${stage.status}, start=${stage.startTime}, end=${stage.endTime}")
             if (index == 1) {
-                Assert.assertEquals(currentTimeMillis, stage.startTime)
+                Assertions.assertEquals(currentTimeMillis, stage.startTime)
             }
 
             if (index == parseModel.size - 1) {
-                Assert.assertEquals(expectStatus, stage.status)
+                Assertions.assertEquals(expectStatus, stage.status)
             } else {
-                Assert.assertEquals(BuildStatus.SUCCEED.name, stage.status)
+                Assertions.assertEquals(BuildStatus.SUCCEED.name, stage.status)
             }
         }
     }
@@ -235,13 +239,13 @@ class CallBackControlTest : TestBase() {
 
             println("${stage.stageName},status=${stage.status}, start=${stage.startTime}, end=${stage.endTime}")
             if (index == 1) {
-                Assert.assertEquals(currentTimeMillis, stage.startTime)
+                Assertions.assertEquals(currentTimeMillis, stage.startTime)
             }
 
             if (index == parseModel.size - 1) {
-                Assert.assertEquals(expectStatus, stage.status)
+                Assertions.assertEquals(expectStatus, stage.status)
             } else {
-                Assert.assertEquals(BuildStatus.SUCCEED.name, stage.status)
+                Assertions.assertEquals(BuildStatus.SUCCEED.name, stage.status)
             }
         }
     }

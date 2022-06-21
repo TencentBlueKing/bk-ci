@@ -20,7 +20,7 @@
         },
 
         methods: {
-            getReviewItem (item, index) {
+            getReviewItem (item) {
                 const typeMap = {
                     PROCESS: 'success',
                     ABORT: 'danger',
@@ -83,7 +83,7 @@
 </script>
 
 <style lang="scss" scoped>
-    /deep/ .bk-timeline {
+    ::v-deep .bk-timeline {
         margin-left: 5px;
         margin-top: 24px;
         margin-bottom: -24px;

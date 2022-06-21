@@ -71,13 +71,13 @@
                     BRANCH: {
                         label: this.$t('editPage.branch'),
                         placeholder: this.$t('editPage.branchTips'),
-                        url: `/process/api/user/scm/{projectId}/{repositoryHashId}/branches`,
+                        url: '/process/api/user/scm/{projectId}/{repositoryHashId}/branches',
                         default: 'master'
                     },
                     TAG: {
                         label: 'Tag',
                         placeholder: this.$t('editPage.tagTips'),
-                        url: `/process/api/user/scm/{projectId}/{repositoryHashId}/tags`,
+                        url: '/process/api/user/scm/{projectId}/{repositoryHashId}/tags',
                         default: ''
                     },
                     COMMIT_ID: {

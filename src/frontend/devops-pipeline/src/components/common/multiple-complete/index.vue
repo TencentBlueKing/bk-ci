@@ -81,7 +81,7 @@
                 if (e) {
                     let value = e.target.value
                     val = e.target.value
-                    value = value.replace(new RegExp(';+', 'gm'), ';')
+                    value = value.replace(/;\+/gm, ';')
                     const lastIdx = val.lastIndexOf(';')
                     if (lastIdx > -1) {
                         this.groupIdStr = val.substring(0, lastIdx + 1) || ''
@@ -111,7 +111,7 @@
                     const lastIndex = this.value.lastIndexOf(';')
                     const value = lastIndex > -1 ? this.value.substring(lastIndex + 1) : this.value
                     this.filterData(value)
-                    this.list.map((item, index) => {
+                    this.list.forEach((item, index) => {
                         if (item === value) {
                             this.focusList = index
                         }

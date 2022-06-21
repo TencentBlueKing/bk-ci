@@ -50,7 +50,7 @@
                     path: this.path
                 })
                 this.metadataList.splice(0, this.metadataList.length)
-                Object.keys(res.meta).map(item => {
+                Object.keys(res.meta).forEach(item => {
                     this.metadataList.push({
                         key: item,
                         value: res.meta[item]
@@ -132,7 +132,7 @@
         }
         .empty-row {
             padding-left: 18px;
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
         }
     }
     .left-render {

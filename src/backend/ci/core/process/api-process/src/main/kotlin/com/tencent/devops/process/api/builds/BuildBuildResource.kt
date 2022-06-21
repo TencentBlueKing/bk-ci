@@ -30,15 +30,9 @@ package com.tencent.devops.process.api.builds
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.process.pojo.BuildTask
-import com.tencent.devops.process.pojo.BuildTaskResult
-import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.RedisAtomsBuild
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -46,8 +40,6 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -59,108 +51,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildBuildResource {
-
-    @Deprecated("replace by BuildJobResource")
-    @ApiOperation("构建机器启动成功")
-    @PUT
-    @Path("/started")
-    fun setStarted(
-        @ApiParam(value = "构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
-        vmSeqId: String,
-        @ApiParam(value = "构建机名称", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String
-    ): Result<BuildVariables>
-
-    @Deprecated("replace by BuildJobResource")
-    @ApiOperation("构建机请求任务")
-    @GET
-    @Path("/claim")
-    fun claimTask(
-        @ApiParam(value = "构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
-        vmSeqId: String,
-        @ApiParam(value = "构建机名称", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String
-    ): Result<BuildTask>
-
-    @Deprecated("replace by BuildJobResource")
-    @ApiOperation("构建机完成任务")
-    @POST
-    @Path("/complete")
-    fun completeTask(
-        @ApiParam(value = "构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
-        vmSeqId: String,
-        @ApiParam(value = "构建机名称", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String,
-        @ApiParam(value = "执行结果", required = true)
-        result: BuildTaskResult
-    ): Result<Boolean>
-
-    @Deprecated("replace by BuildJobResource")
-    @ApiOperation("End the seq build")
-    @POST
-    @Path("/end")
-    fun endTask(
-        @ApiParam(value = "构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
-        vmSeqId: String,
-        @ApiParam(value = "构建机名称", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String
-    ): Result<Boolean>
-
-    @Deprecated("replace by BuildJobResource")
-    @ApiOperation("timeout & end the seq build")
-    @POST
-    @Path("/timeout")
-    fun timeoutTheBuild(
-        @ApiParam("projectId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String,
-        @ApiParam("pipelineId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
-        pipelineId: String,
-        @ApiParam(value = "构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
-        vmSeqId: String
-    ): Result<Boolean>
-
-    @Deprecated("replace by BuildJobResource")
-    @ApiOperation("Heartbeat")
-    @POST
-    @Path("/heartbeat")
-    fun heartbeat(
-        @ApiParam(value = "构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
-        vmSeqId: String,
-        @ApiParam(value = "构建机名称", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String
-    ): Result<Boolean>
-
     @ApiOperation("获取流水线构建单条历史")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/buildNums/{buildNum}/history")
@@ -218,6 +108,9 @@ interface BuildBuildResource {
     @GET
     @Path("/taskIds/{taskId}/subVar")
     fun getSubBuildVars(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam("构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -225,20 +118,6 @@ interface BuildBuildResource {
         @PathParam("taskId")
         taskId: String
     ): Result<Map<String, String>>
-
-    @ApiOperation("构建过程中主动更新atoms缓存信息")
-    @PUT
-    @Path("/project/updateRedisAtoms")
-    fun updateRedisAtoms(
-        @ApiParam("", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String,
-        @ApiParam("构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
-        @ApiParam("", required = true)
-        redisAtomsBuild: RedisAtomsBuild
-    ): Result<Boolean>
 
     @ApiOperation("获取当前构建的构建详情页")
     @GET

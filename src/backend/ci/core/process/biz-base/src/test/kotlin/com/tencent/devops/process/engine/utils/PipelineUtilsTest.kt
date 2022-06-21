@@ -31,20 +31,21 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class PipelineUtilsTest {
 
     @Test
     fun checkPipelineNameLength() {
         val name = "1234567890123456789012345678901234567890123456789012345678901234"
-        PipelineUtils.checkPipelineName(name)
+        PipelineUtils.checkPipelineName(name, 64)
     }
 
-    @Test(expected = ErrorCodeException::class)
+    @Test
     fun checkPipelineNameTooLength() {
         val name = "12345678901234567890123456789012345678901234567890123456789012345" // exceed 64 char
-        PipelineUtils.checkPipelineName(name)
+        Assertions.assertThrows(ErrorCodeException::class.java) { PipelineUtils.checkPipelineName(name, 64) }
     }
 
     @Test
@@ -55,33 +56,33 @@ class PipelineUtilsTest {
         PipelineUtils.checkPipelineParams(params)
     }
 
-    @Test(expected = OperationException::class)
+    @Test
     fun checkPipelineParamsIllegalId() {
         val params = mutableListOf<BuildFormProperty>()
         params.add(make(id = "abc-123"))
-        PipelineUtils.checkPipelineParams(params)
+        Assertions.assertThrows(OperationException::class.java) { PipelineUtils.checkPipelineParams(params) }
     }
 
-    @Test(expected = OperationException::class)
+    @Test
     fun checkPipelineParamsStartWithNum() {
         val params = mutableListOf<BuildFormProperty>()
         params.add(make(id = "123_abc"))
-        PipelineUtils.checkPipelineParams(params)
+        Assertions.assertThrows(OperationException::class.java) { PipelineUtils.checkPipelineParams(params) }
     }
 
     @Test
     fun checkPipelineDescLength() {
         var desc: String? = null
-        PipelineUtils.checkPipelineDescLength(desc)
+        PipelineUtils.checkPipelineDescLength(desc, 100)
         desc = "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-        PipelineUtils.checkPipelineDescLength(desc)
+        PipelineUtils.checkPipelineDescLength(desc, 100)
     }
 
-    @Test(expected = ErrorCodeException::class)
+    @Test
     fun checkPipelineDescLength101() {
         val desc =
             "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901"
-        PipelineUtils.checkPipelineDescLength(desc)
+        Assertions.assertThrows(ErrorCodeException::class.java) { PipelineUtils.checkPipelineDescLength(desc, 100) }
     }
 
     private fun make(id: String): BuildFormProperty {
@@ -97,6 +98,7 @@ class PipelineUtilsTest {
             scmType = null,
             containerType = null,
             glob = null,
-            properties = null)
+            properties = null
+        )
     }
 }

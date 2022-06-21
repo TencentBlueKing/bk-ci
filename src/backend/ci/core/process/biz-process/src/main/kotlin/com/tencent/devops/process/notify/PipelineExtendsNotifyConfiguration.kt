@@ -29,9 +29,6 @@ package com.tencent.devops.process.notify
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.process.bean.DefaultPipelineUrlBeanImpl
-import com.tencent.devops.process.bean.PipelineUrlBean
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -50,10 +47,6 @@ import org.springframework.context.annotation.Configuration
  */
 @Configuration
 class PipelineExtendsNotifyConfiguration {
-
-    @Bean
-    @ConditionalOnMissingBean(PipelineUrlBean::class)
-    fun pipelineUrlBean(@Autowired commonConfig: CommonConfig) = DefaultPipelineUrlBeanImpl(commonConfig)
 
     @Bean
     @ConditionalOnMissingBean(name = ["pipelineMonitorExchange"])

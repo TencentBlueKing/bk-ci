@@ -41,6 +41,8 @@ data class ModelDetail(
     val pipelineName: String,
     @ApiModelProperty("启动用户", required = true)
     val userId: String,
+    @ApiModelProperty("触发用户", required = true)
+    val triggerUser: String? = null,
     @ApiModelProperty("触发条件", required = true)
     val trigger: String,
     @ApiModelProperty("Start time", required = true)
@@ -63,6 +65,8 @@ data class ModelDetail(
     val latestVersion: Int,
     @ApiModelProperty("最新一次的构建buildNo", required = true)
     val latestBuildNum: Int,
-    @ApiModelProperty("执行耗时（排除系统耗时）", required = true)
+    @ApiModelProperty("最近修改人", required = true)
+    val lastModifyUser: String?,
+    @ApiModelProperty("执行耗时（排除系统耗时）流水线执行结束时才赋值", required = true)
     val executeTime: Long = 0
 )

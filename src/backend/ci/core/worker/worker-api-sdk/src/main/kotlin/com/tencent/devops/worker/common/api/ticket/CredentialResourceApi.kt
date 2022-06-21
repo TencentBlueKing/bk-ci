@@ -40,4 +40,16 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
         val responseContent = request(request, "获取凭据失败")
         return objectMapper.readValue(responseContent)
     }
+
+    override fun getAcrossProject(
+        targetProjectId: String,
+        credentialId: String,
+        publicKey: String
+    ): Result<CredentialInfo> {
+        val path = "/ms/ticket/api/build/credentials/$credentialId/across" +
+            "?publicKey=${encode(publicKey)}&targetProjectId=$targetProjectId"
+        val request = buildGet(path)
+        val responseContent = request(request, "获取凭据失败")
+        return objectMapper.readValue(responseContent)
+    }
 }

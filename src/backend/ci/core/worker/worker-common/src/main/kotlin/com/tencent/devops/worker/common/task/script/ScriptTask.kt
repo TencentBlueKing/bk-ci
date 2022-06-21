@@ -45,14 +45,16 @@ import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
+import com.tencent.devops.worker.common.utils.CredentialUtils.parseCredentialValue
 import com.tencent.devops.worker.common.utils.TaskUtil
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
-import org.slf4j.LoggerFactory
 
 /**
  * 构建脚本任务
  */
+@Suppress("LongMethod")
 open class ScriptTask : ITask() {
 
     private val gatewayResourceApi = ApiFactory.create(QualityGatewaySDKApi::class)
@@ -71,40 +73,43 @@ open class ScriptTask : ITask() {
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
         val archiveFileIfExecFail = taskParams["archiveFile"]
-        val script = URLDecoder.decode(taskParams["script"]
-            ?: throw TaskExecuteException(
-                errorMsg = "Empty build script content",
-                errorType = ErrorType.USER,
-                errorCode = ErrorCode.USER_INPUT_INVAILD
-            ), "UTF-8").replace("\r", "")
+        val script = URLDecoder.decode(
+            taskParams["script"]
+                ?: throw TaskExecuteException(
+                    errorMsg = "Empty build script content",
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_INPUT_INVAILD
+                ), "UTF-8"
+        ).replace("\r", "")
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
         val buildId = buildVariables.buildId
-        val runtimeVariables = buildVariables.variables
+        val runtimeVariables = buildVariables.variables.map {
+            it.key to it.value.parseCredentialValue(buildTask.buildVariable)
+        }.toMap()
+            .plus(buildTask.buildVariable ?: emptyMap())
         val projectId = buildVariables.projectId
 
         ScriptEnvUtils.cleanEnv(buildId, workspace)
         ScriptEnvUtils.cleanContext(buildId, workspace)
 
-        val variables = if (buildTask.buildVariable == null) {
-            runtimeVariables
-        } else {
-            runtimeVariables.plus(buildTask.buildVariable!!)
-        }
-
         try {
             command.execute(
                 buildId = buildId,
-                elementId = buildTask.elementId,
+                jobId = buildVariables.jobId,
+                stepId = buildTask.stepId,
                 script = script,
                 taskParam = taskParams,
-                runtimeVariables = variables.plus(TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)),
+                runtimeVariables = runtimeVariables.plus(
+                    TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)
+                ),
                 projectId = projectId,
                 dir = workspace,
                 buildEnvs = takeBuildEnvs(buildTask, buildVariables),
                 continueNoneZero = continueNoneZero.toBoolean(),
                 errorMessage = "Fail to run the plugin",
-                charsetType = charsetType
+                charsetType = charsetType,
+                taskId = buildTask.taskId
             )
         } catch (ignore: Throwable) {
             logger.warn("Fail to run the script task", ignore)
@@ -128,20 +133,30 @@ open class ScriptTask : ITask() {
                     LoggerService.addErrorLine("脚本执行失败之后没有匹配到任何待归档文件")
                 }
             }
+            val errorMsg = "脚本执行失败" +
+                "\n======问题排查指引======\n" +
+                "当脚本退出码非0时，执行失败。可以从以下路径进行分析：\n" +
+                "1. 根据错误日志排查\n" +
+                "2. 在本地手动执行脚本。如果本地执行也失败，很可能是脚本逻辑问题；" +
+                "如果本地OK，排查构建环境（比如环境依赖、或者代码变更等）"
             throw TaskExecuteException(
-                errorMsg = "脚本执行失败",
+                errorMsg = errorMsg,
                 errorType = ErrorType.USER,
-                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
+                errorCode = ErrorCode.USER_SCRIPT_TASK_FAIL
             )
         } finally {
-            // 成功失败都写入环境变量
+            // 成功失败都写入全局变量
             addEnv(ScriptEnvUtils.getEnv(buildId, workspace))
             addEnv(ScriptEnvUtils.getContext(buildId, workspace))
-            addEnv(mapOf("jobs.${buildVariables.containerId}.os" to AgentEnv.getOS().name))
-            ScriptEnvUtils.cleanWhenEnd(buildId, workspace)
+
+            // 增加操作系统类型的输出
+            buildVariables.jobId?.let { addEnv(mapOf("jobs.$it.os" to AgentEnv.getOS().name)) }
 
             // 设置质量红线指标信息
-            setGatewayValue(workspace)
+            setGatewayValue(workspace, buildTask.taskId ?: "", buildTask.elementName ?: "")
+
+            // 清理所有执行的中间输出文件
+            ScriptEnvUtils.cleanWhenEnd(buildId, workspace)
         }
     }
 
@@ -150,7 +165,7 @@ open class ScriptTask : ITask() {
         buildVariables: BuildVariables
     ): List<BuildEnv> = buildVariables.buildEnvs
 
-    private fun setGatewayValue(workspace: File) {
+    private fun setGatewayValue(workspace: File, taskId: String, taskName: String) {
         try {
             val gatewayFile = File(workspace, ScriptEnvUtils.getQualityGatewayEnvFile())
             if (!gatewayFile.exists()) return
@@ -173,7 +188,7 @@ open class ScriptTask : ITask() {
                 LinuxScriptElement.classType
             }
             LoggerService.addNormalLine("save gateway value($elementType): $data")
-            gatewayResourceApi.saveScriptHisMetadata(elementType, data)
+            gatewayResourceApi.saveScriptHisMetadata(elementType, taskId, taskName, data)
             gatewayFile.delete()
         } catch (ignore: Exception) {
             LoggerService.addErrorLine("save gateway value fail: ${ignore.message}")

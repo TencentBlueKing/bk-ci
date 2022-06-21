@@ -43,19 +43,18 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentLink
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStatusWithInfo
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
-import com.tencent.devops.environment.service.thirdPartyAgent.AgentPipelineService
+import com.tencent.devops.environment.service.thirdPartyAgent.ImportService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("TooManyFunctions")
 @RestResource
 class UserThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val slaveGatewayService: SlaveGatewayService,
-    private val agentPipelineService: AgentPipelineService
+    private val importService: ImportService
 ) : UserThirdPartyAgentResource {
     override fun isProjectEnable(userId: String, projectId: String): Result<Boolean> {
-        checkUserId(userId)
-        checkProjectId(projectId)
         return Result(true)
     }
 
@@ -107,17 +106,11 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     }
 
     override fun importAgent(userId: String, projectId: String, agentId: String): Result<Boolean> {
-        checkUserId(userId)
-        checkProjectId(projectId)
-        checkAgentId(agentId)
-        thirdPartyAgentService.importAgent(userId, projectId, agentId)
+        importService.importAgent(userId, projectId, agentId)
         return Result(true)
     }
 
     override fun deleteAgent(userId: String, projectId: String, nodeHashId: String): Result<Boolean> {
-        checkUserId(userId)
-        checkProjectId(projectId)
-        checkNodeId(nodeHashId)
         thirdPartyAgentService.deleteAgent(userId, projectId, nodeHashId)
         return Result(true)
     }
@@ -163,7 +156,11 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        return Result(thirdPartyAgentService.getAgentDetail(userId, projectId, nodeHashId))
+        return Result(thirdPartyAgentService.getAgentDetail(
+            userId = userId,
+            projectId = projectId,
+            nodeHashId = nodeHashId
+        ))
     }
 
     override fun listAgentBuilds(
@@ -234,6 +231,20 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         return Result(thirdPartyAgentService.queryNetMetrix(userId, projectId, nodeHashId, timeRange))
+    }
+
+    override fun saveAgentProps(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        props: Map<String, Any>
+    ): Result<Boolean> {
+        thirdPartyAgentService.saveAgentProps(userId, projectId, nodeHashId, props)
+        return Result(true)
+    }
+
+    override fun getAgentProps(userId: String, projectId: String, nodeHashId: String): Result<Map<String, Any>> {
+        return Result(data = thirdPartyAgentService.getAgentProps(projectId, nodeHashId))
     }
 
     private fun checkUserId(userId: String) {

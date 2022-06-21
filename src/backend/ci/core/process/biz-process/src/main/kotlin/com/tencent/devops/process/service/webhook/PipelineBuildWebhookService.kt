@@ -39,13 +39,14 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
@@ -53,7 +54,10 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
+import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
 import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
+import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
+import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
@@ -61,35 +65,54 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
 import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogContext
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.engine.service.WebhookBuildParameterService
 import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
-import com.tencent.devops.process.engine.service.code.ScmWebhookParamsFactory
-import com.tencent.devops.process.engine.utils.RepositoryUtils
+import com.tencent.devops.repository.utils.RepositoryUtils
 import com.tencent.devops.process.pojo.code.WebhookCommit
+import com.tencent.devops.process.service.builds.PipelineBuildCommitService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-import java.lang.IllegalArgumentException
+import org.springframework.context.ApplicationContext
+import org.springframework.context.ApplicationContextAware
 
 @Suppress("ALL")
-@Service
-class PipelineBuildWebhookService @Autowired constructor(
-    private val objectMapper: ObjectMapper,
-    private val client: Client,
-    private val pipelineWebhookService: PipelineWebhookService,
-    private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineBuildService: PipelineBuildService,
-    private val scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder,
-    private val gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher,
-    private val pipelineWebHookQueueService: PipelineWebHookQueueService,
-    private val buildLogPrinter: BuildLogPrinter
-) {
+abstract class PipelineBuildWebhookService : ApplicationContextAware {
 
-    private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
+    override fun setApplicationContext(applicationContext: ApplicationContext) {
+        objectMapper = applicationContext.getBean(ObjectMapper::class.java)
+        client = applicationContext.getBean(Client::class.java)
+        pipelineWebhookService = applicationContext.getBean(PipelineWebhookService::class.java)
+        pipelineRepositoryService = applicationContext.getBean(PipelineRepositoryService::class.java)
+        pipelineBuildService = applicationContext.getBean(PipelineBuildService::class.java)
+        scmWebhookMatcherBuilder = applicationContext.getBean(ScmWebhookMatcherBuilder::class.java)
+        gitWebhookUnlockDispatcher = applicationContext.getBean(GitWebhookUnlockDispatcher::class.java)
+        pipelineWebHookQueueService = applicationContext.getBean(PipelineWebHookQueueService::class.java)
+        buildLogPrinter = applicationContext.getBean(BuildLogPrinter::class.java)
+        pipelinebuildWebhookService = applicationContext.getBean(PipelineBuildWebhookService::class.java)
+        pipelineBuildCommitService = applicationContext.getBean(PipelineBuildCommitService::class.java)
+        webhookBuildParameterService = applicationContext.getBean(WebhookBuildParameterService::class.java)
+    }
+
+    companion object {
+        lateinit var objectMapper: ObjectMapper
+        lateinit var client: Client
+        lateinit var pipelineWebhookService: PipelineWebhookService
+        lateinit var pipelineRepositoryService: PipelineRepositoryService
+        lateinit var pipelineBuildService: PipelineBuildService
+        lateinit var scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder
+        lateinit var gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher
+        lateinit var pipelineWebHookQueueService: PipelineWebHookQueueService
+        lateinit var buildLogPrinter: BuildLogPrinter
+        lateinit var pipelinebuildWebhookService: PipelineBuildWebhookService // 给AOP调用
+        lateinit var pipelineBuildCommitService: PipelineBuildCommitService
+        lateinit var webhookBuildParameterService: WebhookBuildParameterService
+        private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
+    }
 
     fun externalCodeSvnBuild(e: String): Boolean {
         logger.info("Trigger code svn build - $e")
@@ -186,6 +209,21 @@ class PipelineBuildWebhookService @Autowired constructor(
         return startProcessByWebhook(CodeGithubWebHookTriggerElement.classType, githubWebHookMatcher)
     }
 
+    fun externalP4Build(body: String): Boolean {
+        logger.info("Trigger p4 build($body)")
+
+        val event = try {
+            objectMapper.readValue(body, P4Event::class.java)
+        } catch (e: Exception) {
+            logger.warn("Fail to parse the p4 web hook event", e)
+            return false
+        }
+
+        val p4WebHookMatcher = scmWebhookMatcherBuilder.createP4WebHookMatcher(event)
+
+        return startProcessByWebhook(CodeP4WebHookTriggerElement.classType, p4WebHookMatcher)
+    }
+
     private fun startProcessByWebhook(codeRepositoryType: String, matcher: ScmWebhookMatcher): Boolean {
         val watcher = Watcher("${matcher.getRepoName()}|${matcher.getRevision()}|webhook trigger")
         PipelineWebhookBuildLogContext.addRepoInfo(repoName = matcher.getRepoName(), commitId = matcher.getRevision())
@@ -195,7 +233,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             val pipelines = pipelineWebhookService.getWebhookPipelines(
                 name = matcher.getRepoName(),
                 type = codeRepositoryType
-            ).toSet()
+            )
 
             if (pipelines.isEmpty()) {
                 gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
@@ -203,10 +241,12 @@ class PipelineBuildWebhookService @Autowired constructor(
             }
 
             watcher.start("webhookTriggerPipelineBuild")
-            pipelines.forEach outside@{ pipelineId ->
+            pipelines.forEach outside@{ pipeline ->
+                val projectId = pipeline.first
+                val pipelineId = pipeline.second
                 try {
                     logger.info("pipelineId is $pipelineId")
-                    val model = pipelineRepositoryService.getModel(pipelineId) ?: run {
+                    val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: run {
                         logger.info("$pipelineId|pipeline does not exists, ignore")
                         return@outside
                     }
@@ -222,7 +262,13 @@ class PipelineBuildWebhookService @Autowired constructor(
                         return@outside
                     }
 
-                    if (webhookTriggerPipelineBuild(pipelineId, codeRepositoryType, matcher)) return@outside
+                    if (pipelinebuildWebhookService.webhookTriggerPipelineBuild(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            codeRepositoryType = codeRepositoryType,
+                            matcher = matcher
+                        )
+                    ) return@outside
                 } catch (e: Throwable) {
                     logger.error("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
                 }
@@ -250,40 +296,37 @@ class PipelineBuildWebhookService @Autowired constructor(
             triggerContainer.elements.forEach {
                 when (codeRepositoryType) {
                     CodeSVNWebHookTriggerElement.classType -> {
-                        if ((it is CodeSVNWebHookTriggerElement && it.isElementEnable()) ||
-                            canGitGenericWebhookStartUp(it)
-                        ) {
+                        if ((it is CodeSVNWebHookTriggerElement && it.isElementEnable())) {
                             canWebhookStartup = true
                             return@lit
                         }
                     }
                     CodeGitWebHookTriggerElement.classType -> {
-                        if ((it is CodeGitWebHookTriggerElement && it.isElementEnable()) ||
-                            canGitGenericWebhookStartUp(it)) {
+                        if ((it is CodeGitWebHookTriggerElement && it.isElementEnable())) {
                             canWebhookStartup = true
                             return@lit
                         }
                     }
                     CodeGithubWebHookTriggerElement.classType -> {
-                        if ((it is CodeGithubWebHookTriggerElement && it.isElementEnable()) ||
-                            canGitGenericWebhookStartUp(it)
-                        ) {
+                        if ((it is CodeGithubWebHookTriggerElement && it.isElementEnable())) {
                             canWebhookStartup = true
                             return@lit
                         }
                     }
                     CodeGitlabWebHookTriggerElement.classType -> {
-                        if ((it is CodeGitlabWebHookTriggerElement && it.isElementEnable()) ||
-                            canGitGenericWebhookStartUp(it)
-                        ) {
+                        if ((it is CodeGitlabWebHookTriggerElement && it.isElementEnable())) {
                             canWebhookStartup = true
                             return@lit
                         }
                     }
                     CodeTGitWebHookTriggerElement.classType -> {
-                        if ((it is CodeTGitWebHookTriggerElement && it.isElementEnable()) ||
-                            canGitGenericWebhookStartUp(it)
-                        ) {
+                        if ((it is CodeTGitWebHookTriggerElement && it.isElementEnable())) {
+                            canWebhookStartup = true
+                            return@lit
+                        }
+                    }
+                    CodeP4WebHookTriggerElement.classType -> {
+                        if (it is CodeP4WebHookTriggerElement && it.isElementEnable()) {
                             canWebhookStartup = true
                             return@lit
                         }
@@ -294,30 +337,21 @@ class PipelineBuildWebhookService @Autowired constructor(
         return canWebhookStartup
     }
 
-    private fun canGitGenericWebhookStartUp(
-        element: Element
-    ): Boolean {
-        if (element is CodeGitGenericWebHookTriggerElement && element.isElementEnable()) {
-            return true
-        }
-        return false
-    }
-
-    fun webhookTriggerPipelineBuild(
+    open fun webhookTriggerPipelineBuild(
+        projectId: String,
         pipelineId: String,
         codeRepositoryType: String,
         matcher: ScmWebhookMatcher
     ): Boolean {
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: return false
 
-        val model = pipelineRepositoryService.getModel(pipelineId)
+        val model = pipelineRepositoryService.getModel(projectId, pipelineId)
         if (model == null) {
             logger.warn("[$pipelineId]| Fail to get the model")
             return false
         }
 
-        val projectId = pipelineInfo.projectId
         val userId = pipelineInfo.lastModifyUser
         val variables = mutableMapOf<String, String>()
         val container = model.stages[0].containers[0] as TriggerContainer
@@ -328,11 +362,12 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         // 寻找代码触发原子
         container.elements.forEach elements@{ element ->
-            if (!element.isElementEnable()) {
+            if (!element.isElementEnable() || element !is WebHookTriggerElement) {
                 logger.info("Trigger element is disable, can not start pipeline")
                 return@elements
             }
-            val webHookParams = ScmWebhookParamsFactory.getWebhookElementParams(element, variables) ?: return@elements
+            val webHookParams = WebhookElementParamsRegistrar.getService(element)
+                .getWebhookElementParams(element, variables) ?: return@elements
             val repositoryConfig = webHookParams.repositoryConfig
             if (repositoryConfig.getRepositoryId().isBlank()) {
                 logger.info("repositoryHashId is blank for code trigger pipeline $pipelineId ")
@@ -374,7 +409,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                     val webhookCommit = WebhookCommit(
                         userId = userId,
                         pipelineId = pipelineId,
-                        params = ScmWebhookParamsFactory.getStartParams(
+                        params = WebhookStartParamsRegistrar.getService(element).getStartParams(
                             projectId = projectId,
                             element = element,
                             repo = repo,
@@ -392,16 +427,26 @@ class PipelineBuildWebhookService @Autowired constructor(
                     )
                     val buildId =
                         client.getGateway(ServiceScmWebhookResource::class).webhookCommit(projectId, webhookCommit).data
-
                     PipelineWebhookBuildLogContext.addLogBuildInfo(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         taskId = element.id!!,
                         taskName = element.name,
                         success = true,
-                        triggerResult = buildId
+                        triggerResult = buildId,
+                        id = client.get(ServiceAllocIdResource::class)
+                            .generateSegmentId("PIPELINE_WEBHOOK_BUILD_LOG_DETAIL").data
                     )
                     logger.info("$pipelineId|$buildId|webhook trigger|(${element.name}|repo(${matcher.getRepoName()})")
+                    if (!buildId.isNullOrEmpty()) {
+                        pipelineBuildCommitService.create(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            matcher = matcher,
+                            repo = repo
+                        )
+                    }
                 } catch (ignore: Exception) {
                     logger.warn("$pipelineId|webhook trigger|(${element.name})|repo(${matcher.getRepoName()})", ignore)
                 }
@@ -429,10 +474,11 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         val repoName = webhookCommit.repoName
 
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw IllegalArgumentException("Pipeline($pipelineId) not found")
+        checkPermission(pipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
 
-        val model = pipelineRepositoryService.getModel(pipelineId)
+        val model = pipelineRepositoryService.getModel(projectId, pipelineId)
         if (model == null) {
             logger.warn("[$pipelineId]| Fail to get the model")
             return ""
@@ -440,16 +486,16 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         // 兼容从旧v1版本下发过来的请求携带旧的变量命名
         val params = mutableMapOf<String, Any>()
-        val startParamsWithType = mutableListOf<BuildParameters>()
+        val pipelineParamMap = HashMap<String, BuildParameters>(startParams.size, 1F)
         startParams.forEach {
             // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
             val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
             if (newVarName == null) { // 为空表示该变量是新的，或者不需要兼容，直接加入，能会覆盖旧变量转换而来的新变量
                 params[it.key] = it.value
-                startParamsWithType.add(BuildParameters(it.key, it.value))
+                pipelineParamMap[it.key] = BuildParameters(key = it.key, value = it.value, readOnly = true)
             } else if (!params.contains(newVarName)) { // 新变量还不存在，加入
                 params[newVarName] = it.value
-                startParamsWithType.add(BuildParameters(newVarName, it.value))
+                pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value, readOnly = true)
             }
         }
 
@@ -457,9 +503,9 @@ class PipelineBuildWebhookService @Autowired constructor(
         try {
             val buildId = pipelineBuildService.startPipeline(
                 userId = userId,
-                readyToBuildPipelineInfo = pipelineInfo,
+                pipeline = pipelineInfo,
                 startType = StartType.WEB_HOOK,
-                startParamsWithType = startParamsWithType,
+                pipelineParamMap = pipelineParamMap,
                 channelCode = pipelineInfo.channelCode,
                 isMobile = false,
                 model = model,
@@ -473,13 +519,21 @@ class PipelineBuildWebhookService @Autowired constructor(
                 variables = webhookCommit.params
             )
             // #2958 webhook触发在触发原子上输出变量
-            buildLogPrinter.addLines(buildId = buildId, logMessages = startParamsWithType.map {
+            buildLogPrinter.addLines(buildId = buildId, logMessages = pipelineParamMap.map {
                 LogMessage(
                     message = "${it.key}=${it.value}",
                     timestamp = System.currentTimeMillis(),
                     tag = startParams[PIPELINE_START_TASK_ID]?.toString() ?: ""
                 )
             })
+            if (buildId.isNotBlank()) {
+                webhookBuildParameterService.save(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    buildParameters = pipelineParamMap.values.toList()
+                )
+            }
             return buildId
         } catch (ignore: Exception) {
             logger.warn("[$pipelineId]| webhook trigger fail to start repo($repoName): ${ignore.message}", ignore)
@@ -488,4 +542,6 @@ class PipelineBuildWebhookService @Autowired constructor(
             logger.info("$pipelineId|WEBHOOK_TRIGGER|repo=$repoName|time=${System.currentTimeMillis() - startEpoch}")
         }
     }
+
+    abstract fun checkPermission(userId: String, projectId: String, pipelineId: String)
 }

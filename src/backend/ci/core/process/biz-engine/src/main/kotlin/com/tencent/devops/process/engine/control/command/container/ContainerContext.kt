@@ -44,6 +44,7 @@ data class ContainerContext(
     val event: PipelineBuildContainerEvent, // 当前容器消息事件
     var latestSummary: String, // 最新备注信息，64字符以内
     var cmdFlowState: CmdFlowState = CmdFlowState.CONTINUE, // 当前容器引擎命令流转状态
+    val stageMatrixCount: Int = 0,
     override var cmdFlowSeq: Int = 0, // 命令序号
     override val variables: Map<String, String>, // 变量
     override val watcher: Watcher, // 监控对象

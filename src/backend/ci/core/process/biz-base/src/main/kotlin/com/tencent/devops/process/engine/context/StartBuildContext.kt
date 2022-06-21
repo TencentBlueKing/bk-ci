@@ -33,7 +33,9 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.process.engine.control.DependOnUtils
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
@@ -50,6 +52,9 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
  * 启动流水线上下文类，属于非线程安全类
  */
 data class StartBuildContext(
+    val projectId: String,
+    val pipelineId: String,
+    val buildId: String,
     val actionType: ActionType,
     val executeCount: Int = 1,
     val stageRetry: Boolean,
@@ -64,7 +69,10 @@ data class StartBuildContext(
     val parentTaskId: String?,
     val channelCode: ChannelCode,
     val retryFailedContainer: Boolean,
-    val skipFailedTask: Boolean // 跳过失败的插件 配合 stageRetry 可判断是否跳过所有失败插件
+    var needUpdateStage: Boolean,
+    val skipFailedTask: Boolean, // 跳过失败的插件 配合 stageRetry 可判断是否跳过所有失败插件
+    var buildNoType: BuildNoType? = null,
+    var currentBuildNo: Int? = null
 ) {
 
     /**
@@ -90,7 +98,7 @@ data class StartBuildContext(
         }
     }
 
-    fun needSkipTaskWhenRetry(stage: Stage, taskId: String?): Boolean {
+    fun needSkipTaskWhenRetry(stage: Stage, container: Container, taskId: String?): Boolean {
         return when {
             stage.finally -> {
                 false // finally stage 不会跳过
@@ -99,6 +107,9 @@ data class StartBuildContext(
                 false
             }
             retryStartTaskId.isNullOrBlank() -> { // rebuild or start 不会跳过
+                false
+            }
+            isRetryDependOnContainer(container) -> { // 开启dependOn Job并状态是跳过的不会跳过
                 false
             }
             else -> { // 当前插件不是要失败重试或要跳过的插件，会跳过
@@ -119,24 +130,35 @@ data class StartBuildContext(
      * 是否是要重试的失败容器
      */
     fun isRetryFailedContainer(stage: Stage, container: Container): Boolean {
-        if (stage.finally) { // 当前是finallyStage
-            return if (stage.id == retryStartTaskId) { // finallyStage的重试
-                retryFailedContainer && BuildStatus.parse(container.status).isSuccess() // 只重试失败的Job
-            } else {
-                false
+        return when {
+            stage.finally -> {
+                if (stage.id == retryStartTaskId) { // finallyStage的重试
+                    retryFailedContainer && BuildStatus.parse(container.status).isSuccess() // 只重试失败的Job
+                } else {
+                    false
+                }
             }
+            isRetryDependOnContainer(container) -> false
+            else -> retryFailedContainer && BuildStatus.parse(container.status).isSuccess()
         }
-        // 其他
-        return retryFailedContainer && BuildStatus.parse(container.status).isSuccess()
+    }
+
+    // 失败重试,跳过的dependOn容器也应该被执行
+    fun isRetryDependOnContainer(container: Container): Boolean {
+        return DependOnUtils.enableDependOn(container) && BuildStatus.parse(container.status) == BuildStatus.SKIP
     }
 
     fun needRerun(stage: Stage): Boolean {
         return stage.finally || retryStartTaskId == null || stage.id!! == retryStartTaskId
     }
 
+    fun needRerunTask(stage: Stage, container: Container): Boolean {
+        return needRerun(stage) || isRetryDependOnContainer(container)
+    }
+
     companion object {
 
-        fun init(params: Map<String, Any>): StartBuildContext {
+        fun init(projectId: String, pipelineId: String, buildId: String, params: Map<String, Any>): StartBuildContext {
 
             val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]?.toString()
 
@@ -152,6 +174,9 @@ data class StartBuildContext(
             }
 
             return StartBuildContext(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
                 actionType = actionType,
                 executeCount = executeCount,
                 firstTaskId = params[PIPELINE_START_TASK_ID]?.toString() ?: "",
@@ -168,7 +193,8 @@ data class StartBuildContext(
                     ChannelCode.BS
                 },
                 retryFailedContainer = params[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toString()?.toBoolean() ?: false,
-                skipFailedTask = params[PIPELINE_SKIP_FAILED_TASK]?.toString()?.toBoolean() ?: false
+                skipFailedTask = params[PIPELINE_SKIP_FAILED_TASK]?.toString()?.toBoolean() ?: false,
+                needUpdateStage = false
             )
         }
     }

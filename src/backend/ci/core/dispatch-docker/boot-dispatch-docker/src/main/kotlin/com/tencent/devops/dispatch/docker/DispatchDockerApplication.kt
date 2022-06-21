@@ -29,8 +29,10 @@ package com.tencent.devops.dispatch.docker
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 import org.springframework.context.annotation.ComponentScan
+import org.springframework.scheduling.annotation.EnableScheduling
 
 @MicroService
+@EnableScheduling
 @ComponentScan(
     "com.tencent.devops.dispatch.docker",
     "com.tencent.devops.common.dispatch.sdk"

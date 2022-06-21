@@ -166,7 +166,7 @@
 </template>
 
 <script>
-    import * as cookie from 'js-cookie'
+    import cookie from 'js-cookie'
     import webSocketMessage from '@/utils/webSocketMessage'
     import breadCrumbs from '@/components/bread-crumbs.vue'
 
@@ -185,7 +185,7 @@
                 currentBuildNo: '',
                 currentPipelineId: '',
                 timer: -1,
-                docsLink: `${DOCS_URL_PREFIX}/store/plugins/create-plugin`,
+                docsLink: `${DOCS_URL_PREFIX}/Services/Store/start-new-task.md`,
                 showContent: false,
                 isOverflow: false,
                 isDropdownShow: false,
@@ -196,24 +196,25 @@
                     title: ''
                 },
                 categoryMap: {
-                    'TASK': this.$t('store.流水线插件'),
-                    'TRIGGER': this.$t('store.流水线触发器')
+                    TASK: this.$t('store.流水线插件'),
+                    TRIGGER: this.$t('store.流水线触发器')
                 },
                 jobTypeMap: {
-                    'AGENT': this.$t('store.编译环境'),
-                    'AGENT_LESS': this.$t('store.无编译环境')
+                    AGENT: this.$t('store.编译环境'),
+                    AGENT_LESS: this.$t('store.无编译环境')
                 },
                 osMap: {
-                    'LINUX': 'Linux',
-                    'WINDOWS': 'Windows',
-                    'MACOS': 'macOS'
+                    LINUX: 'Linux',
+                    WINDOWS: 'Windows',
+                    MACOS: 'macOS'
                     // 'NONE': '无构建环境'
                 },
                 releaseMap: {
-                    'NEW': this.$t('store.新上架'),
-                    'INCOMPATIBILITY_UPGRADE': this.$t('store.非兼容式升级'),
-                    'COMPATIBILITY_UPGRADE': this.$t('store.兼容式功能更新'),
-                    'COMPATIBILITY_FIX': this.$t('store.兼容式问题修正')
+                    NEW: this.$t('store.新上架'),
+                    INCOMPATIBILITY_UPGRADE: this.$t('store.非兼容式升级'),
+                    COMPATIBILITY_UPGRADE: this.$t('store.兼容式功能更新'),
+                    COMPATIBILITY_FIX: this.$t('store.兼容式问题修正'),
+                    HIS_VERSION_UPGRADE: this.$t('store.历史大版本问题修复')
                 },
                 versionDetail: {
                     atomCode: '',
@@ -477,13 +478,15 @@
             },
             confirmSubmit (message, confirmFn) {
                 const h = this.$createElement
-                const subHeader = h('p', { style: {
-                    textDecoration: 'none',
-                    cursor: 'pointer',
-                    whiteSpace: 'normal',
-                    textAlign: 'left',
-                    lineHeight: '24px'
-                } }, message)
+                const subHeader = h('p', {
+                    style: {
+                        textDecoration: 'none',
+                        cursor: 'pointer',
+                        whiteSpace: 'normal',
+                        textAlign: 'left',
+                        lineHeight: '24px'
+                    }
+                }, message)
                 this.$bkInfo({
                     type: 'warning',
                     subHeader,
@@ -727,10 +730,10 @@
             }
             .markdown-editor-show.info-value {
                 overflow-y: auto;
-                /deep/ .v-note-panel {
+                ::v-deep .v-note-panel {
                     border: none;
                 }
-                /deep/ .v-show-content {
+                ::v-deep .v-show-content {
                     background: #FAFBFD;
                 }
             }
@@ -787,7 +790,7 @@
                 margin-top: 40px;
             }
         }
-        /deep/ .bk-sideslider-wrapper {
+        ::v-deep .bk-sideslider-wrapper {
             top: 0;
             padding-bottom: 0;
             .bk-sideslider-content {

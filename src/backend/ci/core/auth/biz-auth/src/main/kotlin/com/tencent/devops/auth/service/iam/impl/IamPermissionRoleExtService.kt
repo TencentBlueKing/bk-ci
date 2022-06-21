@@ -44,8 +44,10 @@ import com.tencent.devops.auth.pojo.DefaultGroup
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.AuthGroupService
+import com.tencent.devops.auth.service.StrategyService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -63,7 +65,8 @@ open class IamPermissionRoleExtService @Autowired constructor(
     private val groupService: AuthGroupService,
     private val groupDao: AuthGroupDao,
     private val dslContext: DSLContext,
-    private val client: Client
+    private val client: Client,
+    private val strategyService: StrategyService
 ) : AbsPermissionRoleServiceImpl(groupService) {
 
     override fun groupCreateExt(
@@ -142,7 +145,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
         val pageInfoDTO = PageInfoDTO()
         pageInfoDTO.limit = 1000
         pageInfoDTO.offset = 0
-        val groupInfos = iamManagerService.getGradeManagerRoleGroup(projectId, pageInfoDTO)
+        val groupInfos = iamManagerService.getGradeManagerRoleGroup(projectId, pageInfoDTO) ?: return emptyList()
         val iamIds = groupInfos.results.map { it.id }
         val localGroupInfo = groupDao.getGroupByRelationIds(dslContext, iamIds)
         val resultList = mutableListOf<GroupInfoVo>()
@@ -210,67 +213,61 @@ open class IamPermissionRoleExtService @Autowired constructor(
     }
 
     private fun addDevelopPermission(roleId: Int, projectCode: String) {
-        val actions = mutableListOf<String>()
-        actions.add(PROJECT)
-        actions.add(PIPELINEACTION)
-        actions.add(CREDENTIALACTION)
-        actions.add(CERTACTION)
-        actions.add(REPERTORYACTION)
-        actions.add(ENVIRONMENTACTION)
-        actions.add(NODEACTION)
-//        actions.add(REPORTACTION)
-        val authorizationScopes = buildCreateAuthorizationScopes(actions, projectCode)
-        iamManagerService.createRolePermission(roleId, authorizationScopes)
+        addIamGroupAction(roleId, projectCode, DefaultGroupType.DEVELOPER)
     }
 
     private fun addTestPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
-        actions.add(PROJECT)
-        actions.add(PIPELINEACTION)
-        actions.add(CREDENTIALACTION)
-        actions.add(REPERTORYACTION)
-        actions.add(ENVIRONMENTACTION)
-        actions.add(NODEACTION)
-        val authorizationScopes = buildCreateAuthorizationScopes(actions, projectCode)
-        iamManagerService.createRolePermission(roleId, authorizationScopes)
+        addIamGroupAction(roleId, projectCode, DefaultGroupType.TESTER)
     }
 
     private fun addPMPermission(roleId: Int, projectCode: String) {
-        val actions = mutableListOf<String>()
-        actions.add(PROJECT)
-        actions.add(CREDENTIALACTION)
-        actions.add(REPERTORYACTION)
-        val authorizationScopes = buildCreateAuthorizationScopes(actions, projectCode)
-        iamManagerService.createRolePermission(roleId, authorizationScopes)
+        addIamGroupAction(roleId, projectCode, DefaultGroupType.PM)
     }
 
     private fun addQCPermission(roleId: Int, projectCode: String) {
-        val createActions = mutableListOf<String>()
-        createActions.add(PROJECT)
-        createActions.add(CREDENTIALACTION)
-        createActions.add(REPERTORYACTION)
-        createActions.add(RULECREATEACTION)
-        createActions.add(GROUPCREATEACTION)
-        val createAuthorizationScopes = buildCreateAuthorizationScopes(createActions, projectCode)
-        iamManagerService.createRolePermission(roleId, createAuthorizationScopes)
-        val ruleAction = RULEACTION.split(",")
-        val ruleAuthorizationScopes = buildOtherAuthorizationScopes(ruleAction, projectCode, "rule")
-        iamManagerService.createRolePermission(roleId, ruleAuthorizationScopes)
-        val groupAction = GROUPACTION.split(",")
-        val groupAuthorizationScopes = buildOtherAuthorizationScopes(groupAction, projectCode, "quality_group")
-        iamManagerService.createRolePermission(roleId, groupAuthorizationScopes)
+        addIamGroupAction(roleId, projectCode, DefaultGroupType.QC)
     }
 
     private fun addMaintainerPermission(roleId: Int, projectCode: String) {
-        val actions = mutableListOf<String>()
-        actions.add(PROJECT)
-        actions.add(PIPELINEACTION)
-        actions.add(CREDENTIALACTION)
-        actions.add(REPERTORYACTION)
-        actions.add(ENVIRONMENTACTION)
-        actions.add(NODEACTION)
-        val authorizationScopes = buildCreateAuthorizationScopes(actions, projectCode)
-        iamManagerService.createRolePermission(roleId, authorizationScopes)
+        addIamGroupAction(roleId, projectCode, DefaultGroupType.MAINTAINER)
+    }
+
+    private fun addIamGroupAction(
+        roleId: Int,
+        projectCode: String,
+        group: DefaultGroupType
+    ) {
+        val actions = getGroupStrategy(group)
+        if (actions.first.isNotEmpty()) {
+            val authorizationScopes = buildCreateAuthorizationScopes(actions.first, projectCode)
+            iamManagerService.createRolePermission(roleId, authorizationScopes)
+        }
+        if (actions.second.isNotEmpty()) {
+            actions.second.forEach { (resource, actions) ->
+                val groupAuthorizationScopes = buildOtherAuthorizationScopes(actions, projectCode, resource)
+                iamManagerService.createRolePermission(roleId, groupAuthorizationScopes)
+            }
+        }
+    }
+
+    private fun getGroupStrategy(defaultGroup: DefaultGroupType): Pair<List<String>, Map<String, List<String>>> {
+        val strategyInfo = strategyService.getStrategyByName(defaultGroup.displayName)
+            ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST,
+                defaultMessage = MessageCodeUtil.getCodeMessage(
+                    messageCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST,
+                    params = arrayOf(defaultGroup.value)
+                ))
+        logger.info("getGroupStrategy ${strategyInfo.strategy}")
+        val projectStrategyList = mutableListOf<String>()
+        val resourceStrategyMap = mutableMapOf<String, List<String>>()
+        strategyInfo.strategy.forEach { resource, list ->
+            val actionData = buildAction(resource, list)
+            projectStrategyList.addAll(actionData.first)
+            resourceStrategyMap.putAll(actionData.second)
+        }
+        return Pair(projectStrategyList, resourceStrategyMap)
     }
 
     private fun buildCreateAuthorizationScopes(actions: List<String>, projectCode: String): AuthorizationScopes {
@@ -363,13 +360,34 @@ open class IamPermissionRoleExtService @Autowired constructor(
             .build()
     }
 
+    private fun buildAction(resource: String, actionList: List<String>): Pair<List<String>, Map<String, List<String>>> {
+        val projectStrategyList = mutableListOf<String>()
+        val resourceStrategyMap = mutableMapOf<String, List<String>>()
+        val resourceStrategyList = mutableListOf<String>()
+        // 如果是project相关的资源, 直接拼接action
+        if (resource == AuthResourceType.PROJECT.value) {
+            actionList.forEach { projectAction ->
+                projectStrategyList.add(resource + "_" + projectAction)
+            }
+        } else {
+            actionList.forEach {
+                // 如果是非project资源。 若action是create,需挂在project下,因create相关的资源都是绑定在项目下。
+                if (it == AuthPermission.CREATE.value) {
+                    projectStrategyList.add(resource + "_" + it)
+                } else {
+                    resourceStrategyList.add(resource + "_" + it)
+                }
+            }
+            resourceStrategyMap[resource] = resourceStrategyList
+            logger.info("$resource $resourceStrategyList")
+        }
+        return Pair(projectStrategyList, resourceStrategyMap)
+    }
+
     companion object {
-        val logger = LoggerFactory.getLogger(AbsPermissionRoleMemberImpl::class.java)
+        private val logger = LoggerFactory.getLogger(AbsPermissionRoleMemberImpl::class.java)
         const val PROJECT = "project_view"
         const val PIPELINEACTION = "pipeline_create"
-
-        // TODO:确认代码库的默认权限
-        const val REPORTACTION = "pipeline_view"
         const val CREDENTIALACTION = "credential_create"
         const val CERTACTION = "cert_create"
         const val REPERTORYACTION = "repertory_create"

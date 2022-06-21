@@ -17,7 +17,7 @@ BEGIN
                     AND TABLE_NAME = 'T_CERT'
                     AND COLUMN_NAME = 'CERT_ID') THEN
         ALTER TABLE T_CERT
-            ADD COLUMN `CERT_ID` VARCHAR(128) NOT NULL AFTER PROJECT_ID;
+            ADD COLUMN `CERT_ID` VARCHAR(128) NOT NULL COMMENT '证书ID' AFTER PROJECT_ID;
     ELSEIF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db

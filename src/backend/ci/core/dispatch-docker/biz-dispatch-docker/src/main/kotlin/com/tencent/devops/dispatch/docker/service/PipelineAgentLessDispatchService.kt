@@ -29,9 +29,9 @@ package com.tencent.devops.dispatch.docker.service
 
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.dispatch.docker.client.BuildLessClient
 import com.tencent.devops.dispatch.docker.client.DockerHostClient
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
@@ -51,12 +51,13 @@ import org.springframework.stereotype.Service
 class PipelineAgentLessDispatchService @Autowired constructor(
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
-    private val jobQuotaService: JobQuotaService,
     private val dockerHostClient: DockerHostClient,
+    private val buildLessClient: BuildLessClient,
     private val dockerHostUtils: DockerHostUtils,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val redisUtils: RedisUtils,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val buildLessWhitelistService: BuildLessWhitelistService
 ) {
     fun startUpBuildLess(event: PipelineBuildLessStartupDispatchEvent) {
         val pipelineId = event.pipelineId
@@ -89,31 +90,44 @@ class PipelineAgentLessDispatchService @Autowired constructor(
             )
         }
 
-        val agentLessDockerIp = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
-            projectId = event.projectId,
-            pipelineId = event.pipelineId,
-            vmSeqId = event.vmSeqId,
-            specialIpSet = emptySet(),
-            unAvailableIpList = emptySet(),
-            clusterName = DockerHostClusterType.AGENT_LESS
-        )
-        dockerHostClient.startAgentLessBuild(agentLessDockerIp.first, agentLessDockerIp.second, event)
+        if (!buildLessWhitelistService.checkBuildLessWhitelist(event.projectId)) {
+            val agentLessDockerIp = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                vmSeqId = event.vmSeqId,
+                specialIpSet = emptySet(),
+                unAvailableIpList = emptySet(),
+                clusterName = DockerHostClusterType.BUILD_LESS
+            )
+            buildLessClient.startBuildLess(agentLessDockerIp.first, agentLessDockerIp.second, event)
+        } else {
+            val agentLessDockerIp = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                vmSeqId = event.vmSeqId,
+                specialIpSet = emptySet(),
+                unAvailableIpList = emptySet(),
+                clusterName = DockerHostClusterType.AGENT_LESS
+            )
+            dockerHostClient.startAgentLessBuild(agentLessDockerIp.first, agentLessDockerIp.second, event)
+        }
     }
 
     fun shutdown(event: PipelineBuildLessShutdownDispatchEvent) {
         try {
             LOG.info("[${event.buildId}]| Start to finish the pipeline build($event)")
+            val executeCount = event.executeCount
             if (event.vmSeqId.isNullOrBlank()) {
                 val records = pipelineDockerBuildDao
                     .listBuilds(dslContext, event.buildId)
                 records.forEach {
-                    finishBuild(it, event.buildResult)
+                    finishBuild(it, event.buildResult, executeCount)
                 }
             } else {
                 val record = pipelineDockerBuildDao
                     .getBuild(dslContext, event.buildId, event.vmSeqId!!.toInt())
                 if (record != null) {
-                    finishBuild(record, event.buildResult)
+                    finishBuild(record, event.buildResult, executeCount)
                 }
             }
         } finally {
@@ -123,20 +137,34 @@ class PipelineAgentLessDispatchService @Autowired constructor(
 
     private fun finishBuild(
         record: TDispatchPipelineDockerBuildRecord,
-        success: Boolean
+        success: Boolean,
+        executeCount: Int? = null
     ) {
         LOG.info("Finish the docker buildless (${record.buildId}) with result($success)")
         try {
             if (record.dockerIp.isNotEmpty()) {
-                dockerHostClient.endBuild(
-                    projectId = record.projectId,
-                    pipelineId = record.pipelineId,
-                    buildId = record.buildId,
-                    vmSeqId = record.vmSeqId?.toInt() ?: 0,
-                    containerId = record.containerId,
-                    dockerIp = record.dockerIp,
-                    clusterType = DockerHostClusterType.AGENT_LESS
-                )
+                if (buildLessWhitelistService.checkBuildLessWhitelist(record.projectId)) {
+                    buildLessClient.endBuild(
+                        projectId = record.projectId,
+                        pipelineId = record.pipelineId,
+                        buildId = record.buildId,
+                        vmSeqId = record.vmSeqId?.toInt() ?: 0,
+                        containerId = record.containerId,
+                        dockerIp = record.dockerIp,
+                        clusterType = DockerHostClusterType.BUILD_LESS
+                    )
+                } else {
+                    dockerHostClient.endBuild(
+                        projectId = record.projectId,
+                        pipelineId = record.pipelineId,
+                        buildId = record.buildId,
+                        vmSeqId = record.vmSeqId?.toInt() ?: 0,
+                        containerId = record.containerId,
+                        dockerIp = record.dockerIp,
+                        poolNo = record.poolNo,
+                        clusterType = DockerHostClusterType.AGENT_LESS
+                    )
+                }
             }
 
             pipelineDockerBuildDao.updateStatus(dslContext,
@@ -144,7 +172,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
                 record.vmSeqId,
                 if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
 
-            redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString())
+            redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString(), executeCount)
 
             // 无编译环境清除redisAuth
             redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))

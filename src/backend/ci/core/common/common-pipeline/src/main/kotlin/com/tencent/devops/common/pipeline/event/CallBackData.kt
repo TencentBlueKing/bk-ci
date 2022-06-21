@@ -89,6 +89,7 @@ enum class CallBackEvent {
     DELETE_PIPELINE,
     CREATE_PIPELINE,
     UPDATE_PIPELINE,
+    RESTORE_PIPELINE,
     BUILD_START,
     BUILD_END,
     BUILD_TASK_START,
@@ -110,6 +111,7 @@ data class BuildEvent(
     val pipelineId: String,
     val pipelineName: String,
     val userId: String,
+    val triggerUser: String? = null,
     val status: String,
     val startTime: Long = 0,
     val endTime: Long = 0,
@@ -126,6 +128,7 @@ data class SimpleModel(
 
 data class SimpleStage(
     val stageName: String,
+    val name: String, // 有业务场景会根据真实的stage-name做逻辑。 如id: stage-1,用户改名为"阶段1",会根据"阶段1"做逻辑
     var status: String,
     var startTime: Long = 0,
     var endTime: Long = 0,

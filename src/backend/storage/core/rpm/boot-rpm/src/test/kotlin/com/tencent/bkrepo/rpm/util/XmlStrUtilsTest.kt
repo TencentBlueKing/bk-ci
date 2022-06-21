@@ -92,7 +92,8 @@ class XmlStrUtilsTest {
         val file = File("/Users/weaving/Downloads/filelist/21e8c7280184d7428e4fa259c669fa4b2cfef05f-filelists.xml")
         val randomAccessFile = RandomAccessFile(file, "r")
         val index = indexOf(
-            randomAccessFile, """<package pkgid="cb764f7906736425286341f6c5939347b01c5c17" 
+            randomAccessFile,
+            """<package pkgid="cb764f7906736425286341f6c5939347b01c5c17" 
             |name="httpd" arch="x86_64">""".trimMargin()
         )
         Assertions.assertEquals(287, index)

@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
@@ -51,8 +52,10 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import com.tencent.devops.process.pojo.CallBackHeader
-import com.tencent.devops.process.pojo.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
+import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -78,7 +81,8 @@ import javax.net.ssl.X509TrustManager
 class CallBackControl @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val projectPipelineCallBackService: ProjectPipelineCallBackService
+    private val projectPipelineCallBackService: ProjectPipelineCallBackService,
+    private val client: Client
 ) {
 
     fun pipelineCreateEvent(projectId: String, pipelineId: String) {
@@ -93,6 +97,10 @@ class CallBackControl @Autowired constructor(
         callBackPipelineEvent(projectId, pipelineId, CallBackEvent.UPDATE_PIPELINE)
     }
 
+    fun pipelineRestoreEvent(projectId: String, pipelineId: String) {
+        callBackPipelineEvent(projectId, pipelineId, CallBackEvent.RESTORE_PIPELINE)
+    }
+
     private fun callBackPipelineEvent(projectId: String, pipelineId: String, callBackEvent: CallBackEvent) {
         logger.info("$projectId|$pipelineId|$callBackEvent|callback pipeline event")
         val list = projectPipelineCallBackService.listProjectCallBack(
@@ -105,6 +113,7 @@ class CallBackControl @Autowired constructor(
         }
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
             pipelineId = pipelineId,
             delete = null
         ) ?: return
@@ -150,21 +159,35 @@ class CallBackControl @Autowired constructor(
             }
 
         logger.info("$projectId|$pipelineId|$buildId|${callBackEvent.name}|${event.stageId}|${event.taskId}|callback")
-        val list = projectPipelineCallBackService.listProjectCallBack(
-            projectId = projectId,
-            events = callBackEvent.name
+        val list = mutableListOf<ProjectPipelineCallBack>()
+        list.addAll(
+            projectPipelineCallBackService.listProjectCallBack(
+                projectId = projectId,
+                events = callBackEvent.name
+            )
         )
+        val pipelineCallback = pipelineRepositoryService.getModel(projectId, pipelineId)
+            ?.getPipelineCallBack(projectId, callBackEvent) ?: emptyList()
+        if (pipelineCallback.isNotEmpty()) {
+            list.addAll(pipelineCallback)
+        }
+
         if (list.isEmpty()) {
             return
         }
 
-        val modelDetail = pipelineBuildDetailService.get(buildId = event.buildId, refreshStatus = false) ?: return
+        val modelDetail = pipelineBuildDetailService.get(
+            projectId = projectId,
+            buildId = event.buildId,
+            refreshStatus = false
+        ) ?: return
 
         val buildEvent = BuildEvent(
             buildId = event.buildId,
             pipelineId = modelDetail.pipelineId,
             pipelineName = modelDetail.pipelineName,
             userId = modelDetail.userId,
+            triggerUser = modelDetail.triggerUser,
             status = modelDetail.status,
             startTime = modelDetail.startTime,
             endTime = modelDetail.endTime ?: 0,
@@ -174,7 +197,6 @@ class CallBackControl @Autowired constructor(
             stageId = event.stageId,
             taskId = event.taskId
         )
-
         sendToCallBack(CallBackData(event = callBackEvent, data = buildEvent), list)
     }
 
@@ -221,10 +243,14 @@ class CallBackControl @Autowired constructor(
         var errorMsg: String? = null
         var status = ProjectPipelineCallbackStatus.SUCCESS
         try {
-            callbackClient.newCall(request).execute()
+            HttpRetryUtils.retry(MAX_RETRY_COUNT) {
+                callbackClient.newCall(request).execute()
+            }
         } catch (e: Exception) {
-            logger.warn("BKSystemErrorMonitor|[${callBack.projectId}]|CALL_BACK|" +
-                "url=${callBack.callBackUrl}|${callBack.events}", e)
+            logger.warn(
+                "BKSystemErrorMonitor|[${callBack.projectId}]|CALL_BACK|" +
+                        "url=${callBack.callBackUrl}|${callBack.events}", e
+            )
             errorMsg = e.message
             status = ProjectPipelineCallbackStatus.FAILED
         } finally {
@@ -248,19 +274,23 @@ class CallBackControl @Autowired constructor(
         endTime: Long
     ) {
         try {
-            projectPipelineCallBackService.createHistory(ProjectPipelineCallBackHistory(
-                projectId = callBack.projectId,
-                callBackUrl = callBack.callBackUrl,
-                events = callBack.events,
-                status = status,
-                errorMsg = errorMsg,
-                requestHeaders = requestHeaders,
-                requestBody = "",
-                responseCode = 0,
-                responseBody = "",
-                startTime = startTime,
-                endTime = endTime
-            ))
+            projectPipelineCallBackService.createHistory(
+                ProjectPipelineCallBackHistory(
+                    projectId = callBack.projectId,
+                    callBackUrl = callBack.callBackUrl,
+                    events = callBack.events,
+                    status = status,
+                    errorMsg = errorMsg,
+                    requestHeaders = requestHeaders,
+                    requestBody = "",
+                    responseCode = 0,
+                    responseBody = "",
+                    startTime = startTime,
+                    endTime = endTime,
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("PROJECT_PIPELINE_CALLBACK_HISTORY").data
+                )
+            )
         } catch (e: Throwable) {
             logger.error("[${callBack.projectId}]|[${callBack.callBackUrl}]|[${callBack.events}]|save fail", e)
         }
@@ -270,7 +300,13 @@ class CallBackControl @Autowired constructor(
         val stages = mutableListOf<SimpleStage>()
         model.stages.forEachIndexed { pos, s ->
             val jobs = mutableListOf<SimpleJob>()
-            val stage = SimpleStage(stageName = "Stage-${pos + 1}", status = "", jobs = jobs)
+            val stage = SimpleStage(
+                stageName = "Stage-${pos + 1}",
+                name = s.name ?: "",
+                status = "",
+                jobs = jobs
+            )
+            logger.info("parseModel ${model.name}|${stage.stageName}|${stage.name}|")
             stage.startTime = s.startEpoch ?: 0
             stages.add(stage)
 
@@ -365,6 +401,7 @@ class CallBackControl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(CallBackControl::class.java)
         private val JSON = MediaType.parse("application/json;charset=utf-8")
+        const val MAX_RETRY_COUNT = 3
 
         private fun anySslSocketFactory(): SSLSocketFactory {
             try {

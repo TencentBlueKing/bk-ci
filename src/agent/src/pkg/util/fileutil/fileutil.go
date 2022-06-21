@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,15 +28,17 @@
 package fileutil
 
 import (
+	"archive/zip"
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strconv"
 
-	"github.com/astaxie/beego/logs"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 )
 
 func Exists(file string) bool {
@@ -43,8 +46,8 @@ func Exists(file string) bool {
 	return !(err != nil && os.IsNotExist(err))
 }
 
-func TryRemoveFile(file string) {
-	os.Remove(file)
+func TryRemoveFile(file string) error {
+	return os.Remove(file)
 }
 
 func SetExecutable(file string) error {
@@ -147,5 +150,51 @@ func WriteString(file, str string) error {
 		return err
 	}
 
+	return nil
+}
+
+func Unzip(archive, target string) error {
+	reader, err := zip.OpenReader(archive)
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(target, 0755); err != nil {
+		return err
+	}
+
+	for _, file := range reader.File {
+		path := filepath.Join(target, file.Name)
+		if file.FileInfo().IsDir() {
+			os.MkdirAll(path, file.Mode())
+			continue
+		}
+
+		err2 := unzipFile(file, path)
+		if err2 != nil {
+			return err2
+		}
+	}
+
+	return nil
+}
+
+func unzipFile(file *zip.File, path string) error {
+	fileReader, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer func() { _ = fileReader.Close() }()
+
+	targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+	if err != nil {
+		return err
+	}
+
+	defer func() { _ = targetFile.Close() }()
+
+	if _, err := io.Copy(targetFile, fileReader); err != nil {
+		return err
+	}
 	return nil
 }

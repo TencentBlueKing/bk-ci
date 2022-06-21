@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package blog
 
 import (
@@ -7,8 +16,8 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/common/blog/glog"
-	"build-booster/common/conf"
+	"github.com/Tencent/bk-ci/src/booster/common/blog/glog"
+	"github.com/Tencent/bk-ci/src/booster/common/conf"
 )
 
 // GlogWriter serves as a bridge between the standard log package and the glog package.
@@ -24,7 +33,18 @@ var once sync.Once
 
 // InitLogs initializes logs the way we want for blog.
 func InitLogs(logConfig conf.LogConfig) {
-	glog.InitLogs(logConfig.ToStdErr, logConfig.AlsoToStdErr, logConfig.Verbosity, logConfig.StdErrLevel, logConfig.StdErrThreshold, logConfig.VModule, logConfig.TraceLocation, logConfig.LogDir, logConfig.LogMaxSize, logConfig.LogMaxNum)
+	glog.InitLogs(
+		logConfig.ToStdErr,
+		logConfig.AlsoToStdErr,
+		logConfig.AsyncFlush,
+		logConfig.Verbosity,
+		logConfig.StdErrLevel,
+		logConfig.StdErrThreshold,
+		logConfig.VModule,
+		logConfig.TraceLocation,
+		logConfig.LogDir,
+		logConfig.LogMaxSize,
+		logConfig.LogMaxNum)
 
 	Debugf = glog.V(3).Infof
 	once.Do(func() {
@@ -82,6 +102,7 @@ func SetV(level int32) {
 	Debugf = glog.V(3).Infof
 }
 
+// SetStderrLevel 设置高于等于level的内容会被打到stderr中
 func SetStderrLevel(level StderrLevel) {
 	glog.SetStderrLevel(int32(level))
 }

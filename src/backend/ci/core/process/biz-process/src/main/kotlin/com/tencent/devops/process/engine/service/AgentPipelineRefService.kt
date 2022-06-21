@@ -52,7 +52,7 @@ class AgentPipelineRefService @Autowired constructor(
         logger.info("updateAgentPipelineRef, [$userId|$action|$projectId|$pipelineId]")
         var model: Model? = null
         if (action != "delete_pipeline") {
-            val modelString = pipelineResDao.getLatestVersionModelString(dslContext, pipelineId)
+            val modelString = pipelineResDao.getLatestVersionModelString(dslContext, projectId, pipelineId)
             if (modelString.isNullOrBlank()) {
                 logger.warn("model not found: [$userId|$action|$projectId|$pipelineId]")
                 return
@@ -89,7 +89,7 @@ class AgentPipelineRefService @Autowired constructor(
                             pipelineId = pipelineId,
                             pipelineName = pipelineModel.name,
                             vmSeqId = container.id,
-                            jobId = container.containerId,
+                            jobId = container.containerHashId,
                             jobName = container.name
                         )
                     )

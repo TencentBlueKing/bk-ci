@@ -39,7 +39,7 @@
                 const paramsMap = {}
                 if (this.element.inputParam) {
                     const rowArr = this.element.inputParam.split('\n')
-                    rowArr.map(row => {
+                    rowArr.forEach(row => {
                         const itemArr = row.split('=')
                         if (itemArr[0]) {
                             Object.assign(paramsMap, { [itemArr[0]]: itemArr[1] || '' })

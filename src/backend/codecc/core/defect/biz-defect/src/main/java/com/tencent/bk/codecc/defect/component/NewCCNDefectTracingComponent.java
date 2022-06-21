@@ -21,7 +21,7 @@ import com.tencent.bk.codecc.defect.pojo.AggregateDefectInputModel;
 import com.tencent.bk.codecc.defect.pojo.AggregateDefectOutputModel;
 import com.tencent.bk.codecc.defect.vo.CommitDefectVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
-import com.tencent.devops.common.api.util.JsonUtil;
+import com.tencent.devops.common.api.codecc.util.JsonUtil;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.util.PathUtils;
 import java.util.HashSet;
@@ -212,7 +212,7 @@ public class NewCCNDefectTracingComponent extends AbstractDefectTracingComponent
 
             log.info("save defect trace result: taskId:{}, toolName:{}, buildId:{}, defectCount:{}", taskId, toolName,
                     buildEntity.getBuildId(), upsertDefectList.size());
-            ccnDefectRepository.save(upsertDefectList);
+            ccnDefectRepository.saveAll(upsertDefectList);
         }
         log.info("end saveDefectFile, cost:{}, taskId:{}, toolName:{}, buildId:{}",
                 System.currentTimeMillis() - beginTime, taskId, toolName, buildEntity.getBuildId());
@@ -450,14 +450,14 @@ public class NewCCNDefectTracingComponent extends AbstractDefectTracingComponent
                 && (ccnDefectEntity.getStatus() & ComConstants.DefectStatus.FIXED.value()) == 0
                 && (PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, filterPaths)
                 || (CollectionUtils.isNotEmpty(pathList)
-                && !PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, pathList)))) {
+                && !PathUtils.checkIfMaskByPath(filePath, pathList)))) {
             ccnDefectEntity.setStatus(ccnDefectEntity.getStatus() | ComConstants.DefectStatus.PATH_MASK.value());
             ccnDefectEntity.setExcludeTime(curTime);
             return true;
         }
         // 如果已经是被路径屏蔽的，但是实质没有被路径屏蔽，则要把屏蔽状态去掉
         else if ((CollectionUtils.isEmpty(pathList)
-                || PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, pathList))
+                || PathUtils.checkIfMaskByPath(filePath, pathList))
                 && !PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, filterPaths)
                 && (ccnDefectEntity.getStatus() & ComConstants.DefectStatus.PATH_MASK.value()) > 0) {
             ccnDefectEntity.setStatus(ccnDefectEntity.getStatus() - ComConstants.DefectStatus.PATH_MASK.value());

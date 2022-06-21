@@ -30,8 +30,10 @@ package com.tencent.devops.log.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.enums.LogType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -75,6 +77,9 @@ interface ServiceLogResource {
         @ApiParam("是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
+        @ApiParam("过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
@@ -105,6 +110,9 @@ interface ServiceLogResource {
         @ApiParam("是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
+        @ApiParam("过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
         @ApiParam("日志行数", required = false)
         @QueryParam("num")
         num: Int? = 100,
@@ -150,6 +158,9 @@ interface ServiceLogResource {
         @ApiParam("是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
+        @ApiParam("过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
@@ -212,4 +223,22 @@ interface ServiceLogResource {
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<QueryLogStatus>
+
+    @ApiOperation("获取当前构建的最大行号")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/last_line_num")
+    fun getLogLastLineNum(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<QueryLogLineNum>
 }

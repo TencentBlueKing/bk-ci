@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,8 +32,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/astaxie/beego/logs"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -127,7 +129,7 @@ func (r *HttpClient) Body(body interface{}) *HttpClient {
 	}
 	r.body = bytes.NewReader(data)
 
-	logs.Info("body: ", string(data))
+	logs.Info(fmt.Sprintf("url:[%s]|request body: %s", r.url, string(data)))
 	return r
 }
 
@@ -135,7 +137,7 @@ func (r *HttpClient) Execute() *HttpResult {
 	result := new(HttpResult)
 	defer func() {
 		if err := recover(); err != nil {
-			logs.Error("http request err: ", err)
+			logs.Error(fmt.Sprintf("url:[%s]|http request err: ", r.url), err)
 			result.Error = errors.New("http request err")
 		}
 	}()
@@ -172,8 +174,7 @@ func (r *HttpClient) Execute() *HttpResult {
 
 	result.Body = body
 	result.Status = resp.StatusCode
-	logs.Info("http status: ", resp.Status)
-	logs.Info("http respBody: ", string(body))
+	logs.Info(fmt.Sprintf("url:[%s]|http status: %s, http respBody: %s", r.url, resp.Status, string(body)))
 	return result
 }
 

@@ -47,8 +47,8 @@ import io.swagger.annotations.ApiModelProperty
     defaultImpl = LocalConfiguration::class
 )
 @JsonSubTypes(
-    JsonSubTypes.Type(value = LocalConfiguration::class, name = "rpm-local"), // 兼容处理
     JsonSubTypes.Type(value = LocalConfiguration::class, name = LocalConfiguration.type),
+    JsonSubTypes.Type(value = LocalConfiguration::class, name = "rpm-local"), // 兼容处理
     JsonSubTypes.Type(value = RemoteConfiguration::class, name = RemoteConfiguration.type),
     JsonSubTypes.Type(value = VirtualConfiguration::class, name = VirtualConfiguration.type),
     JsonSubTypes.Type(value = CompositeConfiguration::class, name = CompositeConfiguration.type)

@@ -49,17 +49,19 @@ interface Container {
     var systemElapsed: Long? // 系统耗时（开机时间）
     var elementElapsed: Long? // 插件执行耗时
     var canRetry: Boolean? // 当前job是否能重试
-    var containerId: String? // container 唯一ID
+    var containerId: String? // container 流水线唯一ID，同seq id
+    var containerHashId: String? // container 全局唯一ID
     var startVMStatus: String?
     var executeCount: Int?
     val jobId: String? // 用户自定义id
     var containPostTaskFlag: Boolean? // 是否包含post任务
+    val matrixGroupFlag: Boolean? // 是否为构建矩阵组
 
     /**
      * 只存储Container相关的配置，elements不会存储。
      */
     fun genTaskParams(): MutableMap<String, Any> {
-        val configParams = JsonUtil.toMutableMapSkipEmpty(this)
+        val configParams = JsonUtil.toMutableMap(this)
         if (elements.isNotEmpty()) {
             configParams["elements"] = listOf<Element>() // ignore elements storage
         }
@@ -67,4 +69,12 @@ interface Container {
     }
 
     fun getClassType(): String
+
+    fun getContainerById(vmSeqId: String): Container?
+
+    fun retryFreshMatrixOption()
+
+    fun fetchGroupContainers(): List<Container>?
+
+    fun fetchMatrixContext(): Map<String, String>?
 }

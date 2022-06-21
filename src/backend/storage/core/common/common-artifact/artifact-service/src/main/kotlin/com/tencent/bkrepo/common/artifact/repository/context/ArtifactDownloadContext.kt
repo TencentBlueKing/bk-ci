@@ -31,8 +31,19 @@
 
 package com.tencent.bkrepo.common.artifact.repository.context
 
+import com.tencent.bkrepo.common.api.constant.HttpHeaders
 import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
+import com.tencent.bkrepo.common.artifact.constant.DownloadInterceptorType
+import com.tencent.bkrepo.common.artifact.constant.REPO_KEY
+import com.tencent.bkrepo.common.artifact.interceptor.DownloadInterceptor
+import com.tencent.bkrepo.common.artifact.interceptor.impl.FilenameInterceptor
+import com.tencent.bkrepo.common.artifact.interceptor.impl.MetadataInterceptor
+import com.tencent.bkrepo.common.artifact.interceptor.impl.MobileInterceptor
+import com.tencent.bkrepo.common.artifact.interceptor.impl.WebInterceptor
+import com.tencent.bkrepo.common.security.util.SecurityUtils
+import com.tencent.bkrepo.common.service.util.HeaderUtils
 import com.tencent.bkrepo.repository.pojo.repo.RepositoryDetail
+import org.slf4j.LoggerFactory
 
 /**
  * 构件下载context
@@ -40,5 +51,60 @@ import com.tencent.bkrepo.repository.pojo.repo.RepositoryDetail
 open class ArtifactDownloadContext(
     repo: RepositoryDetail? = null,
     artifact: ArtifactInfo? = null,
-    var useDisposition: Boolean = true
-) : ArtifactContext(repo, artifact)
+    artifacts: List<ArtifactInfo>? = null,
+    userId: String = SecurityUtils.getUserId(),
+    var useDisposition: Boolean = false
+) : ArtifactContext(repo, artifact, userId) {
+
+    val repo = repo ?: request.getAttribute(REPO_KEY) as RepositoryDetail
+    val artifacts = artifacts
+
+    @Suppress("UNCHECKED_CAST")
+    fun getInterceptors(): List<DownloadInterceptor<*>> {
+        val interceptorList = mutableListOf<DownloadInterceptor<*>>()
+        try {
+            val settings = repo.configuration.settings
+            val interceptors = settings[INTERCEPTORS] as? List<Map<String, Any>>
+            interceptors?.forEach {
+                val type: DownloadInterceptorType = DownloadInterceptorType.valueOf(it[TYPE].toString())
+                val rules: Map<String, Any> by it
+                val interceptor = buildInterceptor(type, rules)
+                interceptor?.let { interceptorList.add(interceptor) }
+            }
+            logger.debug("get repo[${repo.projectId}/${repo.name}] download interceptor: $interceptorList")
+        } catch (e: Exception) {
+            logger.warn("fail to get repo[${repo.projectId}/${repo.name}] download interceptor: $e")
+        }
+        return interceptorList
+    }
+
+    private fun buildInterceptor(type: DownloadInterceptorType, rules: Map<String, Any>): DownloadInterceptor<*>? {
+        val downloadSource = getDownloadSource()
+        return when {
+            type == DownloadInterceptorType.FILENAME -> FilenameInterceptor(rules)
+            type == DownloadInterceptorType.METADATA -> MetadataInterceptor(rules)
+            type == DownloadInterceptorType.WEB && type == downloadSource -> WebInterceptor(rules)
+            type == DownloadInterceptorType.MOBILE && type == downloadSource -> MobileInterceptor(rules)
+            else -> null
+        }
+    }
+
+    private fun getDownloadSource(): DownloadInterceptorType {
+        val userAgent = HeaderUtils.getHeader(HttpHeaders.USER_AGENT) ?: return DownloadInterceptorType.WEB
+        logger.debug("download user agent: $userAgent")
+        return when {
+            userAgent.contains(ANDROID_APP_USER_AGENT) -> DownloadInterceptorType.MOBILE
+            userAgent.contains(IOS_APP_USER_AGENT) -> DownloadInterceptorType.MOBILE
+            else -> DownloadInterceptorType.WEB
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ArtifactDownloadContext::class.java)
+        private const val INTERCEPTORS = "interceptors"
+        private const val ANDROID_APP_USER_AGENT = "BKCI_APP"
+        private const val IOS_APP_USER_AGENT = "com.apple.appstored"
+        private const val TYPE = "type"
+    }
+
+}

@@ -32,6 +32,7 @@ dependencies {
     api(project(":core:process:biz-engine"))
     api(project(":core:process:biz-process"))
     api(project(":core:process:biz-process-sample"))
+    api(project(":core:process:biz-base"))
     api(project(":core:common:common-auth:common-auth-mock"))
     api(project(":core:common:common-auth:common-auth-blueking"))
     api(project(":core:common:common-auth:common-auth-v3"))

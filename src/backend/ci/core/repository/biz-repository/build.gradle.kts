@@ -35,7 +35,10 @@ dependencies {
     api(project(":core:common:common-scm"))
     api(project(":core:repository:api-repository"))
     api(project(":core:repository:model-repository"))
+    api(project(":core:repository:plugin-tapd"))
     api(project(":core:common:common-db"))
+    api(project(":core:auth:api-auth"))
+
     api("com.google.code.gson:gson")
     api("org.eclipse.jgit:org.eclipse.jgit")
 }

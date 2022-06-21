@@ -86,12 +86,12 @@ object ShellUtil {
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
-        systemEnvVariables: Map<String, String>? = null,
         prefix: String = "",
         errorMessage: String? = null,
         workspace: File = dir,
         print2Logger: Boolean = true,
-        elementId: String? = null
+        jobId: String? = null,
+        stepId: String? = null
     ): String {
         return executeUnixCommand(
             command = getCommandFile(
@@ -101,16 +101,16 @@ object ShellUtil {
                 workspace = workspace,
                 buildEnvs = buildEnvs,
                 runtimeVariables = runtimeVariables,
-                continueNoneZero = continueNoneZero,
-                systemEnvVariables = systemEnvVariables
+                continueNoneZero = continueNoneZero
             ).canonicalPath,
             sourceDir = dir,
             prefix = prefix,
             errorMessage = errorMessage,
             print2Logger = print2Logger,
             executeErrorMessage = "",
+            jobId = jobId,
             buildId = buildId,
-            elementId = elementId
+            stepId = stepId
         )
     }
 
@@ -121,7 +121,6 @@ object ShellUtil {
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
-        systemEnvVariables: Map<String, String>? = null,
         workspace: File = dir
     ): File {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
@@ -135,11 +134,6 @@ object ShellUtil {
 
         command.append("export $WORKSPACE_ENV=${workspace.absolutePath}\n")
             .append("export DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\n")
-
-        // 设置系统环境变量
-        systemEnvVariables?.forEach { (name, value) ->
-            command.append("export $name=$value\n")
-        }
 
         val commonEnv = runtimeVariables.plus(CommonEnv.getCommonEnv())
             .filterNot { specialEnv(it.key) }
@@ -189,9 +183,9 @@ object ShellUtil {
         }
 
         command.append(setEnv.replace(oldValue = "##resultFile##",
-            newValue = File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath))
+            newValue = "\"${File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath}\""))
         command.append(setGateValue.replace(oldValue = "##gateValueFile##",
-            newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath))
+            newValue = "\"${File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath}\""))
         command.append(script)
 
         file.writeText(command.toString())
@@ -208,7 +202,8 @@ object ShellUtil {
         print2Logger: Boolean = true,
         executeErrorMessage: String? = null,
         buildId: String? = null,
-        elementId: String? = null
+        jobId: String? = null,
+        stepId: String? = null
     ): String {
         try {
             return CommandLineUtils.execute(
@@ -218,7 +213,8 @@ object ShellUtil {
                 prefix = prefix,
                 executeErrorMessage = executeErrorMessage,
                 buildId = buildId,
-                elementId = elementId
+                jobId = jobId,
+                stepId = stepId
             )
         } catch (ignored: Throwable) {
             val errorInfo = errorMessage ?: "Fail to run the command $command"

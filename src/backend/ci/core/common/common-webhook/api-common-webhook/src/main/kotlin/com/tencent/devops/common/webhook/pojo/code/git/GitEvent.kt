@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.pojo.code.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
@@ -36,16 +37,21 @@ import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 @JsonSubTypes(
     JsonSubTypes.Type(value = GitPushEvent::class, name = GitPushEvent.classType),
     JsonSubTypes.Type(value = GitTagPushEvent::class, name = GitTagPushEvent.classType),
-    JsonSubTypes.Type(value = GitMergeRequestEvent::class, name = GitMergeRequestEvent.classType)
+    JsonSubTypes.Type(value = GitMergeRequestEvent::class, name = GitMergeRequestEvent.classType),
+    JsonSubTypes.Type(value = GitIssueEvent::class, name = GitIssueEvent.classType),
+    JsonSubTypes.Type(value = GitReviewEvent::class, name = GitReviewEvent.classType),
+    JsonSubTypes.Type(value = GitNoteEvent::class, name = GitNoteEvent.classType)
 )
 abstract class GitEvent : CodeWebhookEvent
 
-@Suppress("ALL")
+@Suppress("ConstructorParameterNaming")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCommitRepository(
     val name: String,
+    val url: String,
     val git_http_url: String,
-    val git_ssh_url: String
+    val git_ssh_url: String,
+    val homepage: String
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -71,7 +77,7 @@ data class GitUser(
     val username: String
 )
 
-@Suppress("ALL")
+@Suppress("ConstructorParameterNaming")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitProject(
     val name: String,
@@ -89,3 +95,31 @@ data class GitRepository(
     val description: String? = null,
     val homepage: String
 )
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitChangeFileInfo(
+    @JsonProperty("old_path")
+    val oldPath: String?,
+    @JsonProperty("new_path")
+    val newPath: String?,
+    @JsonProperty("a_mode")
+    val aMode: Long?,
+    @JsonProperty("b_mode")
+    val bMode: Long?,
+    @JsonProperty("new_file")
+    val newFile: Boolean?,
+    @JsonProperty("renamed_file")
+    val renameFile: Boolean?,
+    @JsonProperty("deleted_file")
+    val deletedFile: Boolean?,
+    val diff: String?
+)
+
+fun GitEvent.isDeleteEvent() = (this is GitPushEvent && this.isDeleteBranch()) ||
+    (this is GitTagPushEvent && this.isDeleteTag())
+
+fun GitEvent.isMrMergeEvent() = this is GitMergeRequestEvent && this.isMrMergeEvent()
+
+fun GitEvent.isMrForkEvent() = this is GitMergeRequestEvent && this.isMrForkEvent()
+
+fun GitEvent.isMrForkNotMergeEvent() = !this.isMrMergeEvent() && this.isMrForkEvent()

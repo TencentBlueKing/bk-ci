@@ -100,6 +100,7 @@
                                 <div style="min-width: 100%">
                                     <bk-select v-model="relateTemplateForm.projectCode"
                                         searchable
+                                        @change="handleChangeProject"
                                         @toggle="toggleProjectList"
                                         :placeholder="$t('store.请选择项目')"
                                         :enable-virtual-scroll="projectList && projectList.length > 3000"
@@ -456,6 +457,13 @@
                     const res = await this.$store.dispatch('store/requestProjectList')
                     this.projectList.splice(0, this.projectList.length, ...res)
                 }
+            },
+
+            /**
+             * 切换所属项目，清空模板数据
+             */
+            handleChangeProject () {
+                this.relateTemplateForm.template = ''
             },
 
             async selectedTplProject () {

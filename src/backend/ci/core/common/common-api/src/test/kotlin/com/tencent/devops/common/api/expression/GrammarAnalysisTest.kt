@@ -27,9 +27,9 @@
 
 package com.tencent.devops.common.api.expression
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.fail
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.fail
+import org.junit.jupiter.api.Test
 
 class GrammarAnalysisTest {
 
@@ -76,6 +76,17 @@ class GrammarAnalysisTest {
             GrammarAnalysis(items).analysis()
         } catch (e: Exception) {
             assertEquals(e.javaClass, IllegalArgumentException::class.java)
+        }
+    }
+
+    @Test
+    fun analysis5() {
+        val str = "featch/reviews == featch/reviews"
+        val items = Lex(str.toList().toMutableList()).getToken()
+        try {
+            assertEquals(true, GrammarAnalysis(items).analysis())
+        } catch (e: Exception) {
+            fail()
         }
     }
 }

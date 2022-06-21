@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
 import java.nio.file.Paths
+import java.util.concurrent.TimeUnit
 
 @Service
 class ImageBuildHandler(
@@ -79,10 +80,12 @@ class ImageBuildHandler(
             args.map { it.trim().split("=") }.forEach {
                 step.withBuildArg(it.first(), it.last())
             }
-            step.exec(MyBuildImageResultCallback(buildId, pipelineTaskId, dockerHostBuildApi))
-                .awaitImageId()
+            val imageId = step.exec(MyBuildImageResultCallback(buildId, pipelineTaskId, dockerHostBuildApi))
+                .awaitImageId(60, TimeUnit.MINUTES)
+            this.imageId = imageId
+            logger.info("[$buildId]|[$vmSeqId] Build docker image mageId: $imageId")
 
-            nextHandler?.handlerRequest(this)
+            nextHandler.get()?.handlerRequest(this)
         }
     }
 

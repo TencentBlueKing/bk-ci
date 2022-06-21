@@ -2,7 +2,8 @@
     <article class="pipeline-content"
         v-bkloading="{
             isLoading: pageLoading
-        }">
+        }"
+    >
         <pipeline-header :title="header.title">
             <span class="default-subheader-icon"
                 slot="logo">
@@ -183,7 +184,7 @@
                 }
             },
             tutorial () {
-                window.open(`${DOCS_URL_PREFIX}`, '_blank')
+                window.open(`${DOCS_URL_PREFIX}/产品简介/README.md`, '_blank')
             },
             routerToManage (type) {
                 this.$router.push({ name: type })
@@ -256,7 +257,7 @@
         max-width: 80%;
         height: 59px;
         .manage-view-btn {
-            margin-top: 18px;
+            margin-top: 17px;
             width: 24px;
             height: 24px;
             border: 2px dotted $borderWeightColor;
@@ -306,7 +307,15 @@
             .bk-tab-header-setting {
                 margin-left: 10px;
             }
+            .prev,
+            .next {
+                height: 59px !important;
+                line-height: 59px !important;
+            }
         }
+    }
+    .bk-tab-label-list-has-bar {
+        height: 59px !important;
     }
     .label-button {
         margin-right: -5px;

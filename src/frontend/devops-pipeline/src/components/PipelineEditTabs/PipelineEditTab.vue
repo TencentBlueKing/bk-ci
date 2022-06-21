@@ -59,20 +59,17 @@
         },
         methods: {
             ...mapActions('atom', [
-                'togglePropertyPanel',
-                'setPipeline',
-                'setPipelineEditing'
+                'togglePropertyPanel'
             ]),
             ...mapActions('common', [
-                'requestQualityAtom',
                 'requestInterceptAtom'
             ]),
             getLinkAtomIndex (stages, hash) { // 新增
                 let index = null
                 const atomId = hash.substr(1)
-                stages.map((stage, sIndex) => {
-                    stage.containers.map((container, cIndex) => {
-                        container.elements.map((ele, eIndex) => {
+                stages.forEach((stage, sIndex) => {
+                    stage.containers.forEach((container, cIndex) => {
+                        container.elements.forEach((ele, eIndex) => {
                             if (ele.id === atomId) {
                                 index = {
                                     stageIndex: sIndex,
@@ -87,9 +84,9 @@
             },
             getAtomIndex (stages, atomName) {
                 let index = null
-                stages.map((stage, sIndex) => {
-                    stage.containers.map((container, cIndex) => {
-                        container.elements.map((ele, eIndex) => {
+                stages.forEach((stage, sIndex) => {
+                    stage.containers.forEach((container, cIndex) => {
+                        container.elements.forEach((ele, eIndex) => {
                             if (ele['@type'] === atomName || ele.atomCode === atomName) {
                                 index = {
                                     stageIndex: sIndex,

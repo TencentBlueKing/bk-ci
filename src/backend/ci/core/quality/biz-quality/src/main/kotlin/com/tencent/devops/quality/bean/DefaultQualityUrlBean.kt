@@ -35,6 +35,8 @@ class DefaultQualityUrlBean constructor(private val commonConfig: CommonConfig) 
         projectCode: String,
         pipelineId: String,
         buildId: String,
+        position: String,
+        stageId: String?,
         runtimeVariable: Map<String, String>?
     ): String {
         return "${HomeHostUtil

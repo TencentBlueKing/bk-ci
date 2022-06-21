@@ -206,11 +206,23 @@ abstract class AbstractPipelinePermissionService constructor(
      * @param projectId projectId
      * @param group 项目组角色
      */
-    override fun isProjectUser(userId: String, projectId: String, group: BkAuthGroup?): Boolean =
-        authProjectApi.isProjectUser(
+    override fun isProjectUser(userId: String, projectId: String, group: BkAuthGroup?): Boolean {
+        if (group != null && group == BkAuthGroup.MANAGER) {
+            return checkProjectManager(userId, projectId)
+        }
+        return authProjectApi.isProjectUser(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
             projectCode = projectId,
             group = group
         )
+    }
+
+    override fun checkProjectManager(userId: String, projectId: String): Boolean {
+        return authProjectApi.checkProjectManager(
+            userId = userId,
+            projectCode = projectId,
+            serviceCode = pipelineAuthServiceCode
+        )
+    }
 }

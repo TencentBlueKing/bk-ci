@@ -89,7 +89,9 @@
                         this.active = 'overview'
                     }
                 }).catch((err) => {
-                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                    if (err.code !== 2300017) {
+                        this.$bkMessage({ theme: 'error', message: err.message || err })
+                    }
                 }).finally(() => {
                     this.isloading = false
                 })
@@ -127,7 +129,7 @@
             cursor: pointer;
             padding: 0 18px;
         }
-        /deep/ .bk-tab-header {
+        ::v-deep .bk-tab-header {
             background-color: #fff;
             height: 5.96vh !important;
             line-height: 5.96vh !important;
@@ -156,7 +158,7 @@
                 line-height: 5.96vh !important;
             }
         }
-        /deep/ .bk-tab-section {
+        ::v-deep .bk-tab-section {
             padding: 0;
         }
     }

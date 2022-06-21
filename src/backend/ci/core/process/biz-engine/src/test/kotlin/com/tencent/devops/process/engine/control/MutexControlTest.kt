@@ -34,11 +34,11 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
-import org.junit.Assert
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 
-@Suppress("ALL")
+@Suppress("ALL", "UNUSED")
 class MutexControlTest {
 
     private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(mock())
@@ -48,6 +48,7 @@ class MutexControlTest {
     private val containerId: String = "1"
     private val projectId: String = "demo"
     private val pipelineId: String = "p-12345678901234567890123456789012"
+    private val containerHashId: String = "c-12345678901234567890123456789012"
     private val stageId: String = "stage-1"
     private val mutexGroup: MutexGroup = MutexGroup(
         enable = true,
@@ -62,15 +63,19 @@ class MutexControlTest {
         buildId = buildId,
         stageId = stageId,
         containerId = containerId,
+        containerHashId = containerHashId,
         containerType = "vmBuild",
         seq = containerId.toInt(),
         status = BuildStatus.RUNNING,
-        controlOption = null
+        controlOption = null,
+        matrixGroupId = null,
+        matrixGroupFlag = false
     )
     private val mutexControl: MutexControl = MutexControl(
         buildLogPrinter = buildLogPrinter,
         redisOperation = redisOperation,
-        pipelineRuntimeService = mock()
+        pipelineUrlBean = mock(),
+        pipelineContainerService = mock()
     )
 
     @Test
@@ -80,25 +85,23 @@ class MutexControlTest {
             mutexGroup = mutexGroup,
             variables = variables
         )
-        Assert.assertNotNull(initMutexGroup)
-        Assert.assertEquals("mutexGroupNameTest", initMutexGroup!!.mutexGroupName)
-        Assert.assertEquals(10080, initMutexGroup.timeout)
-        Assert.assertEquals(10, initMutexGroup.queue)
+        Assertions.assertNotNull(initMutexGroup)
+        Assertions.assertEquals("mutexGroupNameTest", initMutexGroup!!.mutexGroupName)
+        Assertions.assertEquals(10080, initMutexGroup.timeout)
+        Assertions.assertEquals(10, initMutexGroup.queue)
     }
 
-    @Ignore
+    @Disabled
     // 测试MutexControl的锁功能
     fun checkContainerMutex() {
         val initMutexGroup = mutexControl.decorateMutexGroup(
             mutexGroup = mutexGroup,
             variables = variables
         )
-        Assert.assertEquals(ContainerMutexStatus.READY,
-            mutexControl.checkContainerMutex(mutexGroup = initMutexGroup, container = container)
-        )
+        Assertions.assertEquals(ContainerMutexStatus.READY, mutexControl.acquireMutex(initMutexGroup, container))
     }
 
-    @Ignore
+    @Disabled
     // 测试MutexControl的解锁功能
     fun releaseContainerMutex() {
         val initMutexGroup = mutexControl.decorateMutexGroup(
@@ -110,7 +113,8 @@ class MutexControlTest {
             buildId = buildId,
             stageId = stageId,
             containerId = containerId,
-            mutexGroup = initMutexGroup
+            mutexGroup = initMutexGroup,
+            executeCount = container.executeCount
         )
     }
 }

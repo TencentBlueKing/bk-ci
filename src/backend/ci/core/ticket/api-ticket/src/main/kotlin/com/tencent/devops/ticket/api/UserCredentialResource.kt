@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
+import com.tencent.devops.ticket.pojo.CredentialSettingUpdate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.Permission
@@ -109,7 +110,7 @@ interface UserCredentialResource {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("凭证类型列表，用逗号分隔", required = false, defaultValue = "")
+        @ApiParam("凭证类型列表，用逗号分隔", required = false)
         @QueryParam("credentialTypes")
         credentialTypesString: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")
@@ -216,5 +217,22 @@ interface UserCredentialResource {
         credentialId: String,
         @ApiParam("凭据", required = true)
         credential: CredentialUpdate
+    ): Result<Boolean>
+
+    @ApiOperation("编辑凭据设置凭据")
+    @Path("/{projectId}/{credentialId}/setting")
+    @PUT
+    fun editSetting(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("凭据ID", required = true)
+        @PathParam("credentialId")
+        credentialId: String,
+        @ApiParam("凭据设置", required = true)
+        credentialSetting: CredentialSettingUpdate
     ): Result<Boolean>
 }

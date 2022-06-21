@@ -43,6 +43,7 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentHeartb
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentPipeline
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStartInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
+import com.tencent.devops.environment.service.thirdPartyAgent.ImportService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
 import org.slf4j.LoggerFactory
@@ -50,9 +51,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
 @RestResource
+@Suppress("ReturnCount", "ThrowsCount", "MagicNumber")
 class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
+    private val importService: ImportService,
     private val redisOperation: RedisOperation
 ) : BuildAgentThirdPartyAgentResource {
 
@@ -63,7 +66,14 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
         startInfo: ThirdPartyAgentStartInfo
     ): Result<AgentStatus> {
         checkParam(projectId, agentId, secretKey)
-        return Result(thirdPartyAgentService.agentStartup(projectId, agentId, secretKey, startInfo))
+        val status = thirdPartyAgentService.agentStartup(projectId, agentId, secretKey, startInfo)
+        // #4868 构建机安装完毕启动之后，不需要在web再次点击导入就自动生成节点导入
+        if (AgentStatus.UN_IMPORT_OK == status) {
+            thirdPartyAgentService.getAgent(projectId, agentId).data?.createUser?.let { userId ->
+                importService.importAgent(userId = userId, projectId = projectId, agentId = agentId)
+            }
+        }
+        return Result(status)
     }
 
     override fun agentShutdown(

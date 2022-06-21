@@ -29,82 +29,21 @@ package com.tencent.devops.process.api.builds
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.bean.PipelineUrlBean
-import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
-import com.tencent.devops.process.engine.service.PipelineVMBuildService
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.process.pojo.BuildTask
-import com.tencent.devops.process.pojo.BuildTaskResult
-import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.RedisAtomsBuild
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.SubPipelineStartUpService
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildBuildResourceImpl @Autowired constructor(
-    private val vmBuildService: PipelineVMBuildService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val subPipelineStartUpService: SubPipelineStartUpService,
     private val pipelineUrlBean: PipelineUrlBean
 ) : BuildBuildResource {
-
-    @Deprecated("replace by BuildJobResourceImpl")
-    override fun setStarted(buildId: String, vmSeqId: String, vmName: String): Result<BuildVariables> {
-        checkParam(buildId, vmSeqId, vmName)
-        return Result(vmBuildService.buildVMStarted(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
-    }
-
-    @Deprecated("replace by BuildJobResourceImpl")
-    override fun claimTask(buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
-        checkParam(buildId, vmSeqId, vmName)
-        return Result(vmBuildService.buildClaimTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
-    }
-
-    @Deprecated("replace by BuildJobResourceImpl")
-    override fun completeTask(
-        buildId: String,
-        vmSeqId: String,
-        vmName: String,
-        result: BuildTaskResult
-    ): Result<Boolean> {
-        checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        vmBuildService.buildCompleteTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName, result = result)
-        return Result(true)
-    }
-
-    @Deprecated("replace by BuildJobResourceImpl")
-    override fun endTask(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
-        checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        return Result(vmBuildService.buildEndTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
-    }
-
-    @Deprecated("replace by BuildJobResourceImpl")
-    override fun timeoutTheBuild(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: String
-    ): Result<Boolean> {
-        return Result(
-            data = vmBuildService.setStartUpVMStatus(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                vmSeqId = vmSeqId,
-                buildStatus = BuildStatus.EXEC_TIMEOUT
-            )
-        )
-    }
-
-    @Deprecated("replace by BuildJobResourceImpl")
-    override fun heartbeat(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
-        checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        return Result(data = vmBuildService.heartbeat(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
-    }
 
     override fun getSingleHistoryBuild(
         projectId: String,
@@ -155,39 +94,11 @@ class BuildBuildResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getSubBuildVars(buildId: String, taskId: String): Result<Map<String, String>> {
-        return subPipelineStartUpService.getSubVar(buildId = buildId, taskId = taskId)
-    }
-
-    override fun updateRedisAtoms(
-        projectId: String,
-        buildId: String,
-        redisAtomsBuild: RedisAtomsBuild
-    ): Result<Boolean> {
-        if (redisAtomsBuild.projectId.isBlank() ||
-            redisAtomsBuild.pipelineId.isBlank() ||
-            redisAtomsBuild.buildId.isBlank()) {
-            throw ParamBlankException("Invalid params(projectId,pipelineId,buildId)")
-        }
-
-        return Result(pipelineBuildFacadeService.updateRedisAtoms(buildId, projectId, redisAtomsBuild))
+    override fun getSubBuildVars(projectId: String, buildId: String, taskId: String): Result<Map<String, String>> {
+        return subPipelineStartUpService.getSubVar(projectId = projectId, buildId = buildId, taskId = taskId)
     }
 
     override fun getBuildDetailUrl(projectId: String, pipelineId: String, buildId: String): Result<String> {
-        return Result(pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId))
-    }
-
-    companion object {
-        private fun checkParam(buildId: String, vmSeqId: String, vmName: String) {
-            if (buildId.isBlank()) {
-                throw ParamBlankException("Invalid buildId")
-            }
-            if (vmSeqId.isBlank()) {
-                throw ParamBlankException("Invalid vmSeqId")
-            }
-            if (vmName.isBlank()) {
-                throw ParamBlankException("Invalid vmName")
-            }
-        }
+        return Result(pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, null, null, true))
     }
 }

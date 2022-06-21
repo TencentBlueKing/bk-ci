@@ -28,11 +28,14 @@
 package com.tencent.devops.sign.resources
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.sign.api.pojo.IpaUploadInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
+import com.tencent.devops.sign.api.pojo.SignHistory
 import com.tencent.devops.sign.api.service.ServiceIpaResource
 import com.tencent.devops.sign.dao.IpaUploadDao
 import com.tencent.devops.sign.service.AsyncSignService
@@ -54,6 +57,26 @@ class ServiceIpaResourceImpl @Autowired constructor(
     private val signInfoService: SignInfoService,
     private val objectMapper: ObjectMapper
 ) : ServiceIpaResource {
+
+    override fun getHistorySign(
+        userId: String,
+        startTime: Long?,
+        endTime: Long?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<SignHistory>> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize?.coerceAtMost(20) ?: 20
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val result = signInfoService.listHistory(
+            userId = userId,
+            startTime = startTime,
+            endTime = endTime,
+            offset = limit.offset,
+            limit = limit.limit
+        )
+        return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
+    }
 
     override fun ipaSign(
         ipaSignInfoHeader: String,

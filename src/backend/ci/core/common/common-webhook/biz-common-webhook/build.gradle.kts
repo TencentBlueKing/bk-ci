@@ -30,5 +30,6 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:repository:api-repository"))
     api(project(":core:ticket:api-ticket"))
+    api(project(":core:process:api-process"))
     testImplementation(project(":core:common:common-test"))
 }

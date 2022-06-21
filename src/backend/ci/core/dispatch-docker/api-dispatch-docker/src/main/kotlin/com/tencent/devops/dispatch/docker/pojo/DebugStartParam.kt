@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.docker.pojo
 
+import com.tencent.devops.common.pipeline.type.BuildType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -56,5 +57,9 @@ data class DebugStartParam(
     @ApiModelProperty("启动命令", required = false)
     val cmd: String? = "/bin/sh",
     @ApiModelProperty("镜像信息", required = false)
-    val containerPool: String? = null
+    val containerPool: String? = null,
+    @ApiModelProperty("buildId", required = false)
+    val buildId: String? = null,
+    @ApiModelProperty("dispatchType", required = false)
+    val dispatchType: String = BuildType.DOCKER.name
 )

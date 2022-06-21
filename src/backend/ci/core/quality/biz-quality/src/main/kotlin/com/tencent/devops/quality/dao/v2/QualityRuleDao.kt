@@ -146,7 +146,7 @@ class QualityRuleDao {
     fun getById(dslContext: DSLContext, ruleId: Long): TQualityRuleRecord? {
         with(TQualityRule.T_QUALITY_RULE) {
             return dslContext.selectFrom(this)
-                    .where(ID.eq(ruleId).and(ENABLE.eq(true)))
+                    .where(ID.eq(ruleId))
                     .fetchOne() ?: throw NotFoundException("RuleId: $ruleId not found")
         }
     }
@@ -205,6 +205,42 @@ class QualityRuleDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ID.`in`(ruleIds))
+                .fetch()
+        }
+    }
+
+    fun listByPipelineRange(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String?,
+        enable: Boolean = true
+    ): Result<TQualityRuleRecord>? {
+        with(TQualityRule.T_QUALITY_RULE) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                ENABLE.eq(enable)
+            )
+            if (pipelineId != null) conditions.add(INDICATOR_RANGE.like("%$pipelineId%"))
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetch()
+        }
+    }
+
+    fun listByTemplateRange(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String?,
+        enable: Boolean = true
+    ): Result<TQualityRuleRecord>? {
+        with(TQualityRule.T_QUALITY_RULE) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                ENABLE.eq(enable)
+            )
+            if (templateId != null) conditions.add(PIPELINE_TEMPLATE_RANGE.like("%$templateId%"))
+            return dslContext.selectFrom(this)
+                .where(conditions)
                 .fetch()
         }
     }

@@ -41,6 +41,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
+import org.jooq.Record4
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -133,7 +134,9 @@ class PipelineSettingDao {
                 IS_TEMPLATE,
                 MAX_PIPELINE_RES_NUM,
                 MAX_CON_RUNNING_QUEUE_SIZE,
-                BUILD_NUM_RULE
+                BUILD_NUM_RULE,
+                CONCURRENCY_GROUP,
+                CONCURRENCY_CANCEL_IN_PROGRESS
             )
                 .values(
                     setting.projectId,
@@ -162,7 +165,9 @@ class PipelineSettingDao {
                     isTemplate,
                     setting.maxPipelineResNum,
                     setting.maxConRunningQueueSize,
-                    setting.buildNumRule
+                    setting.buildNumRule,
+                    setting.concurrencyGroup,
+                    setting.concurrencyCancelInProgress
                 ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -189,30 +194,55 @@ class PipelineSettingDao {
                 .set(MAX_PIPELINE_RES_NUM, setting.maxPipelineResNum)
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
                 .set(BUILD_NUM_RULE, setting.buildNumRule)
+                .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
+                .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
                 .execute()
         }
     }
 
-    fun getSetting(dslContext: DSLContext, pipelineId: String): TPipelineSettingRecord? {
+    fun getSetting(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineSettingRecord? {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne()
         }
     }
 
-    fun getSettings(dslContext: DSLContext, pipelineIds: Set<String>): Result<TPipelineSettingRecord> {
+    fun getSettings(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>,
+        projectId: String? = null
+    ): Result<TPipelineSettingRecord> {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PIPELINE_ID.`in`(pipelineIds))
+            if (projectId != null) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
             return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.`in`(pipelineIds))
+                .where(conditions)
                 .fetch()
         }
     }
 
-    fun getSetting(dslContext: DSLContext, pipelineIds: Collection<String>): Result<TPipelineSettingRecord> {
+    /**
+     * 获取简单的数据(避免select大字段)
+     *
+     * @return PIPELINE_ID, DESC, RUN_LOCK_TYPE, BUILD_NUM_RULE
+     */
+    fun getSimpleSettings(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>,
+        projectId: String? = null
+    ): Result<Record4<String, String, Int, String>> {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.`in`(pipelineIds))
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PIPELINE_ID.`in`(pipelineIds))
+            if (projectId != null) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            return dslContext.select(PIPELINE_ID, DESC, RUN_LOCK_TYPE, BUILD_NUM_RULE).from(this)
+                .where(conditions)
                 .fetch()
         }
     }
@@ -250,12 +280,12 @@ class PipelineSettingDao {
         }
     }
 
-    fun updateSetting(dslContext: DSLContext, pipelineId: String, name: String, desc: String) {
+    fun updateSetting(dslContext: DSLContext, projectId: String, pipelineId: String, name: String, desc: String) {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             dslContext.update(this)
                 .set(NAME, name)
                 .set(DESC, desc)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }
@@ -281,10 +311,10 @@ class PipelineSettingDao {
         }
     }
 
-    fun delete(dslContext: DSLContext, pipelineId: String): Int {
+    fun delete(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             return dslContext.deleteFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }

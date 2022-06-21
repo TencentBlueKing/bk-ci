@@ -3,6 +3,7 @@
 构建Agent是指包含了agent进程监控和调度部分逻辑的代码，不包含与流水线交互的构建类业务逻辑代码，需要与另外一个worker(kotlin) 一起整合才能是完整的Agent包。
 
 ## Agent二进制程序编译
+
 > 以下命令请在本目录执行
 
 linux系统，执行命令 `make clean build_linux`
@@ -23,10 +24,10 @@ windows编译，执行脚本 `build_windows.bat`
 
 举例Linux, 其他系统依此类推。
 
-- scripts/linux/install.sh：  agent安装脚本
-- scripts/linux/start.sh：   agent启动脚本
-- scripts/linux/stop.sh：   agent停止脚本
-- scripts/linux/uninstall.sh：   agent卸载脚本
+- scripts/linux/install.sh： agent安装脚本
+- scripts/linux/start.sh： agent启动脚本
+- scripts/linux/stop.sh： agent停止脚本
+- scripts/linux/uninstall.sh： agent卸载脚本
 
 
 

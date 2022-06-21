@@ -42,7 +42,7 @@ abstract class Handler<T : HandlerContext> constructor(
     private val dockerHostConfig: DockerHostConfig,
     private val dockerHostBuildApi: DockerHostBuildResourceApi
 ) {
-    protected var nextHandler: Handler<T>? = null
+    protected var nextHandler = ThreadLocal<Handler<T>?>()
 
     private val logger = LoggerFactory.getLogger(Handler::class.java)
 
@@ -78,7 +78,7 @@ abstract class Handler<T : HandlerContext> constructor(
     abstract fun handlerRequest(handlerContext: T)
 
     fun setNextHandler(handler: Handler<T>): Handler<T> {
-        this.nextHandler = handler
+        this.nextHandler.set(handler)
         return this
     }
 

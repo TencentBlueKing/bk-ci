@@ -95,8 +95,26 @@ const val DEFAULT_STORAGE_KEY = "default"
  * 响应header check sum
  */
 const val X_CHECKSUM_MD5 = "X-Checksum-Md5"
+const val X_CHECKSUM_SHA256 = "X-Checksum-Sha256"
 
 /**
  * 流水线仓库
  */
 const val PIPELINE = "pipeline"
+
+/**
+ * 文件访问请求是否为直接下载
+ */
+const val PARAM_DOWNLOAD = "download"
+
+/**
+ * 文件访问请求是否为展示
+ */
+const val PARAM_PREVIEW = "preview"
+
+/**
+ * 用于非磁盘文件路径标识
+ * */
+// 内存文件
+const val SOURCE_IN_MEMORY = "memory"
+const val SOURCE_IN_REMOTE = "remote"

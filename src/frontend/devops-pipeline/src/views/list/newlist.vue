@@ -237,8 +237,8 @@
 
         computed: {
             ...mapGetters({
-                'statusMap': 'pipelines/getStatusMap',
-                'tagGroupList': 'pipelines/getTagGroupList'
+                statusMap: 'pipelines/getStatusMap',
+                tagGroupList: 'pipelines/getTagGroupList'
             }),
             ...mapState('pipelines', [
                 'currentViewId',
@@ -265,7 +265,7 @@
                 if (val) {
                     this.filter = {}
                     this.currentFilter = {}
-                    this.initPage()
+                    // this.initPage()
                     this.$nextTick(() => {
                         if (this.$refs.infiniteScroll) {
                             this.$refs.infiniteScroll.fetchData()
@@ -363,7 +363,11 @@
                 this.slideShow = val
             },
             togglePageLoading (val) {
-                this.$store.commit('pipelines/showPageLoading', val)
+                if (this.pageLoading !== val) {
+                    this.$nextTick(() => {
+                        this.$store.commit('pipelines/showPageLoading', val)
+                    })
+                }
             },
             calcLatestStartBuildTime (row) {
                 if (row.latestBuildStartTime) {
@@ -400,7 +404,7 @@
 
                 const calcTime = Math.ceil((time - latestBuildStartTime) / (latestBuildEstimatedExecutionSeconds * 100 * 1000))
 
-                if (this.statusMap[item.latestBuildStatus] === 'error') {
+                if (this.statusMap[item.latestBuildStatus] === 'error' || this.statusMap[item.latestBuildStatus] === 'cancel') {
                     return '100%'
                 }
 
@@ -422,12 +426,8 @@
             },
 
             async initPage () {
-                performance.mark('initList:start')
                 this.togglePageLoading(true)
                 await this.init()
-
-                performance.mark('initList:end')
-                performance.measure('initList', 'initList:start', 'initList:end')
                 this.togglePageLoading(false)
             },
 
@@ -623,7 +623,7 @@
                     statusMap
                 } = this
                 const knownErrorList = JSON.parse(localStorage.getItem('pipelineKnowError')) || {}
-                Object.keys(data).map(pipelineId => {
+                Object.keys(data).forEach(pipelineId => {
                     const item = data[pipelineId]
                     if (item) {
                         const status = statusMap[item.latestBuildStatus]
@@ -633,32 +633,38 @@
                         }
                         // 单独修改当前任务是否在执行的状态, 拼接右下角按钮
                         switch (feConfig.status) {
-                            case 'error':
+                            case 'error': {
                                 const isKnowErrorPipeline = !!knownErrorList[`${this.projectId}_${pipelineId}_${item.latestBuildId}`]
                                 feConfig = {
                                     ...feConfig,
-                                    customBtns: isKnowErrorPipeline ? [] : [{
-                                        icon: 'check-1',
-                                        text: this.$t('newlist.known'),
-                                        handler: 'error-noticed'
-                                    }],
+                                    customBtns: isKnowErrorPipeline
+                                        ? []
+                                        : [{
+                                            icon: 'check-1',
+                                            text: this.$t('newlist.known'),
+                                            handler: 'error-noticed'
+                                        }],
                                     isRunning: !isKnowErrorPipeline,
                                     status: isKnowErrorPipeline ? 'known_error' : 'error'
                                 }
                                 break
-                            case 'cancel':
+                            }
+                            case 'cancel': {
                                 const isKnowCancelPipeline = !!knownErrorList[`${this.projectId}_${pipelineId}_${item.latestBuildId}`]
                                 feConfig = {
                                     ...feConfig,
-                                    customBtns: isKnowCancelPipeline ? [] : [{
-                                        icon: 'check-1',
-                                        text: this.$t('newlist.known'),
-                                        handler: 'error-noticed'
-                                    }],
+                                    customBtns: isKnowCancelPipeline
+                                        ? []
+                                        : [{
+                                            icon: 'check-1',
+                                            text: this.$t('newlist.known'),
+                                            handler: 'error-noticed'
+                                        }],
                                     isRunning: !isKnowCancelPipeline,
                                     status: isKnowCancelPipeline ? 'known_cancel' : 'cancel'
                                 }
                                 break
+                            }
                             case 'running':
                                 feConfig = {
                                     ...feConfig,
@@ -946,7 +952,7 @@
                 this.$router.push({
                     name: 'templateEdit',
                     params: {
-                        'templateId': templateId
+                        templateId: templateId
                     }
                 })
             },

@@ -27,9 +27,9 @@
 
 package com.tencent.devops.scm.utils.code.git
 
-import org.junit.Assert
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class GitUtilsTest {
 
@@ -84,9 +84,39 @@ class GitUtilsTest {
     }
 
     @Test
+    fun getDomainAndRepoName() {
+        var url = "git@github.com:Tencent/bk-ci.git"
+        var domainAndRepoName = GitUtils.getDomainAndRepoName(url)
+        assertEquals(domain, domainAndRepoName.first)
+        assertEquals(repoName, domainAndRepoName.second)
+        url = "git@github.com:2244/Tencent/bk-ci.git"
+        domainAndRepoName = GitUtils.getDomainAndRepoName(url)
+        assertEquals("$domain:2244", domainAndRepoName.first)
+        assertEquals(repoName, domainAndRepoName.second)
+        url = "ssh://git@github.com:2244/Tencent/bk-ci.git"
+        domainAndRepoName = GitUtils.getDomainAndRepoName(url)
+        assertEquals("$domain:2244", domainAndRepoName.first)
+        assertEquals(repoName, domainAndRepoName.second)
+        url = "http://github.com/Tencent/bk-ci.git"
+        domainAndRepoName = GitUtils.getDomainAndRepoName(url)
+        assertEquals(domain, domainAndRepoName.first)
+        assertEquals(repoName, domainAndRepoName.second)
+        url = "https://github.com/Tencent/bk-ci.git"
+        domainAndRepoName = GitUtils.getDomainAndRepoName(url)
+        assertEquals(domain, domainAndRepoName.first)
+        assertEquals(repoName, domainAndRepoName.second)
+        url = "http://github.com:8080/Tencent/bk-ci.git"
+        domainAndRepoName = GitUtils.getDomainAndRepoName(url)
+        assertEquals("$domain:8080", domainAndRepoName.first)
+        assertEquals(repoName, domainAndRepoName.second)
+    }
+
+    @Test
     fun getProjectName() {
         var projectName = GitUtils.getProjectName("git@github.com:Tencent/bk-ci.git")
         assertEquals(repoName, projectName)
+        projectName = GitUtils.getProjectName("git@github.com:2Tencent/bk-ci.git")
+        assertEquals("2$repoName", projectName)
         projectName = GitUtils.getProjectName("git@git.xxx.com:Tencent/bk-ci.git")
         assertEquals(repoName, projectName)
         projectName = GitUtils.getProjectName("https://github.com/Tencent/bk-ci.git")
@@ -99,20 +129,32 @@ class GitUtilsTest {
 
     @Test
     fun isLegalHttpUrl() {
-        Assert.assertTrue(GitUtils.isLegalHttpUrl("https://github.com/Tencent/bk-ci.git"))
-        Assert.assertTrue(GitUtils.isLegalHttpUrl("http://github.com/Tencent/bk-ci.git"))
-        Assert.assertTrue(GitUtils.isLegalHttpUrl("http://github.com:8080/Tencent/bk-ci.git"))
-        Assert.assertFalse(GitUtils.isLegalHttpUrl("http://github.com:8080/Tencent/bk-ci"))
-        Assert.assertFalse(GitUtils.isLegalHttpUrl("git@git.xxx.com:Tencent/bk-ci.git"))
+        Assertions.assertTrue(GitUtils.isLegalHttpUrl("https://github.com/Tencent/bk-ci.git"))
+        Assertions.assertTrue(GitUtils.isLegalHttpUrl("http://github.com/Tencent/bk-ci.git"))
+        Assertions.assertTrue(GitUtils.isLegalHttpUrl("http://github.com:8080/Tencent/bk-ci.git"))
+        Assertions.assertFalse(GitUtils.isLegalHttpUrl("http://github.com:8080/Tencent/bk-ci"))
+        Assertions.assertFalse(GitUtils.isLegalHttpUrl("git@git.xxx.com:Tencent/bk-ci.git"))
     }
 
     @Test
     fun isLegalSshUrl() {
-        Assert.assertFalse(GitUtils.isLegalSshUrl("https://github.com/Tencent/bk-ci.git"))
-        Assert.assertFalse(GitUtils.isLegalSshUrl("http://github.com/Tencent/bk-ci.git"))
-        Assert.assertFalse(GitUtils.isLegalSshUrl("http://github.com:8080/Tencent/bk-ci.git"))
-        Assert.assertFalse(GitUtils.isLegalSshUrl("http://github.com:8080/Tencent/bk-ci"))
-        Assert.assertTrue(GitUtils.isLegalSshUrl("git@git.xxx.com:Tencent/bk-ci.git"))
-        Assert.assertFalse(GitUtils.isLegalHttpUrl("git@git.xxx.com:Tencent/bk-ci"))
+        Assertions.assertFalse(GitUtils.isLegalSshUrl("https://github.com/Tencent/bk-ci.git"))
+        Assertions.assertFalse(GitUtils.isLegalSshUrl("http://github.com/Tencent/bk-ci.git"))
+        Assertions.assertFalse(GitUtils.isLegalSshUrl("http://github.com:8080/Tencent/bk-ci.git"))
+        Assertions.assertFalse(GitUtils.isLegalSshUrl("http://github.com:8080/Tencent/bk-ci"))
+        Assertions.assertTrue(GitUtils.isLegalSshUrl("git@git.xxx.com:Tencent/bk-ci.git"))
+        Assertions.assertFalse(GitUtils.isLegalHttpUrl("git@git.xxx.com:Tencent/bk-ci"))
+    }
+
+    @Test
+    fun getRepoGroupAndName() {
+        assertEquals(GitUtils.getRepoGroupAndName("Tencent/bk-ci"), Pair("Tencent", "bk-ci"))
+        assertEquals(GitUtils.getRepoGroupAndName("Tencent/plugin/bk-ci"), Pair("Tencent/plugin", "bk-ci"))
+    }
+
+    @Test
+    fun getShortSha() {
+        assertEquals(GitUtils.getShortSha("e49ca115cf9a5fd433cbb539ee37316b67bde243"), "e49ca115")
+        assertEquals(GitUtils.getShortSha(""), "")
     }
 }

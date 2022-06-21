@@ -29,21 +29,27 @@ package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.Project
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 interface IGitOauthService {
-    fun getProject(userId: String, projectId: String, repoHashId: String?): AuthorizeResult
+    fun getProject(userId: String, projectId: String, repoHashId: String?, search: String? = null): AuthorizeResult
     fun getProjectList(userId: String, page: Int?, pageSize: Int?): List<Project>
     fun getBranch(userId: String, repository: String, page: Int?, pageSize: Int?): List<GitBranch>
     fun getTag(userId: String, repository: String, page: Int?, pageSize: Int?): List<GitTag>
-    fun isOAuth(userId: String, redirectUrlType: RedirectUrlTypeEnum?, redirectUrl: String? = null): AuthorizeResult
-    fun gitCallback(code: String, state: String): Response
-    fun checkAndGetAccessToken(buildId: String, userId: String): GitToken?
+    fun isOAuth(
+        userId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String? = null,
+        gitProjectId: Long? = null,
+        refreshToken: Boolean? = false
+    ): AuthorizeResult
+    fun gitCallback(code: String, state: String): GitOauthCallback
+    fun checkAndGetAccessToken(projectId: String, buildId: String, userId: String): GitToken?
     fun getAccessToken(userId: String): GitToken?
     fun saveAccessToken(userId: String, tGitToken: GitToken): Int
     fun deleteToken(userId: String): Int

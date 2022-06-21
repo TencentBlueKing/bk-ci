@@ -54,7 +54,7 @@ object DependOnUtils {
                 return@container
             }
             if (jobIdSet.contains(jobId)) {
-                val jobName = getContainerName(stage = stage, container = c, jobId = jobId!!)
+                val jobName = getContainerName(stage = stage, container = c, jobId = jobId)
                 throw ErrorCodeException(
                     statusCode = Response.Status.CONFLICT.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_JOBID_EXIST,
@@ -62,7 +62,7 @@ object DependOnUtils {
                     defaultMessage = "$jobName 的jobId(${c.jobId})已存在"
                 )
             }
-            jobIdSet.add(jobId!!)
+            jobIdSet.add(jobId)
         }
         removeNonexistentJob(
             stage = stage,
@@ -97,7 +97,7 @@ object DependOnUtils {
      * dependOn jobId与containerId映射
      * 前端通过jobId声明依赖关系,流水线真正运行是通过containerId
      */
-    fun initDependOn(stage: Stage, params: Map<String, Any>) {
+    fun initDependOn(stage: Stage, params: Map<String, String>) {
         val allJobId2JobMap = mutableMapOf<String, Container>()
         stage.containers.forEach container@{ c ->
             if (c.jobId.isNullOrBlank()) {
@@ -122,7 +122,7 @@ object DependOnUtils {
                     dependOnId = jobControlOption.dependOnId,
                     dependOnName = jobControlOption.dependOnName
                 ),
-                params = params.map { it.key to it.value.toString() }.toMap()
+                params = params
             )
             if (dependOnJobIds.isEmpty()) {
                 return@container
@@ -151,6 +151,22 @@ object DependOnUtils {
                 stage = stage,
                 allJobId2JobMap = allJobId2JobMap
             )
+        }
+    }
+
+    fun enableDependOn(container: Container): Boolean {
+        val jobControlOption = when (container) {
+            is VMBuildContainer -> container.jobControlOption
+            is NormalContainer -> container.jobControlOption
+            else -> null
+        } ?: return false
+        return when (jobControlOption.dependOnType) {
+            DependOnType.ID ->
+                jobControlOption.dependOnId != null && jobControlOption.dependOnId!!.isNotEmpty()
+            DependOnType.NAME ->
+                jobControlOption.dependOnName?.isNotEmpty() ?: false
+            else ->
+                false
         }
     }
 

@@ -35,45 +35,43 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.user.UserDockerHostResource
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
-import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
-import com.tencent.devops.dispatch.docker.service.DockerHostDebugService
-import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoad
+import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
+import com.tencent.devops.dispatch.docker.service.debug.impl.DockerHostDebugServiceImpl
+import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.process.constant.ProcessMessageCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import javax.ws.rs.core.Response
 
 @RestResource
 @Suppress("ALL")
 class UserDockerHostResourceImpl @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService,
-    private val dockerHostDebugService: DockerHostDebugService,
+    private val dockerHostDebugService: DockerHostDebugServiceImpl,
     private val bkAuthPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val pipelineDockerDebugDao: PipelineDockerDebugDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val dockerHostUtils: DockerHostUtils,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val bkTag: BkTag
 ) : UserDockerHostResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserDockerHostResourceImpl::class.java)
     }
-
-    @Value("\${spring.cloud.consul.discovery.tags:prod}")
-    private val consulTag: String = "prod"
 
     override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<Boolean>? {
         checkPermission(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
@@ -82,8 +80,10 @@ class UserDockerHostResourceImpl @Autowired constructor(
         // 查询是否已经有启动调试容器了，如果有，直接返回成功
         val result = dockerHostDebugService.getDebugStatus(debugStartParam.pipelineId, debugStartParam.vmSeqId)
         if (result.status == 0) {
-            logger.info("${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
-                "Container Exist|ContainerId=${result.data?.containerId}")
+            logger.info(
+                "${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
+                        "Container Exist|ContainerId=${result.data?.containerId}"
+            )
             return Result(true)
         }
 
@@ -125,52 +125,34 @@ class UserDockerHostResourceImpl @Autowired constructor(
                         buildEnv = "",
                         registryUser = "",
                         registryPwd = "",
-                        imageType = "",
-                        imagePublicFlag = false,
-                        imageRDType = null
+                        imageType = ""
                     )
 
-                    logger.info("${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
-                        "Container running|ContainerId=${dockerBuildHistory.containerId}")
+                    logger.info(
+                        "${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
+                                "Container running|ContainerId=${dockerBuildHistory.containerId}"
+                    )
                     return Result(true)
                 }
             }
 
             dockerIp = dockerBuildHistory.dockerIp
             poolNo = dockerBuildHistory.poolNo
-        } else {
-            // 没有构建历史的情况下debug，且没有分配构建IP，预先分配构建IP
-            val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
-                dslContext = dslContext,
-                pipelineId = debugStartParam.pipelineId,
-                vmSeq = debugStartParam.vmSeqId
-            )
-            if (taskHistory != null) {
-                dockerIp = taskHistory.dockerIp
-            } else {
-                dockerIp = dockerHostUtils.getAvailableDockerIp(
-                    projectId = debugStartParam.projectId,
-                    pipelineId = debugStartParam.pipelineId,
-                    vmSeqId = debugStartParam.vmSeqId,
-                    unAvailableIpList = setOf()).first
-                pipelineDockerTaskSimpleDao.createOrUpdate(
-                    dslContext = dslContext,
-                    pipelineId = debugStartParam.pipelineId,
-                    vmSeq = debugStartParam.vmSeqId,
-                    dockerIp = dockerIp,
-                    dockerResourceOptionsId = 0
-                )
-            }
-            // 首次构建poolNo=1
-            poolNo = 1
-        }
 
-        dockerHostDebugService.startDebug(
-            dockerIp = dockerIp,
-            userId = userId,
-            poolNo = poolNo,
-            debugStartParam = debugStartParam
-        )
+            dockerHostDebugService.startDebug(
+                dockerIp = dockerIp,
+                userId = userId,
+                poolNo = poolNo,
+                debugStartParam = debugStartParam,
+                startupMessage = dockerBuildHistory.startupMessage
+            )
+        } else {
+            throw ErrorCodeException(
+                errorCode = "2103503",
+                defaultMessage = "Can not found debug container.",
+                params = arrayOf(debugStartParam.pipelineId)
+            )
+        }
 
         return Result(true)
     }
@@ -234,6 +216,8 @@ class UserDockerHostResourceImpl @Autowired constructor(
 
     private fun checkPermission(userId: String, projectId: String, pipelineId: String, vmSeqId: String) {
         checkParam(userId, projectId, pipelineId, vmSeqId)
+
+        val consulTag = bkTag.getLocalTag()
 
         if (!consulTag.contains("stream") && !consulTag.contains("gitci")) {
             validPipelinePermission(

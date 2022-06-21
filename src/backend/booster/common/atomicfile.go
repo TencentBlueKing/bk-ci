@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 // Package common provides the ability to write a file with an eventual
 // rename on Close (using os.Rename). This allows for a file to always be in a
 // consistent state and never represent an in-progress write.

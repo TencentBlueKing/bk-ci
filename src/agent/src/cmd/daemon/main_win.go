@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -12,12 +13,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,29 +31,45 @@
 package main
 
 import (
-	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"time"
 
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
-	"github.com/astaxie/beego/logs"
 	"github.com/kardianos/service"
 )
 
+const daemonProcess = "daemon"
+
 func main() {
+	// 初始化日志
+	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsDaemon.log")
+	err := logs.Init(logFilePath)
+	if err != nil {
+		fmt.Printf("init daemon log error %v\n", err)
+		systemutil.ExitProcess(1)
+	}
+
+	if len(os.Args) == 2 && os.Args[1] == "version" {
+		fmt.Println(config.AgentVersion)
+		systemutil.ExitProcess(0)
+	}
+	logs.Info("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 	runtime.GOMAXPROCS(4)
 
 	workDir := systemutil.GetExecutableDir()
-	err := os.Chdir(workDir)
+	err = os.Chdir(workDir)
 	if err != nil {
 		logs.Info("change work dir failed, err: ", err.Error())
 		systemutil.ExitProcess(1)
 	}
 
-	initLog()
 	defer func() {
 		if err := recover(); err != nil {
 			logs.Error("panic: ", err)
@@ -71,6 +89,11 @@ func main() {
 		WorkingDirectory: "C:/data/landun",
 	}
 
+	if ok := systemutil.CheckProcess(daemonProcess); !ok {
+		logs.Info("get process lock failed, exit")
+		return
+	}
+
 	daemonProgram := &program{}
 	sys := service.ChosenSystem()
 	daemonService, err := sys.New(daemonProgram, serviceConfig)
@@ -86,13 +109,6 @@ func main() {
 }
 
 var GAgentProcess *os.Process = nil
-
-func initLog() {
-	logConfig := make(map[string]string)
-	logConfig["filename"] = systemutil.GetWorkDir() + "/logs/devopsDaemon.log"
-	jsonConfig, _ := json.Marshal(logConfig)
-	logs.SetLogger(logs.AdapterFile, string(jsonConfig))
-}
 
 func watch() {
 	workDir := systemutil.GetExecutableDir()

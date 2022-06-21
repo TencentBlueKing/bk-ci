@@ -59,7 +59,8 @@ data class PipelineBuildTask(
     var errorType: ErrorType? = null,
     var errorCode: Int? = null,
     var errorMsg: String? = null,
-    val atomCode: String? = null
+    val atomCode: String? = null,
+    val stepId: String? = null
 ) {
     fun getTaskParam(paramName: String): String {
         return if (taskParams[paramName] != null) {

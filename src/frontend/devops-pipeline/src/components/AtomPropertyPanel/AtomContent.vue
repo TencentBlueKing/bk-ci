@@ -1,6 +1,17 @@
 <template>
     <section @click="toggleAtomSelectorPopup(false)" v-if="element" class="atom-property-panel">
         <div class="atom-main-content" v-bkloading="{ isLoading: fetchingAtmoModal }">
+            <form-field v-if="atom && !isTriggerContainer(container)" :desc="$t('editPage.stepIdDesc')" label="Step ID" :is-error="errors.has('stepId')" :error-msg="errors.first('stepId')">
+                <vuex-input :value="element.stepId" :clearable="false"
+                    :placeholder="$t('editPage.stepIdPlaceholder')"
+                    name="stepId"
+                    :handle-change="handleUpdateAtom"
+                    :disabled="!editable || showPanelType === 'PAUSE'"
+                    style="width: 282px;margin-top: 6px;"
+                    v-validate.initial="`varRule|unique:${allStepId}`"
+                >
+                </vuex-input>
+            </form-field>
             <div class="atom-type-selector bk-form-row bk-form bk-form-vertical">
                 <div :class="{ 'form-field': true, 'bk-form-inline-item': true, 'is-danger': errors.has('@type') }">
                     <label :title="$t('atom')" class="bk-label">
@@ -32,7 +43,7 @@
                         @selected="handleUpdateVersion"
                         :disabled="!editable || showPanelType === 'PAUSE'"
                     >
-                        <bk-option v-for="v in atomVersionList" :key="v.versionName" :id="v.versionValue" :name="v.versionName"></bk-option>
+                        <bk-option v-for="v in computedAtomVersionList" :key="v.versionName" :id="v.versionValue" :name="v.versionName"></bk-option>
                     </bk-select>
                 </form-field>
             </div>
@@ -46,7 +57,7 @@
                     <p>{{ $t('editPage.noAtomVersion') }}</p>
                 </div>
 
-                <!-- <div class="quality-setting-tips" v-if="showSetRuleTips">
+                <div class="quality-setting-tips" v-if="showSetRuleTips">
                     <div class="quality-setting-desc">
                         {{ $t('details.quality.canSet') }}
                         <span class="quality-rule-link" @click="toSetRule()">{{ $t('details.quality.settingNow') }}
@@ -55,7 +66,7 @@
                     </div>
                     <div class="refresh-btn" v-if="isSetted && !refreshLoading" @click="refresh()">{{ $t('details.quality.reflashSetting') }}</div>
                     <i class="devops-icon icon-circle-2-1 executing-job" v-if="isSetted && refreshLoading"></i>
-                </div> -->
+                </div>
                 <qualitygate-tips v-if="showRuleList" :relative-rule-list="renderRelativeRuleList"></qualitygate-tips>
 
                 <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable && !isRemoteAtom }">
@@ -161,6 +172,7 @@
         props: {
             elementIndex: Number,
             containerIndex: Number,
+            containerGroupIndex: Number,
             stageIndex: Number,
             stages: Array,
             editable: Boolean,
@@ -240,13 +252,22 @@
                 return getContainers(stage)
             },
             container () {
-                const { containerIndex, containers, getContainer } = this
-                return getContainer(containers, containerIndex)
+                const { containerIndex, containerGroupIndex, containers, getContainer } = this
+                return getContainer(containers, containerIndex, containerGroupIndex)
             },
             element () {
                 const { container, elementIndex, getElement } = this
                 const element = getElement(container, elementIndex)
                 return element
+            },
+            allStepId () {
+                const stepIdList = []
+                this.container.elements.forEach(ele => {
+                    if (ele.stepId) {
+                        stepIdList.push(ele.stepId)
+                    }
+                })
+                return stepIdList
             },
             isIncludeRule () {
                 return (this.checkAtomIsIncludeRule(this.ruleList) && !this.isTemplatePanel) || (this.isInstanceTemplate && this.checkAtomIsIncludeRule(this.templateRuleList))
@@ -288,7 +309,7 @@
                     atomCode,
                     version
                 })
-
+                console.log(atomMap, atomModal)
                 switch (true) {
                     case !isObject(atom) && !isObject(atomModal):
                         return null
@@ -315,7 +336,27 @@
                 return this.getRelativeRule(this.templateRuleList)
             },
             hasVersionList () {
-                return Array.isArray(this.atomVersionList) && this.atomVersionList.length > 0
+                return Array.isArray(this.computedAtomVersionList) && this.computedAtomVersionList.length > 0
+            },
+            computedAtomVersionList () {
+                try {
+                    if (typeof this.element.version === 'string') {
+                        const versionValid = this.atomVersionList.find(v => v.versionValue === this.element.version)
+                        if (typeof versionValid === 'undefined') {
+                            return [
+                                ...this.atomVersionList,
+                                {
+                                    versionValue: this.element.version,
+                                    versionName: this.element.version.replace('.*', '.latest')
+                                }
+                            ]
+                        }
+                    }
+                    return this.atomVersionList
+                } catch (error) {
+                    console.log(error)
+                    return this.atomVersionList
+                }
             },
             htmlTemplateVersion () {
                 return (this.atom.atomModal && this.atom.atomModal.htmlTemplateVersion) || this.atom.htmlTemplateVersion

@@ -163,10 +163,10 @@
         },
         computed: {
             ...mapGetters({
-                'viewManageAuth': 'pipelines/getViewManageAuth',
-                'tagGroupList': 'pipelines/getTagGroupList',
-                'showViewCreate': 'pipelines/getShowViewCreate',
-                'createViewForm': 'pipelines/getCreateViewForm'
+                viewManageAuth: 'pipelines/getViewManageAuth',
+                tagGroupList: 'pipelines/getTagGroupList',
+                showViewCreate: 'pipelines/getShowViewCreate',
+                createViewForm: 'pipelines/getCreateViewForm'
             }),
             projectId () {
                 return this.$route.params.projectId
@@ -174,7 +174,7 @@
         },
         watch: {
             tagGroupList (newVal) {
-                newVal.map(val => {
+                newVal.forEach(val => {
                     val['@type'] = 'filterByLabel'
                 })
                 this.viewFilterTypeList = [...this.viewFilterTypeList, ...newVal]
@@ -248,7 +248,7 @@
                 this.createViewForm.filters = [...this.createViewForm.filters]
             },
             formatForm () {
-                this.createViewForm.filters.map(value => {
+                this.createViewForm.filters.forEach(value => {
                     if (value['@type'] === 'filterByName') {
                         value.name = this.$t('pipelineName')
                         value.id = value['@type']
@@ -437,7 +437,7 @@
                 position: relative;
                 top: 2px;
                 left: 2px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
             }
             .bk-tooltip-inner {
                 max-width: 268px;

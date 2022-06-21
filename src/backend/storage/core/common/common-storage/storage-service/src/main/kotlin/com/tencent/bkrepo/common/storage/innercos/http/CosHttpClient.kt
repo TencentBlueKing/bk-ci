@@ -86,7 +86,7 @@ object CosHttpClient {
         val requestTitle = "${request.method()} ${request.url()} ${response?.protocol()}"
 
         val builder = StringBuilder()
-            .append(">>>> ")
+            .append("\n>>>> ")
             .appendln(requestTitle)
             .appendln(request.headers())
 

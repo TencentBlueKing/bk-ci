@@ -21,61 +21,67 @@ const webpack = require('webpack')
 const path = require('path')
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 module.exports = (env, argv) => {
-  return {
-    entry: [
-      'axios',
-      'vee-validate',
-      'js-cookie'
-    ],
-    output: {
-      path: path.join(__dirname, './src/assets/static'),
-      filename: '[name].dll.js',
-      library: 'lib'
-    },
-    module: {
-      rules: [
-        {
-          test: /\.vue$/,
-          include: path.resolve('src'),
-          loader: 'vue-loader'
+    return {
+        entry: [
+            'axios',
+            'vee-validate',
+            'js-cookie'
+        ],
+        output: {
+            path: path.join(__dirname, './src/assets/static'),
+            filename: '[name].dll.js',
+            library: 'lib'
         },
-        {
-          test: /\.js$/,
-          include: path.resolve('src'),
-          loader: 'babel-loader'
+        module: {
+            rules: [
+                {
+                    test: /\.vue$/,
+                    include: path.resolve('src'),
+                    loader: 'vue-loader'
+                },
+                {
+                    test: /\.js$/,
+                    include: path.resolve('src'),
+                    loader: 'babel-loader'
+                },
+                {
+                    test: /\.(png|jpg|gif)$/,
+                    type: 'asset',
+                    parser: {
+                        dataUrlCondition: {
+                            maxSize: 8 * 1024 // 4kb
+                        }
+                    },
+                    generator: {
+                        filename: '[name].[ext]?[hash]'
+                    }
+                },
+                {
+                    test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
+                    type: 'asset',
+                    parser: {
+                        dataUrlCondition: {
+                            maxSize: 8 * 1024 // 4kb
+                        }
+                    }
+                },
+                {
+                    test: /\.svg$/,
+                    loader: 'svg-sprite-loader',
+                    options: {
+                        extract: false
+                    }
+                }
+            ]
         },
-        {
-          test: /\.(png|jpg|gif)$/,
-          loader: 'url-loader',
-          options: {
-            limit: 10000,
-            name: '[name].[ext]?[hash]'
-          }
-        },
-        {
-          test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
-          loader: 'url-loader',
-          options: {
-            limit: 10000
-          }
-        },
-        {
-          test: /\.svg$/,
-          loader: 'svg-sprite-loader',
-          options: {
-            extract: false
-          }
-        }
-      ]
-    },
-    plugins: [
-      // new BundleAnalyzerPlugin(),
-      new webpack.DllPlugin({
-        context: __dirname,
-        name: 'lib',
-        path: path.join(__dirname, './src/assets/static', 'manifest.json')
-      })
+        plugins: [
+            // new BundleAnalyzerPlugin(),
+            new webpack.DllPlugin({
+                context: __dirname,
+                name: 'lib',
+                path: path.join(__dirname, './src/assets/static', 'manifest.json')
+            })
             
-    ]
-  }
+        ]
+    }
 }

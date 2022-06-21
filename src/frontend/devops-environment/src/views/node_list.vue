@@ -301,7 +301,7 @@
 
                     this.nodeList.splice(0, this.nodeList.length)
 
-                    res.map(item => {
+                    res.forEach(item => {
                         item.isEnableEdit = item.nodeHashId === this.curEditNodeItem
                         item.isMore = item.nodeHashId === this.lastCliCKNode.nodeHashId
                         this.nodeList.push(item)
@@ -504,7 +504,7 @@
 
                     this.gatewayList.splice(0, this.gatewayList.length)
                     this.constructImportForm.location = ''
-                    res.map(item => {
+                    res.forEach(item => {
                         this.gatewayList.push(item)
                     })
 
@@ -653,7 +653,7 @@
                 this.curEditNodeDisplayName = node.displayName
                 this.isEditNodeStatus = true
                 this.curEditNodeItem = node.nodeHashId
-                this.nodeList.map(val => {
+                this.nodeList.forEach(val => {
                     if (val.nodeHashId === node.nodeHashId) {
                         val.isEnableEdit = true
                     }
@@ -700,7 +700,7 @@
                             theme
                         })
                         if (theme === 'success') {
-                            this.nodeList.map(val => {
+                            this.nodeList.forEach(val => {
                                 if (val.nodeHashId === node.nodeHashId) {
                                     val.isEnableEdit = false
                                     val.displayName = this.curEditNodeDisplayName
@@ -718,7 +718,7 @@
                 this.isEditNodeStatus = false
                 this.curEditNodeItem = ''
                 this.curEditNodeDisplayName = ''
-                this.nodeList.map(val => {
+                this.nodeList.forEach(val => {
                     if (val.nodeHashId === nodeId) {
                         val.isEnableEdit = false
                     }

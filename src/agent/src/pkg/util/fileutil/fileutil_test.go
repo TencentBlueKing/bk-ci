@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,16 +27,20 @@
 
 package fileutil
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
+)
 
 func Test_CopyFile_01(t *testing.T) {
-	if _, err := CopyFile("d:\\a.conf", "d:\\b.conf", true); err != nil {
+	if _, err := fileutil.CopyFile("d:\\a.conf", "d:\\b.conf", true); err != nil {
 		t.Error("failed", err)
 	}
 }
 
 func Test_Md5_01(t *testing.T) {
-	md5, err := GetFileMd5("d:\\time.exe")
+	md5, err := fileutil.GetFileMd5("d:\\time.exe")
 	if err != nil {
 		t.Error("err: ", err.Error())
 		return
@@ -44,10 +49,18 @@ func Test_Md5_01(t *testing.T) {
 }
 
 func Test_SetExecutable_01(t *testing.T) {
-	md5, err := GetFileMd5("d:\\time.exe")
+	md5, err := fileutil.GetFileMd5("d:\\time.exe")
 	if err != nil {
 		t.Error("err: ", err.Error())
 		return
 	}
 	t.Log("md5: " + md5)
+}
+
+func Test_unzip(t *testing.T) {
+	err := fileutil.Unzip("/Users/xxx/Downloads/1/agent.zip", "/Users/xxx/Downloads/1/")
+	if err != nil {
+		t.Error("err: ", err.Error())
+		return
+	}
 }

@@ -33,8 +33,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.PageQueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.enums.LogType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
@@ -43,6 +45,7 @@ import javax.ws.rs.core.Response
 class BuildLogQueryService @Autowired constructor(
     private val logService: LogService,
     private val logStatusService: LogStatusService,
+    private val indexService: IndexService,
     private val logPermissionService: LogPermissionService
 ) {
 
@@ -52,6 +55,7 @@ class BuildLogQueryService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         debug: Boolean?,
+        logType: LogType?,
         tag: String?,
         jobId: String?,
         executeCount: Int?,
@@ -62,6 +66,7 @@ class BuildLogQueryService @Autowired constructor(
             logService.queryInitLogs(
                 buildId = buildId,
                 debug = debug ?: false,
+                logType = logType,
                 subTag = subTag,
                 tag = tag,
                 jobId = jobId,
@@ -76,6 +81,7 @@ class BuildLogQueryService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         debug: Boolean?,
+        logType: LogType?,
         tag: String?,
         jobId: String?,
         executeCount: Int?,
@@ -88,6 +94,7 @@ class BuildLogQueryService @Autowired constructor(
             logService.queryInitLogsPage(
                 buildId = buildId,
                 debug = debug ?: false,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -104,6 +111,7 @@ class BuildLogQueryService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         debug: Boolean?,
+        logType: LogType?,
         num: Int?,
         fromStart: Boolean?,
         start: Long,
@@ -122,6 +130,7 @@ class BuildLogQueryService @Autowired constructor(
                 start = start,
                 end = end,
                 debug = debug ?: false,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -137,6 +146,7 @@ class BuildLogQueryService @Autowired constructor(
         buildId: String,
         start: Long,
         debug: Boolean?,
+        logType: LogType?,
         tag: String?,
         jobId: String?,
         executeCount: Int?,
@@ -148,6 +158,7 @@ class BuildLogQueryService @Autowired constructor(
                 buildId = buildId,
                 start = start,
                 debug = debug ?: false,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -163,6 +174,7 @@ class BuildLogQueryService @Autowired constructor(
         buildId: String,
         end: Long,
         debug: Boolean?,
+        logType: LogType?,
         size: Int?,
         tag: String?,
         jobId: String?,
@@ -176,6 +188,7 @@ class BuildLogQueryService @Autowired constructor(
                 end = end,
                 size = size,
                 debug = debug ?: false,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -198,6 +211,24 @@ class BuildLogQueryService @Autowired constructor(
                 buildId = buildId,
                 tag = tag,
                 executeCount = executeCount ?: 1
+            )
+        )
+    }
+
+    fun getLastLineNum(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<QueryLogLineNum> {
+        validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
+        val lastLineNum = indexService.getLastLineNum(buildId)
+        val finished = logStatusService.isFinish(buildId, null, null, null, null)
+        return Result(
+            QueryLogLineNum(
+                buildId = buildId,
+                finished = finished,
+                lastLineNum = lastLineNum
             )
         )
     }
@@ -232,6 +263,7 @@ class BuildLogQueryService @Autowired constructor(
         buildId: String,
         size: Int,
         debug: Boolean?,
+        logType: LogType?,
         tag: String?,
         jobId: String?,
         executeCount: Int?,
@@ -241,6 +273,7 @@ class BuildLogQueryService @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             debug = debug ?: false,
+                logType = logType,
             tag = tag,
             subTag = subTag,
             jobId = jobId,
@@ -255,6 +288,7 @@ class BuildLogQueryService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         debug: Boolean?,
+        logType: LogType?,
         size: Int?,
         tag: String?,
         jobId: String?,
@@ -266,6 +300,7 @@ class BuildLogQueryService @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             debug = debug ?: false,
+                logType = logType,
             tag = tag,
             subTag = subTag,
             jobId = jobId,

@@ -24,31 +24,7 @@
                 </div>
             </accordion>
         </template>
-
-        <accordion v-if="outputProps && Object.keys(outputProps).length > 0" show-checkbox show-content>
-            <header class="var-header" slot="header">
-                <span>{{ $t('editPage.atomOutput') }}</span>
-                <i class="devops-icon icon-angle-down" style="display: block"></i>
-            </header>
-            <div slot="content">
-                <form-field class="output-namespace" :desc="outputNamespaceDesc" label="输出字段命名空间" :is-error="errors.has(&quot;namespace&quot;)" :error-msg="errors.first(&quot;namespace&quot;)">
-                    <vuex-input name="namespace" v-validate.initial="{ varRule: true }" v-model="namespace" />
-                </form-field>
-                <div class="atom-output-var-list">
-                    <h4>{{ $t('editPage.outputItemList') }}：</h4>
-                    <p v-for="(output, key) in outputProps" :key="key">
-                        {{ namespace ? `${namespace}_` : '' }}{{ key }}
-                        <bk-popover placement="right">
-                            <i class="icon-info-circle" />
-                            <div slot="content">
-                                {{ output.description }}
-                            </div>
-                        </bk-popover>
-                        <copy-icon :value="bkVarWrapper(namespace ? `${namespace}_${key}` : key)"></copy-icon>
-                    </p>
-                </div>
-            </div>
-        </accordion>
+        <atom-output :element="{}" :atom-props-model="atomPropsModel" :set-parent-validate="() => {}"></atom-output>
     </section>
     <section v-else>
         <div class="empty-tips">{{ emptyTips }}</div>
@@ -66,7 +42,7 @@
     import Tips from '@/components/AtomFormComponent/Tips'
     import DynamicParameter from '@/components/AtomFormComponent/DynamicParameter'
     import DynamicParameterSimple from '@/components/AtomFormComponent/DynamicParameterSimple'
-    import copyIcon from '@/components/copyIcon'
+    import AtomOutput from './AtomOutput'
 
     export default {
         name: 'preview-atom',
@@ -80,18 +56,12 @@
             Tips,
             DynamicParameter,
             DynamicParameterSimple,
-            copyIcon
+            AtomOutput
         },
         mixins: [atomMixin],
         props: {
             handleUpdatePreviewInput: Function,
             atomValue: Object
-        },
-        data () {
-            return {
-                outputNamespaceDesc: this.$t('editPage.namespaceTips'),
-                namespace: ''
-            }
         },
         computed: {
             inputProps () {
@@ -100,14 +70,6 @@
                 } catch (e) {
                     console.warn('getAtomModalInput error', e)
                     return {}
-                }
-            },
-            outputProps () {
-                try {
-                    return this.atomPropsModel.output
-                } catch (e) {
-                    console.warn('getAtomModalOpt error', e)
-                    return null
                 }
             },
             paramsGroupMap () {
@@ -123,9 +85,9 @@
                         props: {}
                     }
                 })
-                Object.keys(this.inputProps).map(key => {
+                Object.keys(this.inputProps).forEach(key => {
                     const prop = this.inputProps[key]
-                    const group = prop.groupName && groupMap[prop.groupName] ? groupMap[prop.groupName] : groupMap['rootProps']
+                    const group = prop.groupName && groupMap[prop.groupName] ? groupMap[prop.groupName] : groupMap.rootProps
                     group.props[key] = prop
                 })
                 return groupMap
@@ -141,9 +103,6 @@
 </script>
 
 <style lang="scss">
-    .output-namespace {
-        margin-bottom: 12px;
-    }
     .atom-output-var-list {
         > h4,
         > p {

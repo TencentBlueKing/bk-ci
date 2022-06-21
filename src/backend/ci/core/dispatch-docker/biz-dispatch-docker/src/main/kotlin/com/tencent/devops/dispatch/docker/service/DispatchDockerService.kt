@@ -34,6 +34,7 @@ import com.tencent.devops.dispatch.docker.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.DockerIpListPage
 import com.tencent.devops.dispatch.docker.pojo.DockerIpUpdateVO
+import com.tencent.devops.dispatch.docker.pojo.HostDriftLoad
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.utils.CommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
@@ -166,6 +167,16 @@ class DispatchDockerService @Autowired constructor(
         return true
     }
 
+    fun updateBuildLessStatus(userId: String, dockerIp: String, dockerIpInfoVO: DockerIpInfoVO): Boolean {
+        // logger.info("$userId update Docker IP status enable: $dockerIp, dockerIpInfoVO: $dockerIpInfoVO")
+        pipelineDockerIPInfoDao.updateBuildLessLoad(
+            dslContext = dslContext,
+            dockerIp = dockerIp,
+            dockerIpInfoVO = dockerIpInfoVO
+        )
+        return true
+    }
+
     fun delete(userId: String, dockerIp: String): Boolean {
         logger.info("$userId delete Docker IP: $dockerIp")
         if (dockerIp.isEmpty()) {
@@ -213,14 +224,10 @@ class DispatchDockerService @Autowired constructor(
         return mapOf("threshold" to dockerHostUtils.getDockerDriftThreshold().toString())
     }
 
-    fun updateDockerDriftThreshold(userId: String, thresholdMap: Map<String, String>): Boolean {
-        logger.info("$userId updateDockerDriftThreshold $thresholdMap")
-        val threshold = (thresholdMap["threshold"] ?: error("Parameter threshold must in (0-100).")).toInt()
-        if (threshold < 0 || threshold > 100) {
-            throw IllegalArgumentException("Parameter threshold must in (0-100).")
-        }
+    fun updateDockerDriftThreshold(userId: String, hostDriftLoad: HostDriftLoad): Boolean {
+        logger.info("$userId updateDockerDriftThreshold $hostDriftLoad")
 
-        dockerHostUtils.updateDockerDriftThreshold(threshold)
+        dockerHostUtils.updateDockerDriftThreshold(hostDriftLoad)
         return true
     }
 }

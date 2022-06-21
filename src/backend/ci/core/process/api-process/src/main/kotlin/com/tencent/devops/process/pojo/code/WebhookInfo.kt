@@ -27,13 +27,31 @@
 
 package com.tencent.devops.process.pojo.code
 
+import io.swagger.annotations.ApiModelProperty
+
 data class WebhookInfo(
+    @ApiModelProperty("仓库url链接", required = false)
     val webhookRepoUrl: String?,
+    @ApiModelProperty("分支名", required = false)
     val webhookBranch: String?,
+    @ApiModelProperty("webhook类型", required = false)
     val webhookType: String?,
+    @ApiModelProperty("事件类型", required = false)
     val webhookEventType: String?,
+    @ApiModelProperty("提交信息", required = false)
     val webhookMessage: String?,
+    @ApiModelProperty("提交信息id", required = false)
     val webhookCommitId: String?,
+    @ApiModelProperty("合并后commitId", required = false)
     // 合并后commitId
-    val webhookMergeCommitSha: String?
+    val webhookMergeCommitSha: String?,
+    @ApiModelProperty("源分支", required = false)
+    // 源分支
+    val webhookSourceBranch: String?,
+    // mr id
+    val mrId: String?,
+    // mr iid
+    val mrIid: String?,
+    // mr url
+    val mrUrl: String?
 )

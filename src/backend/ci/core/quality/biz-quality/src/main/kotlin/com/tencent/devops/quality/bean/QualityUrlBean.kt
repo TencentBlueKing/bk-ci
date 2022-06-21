@@ -36,6 +36,8 @@ interface QualityUrlBean {
         projectCode: String,
         pipelineId: String,
         buildId: String,
+        position: String,
+        stageId: String?,
         runtimeVariable: Map<String, String>?
     ): String
 }

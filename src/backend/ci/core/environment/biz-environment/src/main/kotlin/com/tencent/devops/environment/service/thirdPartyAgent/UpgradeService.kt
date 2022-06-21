@@ -75,17 +75,27 @@ class UpgradeService @Autowired constructor(
                 return value!!
             }
             logger.info("refresh $redisKey from redis")
-            value = redisOperation.get(redisKey) ?: ""
+            value = redisOperation.get(key = redisKey, isDistinguishCluster = true) ?: ""
             stringCache.put(redisKey, value ?: "")
         }
         return value!!
     }
 
     fun setUpgrade(agentVersion: String) =
-        redisOperation.set(agentGrayUtils.getAgentVersionKey(), agentVersion, expired = false)
+        redisOperation.set(
+            key = agentGrayUtils.getAgentVersionKey(),
+            value = agentVersion,
+            expired = false,
+            isDistinguishCluster = true
+        )
 
     fun setMasterVersion(masterVersion: String) =
-        redisOperation.set(agentGrayUtils.getAgentMasterVersionKey(), masterVersion, expired = false)
+        redisOperation.set(
+            key = agentGrayUtils.getAgentMasterVersionKey(),
+            value = masterVersion,
+            expired = false,
+            isDistinguishCluster = true
+        )
 
     fun getWorkerVersion() = getRedisValueWithCache(agentGrayUtils.getAgentVersionKey())
 

@@ -40,6 +40,7 @@
     export default class ShowTooltip extends Vue {
         @Prop({ required: true })
         name: string
+
         @Prop({
             default: 'bottom',
             validator (value) {

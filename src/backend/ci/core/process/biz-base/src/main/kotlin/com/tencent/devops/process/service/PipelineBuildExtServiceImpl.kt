@@ -32,11 +32,23 @@ import com.tencent.devops.process.engine.service.PipelineBuildExtService
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
-class PipelineBuildExtServiceImpl@Autowired constructor(
+class PipelineBuildExtServiceImpl @Autowired constructor(
     private val pipelineContextService: PipelineContextService
 ) : PipelineBuildExtService {
-    override fun buildExt(task: PipelineBuildTask, variable: Map<String, String>): Map<String, String> {
-        return pipelineContextService.buildContext(task.buildId, task.containerId, variable)
+
+    override fun buildExt(
+        task: PipelineBuildTask,
+        variables: Map<String, String>
+    ): Map<String, String> {
+        return pipelineContextService.buildContext(
+            projectId = task.projectId,
+            pipelineId = task.pipelineId,
+            buildId = task.buildId,
+            stageId = task.stageId,
+            containerId = task.containerId,
+            taskId = null,
+            variables = variables
+        )
     }
 
     override fun endBuild(task: PipelineBuildTask) {

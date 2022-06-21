@@ -53,14 +53,15 @@ class PipelineSettingService @Autowired constructor(
         private const val PIPELINE_CURRENT_DAY_BUILD_COUNT_KEY_PREFIX = "PIPELINE_CURRENT_DAY_BUILD_COUNT"
     }
 
-    fun isQueueTimeout(pipelineId: String, startTime: Long): Boolean {
-        val setting = pipelineSettingDao.getSetting(dslContext, pipelineId)
+    fun isQueueTimeout(projectId: String, pipelineId: String, startTime: Long): Boolean {
+        val setting = pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
         val waitQueueTimeMills =
             when {
                 setting == null -> {
                     TimeUnit.HOURS.toMillis(1)
                 }
-                setting.runLockType == PipelineRunLockType.toValue(PipelineRunLockType.SINGLE) -> {
+                setting.runLockType == PipelineRunLockType.toValue(PipelineRunLockType.SINGLE) ||
+                    setting.runLockType == PipelineRunLockType.toValue(PipelineRunLockType.GROUP_LOCK) -> {
                     TimeUnit.SECONDS.toMillis(setting.waitQueueTimeSecond.toLong())
                 }
                 else -> {
@@ -70,25 +71,35 @@ class PipelineSettingService @Autowired constructor(
         return System.currentTimeMillis() - startTime > waitQueueTimeMills
     }
 
-    fun getCurrentDayBuildCount(pipelineId: String): Int {
+    fun getCurrentDayBuildCount(projectId: String, pipelineId: String): Int {
         val currentDayStr = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD)
         val currentDayBuildCountKey = getCurrentDayBuildCountKey(pipelineId, currentDayStr)
         // 判断缓存中是否有值，没有值则从db中实时查
         return if (!redisOperation.hasKey(currentDayBuildCountKey)) {
             logger.info("getCurrentDayBuildCount $currentDayBuildCountKey is not exist!")
-            getCurrentDayBuildCountFromDb(dslContext, currentDayStr, pipelineId)
+            getCurrentDayBuildCountFromDb(
+                transactionContext = dslContext,
+                projectId = projectId,
+                currentDayStr = currentDayStr,
+                pipelineId = pipelineId
+            )
         } else {
             redisOperation.get(currentDayBuildCountKey)!!.toInt()
         }
     }
 
-    fun setCurrentDayBuildCount(transactionContext: DSLContext, pipelineId: String): Int {
+    fun setCurrentDayBuildCount(transactionContext: DSLContext, projectId: String, pipelineId: String): Int {
         val currentDayStr = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD)
         val currentDayBuildCountKey = getCurrentDayBuildCountKey(pipelineId, currentDayStr)
         // 判断缓存中是否有值，没有值则从db中实时查
         if (!redisOperation.hasKey(currentDayBuildCountKey)) {
             logger.info("setCurrentDayBuildCount $currentDayBuildCountKey is not exist!")
-            getCurrentDayBuildCountFromDb(transactionContext, currentDayStr, pipelineId)
+            getCurrentDayBuildCountFromDb(
+                transactionContext = transactionContext,
+                projectId = projectId,
+                currentDayStr = currentDayStr,
+                pipelineId = pipelineId
+            )
         }
         // redis有值则每次自增1
         return redisOperation.increment(currentDayBuildCountKey, 1)?.toInt() ?: 1
@@ -100,6 +111,7 @@ class PipelineSettingService @Autowired constructor(
 
     private fun getCurrentDayBuildCountFromDb(
         transactionContext: DSLContext,
+        projectId: String,
         currentDayStr: String,
         pipelineId: String
     ): Int {
@@ -116,6 +128,7 @@ class PipelineSettingService @Autowired constructor(
         )
         val count = pipelineBuildDao.countBuildNumByTime(
             dslContext = transactionContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             startTime = startTime,
             endTime = endTime

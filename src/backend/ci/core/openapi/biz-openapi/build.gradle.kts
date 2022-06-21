@@ -28,8 +28,8 @@
 dependencies {
     api(project(":core:openapi:model-openapi"))
     api(project(":core:openapi:api-openapi"))
+    api(project(":core:common:common-db"))
     api(project(":core:common:common-pipeline"))
-    api(project(":core:process:biz-process"))
     api(project(":core:repository:api-repository"))
     api(project(":core:environment:api-environment"))
     api(project(":core:artifactory:api-artifactory-sample"))

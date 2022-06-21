@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,6 +29,7 @@ package util
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 )
 
@@ -45,6 +47,27 @@ func ParseJsonToData(jsonData interface{}, targetData interface{}) error {
 	}
 }
 
-func FormatTime(t time.Time) string{
+func FormatTime(t time.Time) string {
 	return t.Format("2006-01-02 15:04:05")
+}
+
+func SplitAndTrimSpace(s string, sep string) []string {
+	split := strings.Split(s, sep)
+	result := make([]string, len(split))
+	for i, sub := range split {
+		result[i] = strings.TrimSpace(sub)
+	}
+	return result
+}
+func Contains(s []string, subs string) bool {
+	if len(s) <= 0 {
+		return false
+	}
+
+	for _, a := range s {
+		if a == subs {
+			return true
+		}
+	}
+	return false
 }

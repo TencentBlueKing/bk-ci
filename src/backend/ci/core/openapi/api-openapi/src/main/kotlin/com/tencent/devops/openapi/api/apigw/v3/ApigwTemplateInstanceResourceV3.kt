@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
@@ -43,12 +44,12 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_PROJECT_TEMPLATE_V3"], description = "OPENAPI-项目模板资源")
@@ -57,7 +58,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwTemplateInstanceResourceV3 {
-    @ApiOperation("批量实例化流水线模板")
+    @ApiOperation("批量实例化流水线模板", tags = ["v3_app_templateInstance_create", "v3_user_templateInstance_create"])
     @POST
     @Path("/")
     fun createTemplateInstances(
@@ -86,7 +87,7 @@ interface ApigwTemplateInstanceResourceV3 {
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet
 
-    @ApiOperation("批量更新流水线模板实例")
+    @ApiOperation("批量更新流水线模板实例", tags = ["v3_user_templateInstance_update", "v3_app_templateInstance_update"])
     @PUT
     @Path("/")
     fun updateTemplateInstances(
@@ -115,7 +116,7 @@ interface ApigwTemplateInstanceResourceV3 {
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet
 
-    @ApiOperation("获取流水线模板的实例列表")
+    @ApiOperation("获取流水线模板的实例列表", tags = ["v3_app_templateInstance_get", "v3_user_templateInstance_get"])
     @GET
     @Path("/")
     fun listTemplateInstances(
@@ -142,6 +143,12 @@ interface ApigwTemplateInstanceResourceV3 {
         pageSize: Int? = 30,
         @ApiParam("名字搜索的关键字", required = false)
         @QueryParam("searchKey")
-        searchKey: String?
+        searchKey: String?,
+        @ApiParam("排序字段", required = false)
+        @QueryParam("sortType")
+        sortType: TemplateSortTypeEnum?,
+        @ApiParam("是否降序", required = false)
+        @QueryParam("desc")
+        desc: Boolean?
     ): Result<TemplateInstancePage>
 }

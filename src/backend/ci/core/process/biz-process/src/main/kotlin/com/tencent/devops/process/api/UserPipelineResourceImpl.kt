@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -37,10 +38,12 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.audit.service.AuditService
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
@@ -63,6 +66,8 @@ import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
+import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
+import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -82,11 +87,13 @@ class UserPipelineResourceImpl @Autowired constructor(
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
         checkParam(userId, projectId)
-        return Result(pipelinePermissionService.checkPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.CREATE
-        ))
+        return Result(
+            pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                permission = AuthPermission.CREATE
+            )
+        )
     }
 
     override fun pipelineExist(userId: String, projectId: String, pipelineName: String): Result<Boolean> {
@@ -135,6 +142,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
     }
 
+    @Timed
     override fun create(
         userId: String,
         projectId: String,
@@ -328,22 +336,26 @@ class UserPipelineResourceImpl @Autowired constructor(
 
     override fun get(userId: String, projectId: String, pipelineId: String): Result<Model> {
         checkParam(userId, projectId)
-        return Result(pipelineInfoFacadeService.getPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
-        ))
+        return Result(
+            pipelineInfoFacadeService.getPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = ChannelCode.BS
+            )
+        )
     }
 
     override fun getVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<Model> {
         checkParam(userId, projectId)
-        return Result(pipelineInfoFacadeService.getPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            channelCode = ChannelCode.BS,
-            version = version)
+        return Result(
+            pipelineInfoFacadeService.getPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = ChannelCode.BS,
+                version = version
+            )
         )
     }
 
@@ -360,11 +372,13 @@ class UserPipelineResourceImpl @Autowired constructor(
             permission = AuthPermission.EDIT,
             message = "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
         )
-        return Result(pipelineRemoteAuthService.generateAuth(
-            pipelineId = pipelineId,
-            projectId = projectId,
-            userId = userId
-        ))
+        return Result(
+            pipelineRemoteAuthService.generateAuth(
+                pipelineId = pipelineId,
+                projectId = projectId,
+                userId = userId
+            )
+        )
     }
 
     override fun softDelete(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
@@ -375,15 +389,17 @@ class UserPipelineResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             channelCode = ChannelCode.BS
         )
-        auditService.createAudit(Audit(
-            resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-            resourceId = pipelineId,
-            resourceName = deletePipeline.pipelineName,
-            userId = userId,
-            action = "delete",
-            actionContent = "删除流水线/Delete Pipeline",
-            projectId = projectId
-        ))
+        auditService.createAudit(
+            Audit(
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceId = pipelineId,
+                resourceName = deletePipeline.pipelineName,
+                userId = userId,
+                action = "delete",
+                actionContent = "删除流水线/Delete Pipeline",
+                projectId = projectId
+            )
+        )
         return Result(true)
     }
 
@@ -398,16 +414,19 @@ class UserPipelineResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            version = version)
-        auditService.createAudit(Audit(
-            resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-            resourceId = pipelineId,
-            resourceName = pipelineName,
-            userId = userId,
-            action = "delete",
-            actionContent = "删除版本/Delete Ver.$version",
-            projectId = projectId
-        ))
+            version = version
+        )
+        auditService.createAudit(
+            Audit(
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceId = pipelineId,
+                resourceName = pipelineName,
+                userId = userId,
+                action = "delete",
+                actionContent = "删除版本/Delete Ver.$version",
+                projectId = projectId
+            )
+        )
         return Result(true)
     }
 
@@ -459,6 +478,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pipelineListFacadeService.listViewAndPipelines(userId, projectId, page, pageSize))
     }
 
+    @Timed
     override fun listViewPipelines(
         userId: String,
         projectId: String,
@@ -550,11 +570,13 @@ class UserPipelineResourceImpl @Autowired constructor(
         pipelineInfo: PipelineModelAndSetting,
         projectId: String
     ): Result<String?> {
-        return Result(pipelineInfoFacadeService.uploadPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineModelAndSetting = pipelineInfo
-        ))
+        return Result(
+            pipelineInfoFacadeService.uploadPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineModelAndSetting = pipelineInfo
+            )
+        )
     }
 
     private fun checkParam(userId: String, projectId: String) {
@@ -583,5 +605,27 @@ class UserPipelineResourceImpl @Autowired constructor(
                 pageSize = pageSize
             )
         )
+    }
+
+    override fun checkYaml(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        yaml: MatrixPipelineInfo
+    ): Result<MatrixPipelineInfo> {
+        checkParam(userId, projectId)
+        if (!pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EDIT
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                params = arrayOf(userId, projectId)
+            )
+        }
+        return Result(MatrixYamlCheckUtils.checkYaml(yaml))
     }
 }

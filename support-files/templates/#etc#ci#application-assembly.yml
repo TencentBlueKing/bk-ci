@@ -36,6 +36,14 @@ spring:
       url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_environment?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
       username: __BK_CI_MYSQL_USER__
       password: __BK_CI_MYSQL_PASSWORD__
+    misc:
+      pkgRegex: "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment)"
+    # 数据源配置（勿随便变更配置项的顺序）
+    dataSourceConfigs:
+      - index: 0
+        url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+        username: __BK_CI_MYSQL_USER__
+        password: __BK_CI_MYSQL_PASSWORD__
 
 server:
   port: __BK_CI_ASSEMBLY_API_PORT__
@@ -75,11 +83,6 @@ dispatch:
   jobQuota:
     systemAlertReceiver:
     enable: false
-
-codecc:
-  path: __BK_CODECC_DATA_DIR__/tools
-  covFile: build_dev.py
-  toolFile: build_tool_dev.py
 
 #### environment
 
@@ -288,6 +291,8 @@ scm:
       tGitHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/codetgit/commit
       hookSecret:
       enableHookSecret: false
+    p4:
+      p4HookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/p4/commit
 #### store
 
 store:
@@ -344,11 +349,6 @@ thread:
   min: 8
 
 #### process
-
-# 流水线加密参数密钥
-parameter:
-  password:
-    pswKey: __BK_CI_PIPELINE_PARAMETER_ENCRYPT_PASSWORD__
 
 # 流水线引擎并发配置
 queueConcurrency:
@@ -418,3 +418,18 @@ wework:
   enableDuplicateCheck: # 表示是否开启重复消息检查，0表示否，1表示是，默认0
   duplicateCheckInterval: # 表示是否重复消息检查的时间间隔，默认1800s，最大不超过4小时
   enableIdTrans: # 表示是否开启id转译，0表示否，1表示是，默认0。仅第三方应用需要用到，企业自建应用可以忽略。
+  
+# 分布式ID配置
+leaf:
+  segment:
+    allocStrategyDaoBeanName: jooqIDAllocDaoImpl
+    enable: true
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_project?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+    username: __BK_CI_MYSQL_USER__
+    password: __BK_CI_MYSQL_PASSWORD__
+  name: leaf
+
+sharding:
+  databaseShardingStrategy:
+    algorithmClassName: "com.tencent.devops.process.sharding.BkProcessDatabaseShardingAlgorithm"
+    shardingField: PROJECT_ID

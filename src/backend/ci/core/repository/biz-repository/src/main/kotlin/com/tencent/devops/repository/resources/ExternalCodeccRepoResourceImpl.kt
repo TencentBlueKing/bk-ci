@@ -28,12 +28,13 @@
 package com.tencent.devops.repository.resources
 
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ExternalCodeccRepoResource
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.repository.service.CommonRepoFileService
 import com.tencent.devops.repository.service.RepoFileService
 import org.springframework.beans.factory.annotation.Autowired
@@ -121,5 +122,29 @@ class ExternalCodeccRepoResourceImpl @Autowired constructor(
 
     override fun getRepoAllMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
         return commonRepoFileService.getGitProjectAllMembers(repoUrl, userId)
+    }
+
+    override fun getFileContentByUrl(
+        projectId: String,
+        repoUrl: String,
+        scmType: ScmType,
+        filePath: String,
+        reversion: String?,
+        branch: String?,
+        subModule: String?,
+        credentialId: String
+    ): Result<String> {
+        return Result(
+            repoFileService.getFileContentByUrl(
+                projectId = projectId,
+                repoUrl = repoUrl,
+                scmType = scmType,
+                filePath = filePath,
+                reversion = reversion,
+                branch = branch,
+                subModule = subModule,
+                credentialId = credentialId
+            )
+        )
     }
 }

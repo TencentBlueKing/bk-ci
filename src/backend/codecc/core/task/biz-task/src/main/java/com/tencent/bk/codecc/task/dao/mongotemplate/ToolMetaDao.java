@@ -52,7 +52,7 @@ public class ToolMetaDao
         Update update = new Update();
         update.set("params", toolMetaEntity.getParams());
         update.set("updated_date", System.currentTimeMillis());
-        return mongoTemplate.updateMulti(query, update, ToolMetaEntity.class).isUpdateOfExisting();
+        return mongoTemplate.updateMulti(query, update, ToolMetaEntity.class).getModifiedCount() > 0;
     }
 
 

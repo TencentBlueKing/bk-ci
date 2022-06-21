@@ -64,7 +64,7 @@ data class IpaSignInfo(
     var mobileProvisionId: String? = null,
     @ApiModelProperty("Universal Link的设置", required = false)
     var universalLinks: List<String>? = null,
-    @ApiModelProperty("钥匙串访问组", required = false)
+    @ApiModelProperty("安全应用组，应为securityApplicationGroupList", required = false)
     var keychainAccessGroups: List<String>? = null,
     @ApiModelProperty("是否替换bundleId", required = false)
     var replaceBundleId: Boolean? = false,
@@ -73,5 +73,9 @@ data class IpaSignInfo(
     @ApiModelProperty("待替换的plist信息", required = false)
     var replaceKeyList: Map<String, String>? = null,
     @ApiModelProperty("指定xcode签名工具版本", required = false)
-    var codeSignVersion: String? = null
+    var codeSignVersion: String? = null,
+    @ApiModelProperty("codesign插件额外参数", required = false)
+    var codesignExternalStr: String? = null,
+    @ApiModelProperty("钥匙串访问组", required = false)
+    var keychainAccessGroupList: List<String>? = null
 )

@@ -24,7 +24,7 @@ import {
 import { getQueryParamList } from '../../../utils/util'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/builds/`
-const pluginPrefix = `plugin/api`
+const pluginPrefix = 'plugin/api'
 
 const state = {
     historyPageStatus: {
@@ -136,12 +136,10 @@ const actions = {
      * @return {Promise} promise 对象
      */
     requestExecPipeline ({ commit, state, dispatch }, { projectId, pipelineId, params }) {
-        let url
-        if (params.buildNo) {
-            url = `${prefix}${projectId}/${pipelineId}?buildNo=${params.buildNo.buildNo}`
+        let url = `${prefix}${projectId}/${pipelineId}`
+        if (params.buildNo && typeof params.buildNo.buildNo !== 'undefined') {
+            url += `?buildNo=${params.buildNo.buildNo}`
             delete params.buildNo
-        } else {
-            url = `${prefix}${projectId}/${pipelineId}`
         }
         return ajax.post(url, {
             ...params

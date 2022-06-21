@@ -83,7 +83,7 @@
                     if (!container.baseOS) return []
                     let buildEnvs = []
                     for (const app in container.buildEnv) {
-                        if (container.buildEnv.hasOwnProperty(app) && Array.isArray(appEnvs[app])) {
+                        if (Object.prototype.hasOwnProperty.call(container.buildEnv, app) && Array.isArray(appEnvs[app])) {
                             buildEnvs = [
                                 ...buildEnvs,
                                 ...appEnvs[app]
@@ -98,12 +98,14 @@
             },
             envsData () {
                 const { stages, globalEnvs, userEnvs, buildEnvs, hasBuildNo } = this
-                const buildNo = hasBuildNo(stages) ? [
-                    {
-                        name: 'BuildNo',
-                        desc: this.$t('buildNum')
-                    }
-                ] : []
+                const buildNo = hasBuildNo(stages)
+                    ? [
+                        {
+                            name: 'BK_CI_BUILD_NO',
+                            desc: this.$t('buildNum')
+                        }
+                    ]
+                    : []
                 return [
                     ...globalEnvs,
                     ...userEnvs,
@@ -171,7 +173,7 @@
                 box-shadow: 0 3px 7px 0 rgba(0,0,0,0.1);
                 transition: all .3s ease;
 
-                /deep/ .bk-table-row {
+                ::v-deep .bk-table-row {
                     line-height: 42px;
                 }
                 &:before {

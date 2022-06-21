@@ -30,7 +30,6 @@ package com.tencent.devops.process.engine.interceptor
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_LOCK
 import com.tencent.devops.process.engine.pojo.Response
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import org.slf4j.LoggerFactory
@@ -44,24 +43,44 @@ import org.springframework.stereotype.Component
  */
 @Component
 class RunLockInterceptor @Autowired constructor(
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRuntimeService: PipelineRuntimeService
 ) : PipelineInterceptor {
 
     override fun execute(task: InterceptData): Response<BuildStatus> {
+        val projectId = task.pipelineInfo.projectId
         val pipelineId = task.pipelineInfo.pipelineId
-        val setting = pipelineRepositoryService.getSetting(pipelineId)
+        val setting = task.setting
         val runLockType = setting?.runLockType
-        return checkRunLock(runLockType, pipelineId)
+        val concurrencyGroup = setting?.concurrencyGroup
+        return checkRunLock(runLockType, projectId, pipelineId, concurrencyGroup)
     }
 
-    fun checkRunLock(runLockType: PipelineRunLockType?, pipelineId: String): Response<BuildStatus> {
+    fun checkRunLock(
+        runLockType: PipelineRunLockType?,
+        projectId: String,
+        pipelineId: String,
+        concurrencyGroup: String?
+    ): Response<BuildStatus> {
         val result: Response<BuildStatus> = if (checkLock(runLockType)) {
             Response(ERROR_PIPELINE_LOCK.toInt(), "当前流水线已被锁定，无法执行，请解锁后重试")
         } else if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
-            val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(pipelineId)
+            val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
             return if (buildSummaryRecord?.runningCount ?: 0 >= 1) {
                 logger.info("[$pipelineId] 当前流水线已设置为同时只能运行一个构建任务，开始排队！")
+                Response(BuildStatus.QUEUE)
+            } else {
+                Response(BuildStatus.RUNNING)
+            }
+        } else if (runLockType == PipelineRunLockType.GROUP_LOCK) {
+            val concurrencyGroupRunningCount = concurrencyGroup?.let {
+                pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+                    projectId = projectId,
+                    concurrencyGroup = it,
+                    status = listOf(BuildStatus.RUNNING)
+                ).size
+            } ?: 0
+            if (concurrencyGroupRunningCount >= 1) {
+                logger.info("[$pipelineId] 当前互斥组[$concurrencyGroup]同时只能运行一个构建任务，开始排队！")
                 Response(BuildStatus.QUEUE)
             } else {
                 Response(BuildStatus.RUNNING)

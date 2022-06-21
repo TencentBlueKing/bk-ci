@@ -40,7 +40,6 @@ import com.tencent.devops.dockerhost.services.generator.DockerEnvLoader
 import com.tencent.devops.dockerhost.services.generator.DockerMountLoader
 import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
 import com.tencent.devops.dockerhost.utils.RandomUtil
-import com.tencent.devops.process.engine.common.VMUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -59,6 +58,11 @@ class ContainerRunHandler(
                     .withBinds(DockerBindLoader.loadBinds(this))
                     .withMounts(DockerMountLoader.loadMounts(this))
                     .withNetworkMode("bridge")
+
+                // 对开启代码加速白名单项目增加--init启动参数，用于容器销毁时回收进程
+                if (qpcUniquePath != null && qpcUniquePath.isNotBlank()) {
+                    hostConfig.withInit(true)
+                }
 
                 if (dockerResource != null) {
                     hostConfig
@@ -86,7 +90,7 @@ class ContainerRunHandler(
                     buildId = buildId,
                     red = true,
                     message = "启动构建环境失败，错误信息:${er.message}",
-                    tag = VMUtils.genStartVMTaskId(vmSeqId.toString()),
+                    tag = taskId(),
                     containerHashId = containerHashId
                 )
                 if (er is NotFoundException) {
@@ -102,7 +106,7 @@ class ContainerRunHandler(
                 }
             }
 
-            nextHandler?.handlerRequest(this)
+            nextHandler.get()?.handlerRequest(this)
         }
     }
 

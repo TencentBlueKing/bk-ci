@@ -1,4 +1,13 @@
-package distcc_server
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
+package ds
 
 import (
 	"reflect"
@@ -7,6 +16,7 @@ import (
 	"unsafe"
 )
 
+// StatsInfo describe the stats get from distcc daemon
 type StatsInfo struct {
 	TCPAccept           int64   `json:"dcc_tcp_accept"`
 	RejBadReq           int64   `json:"dcc_rej_bad_req"`
@@ -37,6 +47,7 @@ type StatsInfo struct {
 	FreeSpace           string  `json:"dcc_free_space"`
 }
 
+// ParseAll parse the message from distcc daemon into StatsInfo
 func (si *StatsInfo) ParseAll(data []byte) {
 	lines := strings.Split(string(data), "\n")
 	for _, line := range lines {
@@ -44,6 +55,7 @@ func (si *StatsInfo) ParseAll(data []byte) {
 	}
 }
 
+// Parse parse the single line stats message
 func (si *StatsInfo) Parse(line string) {
 	line = strings.Replace(line, "\n", "", -1)
 	line = strings.Replace(line, "\r", "", -1)
@@ -81,13 +93,16 @@ func (si *StatsInfo) Parse(line string) {
 	}
 }
 
+// GetCurrentLoad return the current running job number according to stats
 func (si *StatsInfo) GetCurrentLoad() *StatsLoad {
 	return &StatsLoad{
-		StatsInfo:   si,
-		RunningJobs: si.TCPAccept - si.RejBadReq - si.RejOverload - si.CompileOK - si.CompileErr - si.CompileTimeout - si.CliDisconnect - si.Other,
+		StatsInfo: si,
+		RunningJobs: si.TCPAccept - si.RejBadReq - si.RejOverload - si.CompileOK -
+			si.CompileErr - si.CompileTimeout - si.CliDisconnect - si.Other,
 	}
 }
 
+// StatsLoad describe the stats info and the job running status
 type StatsLoad struct {
 	*StatsInfo
 	RunningJobs int64

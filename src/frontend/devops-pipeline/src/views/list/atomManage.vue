@@ -306,10 +306,10 @@
                     background-color: white;
                 }
             }
-            /deep/ .bk-tab-label:hover .atom-panel-count {
+            ::v-deep .bk-tab-label:hover .atom-panel-count {
                 background: #3a84ff;
             }
-            /deep/ .atom-manage-des {
+            ::v-deep .atom-manage-des {
                 h5 {
                     margin-top: 0;
                     margin-bottom: 4px;
@@ -324,23 +324,23 @@
                     width: 100%;
                 }
             }
-            /deep/ div.bk-tab-section {
+            ::v-deep div.bk-tab-section {
                 padding: 0;
                 .bk-table-large .cell {
                     -webkit-line-clamp: 1;
                 }
             }
-            /deep/ .bk-table-body-wrapper {
+            ::v-deep .bk-table-body-wrapper {
                 max-height: calc(100vh - 250px);
                 overflow-y: auto;
                 .primary-color {
                     color: $primaryColor;
                 }
             }
-            /deep/ .bk-table-body-wrapper .cursor-pointer {
+            ::v-deep .bk-table-body-wrapper .cursor-pointer {
                 cursor: pointer;
             }
-            /deep/ thead tr th:first-child div {
+            ::v-deep thead tr th:first-child div {
                 margin-left: 10px;
             }
             .atom-logo {
@@ -413,7 +413,7 @@
     .delete-reasons {
         display: block;
         padding: 6px 0;
-        /deep/ .bk-checkbox-text {
+        ::v-deep .bk-checkbox-text {
             font-size: 12px;
         }
     }
@@ -430,7 +430,7 @@
         line-height: 12px;
         font-size: 12px;
         border-radius: 2px;
-        border: 1px solid $fontLigtherColor;
+        border: 1px solid $fontLighterColor;
         resize: none;
     }
 

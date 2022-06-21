@@ -27,19 +27,23 @@
 
 package com.tencent.devops.scm
 
+import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.scm.code.CodeGitScmImpl
 import com.tencent.devops.scm.code.CodeGitlabScmImpl
+import com.tencent.devops.scm.code.CodeP4ScmImpl
 import com.tencent.devops.scm.code.CodeSvnScmImpl
 import com.tencent.devops.scm.code.CodeTGitScmImpl
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.exception.ScmException
 
 object ScmFactory {
 
@@ -152,8 +156,32 @@ object ScmFactory {
                     projectName = projectName,
                     branchName = branchName,
                     url = url,
+                    privateKey = privateKey,
+                    passPhrase = passPhrase,
                     token = token,
                     gitConfig = gitConfig,
+                    event = event
+                )
+            }
+            ScmType.CODE_P4 -> {
+                if (passPhrase == null) {
+                    throw ScmException(
+                        MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY),
+                        ScmType.CODE_P4.name
+                    )
+                }
+                if (userName == null) {
+                    throw ScmException(
+                        MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY),
+                        ScmType.CODE_P4.name
+                    )
+                }
+                CodeP4ScmImpl(
+                    projectName = projectName,
+                    branchName = branchName,
+                    url = url,
+                    username = userName,
+                    password = passPhrase,
                     event = event
                 )
             }

@@ -28,15 +28,19 @@
 package com.tencent.devops.plugin.worker.task.archive
 
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.element.ReportArchiveElement
+import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.REPORT_DYNAMIC_ROOT_URL
-import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.report.ReportSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -46,14 +50,17 @@ import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.utils.TaskUtil
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import java.util.regex.Pattern
-import javax.ws.rs.NotFoundException
 
 @TaskClassType(classTypes = [ReportArchiveElement.classType])
 class ReportArchiveTask : ITask() {
 
-    private val api = ApiFactory.create(ReportSDKApi::class)
+    private val api = ArtifactApiFactory.create(ReportSDKApi::class)
 
     private val regex = Pattern.compile("[,|;]")
 
@@ -74,12 +81,20 @@ class ReportArchiveTask : ITask() {
 
             val fileDir = getFile(workspace, fileDirParam)
             if (!fileDir.isDirectory) {
-                throw NotFoundException("文件夹($fileDirParam)不存在")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = "文件夹($fileDirParam)不存在"
+                )
             }
 
             val indexFile = getFile(fileDir, indexFileParam)
             if (!indexFile.exists()) {
-                throw RuntimeException("入口文件($indexFileParam)不在文件夹($fileDirParam)下")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = "入口文件($indexFileParam)不在文件夹($fileDirParam)下"
+                )
             }
             LoggerService.addNormalLine("入口文件检测完成")
             val reportRootUrl = api.getRootUrl(elementId).data!!
@@ -99,15 +114,21 @@ class ReportArchiveTask : ITask() {
                 type = TokenType.UPLOAD,
                 expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
             )
-            allFileList.forEach {
-                val relativePath = fileDirPath.relativize(Paths.get(it.canonicalPath)).toString()
-                api.uploadReport(
-                    file = it,
-                    taskId = elementId,
-                    relativePath = relativePath,
-                    buildVariables = buildVariables,
-                    token = token
-                )
+            if (allFileList.size > 10) {
+                val executors = Executors.newFixedThreadPool(10)
+                allFileList.forEach {
+                    executors.execute {
+                        uploadReportFile(fileDirPath, it, elementId, buildVariables, token)
+                    }
+                }
+                executors.shutdown()
+                if (!executors.awaitTermination(buildVariables.timeoutMills, TimeUnit.MILLISECONDS)) {
+                    throw TimeoutException("parallel upload report timeout")
+                }
+            } else {
+                allFileList.forEach {
+                    uploadReportFile(fileDirPath, it, elementId, buildVariables, token)
+                }
             }
             LoggerService.addNormalLine("上传自定义产出物成功，共产生了${allFileList.size}个文件")
         } else {
@@ -132,6 +153,25 @@ class ReportArchiveTask : ITask() {
 
         logger.info("indexFileParam is:$indexFileParam,reportNameParam is:$reportNameParam,reportType is:$reportType")
         api.createReportRecord(elementId, indexFileParam, reportNameParam, reportType, reportEmail)
+    }
+
+    private fun uploadReportFile(
+        fileDirPath: Path,
+        file: File,
+        elementId: String,
+        buildVariables: BuildVariables,
+        token: String?
+    ) {
+        val relativePath = fileDirPath.relativize(Paths.get(file.canonicalPath)).toString()
+        HttpRetryUtils.retry(retryTime = 3) {
+            api.uploadReport(
+                file = file,
+                taskId = elementId,
+                relativePath = relativePath,
+                buildVariables = buildVariables,
+                token = token
+            )
+        }
     }
 
     private fun recursiveGetFiles(file: File): List<File> {

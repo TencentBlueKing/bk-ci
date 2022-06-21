@@ -37,4 +37,6 @@ dependencies {
     api(project(":core:common:common-db"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:log:api-log"))
+    api(project(":core:buildless:api-buildless"))
+    api(project(":core:dispatch-bcs:api-dispatch-bcs"))
 }

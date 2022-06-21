@@ -36,6 +36,7 @@ import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.common.UnInstallReq
 
@@ -54,23 +55,36 @@ interface AtomService {
         accessToken: String,
         userId: String,
         serviceScope: String?,
+        jobType: String?,
         os: String?,
         projectCode: String,
-        category: String?,
+        category: String? = AtomCategoryEnum.TASK.name,
         classifyId: String?,
-        page: Int?,
-        pageSize: Int?
+        recommendFlag: Boolean?,
+        keyword: String?,
+        queryProjectAtomFlag: Boolean = true,
+        fitOsFlag: Boolean? = true,
+        queryFitAgentBuildLessAtomFlag: Boolean? = true,
+        page: Int = 1,
+        pageSize: Int = 10
     ): Result<AtomResp<AtomRespItem>?>
 
     /**
      * 获取插件列表
      */
     fun serviceGetPipelineAtoms(
+        userId: String,
         serviceScope: String?,
+        jobType: String?,
         os: String?,
         projectCode: String,
-        category: String?,
+        category: String? = AtomCategoryEnum.TASK.name,
         classifyId: String?,
+        recommendFlag: Boolean?,
+        keyword: String?,
+        queryProjectAtomFlag: Boolean = true,
+        fitOsFlag: Boolean? = true,
+        queryFitAgentBuildLessAtomFlag: Boolean? = true,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?>
@@ -87,7 +101,8 @@ interface AtomService {
         projectCode: String,
         atomCode: String,
         version: String,
-        atomStatus: Byte? = null
+        atomStatus: Byte? = null,
+        queryOfflineFlag: Boolean = false
     ): Result<PipelineAtom?>
 
     /**
@@ -98,7 +113,8 @@ interface AtomService {
         projectCode: String? = null,
         atomCode: String,
         version: String,
-        atomStatus: Byte? = null
+        atomStatus: Byte? = null,
+        queryOfflineFlag: Boolean = false
     ): Result<PipelineAtom?>
 
     /**
@@ -144,8 +160,9 @@ interface AtomService {
         userId: String,
         projectCode: String,
         classifyCode: String?,
-        page: Int?,
-        pageSize: Int?
+        name: String?,
+        page: Int,
+        pageSize: Int
     ): Page<InstalledAtom>
 
     /**
@@ -177,4 +194,13 @@ interface AtomService {
     fun findUnDefaultAtom(
         atomList: List<String>
     ): Result<List<String>>
+
+    /**
+     * 获取插件真实版本号
+     * @param projectCode 项目代码
+     * @param atomCode 插件代码
+     * @param version 插件版本号
+     * @return 插件真实版本号
+     */
+    fun getAtomRealVersion(projectCode: String, atomCode: String, version: String): Result<String?>
 }

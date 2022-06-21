@@ -34,6 +34,8 @@ import com.tencent.devops.common.event.pojo.measure.AtomMonitorReportBroadCastEv
 import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.constant.MonitoringMessageCode.ERROR_MONITORING_INSERT_DATA_FAIL
 import com.tencent.devops.monitoring.consumer.processor.monitor.AbstractMonitorProcessor
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -41,7 +43,8 @@ import org.springframework.stereotype.Component
 @Component
 class AtomMonitorReportListener @Autowired constructor(
     private val influxdbClient: InfluxdbClient,
-    private val monitorProcessors: List<AbstractMonitorProcessor>
+    private val monitorProcessors: List<AbstractMonitorProcessor>,
+    private val meterRegistry: MeterRegistry
 ) : Listener<AtomMonitorReportBroadCastEvent> {
 
     override fun execute(event: AtomMonitorReportBroadCastEvent) {
@@ -62,7 +65,16 @@ class AtomMonitorReportListener @Autowired constructor(
     }
 
     fun insertAtomMonitorData(data: AtomMonitorData) {
+        // 写入influxdb
         influxdbClient.insert(data)
+
+        // 暴露prometheus
+        Counter.builder("atom_monitor")
+            .tag("atomCode", data.atomCode)
+            .tag("errorCode", data.errorCode.toString())
+            .tag("errorType", data.errorType ?: "null")
+            .register(meterRegistry)
+            .increment()
     }
 
     companion object {

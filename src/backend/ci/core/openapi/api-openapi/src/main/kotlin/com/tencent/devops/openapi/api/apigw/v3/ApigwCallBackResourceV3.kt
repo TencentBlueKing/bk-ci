@@ -33,10 +33,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
 import com.tencent.devops.process.pojo.CreateCallBackResult
-import com.tencent.devops.process.pojo.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
-import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -58,7 +58,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwCallBackResourceV3 {
 
-    @ApiOperation("创建callback回调 #4319 支持Stage事件")
+    @ApiOperation("创建callback回调 #4319 支持Stage事件", tags = ["v3_app_callback_create", "v3_user_callback_create"])
     @POST
     @Path("/")
     fun create(
@@ -88,7 +88,7 @@ interface ApigwCallBackResourceV3 {
         secretToken: String?
     ): Result<Boolean>
 
-    @ApiOperation("批量创建callback回调")
+    @ApiOperation("批量创建callback回调", tags = ["v3_user_callback_batch_create", "v3_app_callback_batch_create"])
     @POST
     @Path("/batch")
     fun batchCreate(
@@ -118,7 +118,7 @@ interface ApigwCallBackResourceV3 {
         secretToken: String?
     ): Result<CreateCallBackResult>
 
-    @ApiOperation("callback回调列表")
+    @ApiOperation("callback回调列表", tags = ["v3_app_callback_list", "v3_user_callback_list"])
     @GET
     @Path("/")
     fun list(
@@ -142,7 +142,7 @@ interface ApigwCallBackResourceV3 {
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBack>>
 
-    @ApiOperation("callback回调移除")
+    @ApiOperation("callback回调移除", tags = ["v3_app_callback_delete", "v3_user_callback_delete"])
     @DELETE
     @Path("/{id}")
     fun remove(
@@ -158,12 +158,12 @@ interface ApigwCallBackResourceV3 {
         @ApiParam("projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("id", required = true)
+        @ApiParam("传入的是回调列表接口返回的id：v3_user/app_callback_list", required = true)
         @PathParam("id")
         id: Long
     ): Result<Boolean>
 
-    @ApiOperation("callback回调执行历史记录")
+    @ApiOperation("callback回调执行历史记录", tags = ["v3_user_callback_history_list", "v3_app_callback_history_list"])
     @GET
     @Path("/history")
     fun listHistory(
@@ -199,7 +199,7 @@ interface ApigwCallBackResourceV3 {
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBackHistory>>
 
-    @ApiOperation("callback回调重试")
+    @ApiOperation("callback回调重试", tags = [])
     @POST
     @Path("/history/{id}/retry")
     fun retry(

@@ -49,3 +49,12 @@ scm:
     tGit:
       apiUrl: https://git.tencent.com/api/v3
       tGitHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/codetgit/commit
+    p4:
+      p4HookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/p4/commit
+tapd:
+    clientId: __BK_CI_REPOSITORY_TAPD_CLIENT_ID__
+    clientSecret: __BK_CI_REPOSITORY_TAPD_CLIENT_SECRET__
+    redirectUrl: __BK_CI_PUBLIC_URL__/console/
+    callbackUrl: __BK_CI_PUBLIC_URL__/repository/api/external/repo/tapd/callback
+    serverUrl: __BK_CI_REPOSITORY_TAPD_SERVER_URL__
+    apiUrl: __BK_CI_REPOSITORY_TAPD_API_URL__

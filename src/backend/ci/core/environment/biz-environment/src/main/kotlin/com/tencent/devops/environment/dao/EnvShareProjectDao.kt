@@ -28,6 +28,8 @@
 package com.tencent.devops.environment.dao
 
 import com.tencent.devops.environment.pojo.AddSharedProjectInfo
+import com.tencent.devops.environment.pojo.TEnvShareProjectInfo
+import com.tencent.devops.model.environment.tables.TEnv
 import com.tencent.devops.model.environment.tables.TEnvShareProject
 import com.tencent.devops.model.environment.tables.records.TEnvShareProjectRecord
 import org.jooq.DSLContext
@@ -43,17 +45,39 @@ class EnvShareProjectDao {
         name: String?,
         offset: Int,
         limit: Int
-    ): List<TEnvShareProjectRecord> {
-        with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
-            val where = dslContext.selectFrom(this)
-                .where(MAIN_PROJECT_ID.eq(projectId))
-                .and((ENV_ID.eq(envId)))
-            if (!name.isNullOrBlank()) {
-                where.and(SHARED_PROJECT_NAME.like("%$name%"))
-            }
-            return where.orderBy(UPDATE_TIME.desc()).limit(limit).offset(offset)
-                .fetch()
+    ): List<TEnvShareProjectInfo> {
+        val a = TEnvShareProject.T_ENV_SHARE_PROJECT.`as`("a")
+        val b = TEnv.T_ENV.`as`("b")
+        val dsl = dslContext.select(
+            a.ENV_ID,
+            b.ENV_NAME,
+            a.MAIN_PROJECT_ID,
+            a.SHARED_PROJECT_ID,
+            a.SHARED_PROJECT_NAME,
+            a.TYPE,
+            a.CREATOR,
+            a.CREATE_TIME,
+            a.UPDATE_TIME
+        ).from(a).join(b).on(a.ENV_ID.eq(b.ENV_ID))
+            .where(a.MAIN_PROJECT_ID.eq(projectId))
+            .and((a.ENV_ID.eq(envId)))
+        if (!name.isNullOrBlank()) {
+            dsl.and(a.SHARED_PROJECT_NAME.like("%$name%"))
         }
+        return dsl.orderBy(a.UPDATE_TIME.desc()).limit(limit).offset(offset)
+            .fetch().map {
+                TEnvShareProjectInfo(
+                    envId = it.value1(),
+                    envName = it.value2(),
+                    mainProjectId = it.value3(),
+                    sharedProjectId = it.value4(),
+                    sharedProjectName = it.value5(),
+                    type = it.value6(),
+                    creator = it.value7(),
+                    createTime = it.value8(),
+                    updateTime = it.value9()
+                )
+            }
     }
 
     fun count(
@@ -88,6 +112,63 @@ class EnvShareProjectDao {
         }
     }
 
+    fun list(
+        dslContext: DSLContext,
+        mainProjectId: String,
+        envName: String?,
+        envId: Long?
+    ): List<TEnvShareProjectRecord> {
+        with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
+            val dsl = dslContext.selectFrom(this)
+                .where(MAIN_PROJECT_ID.eq(mainProjectId))
+            if (!envName.isNullOrBlank()) {
+                dsl.and(ENV_NAME.eq(envName))
+            }
+            if (envId != null) {
+                dsl.and(ENV_ID.eq(envId))
+            }
+            return dsl.fetch()
+        }
+    }
+
+    fun listByShare(
+        dslContext: DSLContext,
+        envName: String?,
+        sharedProjectId: String
+    ): List<TEnvShareProjectInfo> {
+        val a = TEnvShareProject.T_ENV_SHARE_PROJECT.`as`("a")
+        val b = TEnv.T_ENV.`as`("b")
+        val dsl = dslContext.select(
+            a.ENV_ID,
+            b.ENV_NAME,
+            a.MAIN_PROJECT_ID,
+            a.SHARED_PROJECT_ID,
+            a.SHARED_PROJECT_NAME,
+            a.TYPE,
+            a.CREATOR,
+            a.CREATE_TIME,
+            a.UPDATE_TIME
+        ).from(a).join(b).on(a.ENV_ID.eq(b.ENV_ID))
+            .where(a.SHARED_PROJECT_ID.eq(sharedProjectId))
+        if (!envName.isNullOrBlank()) {
+            dsl.and(a.ENV_NAME.eq(envName))
+        }
+        return dsl.fetch().map {
+            TEnvShareProjectInfo(
+                envId = it.value1(),
+                envName = it.value2(),
+                mainProjectId = it.value3(),
+                sharedProjectId = it.value4(),
+                sharedProjectName = it.value5(),
+                type = it.value6(),
+                creator = it.value7(),
+                createTime = it.value8(),
+                updateTime = it.value9()
+            )
+        }
+    }
+
+    @SuppressWarnings("LongParameterList")
     fun batchSave(
         dslContext: DSLContext,
         userId: String,
@@ -117,7 +198,7 @@ class EnvShareProjectDao {
                     envId,
                     envName,
                     mainProjectId,
-                    it.gitProjectId,
+                    it.getFinalProjectId(),
                     it.name,
                     it.type.name,
                     userId,
@@ -125,12 +206,27 @@ class EnvShareProjectDao {
                     now
                 ).onDuplicateKeyUpdate()
                     .set(ENV_NAME, envName)
-                    .set(SHARED_PROJECT_NAME, it.gitProjectId)
+                    .set(SHARED_PROJECT_NAME, it.getFinalProjectId())
                     .set(TYPE, it.type.name)
                     .set(CREATOR, userId)
                     .set(UPDATE_TIME, now)
             }
         }).execute()
+    }
+
+    fun batchUpdateEnvName(
+        dslContext: DSLContext,
+        envId: Long,
+        envName: String
+    ) {
+        val now = LocalDateTime.now()
+        with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
+            dslContext.update(this)
+                .set(ENV_NAME, envName)
+                .set(UPDATE_TIME, now)
+                .where(ENV_ID.eq(envId))
+                .execute()
+        }
     }
 
     fun deleteByEnvAndMainProj(

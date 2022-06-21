@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -40,7 +41,6 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -49,37 +49,16 @@ import javax.ws.rs.core.MediaType
 @Path("/build/repositories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("LongParameterList")
 interface BuildRepositoryResource {
 
-    @Deprecated("这个接口要丢弃，当前兼容老的agent的接口")
-    @ApiOperation("构建机获取代码库详情")
-    @Path("/{repositoryHashId}/")
-    @GET
-    fun get(
-        @ApiParam(value = "构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
-        vmSeqId: String,
-        @ApiParam(value = "构建机名称", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String,
-        @ApiParam("代码库哈希ID", required = true)
-        @PathParam("repositoryHashId")
-        repositoryHashId: String
-    ): Result<Repository>
-
-    /**
-     * TODO
-     * Repository ID 是代码ID或者仓库名， 如果仓库名， 那中间又可能带有 '/'
-     * 如果是带了 '/' 之后， 虽然agent会做url encode, 但是网关那层会把这个自动decode， 导致请求会返回404，
-     * 所以新加了这个API， repository ID以query方式传递过来
-     */
     @ApiOperation("构建机获取代码库详情")
     @Path("/")
     @GET
     fun getByType(
+        @ApiParam(value = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -95,25 +74,5 @@ interface BuildRepositoryResource {
         @ApiParam("代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
-    ): Result<Repository>
-
-    @Deprecated("这个接口要丢弃，当前兼容老的agent的接口")
-    @ApiOperation("构建机获取代码库详情")
-//    @Path("/{repositoryHashId}/")
-    @Path("/repositoryHashId/{repositoryHashId}/")
-    @GET
-    fun getV2(
-        @ApiParam(value = "构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
-        @ApiParam(value = "构建环境ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
-        vmSeqId: String,
-        @ApiParam(value = "构建机名称", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String,
-        @ApiParam("代码库哈希ID", required = true)
-        @PathParam("repositoryHashId")
-        repositoryHashId: String
     ): Result<Repository>
 }

@@ -52,4 +52,12 @@ object Timeout {
         }
         return minute to TimeUnit.MINUTES.toMillis(minute.toLong())
     }
+
+    fun transMinuteTimeoutToSec(timeoutMinutes: Int?): Long {
+        var minute = timeoutMinutes ?: DEFAULT_TIMEOUT_MIN
+        if (minute <= 0 || minute > MAX_MINUTES) {
+            minute = MAX_MINUTES
+        }
+        return TimeUnit.MINUTES.toSeconds(minute.toLong()) + 1 // #5109 buffer 1 second
+    }
 }

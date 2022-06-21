@@ -257,6 +257,7 @@ func (m *modulePat) match(file string) bool {
 	return match
 }
 
+// String return the string of filter
 func (m *moduleSpec) String() string {
 	// Lock because the type is not atomic. TODO: clean this up.
 	logging.mu.Lock()
@@ -266,7 +267,7 @@ func (m *moduleSpec) String() string {
 		if i > 0 {
 			b.WriteRune(',')
 		}
-		fmt.Fprintf(&b, "%s=%d", f.pattern, f.level)
+		_, _ = fmt.Fprintf(&b, "%s=%d", f.pattern, f.level)
 	}
 	return b.String()
 }
@@ -342,6 +343,7 @@ func (t *traceLocation) match(file string, line int) bool {
 	return t.file == file
 }
 
+// String return the string of caller's filename and line
 func (t *traceLocation) String() string {
 	// Lock because the type is not atomic. TODO: clean this up.
 	logging.mu.Lock()
@@ -400,16 +402,20 @@ func init() {
 	logging.stderrThreshold = errorLog
 	logging.toStderr = false
 	logging.alsoToStderr = false
-	logging.vmodule.Set("")
-	logging.traceLocation.Set("")
+	_ = logging.vmodule.Set("")
+	_ = logging.traceLocation.Set("")
+
+	logging.loggingQueue = &loggingQueue{loggingT: &logging}
 
 	logging.setVState(0, nil, false)
+
+	// 此flush改为将loggingQueue的内容刷到output里, 并非之前的flush到file里
 	go logging.flushDaemon()
 }
 
 // Flush flushes all pending log I/O.
 func Flush() {
-	logging.lockAndFlushAll()
+	logging.flushQueueAndFiles()
 }
 
 // loggingT collects all the global state of the logging setup.
@@ -420,6 +426,7 @@ type loggingT struct {
 	toStderr      bool     // The -logtostderr flag.
 	toStderrLevel severity //
 	alsoToStderr  bool     // The -alsologtostderr flag.
+	asyncFlush    bool
 
 	// Level flag. Handled atomically.
 	stderrThreshold severity // The -stderrthreshold flag.
@@ -436,6 +443,12 @@ type loggingT struct {
 	mu sync.Mutex
 	// file holds writer for each of the log types.
 	file [numSeverity]flushSyncWriter
+
+	// check if file is flushing or syncing
+	flushing     bool
+	flushingLock sync.RWMutex
+	loggingQueue *loggingQueue
+
 	// pcs is used in V to avoid an allocation when computing the caller's PC.
 	pcs [1]uintptr
 	// vmap is a cache of the V Level for each V() call site, identified by PC.
@@ -451,6 +464,79 @@ type loggingT struct {
 	// safely using atomic.LoadInt32.
 	vmodule   moduleSpec // The state of the -vmodule flag.
 	verbosity Level      // V logging level, the value of the -v flag/
+}
+
+type loggingQueue struct {
+	sync.RWMutex
+
+	loggingT *loggingT
+	head     *loggingQueueItem
+	tail     *loggingQueueItem
+	length   int
+}
+
+func (lq *loggingQueue) output(s severity, buf *buffer, file string, line int, alsoToStderr bool) {
+	lq.Lock()
+	defer lq.Unlock()
+
+	item := &loggingQueueItem{
+		s:            s,
+		buf:          buf,
+		file:         file,
+		line:         line,
+		alsoToStderr: alsoToStderr,
+	}
+
+	lq.length++
+	if lq.tail != nil {
+		lq.tail.next = item
+		lq.tail = item
+		return
+	}
+
+	lq.head = item
+	lq.tail = item
+}
+
+func (lq *loggingQueue) getHead() *loggingQueueItem {
+	lq.Lock()
+	defer lq.Unlock()
+
+	if lq.head == nil {
+		return nil
+	}
+
+	head := lq.head
+	lq.head = lq.head.next
+	if lq.head == nil {
+		lq.tail = nil
+	}
+	lq.length--
+	return head
+}
+
+func (lq *loggingQueue) flush() {
+	lq.loggingT.flushingLock.Lock()
+	defer lq.loggingT.flushingLock.Unlock()
+
+	if lq.loggingT.flushing {
+		return
+	}
+
+	for head := lq.getHead(); head != nil; head = lq.getHead() {
+		lq.loggingT.output(head.s, head.buf, head.file, head.line, head.alsoToStderr)
+		head = head.next
+	}
+}
+
+type loggingQueueItem struct {
+	s            severity
+	buf          *buffer
+	file         string
+	line         int
+	alsoToStderr bool
+
+	next *loggingQueueItem
 }
 
 // buffer holds a byte Buffer for reuse. The zero value is ready for use.
@@ -574,13 +660,13 @@ func (l *loggingT) formatHeader(s severity, file string, line int) *buffer {
 	buf.tmp[21] = ' '
 	buf.nDigits(7, 22, pid, ' ') // TODO: should be TID
 	buf.tmp[29] = ' '
-	buf.Write(buf.tmp[:30])
-	buf.WriteString(file)
+	_, _ = buf.Write(buf.tmp[:30])
+	_, _ = buf.WriteString(file)
 	buf.tmp[0] = ':'
 	n := buf.someDigits(1, line)
 	buf.tmp[n+1] = ']'
 	buf.tmp[n+2] = ' '
-	buf.Write(buf.tmp[:n+3])
+	_, _ = buf.Write(buf.tmp[:n+3])
 	return buf
 }
 
@@ -627,8 +713,12 @@ func (buf *buffer) someDigits(i, d int) int {
 
 func (l *loggingT) println(s severity, args ...interface{}) {
 	buf, file, line := l.header(s, 0)
-	fmt.Fprintln(buf, args...)
-	l.output(s, buf, file, line, false)
+	_, _ = fmt.Fprintln(buf, args...)
+	if l.asyncFlush {
+		l.loggingQueue.output(s, buf, file, line, false)
+	} else {
+		l.output(s, buf, file, line, false)
+	}
 }
 
 func (l *loggingT) print(s severity, args ...interface{}) {
@@ -637,20 +727,28 @@ func (l *loggingT) print(s severity, args ...interface{}) {
 
 func (l *loggingT) printDepth(s severity, depth int, args ...interface{}) {
 	buf, file, line := l.header(s, depth)
-	fmt.Fprint(buf, args...)
+	_, _ = fmt.Fprint(buf, args...)
 	if buf.Bytes()[buf.Len()-1] != '\n' {
-		buf.WriteByte('\n')
+		_ = buf.WriteByte('\n')
 	}
-	l.output(s, buf, file, line, false)
+	if l.asyncFlush {
+		l.loggingQueue.output(s, buf, file, line, false)
+	} else {
+		l.output(s, buf, file, line, false)
+	}
 }
 
 func (l *loggingT) printf(s severity, format string, args ...interface{}) {
 	buf, file, line := l.header(s, 0)
-	fmt.Fprintf(buf, format, args...)
+	_, _ = fmt.Fprintf(buf, format, args...)
 	if buf.Bytes()[buf.Len()-1] != '\n' {
-		buf.WriteByte('\n')
+		_ = buf.WriteByte('\n')
 	}
-	l.output(s, buf, file, line, false)
+	if l.asyncFlush {
+		l.loggingQueue.output(s, buf, file, line, false)
+	} else {
+		l.output(s, buf, file, line, false)
+	}
 }
 
 // printWithFileLine behaves like print but uses the provided file and line number.  If
@@ -658,11 +756,15 @@ func (l *loggingT) printf(s severity, format string, args ...interface{}) {
 // will also appear in the log file unless --logtostderr is set.
 func (l *loggingT) printWithFileLine(s severity, file string, line int, alsoToStderr bool, args ...interface{}) {
 	buf := l.formatHeader(s, file, line)
-	fmt.Fprint(buf, args...)
+	_, _ = fmt.Fprint(buf, args...)
 	if buf.Bytes()[buf.Len()-1] != '\n' {
-		buf.WriteByte('\n')
+		_ = buf.WriteByte('\n')
 	}
-	l.output(s, buf, file, line, alsoToStderr)
+	if l.asyncFlush {
+		l.loggingQueue.output(s, buf, file, line, alsoToStderr)
+	} else {
+		l.output(s, buf, file, line, alsoToStderr)
+	}
 }
 
 // output writes the data to the log files and releases the buffer.
@@ -670,7 +772,7 @@ func (l *loggingT) output(s severity, buf *buffer, file string, line int, alsoTo
 	l.mu.Lock()
 	if l.traceLocation.isSet() {
 		if l.traceLocation.match(file, line) {
-			buf.Write(stacks(false))
+			_, _ = buf.Write(stacks(false))
 		}
 	}
 	data := buf.Bytes()
@@ -686,22 +788,22 @@ func (l *loggingT) output(s severity, buf *buffer, file string, line int, alsoTo
 		}
 		if l.file[s] == nil {
 			if err := l.createFiles(s); err != nil {
-				os.Stderr.Write(data) // Make sure the message appears somewhere.
+				_, _ = os.Stderr.Write(data) // Make sure the message appears somewhere.
 				l.exit(err)
 			}
 		}
 		switch s {
 		case fatalLog:
-			l.file[fatalLog].Write(data)
+			_, _ = l.file[fatalLog].Write(data)
 			fallthrough
 		case errorLog:
-			l.file[errorLog].Write(data)
+			_, _ = l.file[errorLog].Write(data)
 			fallthrough
 		case warningLog:
-			l.file[warningLog].Write(data)
+			_, _ = l.file[warningLog].Write(data)
 			fallthrough
 		case infoLog:
-			l.file[infoLog].Write(data)
+			_, _ = l.file[infoLog].Write(data)
 		}
 	}
 	if s == fatalLog {
@@ -716,14 +818,14 @@ func (l *loggingT) output(s severity, buf *buffer, file string, line int, alsoTo
 		// If -logtostderr has been specified, the loop below will do that anyway
 		// as the first stack in the full dump.
 		if !l.toStderr {
-			os.Stderr.Write(stacks(false))
+			_, _ = os.Stderr.Write(stacks(false))
 		}
 		// Write the stack trace for all goroutines to the files.
 		trace := stacks(true)
 		logExitFunc = func(error) {} // If we get a write error, we'll still exit below.
 		for log := fatalLog; log >= infoLog; log-- {
 			if f := l.file[log]; f != nil { // Can be nil if -logtostderr is set.
-				f.Write(trace)
+				_, _ = f.Write(trace)
 			}
 		}
 		l.mu.Unlock()
@@ -751,7 +853,7 @@ func timeoutFlush(timeout time.Duration) {
 	select {
 	case <-done:
 	case <-time.After(timeout):
-		fmt.Fprintln(os.Stderr, "glog: Flush took longer than", timeout)
+		_, _ = fmt.Fprintln(os.Stderr, "glog: Flush took longer than", timeout)
 	}
 }
 
@@ -778,7 +880,7 @@ func stacks(all bool) []byte {
 // of exiting on error. Used in testing and to guarantee we reach a required exit
 // for fatal logs. Instead, exit could be a function rather than a method but that
 // would make its use clumsier.
-var logExitFunc func(error) = func(error) {
+var logExitFunc = func(error) {
 	for _, f := range logging.file {
 		// drop all data in buffer in case of buffer overflow.
 		if f != nil {
@@ -797,7 +899,7 @@ func (l *loggingT) exit(err error) {
 		return
 	}
 
-	fmt.Fprintf(os.Stderr, "log: exiting because of error: %v\n", err)
+	_, _ = fmt.Fprintf(os.Stderr, "log: exiting because of error: %v\n", err)
 	l.flushAll()
 	os.Exit(2)
 }
@@ -814,14 +916,17 @@ type syncBuffer struct {
 	nbytes uint64 // The number of bytes written to this file
 }
 
+// Reset call writer reset
 func (sb *syncBuffer) Reset() {
 	sb.Writer.Reset(sb.file)
 }
 
+// Sync do file sync from memory to disk
 func (sb *syncBuffer) Sync() error {
 	return sb.file.Sync()
 }
 
+// Write write logs to buffer
 func (sb *syncBuffer) Write(p []byte) (n int, err error) {
 	if sb.nbytes+uint64(len(p)) >= MaxSize() {
 		if err := sb.rotateFile(time.Now()); err != nil {
@@ -833,14 +938,14 @@ func (sb *syncBuffer) Write(p []byte) (n int, err error) {
 	if err != nil {
 		sb.logger.exit(err)
 	}
-	return n, err
+	return
 }
 
 // rotateFile closes the syncBuffer's file and starts a new one.
 func (sb *syncBuffer) rotateFile(now time.Time) error {
 	if sb.file != nil {
-		sb.Flush()
-		sb.file.Close()
+		_ = sb.Flush()
+		_ = sb.file.Close()
 	}
 	var err error
 	sb.file, _, err = create(severityName[sb.sev], now)
@@ -853,10 +958,11 @@ func (sb *syncBuffer) rotateFile(now time.Time) error {
 
 	// Write header.
 	var buf bytes.Buffer
-	fmt.Fprintf(&buf, "Log file created at: %s\n", now.Format("2006/01/02 15:04:05"))
-	fmt.Fprintf(&buf, "Running on machine: %s\n", host)
-	fmt.Fprintf(&buf, "Binary: Built with %s %s for %s/%s\n", runtime.Compiler, runtime.Version(), runtime.GOOS, runtime.GOARCH)
-	fmt.Fprintf(&buf, "Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg\n")
+	_, _ = fmt.Fprintf(&buf, "Log file created at: %s\n", now.Format("2006/01/02 15:04:05"))
+	_, _ = fmt.Fprintf(&buf, "Running on machine: %s\n", host)
+	_, _ = fmt.Fprintf(&buf, "Binary: Built with %s %s for %s/%s\n",
+		runtime.Compiler, runtime.Version(), runtime.GOOS, runtime.GOARCH)
+	_, _ = fmt.Fprintf(&buf, "Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg\n")
 	n, err := sb.file.Write(buf.Bytes())
 	sb.nbytes += uint64(n)
 	return err
@@ -886,20 +992,35 @@ func (l *loggingT) createFiles(sev severity) error {
 	return nil
 }
 
-const flushInterval = 30 * time.Second
+const flushInterval = 3 * time.Second
 
 // flushDaemon periodically flushes the log file buffers.
 func (l *loggingT) flushDaemon() {
-	for _ = range time.NewTicker(flushInterval).C {
-		l.lockAndFlushAll()
+	for range time.NewTicker(flushInterval).C {
+		l.loggingQueue.flush()
 	}
+}
+
+func (l *loggingT) flushQueueAndFiles() {
+	l.loggingQueue.flush()
+	l.lockAndFlushAll()
 }
 
 // lockAndFlushAll is like flushAll but locks l.mu first.
 func (l *loggingT) lockAndFlushAll() {
+	// 在真正拿mu lock去做syscall之前, 先告知所有人正在flushing, 并立即释放flushing的查询lock, 让其他人可以迅速知道
+	l.flushingLock.Lock()
+	l.flushing = true
+	l.flushingLock.Unlock()
+
 	l.mu.Lock()
 	l.flushAll()
 	l.mu.Unlock()
+
+	// syscall调用完之后, 设置flushing为false, 开放output
+	l.flushingLock.Lock()
+	l.flushing = false
+	l.flushingLock.Unlock()
 }
 
 // flushAll flushes all the logs and attempts to "sync" their data to disk.
@@ -909,8 +1030,9 @@ func (l *loggingT) flushAll() {
 	for s := fatalLog; s >= infoLog; s-- {
 		file := l.file[s]
 		if file != nil {
-			file.Flush() // ignore error
-			file.Sync()  // ignore error
+			_ = file.Flush() // ignore error
+			// sync is unnecessary for the logs, it cost too much by holding the lock to this
+			//file.Sync()  // ignore error
 		}
 	}
 }

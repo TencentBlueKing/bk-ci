@@ -34,6 +34,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.util.concurrent.Callable
@@ -56,27 +57,21 @@ class TaskDaemon(
         }
     }
 
-    fun run() {
+    fun runWithTimeout() {
         val timeout = TaskUtil.getTimeOut(buildTask)
-        val taskDaemon = TaskDaemon(
-            task = task,
-            buildTask = buildTask,
-            buildVariables = buildVariables,
-            workspace = workspace
-        )
         val executor = Executors.newCachedThreadPool()
         val taskId = buildTask.taskId
         if (taskId != null) {
             TaskExecutorCache.put(taskId, executor)
         }
-        val f1 = executor.submit(taskDaemon)
+        val f1 = executor.submit(this)
         try {
             f1.get(timeout, TimeUnit.MINUTES) ?: throw TimeoutException("插件执行超时, 超时时间:${timeout}分钟")
-        } catch (e: TimeoutException) {
+        } catch (ignore: TimeoutException) {
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OUTTIME_LIMIT,
-                errorMsg = e.message ?: "插件执行超时, 超时时间:${timeout}分钟"
+                errorMsg = ignore.message ?: "插件执行超时, 超时时间:${timeout}分钟"
             )
         } finally {
             executor.shutdownNow()
@@ -106,8 +101,12 @@ class TaskDaemon(
         if (allEnv.isNotEmpty()) {
             allEnv.forEach { (key, value) ->
                 if (value.length > PARAM_MAX_LENGTH) {
-                    LoggerService.addWarnLine("[${buildTask.taskId}]|ABANDON_DATA|len[$key]=${value.length}" +
-                        "(max=$PARAM_MAX_LENGTH)")
+                    LoggerService.addWarnLine("Warning, assignment to variable [$key] failed, " +
+                        "more than $PARAM_MAX_LENGTH characters(len=${value.length})")
+                    return@forEach
+                }
+                if (SensitiveValueService.matchSensitiveValue(value)) {
+                    LoggerService.addWarnLine("Warning, credentials cannot be assigned to variable[$key]")
                     return@forEach
                 }
                 buildResult[key] = value
@@ -116,14 +115,17 @@ class TaskDaemon(
 
         return BuildTaskResult(
             taskId = buildTask.taskId!!,
-            elementId = buildTask.elementId!!,
+            elementId = buildTask.taskId!!,
             containerId = buildVariables.containerHashId,
+            elementVersion = buildTask.elementVersion,
             success = isSuccess,
             buildResult = buildResult,
             message = errorMessage,
             type = buildTask.type,
             errorType = errorType,
             errorCode = errorCode,
+            platformCode = task.getPlatformCode(),
+            platformErrorCode = task.getPlatformErrorCode(),
             monitorData = getMonitorData()
         )
     }

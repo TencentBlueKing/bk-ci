@@ -27,21 +27,31 @@
 
 package com.tencent.devops.openapi.resources.apigw.v3
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
+import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
-import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.openapi.api.apigw.v3.ApigwLogResourceV3
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class ApigwLogResourceV3Impl @Autowired constructor(
     private val client: Client
 ) : ApigwLogResourceV3 {
+
+    @Value("\${devopsGateway.api:#{null}}")
+    private val gatewayUrl: String? = ""
+
     override fun getInitLogs(
         appCode: String?,
         apigwType: String?,
@@ -96,7 +106,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             debug = debug,
-            num = num,
+            num = num ?: 100,
             fromStart = fromStart,
             start = start,
             end = end,
@@ -152,15 +162,22 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             "downloadLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId]" +
                 "jobId[$jobId] executeCount[$executeCount] tag[$tag] jobId[$jobId]"
         )
-        return client.get(ServiceLogResource::class).downloadLogs(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            tag = tag,
-            jobId = jobId,
-            executeCount = executeCount
+        val path = StringBuilder("$gatewayUrl/log/api/service/logs/")
+        path.append(projectId)
+        path.append("/$pipelineId/$buildId/download?executeCount=${executeCount ?: 1}")
+
+        if (!tag.isNullOrBlank()) path.append("&tag=$tag")
+        if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
+
+        val response = OkhttpUtils.doLongGet(
+            url = path.toString(),
+            headers = mapOf(AUTH_HEADER_USER_ID to userId, AUTH_HEADER_PROJECT_ID to projectId)
         )
+        return Response
+            .ok(response.body()!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .header("content-disposition", "attachment; filename = $pipelineId-$buildId-log.txt")
+            .header("Cache-Control", "no-cache")
+            .build()
     }
 
     override fun getLogMode(
@@ -184,6 +201,21 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             buildId = buildId,
             tag = tag,
             executeCount = executeCount
+        )
+    }
+
+    override fun getLogLastLineNum(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<QueryLogLineNum> {
+        logger.info("downloadLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId]")
+        return client.get(ServiceLogResource::class).getLogLastLineNum(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
         )
     }
 

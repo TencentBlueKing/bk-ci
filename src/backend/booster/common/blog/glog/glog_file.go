@@ -58,8 +58,11 @@ type fileInfo struct {
 // sorting a list of fileInfo
 type fileInfoList []fileInfo
 
+// Len
 func (b fileInfoList) Len() int           { return len(b) }
+// Swap
 func (b fileInfoList) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
+// Less
 func (b fileInfoList) Less(i, j int) bool { return b[i].timestamp < b[j].timestamp }
 
 // fileBlock is a block of chain in logKeeper.
@@ -99,7 +102,7 @@ func (lk *logKeeper) add(tag string, newBlock *fileBlock) (ok bool) {
 	for lk.total[tag] > MaxNum() {
 		lk.remove(tag)
 	}
-	return ok
+	return
 }
 
 func (lk *logKeeper) remove(tag string) (ok bool) {
@@ -111,11 +114,20 @@ func (lk *logKeeper) remove(tag string) (ok bool) {
 	lk.head[tag] = block.next
 	block = nil // for GC
 	lk.total[tag]--
-	return ok
+	return
 }
 
 func (lk *logKeeper) removeFile(name string) error {
-	return os.Remove(filepath.Join(lk.dir, name))
+	f := filepath.Join(lk.dir, name)
+	s, err := os.Stat(f)
+	if err != nil {
+		return err
+	}
+
+	if s.ModTime().Local().Add(6*time.Hour).After(time.Now().Local()) {
+		return nil
+	}
+	return os.Remove(f)
 }
 
 func (lk *logKeeper) load() {

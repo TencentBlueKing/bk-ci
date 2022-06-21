@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.api.thirdPartyAgent
 
+import com.tencent.devops.common.web.annotation.BkField
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -52,6 +53,7 @@ interface ExternalThirdPartyAgentResource {
     fun downloadAgentInstallScript(
         @ApiParam("Agent ID", required = true)
         @PathParam("agentId")
+        @BkField(minLength = 3, maxLength = 32)
         agentId: String
     ): Response
 
@@ -62,10 +64,14 @@ interface ExternalThirdPartyAgentResource {
     fun downloadAgent(
         @ApiParam("Agent ID", required = true)
         @PathParam("agentId")
+        @BkField(minLength = 3, maxLength = 32)
         agentId: String,
         @ApiParam("本地eTag标签", required = false)
         @QueryParam("eTag")
-        eTag: String?
+        eTag: String?,
+        @ApiParam("本地操作系统架构", required = false)
+        @QueryParam("arch")
+        arch: String?
     ): Response
 
     @ApiOperation("下载JRE")
@@ -75,9 +81,24 @@ interface ExternalThirdPartyAgentResource {
     fun downloadJRE(
         @ApiParam("Agent ID", required = true)
         @PathParam("agentId")
+        @BkField(minLength = 3, maxLength = 32)
         agentId: String,
         @ApiParam("本地eTag标签", required = false)
         @QueryParam("eTag")
-        eTag: String?
+        eTag: String?,
+        @ApiParam("本地操作系统架构", required = false)
+        @QueryParam("arch")
+        arch: String?
+    ): Response
+
+    @ApiOperation("生成并下载新的批次安装所需要的文件")
+    @GET
+    @Path("/{agentHashId}/batch_zip")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    fun downloadNewInstallAgentBatchFile(
+        @ApiParam("agentHashId 化身 install Key", required = true)
+        @PathParam("agentHashId")
+        @BkField(minLength = 3, maxLength = 32)
+        agentHashId: String
     ): Response
 }

@@ -124,7 +124,7 @@ const mutations = {
      * @param {String} pipelineId
      */
     removePipelineById (state, pipelineId) {
-        state.allPipelineList.map((item, index) => {
+        state.allPipelineList.forEach((item, index) => {
             if (item.pipelineId === pipelineId) {
                 state.allPipelineList.splice(index, 1)
             }
@@ -174,12 +174,12 @@ const mutations = {
                 if (_target.index === undefined) {
                     val.splice(0, val.length, ..._target)
                 } else {
-                    _target.index.map((_index, i) => {
+                    _target.index.forEach((_index, i) => {
                         val[_index][_target.key[i]] = _target.value[i]
                     })
                 }
             } else if (val.toString().toLowerCase() === '[object object]') {
-                _target.key.map((item, i) => {
+                _target.key.forEach((item, i) => {
                     val[item] = _target.value[i]
                 })
             } else {
@@ -486,9 +486,9 @@ const actions = {
 
     commitSetting ({ commit, state, dispatch }, { projectId, pipelineId, type, role }) {
         return ajax.put(`${PROCESS_API_URL_PREFIX}/backend/api/perm/service/pipeline/mgr_resource/permission`, {
-            'project_id': projectId,
-            'resource_code': pipelineId,
-            'resource_type_code': type,
+            project_id: projectId,
+            resource_code: pipelineId,
+            resource_type_code: type,
             role
         }).then(response => {
             return response.data

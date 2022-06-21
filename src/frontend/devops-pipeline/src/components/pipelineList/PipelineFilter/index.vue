@@ -87,7 +87,7 @@
         },
         computed: {
             ...mapGetters({
-                'tagGroupList': 'pipelines/getTagGroupList'
+                tagGroupList: 'pipelines/getTagGroupList'
             }),
             projectId () {
                 return this.$route.params.projectId
@@ -116,7 +116,7 @@
                 }
             },
             handleCurrentFilter () {
-                this.tagGroupList.map(item => {
+                this.tagGroupList.forEach(item => {
                     const res = this.currentFilter.groups.find(iitem => (iitem.id === item.id))
                     if (res) {
                         Object.assign(this.currentFilter, { [item.id]: res.labels })
@@ -129,7 +129,7 @@
             async filterCommit () {
                 let labels = []
                 let labelIds = ''
-                this.tagGroupList.map(item => {
+                this.tagGroupList.forEach(item => {
                     if (this.currentFilter[item.id] && this.currentFilter[item.id].length > 0) {
                         labels = labels.concat(this.currentFilter[item.id])
                     }
@@ -149,7 +149,7 @@
                     filterByCreator: [],
                     groups: []
                 }
-                this.tagGroupList.map(item => {
+                this.tagGroupList.forEach(item => {
                     Object.assign(this.currentFilter, { [item.id]: [] })
                 })
             },
@@ -188,7 +188,7 @@
                 color: $fontWeightColor;
                 .devops-icon {
                     font-size: 10px;
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                 }
                 .menu-btn {
                     position: relative;
@@ -287,22 +287,22 @@
             .form-group {
                 margin-bottom: 15px;
                 ::-webkit-input-placeholder { /* WebKit browsers */
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                 }
                 :-moz-placeholder { /* Mozilla Firefox 4 to 18 */
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                 }
                 ::-moz-placeholder { /* Mozilla Firefox 19+ */
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                 }
                 :-ms-input-placeholder { /* Internet Explorer 10+ */
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                 }
                 .input-text {
                     cursor: text;
                 }
                 .devops-icon {
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                     &:hover {
                         color:$fontWeightColor;
                     }

@@ -1,27 +1,43 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package pkg
 
 import (
-	"build-booster/common"
-	"build-booster/common/blog"
-	"build-booster/common/encrypt"
-	"build-booster/common/http/httpserver"
-	"build-booster/gateway/config"
-	"build-booster/gateway/pkg/api"
-	_ "build-booster/gateway/pkg/api/v1"
-	"build-booster/gateway/pkg/register-discover"
-	"build-booster/server/pkg/engine"
-	"build-booster/server/pkg/engine/apisjob"
-	"build-booster/server/pkg/engine/distcc"
-	"build-booster/server/pkg/engine/disttask"
-	"build-booster/server/pkg/engine/fastbuild"
+	"fmt"
+	"time"
+
+	"github.com/Tencent/bk-ci/src/booster/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/encrypt"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpserver"
+	"github.com/Tencent/bk-ci/src/booster/gateway/config"
+	"github.com/Tencent/bk-ci/src/booster/gateway/pkg/api"
+	rd "github.com/Tencent/bk-ci/src/booster/gateway/pkg/register-discover"
+
+	// 初始化api资源
+	_ "github.com/Tencent/bk-ci/src/booster/gateway/pkg/api/v1"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/apisjob"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/disttask"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/fastbuild"
 )
 
+// GatewayServer describe the gateway http server
 type GatewayServer struct {
 	conf       *config.GatewayConfig
 	httpServer *httpserver.HTTPServer
-	rd         register_discover.RegisterDiscover
+	rd         rd.RegisterDiscover
 }
 
+// NewGatewayServer get a new GatewayServer
 func NewGatewayServer(conf *config.GatewayConfig) (*GatewayServer, error) {
 	s := &GatewayServer{conf: conf}
 
@@ -65,12 +81,6 @@ func (dcs *GatewayServer) initDistCCResource() error {
 		return err
 	}
 
-	if err := api.InitActionsFunc(); err != nil {
-		return err
-	}
-
-	// Init routes in actions
-	a.InitActions()
 	blog.Infof("success to enable gateway for distcc mysql")
 	return nil
 }
@@ -98,12 +108,6 @@ func (dcs *GatewayServer) initFBResource() error {
 		return err
 	}
 
-	if err := api.InitActionsFunc(); err != nil {
-		return err
-	}
-
-	// Init routes in actions
-	a.InitActions()
 	blog.Infof("success to enable gateway for fastbuild mysql")
 	return nil
 }
@@ -131,12 +135,6 @@ func (dcs *GatewayServer) initAPISJobResource() error {
 		return err
 	}
 
-	if err := api.InitActionsFunc(); err != nil {
-		return err
-	}
-
-	// Init routes in actions
-	a.InitActions()
 	blog.Infof("success to enable gateway for apisjob mysql")
 	return nil
 }
@@ -164,19 +162,14 @@ func (dcs *GatewayServer) initDistTaskResource() error {
 		return err
 	}
 
-	if err := api.InitActionsFunc(); err != nil {
-		return err
-	}
-
-	// Init routes in actions
-	a.InitActions()
 	blog.Infof("success to enable gateway for disttask mysql")
 	return nil
 }
 
+// Start brings up the gateway http server
 func (dcs *GatewayServer) Start() error {
 	var err error
-	if dcs.rd, err = register_discover.NewRegisterDiscover(dcs.conf); err != nil {
+	if dcs.rd, err = rd.NewRegisterDiscover(dcs.conf); err != nil {
 		blog.Errorf("get new register discover failed: %v", err)
 		return err
 	}
@@ -187,22 +180,26 @@ func (dcs *GatewayServer) Start() error {
 	}
 
 	// init distCC server related resources
-	if err = dcs.initDistCCResource(); err != nil {
+	if err = waitUntilResourceReady(dcs.initDistCCResource); err != nil {
 		return err
 	}
 
 	// init fb server related resources
-	if err = dcs.initFBResource(); err != nil {
+	if err = waitUntilResourceReady(dcs.initFBResource); err != nil {
 		return err
 	}
 
 	// init apis job server related resources
-	if err = dcs.initAPISJobResource(); err != nil {
+	if err = waitUntilResourceReady(dcs.initAPISJobResource); err != nil {
 		return err
 	}
 
 	// init disttask server related resources
-	if err = dcs.initDistTaskResource(); err != nil {
+	if err = waitUntilResourceReady(dcs.initDistTaskResource); err != nil {
+		return err
+	}
+
+	if err := api.InitActionsFunc(); err != nil {
 		return err
 	}
 
@@ -228,4 +225,20 @@ func Run(conf *config.GatewayConfig) error {
 	}
 
 	return server.Start()
+}
+
+func waitUntilResourceReady(initF func() error) error {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		if err := initF(); err != nil {
+			blog.Errorf("init resource failed: %v, retry later", err)
+			continue
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf("init resource timeout")
 }

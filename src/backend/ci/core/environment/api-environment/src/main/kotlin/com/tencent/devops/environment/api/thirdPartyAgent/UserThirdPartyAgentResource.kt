@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
@@ -58,6 +59,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/environment/thirdPartyAgent")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("TooManyFunctions")
 interface UserThirdPartyAgentResource {
 
     @ApiOperation("是否启动第三方构建机接入")
@@ -168,12 +170,15 @@ interface UserThirdPartyAgentResource {
     fun importAgent(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(minLength = 1, maxLength = 128)
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
+        @BkField(minLength = 1, maxLength = 64)
         projectId: String,
         @ApiParam("Agent Hash ID", required = true)
         @PathParam("agentId")
+        @BkField(minLength = 1, maxLength = 32)
         agentId: String
     ): Result<Boolean>
 
@@ -183,12 +188,15 @@ interface UserThirdPartyAgentResource {
     fun deleteAgent(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(minLength = 1, maxLength = 128)
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
+        @BkField(minLength = 1, maxLength = 64)
         projectId: String,
         @ApiParam("Node Hash ID", required = true)
         @PathParam("nodeHashId")
+        @BkField(minLength = 1, maxLength = 32)
         nodeHashId: String
     ): Result<Boolean>
 
@@ -370,4 +378,41 @@ interface UserThirdPartyAgentResource {
         @QueryParam("timeRange")
         timeRange: String
     ): Result<Map<String, List<Map<String, Any>>>>
+
+    @ApiOperation("保存agent配置")
+    @POST
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/props")
+    fun saveAgentProps(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(minLength = 1)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        @BkField(minLength = 1)
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        @BkField(minLength = 3)
+        nodeHashId: String,
+        @ApiParam("Envs", required = true)
+        props: Map<String, Any>
+    ): Result<Boolean>
+    @ApiOperation("获取agent配置")
+    @GET
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/props")
+    fun getAgentProps(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(minLength = 1)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        @BkField(minLength = 1)
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        @BkField(minLength = 3)
+        nodeHashId: String
+    ): Result<Map<String, Any>>
 }

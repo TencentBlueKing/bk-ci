@@ -73,7 +73,11 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         return if (expired == false) {
             redisTemplate.opsForValue().set(finalKey, value)
         } else {
-            redisTemplate.opsForValue().set(finalKey, value, expiredInSecond ?: maxExpireTime, TimeUnit.SECONDS)
+            var timeout = expiredInSecond ?: maxExpireTime
+            if (timeout <= 0) { // #5901 不合法值清理，设置默认为超时时间，防止出错。
+                timeout = maxExpireTime
+            }
+            redisTemplate.opsForValue().set(finalKey, value, timeout, TimeUnit.SECONDS)
         }
     }
 
@@ -192,6 +196,10 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         return redisTemplate.opsForZSet().range(getFinalKey(key, isDistinguishCluster), start, end)
     }
 
+    fun zrank(key: String, values: String, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForZSet().rank(getFinalKey(key, isDistinguishCluster), values)
+    }
+
     fun zrevrange(key: String, start: Long, end: Long, isDistinguishCluster: Boolean? = false): Set<String>? {
         return redisTemplate.opsForZSet().reverseRange(getFinalKey(key, isDistinguishCluster), start, end)
     }
@@ -216,8 +224,20 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         return redisTemplate.execute(action)
     }
 
+    fun listSize(key: String, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForList().size(getFinalKey(key, isDistinguishCluster))
+    }
+
+    fun listRange(key: String, start: Long, end: Long, isDistinguishCluster: Boolean? = false): List<String>? {
+        return redisTemplate.opsForList().range(getFinalKey(key, isDistinguishCluster), start, end)
+    }
+
     fun leftPush(key: String, value: String, isDistinguishCluster: Boolean? = false): Long? {
         return redisTemplate.opsForList().leftPush(getFinalKey(key, isDistinguishCluster), value)
+    }
+
+    fun rightPush(key: String, value: String, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForList().rightPush(getFinalKey(key, isDistinguishCluster), value)
     }
 
     fun rightPop(key: String, isDistinguishCluster: Boolean? = false): String? {

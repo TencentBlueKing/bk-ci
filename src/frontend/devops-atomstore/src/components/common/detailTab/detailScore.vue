@@ -91,7 +91,7 @@
         },
 
         computed: {
-            ...mapGetters('store', { 'commentList': 'getCommentList', 'detail': 'getDetail' }),
+            ...mapGetters('store', { commentList: 'getCommentList', detail: 'getDetail' }),
 
             detailCode () {
                 return this.$route.params.code
@@ -224,7 +224,7 @@
         margin-top: 26px;
         padding-bottom: 32px;
         border-bottom: 1px solid $borderLightColor;
-        /deep/ .v-note-wrapper .v-note-panel .v-note-show .v-show-content {
+        ::v-deep .v-note-wrapper .v-note-panel .v-note-show .v-show-content {
             padding: 0;
         }
         .summary-all {

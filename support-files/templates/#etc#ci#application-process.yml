@@ -1,18 +1,16 @@
 # 服务配置文件模板
 spring:
   datasource:
-    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
-    username: __BK_CI_MYSQL_USER__
-    password: __BK_CI_MYSQL_PASSWORD__
+    # 数据源配置（勿随便变更配置项的顺序）
+    dataSourceConfigs:
+      - index: 0
+        url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+        username: __BK_CI_MYSQL_USER__
+        password: __BK_CI_MYSQL_PASSWORD__
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21921
 server:
   port: __BK_CI_PROCESS_API_PORT__
-
-# 流水线加密参数密钥
-parameter:
-  password:
-    pswKey: __BK_CI_PIPELINE_PARAMETER_ENCRYPT_PASSWORD__
 
 # 流水线引擎并发配置
 queueConcurrency:
@@ -25,6 +23,10 @@ queueConcurrency:
 # 流水线模板配置  
 template:
   instanceListUrl: "__BK_CI_PUBLIC_URL__/console/store/pipeline/{0}/template/{0}/instance"
+  maxSyncInstanceNum: 10
+  maxSaveVersionNum: 300
+  maxSaveVersionRecordNum: 2
+  maxUpdateInstanceNum: 100
   
 
 build:
@@ -42,6 +44,8 @@ pipeline:
     common:
       maxModelSize: 16777215
       maxStageNum: 20
+      maxPipelineNameSize: 255
+      maxPipelineDescSize: 255
       stage:
         maxJobNum: 20
         job:
@@ -77,3 +81,11 @@ scm:
     tGit:
       hookSecret: 
       enableHookSecret: false
+
+sharding:
+  databaseShardingStrategy:
+    algorithmClassName: "com.tencent.devops.process.sharding.BkProcessDatabaseShardingAlgorithm"
+    shardingField: PROJECT_ID
+
+stream:
+  scmType: __BK_CI_STREAM_SCM_TYPE__

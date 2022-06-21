@@ -298,7 +298,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         return destPath
     }
 
-    override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse) {
+    override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse, logo: Boolean?) {
         logger.info("downloadFile, filePath: $filePath")
         if (filePath.contains("..")) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
@@ -353,7 +353,8 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         fileName: String?,
         fileType: FileTypeEnum?,
         props: Map<String, String?>?,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        logo: Boolean?
     ): String {
         logger.info("uploadFile|filePath=$filePath|fileName=$fileName|props=$props")
         val uploadFileName = fileName ?: file.name
@@ -603,6 +604,18 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
 
     override fun deleteFile(userId: String, filePath: String) {
         FileSystemUtils.deleteRecursively(File("$archiveLocalBasePath/$filePath"))
+    }
+
+    override fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        filePath: String,
+        includeFolder: Boolean?,
+        deep: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Page<FileInfo> {
+        TODO("Not yet implemented")
     }
 
     companion object {

@@ -28,8 +28,11 @@
 package com.tencent.devops.artifactory.util
 
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
+import com.tencent.bkrepo.repository.pojo.node.NodeInfo
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
+import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.bkrepo.ArtifactInfo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
@@ -43,11 +46,14 @@ import java.time.format.DateTimeFormatter
 object BkRepoUtils {
     const val BKREPO_DEFAULT_USER = "admin"
     const val BKREPO_DEVOPS_PROJECT_ID = "devops"
+    const val BKREPO_STORE_PROJECT_ID = "bk-store"
     const val BKREPO_COMMOM_REPO = "common"
 
     const val REPO_NAME_PIPELINE = "pipeline"
     const val REPO_NAME_CUSTOM = "custom"
     const val REPO_NAME_REPORT = "report"
+    const val REPO_NAME_PLUGIN = "plugin"
+    const val REPO_NAME_STATIC = "static"
 
     fun parseArtifactoryInfo(path: String): ArtifactInfo {
         val normalizedPath = path.trim().removePrefix("/").removePrefix("./")
@@ -61,7 +67,13 @@ object BkRepoUtils {
     }
 
     private fun checkRepoName(repoName: String): String {
-        if (repoName != REPO_NAME_PIPELINE && repoName != REPO_NAME_CUSTOM && repoName != REPO_NAME_REPORT) {
+        val validateRepoName =
+            repoName == REPO_NAME_PIPELINE ||
+                repoName == REPO_NAME_CUSTOM ||
+                repoName == REPO_NAME_REPORT ||
+                repoName == REPO_NAME_PLUGIN ||
+                repoName == REPO_NAME_STATIC
+        if (!validateRepoName) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf("repoName"))
         }
         return repoName
@@ -114,6 +126,23 @@ object BkRepoUtils {
             modifiedTime = LocalDateTime.parse(lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
             checksums = FileChecksums(sha256, "", md5 ?: ""),
             meta = metadata.entries.associate { Pair(it.key, it.value.toString()) }
+        )
+    }
+
+    fun NodeInfo.toFileInfo(): FileInfo {
+        val properties = metadata?.map { Property(it.key, it.value.toString()) }
+        return FileInfo(
+            name = name,
+            fullName = fullPath,
+            path = fullPath, // bug?
+            fullPath = fullPath,
+            size = size,
+            folder = folder,
+            modifiedTime = LocalDateTime.parse(lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME)
+                .timestamp(),
+            artifactoryType = ArtifactoryType.CUSTOM_DIR,
+            properties = properties,
+            md5 = md5
         )
     }
 }

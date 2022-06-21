@@ -46,6 +46,7 @@ import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.service.detail.BaseBuildDetailService
+import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
@@ -64,16 +65,17 @@ import java.util.concurrent.TimeUnit
 class PipelineBuildDetailService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
-    private val stageTagService: StageTagService,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
     redisOperation: RedisOperation,
+    stageTagService: StageTagService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseBuildDetailService(
     dslContext,
     pipelineBuildDao,
     buildDetailDao,
+    stageTagService,
     pipelineEventDispatcher,
     redisOperation
 ) {
@@ -94,26 +96,33 @@ class PipelineBuildDetailService @Autowired constructor(
 
     /**
      * 查询ModelDetail
+     * @param projectId: 项目Id
      * @param buildId: 构建Id
      * @param refreshStatus: 是否刷新状态
      */
-    fun get(buildId: String, refreshStatus: Boolean = true): ModelDetail? {
+    fun get(projectId: String, buildId: String, refreshStatus: Boolean = true): ModelDetail? {
 
-        val record = buildDetailDao.get(dslContext, buildId) ?: return null
+        val record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
 
-        val buildInfo = pipelineBuildDao.convert(pipelineBuildDao.getBuildInfo(dslContext, buildId)) ?: return null
+        val buildInfo = pipelineBuildDao.convert(
+            pipelineBuildDao.getBuildInfo(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId
+            )
+        ) ?: return null
 
-        val latestVersion = pipelineRepositoryService.getPipelineInfo(buildInfo.pipelineId)?.version ?: -1
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, buildInfo.pipelineId) ?: return null
 
-        val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, buildInfo.pipelineId)
+        val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, buildInfo.pipelineId)
 
         val model = JsonUtil.to(record.model, Model::class.java)
 
         // 判断需要刷新状态，目前只会改变canRetry & canSkip 状态
         if (refreshStatus) {
             // #4245 仅当在有限时间内并已经失败或者取消(终态)的构建上可尝试重试或跳过
-            if (checkPassDays(buildInfo.startTime) &&
-                (buildInfo.status.isFailure() || buildInfo.status.isCancel())) {
+            // #6400 无需流水线是终态就可以进行task重试
+            if (checkPassDays(buildInfo.startTime)) {
                 ModelUtils.refreshCanRetry(model)
             }
         }
@@ -134,7 +143,12 @@ class PipelineBuildDetailService @Autowired constructor(
 
         // #4531 兼容历史构建的页面显示
         model.stages.forEach { stage ->
-            stage.refreshReviewOption()
+            stage.resetBuildOption()
+            // #4518 兼容历史构建的containerId作为日志JobId，发布后新产生的groupContainers无需校准
+            stage.containers.forEach { container ->
+                container.containerHashId = container.containerHashId ?: container.containerId
+                container.containerId = container.id
+            }
         }
 
         return ModelDetail(
@@ -142,6 +156,7 @@ class PipelineBuildDetailService @Autowired constructor(
             pipelineId = buildInfo.pipelineId,
             pipelineName = model.name,
             userId = record.startUser ?: "",
+            triggerUser = buildInfo.triggerUser,
             trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
             startTime = record.startTime?.timestampmilli() ?: LocalDateTime.now().timestampmilli(),
             endTime = record.endTime?.timestampmilli(),
@@ -151,30 +166,32 @@ class PipelineBuildDetailService @Autowired constructor(
             buildNum = buildInfo.buildNum,
             cancelUserId = record.cancelUser ?: "",
             curVersion = buildInfo.version,
-            latestVersion = latestVersion,
+            latestVersion = pipelineInfo.version,
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
+            lastModifyUser = pipelineInfo.lastModifyUser,
             executeTime = buildInfo.executeTime
         )
     }
 
-    fun updateModel(buildId: String, model: Model) {
+    fun updateModel(projectId: String, buildId: String, model: Model) {
         buildDetailDao.update(
             dslContext = dslContext,
+            projectId = projectId,
             buildId = buildId,
             model = JsonUtil.getObjectMapper().writeValueAsString(model),
             buildStatus = BuildStatus.RUNNING
         )
-        pipelineDetailChangeEvent(buildId)
+        pipelineDetailChangeEvent(projectId, buildId)
     }
 
-    fun buildCancel(buildId: String, buildStatus: BuildStatus) {
-        logger.info("Cancel the build $buildId")
-        update(buildId = buildId, modelInterface = object : ModelInterface {
+    fun buildCancel(projectId: String, buildId: String, buildStatus: BuildStatus, cancelUser: String) {
+        logger.info("Cancel the build $buildId by $cancelUser")
+        update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
 
             var update = false
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
-                if (stage.status == BuildStatus.RUNNING.name) {
+                if (BuildStatus.parse(stage.status).isRunning()) {
                     stage.status = buildStatus.name
                     if (stage.startEpoch == null) {
                         stage.elapsed = 0
@@ -186,7 +203,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 return Traverse.CONTINUE
             }
 
-            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+            override fun onFindContainer(container: Container, stage: Stage): Traverse {
                 val status = BuildStatus.parse(container.status)
                 if (status == BuildStatus.PREPARE_ENV) {
                     if (container.startEpoch == null) {
@@ -194,25 +211,13 @@ class PipelineBuildDetailService @Autowired constructor(
                     } else {
                         container.systemElapsed = System.currentTimeMillis() - container.startEpoch!!
                     }
-
-                    var containerElapsed = 0L
-                    run lit@{
-                        stage.containers.forEach {
-                            containerElapsed += it.elementElapsed ?: 0
-                            if (it == container) {
-                                return@lit
-                            }
-                        }
-                    }
-
-                    stage.elapsed = containerElapsed
-
                     update = true
                 }
                 // #3138 状态实时刷新
                 val refreshFlag = status.isRunning() && container.elements[0].status.isNullOrBlank() &&
-                    container.containPostTaskFlag != true
+                        container.containPostTaskFlag != true
                 if (status == BuildStatus.PREPARE_ENV || refreshFlag) {
+                    ContainerUtils.clearQueueContainerName(container)
                     container.status = buildStatus.name
                 }
                 return Traverse.CONTINUE
@@ -258,17 +263,22 @@ class PipelineBuildDetailService @Autowired constructor(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, buildStatus = BuildStatus.RUNNING, operation = "buildCancel")
+        }, buildStatus = BuildStatus.RUNNING, cancelUser = cancelUser, operation = "buildCancel")
     }
 
-    fun buildEnd(buildId: String, buildStatus: BuildStatus, cancelUser: String? = null): List<BuildStageStatus> {
-        logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|cancelUser=$cancelUser")
+    fun buildEnd(
+        projectId: String,
+        buildId: String,
+        buildStatus: BuildStatus,
+        errorMsg: String?
+    ): List<BuildStageStatus> {
+        logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
         var allStageStatus: List<BuildStageStatus> = emptyList()
-        update(buildId = buildId, modelInterface = object : ModelInterface {
+        update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
             var update = false
 
-            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
-                if (!container.status.isNullOrBlank() && BuildStatus.valueOf(container.status!!).isRunning()) {
+            override fun onFindContainer(container: Container, stage: Stage): Traverse {
+                if (BuildStatus.parse(container.status).isRunning()) {
                     container.status = buildStatus.name
                     update = true
                     if (container.startEpoch == null) {
@@ -276,18 +286,20 @@ class PipelineBuildDetailService @Autowired constructor(
                     } else {
                         container.elementElapsed = System.currentTimeMillis() - container.startEpoch!!
                     }
+                    ContainerUtils.clearQueueContainerName(container)
                 }
                 return Traverse.CONTINUE
             }
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
                 if (allStageStatus.isEmpty()) {
-                    allStageStatus = fetchHistoryStageStatus(model)
+                    allStageStatus = fetchHistoryStageStatus(
+                        model = model,
+                        buildStatus = buildStatus,
+                        errorMsg = errorMsg
+                    )
                 }
-                if (stage.id.isNullOrBlank()) {
-                    return Traverse.BREAK
-                }
-                if (!stage.status.isNullOrBlank() && BuildStatus.valueOf(stage.status!!).isRunning()) {
+                if (BuildStatus.parse(stage.status).isRunning()) {
                     stage.status = buildStatus.name
                     update = true
                     if (stage.startEpoch == null) {
@@ -329,38 +341,27 @@ class PipelineBuildDetailService @Autowired constructor(
         return allStageStatus
     }
 
-    fun updateBuildCancelUser(buildId: String, cancelUserId: String) {
-        buildDetailDao.updateBuildCancelUser(dslContext, buildId, cancelUserId)
+    fun updateBuildCancelUser(projectId: String, buildId: String, cancelUserId: String) {
+        buildDetailDao.updateBuildCancelUser(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            cancelUser = cancelUserId
+        )
     }
 
-    private fun fetchHistoryStageStatus(model: Model): List<BuildStageStatus> {
-        val stageTagMap: Map<String, String>
-            by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } ?: emptyMap() }
-        // 更新Stage状态至BuildHistory
-        return model.stages.map {
-            BuildStageStatus(
-                stageId = it.id!!,
-                name = it.name ?: it.id!!,
-                status = it.status,
-                startEpoch = it.startEpoch,
-                elapsed = it.elapsed,
-                tag = it.tag?.map { _it ->
-                    stageTagMap.getOrDefault(_it, "null")
-                }
-            )
-        }
-    }
-
-    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: Int, vmInfo: VmInfo) {
+    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
 
-                override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
-                    if (id == containerId) {
-                        if (container is VMBuildContainer && container.showBuildResource == true) {
-                            container.name = vmInfo.name
+                override fun onFindContainer(container: Container, stage: Stage): Traverse {
+                    val targetContainer = container.getContainerById(containerId)
+                    if (targetContainer != null) {
+                        if (targetContainer is VMBuildContainer && targetContainer.showBuildResource == true) {
+                            targetContainer.name = vmInfo.name
                         }
                         update = true
                         return Traverse.BREAK
@@ -375,5 +376,13 @@ class PipelineBuildDetailService @Autowired constructor(
             buildStatus = BuildStatus.RUNNING,
             operation = "saveBuildVmInfo($projectId,$pipelineId)"
         )
+    }
+
+    fun getBuildDetailPipelineId(projectId: String, buildId: String): String? {
+        return pipelineBuildDao.getBuildInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId
+        )?.pipelineId
     }
 }

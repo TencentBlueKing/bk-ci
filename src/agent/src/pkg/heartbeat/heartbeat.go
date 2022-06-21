@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -33,15 +34,15 @@ import (
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/job"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/upgrade"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
-	"github.com/astaxie/beego/logs"
 )
 
 func DoAgentHeartbeat() {
 	for {
-		agentHeartbeat()
+		_ = agentHeartbeat()
 		time.Sleep(10 * time.Second)
 	}
 }
@@ -84,12 +85,34 @@ func agentHeartbeat() error {
 		config.GAgentConfig.FileGateway = heartbeatResponse.FileGateway
 		configChanged = true
 	}
+
+	if heartbeatResponse.Props.KeepLogsHours > 0 {
+		config.GAgentConfig.LogsKeepHours = heartbeatResponse.Props.KeepLogsHours
+		configChanged = true
+	}
+
+	if len(heartbeatResponse.Props.IgnoreLocalIps) > 0 {
+		config.GAgentConfig.IgnoreLocalIps = heartbeatResponse.Props.IgnoreLocalIps
+		configChanged = true
+	}
+
 	if configChanged {
-		config.GAgentConfig.SaveConfig()
+		_ = config.GAgentConfig.SaveConfig()
 	}
 
 	// agent环境变量
 	config.GEnvVars = heartbeatResponse.Envs
+
+	/*
+	   忽略一些在Windows机器上VPN代理软件所产生的虚拟网卡（有Mac地址）的IP，一般这类IP
+	   更像是一些路由器的192开头的IP，属于干扰IP，安装了这类软件的windows机器IP都会变成相同，所以需要忽略掉
+	*/
+	if len(config.GAgentConfig.IgnoreLocalIps) > 0 {
+		splitIps := util.SplitAndTrimSpace(config.GAgentConfig.IgnoreLocalIps, ",")
+		if util.Contains(splitIps, config.GAgentEnv.AgentIp) { // Agent检测到的IP与要忽略的本地VPN IP相同，则更换真正IP
+			config.GAgentEnv.AgentIp = systemutil.GetAgentIp(splitIps)
+		}
+	}
 
 	// 检测agent版本与agent文件是否匹配
 	if config.AgentVersion != heartbeatResponse.MasterVersion {

@@ -87,4 +87,30 @@ interface UserQualityControlPointResource {
         @PathParam("elementType")
         elementType: String
     ): Result<QualityControlPoint>
+
+    @ApiOperation("获取项目中控制点的原子类型列表")
+    @Path("/list/{projectId}/elementType")
+    @GET
+    fun listProjectElementType(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<String>>
+
+    @ApiOperation("获取项目中控制点信息")
+    @Path("/project/{projectId}/elementType/{elementType}/get")
+    @GET
+    fun getProjectControlPoint(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @PathParam("elementType")
+        elementType: String
+    ): Result<QualityControlPoint>
 }
