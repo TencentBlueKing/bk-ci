@@ -228,7 +228,7 @@ class MQConfiguration @Autowired constructor() {
         @Autowired buildListener: BuildListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(buildListener, buildListener::handleStartMessage.name)
+        val adapter = MessageListenerAdapter(buildListener, buildListener::handleStartup.name)
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
@@ -267,7 +267,7 @@ class MQConfiguration @Autowired constructor() {
         @Autowired buildListener: BuildListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(buildListener, buildListener::handleStartDemoteMessage.name)
+        val adapter = MessageListenerAdapter(buildListener, buildListener::handleStartup.name)
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,

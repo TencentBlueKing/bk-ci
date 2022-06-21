@@ -74,15 +74,6 @@ interface BuildListener {
 
     fun onShutdown(event: PipelineAgentShutdownEvent)
 
-    @BkTimed
-    fun handleStartMessage(event: PipelineAgentStartupEvent) {
-        handleStartCommon(event) { doStartHandler() }
-    }
-
-    fun handleStartDemoteMessage(event: PipelineAgentStartupEvent) {
-        handleStartCommon(event) { doStartDemoteHandler() }
-    }
-
     fun handleShutdownMessage(event: PipelineAgentShutdownEvent) {
         try {
             logger.info("Start to handle the shutdown message ($event)")
@@ -227,7 +218,8 @@ interface BuildListener {
         return newValue.toString()
     }
 
-    private fun handleStartCommon(event: PipelineAgentStartupEvent, startup: () -> Unit) {
+    @BkTimed
+    fun handleStartup(event: PipelineAgentStartupEvent) {
         DispatcherContext.setEvent(event)
         val dispatchService = getDispatchService()
 
@@ -241,7 +233,22 @@ interface BuildListener {
 
             startTime = System.currentTimeMillis()
             DispatchLogRedisUtils.setRedisExecuteCount(event.buildId, event.executeCount)
-            startup()
+
+            val jobQuotaService = getJobQuotaService()
+
+            // 校验流水线是否还在运行中
+            dispatchService.checkRunning(event)
+            // 校验构建资源配额是否超限，配额超限后会放进延迟队列
+            if (!jobQuotaService.checkAndAddRunningJob(
+                    startupEvent = event,
+                    vmType = getVmType(),
+                    demoteQueueRouteKeySuffix = getStartupDemoteQueue()
+                )) {
+                return
+            }
+
+            val dispatchMessage = dispatchService.buildDispatchMessage(event)
+            onStartup(dispatchMessage)
         } catch (e: BuildFailureException) {
             dispatchService.logRed(buildId = event.buildId,
                 containerHashId = event.containerHashId,
@@ -291,27 +298,6 @@ interface BuildListener {
                 errorType = errorType
             )
         }
-    }
-
-    private fun doStartHandler() {
-        val dispatchService = getDispatchService()
-        val jobQuotaService = getJobQuotaService()
-        val event = DispatcherContext.getEvent()!!
-
-        // 校验流水线是否还在运行中
-        dispatchService.checkRunning(event)
-        // 校验构建资源配额是否超限，配额超限后会放进延迟队列
-        if (!jobQuotaService.checkAndAddRunningJob(event, getVmType(), getStartupDemoteQueue())) {
-            return
-        }
-
-        val dispatchMessage = dispatchService.buildDispatchMessage(event)
-        onStartup(dispatchMessage)
-    }
-
-    private fun doStartDemoteHandler() {
-        val dispatchMessage = getDispatchService().buildDispatchMessage(DispatcherContext.getEvent()!!)
-        onStartupDemote(dispatchMessage)
     }
 
     private fun getDispatchService(): DispatchService {
