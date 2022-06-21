@@ -40,6 +40,8 @@ data class PipelineBuildInfoDO(
     val pipelineName: String,
     @ApiModelProperty("渠道代码")
     val channelCode: String,
+    @ApiModelProperty("域名")
+    val domain: String,
     @ApiModelProperty("构建ID")
     val buildId: String,
     @ApiModelProperty("构建序号")

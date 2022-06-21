@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.Date
 import java.util.concurrent.TimeUnit
@@ -57,6 +58,9 @@ class MetricsServiceImpl constructor(
     private val dslContext: DSLContext,
     private val pipelineStageTagDao: PipelineStageTagDao
 ) : MetricsService {
+
+    @Value("\${metrics.allowReportProjectConfig:}")
+    val allowReportProjectConfig: String = ""
 
     private val stageTagCache = Caffeine.newBuilder()
         .maximumSize(1000)
@@ -78,6 +82,11 @@ class MetricsServiceImpl constructor(
             return
         }
         val projectId = buildInfo.projectId
+        // 判断该项目是否允许进行数据上报
+        if (allowReportProjectConfig.isNotBlank() &&
+            !allowReportProjectConfig.split(",").contains(projectId)) {
+            return
+        }
         val pipelineId = buildInfo.pipelineId
         val buildId = buildInfo.buildId
         val pipelineName = pipelineInfoDao.getPipelineInfo(
