@@ -149,7 +149,9 @@ class IndexService @Autowired constructor(
             return
         }
         val updateCount = indexDao.updateLastLineNum(dslContext, buildId, latestLineNum)
-        if (updateCount != 1) {
+        if (updateCount == 1) {
+            redisOperation.delete(getLineNumRedisKey(buildId))
+        } else {
             logger.warn("[$buildId|$latestLineNum] Fail to update the build latest line num")
         }
     }
