@@ -31,3 +31,7 @@ cron:
 # stream 运行时的默认镜像
 container:
   defaultImage: bkci/ci:latest
+ 
+login:
+    github:
+        redirectUrl: __BK_CI_STREAM_GIT_URL__/auth/api/user/third/login?code=%s&userId=%s&type=%s

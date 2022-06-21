@@ -25,36 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.repository.api.github
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.ExternalGithubResource
-import com.tencent.devops.repository.service.github.GithubOAuthService
-import com.tencent.devops.repository.service.github.IGithubService
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
+import com.tencent.devops.common.sdk.github.pojo.Organization
+import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class ExternalGithubResourceImpl @Autowired constructor(
-    private val githubService: IGithubService,
-    private val githubOauthService: GithubOAuthService
-) : ExternalGithubResource {
+@Api(tags = ["SERVICE_ORGANIZATION_GITHUB"], description = "服务-github-organization")
+@Path("/service/github/organization")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceGithubOrganizationResource {
 
-    override fun webhookCommit(event: String, guid: String, signature: String, body: String): Result<Boolean> {
-        logger.info("Github webhook [event=$event, guid=$guid, signature=$signature, body=$body]")
-        githubService.webhookCommit(event, guid, signature, body)
-        return Result(true)
-    }
-
-    override fun oauthCallback(code: String, state: String): Response {
-        val githubCallback = githubOauthService.githubCallback(code, state)
-        return Response.temporaryRedirect(UriBuilder.fromUri(githubCallback.redirectUrl).build()).build()
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ExternalGithubResourceImpl::class.java)
-    }
+    @ApiOperation("列出某个用户的仓库列表")
+    @POST
+    @Path("/listOrganizations")
+    fun listOrganizations(
+        request: ListOrganizationsRequest,
+        userId: String
+    ): List<Organization>
 }

@@ -25,38 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github
+package com.tencent.devops.repository.resources.github
 
-import com.tencent.devops.common.sdk.util.SdkRetryHelper
+import com.tencent.devops.common.sdk.github.pojo.Organization
+import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.github.ServiceGithubOrganizationResource
+import com.tencent.devops.repository.github.service.GithubOrganizationService
+import com.tencent.devops.repository.service.github.GithubTokenService
+import org.springframework.beans.factory.annotation.Autowired
 
-class AutoRetryGithubClient(
-    // github服务域名
-    override val serverUrl: String,
-    // github接口地址
-    override val apiUrl: String,
-    // github 应用ID
-    override val clientId: String,
-    // github 应用secret
-    override val clientSecret: String,
-    // 最大重试次数
-    private val maxAttempts: Int = 3,
-    private val retryWaitTime: Long = 500
-) : DefaultGithubClient(
-    serverUrl = serverUrl,
-    apiUrl = apiUrl,
-    clientId = clientId,
-    clientSecret = clientSecret
-) {
-
-    override fun <T> execute(oauthToken: String, request: GithubRequest<T>): T {
-        return SdkRetryHelper(maxAttempts = maxAttempts, retryWaitTime = retryWaitTime).execute {
-            super.execute(oauthToken, request)
-        }
-    }
-
-    override fun <T> execute(username: String, token: String, request: GithubRequest<T>): T {
-        return SdkRetryHelper(maxAttempts = maxAttempts, retryWaitTime = retryWaitTime).execute {
-            super.execute(username, token, request)
-        }
+@RestResource
+class ServiceGithubOrganizationResourceImpl @Autowired constructor(
+    val githubTokenService: GithubTokenService,
+    val organizationService: GithubOrganizationService
+) : ServiceGithubOrganizationResource {
+    override fun listOrganizations(
+        request: ListOrganizationsRequest,
+        userId: String
+    ): List<Organization> {
+        return organizationService.listOrganizations(
+            request = request,
+            token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+        )
     }
 }

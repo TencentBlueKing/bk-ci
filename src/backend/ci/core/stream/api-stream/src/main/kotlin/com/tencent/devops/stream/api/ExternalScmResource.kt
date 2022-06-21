@@ -32,11 +32,14 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @Api(tags = ["EXTERNAL_GIT_HOOKS"], description = "GIT WebHooks触发")
 @Path("/service/scm")
@@ -55,4 +58,16 @@ interface ExternalScmResource {
         eventType: String,
         event: String
     ): Result<Boolean>
+
+    @ApiOperation("github回调请求")
+    @GET
+    @Path("/github/callback")
+    fun githubCallback(
+        @ApiParam(value = "code")
+        @QueryParam("code")
+        code: String,
+        @ApiParam(value = "state")
+        @QueryParam("state")
+        state: String
+    ): Response
 }
