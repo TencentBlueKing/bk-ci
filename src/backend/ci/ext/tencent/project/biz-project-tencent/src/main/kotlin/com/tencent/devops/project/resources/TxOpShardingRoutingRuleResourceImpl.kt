@@ -25,36 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.util
+package com.tencent.devops.project.resources
 
-import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.AESUtil
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.service.TxOpShardingRoutingRuleResource
+import com.tencent.devops.project.service.TxOpShardingRuleService
+import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * password参数类型工具类
- */
-@Suppress("ALL")
-@Component
-class PswParameterUtils {
+@RestResource
+class TxOpShardingRoutingRuleResourceImpl @Autowired constructor(
+    private val txOpShardingRuleService: TxOpShardingRuleService
+) : TxOpShardingRoutingRuleResource {
 
-    @Value("\${parameter.password.pswKey}")
-    private val pswKey: String = ""
-
-    fun decrypt(content: String): String {
-        try {
-            return AESUtil.decrypt(pswKey, content)
-        } catch (e: Exception) {
-            throw OperationException("password: $content decrypt error.")
-        }
+    override fun syncShardingRoutingRuleInfo(): Result<Boolean> {
+        return Result(txOpShardingRuleService.syncShardingRoutingRuleInfo())
     }
 
-    fun encrypt(content: String): String {
-        try {
-            return AESUtil.encrypt(pswKey, content)
-        } catch (e: Exception) {
-            throw OperationException("password: $content encrypt error.")
-        }
+    override fun clearInvalidRuleRedisInfo(): Result<Boolean> {
+        return Result(txOpShardingRuleService.clearInvalidRuleRedisInfo())
     }
 }
