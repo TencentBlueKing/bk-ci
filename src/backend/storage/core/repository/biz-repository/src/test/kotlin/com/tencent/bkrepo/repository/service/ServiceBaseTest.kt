@@ -52,6 +52,7 @@ import com.tencent.bkrepo.repository.UT_REPO_NAME
 import com.tencent.bkrepo.repository.UT_USER
 import com.tencent.bkrepo.repository.config.RepositoryProperties
 import com.tencent.bkrepo.repository.dao.ProjectDao
+import com.tencent.bkrepo.repository.dao.ProxyChannelDao
 import com.tencent.bkrepo.repository.dao.RepositoryDao
 import com.tencent.bkrepo.repository.pojo.project.ProjectCreateRequest
 import com.tencent.bkrepo.repository.pojo.project.ProjectInfo
@@ -75,6 +76,7 @@ import org.springframework.test.context.TestPropertySource
     RepositoryProperties::class,
     ProjectDao::class,
     RepositoryDao::class,
+    ProxyChannelDao::class,
     HttpAuthProperties::class,
     SpringContextUtils::class
 )

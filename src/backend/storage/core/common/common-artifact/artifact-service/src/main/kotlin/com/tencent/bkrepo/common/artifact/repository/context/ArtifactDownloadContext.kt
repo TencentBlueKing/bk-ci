@@ -51,11 +51,13 @@ import org.slf4j.LoggerFactory
 open class ArtifactDownloadContext(
     repo: RepositoryDetail? = null,
     artifact: ArtifactInfo? = null,
+    artifacts: List<ArtifactInfo>? = null,
     userId: String = SecurityUtils.getUserId(),
     var useDisposition: Boolean = false
 ) : ArtifactContext(repo, artifact, userId) {
 
     val repo = repo ?: request.getAttribute(REPO_KEY) as RepositoryDetail
+    val artifacts = artifacts
 
     @Suppress("UNCHECKED_CAST")
     fun getInterceptors(): List<DownloadInterceptor<*>> {

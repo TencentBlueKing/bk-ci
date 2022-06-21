@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class UserFilterTest {
     private val response = WebhookFilterResponse()
@@ -41,7 +41,7 @@ class UserFilterTest {
             includedUsers = emptyList(),
             excludedUsers = emptyList()
         )
-        Assert.assertTrue(userFilter.doFilter(response))
+        Assertions.assertTrue(userFilter.doFilter(response))
 
         userFilter = UserFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -49,7 +49,7 @@ class UserFilterTest {
             includedUsers = listOf("xiaoming", "xiaohong"),
             excludedUsers = emptyList()
         )
-        Assert.assertTrue(userFilter.doFilter(response))
+        Assertions.assertTrue(userFilter.doFilter(response))
 
         userFilter = UserFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -57,7 +57,7 @@ class UserFilterTest {
             includedUsers = listOf("xiaoming", "xiaohong"),
             excludedUsers = emptyList()
         )
-        Assert.assertFalse(userFilter.doFilter(response))
+        Assertions.assertFalse(userFilter.doFilter(response))
     }
 
     @Test
@@ -68,7 +68,7 @@ class UserFilterTest {
             includedUsers = emptyList(),
             excludedUsers = emptyList()
         )
-        Assert.assertTrue(userFilter.doFilter(response))
+        Assertions.assertTrue(userFilter.doFilter(response))
 
         userFilter = UserFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -76,7 +76,7 @@ class UserFilterTest {
             includedUsers = emptyList(),
             excludedUsers = listOf("xiaoming", "xiaohong")
         )
-        Assert.assertFalse(userFilter.doFilter(response))
+        Assertions.assertFalse(userFilter.doFilter(response))
 
         userFilter = UserFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -84,7 +84,7 @@ class UserFilterTest {
             includedUsers = emptyList(),
             excludedUsers = listOf("xiaoming", "xiaohong")
         )
-        Assert.assertTrue(userFilter.doFilter(response))
+        Assertions.assertTrue(userFilter.doFilter(response))
     }
 
     @Test
@@ -95,7 +95,7 @@ class UserFilterTest {
             includedUsers = listOf("xiaoming"),
             excludedUsers = listOf("xiaohong")
         )
-        Assert.assertTrue(userFilter.doFilter(response))
+        Assertions.assertTrue(userFilter.doFilter(response))
 
         userFilter = UserFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -103,7 +103,7 @@ class UserFilterTest {
             includedUsers = listOf("xiaoming"),
             excludedUsers = listOf("xiaohong")
         )
-        Assert.assertFalse(userFilter.doFilter(response))
+        Assertions.assertFalse(userFilter.doFilter(response))
 
         userFilter = UserFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -111,6 +111,6 @@ class UserFilterTest {
             includedUsers = listOf("xiaoming"),
             excludedUsers = listOf("xiaohong")
         )
-        Assert.assertFalse(userFilter.doFilter(response))
+        Assertions.assertFalse(userFilter.doFilter(response))
     }
 }

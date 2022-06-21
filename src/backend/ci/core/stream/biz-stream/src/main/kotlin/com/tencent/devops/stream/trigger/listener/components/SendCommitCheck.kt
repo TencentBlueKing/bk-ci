@@ -143,6 +143,9 @@ class SendCommitCheck @Autowired constructor(
                 logger.warn("buildReviewListener event not match: ${finishData.reviewType}")
                 BUILD_RUNNING_DESC
             }
+            BuildReviewType.QUALITY_TASK_REVIEW_PASS, BuildReviewType.QUALITY_TASK_REVIEW_ABORT -> {
+                ""
+            }
         }
     }
 
@@ -237,6 +240,9 @@ private fun BuildFinishStageData.isCheckInOrOut(): Pair<String?, String?> {
         }
         // 这里先这么写，未来如果这么枚举扩展代码编译时可以第一时间感知，防止漏过事件
         BuildReviewType.TASK_REVIEW -> {
+            Pair(null, null)
+        }
+        BuildReviewType.QUALITY_TASK_REVIEW_PASS, BuildReviewType.QUALITY_TASK_REVIEW_ABORT -> {
             Pair(null, null)
         }
     }

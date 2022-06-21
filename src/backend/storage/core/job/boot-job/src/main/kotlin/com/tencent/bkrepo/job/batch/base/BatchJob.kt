@@ -70,12 +70,12 @@ abstract class BatchJob(private val batchJobProperties: BatchJobProperties) {
     protected val taskId: String = javaClass.simpleName
 
     /**
-     * 最长加锁时间
+     * 最少加锁时间
      */
     open fun getLockAtLeastFor(): Duration = Duration.ofSeconds(1)
 
     /**
-     * 最少加锁时间
+     * 最长加锁时间
      */
     open fun getLockAtMostFor(): Duration = Duration.ofMinutes(1)
 
@@ -90,6 +90,7 @@ abstract class BatchJob(private val batchJobProperties: BatchJobProperties) {
     open fun start(): Boolean {
         if (!batchJobProperties.enabled) {
             logger.info("Job[${getJobName()}] not enabled,exit job.")
+            return false
         }
         logger.info("Start to execute async job[${getJobName()}]")
         stop = false

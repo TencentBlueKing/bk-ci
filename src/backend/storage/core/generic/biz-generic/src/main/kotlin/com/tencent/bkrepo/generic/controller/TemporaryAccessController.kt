@@ -30,6 +30,7 @@ package com.tencent.bkrepo.generic.controller
 import com.tencent.bkrepo.auth.pojo.enums.PermissionAction
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.common.artifact.api.ArtifactFile
+import com.tencent.bkrepo.common.artifact.api.ArtifactPathVariable
 import com.tencent.bkrepo.common.security.manager.PermissionManager
 import com.tencent.bkrepo.common.service.util.ResponseBuilder
 import com.tencent.bkrepo.generic.artifact.GenericArtifactInfo
@@ -103,16 +104,38 @@ class TemporaryAccessController(
         temporaryAccessService.decrementPermits(tokenInfo)
     }
 
+    /**
+     * 下载sign file
+     * */
     @GetMapping("/sign/$DELTA_MAPPING_URI")
-    fun sign(
+    fun downloadSignFile(
         artifactInfo: GenericArtifactInfo,
-        @RequestParam token: String
+        @RequestParam token: String,
+        @RequestParam md5: String? = null
     ) {
         val tokenInfo = temporaryAccessService.validateToken(token, artifactInfo, TokenType.DOWNLOAD)
-        temporaryAccessService.sign(artifactInfo)
+        temporaryAccessService.sign(artifactInfo, md5)
         temporaryAccessService.decrementPermits(tokenInfo)
     }
 
+    /**
+     * 上传sign file
+     * */
+    @PutMapping("/sign/$DELTA_MAPPING_URI")
+    fun uploadSignFile(
+        @ArtifactPathVariable artifactInfo: GenericArtifactInfo,
+        @RequestParam token: String,
+        @RequestParam md5: String,
+        signFile: ArtifactFile
+    ) {
+        val tokenInfo = temporaryAccessService.validateToken(token, artifactInfo, TokenType.UPLOAD)
+        temporaryAccessService.uploadSignFile(signFile, artifactInfo, md5)
+        temporaryAccessService.decrementPermits(tokenInfo)
+    }
+
+    /**
+     * 增量上传patch
+     * */
     @PatchMapping("/patch/$DELTA_MAPPING_URI")
     fun patch(
         artifactInfo: GenericArtifactInfo,

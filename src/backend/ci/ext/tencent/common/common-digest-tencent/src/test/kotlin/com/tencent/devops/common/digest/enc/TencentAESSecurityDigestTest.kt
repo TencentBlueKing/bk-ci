@@ -28,8 +28,8 @@
 package com.tencent.devops.common.digest.enc
 
 import com.tencent.devops.common.api.digest.enc.DigestFactory
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class TencentAESSecurityDigestTest {
 
@@ -37,6 +37,6 @@ class TencentAESSecurityDigestTest {
     fun hello() {
         val digest = DigestFactory.getDigest("SecurityUtil")
         println(digest.javaClass)
-        Assert.assertEquals(TencentAESSecurityDigest::class.java, digest.javaClass)
+        Assertions.assertEquals(TencentAESSecurityDigest::class.java, digest.javaClass)
     }
 }

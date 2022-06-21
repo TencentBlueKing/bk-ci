@@ -27,21 +27,24 @@
 
 package com.tencent.bkrepo.webhook.dao
 
-import com.mongodb.client.result.DeleteResult
-import com.tencent.bkrepo.common.mongo.dao.simple.SimpleMongoDao
+import com.tencent.bkrepo.common.mongo.dao.sharding.MonthRangeShardingMongoDao
 import com.tencent.bkrepo.webhook.model.TWebHookLog
-import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
+import org.springframework.data.mongodb.core.query.and
+import org.springframework.data.mongodb.core.query.isEqualTo
+import org.springframework.data.mongodb.core.query.where
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class WebHookLogDao : SimpleMongoDao<TWebHookLog>() {
+class WebHookLogDao : MonthRangeShardingMongoDao<TWebHookLog>() {
 
-    fun deleteByRequestTimeBefore(date: LocalDateTime): DeleteResult {
+    fun findById(id: String): TWebHookLog? {
+        val endDateTime = LocalDateTime.now()
+        val startDateTime = endDateTime.minusMonths(1L)
         val query = Query(
-            Criteria.where(TWebHookLog::requestTime.name).lt(date)
+            where(TWebHookLog::id).isEqualTo(id).and(TWebHookLog::requestTime).gte(startDateTime).lte(endDateTime)
         )
-        return this.remove(query)
+        return findOne(query)
     }
 }

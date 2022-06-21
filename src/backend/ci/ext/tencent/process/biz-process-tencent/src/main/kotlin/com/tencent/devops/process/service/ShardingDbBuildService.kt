@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.PROFILE_PRODUCTION
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.lambda.api.service.ServiceBkDataResource
 import com.tencent.devops.lambda.pojo.bkdata.BkDataQueryData
 import com.tencent.devops.lambda.pojo.bkdata.BkDataQueryParam
@@ -107,7 +107,7 @@ class ShardingDbBuildService @Autowired constructor(
         // 3、将各分区库最近总构建量存入redis中
         shardingDbBuildNumMap.forEach { (routingRule, totalBuildNum) ->
             redisOperation.hset(
-                key = getKeyByRedisName(PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY),
+                key = getKeyByDbClusterName(PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY),
                 hashKey = routingRule,
                 values = totalBuildNum.toString()
             )
@@ -132,7 +132,7 @@ class ShardingDbBuildService @Autowired constructor(
         // 3、将各分区库最近构建项目总数量存入redis中
         shardingDbBuildProjectNumMap.forEach { (routingRule, totalBuildProjectNum) ->
             redisOperation.hset(
-                key = getKeyByRedisName(PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY),
+                key = getKeyByDbClusterName(PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY),
                 hashKey = routingRule,
                 values = totalBuildProjectNum.toString()
             )
@@ -182,21 +182,12 @@ class ShardingDbBuildService @Autowired constructor(
     }
 
     /**
-     * 根据redis名称获取真实的key值
+     * 获取真实的key值
      * @param key 原始key
      * @return 真实的key值
      */
-    private fun getKeyByRedisName(key: String): String {
-        val redisName = redisOperation.getRedisName()
-        return if (!redisName.isNullOrBlank()) {
-            if (redisName.contains("v3")) {
-                // v3集群的服务器的数据也落到正式环境数据库
-                "$PROFILE_PRODUCTION:$key"
-            } else {
-                "$redisName:$key"
-            }
-        } else {
-            key
-        }
+    private fun getKeyByDbClusterName(key: String): String {
+        val dbClusterName = CommonUtils.getDbClusterName()
+        return "$dbClusterName:$key"
     }
 }
