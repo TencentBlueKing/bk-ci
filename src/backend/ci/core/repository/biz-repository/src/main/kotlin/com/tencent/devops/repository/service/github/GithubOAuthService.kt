@@ -32,9 +32,13 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.repository.github.service.GithubUserService
 import com.tencent.devops.repository.pojo.github.GithubAppUrl
 import com.tencent.devops.repository.pojo.github.GithubOauth
+import com.tencent.devops.repository.pojo.github.GithubOauthCallback
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.scm.config.GitConfig
 import okhttp3.MediaType
@@ -44,15 +48,16 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.net.URLDecoder
 import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
 
 @Service
 @Suppress("ALL")
 class GithubOAuthService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val gitConfig: GitConfig,
-    private val githubTokenService: GithubTokenService
+    private val githubTokenService: GithubTokenService,
+    private val githubUserService: GithubUserService
 ) {
 
     fun getGithubOauth(projectId: String, userId: String, repoHashId: String?): GithubOauth {
@@ -65,7 +70,15 @@ class GithubOAuthService @Autowired constructor(
 
     fun getGithubAppUrl() = GithubAppUrl(gitConfig.githubAppUrl)
 
-    fun githubCallback(code: String, state: String): Response {
+    fun githubCallback(code: String, state: String, channelCode: String? = null): GithubOauthCallback {
+        return if (channelCode == ChannelCode.GIT.name) {
+            githubCallbackForGIT(code = code, state = state)
+        } else {
+            githubCallbackForBS(code = code, state = state)
+        }
+    }
+
+    fun githubCallbackForBS(code: String, state: String): GithubOauthCallback {
         if (!state.contains(",BK_DEVOPS__")) {
             throw OperationException("TGIT call back contain invalid parameter: $state")
         }
@@ -77,9 +90,32 @@ class GithubOAuthService @Autowired constructor(
         val githubToken = getAccessTokenImpl(code)
 
         githubTokenService.createAccessToken(userId, githubToken.accessToken, githubToken.tokenType, githubToken.scope)
-        return Response.temporaryRedirect(
-            UriBuilder.fromUri("${gitConfig.githubRedirectUrl}/$projectId#popupGithub$repoHashId").build())
-                .build()
+        return GithubOauthCallback(
+            userId = userId,
+            redirectUrl = "${gitConfig.githubRedirectUrl}/$projectId#popupGithub$repoHashId"
+        )
+    }
+
+    fun githubCallbackForGIT(code: String, state: String): GithubOauthCallback {
+        val githubToken = getAccessTokenImpl(code)
+        val userResponse = githubUserService.getUser(githubToken.accessToken)
+        githubTokenService.createAccessToken(
+            userResponse.login,
+            githubToken.accessToken,
+            githubToken.tokenType,
+            githubToken.scope
+        )
+        val redirectUrl = if (state.isNotBlank()) {
+            val authParamDecodeJsonStr = URLDecoder.decode(state, "UTF-8")
+            val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
+            authParams["redirectUrl"]?.toString() ?: ""
+        } else {
+            ""
+        }
+        return GithubOauthCallback(
+            userId = userResponse.login,
+            redirectUrl = redirectUrl
+        )
     }
 
     private fun getAccessTokenImpl(code: String): GithubToken {

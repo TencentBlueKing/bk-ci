@@ -27,7 +27,6 @@
 
 package com.tencent.devops.repository.github.config
 
-import com.tencent.devops.common.sdk.github.AutoRetryGithubClient
 import com.tencent.devops.common.sdk.github.DefaultGithubClient
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -42,21 +41,7 @@ class GithubConfig {
         return with(properties) {
             DefaultGithubClient(
                 serverUrl = serverUrl,
-                apiUrl = apiUrl,
-                clientId = clientId,
-                clientSecret = clientSecret
-            )
-        }
-    }
-
-    @Bean
-    fun autoRetryGithubClient(properties: GithubProperties): AutoRetryGithubClient {
-        return with(properties) {
-            AutoRetryGithubClient(
-                serverUrl = serverUrl,
-                apiUrl = apiUrl,
-                clientId = clientId,
-                clientSecret = clientSecret
+                apiUrl = apiUrl
             )
         }
     }

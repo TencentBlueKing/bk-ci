@@ -27,21 +27,20 @@
 
 package com.tencent.devops.common.sdk.github
 
-import com.tencent.devops.common.sdk.github.request.GHOauthTokenRequest
-import com.tencent.devops.common.sdk.github.response.GHOauthTokenResponse
+import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.util.SdkHttpUtil
+import com.tencent.devops.common.sdk.util.SdkRetryHelper
 import okhttp3.Credentials
 import org.slf4j.LoggerFactory
 
-open class DefaultGithubClient(
+class DefaultGithubClient(
     // github服务域名
-    open val serverUrl: String,
+    private val serverUrl: String,
     // github接口地址
-    open val apiUrl: String,
-    // github 应用ID
-    open val clientId: String,
-    // github 应用secret
-    open val clientSecret: String
+    private val apiUrl: String,
+    // 最大重试次数
+    private val maxAttempts: Int = 3,
+    private val retryWaitTime: Long = 500
 ) : GithubClient {
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultGithubClient::class.java)
@@ -52,11 +51,21 @@ open class DefaultGithubClient(
             "Authorization" to "token  $oauthToken",
             "Accept" to "application/vnd.github.v3+json"
         )
-        return SdkHttpUtil.execute(
-            apiUrl = apiUrl,
-            systemHeaders = headers,
-            request = request
-        )
+        return if (request.getHttpMethod() == HttpMethod.GET) {
+            SdkRetryHelper(maxAttempts = maxAttempts, retryWaitTime = retryWaitTime).execute {
+                SdkHttpUtil.execute(
+                    apiUrl = apiUrl,
+                    systemHeaders = headers,
+                    request = request
+                )
+            }
+        } else {
+            SdkHttpUtil.execute(
+                apiUrl = apiUrl,
+                systemHeaders = headers,
+                request = request
+            )
+        }
     }
 
     override fun <T> execute(username: String, token: String, request: GithubRequest<T>): T {
@@ -64,27 +73,18 @@ open class DefaultGithubClient(
             "Authorization" to Credentials.basic(username, token),
             "Accept" to "application/vnd.github.v3+json"
         )
-        return SdkHttpUtil.execute(
-            apiUrl = apiUrl,
-            systemHeaders = headers,
-            request = request
-        )
-    }
-
-    override fun accessToken(code: String, redirectUri: String?): GHOauthTokenResponse {
-        val request = GHOauthTokenRequest(
-            clientId = clientId,
-            clientSecret = clientSecret,
-            code = code,
-            redirectUri = redirectUri
-        )
-        return SdkHttpUtil.execute(
-            apiUrl = serverUrl,
-            request = request
-        )
-    }
-
-    override fun appInstallUrl(redirectUri: String, state: String): String {
-        return "$serverUrl/login/oauth/authorize?client_id=$clientId&redirect_uri=$redirectUri&state=$state"
+        return if (request.getHttpMethod() == HttpMethod.GET) {
+            SdkHttpUtil.execute(
+                apiUrl = apiUrl,
+                systemHeaders = headers,
+                request = request
+            )
+        } else {
+            SdkHttpUtil.execute(
+                apiUrl = apiUrl,
+                systemHeaders = headers,
+                request = request
+            )
+        }
     }
 }

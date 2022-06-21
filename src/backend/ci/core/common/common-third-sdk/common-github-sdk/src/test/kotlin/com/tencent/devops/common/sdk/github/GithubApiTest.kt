@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.sdk.github
 
-import com.tencent.devops.common.sdk.github.request.GetBranchRequest
-import com.tencent.devops.common.sdk.github.request.ListBranchesRequest
+import com.tencent.devops.common.sdk.github.request.GHGetBranchRequest
+import com.tencent.devops.common.sdk.github.request.GHListBranchesRequest
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
@@ -42,7 +42,7 @@ class GithubApiTest {
 
     @Test
     fun listBranches() {
-        val request = ListBranchesRequest(
+        val request = GHListBranchesRequest(
             owner = "Tencent",
             repo = "bk-ci"
         )
@@ -55,7 +55,7 @@ class GithubApiTest {
 
     @Test
     fun getBranch() {
-        val request = GetBranchRequest(
+        val request = GHGetBranchRequest(
             owner = "Tencent",
             repo = "bk-ci",
             branch = "master"

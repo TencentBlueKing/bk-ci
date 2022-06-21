@@ -34,16 +34,20 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.stream.api.ExternalScmResource
+import com.tencent.devops.stream.service.StreamLoginService
 import com.tencent.devops.stream.trigger.mq.streamRequest.StreamRequestDispatcher
 import com.tencent.devops.stream.trigger.mq.streamRequest.StreamRequestEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.UriBuilder
 
 @RestResource
 class ExternalScmResourceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val streamLoginService: StreamLoginService
 ) : ExternalScmResource {
 
     companion object {
@@ -67,5 +71,11 @@ class ExternalScmResourceImpl @Autowired constructor(
             )
         )
         return Result(true)
+    }
+
+    override fun githubCallback(code: String, state: String): Response {
+        val redirectUrl = streamLoginService.githubCallback(code, state)
+        return Response.temporaryRedirect(UriBuilder.fromUri(redirectUrl).build())
+            .status(Response.Status.TEMPORARY_REDIRECT).build()
     }
 }
