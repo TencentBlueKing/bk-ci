@@ -193,7 +193,6 @@ class StreamProjectService @Autowired constructor(
             logger.info("STREAM|gitProjects|This does not exist in redis, so create it|userId=$userId")
             val projectList = mutableListOf<StreamProjectSimpleInfo>()
             var page = 1
-            var enableCiNumber = 0
             do {
                 val list = streamGitTransferService.getProjectList(
                     userId = userId,
@@ -221,9 +220,9 @@ class StreamProjectService @Autowired constructor(
                         )
                     )
                 }
-                enableCiNumber += settings.values.filter { it.enableCi == true }.size
                 page += 1
-            } while (list.isNotEmpty() || enableCiNumber >= 100)
+                Thread.sleep(100)
+            } while (list.isNotEmpty() && page < 3)
             val updateLock = RedisLock(redisOperation, getProjectListLockKey(userId), 10)
             updateLock.lock()
             try {
