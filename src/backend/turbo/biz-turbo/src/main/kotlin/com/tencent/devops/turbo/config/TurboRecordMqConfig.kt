@@ -90,7 +90,7 @@ class TurboRecordMqConfig {
 
     @Bean
     fun turboRecordUpdateListenerContainer(
-        @Qualifier("") connectionFactory: ConnectionFactory,
+        @Qualifier("rabbitConnectionFactory") connectionFactory: ConnectionFactory,
         turboRecordUpdateQueue: Queue,
         rabbitAdmin: RabbitAdmin,
         turboRecordConsumer: TurboRecordConsumer,
