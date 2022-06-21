@@ -1,7 +1,7 @@
 package com.tencent.bkrepo.nuget.util
 
 import com.github.zafarkhaja.semver.Version
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 
 object NugetVersionUtils {

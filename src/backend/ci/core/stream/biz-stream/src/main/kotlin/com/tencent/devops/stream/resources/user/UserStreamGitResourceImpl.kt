@@ -45,6 +45,7 @@ import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.service.StreamGitService
 import com.tencent.devops.stream.service.StreamGitTransferService
+import com.tencent.devops.stream.service.StreamPipelineService
 import com.tencent.devops.stream.service.StreamProjectService
 import com.tencent.devops.stream.service.StreamRequestService
 import com.tencent.devops.stream.util.GitCommonUtils
@@ -59,7 +60,8 @@ class UserStreamGitResourceImpl @Autowired constructor(
     private val streamBasicSettingService: StreamBasicSettingService,
     private val streamProjectService: StreamProjectService,
     private val streamGitTransferService: StreamGitTransferService,
-    private val streamRequestService: StreamRequestService
+    private val streamRequestService: StreamRequestService,
+    private val streamPipelineService: StreamPipelineService
 ) : UserStreamGitResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserStreamGitResourceImpl::class.java)
@@ -139,12 +141,21 @@ class UserStreamGitResourceImpl @Autowired constructor(
         val newFile = streamCreateFile.copy(
             filePath = getFilePath(streamCreateFile.filePath)
         )
-        return Result(
-            streamGitTransferService.createNewFile(
-                userId = getOauthUser(userId = userId, isEnableUser = false, gitProjectId = gitProjectId.toLong()),
+        val createNewFileIsSuccess = streamGitTransferService.createNewFile(
+            userId = getOauthUser(userId = userId, isEnableUser = false, gitProjectId = gitProjectId.toLong()),
+            gitProjectId = gitProjectId,
+            streamCreateFile = newFile
+        )
+        if (createNewFileIsSuccess) {
+            streamPipelineService.createNewPipeLine(
                 gitProjectId = gitProjectId,
-                streamCreateFile = newFile
+                file = newFile,
+                userId = userId,
+                branch = streamCreateFile.branch
             )
+        }
+        return Result(
+            createNewFileIsSuccess
         )
     }
 

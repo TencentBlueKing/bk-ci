@@ -43,9 +43,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-aop")
     implementation("com.google.guava:guava")
     implementation("com.amazonaws:aws-java-sdk-s3")
-    implementation("org.apache.hadoop:hadoop-hdfs")
-    implementation("org.apache.hadoop:hadoop-common")
     implementation("com.squareup.okhttp3:okhttp")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
-    implementation("com.tencent.polaris:polaris-discovery-factory:1.2.4")
+    implementation("com.tencent.polaris:polaris-discovery-factory")
 }

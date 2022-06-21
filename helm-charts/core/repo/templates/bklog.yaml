@@ -1,0 +1,58 @@
+{{- if .Values.bkLogConfig.enabled }}
+
+# service log
+apiVersion: bk.tencent.com/v1alpha1
+kind: BkLogConfig
+metadata:
+  name: bk-repo-service-log-config
+spec:
+  dataId: {{ .Values.bkLogConfig.service.dataId }}
+  logConfigType: container_log_config
+  namespace: {{ .Release.Namespace }}
+  labelSelector:
+    matchLabels: {{- include "common.labels.standard" . | nindent 6 }}
+      {{ include "bkrepo.labelValues.scope" . }}: {{ include "bkrepo.labelValues.scope.backend" . }}
+  path:
+    - /data/workspace/logs/*.log
+  encoding: 'utf-8'
+  ext_meta:
+    logSourceType: "service"
+
+---
+# gateway access log
+apiVersion: bk.tencent.com/v1alpha1
+kind: BkLogConfig
+metadata:
+  name: bk-repo-gateway-acsess-log-config
+spec:
+  dataId: {{ .Values.bkLogConfig.gatewayAccess.dataId }}
+  logConfigType: container_log_config
+  namespace: {{ .Release.Namespace }}
+  labelSelector:
+    matchLabels: {{- include "common.labels.standard" . | nindent 6 }}
+      {{ include "bkrepo.labelValues.scope" . }}: {{ include "bkrepo.labelValues.scope.gateway" . }}
+  path:
+    - /data/workspace/logs/nginx/bkrepo.access.*.log
+  ext_meta:
+    logSourceType: "gateway-access"
+
+---
+# gateway error log
+apiVersion: bk.tencent.com/v1alpha1
+kind: BkLogConfig
+metadata:
+  name: bk-repo-gateway-error-log-config
+spec:
+  dataId: {{ .Values.bkLogConfig.gatewayError.dataId }}
+
+  logConfigType: container_log_config
+  namespace: {{ .Release.Namespace }}
+  labelSelector:
+    matchLabels: {{- include "common.labels.standard" . | nindent 6 }}
+      {{ include "bkrepo.labelValues.scope" . }}: {{ include "bkrepo.labelValues.scope.gateway" . }}
+  path:
+    - /data/workspace/logs/nginx/*.error.log
+  ext_meta:
+    logSourceType: "gateway-error"
+
+{{- end }}

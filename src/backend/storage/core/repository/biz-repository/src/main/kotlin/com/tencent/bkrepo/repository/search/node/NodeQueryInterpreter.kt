@@ -35,6 +35,7 @@ import com.tencent.bkrepo.common.query.builder.MongoQueryInterpreter
 import com.tencent.bkrepo.common.query.interceptor.QueryContext
 import com.tencent.bkrepo.common.query.model.QueryModel
 import com.tencent.bkrepo.common.security.manager.PermissionManager
+import com.tencent.bkrepo.repository.search.common.LocalDatetimeRuleInterceptor
 import com.tencent.bkrepo.repository.search.common.MetadataRuleInterceptor
 import com.tencent.bkrepo.repository.search.common.RepoNameRuleInterceptor
 import com.tencent.bkrepo.repository.search.common.RepoTypeRuleInterceptor
@@ -47,7 +48,8 @@ import javax.annotation.PostConstruct
 class NodeQueryInterpreter(
     private val permissionManager: PermissionManager,
     private val repoNameRuleInterceptor: RepoNameRuleInterceptor,
-    private val repoTypeRuleInterceptor: RepoTypeRuleInterceptor
+    private val repoTypeRuleInterceptor: RepoTypeRuleInterceptor,
+    private val localDatetimeRuleInterceptor: LocalDatetimeRuleInterceptor
 ) : MongoQueryInterpreter() {
 
     @PostConstruct
@@ -57,6 +59,7 @@ class NodeQueryInterpreter(
         addRuleInterceptor(repoTypeRuleInterceptor)
         addRuleInterceptor(repoNameRuleInterceptor)
         addRuleInterceptor(MetadataRuleInterceptor())
+        addRuleInterceptor(localDatetimeRuleInterceptor)
     }
 
     override fun initContext(queryModel: QueryModel, mongoQuery: Query): QueryContext {

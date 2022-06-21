@@ -31,18 +31,30 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.pojo.AllPathPair
+import com.tencent.devops.stream.pojo.StreamCreateFileInfo
 import com.tencent.devops.stream.pojo.StreamGitPipelineDir
 import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
+import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import com.tencent.devops.stream.trigger.pojo.StreamTriggerLock
+import com.tencent.devops.stream.util.GitCommonUtils
+import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,19 +64,21 @@ import org.springframework.stereotype.Service
 class StreamPipelineService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val pipelineResourceDao: GitPipelineResourceDao,
+    private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val redisOperation: RedisOperation,
     private val websocketService: StreamWebsocketService,
     private val streamGitTransferService: StreamGitTransferService,
     private val streamBasicSettingService: StreamBasicSettingService,
+    private val streamPipelineBranchService: StreamPipelineBranchService,
     private val gitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamPipelineService::class.java)
         private val channelCode = ChannelCode.GIT
         private const val CIDir = ".ci/"
+        private const val ymlVersion = "v2.0"
     }
 
     fun getPipelineList(
@@ -78,7 +92,7 @@ class StreamPipelineService @Autowired constructor(
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val pipelines = pipelineResourceDao.getPageByGitProjectId(
+        val pipelines = gitPipelineResourceDao.getPageByGitProjectId(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
             keyword = keyword,
@@ -93,7 +107,7 @@ class StreamPipelineService @Autowired constructor(
             totalPages = 0,
             records = emptyList()
         )
-        val count = pipelineResourceDao.getPipelineCount(dslContext, gitProjectId)
+        val count = gitPipelineResourceDao.getPipelineCount(dslContext, gitProjectId)
         // 获取流水线最后一次构建分支
         val pipelineBranchMap = getPipelineLastBuildBranch(gitProjectId, pipelines.map { it.pipelineId }.toSet())
         val basicSetting = streamBasicSettingService.getStreamConf(gitProjectId)
@@ -132,7 +146,7 @@ class StreamPipelineService @Autowired constructor(
         gitProjectId: Long,
         pipelineId: String?
     ): StreamGitPipelineDir {
-        val allPipeline = pipelineResourceDao.getDirListByGitProjectId(
+        val allPipeline = gitPipelineResourceDao.getDirListByGitProjectId(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
             pipelineId = null
@@ -156,7 +170,7 @@ class StreamPipelineService @Autowired constructor(
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val pipelines = pipelineResourceDao.getPageByGitProjectId(
+        val pipelines = gitPipelineResourceDao.getPageByGitProjectId(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
             keyword = keyword,
@@ -184,7 +198,7 @@ class StreamPipelineService @Autowired constructor(
         pipelineId: String
     ): StreamGitProjectPipeline? {
         logger.info("get pipeline: $pipelineId")
-        val pipeline = pipelineResourceDao.getPipelinesInIds(
+        val pipeline = gitPipelineResourceDao.getPipelinesInIds(
             dslContext = dslContext,
             gitProjectId = null,
             pipelineIds = listOf(pipelineId)
@@ -223,7 +237,7 @@ class StreamPipelineService @Autowired constructor(
                     ", edit timerTrigger with $edited"
             )
             websocketService.pushPipelineWebSocket(gitProjectId.toString(), pipelineId, userId)
-            return pipelineResourceDao.enablePipelineById(
+            return gitPipelineResourceDao.enablePipelineById(
                 dslContext = dslContext,
                 pipelineId = pipelineId,
                 enabled = enabled
@@ -245,7 +259,7 @@ class StreamPipelineService @Autowired constructor(
         val conf = streamBasicSettingService.getStreamConf(gitProjectId) ?: return null
 
         val filePath =
-            pipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)?.filePath ?: return null
+            gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)?.filePath ?: return null
 
         return streamGitTransferService.getYamlContent(
             gitProjectId = gitProjectId.toString(),
@@ -255,6 +269,143 @@ class StreamPipelineService @Autowired constructor(
         )
     }
 
+    fun savePipeline(
+        pipeline: StreamTriggerPipeline,
+        userId: String,
+        gitProjectId: Long,
+        projectCode: String,
+        modelAndSetting: PipelineModelAndSetting,
+        updateLastModifyUser: Boolean,
+        branch: String
+    ) {
+        val processClient = client.get(ServicePipelineResource::class)
+        if (pipeline.pipelineId.isBlank()) {
+            // 直接新建
+            logger.info("create newpipeline: $pipeline")
+
+            pipeline.pipelineId = processClient.create(
+                userId = userId,
+                projectId = projectCode,
+                pipeline = modelAndSetting.model,
+                channelCode = channelCode
+            ).data!!.id
+            streamPipelineBranchService.saveOrUpdate(
+                gitProjectId = gitProjectId,
+                pipelineId = pipeline.pipelineId,
+                branch = branch
+            )
+            gitPipelineResourceDao.createPipeline(
+                dslContext = dslContext,
+                gitProjectId = gitProjectId,
+                pipeline = pipeline.toGitPipeline(),
+                version = ymlVersion
+            )
+            websocketService.pushPipelineWebSocket(
+                projectId = projectCode,
+                pipelineId = pipeline.pipelineId,
+                userId = userId
+            )
+        }
+        processClient.saveSetting(
+            userId = userId,
+            projectId = projectCode,
+            pipelineId = pipeline.pipelineId,
+            setting = modelAndSetting.setting.copy(
+                projectId = projectCode,
+                pipelineId = pipeline.pipelineId,
+                pipelineName = modelAndSetting.model.name
+            ),
+            updateLastModifyUser = updateLastModifyUser
+        )
+    }
+
+    fun getPipelineByFile(
+        gitProjectId: Long,
+        filePath: String
+    ): TGitPipelineResourceRecord? {
+        return gitPipelineResourceDao.getPipelineByFile(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            filePath = filePath
+        )
+    }
+
+    fun createNewPipeLine(gitProjectId: String, file: StreamCreateFileInfo, userId: String, branch: String) {
+        val pipeline = StreamTriggerPipeline(
+            gitProjectId = gitProjectId,
+            pipelineId = "",
+            filePath = file.filePath,
+            displayName = file.filePath,
+            enabled = true,
+            creator = userId,
+            lastUpdateBranch = file.branch
+        )
+        // pipelineId可能为blank所以使用filePath为key
+        val triggerLock = StreamTriggerLock(
+            redisOperation = redisOperation,
+            gitProjectId = gitProjectId,
+            filePath = pipeline.filePath
+        )
+        val gitProjectCode = GitCommonUtils.getCiProjectId(gitProjectId = gitProjectId.toLong())
+        val realPipeline: StreamTriggerPipeline
+        // 避免出现多个触发拿到空的pipelineId后依次进来创建，所以需要在锁后重新获取pipeline
+        triggerLock.use {
+            triggerLock.lock()
+            realPipeline = getRealPipeLine(gitProjectId, pipeline)
+            // 优先创建流水线为了前台显示
+            if (realPipeline.pipelineId.isBlank()) {
+                // 在蓝盾那边
+                savePipeline(
+                    pipeline = realPipeline,
+                    userId = userId,
+                    gitProjectId = gitProjectId.toLong(),
+                    projectCode = gitProjectCode,
+                    modelAndSetting = createTriggerModel(gitProjectCode),
+                    updateLastModifyUser = true,
+                    branch = branch
+                )
+            }
+        }
+    }
+
+    private fun getRealPipeLine(gitProjectId: String, pipeline: StreamTriggerPipeline) =
+        getPipelineByFile(
+            gitProjectId = gitProjectId.toLong(),
+            filePath = pipeline.filePath
+        )?.let {
+            StreamTriggerPipeline(it)
+        } ?: pipeline
+
+    private fun getProjectCode(gitProjectId: String): String {
+        return "git_$gitProjectId"
+    }
+
+    private fun createTriggerModel(projectCode: String) = PipelineModelAndSetting(
+        model = Model(
+            name = StreamPipelineUtils.genBKPipelineName(projectCode),
+            desc = "",
+            stages = listOf(
+                Stage(
+                    id = VMUtils.genStageId(1),
+                    name = VMUtils.genStageId(1),
+                    containers = listOf(
+                        TriggerContainer(
+                            id = "0",
+                            name = "构建触发",
+                            elements = listOf(
+                                ManualTriggerElement(
+                                    name = "手动触发",
+                                    id = "T-1-1-1"
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        ),
+        setting = PipelineSetting()
+    )
+
     private fun getPipelineLastBuildBranch(
         gitProjectId: Long,
         pipelineIds: Set<String>
@@ -262,6 +413,11 @@ class StreamPipelineService @Autowired constructor(
         val conf = streamBasicSettingService.getStreamConf(gitProjectId) ?: return emptyMap()
         var branch: String? = null
         val result = mutableMapOf<String, String>()
+        val idToLastUpdateBranch = gitPipelineResourceDao.getLastUpdateBranchByIds(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            pipelineIds = pipelineIds
+        ).associate { it.value1() to it.value2() }
         val pipelineBuild = gitRequestEventBuildDao.getPipelinesLastBuild(dslContext, gitProjectId, pipelineIds)
             ?.associate { it.pipelineId to it.branch }
         // 获取没有构建记录的流水线的未构建成功的分支
@@ -279,6 +435,10 @@ class StreamPipelineService @Autowired constructor(
             }
             if (!pipelineNoBuild?.get(pipelineId).isNullOrBlank()) {
                 result[pipelineId] = pipelineNoBuild?.get(pipelineId).toString()
+                return@forEach
+            }
+            if (!idToLastUpdateBranch[pipelineId].isNullOrBlank()) {
+                result[pipelineId] = idToLastUpdateBranch[pipelineId].toString()
                 return@forEach
             }
             // 构建记录和未构建记录都没得，就去拿默认分支

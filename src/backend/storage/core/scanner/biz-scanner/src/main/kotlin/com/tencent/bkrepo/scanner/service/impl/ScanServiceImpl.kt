@@ -57,9 +57,9 @@ import com.tencent.bkrepo.scanner.pojo.ScanTaskStatus
 import com.tencent.bkrepo.scanner.pojo.ScanTriggerType
 import com.tencent.bkrepo.scanner.pojo.SubScanTask
 import com.tencent.bkrepo.scanner.pojo.request.ArtifactVulnerabilityRequest
+import com.tencent.bkrepo.scanner.pojo.request.BatchScanRequest
 import com.tencent.bkrepo.scanner.pojo.request.FileScanResultDetailRequest
 import com.tencent.bkrepo.scanner.pojo.request.FileScanResultOverviewRequest
-import com.tencent.bkrepo.scanner.pojo.request.MatchPlanSingleScanRequest
 import com.tencent.bkrepo.scanner.pojo.request.ReportResultRequest
 import com.tencent.bkrepo.scanner.pojo.request.ScanRequest
 import com.tencent.bkrepo.scanner.pojo.request.ScanTaskQuery
@@ -71,7 +71,6 @@ import com.tencent.bkrepo.scanner.service.ScanService
 import com.tencent.bkrepo.scanner.service.ScannerService
 import com.tencent.bkrepo.scanner.task.ScanTaskScheduler
 import com.tencent.bkrepo.scanner.utils.Converter
-import com.tencent.bkrepo.scanner.utils.RuleMatcher
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationEventPublisher
@@ -85,6 +84,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter.ISO_DATE_TIME
+import java.time.temporal.ChronoUnit
 
 @Service
 class ScanServiceImpl @Autowired constructor(
@@ -124,7 +124,7 @@ class ScanServiceImpl @Autowired constructor(
                     createdDate = now,
                     lastModifiedBy = userId,
                     lastModifiedDate = now,
-                    rule = rule?.toJsonString() ?: plan?.rule,
+                    rule = rule?.toJsonString(),
                     triggerType = triggerType.name,
                     planId = plan?.id,
                     status = ScanTaskStatus.PENDING.name,
@@ -149,18 +149,13 @@ class ScanServiceImpl @Autowired constructor(
     override fun singleScan(request: SingleScanRequest): ScanTask {
         with(request) {
             val plan = scanPlanDao.get(planId)
-            return scan(Converter.convert(request, plan.type), ScanTriggerType.MANUAL)
+            return self.scan(Converter.convert(request, plan.type), ScanTriggerType.MANUAL)
         }
     }
 
-    @Transactional(rollbackFor = [Throwable::class])
-    override fun matchPlanScan(request: MatchPlanSingleScanRequest): List<ScanTask> {
-        with(request) {
-            val plans = scanPlanDao.findByProjectIdAndRepoNames(projectId, listOf(repoName))
-            return plans
-                .filter { RuleMatcher.match(request, it) }
-                .map { scan(Converter.convert(request, it), ScanTriggerType.valueOf(triggerType)) }
-        }
+    override fun batchScan(request: BatchScanRequest): ScanTask {
+        val plan = scanPlanDao.get(request.planId)
+        return self.scan(Converter.convert(request, plan.type), Converter.convert(request.triggerType))
     }
 
     @Transactional(rollbackFor = [Throwable::class])
@@ -307,8 +302,12 @@ class ScanServiceImpl @Autowired constructor(
             }
 
             val oldStatus = SubScanTaskStatus.valueOf(subScanTask.status)
+            val scanner = scannerService.get(subScanTask.scanner)
+            val maxScanDuration = scanner.maxScanDuration(subScanTask.size)
+            // 多加1分钟，避免执行器超时后正在上报结果又被重新触发
+            val timeoutDateTime = LocalDateTime.now().plus(maxScanDuration, ChronoUnit.MILLIS).plusMinutes(1L)
             val updateResult = subScanTaskDao.updateStatus(
-                subScanTaskId, SubScanTaskStatus.EXECUTING, oldStatus, subScanTask.lastModifiedDate
+                subScanTaskId, SubScanTaskStatus.EXECUTING, oldStatus, subScanTask.lastModifiedDate, timeoutDateTime
             )
             val modified = updateResult.modifiedCount == 1L
             if (modified) {
@@ -346,13 +345,25 @@ class ScanServiceImpl @Autowired constructor(
     @Scheduled(fixedDelay = FIXED_DELAY, initialDelay = FIXED_DELAY)
     @Transactional(rollbackFor = [Throwable::class])
     fun enqueueTimeoutTask() {
-        val task = scanTaskDao.timeoutTask(DEFAULT_TASK_EXECUTE_TIMEOUT_SECONDS)
+        val task = scanTaskDao.timeoutTask(DEFAULT_TASK_EXECUTE_TIMEOUT_SECONDS) ?: return
         // 任务超时后移除所有子任务，重置状态后重新提交执行
-        if (task != null && scanTaskDao.resetTask(task.id!!, task.lastModifiedDate).modifiedCount == 1L) {
+        val resetTask = scanTaskDao.resetTask(task.id!!, task.lastModifiedDate)
+        if (resetTask != null) {
             subScanTaskDao.deleteByParentTaskId(task.id)
             scannerMetrics.taskStatusChange(ScanTaskStatus.valueOf(task.status), ScanTaskStatus.PENDING)
             val plan = task.planId?.let { scanPlanDao.get(it) }
-            scanTaskScheduler.schedule(Converter.convert(task, plan))
+            scanTaskScheduler.schedule(Converter.convert(resetTask, plan))
+        }
+    }
+
+    /**
+     * 结束处于blocked状态超时的子任务
+     */
+    @Scheduled(fixedDelay = FIXED_DELAY, initialDelay = FIXED_DELAY)
+    fun finishBlockTimeoutSubScanTask() {
+        subScanTaskDao.blockedTimeoutTasks(DEFAULT_TASK_EXECUTE_TIMEOUT_SECONDS).records.forEach { subtask ->
+            logger.info("subTask[${subtask.id}] of parentTask[${subtask.parentScanTaskId}] block timeout")
+            self.updateScanTaskResult(subtask, SubScanTaskStatus.BLOCK_TIMEOUT.name, emptyMap())
         }
     }
 

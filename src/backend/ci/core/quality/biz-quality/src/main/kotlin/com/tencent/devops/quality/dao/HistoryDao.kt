@@ -34,12 +34,16 @@ import org.jooq.DSLContext
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL.max
+import org.springframework.beans.factory.annotation.Autowired
 import org.jooq.impl.DSL.count
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository@Suppress("ALL")
-class HistoryDao {
+@Repository
+@Suppress("ALL")
+class HistoryDao @Autowired constructor(
+    private val innerDslContext: DSLContext
+) {
     fun create(
         dslContext: DSLContext,
         projectId: String,
@@ -275,6 +279,30 @@ class HistoryDao {
         endTime: LocalDateTime?
     ): Long {
         return count(dslContext, projectId, pipelineId, ruleId, RuleInterceptResult.FAIL.name, startTime, endTime)
+    }
+
+    fun batchUpdateHistoryResult(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        result: RuleInterceptResult,
+        ruleIds: Set<Long>?
+    ): Int {
+        return with(THistory.T_HISTORY) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                PIPELINE_ID.eq(pipelineId),
+                BUILD_ID.eq(buildId)
+            )
+            if (!ruleIds.isNullOrEmpty()) {
+                conditions.add(RULE_ID.`in`(ruleIds))
+            }
+            innerDslContext.update(this)
+                .set(RESULT, result.name)
+                .where(conditions)
+                .and(RESULT.eq(RuleInterceptResult.WAIT.name))
+                .execute()
+        }
     }
 
     fun batchDailyTotalCount(

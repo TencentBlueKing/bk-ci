@@ -81,6 +81,10 @@ class ClientConfig(private val credentials: InnerCosCredentials) {
      */
     val endpointResolver = createEndpointResolver()
 
+    val slowLogSpeed = credentials.slowLogSpeed
+
+    val slowLogTime = credentials.slowLogTimeInMillis
+
     private fun createEndpointResolver(): EndpointResolver {
         return if (credentials.modId != null && credentials.cmdId != null) {
             PolarisEndpointResolver(credentials.modId!!, credentials.cmdId!!)

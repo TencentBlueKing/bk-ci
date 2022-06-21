@@ -232,6 +232,11 @@ class PlanArtifactLatestSubScanTaskDao(
                 criteriaList.add(buildCriteria(it.projectId, it.repoName, it.fullPath, it.planId))
             }
         }
+
+        if (criteriaList.isEmpty()) {
+            return
+        }
+
         val criteria = Criteria().orOperator(*criteriaList.toTypedArray())
         val oldSubtasks = find(Query(criteria))
         if (oldSubtasks.isEmpty()) {

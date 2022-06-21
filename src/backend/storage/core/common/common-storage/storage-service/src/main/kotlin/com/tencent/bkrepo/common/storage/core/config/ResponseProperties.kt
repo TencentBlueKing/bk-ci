@@ -45,5 +45,14 @@ data class ResponseProperties(
     /**
      * 每秒传输数据量
      */
-    var rateLimit: DataSize = DataSize.ofBytes(-1)
+    var rateLimit: DataSize = DataSize.ofBytes(-1),
+
+    /**
+     * mime mappings，content-type的MediaType映射
+     * */
+    var mimeMappings: Map<String, String> = emptyMap(),
+    /**
+     * 二进制媒体类型，不指定编码。
+     * */
+    var binaryMediaTypes: Set<String> = emptySet()
 )

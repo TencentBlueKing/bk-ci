@@ -52,7 +52,7 @@ class ClientErrorDecoder @Autowired constructor(val objectMapper: ObjectMapper) 
         try {
             result = objectMapper.readValue(responseStream)
         } catch (ignore: IOException) {
-            return ClientException("内部服务返回结果无法解析")
+            return ClientException("内部服务返回结果无法解析 $response")
         }
         return RemoteServiceException(
             httpStatus = response.status(),

@@ -36,6 +36,7 @@ import com.tencent.bkrepo.common.artifact.stream.Range
 import com.tencent.bkrepo.common.artifact.stream.artifactStream
 import com.tencent.bkrepo.common.artifact.util.okhttp.BasicAuthInterceptor
 import com.tencent.bkrepo.common.artifact.util.okhttp.HttpClientBuilderFactory
+import com.tencent.bkrepo.helm.exception.HelmBadRequestException
 import java.io.InputStream
 import java.net.InetSocketAddress
 import java.net.Proxy
@@ -53,7 +54,7 @@ object RemoteDownloadUtil {
     /**
      * 从remote地址下载index.yaml
      */
-    fun doHttpRequest(configuration: RemoteConfiguration, path: String): InputStream? {
+    fun doHttpRequest(configuration: RemoteConfiguration, path: String): InputStream {
         val httpClient = with(configuration) {
             val builder = HttpClientBuilderFactory.create()
             builder.readTimeout(network.readTimeout, TimeUnit.MILLISECONDS)
@@ -63,14 +64,14 @@ object RemoteDownloadUtil {
             createAuthenticateInterceptor(configuration.credentials)?.let { builder.addInterceptor(it) }
             builder.build()
         }
-        val downloadUrl = configuration.url.trimEnd('/') + "/" + path
+        val downloadUrl = configuration.url.trimEnd('/') + path
         val request = Request.Builder().url(downloadUrl).build()
         val response = httpClient.newCall(request).execute()
         return if (response.isSuccessful) {
             val artifactFile = ArtifactFileFactory.build(response.body()!!.byteStream())
             val size = artifactFile.getSize()
             artifactFile.getInputStream().artifactStream(Range.full(size))
-        } else null
+        } else throw HelmBadRequestException("The response of request $downloadUrl is ${response.code()}")
     }
 
     /**

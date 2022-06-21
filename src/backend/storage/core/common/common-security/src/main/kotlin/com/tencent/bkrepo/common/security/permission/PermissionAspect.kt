@@ -55,7 +55,6 @@ class PermissionAspect(
         val method = signature.method
         val permission = method.getAnnotation(Permission::class.java)
         val userId = SecurityUtils.getUserId()
-
         return try {
             permissionCheckHandler.onPermissionCheck(userId, permission)
             permissionCheckHandler.onPermissionCheckSuccess()

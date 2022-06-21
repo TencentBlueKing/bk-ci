@@ -31,7 +31,7 @@
 
 dependencies {
     implementation(project(":auth:biz-auth"))
-    testImplementation("it.ozimov:embedded-redis:0.7.3") {
+    testImplementation("it.ozimov:embedded-redis:${Versions.EmbeddedRedis}") {
         exclude("org.slf4j", "slf4j-simple")
     }
 }

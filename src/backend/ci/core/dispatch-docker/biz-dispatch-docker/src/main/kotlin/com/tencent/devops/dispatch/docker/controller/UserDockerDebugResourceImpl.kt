@@ -27,111 +27,33 @@
 
 package com.tencent.devops.dispatch.docker.controller
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.user.UserDockerDebugResource
-import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
-import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
-import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
+import com.tencent.devops.dispatch.docker.pojo.DebugResponse
 import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
-import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
-import com.tencent.devops.dispatch.docker.service.DockerHostDebugService
-import com.tencent.devops.dispatch.docker.service.ExtDebugService
-import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
-import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
-import com.tencent.devops.process.constant.ProcessMessageCode
-import org.jooq.DSLContext
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerRoutingType
+import com.tencent.devops.dispatch.docker.service.DockerRoutingService
+import com.tencent.devops.dispatch.docker.service.debug.DebugServiceEnum
+import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import javax.ws.rs.core.Response
+import java.util.stream.Collectors
 
 @RestResource
-@Suppress("ALL")
 class UserDockerDebugResourceImpl @Autowired constructor(
-    private val dockerHostBuildService: DockerHostBuildService,
-    private val dockerHostDebugService: DockerHostDebugService,
-    private val bkAuthPermissionApi: AuthPermissionApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
-    private val pipelineDockerDebugDao: PipelineDockerDebugDao,
-    private val pipelineDockerBuildDao: PipelineDockerBuildDao,
-    private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
-    private val dockerHostUtils: DockerHostUtils,
-    private val extDebugService: ExtDebugService,
-    private val dslContext: DSLContext
+    private val dockerRoutingService: DockerRoutingService,
+    private val extDebugService: ExtDebugService
 ) : UserDockerDebugResource {
-    companion object {
-        private val logger = LoggerFactory.getLogger(UserDockerDebugResourceImpl::class.java)
-    }
 
-    @Value("\${spring.cloud.consul.discovery.tags:prod}")
-    private val consulTag: String = "prod"
-
-    override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<String>? {
-        // checkPermission(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
-
+    override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<DebugResponse>? {
         logger.info("[$userId]| start debug, debugStartParam: $debugStartParam")
-        // 查询是否已经有启动调试容器了，如果有，直接返回成功
-        val historyPair = dockerHostDebugService.getDebugHistory(
-            debugStartParam.pipelineId,
-            debugStartParam.vmSeqId
-        )
-        if (historyPair != null) {
-            val wsUrl = dockerHostDebugService.getWsUrl(
-                dockerIp = historyPair.first,
-                projectId = debugStartParam.projectId,
-                pipelineId = debugStartParam.pipelineId,
-                containerId = historyPair.second
-            )
-            logger.info("${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
-                    "Container Exist|wsUrl=$wsUrl")
-            return Result(wsUrl)
-        }
-
-        var buildHistory: TDispatchPipelineDockerBuildRecord? = null
-        if (debugStartParam.buildId.isNullOrBlank()) {
-            // 查询是否存在构建机可启动调试，查看当前构建机的状态，如果running且已经容器，则直接复用当前running的containerId
-            val dockerBuildHistoryList = pipelineDockerBuildDao.getLatestBuild(
-                dslContext,
-                debugStartParam.pipelineId,
-                debugStartParam.vmSeqId.toInt()
-            )
-
-            if (dockerBuildHistoryList.size > 0 && dockerBuildHistoryList[0].dockerIp.isNotEmpty()) {
-                buildHistory = dockerBuildHistoryList[0]
-            }
-        } else {
-            buildHistory = pipelineDockerBuildDao.getBuild(
-                dslContext = dslContext,
-                buildId = debugStartParam.buildId!!,
-                vmSeqId = debugStartParam.vmSeqId.toInt()
-            )
-        }
-
-        if (buildHistory != null) {
-            val containerId = dockerHostDebugService.startDebug(
-                dockerIp = buildHistory.dockerIp,
-                userId = userId,
-                poolNo = buildHistory.poolNo,
-                debugStartParam = debugStartParam,
-                startupMessage = buildHistory.startupMessage
-            )
-            return Result(dockerHostDebugService.getWsUrl(
-                dockerIp = buildHistory.dockerIp,
-                projectId = debugStartParam.projectId,
-                pipelineId = debugStartParam.pipelineId,
-                containerId = containerId
-            ))
-        } else {
-            // 没有构建历史的情况下debug，先确认是否来自其他构建集群
+        // dispatchType不在枚举工厂类内时默认为ext debug服务
+        if (!DebugServiceEnum
+                .values().toList()
+                .stream().map { it.name }.collect(Collectors.toList()).contains(debugStartParam.dispatchType)) {
             val debugUrl = extDebugService.startDebug(
                 userId = userId,
                 projectId = debugStartParam.projectId,
@@ -139,13 +61,35 @@ class UserDockerDebugResourceImpl @Autowired constructor(
                 buildId = debugStartParam.buildId,
                 vmSeqId = debugStartParam.vmSeqId
             ) ?: throw ErrorCodeException(
-                    errorCode = "2103503",
-                    defaultMessage = "Can not found debug container.",
-                    params = arrayOf(debugStartParam.pipelineId)
-                )
+                errorCode = "2103503",
+                defaultMessage = "Can not found debug container.",
+                params = arrayOf(debugStartParam.pipelineId)
+            )
 
-            return Result(debugUrl)
+            return Result(
+                DebugResponse(
+                    websocketUrl = debugUrl,
+                    containerName = null,
+                    dispatchType = BuildType.PUBLIC_DEVCLOUD.name
+                )
+            )
         }
+
+        val formatDispatchType = formatDispatchType(debugStartParam.projectId)
+        val debugUrl = DebugServiceEnum.valueOf(formatDispatchType.name).instance().startDebug(
+            userId = userId,
+            projectId = debugStartParam.projectId,
+            pipelineId = debugStartParam.pipelineId,
+            vmSeqId = debugStartParam.vmSeqId,
+            buildId = debugStartParam.buildId
+        )
+        return Result(
+            DebugResponse(
+            websocketUrl = debugUrl,
+            containerName = null,
+            dispatchType = formatDispatchType.name
+        )
+        )
     }
 
     override fun stopDebug(
@@ -153,81 +97,45 @@ class UserDockerDebugResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         vmSeqId: String,
-        containerName: String?
+        containerName: String?,
+        dispatchType: String?
     ): Result<Boolean>? {
-        checkPermission(userId, projectId, pipelineId, vmSeqId)
-
-        val pipelineDockerDebug = pipelineDockerDebugDao.getDebug(dslContext, pipelineId, vmSeqId)
-        if (pipelineDockerDebug != null) {
-            return dockerHostDebugService.deleteDebug(pipelineId, vmSeqId)
-        } else {
-            return Result(extDebugService.stopDebug(
+        if (!DebugServiceEnum
+                .values().toList()
+                .stream().map { it.name }.collect(Collectors.toList()).contains(dispatchType)) {
+            val result = extDebugService.stopDebug(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 vmSeqId = vmSeqId,
-                containerName ?: ""
-            ))
+                containerName = containerName ?: ""
+            )
+
+            return Result(result)
+        }
+
+        val formatDispatchType = formatDispatchType(projectId)
+        return Result(DebugServiceEnum.valueOf(formatDispatchType.name!!).instance().stopDebug(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            vmSeqId = vmSeqId,
+            containerName = containerName ?: ""
+        ))
+    }
+
+    /**
+     * BCS和VM构建类型在前端统一表现为VM类型，通过白名单控制BCS构建类型路由
+     */
+    private fun formatDispatchType(projectId: String): BuildType {
+        return when (dockerRoutingService.getDockerRoutingType(projectId)) {
+            DockerRoutingType.VM -> BuildType.DOCKER
+            DockerRoutingType.BCS -> BuildType.PUBLIC_BCS
+            else -> BuildType.DOCKER
         }
     }
 
-    fun checkParam(userId: String, projectId: String, pipelineId: String, vmSeqId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-        if (pipelineId.isBlank()) {
-            throw ParamBlankException("Invalid pipelineId")
-        }
-        if (vmSeqId.isBlank()) {
-            throw ParamBlankException("Invalid vmSeqID")
-        }
-    }
-
-    private fun checkPermission(userId: String, projectId: String, pipelineId: String, vmSeqId: String) {
-        checkParam(userId, projectId, pipelineId, vmSeqId)
-
-        if (!consulTag.contains("stream") && !consulTag.contains("gitci")) {
-            validPipelinePermission(
-                userId = userId,
-                authResourceType = AuthResourceType.PIPELINE_DEFAULT,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = AuthPermission.EDIT,
-                message = "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
-            )
-        }
-    }
-
-    private fun validPipelinePermission(
-        userId: String,
-        authResourceType: AuthResourceType,
-        projectId: String,
-        pipelineId: String,
-        permission: AuthPermission,
-        message: String?
-    ) {
-        if (!bkAuthPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = pipelineAuthServiceCode,
-                resourceType = authResourceType,
-                projectCode = projectId,
-                resourceCode = pipelineId,
-                permission = permission
-            )
-        ) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
-                defaultMessage = permission.alias
-            )
-            throw ErrorCodeException(
-                statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
-                defaultMessage = message,
-                params = arrayOf(permissionMsg)
-            )
-        }
+    companion object {
+        private val logger = LoggerFactory.getLogger(UserDockerDebugResourceImpl::class.java)
     }
 }

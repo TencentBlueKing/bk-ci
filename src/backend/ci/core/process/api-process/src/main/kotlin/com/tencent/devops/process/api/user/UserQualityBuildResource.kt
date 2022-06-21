@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
+import com.tencent.devops.common.quality.pojo.request.QualityReviewRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -70,6 +71,8 @@ interface UserQualityBuildResource {
         elementId: String,
         @ApiParam("动作", required = true)
         @PathParam("action")
-        action: ManualReviewAction
+        action: ManualReviewAction,
+        @ApiParam("红线ID", required = false)
+        request: QualityReviewRequest?
     ): Result<Boolean>
 }

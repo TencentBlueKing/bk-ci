@@ -49,7 +49,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import org.junit.Before
+import org.junit.jupiter.api.BeforeEach
 import java.time.LocalDateTime
 
 open class TestBase {
@@ -71,7 +71,7 @@ open class TestBase {
         const val userId = "user0"
     }
 
-    @Before
+    @BeforeEach
     open fun setUp() {
         variables.clear()
     }

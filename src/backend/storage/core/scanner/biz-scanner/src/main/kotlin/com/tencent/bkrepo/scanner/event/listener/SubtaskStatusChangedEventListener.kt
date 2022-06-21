@@ -42,6 +42,11 @@ class SubtaskStatusChangedEventListener(private val metadataClient: MetadataClie
     @EventListener(SubtaskStatusChangedEvent::class)
     fun listen(event: SubtaskStatusChangedEvent) {
         with(event.subtask) {
+            // 未指定扫描方案表示为系统级别触发的扫描，不更新元数据
+            if (planId == null) {
+                return
+            }
+
             // 更新扫描状态元数据
             val request = MetadataSaveRequest(
                 projectId = projectId,
