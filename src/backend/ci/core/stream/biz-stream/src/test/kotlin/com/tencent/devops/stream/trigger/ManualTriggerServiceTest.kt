@@ -29,12 +29,32 @@
 
 package com.tencent.devops.stream.trigger
 
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
 
-@DisplayName("手动触发参数测试哦")
+@DisplayName("stream手动触发相关测试")
 internal class ManualTriggerServiceTest {
 
-    @DisplayName("测试解析json为Map")
-    fun parseJsonToInputsTest() {
+    @Test
+    fun parseInputsTest() {
+        val testData = mapOf(
+            "string" to "string",
+            "int" to 123,
+            "double" to 4.5,
+            "array" to listOf(1, 2.2, "3"),
+            "bool" to true
+        )
+
+        Assertions.assertEquals(
+            mapOf(
+                "string" to "string",
+                "int" to "123",
+                "double" to "4.5",
+                "array" to "[ 1, 2.2, \"3\" ]",
+                "bool" to "true"
+            ),
+            ManualTriggerService.parseInputs(testData)
+        )
     }
 }

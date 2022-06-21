@@ -76,24 +76,7 @@ abstract class BaseManualTriggerService @Autowired constructor(
     open fun triggerBuild(userId: String, pipelineId: String, triggerBuildReq: TriggerBuildReq): TriggerBuildResult {
         logger.info("Trigger build, userId: $userId, pipeline: $pipelineId, triggerBuildReq: $triggerBuildReq")
 
-        val streamTriggerSetting = streamBasicSettingDao.getSettingByProjectCode(
-            dslContext = dslContext,
-            projectCode = triggerBuildReq.projectId
-        )?.let {
-            StreamTriggerSetting(
-                enableCi = it.enableCi,
-                buildPushedBranches = it.buildPushedBranches,
-                buildPushedPullRequest = it.buildPushedPullRequest,
-                enableUser = it.enableUserId,
-                gitHttpUrl = it.gitHttpUrl,
-                projectCode = it.projectCode,
-                enableCommitCheck = it.enableCommitCheck,
-                enableMrBlock = it.enableMrBlock,
-                name = it.name,
-                enableMrComment = it.enableMrComment,
-                homepage = it.homePage
-            )
-        } ?: throw CustomException(Response.Status.FORBIDDEN, message = TriggerReason.CI_DISABLED.detail)
+        val streamTriggerSetting = getSetting(triggerBuildReq)
 
         // open api 通过提供事件原文模拟事件触发
         val action = loadAction(
@@ -171,6 +154,28 @@ abstract class BaseManualTriggerService @Autowired constructor(
                 buildId = result.id
             )
         )
+    }
+
+    protected fun getSetting(triggerBuildReq: TriggerBuildReq): StreamTriggerSetting {
+        val streamTriggerSetting = streamBasicSettingDao.getSettingByProjectCode(
+            dslContext = dslContext,
+            projectCode = triggerBuildReq.projectId
+        )?.let {
+            StreamTriggerSetting(
+                enableCi = it.enableCi,
+                buildPushedBranches = it.buildPushedBranches,
+                buildPushedPullRequest = it.buildPushedPullRequest,
+                enableUser = it.enableUserId,
+                gitHttpUrl = it.gitHttpUrl,
+                projectCode = it.projectCode,
+                enableCommitCheck = it.enableCommitCheck,
+                enableMrBlock = it.enableMrBlock,
+                name = it.name,
+                enableMrComment = it.enableMrComment,
+                homepage = it.homePage
+            )
+        } ?: throw CustomException(Response.Status.FORBIDDEN, message = TriggerReason.CI_DISABLED.detail)
+        return streamTriggerSetting
     }
 
     abstract fun loadAction(
