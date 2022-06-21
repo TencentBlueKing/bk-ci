@@ -25,37 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.utils
+package com.tencent.devops.project.resources
 
-import org.junit.jupiter.api.Test
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.service.TxOpShardingRoutingRuleResource
+import com.tencent.devops.project.service.TxOpShardingRuleService
+import org.springframework.beans.factory.annotation.Autowired
 
-import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
+@RestResource
+class TxOpShardingRoutingRuleResourceImpl @Autowired constructor(
+    private val txOpShardingRuleService: TxOpShardingRuleService
+) : TxOpShardingRoutingRuleResource {
 
-class CostUtilsTest {
-
-    @Test
-    fun costTime1() {
-        val startTime = System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(1)
-        val url = "http://test"
-        CostUtils.costTime(startTime, url, logger)
+    override fun syncShardingRoutingRuleInfo(): Result<Boolean> {
+        return Result(txOpShardingRuleService.syncShardingRoutingRuleInfo())
     }
 
-    @Test
-    fun costTime2() {
-        val startTime = System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(10)
-        val url = "http://test"
-        CostUtils.costTime(startTime, url, logger)
-    }
-
-    @Test
-    fun costTime3() {
-        val startTime = System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(5)
-        val url = "http://test"
-        CostUtils.costTime(startTime, url, logger)
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(CostUtilsTest::class.java)
+    override fun clearInvalidRuleRedisInfo(): Result<Boolean> {
+        return Result(txOpShardingRuleService.clearInvalidRuleRedisInfo())
     }
 }

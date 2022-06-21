@@ -143,7 +143,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
         LOG.info("Finish the docker buildless (${record.buildId}) with result($success)")
         try {
             if (record.dockerIp.isNotEmpty()) {
-                if (buildLessWhitelistService.checkBuildLessWhitelist(record.projectId)) {
+                if (!buildLessWhitelistService.checkBuildLessWhitelist(record.projectId)) {
                     buildLessClient.endBuild(
                         projectId = record.projectId,
                         pipelineId = record.pipelineId,

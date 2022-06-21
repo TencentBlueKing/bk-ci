@@ -25,37 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.utils
+package com.tencent.devops.project.api.service
 
-import org.junit.jupiter.api.Test
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
+@Api(tags = ["OP_PROJECT_SHARDING_ROUTING_RULE"], description = "OP-项目-分片路由规则")
+@Path("/op/project/sharding/routing/rules")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface TxOpShardingRoutingRuleResource {
 
-class CostUtilsTest {
+    @ApiOperation("同步分片规则信息")
+    @PUT
+    @Path("/syncShardingRoutingRuleInfo")
+    fun syncShardingRoutingRuleInfo(): Result<Boolean>
 
-    @Test
-    fun costTime1() {
-        val startTime = System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(1)
-        val url = "http://test"
-        CostUtils.costTime(startTime, url, logger)
-    }
-
-    @Test
-    fun costTime2() {
-        val startTime = System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(10)
-        val url = "http://test"
-        CostUtils.costTime(startTime, url, logger)
-    }
-
-    @Test
-    fun costTime3() {
-        val startTime = System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(5)
-        val url = "http://test"
-        CostUtils.costTime(startTime, url, logger)
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(CostUtilsTest::class.java)
-    }
+    @ApiOperation("清理无效的分片规则redis缓存")
+    @PUT
+    @Path("/clearInvalidRuleRedisInfo")
+    fun clearInvalidRuleRedisInfo(): Result<Boolean>
 }

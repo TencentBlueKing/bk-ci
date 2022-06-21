@@ -25,37 +25,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.utils
+package com.tencent.devops.project.dao
 
-import org.junit.jupiter.api.Test
+import com.tencent.devops.model.project.tables.TShardingRoutingRule
+import com.tencent.devops.model.project.tables.records.TShardingRoutingRuleRecord
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
 
-import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
+@Repository
+class TxShardingRoutingRuleDao {
 
-class CostUtilsTest {
-
-    @Test
-    fun costTime1() {
-        val startTime = System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(1)
-        val url = "http://test"
-        CostUtils.costTime(startTime, url, logger)
+    fun getShardingRoutingRules(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<TShardingRoutingRuleRecord>? {
+        return with(TShardingRoutingRule.T_SHARDING_ROUTING_RULE) {
+            dslContext.selectFrom(this)
+                .orderBy(CREATE_TIME.asc(), ID.asc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
     }
 
-    @Test
-    fun costTime2() {
-        val startTime = System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(10)
-        val url = "http://test"
-        CostUtils.costTime(startTime, url, logger)
-    }
-
-    @Test
-    fun costTime3() {
-        val startTime = System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(5)
-        val url = "http://test"
-        CostUtils.costTime(startTime, url, logger)
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(CostUtilsTest::class.java)
+    fun updateShardingRoutingRule(
+        dslContext: DSLContext,
+        id: String,
+        type: String,
+        clusterName: String,
+        moduleCode: String,
+        dataSourceName: String
+    ) {
+        with(TShardingRoutingRule.T_SHARDING_ROUTING_RULE) {
+            dslContext.update(this)
+                .set(TYPE, type)
+                .set(CLUSTER_NAME, clusterName)
+                .set(MODULE_CODE, moduleCode)
+                .set(DATA_SOURCE_NAME, dataSourceName)
+                .where(ID.eq(id))
+                .execute()
+        }
     }
 }
