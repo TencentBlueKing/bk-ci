@@ -68,7 +68,7 @@ class IndexDao {
         }
     }
 
-    fun getBuild(dslContext: DSLContext, buildId: String): TLogIndicesV2Record? {
+    fun getBuildIndexRecord(dslContext: DSLContext, buildId: String): TLogIndicesV2Record? {
         with(TLogIndicesV2.T_LOG_INDICES_V2) {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
@@ -80,7 +80,7 @@ class IndexDao {
         dslContext: DSLContext,
         buildId: String
     ): String? {
-        return getBuild(dslContext, buildId)?.indexName
+        return getBuildIndexRecord(dslContext, buildId)?.indexName
     }
 
     fun updateLastLineNum(

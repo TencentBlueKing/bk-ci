@@ -110,31 +110,22 @@ class IndexService @Autowired constructor(
     }
 
     fun getAndAddLineNum(buildId: String, size: Int): Long? {
-        var lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
-        // val startLineNum = indexDaoV2.updateLastLineNum(dslContext, buildId, size)
-        if (lineNum == null) {
-            val redisLock = RedisLock(
-                redisOperation = redisOperation,
-                lockKey = "$LOG_LINE_NUM_LOCK:$buildId",
-                expiredTimeInSeconds = INDEX_LOCK_EXPIRE_SECONDS
-            )
-            try {
-                redisLock.lock()
-                lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
-                if (lineNum == null) {
-                    logger.warn("[$buildId|$size] Fail to get and add the line num, get from db")
-                    val build = indexDao.getBuild(dslContext, buildId)
-                    if (build == null) {
-                        logger.warn("[$buildId|$size] The build is not exist in db")
-                        return null
-                    }
-                    lineNum = build.lastLineNum + size.toLong()
-                    redisOperation.set(
-                        getLineNumRedisKey(buildId), lineNum.toString(), TimeUnit.DAYS.toSeconds(2)
-                    )
+        var lineNum = redisOperation.get(getLineNumRedisKey(buildId))?.toLong()
+        RedisLock(redisOperation, "$LOG_LINE_NUM_LOCK:$buildId", 10).use { lock ->
+            // 获得并发锁时才能读取db或修改redis缓存
+            lock.lock()
+            // 缓存命中则直接进行自增，缓存未命中则从db中取值，自增后再刷新缓存
+            if (lineNum == null) {
+                logger.warn("[$buildId|$size] Fail to get and add the line num, get from db")
+                val lastLineNum = indexDao.getBuildIndexRecord(dslContext, buildId)?.lastLineNum ?: run {
+                    logger.warn("[$buildId|$size] The build is not exist in db")
+                    return null
                 }
-            } finally {
-                redisLock.unlock()
+                logger.warn("[$buildId|$lineNum] Got from db, lastLineNum: $lastLineNum")
+                lineNum = lastLineNum + size.toLong()
+                redisOperation.set(getLineNumRedisKey(buildId), lineNum.toString(), TimeUnit.DAYS.toSeconds(2))
+            } else {
+                lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
             }
         }
         return lineNum!! - size
@@ -142,7 +133,7 @@ class IndexService @Autowired constructor(
 
     fun getLastLineNum(buildId: String): Long {
         return redisOperation.get(getLineNumRedisKey(buildId))?.toLong()
-            ?: indexDao.getBuild(dslContext, buildId)?.lastLineNum ?: 0
+            ?: indexDao.getBuildIndexRecord(dslContext, buildId)?.lastLineNum ?: 0
     }
 
     fun flushLineNum2DB(buildId: String) {
