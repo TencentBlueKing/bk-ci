@@ -37,7 +37,9 @@ class GithubApiTest {
 
     private val client = DefaultGithubClient(
         serverUrl = "https://github.com/",
-        apiUrl = "https://api.github.com/"
+        apiUrl = "https://api.github.com/",
+        clientId = "",
+        clientSecret = ""
     )
 
     @Test

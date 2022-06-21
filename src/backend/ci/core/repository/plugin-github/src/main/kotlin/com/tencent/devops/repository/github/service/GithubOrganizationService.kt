@@ -25,31 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github
+package com.tencent.devops.repository.github.service
 
-import com.tencent.devops.common.sdk.github.request.GetUserRequest
-import org.junit.jupiter.api.Test
+import com.tencent.devops.common.sdk.github.DefaultGithubClient
+import com.tencent.devops.common.sdk.github.pojo.Organization
+import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
+import com.tencent.devops.repository.github.config.GithubProperties
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-class GithubUserApiTest {
-
-    private val client = DefaultGithubClient(
-        serverUrl = "https://github.com/",
-        apiUrl = "https://api.github.com/",
-        clientId = "",
-        clientSecret = ""
-    )
-
-    private val token = "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"
-    private val repo = "bk-ci"
-    private val owner = "Florence-y"
-    private val defaultBranch = "master"
-    @Test
-    fun getUser() {
-        val request = GetUserRequest()
-        val response = client.execute(
-            oauthToken = token,
-            request = request
+@Service
+class GithubOrganizationService @Autowired constructor(
+    private val defaultGithubClient: DefaultGithubClient,
+    private val githubProperties: GithubProperties
+) {
+    fun listOrganizations(
+        request: ListOrganizationsRequest,
+        token: String
+    ): List<Organization> {
+        return defaultGithubClient.execute(
+            request = request,
+            oauthToken = token
         )
-        println(response)
     }
 }
