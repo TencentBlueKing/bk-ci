@@ -34,12 +34,18 @@ class AutoRetryGithubClient(
     override val serverUrl: String,
     // github接口地址
     override val apiUrl: String,
+    // github 应用ID
+    override val clientId: String,
+    // github 应用secret
+    override val clientSecret: String,
     // 最大重试次数
     private val maxAttempts: Int = 3,
     private val retryWaitTime: Long = 500
 ) : DefaultGithubClient(
     serverUrl = serverUrl,
-    apiUrl = apiUrl
+    apiUrl = apiUrl,
+    clientId = clientId,
+    clientSecret = clientSecret
 ) {
 
     override fun <T> execute(oauthToken: String, request: GithubRequest<T>): T {

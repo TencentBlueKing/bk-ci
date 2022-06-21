@@ -25,9 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.pojo
+package com.tencent.devops.repository.github.config
 
-data class BranchCommit(
-    val sha: String,
-    val url: String
-)
+import com.tencent.devops.common.sdk.github.AutoRetryGithubClient
+import com.tencent.devops.common.sdk.github.DefaultGithubClient
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+@EnableConfigurationProperties(GithubProperties::class)
+class GithubConfig {
+
+    @Bean
+    fun defaultGithubClient(properties: GithubProperties): DefaultGithubClient {
+        return with(properties) {
+            DefaultGithubClient(
+                serverUrl = serverUrl,
+                apiUrl = apiUrl,
+                clientId = clientId,
+                clientSecret = clientSecret
+            )
+        }
+    }
+
+    @Bean
+    fun autoRetryGithubClient(properties: GithubProperties): AutoRetryGithubClient {
+        return with(properties) {
+            AutoRetryGithubClient(
+                serverUrl = serverUrl,
+                apiUrl = apiUrl,
+                clientId = clientId,
+                clientSecret = clientSecret
+            )
+        }
+    }
+}

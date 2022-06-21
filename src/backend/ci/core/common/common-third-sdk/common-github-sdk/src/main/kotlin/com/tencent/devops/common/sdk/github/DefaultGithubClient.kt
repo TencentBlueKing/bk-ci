@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.sdk.github
 
+import com.tencent.devops.common.sdk.github.request.GHOauthTokenRequest
+import com.tencent.devops.common.sdk.github.response.GHOauthTokenResponse
 import com.tencent.devops.common.sdk.util.SdkHttpUtil
 import okhttp3.Credentials
 import org.slf4j.LoggerFactory
@@ -35,7 +37,11 @@ open class DefaultGithubClient(
     // github服务域名
     open val serverUrl: String,
     // github接口地址
-    open val apiUrl: String
+    open val apiUrl: String,
+    // github 应用ID
+    open val clientId: String,
+    // github 应用secret
+    open val clientSecret: String
 ) : GithubClient {
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultGithubClient::class.java)
@@ -63,5 +69,22 @@ open class DefaultGithubClient(
             systemHeaders = headers,
             request = request
         )
+    }
+
+    override fun accessToken(code: String, redirectUri: String?): GHOauthTokenResponse {
+        val request = GHOauthTokenRequest(
+            clientId = clientId,
+            clientSecret = clientSecret,
+            code = code,
+            redirectUri = redirectUri
+        )
+        return SdkHttpUtil.execute(
+            apiUrl = serverUrl,
+            request = request
+        )
+    }
+
+    override fun appInstallUrl(redirectUri: String, state: String): String {
+        return "$serverUrl/login/oauth/authorize?client_id=$clientId&redirect_uri=$redirectUri&state=$state"
     }
 }

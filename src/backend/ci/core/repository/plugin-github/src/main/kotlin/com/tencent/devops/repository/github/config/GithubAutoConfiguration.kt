@@ -25,22 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.request
+package com.tencent.devops.repository.github.config
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.tencent.devops.common.sdk.enums.HttpMethod
-import com.tencent.devops.common.sdk.github.GithubRequest
-import com.tencent.devops.common.sdk.github.response.BranchResponse
+import org.springframework.context.annotation.ComponentScan
+import org.springframework.context.annotation.Configuration
 
-data class GetBranchRequest(
-    @JsonIgnore
-    val owner: String,
-    @JsonIgnore
-    val repo: String,
-    @JsonIgnore
-    val branch: String
-) : GithubRequest<BranchResponse>() {
-    override fun getHttpMethod() = HttpMethod.GET
-
-    override fun getApiPath() = "/repos/$owner/$repo/branches/$branch"
-}
+@Configuration
+@ComponentScan("com.tencent.devops.repository.github")
+class GithubAutoConfiguration
