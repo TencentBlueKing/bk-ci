@@ -29,12 +29,18 @@ const columns = [
             color: '#3a84ff',
           },
           onClick () {
-            router.push({
-              name: 'PluginRunAnalysis',
-              query: {
-                pipelineId: row.pipelineId,
-              },
-            });
+            const projectId = row.projectId
+            const pipelineId = row.pipelineId
+            const buildId = row.buildId
+            http.getPipelineType({
+              projectId,
+              pipelineId
+            }).then(res => {
+              if (res.channelCode === 'BS') {
+                window.open(`${window.WEB_URL_PREFIX}/pipeline/${projectId}/${pipelineId}/detail/${buildId}`, '_blank')
+              }
+              window.open(`${window.STREAM_URL_PREFIX}/pipeline/${pipelineId}/detail/${buildId}/?page=1#/${projectId.split('_')[1]}`, '_blank')
+            })
           },
         },
         [

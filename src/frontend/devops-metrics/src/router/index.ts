@@ -36,7 +36,7 @@ export default createRouter({
           component: PluginTrendEntry,
           children: [
             {
-              path: '',
+              path: 'fail-analysis',
               name: 'PluginFailAnalysis',
               component: PluginFailAnalysis,
             },

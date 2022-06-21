@@ -3,6 +3,10 @@ import ScrollLoadSelect from '@/components/scroll-load-select';
 import http from '@/http/api';
 import { sharedProps } from '../common/props-type';
 import useFilter from '@/composables/use-filter';
+import {
+  ref,
+  watch
+} from 'vue';
 
 const emit = defineEmits(['change']);
 defineProps(sharedProps);
@@ -58,7 +62,7 @@ const clearStatus = () => {
     <bk-date-picker
       class="mr16 w240"
       type="daterange"
-      :value="[status.startTime, status.endTime]"
+      :model-value="[status.startTime, status.endTime]"
       @change="handleTimeChange"
     />
     <bk-button @click="clearStatus">Reset</bk-button>

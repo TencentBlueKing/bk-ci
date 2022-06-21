@@ -38,8 +38,8 @@ const clearStatus = () => {
     />
     <scroll-load-select
       class="mr8 w240"
-      id-key="errorCode"
-      name-key="errorMsg"
+      id-key="errorType"
+      name-key="errorName"
       placeholder="Error type"
       :multiple="true"
       :api-method="http.getErrorTypeList"
@@ -69,7 +69,7 @@ const clearStatus = () => {
     <bk-date-picker
       class="mr16 w240"
       type="daterange"
-      :value="[status.startTime, status.endTime]"
+      :model-value="[status.startTime, status.endTime]"
       @change="handleTimeChange"
     />
     <bk-button @click="clearStatus">Reset</bk-button>

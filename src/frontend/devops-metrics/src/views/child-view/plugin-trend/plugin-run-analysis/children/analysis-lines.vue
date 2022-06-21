@@ -58,8 +58,13 @@ const getData = () => {
 };
 
 watch(
-  () => props.status,
-  getData,
+  () => props.status, () => {
+    analysisData.value.rateTrend.data = []
+    analysisData.value.rateTrend.labels = []
+    analysisData.value.timeTrend.data = []
+    analysisData.value.timeTrend.labels = []
+    getData();
+  }
 );
 onMounted(getData);
 </script>
@@ -74,6 +79,8 @@ onMounted(getData);
       <line-chart
         :data="analysisData.rateTrend.data"
         :labels="analysisData.rateTrend.labels"
+        title="Success rate (%)"
+        type="rate"
       />
     </section>
     <section class="analysis-line overview-card mt20">
@@ -81,6 +88,8 @@ onMounted(getData);
       <line-chart
         :data="analysisData.timeTrend.data"
         :labels="analysisData.timeTrend.labels"
+        title="Average time (min)"
+        type="time"
       />
     </section>
   </bk-loading>

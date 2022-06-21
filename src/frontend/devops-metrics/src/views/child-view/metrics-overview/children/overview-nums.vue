@@ -98,7 +98,7 @@ const init = () => {
       data.value.resolvedDefectNum = codeCheckInfo.resolvedDefectNum;
       data.value.repoCodeccAvgScore = codeCheckInfo.repoCodeccAvgScore;
       data.value.qualityInterceptionRate = qualityInfo.qualityInterceptionRate;
-      data.value.turboSaveTime = timeFormatter(turboInfo.turboSaveTime);
+      data.value.turboSaveTime = timeFormatter(turboInfo.turboSaveTime * 1000);
       data.value.interceptionCount = qualityInfo.interceptionCount
       data.value.totalQualityExecuteCount = qualityInfo.totalExecuteCount
     })
@@ -173,6 +173,7 @@ onMounted(init);
             </bk-popover>
           </span>
         </section>
+        <span class="line-split"></span>
       </section>
     </section>
     <section class="w2 gap-line">
@@ -213,6 +214,7 @@ onMounted(init);
             </bk-popover>
           </span>
         </section>
+        <span class="line-split"></span>
       </section>
     </section>
     <section class="w1 gap-line">
@@ -234,6 +236,7 @@ onMounted(init);
             </bk-popover>
           </span>
         </section>
+        <span class="line-split"></span>
       </section>
     </section>
     <section class="w1">
@@ -282,16 +285,6 @@ onMounted(init);
 
 .gap-line {
   position: relative;
-
-  &:after {
-    content: '';
-    position: absolute;
-    right: .4rem;
-    top: .38rem;
-    width: 1px;
-    height: .52rem;
-    background: #dcdee5;
-  }
 }
 
 .card-num-group {
@@ -301,6 +294,12 @@ onMounted(init);
   margin-top: .24rem;
   position: relative;
   right: .4rem;
+  .line-split {
+    display: inline-block;
+    width: 1px;
+    height: .52rem;
+    background: #dcdee5;
+  }
 }
 
 .card-detail {
