@@ -25,36 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.util
+package com.tencent.devops.common.expression.pipeline.contextData
 
-import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.AESUtil
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import com.fasterxml.jackson.databind.JsonNode
+import com.tencent.devops.common.expression.expression.sdk.IReadOnlyArray
+import com.tencent.devops.common.expression.utils.ExpJsonUtil
 
-/**
- * password参数类型工具类
- */
-@Suppress("ALL")
-@Component
-class PswParameterUtils {
+class ArrayContextData : PipelineContextData(PipelineContextDataType.ARRAY), IReadOnlyArray<PipelineContextData?> {
 
-    @Value("\${parameter.password.pswKey}")
-    private val pswKey: String = ""
+    private var mItems = mutableListOf<PipelineContextData?>()
 
-    fun decrypt(content: String): String {
-        try {
-            return AESUtil.decrypt(pswKey, content)
-        } catch (e: Exception) {
-            throw OperationException("password: $content decrypt error.")
-        }
+    override fun iterator(): Iterator<PipelineContextData?> = mItems.iterator()
+
+    override val count: Int
+        get() = mItems.count()
+
+    fun add(item: PipelineContextData?) {
+        mItems.add(item)
     }
 
-    fun encrypt(content: String): String {
-        try {
-            return AESUtil.encrypt(pswKey, content)
-        } catch (e: Exception) {
-            throw OperationException("password: $content encrypt error.")
+    override fun get(index: Int): Any? = mItems[index]
+
+    override fun clone(): PipelineContextData {
+        val result = ArrayContextData()
+        if (mItems.isNotEmpty()) {
+            result.mItems = mutableListOf()
+            mItems.forEach {
+                result.mItems.add(it)
+            }
         }
+        return result
+    }
+
+    override fun toJson(): JsonNode {
+        val json = ExpJsonUtil.createArrayNode()
+        if (mItems.isNotEmpty()) {
+            mItems.forEach {
+                json.add(it?.toJson())
+            }
+        }
+        return json
     }
 }

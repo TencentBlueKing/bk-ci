@@ -18,6 +18,7 @@ allprojects {
     dependencyManagement {
         setApplyMavenExclusions(false)
         dependencies {
+            dependency("org.json:json:${Versions.orgJson}")
             dependency("org.mockito:mockito-all:${Versions.Mockito}")
             dependency("com.nhaarman:mockito-kotlin-kt1.1:${Versions.MockitoKt}")
             dependency("javax.ws.rs:javax.ws.rs-api:${Versions.Jaxrs}")
@@ -102,10 +103,6 @@ allprojects {
         }
     }
 
-    // 兼容Junit4
-    dependencies {
-        testImplementation("org.junit.vintage:junit-vintage-engine")
-    }
     // 兼容 Log4j
     configurations.forEach {
         it.exclude("org.springframework.boot", "spring-boot-starter-tomcat")
