@@ -98,7 +98,7 @@ const init = () => {
       data.value.resolvedDefectNum = codeCheckInfo.resolvedDefectNum;
       data.value.repoCodeccAvgScore = codeCheckInfo.repoCodeccAvgScore;
       data.value.qualityInterceptionRate = qualityInfo.qualityInterceptionRate;
-      data.value.turboSaveTime = timeFormatter(turboInfo.turboSaveTime);
+      data.value.turboSaveTime = timeFormatter(turboInfo.turboSaveTime * 1000);
       data.value.interceptionCount = qualityInfo.interceptionCount
       data.value.totalQualityExecuteCount = qualityInfo.totalExecuteCount
     })

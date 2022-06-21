@@ -11,6 +11,15 @@ import {
 } from 'vue';
 import http from '@/http/api';
 
+import { sharedProps } from '../plugin-fail-analysis/common/props-type';
+import useFilter from '@/composables/use-filter';
+const emit = defineEmits(['change']);
+defineProps(sharedProps);
+
+const {
+  handleChange,
+} = useFilter(emit);
+
 // 状态
 const isShow = ref(false);
 const searchStr = ref('');
@@ -31,7 +40,7 @@ const getPluginList = () => {
   isLoading.value = true;
   Promise.all([
     http.getProjectShowPluginList(),
-    http.getProjectOptionPluginList({ keyword: searchStr.value }),
+    http.getProjectOptionPluginList({ keyword: searchStr.value, page: 1, pageSize: 100 }),
   ])
     .then(([
       pluginList,
@@ -72,7 +81,7 @@ const submit = async () => {
     originProjectPluginList.forEach((originPlugin) => {
       const hasDelete = projectPluginList.value.every(plugin => plugin.atomCode !== originPlugin.atomCode);
       if (hasDelete) {
-        deletePluginList.push(originPlugin.atomCode);
+        deletePluginList.push(originPlugin);
       }
     });
     projectPluginList.value.forEach((plugin) => {
@@ -83,7 +92,7 @@ const submit = async () => {
     });
     if (deletePluginList.length) {
       await http.deleteProjectPlugin({
-        atomCodes: deletePluginList,
+        atomBaseInfos: deletePluginList,
       });
     }
     if (newPluginList.length) {
@@ -95,6 +104,8 @@ const submit = async () => {
   } catch (error) {
     console.error(error);
   } finally {
+    const atomCodes = projectPluginList.value.map(item => item.atomCode)
+    handleChange({ atomCodes })
     isSubmitting.value = false;
   }
 };

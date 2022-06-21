@@ -6,7 +6,7 @@ import {
 
 export default {
   getPipelineList(params) {
-    return fetch.get(`${PROCESS_API}/pipelineInfos/pagination`, params);
+    return fetch.get(`${PROCESS_API}/pipelineInfos/get/names`, params);
   },
   getPipelineLabels(params) {
     return fetch.get(`${METRICS_API}/project/info/pipeline/label/list`, params);
@@ -51,7 +51,7 @@ export default {
     return fetch.post(`${METRICS_API}/atom/display/add`, params);
   },
   deleteProjectPlugin(params) {
-    return fetch.delete(`${METRICS_API}/atom/display/delete`, params);
+    return fetch.post(`${METRICS_API}/atom/display/delete`, params);
   },
   getErrorCodeStatisticsInfo(params) {
     return fetch.post(`${METRICS_API}/pipeline/atom/fail/infos/errorCode/statistics/info`, params);
@@ -64,5 +64,8 @@ export default {
   },
   getAtomStatisticsDetail(params, page, pageSize) {
     return fetch.post(`${METRICS_API}/atom/statistics/execute/info?page=${page}&pageSize=${pageSize}`, params);
+  },
+  getPipelineType({ projectId, pipelineId }) {
+    return fetch.get(`${PROCESS_API}/pipelineInfos/${projectId}/searchByPipelineId?pipelineId=${pipelineId}`)
   },
 };
