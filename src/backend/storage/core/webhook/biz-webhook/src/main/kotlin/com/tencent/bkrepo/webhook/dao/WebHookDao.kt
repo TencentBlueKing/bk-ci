@@ -27,7 +27,6 @@
 
 package com.tencent.bkrepo.webhook.dao
 
-import com.tencent.bkrepo.common.artifact.event.base.EventType
 import com.tencent.bkrepo.common.mongo.dao.simple.SimpleMongoDao
 import com.tencent.bkrepo.webhook.constant.AssociationType
 import com.tencent.bkrepo.webhook.model.TWebHook
@@ -39,43 +38,10 @@ import org.springframework.stereotype.Repository
 @Repository
 class WebHookDao : SimpleMongoDao<TWebHook>() {
 
-    fun findByAssociationTypeAndAssociationId(type: AssociationType, id: String): List<TWebHook> {
-        if (id.isBlank()) {
-            return emptyList()
-        }
+    fun findByAssociationTypeAndAssociationId(type: AssociationType, id: String?): List<TWebHook> {
         val query = Query(
             Criteria.where(TWebHook::associationType.name).isEqualTo(type)
-                .and(TWebHook::associationId.name).isEqualTo(id)
-        )
-        return this.find(query)
-    }
-
-    fun findSystemWebHookByEventType(type: EventType?): List<TWebHook> {
-        if (type == null) {
-            return emptyList()
-        }
-        val query = Query(
-            Criteria.where(TWebHook::associationType.name).isEqualTo(AssociationType.SYSTEM)
-                .and(TWebHook::triggers.name).isEqualTo(type)
-        )
-        return this.find(query)
-    }
-
-    fun findProjectWebHookByEventType(projectId: String, type: EventType): List<TWebHook> {
-        val query = Query(
-            Criteria.where(TWebHook::associationType.name).isEqualTo(AssociationType.PROJECT)
-                .and(TWebHook::associationId.name).isEqualTo(projectId)
-                .and(TWebHook::triggers.name).isEqualTo(type)
-        )
-        return this.find(query)
-    }
-
-    fun findRepoWebHookByEventType(projectId: String, repoName: String, type: EventType): List<TWebHook> {
-        val associationId = "$projectId:$repoName"
-        val query = Query(
-            Criteria.where(TWebHook::associationType.name).isEqualTo(AssociationType.REPO)
-                .and(TWebHook::associationId.name).isEqualTo(associationId)
-                .and(TWebHook::triggers.name).isEqualTo(type)
+                .apply { id?.let { and(TWebHook::associationId.name).isEqualTo(id) } }
         )
         return this.find(query)
     }

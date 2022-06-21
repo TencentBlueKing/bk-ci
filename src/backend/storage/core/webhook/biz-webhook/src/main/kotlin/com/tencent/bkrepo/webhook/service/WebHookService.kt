@@ -41,12 +41,12 @@ interface WebHookService {
     /**
      * 创建WebHook
      */
-    fun createWebHook(userId: String, request: CreateWebHookRequest)
+    fun createWebHook(userId: String, request: CreateWebHookRequest): WebHook
 
     /**
      * 更新WebHook
      */
-    fun updateWebHook(userId: String, request: UpdateWebHookRequest)
+    fun updateWebHook(userId: String, request: UpdateWebHookRequest): WebHook
 
     /**
      * 删除WebHook
@@ -61,7 +61,7 @@ interface WebHookService {
     /**
      * 根据关联对象类型[associationType]、关联对象id[associationId]获取WebHook列表
      */
-    fun listWebHook(userId: String, associationType: AssociationType, associationId: String): List<WebHook>
+    fun listWebHook(userId: String, associationType: AssociationType, associationId: String?): List<WebHook>
 
     /**
      * 测试WebHook

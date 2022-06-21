@@ -38,7 +38,6 @@ import com.tencent.bkrepo.common.storage.core.StorageService
 import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
 import com.tencent.bkrepo.repository.job.base.CenterNodeJob
 import com.tencent.bkrepo.repository.service.repo.StorageCredentialService
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.Duration
 
@@ -52,7 +51,7 @@ class FileSynchronizeJob(
     private val clusterProperties: ClusterProperties
 ) : CenterNodeJob() {
 
-    @Scheduled(cron = "0 0 0 ? * 6")
+    //    @Scheduled(cron = "0 0 0 ? * 6")
     override fun start() {
         super.start()
     }

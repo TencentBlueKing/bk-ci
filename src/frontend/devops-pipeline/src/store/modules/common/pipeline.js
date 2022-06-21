@@ -241,44 +241,18 @@ export const actions = {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    startDebugDevcloud: async ({ commit }, data) => {
-        const buildIdQuery = data.buildId ? `?buildId=${data.buildId}` : ''
-        return request.post(`dispatch-devcloud/api/user/dispatchDevcloud/startDebug/pipeline/${data.pipelineId}/vmSeq/${data.vmSeqId}${buildIdQuery}`, {}).then(response => {
-            return response.data
-        })
-    },
-    stopDebugDevcloud: async ({ commit }, data) => {
-        return request.post(`dispatch-devcloud/api/user/dispatchDevcloud/stopDebug/pipeline/${data.pipelineId}/vmSeq/${data.vmSeqId}?containerName=${data.containerName}`, {}).then(response => {
-            return response.data
-        })
-    },
     startDebugDocker: async ({ commit }, data) => {
-        return request.post('dispatch-docker/api/user/dockerhost/startDebug/', data).then(response => {
+        return request.post('dispatch-docker/api/user/docker/debug/start/', data).then(response => {
             return response.data
         })
     },
-    stopDebugDocker: async ({ commit }, { projectId, pipelineId, vmSeqId }) => {
-        return request.post(`dispatch-docker/api/user/dockerhost/stopDebug/${projectId}/${pipelineId}/${vmSeqId}`).then(response => {
+    stopDebugDocker: async ({ commit }, { projectId, pipelineId, vmSeqId, dispatchType }) => {
+        return request.post(`dispatch-docker/api/user/docker/debug/stop/projects/${projectId}/pipelines/${pipelineId}/vmseqs/${vmSeqId}?dispatchType=${dispatchType}`).then(response => {
             return response.data
-        })
-    },
-    getContainerInfoByBuildId: ({ commit }, { projectId, pipelineId, buildId, vmSeqId }) => {
-        return request.get(`dispatch-docker/api/user/dockerhost/getContainerInfo/${projectId}/${pipelineId}/${buildId}/${vmSeqId}`).then(response => {
-            return response.data
-        })
-    },
-    getContainerInfo: ({ commit }, { projectId, pipelineId, vmSeqId }) => {
-        return request.get(`dispatch-docker/api/user/dockerhost/getDebugStatus/${projectId}/${pipelineId}/${vmSeqId}`).then(response => {
-            return response.data
-        })
-    },
-    getDockerExecId: async ({ commit }, { containerId, projectId, pipelineId, cmd, targetIp }) => {
-        return request.post(`${PROXY_URL_PREFIX}/docker-console-create?pipelineId=${pipelineId}&projectId=${projectId}&targetIp=${targetIp}`, { container_id: containerId, cmd }).then(response => {
-            return response && response.Id
         })
     },
     resizeTerm: async ({ commit }, { resizeUrl, params }) => {
-        return request.post(`${PROXY_URL_PREFIX}/${resizeUrl}`, params).then(response => {
+        return request.post(`dispatch-docker/api/user/${resizeUrl}`, params).then(response => {
             return response && response.Id
         })
     },

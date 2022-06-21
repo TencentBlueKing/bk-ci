@@ -1,25 +1,41 @@
 package com.tencent.devops.stream.trigger.actions.streamActions
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
+import com.tencent.devops.stream.trigger.exception.CommitCheck
+import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
+import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
+import com.tencent.devops.stream.util.CommonCredentialUtils
+import com.tencent.devops.ticket.pojo.enums.CredentialType
+import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
 class StreamRepoTriggerAction(
     // 可能会包含stream action事件类似删除
-    private val baseAction: BaseAction
+    private val baseAction: BaseAction,
+    private val client: Client
 ) : BaseAction {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(StreamRepoTriggerAction::class.java)
+    }
+
     override val metaData: ActionMetaData = baseAction.metaData
     override var data: ActionData = baseAction.data
     override val api: StreamGitApiService = baseAction.api
@@ -69,7 +85,10 @@ class StreamRepoTriggerAction(
         return baseAction.getChangeSet()
     }
 
-    override fun isMatch(triggerOn: TriggerOn) = baseAction.isMatch(triggerOn)
+    override fun isMatch(triggerOn: TriggerOn): TriggerResult {
+        triggerCheckRepoTriggerCredentials(triggerOn)
+        return baseAction.isMatch(triggerOn)
+    }
 
     override fun getUserVariables(yamlVariables: Map<String, Variable>?): Map<String, Variable>? = null
 
@@ -91,10 +110,127 @@ class StreamRepoTriggerAction(
     }
 
     override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) {
-        baseAction.registerCheckRepoTriggerCredentials(repoHook)
+        val (_, userName) = checkRepoTriggerCredentials(
+            repoHook = repoHook
+        )
+        // 表示路径至少为2级，不支持只填一级路径进行模糊匹配
+        if (repoHook.name!!.contains("/") && !repoHook.name!!.startsWith("/")) {
+            checkHaveGroupName(repoHook.name!!, userName)
+        }
     }
 
     override fun updateLastBranch(pipelineId: String, branch: String) {
         baseAction.updateLastBranch(pipelineId, branch)
+    }
+
+    private fun checkHaveGroupName(
+        name: String,
+        userName: String?
+    ) {
+        val firstGroupName = name.split("/").firstOrNull()
+        baseAction.api.getProjectList(
+            cred = TGitCred(userId = userName),
+            search = firstGroupName,
+            minAccessLevel = GitAccessLevelEnum.MASTER
+        )?.ifEmpty { null } ?: throw StreamTriggerException(
+            action = this,
+            triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
+            reasonParams = listOf("First level group[$firstGroupName] does not exist"),
+            commitCheck = CommitCheck(
+                block = false,
+                state = StreamCommitCheckState.FAILURE
+            )
+        )
+    }
+
+    /**
+     * 判断是否可以注册跨项目构建事件
+     * @return 用户名称
+     */
+    private fun triggerCheckRepoTriggerCredentials(triggerOn: TriggerOn): String? {
+        if (triggerOn.repoHook == null) {
+            return null
+        }
+        val (repoTriggerCredentialsCheck, repoTriggerUserId) = checkRepoTriggerCredentials(triggerOn.repoHook!!)
+        if (!repoTriggerCredentialsCheck) {
+            throw StreamTriggerException(
+                action = this,
+                triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
+                reasonParams = listOf(
+                    "Permissions denied, master and above permissions are required. " +
+                        "Repo: (${triggerOn.repoHook?.name})"
+                ),
+                commitCheck = CommitCheck(
+                    block = false,
+                    state = StreamCommitCheckState.FAILURE
+                )
+            )
+        }
+        // 增加远程仓库时所使用权限的userId
+        this.data.context.repoTrigger?.buildUserID = repoTriggerUserId
+        logger.info("after check repoTrigger credentials |repoTrigger=${this.data.context.repoTrigger}")
+        return repoTriggerUserId
+    }
+
+    private fun checkRepoTriggerCredentials(repoHook: RepositoryHook): Pair<Boolean, String?> {
+        val token = when {
+            repoHook.credentialsForTicketId != null ->
+                try {
+                    CommonCredentialUtils.getCredential(
+                        client = client,
+                        projectId = "git_${this.data.getGitProjectId()}",
+                        credentialId = repoHook.credentialsForTicketId!!,
+                        type = CredentialType.ACCESSTOKEN
+                    )["v1"] ?: return Pair(false, null)
+                } catch (e: Throwable) {
+                    throw StreamTriggerException(
+                        action = this,
+                        triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
+                        reasonParams = listOf("Credential [${repoHook.credentialsForTicketId}] does not exist"),
+                        commitCheck = CommitCheck(
+                            block = false,
+                            state = StreamCommitCheckState.FAILURE
+                        )
+                    )
+                }
+            repoHook.credentialsForToken != null -> repoHook.credentialsForToken!!
+            else -> throw StreamTriggerException(
+                action = this,
+                triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
+                reasonParams = listOf("credentials cannot be null"),
+                commitCheck = CommitCheck(
+                    block = false,
+                    state = StreamCommitCheckState.FAILURE
+                )
+            )
+        }
+
+        this.data.context.repoTrigger?.repoTriggerCred = TGitCred(
+            userId = null,
+            accessToken = token,
+            useAccessToken = false
+        )
+        // stream 侧需要的是user 数字id 而不是 rtx
+        val userInfo = try {
+            this.api.getUserInfoByToken(
+                this.data.context.repoTrigger?.repoTriggerCred as TGitCred
+            ) ?: return Pair(false, null)
+        } catch (e: Throwable) {
+            throw StreamTriggerException(
+                action = this,
+                triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
+                reasonParams = listOf("401 Unauthorized. Repo:(${repoHook.name})"),
+                commitCheck = CommitCheck(
+                    block = false,
+                    state = StreamCommitCheckState.FAILURE
+                )
+            )
+        }
+        val check = this.api.getProjectUserInfo(
+            cred = this.data.context.repoTrigger?.repoTriggerCred as TGitCred,
+            userId = userInfo.id,
+            gitProjectId = this.data.eventCommon.gitProjectId
+        ).accessLevel >= 40
+        return Pair(check, userInfo.username)
     }
 }

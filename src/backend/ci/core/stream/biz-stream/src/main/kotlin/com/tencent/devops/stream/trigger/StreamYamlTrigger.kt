@@ -101,7 +101,11 @@ class StreamYamlTrigger @Autowired constructor(
                 creator = action.data.getUserId(),
                 lastUpdateBranch = action.data.eventCommon.branch
             )
-            streamYamlBaseBuild.createNewPipeLine(pipeline = pipeline, projectCode = action.getProjectCode())
+            streamYamlBaseBuild.createNewPipeLine(
+                pipeline = pipeline,
+                projectCode = action.getProjectCode(),
+                action = action
+            )
             // 新建流水线放
             action.data.context.pipeline = pipeline
         } else if (needUpdateLastBuildBranch(action)) {
@@ -210,7 +214,8 @@ class StreamYamlTrigger @Autowired constructor(
     private fun needUpdateLastBuildBranch(action: BaseAction): Boolean {
         return action.data.context.pipeline!!.pipelineId.isBlank() ||
             (
-                !action.getChangeSet().isNullOrEmpty() &&
+                action is GitBaseAction &&
+                        !action.getChangeSet().isNullOrEmpty() &&
                     action.getChangeSet()!!.toSet()
                         .contains(action.data.context.pipeline!!.filePath)
                 )

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
+import com.tencent.devops.stream.pojo.openapi.StreamYamlCheck
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -65,4 +66,15 @@ interface ServiceStreamTriggerResource {
         @ApiParam("TriggerBuild请求", required = true)
         streamTriggerBuildReq: StreamTriggerBuildReq
     ): Result<TriggerBuildResult>
+
+    @ApiOperation("yaml schema check", tags = ["v4_stream_app_check_yaml", "v4_stream_user_check_yaml"])
+    @POST
+    @Path("/check_yaml")
+    fun checkYaml(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "yaml 文件体", required = true)
+        yamlCheck: StreamYamlCheck
+    ): Result<String>
 }

@@ -71,6 +71,7 @@ class StreamPipelineService @Autowired constructor(
     private val websocketService: StreamWebsocketService,
     private val streamGitTransferService: StreamGitTransferService,
     private val streamBasicSettingService: StreamBasicSettingService,
+    private val streamPipelineBranchService: StreamPipelineBranchService,
     private val gitConfig: StreamGitConfig
 ) {
     companion object {
@@ -274,7 +275,8 @@ class StreamPipelineService @Autowired constructor(
         gitProjectId: Long,
         projectCode: String,
         modelAndSetting: PipelineModelAndSetting,
-        updateLastModifyUser: Boolean
+        updateLastModifyUser: Boolean,
+        branch: String
     ) {
         val processClient = client.get(ServicePipelineResource::class)
         if (pipeline.pipelineId.isBlank()) {
@@ -287,6 +289,11 @@ class StreamPipelineService @Autowired constructor(
                 pipeline = modelAndSetting.model,
                 channelCode = channelCode
             ).data!!.id
+            streamPipelineBranchService.saveOrUpdate(
+                gitProjectId = gitProjectId,
+                pipelineId = pipeline.pipelineId,
+                branch = branch
+            )
             gitPipelineResourceDao.createPipeline(
                 dslContext = dslContext,
                 gitProjectId = gitProjectId,
@@ -323,7 +330,7 @@ class StreamPipelineService @Autowired constructor(
         )
     }
 
-    fun createNewPipeLine(gitProjectId: String, file: StreamCreateFileInfo, userId: String) {
+    fun createNewPipeLine(gitProjectId: String, file: StreamCreateFileInfo, userId: String, branch: String) {
         val pipeline = StreamTriggerPipeline(
             gitProjectId = gitProjectId,
             pipelineId = "",
@@ -354,7 +361,8 @@ class StreamPipelineService @Autowired constructor(
                     gitProjectId = gitProjectId.toLong(),
                     projectCode = gitProjectCode,
                     modelAndSetting = createTriggerModel(gitProjectCode),
-                    updateLastModifyUser = true
+                    updateLastModifyUser = true,
+                    branch = branch
                 )
             }
         }

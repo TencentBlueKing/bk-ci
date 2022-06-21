@@ -9,7 +9,7 @@
                 <p class="debug-tips" v-show="isRunning">{{ $t('editPage.docker.fromRunningTips') }}</p>
             </div>
             <div class="container">
-                <my-terminal v-if="!isLoading" :url="url" :resize-url="resizeUrl" :exec-id="execId"></my-terminal>
+                <my-terminal v-if="!isLoading" :url="url" :resize-url="resizeUrl" :exec-id="execId" :console-type="realDispatchType"></my-terminal>
             </div>
             <div class="footer"></div>
         </section>
@@ -46,18 +46,16 @@
                     title: this.$t('editPage.docker.failTitle'),
                     desc: this.$t('editPage.docker.failDesc')
                 },
-                containerName: ''
+                containerName: '',
+                realDispatchType: ''
             }
         },
         computed: {
             isLoading () {
-                return !this.url
+                return !this.url || this.isExiting
             },
             loadingTitle () {
-                return !this.isExiting ? this.$t('editPage.docker.loadingTitle') : 'exiting'
-            },
-            consoleType () {
-                return this.$route.query.type || 'DOCKER'
+                return !this.isExiting ? this.$t('editPage.docker.loadingTitle') : this.$t('editPage.docker.exiting')
             },
             projectId () {
                 return this.$route.params.projectId
@@ -68,27 +66,15 @@
             buildId () {
                 return this.$route.query.buildId
             },
-            targetIp () {
-                return this.$route.query.targetIp
-            },
             vmSeqId () {
                 return this.$route.query.vmSeqId
             },
-            containerId () {
-                return this.$route.query.containerId
+            dispatchType () {
+                return this.$route.query.dispatchType
             }
         },
         async created () {
-            if (this.consoleType === 'DOCKER') {
-                if (this.targetIp && this.pipelineId && this.containerId) {
-                    this.isRunning = true
-                    this.getLinkDetail(this.containerId, this.targetIp)
-                } else {
-                    await this.getContainerInfo()
-                }
-            } else if (this.consoleType === 'DEVCLOUD') {
-                await this.linkDevCloud()
-            }
+            this.linkConsole()
         },
         mounted () {
             this.addLeaveListenr()
@@ -97,47 +83,26 @@
             this.removeLeaveListenr()
         },
         methods: {
-            async linkDevCloud () {
+            async linkConsole () {
                 try {
-                    const res = await this.$store.dispatch('common/startDebugDevcloud', {
-                        pipelineId: this.pipelineId,
-                        vmSeqId: this.vmSeqId,
-                        buildId: this.buildId
+                    const { projectId, pipelineId, buildId, vmSeqId, dispatchType } = this
+                    const res = await this.$store.dispatch('common/startDebugDocker', {
+                        projectId,
+                        pipelineId,
+                        buildId,
+                        vmSeqId,
+                        dispatchType
                     })
-                    this.url = res.websocketUrl
-                    this.containerName = res.containerName
+                    let { websocketUrl } = res
+                    this.realDispatchType = res.dispatchType || this.dispatchType
+                    if (this.realDispatchType === 'PUBLIC_BCS') {
+                        websocketUrl = websocketUrl + '?hide_banner=true'
+                    }
+                    this.url = websocketUrl
                 } catch (err) {
                     console.log(err)
                     this.connectError = true
                     this.config.desc = err.message || this.$t('editPage.docker.failDesc')
-                }
-            },
-            async getContainerInfo () {
-                clearTimeout(this.timer)
-                try {
-                    const res = await this.$store.dispatch('common/getContainerInfo', {
-                        projectId: this.projectId,
-                        pipelineId: this.pipelineId,
-                        vmSeqId: this.vmSeqId
-                    })
-                    if (res && res.status === 2 && res.containerId && res.address) {
-                        this.getLinkDetail(res.containerId, res.address)
-                    } else {
-                        this.timer = setTimeout(async () => {
-                            await this.getContainerInfo()
-                        }, 5000)
-                    }
-                } catch (err) {
-                    console.log(err)
-                    if (err && err.code === 1) {
-                        this.connectError = true
-                        this.config.desc = err.message || this.$t('editPage.docker.failDesc')
-                    } else {
-                        this.$showTips({
-                            theme: 'error',
-                            message: err.message || err
-                        })
-                    }
                 }
             },
             async stopDebug () {
@@ -146,22 +111,9 @@
                 navConfirm({ title: this.$t('editPage.docker.confirmStop'), content })
                     .then(async () => {
                         try {
-                            if (this.consoleType === 'DOCKER') {
-                                await this.$store.dispatch('common/stopDebugDocker', {
-                                    projectId: this.projectId,
-                                    pipelineId: this.pipelineId,
-                                    vmSeqId: this.vmSeqId
-                                })
-                            } else if (this.consoleType === 'DEVCLOUD') {
-                                this.isExiting = true
-                                this.url = ''
-                                this.$store.dispatch('common/stopDebugDevcloud', {
-                                    projectId: this.projectId,
-                                    pipelineId: this.pipelineId,
-                                    vmSeqId: this.vmSeqId,
-                                    containerName: this.containerName
-                                })
-                            }
+                            this.isExiting = true
+                            const { projectId, pipelineId, vmSeqId, realDispatchType } = this
+                            await this.$store.dispatch('common/stopDebugDocker', { projectId, pipelineId, vmSeqId, dispatchType: realDispatchType })
                             this.$router.push({
                                 name: 'pipelinesEdit',
                                 params: {
@@ -176,29 +128,6 @@
                             })
                         }
                     }).catch(() => {})
-            },
-            async getLinkDetail (containerId, targetIp) {
-                try {
-                    if (!containerId || !targetIp) {
-                        throw Error(this.$t('editPage.docker.abnormalParams'))
-                    }
-                    const execId = await this.$store.dispatch('common/getDockerExecId', {
-                        targetIp,
-                        containerId,
-                        projectId: this.projectId,
-                        pipelineId: this.pipelineId,
-                        cmd: ['/bin/bash']
-                    })
-                    this.execId = execId
-                    this.resizeUrl = `docker-console-resize?pipelineId=${this.pipelineId}&projectId=${this.projectId}&targetIp=${targetIp}`
-                    const protocol = document.location.protocol === 'https:' ? 'wss:' : 'ws:'
-                    this.url = `${protocol}${PROXY_URL_PREFIX}/docker-console-new?eventId=${execId}&pipelineId=${this.pipelineId}&projectId=${this.projectId}&targetIP=${targetIp}&containerId=${containerId}`
-                } catch (err) {
-                    this.$showTips({
-                        message: err.message,
-                        theme: 'error'
-                    })
-                }
             },
             addLeaveListenr () {
                 window.addEventListener('beforeunload', this.leaveSure)

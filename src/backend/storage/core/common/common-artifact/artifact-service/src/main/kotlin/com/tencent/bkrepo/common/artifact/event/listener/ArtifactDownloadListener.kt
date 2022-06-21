@@ -42,6 +42,14 @@ class ArtifactDownloadListener(
 
     @EventListener(ArtifactDownloadedEvent::class)
     fun listen(event: ArtifactDownloadedEvent) {
+        if (event.context.artifacts.isNullOrEmpty()) {
+            recordSingleNodeDownload(event)
+        } else {
+            recordMultiNodeDownload(event)
+        }
+    }
+
+    private fun recordSingleNodeDownload(event: ArtifactDownloadedEvent) {
         val projectId = event.context.projectId
         val repoName = event.context.repoName
         val fullPath = event.context.artifactInfo.getArtifactFullPath()
@@ -65,6 +73,20 @@ class ArtifactDownloadListener(
             val downloadedEvent = buildDownloadEvent(node, userId)
             operateLogService.saveEventAsync(downloadedEvent, HttpContextHolder.getClientAddress())
         }
+    }
+
+    private fun recordMultiNodeDownload(event: ArtifactDownloadedEvent) {
+        val userId = event.context.userId
+        val eventList = event.context.artifacts!!.map {
+            NodeDownloadedEvent(
+                projectId = it.projectId,
+                repoName = it.repoName,
+                resourceKey = it.getArtifactFullPath(),
+                userId = userId,
+                data = emptyMap()
+            )
+        }
+        operateLogService.saveEventsAsync(eventList, HttpContextHolder.getClientAddress())
     }
 
     private fun buildDownloadEvent(

@@ -37,8 +37,10 @@ data class UpdateWebHookRequest(
     val id: String,
     @ApiModelProperty("回调地址")
     val url: String? = null,
-    @ApiModelProperty("请求令牌")
-    val token: String? = null,
+    @ApiModelProperty("请求头")
+    val headers: Map<String, String>? = null,
     @ApiModelProperty("触发事件")
-    val triggers: List<EventType>? = null
+    val triggers: List<EventType>? = null,
+    @ApiModelProperty("事件资源key正则模型")
+    val resourceKeyPattern: String? = null
 )

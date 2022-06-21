@@ -28,10 +28,6 @@
 dependencies {
     api(project(":common:common-artifact:artifact-api"))
     api(project(":repository:api-repository"))
+    api("com.tencent.devops:devops-pulsar")
     api("commons-io:commons-io")
-    api("org.springframework.cloud:spring-cloud-stream")
-    api("org.springframework.boot:spring-boot-actuator")
-    api("org.springframework.boot:spring-boot-actuator-autoconfigure")
-    api("org.apache.pulsar:pulsar-client:2.9.1")
-    api("com.google.protobuf:protobuf-java:3.19.4")
 }

@@ -33,5 +33,7 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConstructorBinding
 @ConfigurationProperties(prefix = "spring.datasource")
 data class DataSourceProperties(
-    val dataSourceConfigs: List<DataSourceConfig>
+    val dataSourceConfigs: List<DataSourceConfig>, // 数据源配置
+    val tableRuleConfigs: List<TableRuleConfig>, // 数据库表规则配置
+    val bindingTableGroupConfigs: List<BindingTableGroupConfig>? = null // 绑定表规则配置
 )

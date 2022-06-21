@@ -34,7 +34,7 @@ package com.tencent.bkrepo.rpm.artifact
 import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
 import com.tencent.bkrepo.common.artifact.util.PackageKeys
 import com.tencent.bkrepo.common.service.util.HttpContextHolder
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 
 class RpmArtifactInfo(
     projectId: String,
