@@ -36,7 +36,6 @@ import com.tencent.devops.metrics.service.SyncPipelineRelateLabelDataService
 import com.tencent.devops.model.metrics.tables.records.TProjectPipelineLabelInfoRecord
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime

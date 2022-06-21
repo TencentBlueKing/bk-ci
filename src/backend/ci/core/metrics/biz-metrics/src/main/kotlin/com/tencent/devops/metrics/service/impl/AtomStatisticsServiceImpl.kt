@@ -167,7 +167,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             }
         }
         //  对查询区间中没有数据的时间添加占位数据
-        atomBaseTrendInfoMap.keys.forEach{ atomCode ->
+        atomBaseTrendInfoMap.keys.forEach { atomCode ->
             val atomBaseTrendInfos = atomBaseTrendInfoMap[atomCode]
             val atomTrendInfos = mutableListOf<AtomBaseTrendInfoDO>()
             (betweenDate).forEach { date ->
