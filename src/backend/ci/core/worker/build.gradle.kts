@@ -76,4 +76,9 @@ subprojects {
         it.exclude(group = "org.springframework.security", module = "*")
         it.exclude("org.springframework.boot", "spring-boot-starter-log4j2")
     }
+
+    dependencies {
+        testImplementation("org.junit.jupiter:junit-jupiter-api")
+        testImplementation("org.junit.jupiter:junit-jupiter-engine")
+    }
 }

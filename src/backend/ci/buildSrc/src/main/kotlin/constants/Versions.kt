@@ -13,6 +13,7 @@ object Versions {
     const val Jasypt = "3.0.3"
     const val Swagger = "1.6.2"
     const val Mockito = "1.10.19"
+    const val orgJson = "20210307"
     const val JsonLib = "2.4"
     const val CronUtils = "9.1.6"
     const val Thumbnailator = "0.4.8"

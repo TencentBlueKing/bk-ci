@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.api.util
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.io.File
 
 class FileUtilTest {

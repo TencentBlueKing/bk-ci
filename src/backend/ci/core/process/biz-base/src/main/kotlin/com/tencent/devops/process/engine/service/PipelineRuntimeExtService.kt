@@ -111,34 +111,24 @@ class PipelineRuntimeExtService @Autowired constructor(
         concurrencyGroup: String,
         buildStatus: BuildStatus = BuildStatus.QUEUE_CACHE
     ): BuildInfo? {
-        val redisLock = RedisLock(
-            redisOperation = redisOperation,
-            lockKey = "$nextBuildKey:$concurrencyGroup",
-            expiredTimeInSeconds = expiredTimeInSeconds
-        )
-        try {
-            redisLock.lock()
-            val buildInfo = pipelineBuildDao.convert(
-                pipelineBuildDao.getOneConcurrencyQueueBuild(
-                    dslContext,
-                    projectId = projectId,
-                    concurrencyGroup = concurrencyGroup
-                )
+        val buildInfo = pipelineBuildDao.convert(
+            pipelineBuildDao.getOneConcurrencyQueueBuild(
+                dslContext,
+                projectId = projectId,
+                concurrencyGroup = concurrencyGroup
             )
-            if (buildInfo != null) {
-                pipelineBuildDao.updateStatus(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    buildId = buildInfo.buildId,
-                    oldBuildStatus = buildInfo.status,
-                    newBuildStatus = buildStatus
-                )
-                return buildInfo
-            }
-            return null
-        } finally {
-            redisLock.unlock()
+        )
+        if (buildInfo != null) {
+            pipelineBuildDao.updateStatus(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildInfo.buildId,
+                oldBuildStatus = buildInfo.status,
+                newBuildStatus = buildStatus
+            )
+            return buildInfo
         }
+        return null
     }
 
     fun existQueue(projectId: String, pipelineId: String, buildId: String, buildStatus: BuildStatus): Boolean {

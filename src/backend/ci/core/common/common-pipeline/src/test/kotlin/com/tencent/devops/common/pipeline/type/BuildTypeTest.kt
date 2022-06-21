@@ -29,8 +29,8 @@ package com.tencent.devops.common.pipeline.type
 
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.EnumUtil
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class BuildTypeTest {
 
@@ -45,10 +45,10 @@ class BuildTypeTest {
             println("${it.name} ${it.value} ${it.osList}")
         }
 
-        Assert.assertNotNull(BuildType.valueOf("DIY_WINDOWS"))
+        Assertions.assertNotNull(BuildType.valueOf("DIY_WINDOWS"))
         val newBuildType = BuildType.valueOf("DIY_WINDOWS")
 
-        Assert.assertArrayEquals(
+        Assertions.assertArrayEquals(
             additionalValues, arrayOf(
                 newBuildType.value,
                 newBuildType.osList,
@@ -73,24 +73,24 @@ class BuildTypeTest {
         BuildType.values().forEach {
             println("${it.name} ${it.value} ${it.osList}")
             if (it.name === "DOCKER") {
-                Assert.assertEquals("蓝盾公共构建资源666", it.value)
-                Assert.assertEquals(1, it.osList.size)
-                Assert.assertEquals(OS.MACOS, it.osList[0])
+                Assertions.assertEquals("蓝盾公共构建资源666", it.value)
+                Assertions.assertEquals(1, it.osList.size)
+                Assertions.assertEquals(OS.MACOS, it.osList[0])
             }
         }
 
         // 支持 valueOf 动态实例化
         val newDOCKER = BuildType.valueOf(BuildType.DOCKER.name)
-        Assert.assertNotEquals(BuildType.DOCKER/*编译时期确定了，与后来修改的不是同一个实例，不相等*/, newDOCKER)
+        Assertions.assertNotEquals(BuildType.DOCKER/*编译时期确定了，与后来修改的不是同一个实例，不相等*/, newDOCKER)
         val whenCaseEquals = when (newDOCKER) {
             BuildType.DOCKER -> {
                 true
             }
             else -> false
         }
-        Assert.assertTrue(whenCaseEquals)
-        Assert.assertEquals("蓝盾公共构建资源666", newDOCKER.value)
-        Assert.assertArrayEquals(
+        Assertions.assertTrue(whenCaseEquals)
+        Assertions.assertEquals("蓝盾公共构建资源666", newDOCKER.value)
+        Assertions.assertArrayEquals(
             additionalValues,
             arrayOf(
                 newDOCKER.value,
@@ -102,7 +102,7 @@ class BuildTypeTest {
         )
 
         // 不支持这种，因为前者在编译时已经被编译成常量
-        Assert.assertNotEquals(BuildType.DOCKER.value, newDOCKER.value)
-        Assert.assertNotEquals(BuildType.DOCKER.osList[0], newDOCKER.osList[0])
+        Assertions.assertNotEquals(BuildType.DOCKER.value, newDOCKER.value)
+        Assertions.assertNotEquals(BuildType.DOCKER.osList[0], newDOCKER.osList[0])
     }
 }
