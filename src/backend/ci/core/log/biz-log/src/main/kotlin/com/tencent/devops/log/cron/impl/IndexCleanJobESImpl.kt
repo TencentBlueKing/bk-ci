@@ -27,7 +27,6 @@
 
 package com.tencent.devops.log.cron.impl
 
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.LogClient
@@ -83,17 +82,6 @@ class IndexCleanJobESImpl @Autowired constructor(
         }
     }
 
-    override fun updateExpireIndexDay(expired: Int) {
-        logger.warn("Update the expire index day from $expired to ${this.coldIndexInDay}")
-        if (expired <= 10) {
-            logger.warn("The expired is illegal")
-            throw OperationException("Expired is illegal")
-        }
-        this.coldIndexInDay = expired
-    }
-
-    override fun getExpireIndexDay() = coldIndexInDay
-
     private fun makeColdESIndexes() {
         client.getActiveClients().forEach { c ->
             val response = c.restClient
@@ -117,13 +105,13 @@ class IndexCleanJobESImpl @Autowired constructor(
     }
 
     private fun makeColdESIndex(c: RestHighLevelClient, index: String) {
-        logger.info("[$index] Start to close ES index")
         val request = UpdateSettingsRequest(index).settings(
             Settings.builder()
                 .put(makeIndexColdKey, makeIndexColdValue)
         )
+        logger.info("[$index][$makeIndexColdKey][$makeIndexColdValue] Make cold request: $request")
         val resp = c.indices().putSettings(request, RequestOptions.DEFAULT)
-        logger.info("Get the close es response - ${resp.isAcknowledged}")
+        logger.info("Get the config es response - ${resp.isAcknowledged}")
     }
 
     private fun deleteESIndexes() {

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.log.cron.impl
 
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.cron.IndexCleanJob
 import com.tencent.devops.log.lucene.LuceneClient
@@ -61,17 +60,6 @@ class IndexCleanJobLuceneImpl @Autowired constructor(
             logger.warn("Fail to clean the index", ignore)
         }
     }
-
-    override fun updateExpireIndexDay(expired: Int) {
-        logger.warn("Update the expire index day from $expired to ${this.deleteIndexInDay}")
-        if (expired <= 10) {
-            logger.warn("The expired is illegal")
-            throw OperationException("Expired is illegal")
-        }
-        this.deleteIndexInDay = expired
-    }
-
-    override fun getExpireIndexDay() = deleteIndexInDay
 
     private fun deleteLuceneIndexes() {
         val indexes = luceneClient.listIndices()
