@@ -32,36 +32,36 @@ package com.tencent.devops.common.pipeline.enums
  * [visible] 是否对用户可见
  */
 @Suppress("TooManyFunctions")
-enum class BuildStatus(val statusName: String, val visible: Boolean,val statusOrdinal: Int) {
+enum class BuildStatus(val statusName: String, val visible: Boolean) {
 
-    SUCCEED("成功", true,0), // 0 成功（最终态）
-    FAILED("失败", true,1), // 1 失败（最终态）
-    CANCELED("取消", true,2), // 2 取消（最终态）
-    RUNNING("运行中", true,3), // 3 运行中（中间状态）
-    TERMINATE("终止", true,4), // 4 终止（Task最终态）待作废
-    REVIEWING("审核中", true,5), // 5 审核中（Task中间状态）
-    REVIEW_ABORT("审核驳回", true,6), // 6 审核驳回（Task最终态）
-    REVIEW_PROCESSED("审核通过", true,7), // 7 审核通过（Task最终态）
-    HEARTBEAT_TIMEOUT("心跳超时", true,8), // 8 心跳超时（最终态）
-    PREPARE_ENV("准备环境中", true,9), // 9 准备环境中（中间状态）
-    UNEXEC("从未执行", false,10), // 10 从未执行（最终态）
-    SKIP("跳过", true,11), // 11 跳过（最终态）
-    QUALITY_CHECK_FAIL("质量红线检查失败", true,12), // 12 质量红线检查失败（最终态）
-    QUEUE("排队", true,13), // 13 排队（初始状态）
-    LOOP_WAITING("轮循等待", true,14), // 14 轮循等待中 互斥组抢锁轮循 （中间状态）
-    CALL_WAITING("等待回调", true,15), // 15 等待回调 用于启动构建环境插件等待构建机回调启动结果（中间状态）
-    TRY_FINALLY("补偿任务", false,16), // 16 不可见的后台状态（未使用）
-    QUEUE_TIMEOUT("排队超时", true,17), // 17 排队超时（最终态）
-    EXEC_TIMEOUT("执行超时", true,18), // 18 执行超时（最终态）
-    QUEUE_CACHE("队列待处理", true,19), // 19 队列待处理，瞬态。只在启动和取消过程中存在（中间状态）
-    RETRY("重试", true,20), // 20 重试（中间状态）
-    PAUSE("暂停执行", true,21), // 21 暂停执行，等待事件 （Stage/Job/Task中间态）
-    STAGE_SUCCESS("阶段性完成", true,22), // 22 当Stage人工审核取消运行时，成功（Stage/Pipeline最终态）
-    QUOTA_FAILED("配额不够失败", true,23), // 23 失败 (未使用）
-    DEPENDENT_WAITING("依赖等待", true,24), // 24 依赖等待 等待依赖的job完成才会进入准备环境（Job中间态）
-    QUALITY_CHECK_PASS("质量红线检查通过", true,25), // 25 质量红线检查通过
-    QUALITY_CHECK_WAIT("质量红线等待把关", true,26), // 26 质量红线等待把关
-    UNKNOWN("未知状态", false,99); // 99
+    SUCCEED("成功", true), // 0 成功（最终态）
+    FAILED("失败", true), // 1 失败（最终态）
+    CANCELED("取消", true), // 2 取消（最终态）
+    RUNNING("运行中", true), // 3 运行中（中间状态）
+    TERMINATE("终止", true), // 4 终止（Task最终态）待作废
+    REVIEWING("审核中", true), // 5 审核中（Task中间状态）
+    REVIEW_ABORT("审核驳回", true), // 6 审核驳回（Task最终态）
+    REVIEW_PROCESSED("审核通过", true), // 7 审核通过（Task最终态）
+    HEARTBEAT_TIMEOUT("心跳超时", true), // 8 心跳超时（最终态）
+    PREPARE_ENV("准备环境中", true), // 9 准备环境中（中间状态）
+    UNEXEC("从未执行", false), // 10 从未执行（最终态）
+    SKIP("跳过", true), // 11 跳过（最终态）
+    QUALITY_CHECK_FAIL("质量红线检查失败", true), // 12 质量红线检查失败（最终态）
+    QUEUE("排队", true), // 13 排队（初始状态）
+    LOOP_WAITING("轮循等待", true), // 14 轮循等待中 互斥组抢锁轮循 （中间状态）
+    CALL_WAITING("等待回调", true), // 15 等待回调 用于启动构建环境插件等待构建机回调启动结果（中间状态）
+    TRY_FINALLY("补偿任务", false), // 16 不可见的后台状态（未使用）
+    QUEUE_TIMEOUT("排队超时", true), // 17 排队超时（最终态）
+    EXEC_TIMEOUT("执行超时", true), // 18 执行超时（最终态）
+    QUEUE_CACHE("队列待处理", true), // 19 队列待处理，瞬态。只在启动和取消过程中存在（中间状态）
+    RETRY("重试", true), // 20 重试（中间状态）
+    PAUSE("暂停执行", true), // 21 暂停执行，等待事件 （Stage/Job/Task中间态）
+    STAGE_SUCCESS("阶段性完成", true), // 22 当Stage人工审核取消运行时，成功（Stage/Pipeline最终态）
+    QUOTA_FAILED("配额不够失败", true), // 23 失败 (未使用）
+    DEPENDENT_WAITING("依赖等待", true), // 24 依赖等待 等待依赖的job完成才会进入准备环境（Job中间态）
+    QUALITY_CHECK_PASS("质量红线检查通过", true), // 25 质量红线检查通过
+    QUALITY_CHECK_WAIT("质量红线等待把关", true), // 26 质量红线等待把关
+    UNKNOWN("未知状态", false); // 99
 
     fun isNeverRun(): Boolean = this == UNEXEC
 
