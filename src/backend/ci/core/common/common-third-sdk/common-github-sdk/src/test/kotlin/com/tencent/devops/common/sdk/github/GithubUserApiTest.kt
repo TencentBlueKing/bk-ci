@@ -34,7 +34,9 @@ class GithubUserApiTest {
 
     private val client = DefaultGithubClient(
         serverUrl = "https://github.com/",
-        apiUrl = "https://api.github.com/"
+        apiUrl = "https://api.github.com/",
+        clientId = "",
+        clientSecret = ""
     )
 
     private val token = "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"
