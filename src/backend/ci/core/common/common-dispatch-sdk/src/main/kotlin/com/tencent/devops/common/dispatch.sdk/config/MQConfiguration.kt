@@ -58,10 +58,10 @@ import org.springframework.core.Ordered
 class MQConfiguration @Autowired constructor() {
 
     @Value("\${dispatch.demoteQueue.concurrency:10}")
-    private val demoteQueueConcurrency: Int = 10
+    private val demoteQueueConcurrency: Int = 2
 
     @Value("\${dispatch.demoteQueue.maxConcurrency:10}")
-    private val demoteQueueMaxConcurrency: Int = 10
+    private val demoteQueueMaxConcurrency: Int = 2
 
     @Value("\${dispatch.agentStartQueue.concurrency:60}")
     private val agentStartQueueConcurrency: Int = 60
