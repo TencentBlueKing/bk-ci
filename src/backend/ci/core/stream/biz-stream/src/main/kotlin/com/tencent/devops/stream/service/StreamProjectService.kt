@@ -153,7 +153,7 @@ class StreamProjectService @Autowired constructor(
         sort: StreamSortAscOrDesc?
     ): List<StreamProjectGitInfo>? {
         return try {
-            if (!redisOperation.hasKey(getProjectListKey(userId))){
+            if (!redisOperation.hasKey(getProjectListKey(userId))) {
                 cacheProjectList(userId)
             }
             streamGitTransferService.getProjectList(
