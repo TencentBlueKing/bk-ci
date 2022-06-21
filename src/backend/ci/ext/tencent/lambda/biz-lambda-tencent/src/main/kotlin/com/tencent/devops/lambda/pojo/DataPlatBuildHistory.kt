@@ -62,6 +62,8 @@ data class DataPlatBuildHistory(
     val endTime: String?,
     @ApiModelProperty("状态", required = true)
     val status: String,
+    @ApiModelProperty("状态枚举值", required = true)
+    val statusOrdinal: Int,
     @ApiModelProperty("各阶段状态", required = true)
     val stageStatus: String?,
     @ApiModelProperty("结束原因", required = true)

@@ -593,6 +593,7 @@ class LambdaDataService @Autowired constructor(
                 startTime = startTime?.format(dateTimeFormatter) ?: "",
                 endTime = endTime?.format(dateTimeFormatter) ?: "",
                 status = buildStatus[status].name,
+                statusOrdinal = buildStatus[status].ordinal,
                 stageStatus = stageStatus,
                 deleteReason = "",
                 currentTimestamp = currentTimestamp,
