@@ -30,7 +30,9 @@ package com.tencent.devops.repository.api.github
 import com.tencent.devops.common.sdk.github.pojo.Organization
 import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
 import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
 import javax.ws.rs.Consumes
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
@@ -40,6 +42,10 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGithubOrganizationResource {
+
+    @ApiOperation("列出某个用户的仓库列表")
+    @POST
+    @Path("/listOrganizations")
     fun listOrganizations(
         request: ListOrganizationsRequest,
         userId: String
