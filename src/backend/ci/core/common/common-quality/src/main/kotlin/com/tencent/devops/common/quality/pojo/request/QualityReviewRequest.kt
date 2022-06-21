@@ -25,19 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.constant
+package com.tencent.devops.common.quality.pojo.request
 
-object MQ {
-
-    // 流水线结束广播队列-红线
-    const val QUEUE_PIPELINE_BUILD_CANCEL_QUALITY = "q.engine.pipeline.build.cancel.quality"
-
-    // 流水线重试广播队列-红线
-    const val QUEUE_PIPELINE_BUILD_RETRY_QUALITY = "q.engine.pipeline.build.retry.quality"
-
-    // 流水线超时广播队列-红线
-    const val QUEUE_PIPELINE_BUILD_TIMEOUT_QUALITY = "q.engine.pipeline.build.timeout.quality"
-
-    // 流水线红线人工审核队列
-    const val QUEUE_PIPELINE_BUILD_QUALITY_REVIEW = "q.engine.pipeline.build.review.quality"
-}
+data class QualityReviewRequest(
+    val ruleIds: List<String>
+)
