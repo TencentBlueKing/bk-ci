@@ -25,38 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.cron
+package com.tencent.devops.log.resources
 
-import com.tencent.devops.log.util.IndexNameUtils.LOG_INDEX_PREFIX
-import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.log.api.OpLogResource
+import com.tencent.devops.log.cron.impl.IndexCleanJobESImpl
+import org.springframework.beans.factory.annotation.Autowired
 
-@Suppress("ReturnCount")
-interface IndexCleanJob {
+@RestResource
+class OpLogResourceImpl @Autowired constructor(
+    val indexCleanJobES: IndexCleanJobESImpl
+) : OpLogResource {
 
-    fun cleanIndex()
-
-    fun expire(deathLine: LocalDateTime, index: String): Boolean {
-        try {
-            if (!index.startsWith(LOG_INDEX_PREFIX)) {
-                return false
-            }
-            val dateStr = index.replace(LOG_INDEX_PREFIX, "") + " 00:00"
-            val format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-            val date = LocalDateTime.parse(dateStr, format)
-
-            if (deathLine > date) {
-                logger.info("[$index] The index is expire ($deathLine|$date)")
-                return true
-            }
-        } catch (ignore: Throwable) {
-            logger.warn("[$index] Fail to check if the index expire", ignore)
-        }
-        return false
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(IndexCleanJob::class.java)
+    override fun makeIndexCold(): Result<Boolean> {
+        indexCleanJobES.cleanIndex()
+        return Result(true)
     }
 }
