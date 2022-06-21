@@ -26,7 +26,7 @@ class BkMetricsDailyJob @Autowired constructor(
     }
 
     override fun execute(context: JobExecutionContext) {
-        logger.info("BkMetricsDailyJob context: ${JsonUtil.toJson(context)}")
+        logger.info("BkMetricsDailyJob context: ${JsonUtil.toJson(context.jobDetail)}")
 
         val jobParam = context.jobDetail.jobDataMap
         val pageSize = if (!jobParam.containsKey("pageSize")) {
@@ -63,10 +63,7 @@ class BkMetricsDailyJob @Autowired constructor(
 
             pageNum++
         } while (projectDaySummaryPage.size >= pageSize)
-
-
-
-
+        logger.info("BkMetricsDailyJob execute finish")
     }
 
     /**
