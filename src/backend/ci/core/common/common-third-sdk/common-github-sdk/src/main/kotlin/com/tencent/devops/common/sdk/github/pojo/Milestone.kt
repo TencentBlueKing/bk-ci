@@ -5,15 +5,15 @@ import java.time.LocalDateTime
 
 data class Milestone(
     @JsonProperty("closed_at")
-    val closedAt: LocalDateTime,
+    val closedAt: String,
     @JsonProperty("closed_issues")
     val closedIssues: Int,
     @JsonProperty("created_at")
-    val createdAt: LocalDateTime,
+    val createdAt: String,
     val creator: GithubAuthor,
     val description: String,
     @JsonProperty("due_on")
-    val dueOn: LocalDateTime,
+    val dueOn: String,
     @JsonProperty("html_url")
     val htmlUrl: String,
     val id: Int,
@@ -27,6 +27,6 @@ data class Milestone(
     val state: String,
     val title: String,
     @JsonProperty("updated_at")
-    val updatedAt: LocalDateTime,
+    val updatedAt: String,
     val url: String
 )

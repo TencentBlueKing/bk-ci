@@ -19,8 +19,8 @@ data class CommitResponse(
     @JsonProperty("comments_url")
     val commentsUrl: String,
     val commit: GithubCommit,
-    val author: GithubAuthor,
-    val committer: GithubAuthor,
+    val author: GithubAuthor?,
+    val committer: GithubAuthor?,
     val parents: List<GHBranchCommit>,
     val stats: CommitStats? = null,
     val files: List<CommitFile>? = null

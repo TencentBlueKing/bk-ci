@@ -8,7 +8,6 @@ import com.tencent.devops.common.sdk.github.pojo.GithubHead
 import com.tencent.devops.common.sdk.github.pojo.Links
 import com.tencent.devops.common.sdk.github.pojo.Milestone
 import com.tencent.devops.common.sdk.github.pojo.PullRequestLabel
-import java.time.LocalDateTime
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PullRequestResponse(
@@ -39,21 +38,21 @@ data class PullRequestResponse(
     val locked: Boolean,
     val title: String,
     val user: GithubAuthor,
-    val body: String,
+    val body: String?,
     val labels: List<PullRequestLabel>,
-    val milestone: Milestone,
+    val milestone: Milestone?,
     @JsonProperty("active_lock_reason")
-    val activeLockReason: String,
+    val activeLockReason: String?,
     @JsonProperty("create_at")
-    val createdAt: LocalDateTime,
+    val createdAt: String?,
     @JsonProperty("update_at")
-    val updatedAt: LocalDateTime,
+    val updatedAt: String?,
     @JsonProperty("closed_at")
-    val closedAt: LocalDateTime,
+    val closedAt: String?,
     @JsonProperty("merged_at")
-    val mergedAt: LocalDateTime,
+    val mergedAt: String?,
     @JsonProperty("merge_commit_sha")
-    val mergeCommitSha: String,
+    val mergeCommitSha: String?,
     val assignee: GithubAuthor,
     val assignees: List<GithubAuthor>,
     @JsonProperty("requested_reviewers")
@@ -75,7 +74,7 @@ data class PullRequestResponse(
     @JsonProperty("mergeable_state")
     val mergeableState: String,
     @JsonProperty("merged_by")
-    val mergedBy: GithubAuthor,
+    val mergedBy: GithubAuthor?,
     val comments: Int,
     @JsonProperty("review_comments")
     val reviewComments: Int,

@@ -11,14 +11,14 @@ data class ListCommitRequest(
     val owner: String,
     @JsonIgnore
     val repo: String,
-    val sha: String,
-    val path: String,
-    val author: String,
-    val since: String,
-    val until: String,
+    val sha: String? = null,
+    val path: String? = null,
+    val author: String? = null,
+    val since: String? = null,
+    val until: String? = null,
     @JsonProperty("per_page")
-    val perPage: Int,
-    val page: Int
+    val perPage: Int = 30,
+    val page: Int = 1
 ) : GithubRequest<List<CommitResponse>>() {
     override fun getHttpMethod() = HttpMethod.GET
 

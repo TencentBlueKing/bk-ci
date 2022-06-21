@@ -9,5 +9,5 @@ data class License(
     val nodeId: String,
     @JsonProperty("spdx_id")
     val spdxId: String,
-    val url: String
+    val url: String?
 )

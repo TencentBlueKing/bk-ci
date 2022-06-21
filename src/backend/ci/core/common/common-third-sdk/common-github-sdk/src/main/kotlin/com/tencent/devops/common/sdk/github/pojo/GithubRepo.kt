@@ -36,7 +36,7 @@ data class GithubRepo(
     @JsonProperty("contributors_url")
     val contributorsUrl: String,
     @JsonProperty("created_at")
-    val createdAt: LocalDateTime,
+    val createdAt: String,
     @JsonProperty("default_branch")
     val defaultBranch: String,
     @JsonProperty("deployments_url")
@@ -98,7 +98,7 @@ data class GithubRepo(
     @JsonProperty("milestones_url")
     val milestonesUrl: String,
     @JsonProperty("mirror_url")
-    val mirrorUrl: String,
+    val mirrorUrl: String?,
     val name: String,
     @JsonProperty("node_id")
     val nodeId: String,
@@ -109,12 +109,12 @@ data class GithubRepo(
     @JsonProperty("open_issues_count")
     val openIssuesCount: Int,
     val owner: GithubAuthor,
-    val permissions: Permissions,
+    val permissions: GithubRepoPermissions?,
     val private: Boolean,
     @JsonProperty("pulls_url")
     val pullsUrl: String,
     @JsonProperty("pushed_at")
-    val pushedAt: LocalDateTime,
+    val pushedAt: String,
     @JsonProperty("releases_url")
     val releasesUrl: String,
     val size: Int,
@@ -137,12 +137,12 @@ data class GithubRepo(
     @JsonProperty("teams_url")
     val teamsUrl: String,
     @JsonProperty("temp_clone_token")
-    val tempCloneToken: String,
+    val tempCloneToken: String?,
     val topics: List<String>,
     @JsonProperty("trees_url")
     val treesUrl: String,
     @JsonProperty("updated_at")
-    val updatedAt: LocalDateTime,
+    val updatedAt: String,
     val url: String,
     val watchers: Int,
     @JsonProperty("watchers_count")

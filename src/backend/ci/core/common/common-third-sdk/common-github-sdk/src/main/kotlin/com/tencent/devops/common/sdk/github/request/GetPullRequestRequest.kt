@@ -1,23 +1,20 @@
 package com.tencent.devops.common.sdk.github.request
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
-import com.tencent.devops.common.sdk.github.response.CommitResponse
+import com.tencent.devops.common.sdk.github.response.PullRequestResponse
 
-data class GetCommitRequest(
+data class GetPullRequestRequest(
     @JsonIgnore
     val owner: String,
     @JsonIgnore
     val repo: String,
     @JsonIgnore
-    val ref: String,
-    val page: Int = 1,
-    @JsonProperty("per_page")
-    val perPage: Int = 30
-) : GithubRequest<CommitResponse>() {
+    val pullNumber: String
+) : GithubRequest<PullRequestResponse>() {
     override fun getHttpMethod() = HttpMethod.GET
 
-    override fun getApiPath() = "repos/$owner/$repo/commits/$ref"
+    override fun getApiPath() = "/repos/$owner/$repo/pulls/$pullNumber"
+
 }
