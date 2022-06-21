@@ -118,7 +118,7 @@ class IndexCleanJobESImpl @Autowired constructor(
         client.getActiveClients().forEach { c ->
             val response = c.restClient
                 .indices()
-                .get(GetIndexRequest(), RequestOptions.DEFAULT)
+                .get(GetIndexRequest("$LOG_INDEX_PREFIX*"), RequestOptions.DEFAULT)
 
             if (response.indices.isEmpty()) {
                 return

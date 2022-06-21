@@ -41,13 +41,13 @@ import javax.ws.rs.core.MediaType
  * Powered By Tencent
  */
 @Api(tags = ["OP_LOG"], description = "管理-日志资源")
-@Path("/op/logs")
+@Path("/op")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpLogResource {
 
-    @ApiParam("重新打开索引")
+    @ApiParam("执行搬冷任务")
     @PUT
-    @Path("/v2/es/index/cold")
+    @Path("/es/index/cold")
     fun makeIndexCold(): Result<Boolean>
 }
