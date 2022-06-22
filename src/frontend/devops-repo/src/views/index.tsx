@@ -23,27 +23,41 @@
 * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 * IN THE SOFTWARE.
 */
-import { createApp } from 'vue';
-import 'bkui-vue/dist/style.css';
-
-import createI18n from '@/locale';
 import router from '@/router';
-import store, { key } from '@/store';
-import '@/styles/index.less';
-import Root from './views';
-import { IS_CI_MODE } from './utils';
-const { i18n } = createI18n();
+import { useStore } from '@/store';
+import { FETCH_PROJECT_LIST, FETCH_USER_INFO } from '@/store/constants';
+import { Loading } from 'bkui-vue';
+import { defineComponent, onBeforeMount, ref } from 'vue';
+import { RouterView, useRoute } from 'vue-router';
 
-router.afterEach((to) => {
-  console.log('sync');
-  if (IS_CI_MODE) {
-    // @ts-ignore
-    window.$syncUrl?.(to.fullPath);
-  }
+export default defineComponent({
+  setup() {
+    const store = useStore();
+    const route = useRoute();
+    const isLoading = ref(true);
+    onBeforeMount(async () => {
+      isLoading.value = true;
+      await Promise.all([
+        store.dispatch(FETCH_USER_INFO),
+        store.dispatch(FETCH_PROJECT_LIST),
+      ]);
+      if (!route.params.projectId && store.state.projectList.length > 0) {
+        router.replace({
+          name: 'repoList',
+          params: {
+            ...route.params,
+            projectId: store.state.projectList[0].id,
+          },
+        });
+      }
+      isLoading.value = false;
+    });
+
+
+    return () => (
+      <Loading class="bk-repo-entry" loading={isLoading.value}>
+        <RouterView />
+      </Loading>
+    );
+  },
 });
-
-createApp(Root)
-  .use(router)
-  .use(store, key)
-  .use(i18n)
-  .mount('#bk-repo-app');

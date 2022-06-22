@@ -117,9 +117,9 @@ export default defineComponent({
     }
     return () => (
       <div class="bk-repo-login">
-        <img class="bg-login-img" src="/assets/bg_login.png" />
+        <img class="bg-login-img" src={`${process.env.BASE_URL}assets/bg_login.png`} />
         <section class="bk-repo-login-content">
-          <img src="/assets/logo_login.png" />
+          <img src={`${process.env.BASE_URL}assets/logo_login.png`} />
           <div class="bk-repo-login-form">
             {
               !!loginFailedTip.value && (

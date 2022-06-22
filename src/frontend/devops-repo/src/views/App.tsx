@@ -23,15 +23,14 @@
 * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 * IN THE SOFTWARE.
 */
-import { defineComponent, ref, computed, onBeforeMount } from 'vue';
+import { defineComponent, ref, computed } from 'vue';
 import { RouterView, useRoute, useRouter } from 'vue-router';
-import { Navigation, Menu, Breadcrumb, Button, Loading, Sideslider } from 'bkui-vue';
+import { Navigation, Menu, Breadcrumb, Button, Sideslider } from 'bkui-vue';
 import { useI18n } from 'vue-i18n';
 
 import Icon from '@/components/Icon';
 import { useStore } from '@/store';
 import OperationDialog from '@/components/OperationDialog';
-import { FETCH_PROJECT_LIST, FETCH_USER_INFO } from '@/store/constants';
 import Header from '@/components/Header';
 import { IS_CI_MODE } from '@/utils';
 import { useCiMessage, useOperation, useRouteParams } from '@/hooks';
@@ -43,7 +42,6 @@ export default defineComponent({
     const currentRoute = useRoute();
     const router = useRouter();
     const store = useStore();
-    const isLoading = ref(true);
     const repoParams = useRouteParams();
     const activeArtifact = computed(() => store.state.operationProps.artifact);
     const { closeOperation } = useOperation();
@@ -89,14 +87,6 @@ export default defineComponent({
         };
       });
     });
-    onBeforeMount(async () => {
-      isLoading.value = true;
-      await Promise.all([
-        store.dispatch(FETCH_USER_INFO),
-        store.dispatch(FETCH_PROJECT_LIST),
-      ]);
-      isLoading.value = false;
-    });
 
     function handleCollapse() {
       sideNavCollapsed.value = !sideNavCollapsed.value;
@@ -119,7 +109,7 @@ export default defineComponent({
     }
 
     return () => (
-      <Loading class="bk-repo-entry" loading={isLoading.value}>
+      <>
         {!IS_CI_MODE && <Header></Header>}
         <Navigation
           class="bk-repo-content"
@@ -177,7 +167,7 @@ export default defineComponent({
             ),
             default: () => (
               <>
-                {!isLoading.value && <RouterView />}
+                <RouterView />
                 <OperationDialog
                   projectId={repoParams.value.projectId}
                   repoName={repoParams.value.repoName}
@@ -201,7 +191,7 @@ export default defineComponent({
             ),
           }}
         </Navigation>
-      </Loading>
+      </>
     );
   },
 });
