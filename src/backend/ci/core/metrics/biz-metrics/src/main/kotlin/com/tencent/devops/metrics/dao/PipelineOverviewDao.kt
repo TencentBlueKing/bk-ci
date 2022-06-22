@@ -80,10 +80,6 @@ class PipelineOverviewDao {
         with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             var pipelineIds = queryPipelineOverview.baseQueryReq.pipelineIds
-            if (pipelineIds.isNullOrEmpty()) {
-                pipelineIds =
-                    getPipelineIdByTotalExecuteCount(dslContext, queryPipelineOverview)
-            }
             val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo, pipelineIds)
             val step = dslContext.select(
                 sum<Long>(TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_EXECUTE_COUNT_SUM),
@@ -103,9 +99,6 @@ class PipelineOverviewDao {
     ): Result<Record5<LocalDateTime, BigDecimal, BigDecimal, BigDecimal, BigDecimal>>? {
         with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
             var pipelineIds = queryPipelineOverview.baseQueryReq.pipelineIds
-            if (pipelineIds.isNullOrEmpty()) {
-                pipelineIds = getPipelineIdByTotalExecuteCount(dslContext, queryPipelineOverview)
-            }
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo, pipelineIds)
             val step = dslContext.select(
