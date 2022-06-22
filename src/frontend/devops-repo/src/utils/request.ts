@@ -23,7 +23,9 @@
 * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 * IN THE SOFTWARE.
 */
+import router from '@/router';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import { IS_CI_MODE } from '.';
 
 interface ResponseData {
   code: number,
@@ -94,8 +96,21 @@ instance.interceptors.request.use((request: AxiosRequestConfig) => {
 });
 
 instance.interceptors.response.use<ResponseData>((response: AxiosResponse) => {
-  const { data, config } = response;
-  if (data.code !== 0 && config.method !== 'head') {
+  const { data, config, status } = response;
+  if (status === 401 || status === 402) {
+    if (IS_CI_MODE) {
+      window.postMessage({
+        action: 'toggleLoginDialog',
+      }, '*');
+      // TODO: 后续优化
+      // @ts-ignore
+      location.href = window.getLoginUrl();
+    } else {
+      router.replace({
+        name: 'login',
+      });
+    }
+  } else if (data.code !== 0 && config.method !== 'head') {
     return Promise.reject({
       message: data.message,
     });
