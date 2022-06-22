@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve --fix",
-    "build": "vue-cli-service build",
+    "public": "vue-cli-service build",
+    "public:dev": "cross-env NODE_ENV=dev npm run public",
+    "public:test": "cross-env NODE_ENV=test npm run public",
+    "public:production": "cross-env NODE_ENV=production npm run public",
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint"
   },
