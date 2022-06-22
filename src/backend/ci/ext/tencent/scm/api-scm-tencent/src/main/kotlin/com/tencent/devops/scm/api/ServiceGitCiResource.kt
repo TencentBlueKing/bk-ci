@@ -46,6 +46,7 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -329,6 +330,7 @@ interface ServiceGitCiResource {
         pageSize: Int,
         @ApiParam("是否使用accessToken", required = true)
         @QueryParam("useAccessToken")
+        @DefaultValue("true")
         useAccessToken: Boolean
     ): Result<List<ChangeFileInfo>>
 
