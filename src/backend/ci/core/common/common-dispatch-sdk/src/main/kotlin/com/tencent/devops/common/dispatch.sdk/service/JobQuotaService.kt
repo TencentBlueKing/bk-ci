@@ -110,10 +110,10 @@ class JobQuotaService constructor(
                     executeCount = executeCount ?: 1
                 )
 
-                dispatchService.redispatch(startupEvent.copy(
-                    routeKeySuffix = demoteQueueRouteKeySuffix,
-                    delayMills = 0
-                ))
+                startupEvent.retryTime += 1
+                startupEvent.delayMills = RETRY_DELTA
+                startupEvent.routeKeySuffix = demoteQueueRouteKeySuffix
+                dispatchService.redispatch(startupEvent)
 
                 return false
             } else {

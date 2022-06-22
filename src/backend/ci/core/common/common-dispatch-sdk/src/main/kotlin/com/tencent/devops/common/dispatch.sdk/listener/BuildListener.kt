@@ -234,11 +234,10 @@ interface BuildListener {
             startTime = System.currentTimeMillis()
             DispatchLogRedisUtils.setRedisExecuteCount(event.buildId, event.executeCount)
 
-            val jobQuotaService = getJobQuotaService()
-
             // 校验流水线是否还在运行中
             dispatchService.checkRunning(event)
             // 校验构建资源配额是否超限，配额超限后会放进延迟队列
+            val jobQuotaService = getJobQuotaService()
             if (!jobQuotaService.checkAndAddRunningJob(
                     startupEvent = event,
                     vmType = getVmType(),

@@ -48,6 +48,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.monitoring.api.service.DispatchReportResource
 import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
@@ -126,18 +127,16 @@ class DispatchService constructor(
     }
 
     fun checkRunning(event: PipelineAgentStartupEvent) {
-        // 判断流水线是否还在运行，如果已经停止则不在运行
-        // 只有detail的信息是在shutdown事件发出之前就写入的，所以这里去builddetail的信息。
-        // 为了兼容gitci的权限，这里把渠道号都改成GIT,以便去掉用户权限验证
-        val record = client.get(ServiceBuildResource::class).getBuildDetailStatusWithoutPermission(
-            event.userId,
-            event.projectId,
-            event.pipelineId,
-            event.buildId,
-            ChannelCode.BS
+        // 判断流水线当前container是否在运行中
+        val statusResult = client.get(ServicePipelineTaskResource::class).getTaskStatus(
+            projectId = event.projectId,
+            buildId = event.buildId,
+            taskId = VMUtils.genStartVMTaskId(event.containerId)
         )
-        if (record.isNotOk() || record.data == null) {
-            logger.warn("The build event($event) fail to check if pipeline is running because of ${record.message}")
+
+        if (statusResult.isNotOk() || statusResult.data == null) {
+            logger.warn("The build event($event) fail to check if pipeline task is running " +
+                            "because of ${statusResult.message}")
             throw BuildFailureException(
                 errorType = ErrorType.SYSTEM,
                 errorCode = DispatchSdkErrorCode.PIPELINE_STATUS_ERROR,
@@ -145,8 +144,8 @@ class DispatchService constructor(
                 errorMessage = "无法获取流水线状态"
             )
         }
-        val status = BuildStatus.parse(record.data)
-        if (!status.isRunning()) {
+
+        if (!statusResult.data!!.isRunning()) {
             logger.warn("The build event($event) is not running")
             throw BuildFailureException(
                 errorType = ErrorType.USER,
