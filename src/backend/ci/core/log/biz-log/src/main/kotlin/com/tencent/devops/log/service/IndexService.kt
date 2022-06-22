@@ -117,7 +117,7 @@ class IndexService @Autowired constructor(
             // 缓存命中则直接进行自增，缓存未命中则从db中取值，自增后再刷新缓存
             if (lineNum == null) {
                 logger.warn("[$buildId|$size] Fail to get and add the line num, get from db")
-                val lastLineNum = indexDao.getBuildIndexRecord(dslContext, buildId)?.lastLineNum ?: run {
+                val lastLineNum = indexDao.getBuild(dslContext, buildId)?.lastLineNum ?: run {
                     logger.warn("[$buildId|$size] The build is not exist in db")
                     return null
                 }
@@ -133,7 +133,7 @@ class IndexService @Autowired constructor(
 
     fun getLastLineNum(buildId: String): Long {
         return redisOperation.get(getLineNumRedisKey(buildId))?.toLong()
-            ?: indexDao.getBuildIndexRecord(dslContext, buildId)?.lastLineNum ?: 0
+            ?: indexDao.getBuild(dslContext, buildId)?.lastLineNum ?: 0
     }
 
     fun flushLineNum2DB(buildId: String) {
