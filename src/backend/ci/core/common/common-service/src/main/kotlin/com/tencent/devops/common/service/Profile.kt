@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.service
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.env.Env
 import org.springframework.core.env.Environment
 import org.springframework.stereotype.Component
@@ -76,11 +77,21 @@ class Profile(private val environment: Environment) {
         activeProfiles.contains(PROFILE_DEFAULT)
 
     fun isStream(): Boolean {
-        return activeProfiles.contains(PROFILE_STREAM)
+        activeProfiles.forEach { activeProfile ->
+            if (activeProfile.contains(PROFILE_STREAM)) {
+                return true
+            }
+        }
+        return false
     }
 
     fun isAuto(): Boolean {
-        return activeProfiles.contains(PROFILE_AUTO)
+        activeProfiles.forEach { activeProfile ->
+            if (activeProfile.contains(PROFILE_AUTO)) {
+                return true
+            }
+        }
+        return false
     }
 
     fun getEnv(): Env {
