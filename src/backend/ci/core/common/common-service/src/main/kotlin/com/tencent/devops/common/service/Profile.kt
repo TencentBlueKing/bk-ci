@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.service
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.env.Env
 import org.springframework.core.env.Environment
 import org.springframework.stereotype.Component
