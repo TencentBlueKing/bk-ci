@@ -325,13 +325,17 @@ object PipelineVarUtil {
     }
 
     /**
-     * 旧变量转新变量
+     * 将[varMaps]找到旧变量并替换成新变量，并删除掉旧变量
      */
     fun replaceOldByNewVar(varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>) {
         turningWithType(oldVarMappingNewVar, varMaps, true)
         prefixTurningWithType(oldPrefixMappingNew, varMaps, true)
     }
 
+    /**
+     *  遍历[varMaps]中的fullKey，与[mapping]中的key做完成匹配，匹配成功后从[mapping]取出value作newKey
+     *  并写入到[varMaps],最后根据[replace]值为true决定要删除[varMaps]中的fullKey
+     */
     private fun turningWithType(
         mapping: Map<String, String>,
         varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>,
@@ -360,7 +364,11 @@ object PipelineVarUtil {
         }
     }
 
-    @Suppress("ALL")
+    @Suppress("NestedBlockDepth")
+    /**
+     *  遍历[vars]中的fullKey，与[mapping]中的key做前缀匹配，匹配成功后从[mapping]取出value,替换掉fullKey的前缀key，组成newKey
+     *  并写入到[vars],最后根据[replace]值为true决定要删除[vars]中的fullKey
+     */
     private fun prefixTurning(
         mapping: Map<String, String>,
         vars: MutableMap<String, String>,
@@ -380,7 +388,11 @@ object PipelineVarUtil {
         }
     }
 
-    @Suppress("ALL")
+    @Suppress("NestedBlockDepth")
+    /**
+     *  遍历[varMaps]中的fullKey，与[mapping]中的key做前缀匹配，匹配成功后从[mapping]取出value,替换掉fullKey的前缀key，组成newKey
+     *  并写入到[varMaps],最后根据[replace]值为true决定要删除[varMaps]中的fullKey
+     */
     private fun prefixTurningWithType(
         mapping: Map<String, String>,
         varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>,

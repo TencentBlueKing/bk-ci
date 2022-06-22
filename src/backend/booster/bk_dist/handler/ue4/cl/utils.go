@@ -386,11 +386,15 @@ var (
 	// skip options and skip its value in the next index
 	skipLocalOptionsWithValue = map[string]bool{
 		"/D":                  true, // Defines constants and macros.
+		"-D":                  true, // same with /D, supported by vs 2022
 		"/I":                  true, // Searches a directory for include files.
+		"-I":                  true, // same with /I, supported by vs 2022
 		"/U":                  true, // Removes a predefined macro.
 		"/FI":                 true,
 		"/Yu":                 true,
 		"/sourceDependencies": true,
+		"/external:":          true, //specify compiler diagnostic behavior for certain header files
+		"-external:":          true, //specify compiler diagnostic behavior for certain header files
 	}
 
 	// skip options without value
@@ -403,14 +407,18 @@ var (
 
 	// skip options start with flags
 	skipLocalOptionStartWith = map[string]bool{
-		"/D":  true,
-		"/I":  true,
-		"/U":  true,
-		"/Fd": true,
-		"/FI": true, // Preprocesses the specified include file.
-		"/Fp": true, // Preprocesses the specified include file.
-		"/Yu": true, // Uses a precompiled header file during build.
-		"/Zm": true, // Specifies the precompiled header memory allocation limit.
+		"/D":         true,
+		"/I":         true,
+		"-D":         true,
+		"-I":         true,
+		"/U":         true,
+		"/Fd":        true,
+		"/FI":        true, // Preprocesses the specified include file.
+		"/Fp":        true, // Preprocesses the specified include file.
+		"/Yu":        true, // Uses a precompiled header file during build.
+		"/Zm":        true, // Specifies the precompiled header memory allocation limit.
+		"/external:": true, //specify compiler diagnostic behavior for certain header files
+		"-external:": true, //specify compiler diagnostic behavior for certain header files
 	}
 )
 
@@ -483,9 +491,10 @@ func stripLocalArgs(args []string) []string {
 }
 
 type ccArgs struct {
-	inputFile  string
-	outputFile string
-	args       []string
+	inputFile           string
+	outputFile          string
+	args                []string
+	specifiedSourceType bool
 }
 
 // scanArgs receive the complete compiling args, and the first item should always be a compiler name.
@@ -518,6 +527,10 @@ func scanArgs(args []string) (*ccArgs, error) {
 
 			case "/c":
 				seenOptionC = true
+				continue
+
+			case "/TC", "/Tc", "/TP", "/Tp":
+				r.specifiedSourceType = true
 				continue
 			}
 
@@ -556,6 +569,12 @@ func scanArgs(args []string) (*ccArgs, error) {
 				continue
 			}
 			continue
+		} else if strings.HasPrefix(arg, "-") {
+			switch arg {
+			case "-c":
+				seenOptionC = true
+				continue
+			}
 		}
 
 		// if this is not start with /, then it maybe a file.
@@ -582,7 +601,7 @@ func scanArgs(args []string) (*ccArgs, error) {
 	}
 
 	if !seenOptionC {
-		blog.Warnf("cl: scan args: no /c found, compiler apparently called not for compile")
+		blog.Warnf("cl: scan args: no /c or -c found, compiler apparently called not for compile")
 		return nil, ErrorMissingOption
 	}
 
@@ -724,13 +743,17 @@ func setActionOptionE(args []string) ([]string, error) {
 			found = true
 			r = append(r, "/E")
 			continue
+		} else if arg == "-c" {
+			found = true
+			r = append(r, "/E")
+			continue
 		}
 
 		r = append(r, arg)
 	}
 
 	if !found {
-		blog.Warnf("cl: failed to find /c")
+		blog.Warnf("cl: failed to find /c or -c")
 		return nil, ErrorMissingOption
 	}
 
