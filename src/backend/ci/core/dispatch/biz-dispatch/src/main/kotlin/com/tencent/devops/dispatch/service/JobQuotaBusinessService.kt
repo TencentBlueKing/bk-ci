@@ -40,6 +40,7 @@ import com.tencent.devops.dispatch.dao.RunningJobsDao
 import com.tencent.devops.dispatch.pojo.JobQuotaHistory
 import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import com.tencent.devops.dispatch.utils.JobQuotaProjectLock
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.common.VMUtils
 import org.jooq.DSLContext
@@ -59,7 +60,8 @@ class JobQuotaBusinessService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val jobQuotaInterface: JobQuotaInterface,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val redisOperation: RedisOperation
 ) {
 
     /**
@@ -75,20 +77,27 @@ class JobQuotaBusinessService @Autowired constructor(
         containerHashId: String?
     ): Boolean {
         LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} >>> start check job quota.")
-        val result = checkJobQuotaBase(
-            projectId = projectId,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            containerId = containerId,
-            containerHashId = containerHashId,
-            executeCount = executeCount,
-            vmType = vmType
-        )
 
-        // 如果配额没有超限，则记录一条running job
-        if (result) {
-            LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} >>> start add running job.")
-            runningJobsDao.insert(dslContext, projectId, vmType, buildId, vmSeqId, executeCount)
+        val jobQuotaProjectLock = JobQuotaProjectLock(redisOperation, projectId)
+        try {
+            jobQuotaProjectLock.lock()
+            val result = checkJobQuotaBase(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                containerId = containerId,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
+                vmType = vmType
+            )
+
+            // 如果配额没有超限，则记录一条running job
+            if (result) {
+                LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} >>> start add running job.")
+                runningJobsDao.insert(dslContext, projectId, vmType, buildId, vmSeqId, executeCount)
+            }
+        } finally {
+            jobQuotaProjectLock.unlock()
         }
 
         checkSystemWarn(vmType)
