@@ -42,6 +42,7 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
 ) : ServiceProjectAuthResource {
     override fun getProjectUsers(
         token: String,
+        type: String?,
         projectCode: String,
         group: BkAuthGroup?
     ): Result<List<String>> {
@@ -70,6 +71,7 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
 
     override fun isProjectUser(
         token: String,
+        type: String?,
         userId: String,
         projectCode: String,
         group: BkAuthGroup?
@@ -81,7 +83,12 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun checkProjectManager(token: String, userId: String, projectCode: String): Result<Boolean> {
+    override fun checkProjectManager(
+        token: String,
+        type: String?,
+        userId: String,
+        projectCode: String,
+    ): Result<Boolean> {
         return Result(permissionProjectService.checkProjectManager(
             userId = userId,
             projectCode = projectCode

@@ -39,8 +39,7 @@ class UserThirdLoginResourceImpl @Autowired constructor(
     val loginService: ThirdLoginService
 ) : UserThirdLoginResource {
     override fun thirdLogin(code: String, userId: String, type: String): Response {
-        val callbackUrl = ""
-        return loginService.thirdLogin(code, userId, type, callbackUrl)
+        return loginService.thirdLogin(code, userId, type)
     }
 
     override fun thirdLoginOut(userId: String): Result<Boolean> {

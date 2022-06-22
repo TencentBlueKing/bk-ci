@@ -35,6 +35,7 @@ import com.tencent.devops.common.auth.utils.StringUtils
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Cookie
 import javax.ws.rs.core.NewCookie
@@ -46,7 +47,10 @@ class ThirdLoginService @Autowired constructor(
     private val redisOperation: RedisOperation
 ) {
 
-    fun thirdLogin(code: String, userId: String, type: String, callbackUrl: String): Response {
+    @Value("\${login.third.url:#{null}}")
+    val callbackUrl : String = ""
+
+    fun thirdLogin(code: String, userId: String, type: String): Response {
         logger.info("$userId login by $type")
 
         // code校验不通过直接报错

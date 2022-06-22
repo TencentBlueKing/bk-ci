@@ -59,12 +59,12 @@ interface ServiceProjectAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,
-        @PathParam("projectCode")
-        @ApiParam("项目Code", required = true)
-        projectCode: String,
         @HeaderParam(AUTH_HEADER_GIT_TYPE)
         @ApiParam("系统类型")
         type: String? = null,
+        @PathParam("projectCode")
+        @ApiParam("项目Code", required = true)
+        projectCode: String,
         @QueryParam("group")
         @ApiParam("用户组类型", required = false)
         group: BkAuthGroup? = null
