@@ -48,7 +48,10 @@ class ThirdLoginService @Autowired constructor(
 ) {
 
     @Value("\${login.third.url:#{null}}")
-    val callbackUrl : String = ""
+    val callbackUrl: String = ""
+
+    @Value("\${login.third.domain:#{null}}")
+    val domain: String = ""
 
     fun thirdLogin(code: String, userId: String, type: String): Response {
         logger.info("$userId login by $type")
@@ -59,9 +62,11 @@ class ThirdLoginService @Autowired constructor(
         }
 
         val token = buildLoginToken(userId, type)
+        val cookie = Cookie(AUTH_HEADER_BK_CI_LOGIN_TOKEN,"$type:$token", "/", domain)
+        logger.info("cookie: $cookie")
         return Response.temporaryRedirect(
             UriBuilder.fromUri(callbackUrl).build())
-            .cookie(NewCookie(AUTH_HEADER_BK_CI_LOGIN_TOKEN, "$type:$token"))
+            .cookie(NewCookie(cookie, "", LOGIN_EXPIRE_TIME.toInt(), false))
             .build()
     }
 
