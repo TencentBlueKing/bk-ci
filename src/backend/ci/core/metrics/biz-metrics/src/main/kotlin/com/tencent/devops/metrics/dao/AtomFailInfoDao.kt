@@ -134,9 +134,13 @@ class AtomFailInfoDao {
         if (!queryAtomFailInfo.errorCodes.isNullOrEmpty()) {
             conditions.add(this.ERROR_CODE.`in`(queryAtomFailInfo.errorCodes))
         }
-        val startTimeDateTime = DateTimeUtil.stringToLocalDate(baseQueryReq.startTime!!)!!.atStartOfDay()
-        val endTimeDateTime = DateTimeUtil.stringToLocalDate(baseQueryReq.endTime!!)!!.atStartOfDay()
-        conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
+        val endDateTime = DateTimeUtil.stringToLocalDate(baseQueryReq.endTime)?.atStartOfDay()
+        val startDateTime = DateTimeUtil.stringToLocalDate(baseQueryReq.startTime)?.atStartOfDay()
+        if (!startDateTime!!.isEqual(endDateTime)) {
+            conditions.add(this.STATISTICS_TIME.between(startDateTime, endDateTime))
+        } else {
+            conditions.add(this.STATISTICS_TIME.eq(startDateTime))
+        }
         return conditions
     }
 

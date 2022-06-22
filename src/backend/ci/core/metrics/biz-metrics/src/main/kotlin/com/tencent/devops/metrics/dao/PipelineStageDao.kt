@@ -116,9 +116,13 @@ class PipelineStageDao {
         if (!queryCondition.pipelineLabelIds.isNullOrEmpty()) {
             conditions.add(tProjectPipelineLabelInfo.LABEL_ID.`in`(queryCondition.pipelineLabelIds))
         }
-        val startTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.startTime)!!.atStartOfDay()
-        val endTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.endTime)!!.atStartOfDay()
-        conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
+        val startDateTime = DateTimeUtil.stringToLocalDate(queryCondition.startTime)!!.atStartOfDay()
+        val endDateTime = DateTimeUtil.stringToLocalDate(queryCondition.endTime)!!.atStartOfDay()
+        if (startDateTime.isEqual(endDateTime)) {
+            conditions.add(this.STATISTICS_TIME.eq(startDateTime))
+        } else {
+            conditions.add(this.STATISTICS_TIME.between(startDateTime, endDateTime))
+        }
         conditions.add(this.STAGE_TAG_NAME.eq(queryCondition.stageTag))
         return conditions
     }
