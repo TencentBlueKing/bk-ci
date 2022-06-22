@@ -36,16 +36,13 @@ import com.tencent.devops.common.sdk.github.request.GetTreeRequest
 import com.tencent.devops.common.sdk.github.request.ListCommitRequest
 import com.tencent.devops.common.sdk.github.request.ListPullRequestFileRequest
 import com.tencent.devops.common.sdk.github.request.UpdateCheckRunRequest
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class GithubApiTest {
 
     private val client = DefaultGithubClient(
         serverUrl = "https://github.com/",
-        apiUrl = "https://api.github.com/",
-        clientId = "",
-        clientSecret = ""
+        apiUrl = "https://api.github.com/"
     )
 
     private val token = "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"
