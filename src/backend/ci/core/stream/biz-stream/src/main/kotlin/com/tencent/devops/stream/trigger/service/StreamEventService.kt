@@ -114,7 +114,7 @@ class StreamEventService @Autowired constructor(
                     block = setting.enableMrBlock && commitCheckBlock,
                     targetUrl = StreamPipelineUtils.genStreamV2NotificationsUrl(
                         streamUrl = streamGitConfig.streamUrl ?: throw ParamBlankException("启动配置缺少 streamGitConfig"),
-                        gitProjectId = eventCommon.gitProjectId
+                        gitProjectId = getGitProjectId()
                     ),
                     context = "${context.pipeline!!.filePath}@${action.metaData.streamObjectKind.name}",
                     description = TriggerReason.getTriggerReason(reason)?.summary ?: reason,
