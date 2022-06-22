@@ -1,5 +1,5 @@
 <template>
-    <bk-sideslider :is-show.sync="show" :quick-close="true" @hidden="hidden" :width="622" :title="isEdit ? 'Edit experience group' : 'Add experience group'">
+    <bk-sideslider :is-show.sync="show" :quick-close="true" @hidden="hidden" :width="622" :title="isEdit ? $t('setting.userGroup.editGroup') : $t('setting.userGroup.addGroup')">
         <bk-form :model="formData" ref="groupForm" slot="content" class="group-form" form-type="vertical" :label-width="400">
             <bk-form-item :label="$t('name')" :required="true" :rules="[requireRule('Name'), nameRule]" property="name" error-display-type="normal">
                 <bk-input v-model="formData.name" placeholder="No more than 10 characters"></bk-input>
