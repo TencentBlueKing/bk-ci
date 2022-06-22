@@ -16,7 +16,6 @@ import com.tencent.devops.common.webhook.service.code.matcher.GitWebHookMatcher
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.on.IssueRule
-import com.tencent.devops.process.yaml.v2.models.on.ManualRule
 import com.tencent.devops.process.yaml.v2.models.on.MrRule
 import com.tencent.devops.process.yaml.v2.models.on.PushRule
 import com.tencent.devops.process.yaml.v2.models.on.TagRule
@@ -106,13 +105,13 @@ object TriggerBuilder {
     fun buildManualTriggerOn(objectKind: StreamObjectKind): TriggerOn? {
         return when (objectKind) {
             StreamObjectKind.PUSH ->
-                TriggerOn(push = PushRule(), mr = null, tag = null, manual = ManualRule(null, null))
+                TriggerOn(push = PushRule(), mr = null, tag = null)
             StreamObjectKind.TAG_PUSH ->
-                TriggerOn(push = null, mr = null, tag = TagRule(), manual = ManualRule(null, null))
+                TriggerOn(push = null, mr = null, tag = TagRule())
             StreamObjectKind.MERGE_REQUEST ->
-                TriggerOn(push = null, mr = MrRule(), tag = null, manual = ManualRule(null, null))
+                TriggerOn(push = null, mr = MrRule(), tag = null)
             StreamObjectKind.ISSUE ->
-                TriggerOn(push = null, mr = null, tag = null, issue = IssueRule(), manual = ManualRule(null, null))
+                TriggerOn(push = null, mr = null, tag = null, issue = IssueRule())
             else -> null
         }
     }

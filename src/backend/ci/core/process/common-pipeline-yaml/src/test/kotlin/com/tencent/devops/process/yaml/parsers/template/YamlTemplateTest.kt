@@ -33,6 +33,9 @@ import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.Variable
+import com.tencent.devops.process.yaml.v2.models.VariableDatasource
+import com.tencent.devops.process.yaml.v2.models.VariablePropType
+import com.tencent.devops.process.yaml.v2.models.VariableProps
 import com.tencent.devops.process.yaml.v2.models.format
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
@@ -134,11 +137,36 @@ class YamlTemplateTest {
         val vars = replace("$sampleDir/variablesSub/variablesSub.yml", null, false)
         Assertions.assertEquals(
             mapOf<String, Any>(
-                "USERNAME" to Variable(value = "VARIABLES", readonly = null),
-                "cyc_USERNAME1" to Variable(value = "CYC_VARIABLES", readonly = null),
-                "cyc_USERNAME2" to Variable(value = "CYC_VARIABLES2", readonly = null),
-                "RES_REPOA_VAR1_USERNAME" to Variable(value = "RES_VARIABLE", readonly = null),
-                "RES_REPOA_VAR2_USERNAME" to Variable(value = "aaa", readonly = null)
+                "USERNAME" to Variable(
+                    value = "VARIABLES", readonly = null, allowModifyAtStartup = true,
+                    props = VariableProps(
+                        label = "我是预定义下拉可选值的字段",
+                        type = VariablePropType.SELECTOR.value,
+                        values = listOf(1, 2, 3),
+                        multiple = true,
+                        description = "这是个允许多选的下拉选择字段"
+                    )
+                ),
+                "cyc_USERNAME1" to Variable(
+                    value = "CYC_VARIABLES", readonly = null, allowModifyAtStartup = null,
+                    props = VariableProps(
+                        label = "我是通过url获取下拉可选值的字段",
+                        type = VariablePropType.SELECTOR.value,
+                        multiple = null,
+                        datasource = VariableDatasource(
+                            url = "sss",
+                            paramId = "",
+                            hasAddItem = true
+                        )
+                    )
+                ),
+                "cyc_USERNAME2" to Variable(value = "CYC_VARIABLES2", readonly = null, allowModifyAtStartup = null),
+                "RES_REPOA_VAR1_USERNAME" to Variable(
+                    value = "RES_VARIABLE",
+                    readonly = null,
+                    allowModifyAtStartup = null
+                ),
+                "RES_REPOA_VAR2_USERNAME" to Variable(value = "aaa", readonly = null, allowModifyAtStartup = null)
             ), (vars as PreScriptBuildYaml).variables
         )
     }

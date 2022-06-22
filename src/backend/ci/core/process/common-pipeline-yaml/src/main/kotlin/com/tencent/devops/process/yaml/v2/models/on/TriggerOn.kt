@@ -50,7 +50,8 @@ data class TriggerOn(
     @ApiModelProperty(name = "repo_hook")
     @JsonProperty("repo_hook")
     val repoHook: RepositoryHook? = null,
-    val manual: ManualRule?
+    val manual: String? = null,
+    val openapi: String? = null
 )
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -67,5 +68,6 @@ data class PreTriggerOn(
     @ApiModelProperty(name = "repo_hook")
     @JsonProperty("repo_hook")
     val repoHook: List<Any>? = null,
-    val manual: Any?
+    val manual: String? = null,
+    val openapi: String? = null
 )

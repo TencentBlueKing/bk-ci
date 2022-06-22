@@ -6,6 +6,14 @@ parameters:
 variables:
   cyc_USERNAME1:
     value: ${{ parameters.username }}
+    props:
+      label: 我是通过url获取下拉可选值的字段
+      type: selector
+      datasource:
+        url: sss
+        param-id: ""
+        has-add-item: true
+
   template:
     - name: cyclic/variable/templates/variable2.yml
       parameters:

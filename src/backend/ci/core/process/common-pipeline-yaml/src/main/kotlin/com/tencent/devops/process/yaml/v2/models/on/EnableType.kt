@@ -27,43 +27,7 @@
 
 package com.tencent.devops.process.yaml.v2.models.on
 
-/**
- * 手动触发触发器配置
- * @param enable 不应该参与yaml渲染只做中间值，所以默认为null
- */
-data class ManualRule(
-    val enable: Boolean? = true,
-    val inputs: Map<String, ManualInputItem>?
-)
-
-data class ManualInputItem(
-    val default: Any?,
-    val label: String,
-    val type: String,
-    val values: List<Any>?,
-    val description: String?,
-    val multiple: Boolean?
-)
-
-enum class ManualInputItemType(val value: String) {
-    VUEX_INPUT("vuex-input"),
-    VUEX_TEXTAREA("vuex-textarea"),
-    SELECTOR("selector"),
-    ATOM_CHECKBOX_LIST("atom-checkbox-list"),
-    BOOLEAN("boolean"),
-    TIME_PICKER("time-picker"),
-    COMPANY_STAFF_INPUT("company-staff-input"),
-    TIPS("tips");
-
-    companion object {
-        fun findType(value: String): ManualInputItemType? {
-            values().forEach {
-                if (it.value == value) {
-                    return it
-                }
-            }
-
-            return null
-        }
-    }
+enum class EnableType(val value: String) {
+    TRUE("enabled"),
+    FALSE("disabled")
 }

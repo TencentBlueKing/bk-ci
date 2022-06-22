@@ -35,6 +35,8 @@ import com.tencent.devops.process.yaml.v2.models.MetaData
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.TemplateInfo
 import com.tencent.devops.process.yaml.v2.models.Variable
+import com.tencent.devops.process.yaml.v2.models.VariableDatasource
+import com.tencent.devops.process.yaml.v2.models.VariableProps
 import com.tencent.devops.process.yaml.v2.models.job.Container
 import com.tencent.devops.process.yaml.v2.models.job.Credentials
 import com.tencent.devops.process.yaml.v2.models.job.Mutex
@@ -50,10 +52,46 @@ import com.tencent.devops.process.yaml.v2.utils.StreamEnvUtils
 
 object YamlObjects {
 
-    fun getVariable(variable: Map<String, Any>): Variable {
+    fun getVariable(fromPath: String, variable: Map<String, Any>): Variable {
         return Variable(
             value = variable["value"]?.toString(),
-            readonly = getNullValue("readonly", variable)?.toBoolean()
+            readonly = getNullValue("readonly", variable)?.toBoolean(),
+            allowModifyAtStartup = getNullValue("allow-modify-at-startup", variable)?.toBoolean(),
+            props = if (variable["props"] == null) {
+                null
+            } else {
+                getVarProps(fromPath, variable["props"]!!)
+            }
+        )
+    }
+
+    private fun getVarProps(fromPath: String, props: Any): VariableProps {
+        val propsMap = transValue<Map<String, Any?>>(fromPath, "props", props)
+        return VariableProps(
+            label = getNullValue("label", propsMap),
+            type = getNotNullValue("type", "props", propsMap),
+            values = transNullValue(fromPath, "values", "values", propsMap),
+            datasource = getVarPropDataSource(fromPath, propsMap["datasource"]),
+            description = getNullValue("description", propsMap),
+            multiple = getNullValue("multiple", propsMap)?.toBoolean()
+        )
+    }
+
+    private fun getVarPropDataSource(fromPath: String, datasource: Any?): VariableDatasource? {
+        if (datasource == null) {
+            return null
+        }
+
+        val datasourceMap = transValue<Map<String, Any?>>(fromPath, "datasource", datasource)
+
+        return VariableDatasource(
+            url = getNotNullValue("url", "datasource", datasourceMap),
+            dataPath = getNullValue("data-path", datasourceMap),
+            paramId = getNullValue("param-id", datasourceMap),
+            paramName = getNullValue("param-name", datasourceMap),
+            hasAddItem = getNullValue("has-add-item", datasourceMap)?.toBoolean(),
+            itemText = getNullValue("item-text", datasourceMap),
+            itemTargetUrl = getNullValue("item-target-url", datasourceMap),
         )
     }
 
