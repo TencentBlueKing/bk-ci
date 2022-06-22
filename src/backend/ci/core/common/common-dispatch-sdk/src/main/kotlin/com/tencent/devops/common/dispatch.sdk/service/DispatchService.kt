@@ -140,8 +140,8 @@ class DispatchService constructor(
             throw BuildFailureException(
                 errorType = ErrorType.SYSTEM,
                 errorCode = DispatchSdkErrorCode.PIPELINE_STATUS_ERROR,
-                formatErrorMessage = "无法获取流水线JOB状态",
-                errorMessage = "无法获取流水线JOB状态"
+                formatErrorMessage = "无法获取流水线JOB状态，构建停止",
+                errorMessage = "无法获取流水线JOB状态，构建停止"
             )
         }
 
@@ -150,8 +150,8 @@ class DispatchService constructor(
             throw BuildFailureException(
                 errorType = ErrorType.USER,
                 errorCode = DispatchSdkErrorCode.PIPELINE_NOT_RUNNING,
-                formatErrorMessage = "流水线JOB已经不再运行",
-                errorMessage = "流水线JOB已经不再运行"
+                formatErrorMessage = "流水线JOB已经不再运行，构建停止",
+                errorMessage = "流水线JOB已经不再运行，构建停止"
             )
         }
     }
