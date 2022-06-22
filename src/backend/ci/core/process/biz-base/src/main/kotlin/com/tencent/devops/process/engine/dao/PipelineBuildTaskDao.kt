@@ -40,7 +40,6 @@ import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.DSLContext
 import org.jooq.Record1
-import org.jooq.Record2
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository

@@ -35,7 +35,7 @@ class JobQuotaProjectLock(
     projectId: String
 ) {
 
-    private val redisLock = RedisLock(redisOperation, "DISPATCH_JOB_QUOTA_${projectId}", 60L)
+    private val redisLock = RedisLock(redisOperation, "DISPATCH_JOB_QUOTA_$projectId", 60L)
 
     fun tryLock() = redisLock.tryLock()
 
