@@ -65,6 +65,7 @@ class ProjectInfoServiceImpl @Autowired constructor(
         val projectId = queryProjectInfoDTO.projectId
         val page = queryProjectInfoDTO.page
         val pageSize = queryProjectInfoDTO.pageSize
+        val keyword = queryProjectInfoDTO.keyword
         val records = if (queryProjectInfoDTO.keyword.isNullOrBlank()) {
             // 从缓存中查找插件属性信息
             val atomCodesList = atomCodeCache.getIfPresent("$projectId:$page:$pageSize")
@@ -77,12 +78,12 @@ class ProjectInfoServiceImpl @Autowired constructor(
                 result
             }
         } else {
-            projectInfoDao.queryProjectAtomList(dslContext, projectId, page, pageSize, queryProjectInfoDTO.keyword)
+            projectInfoDao.queryProjectAtomList(dslContext, projectId, page, pageSize, keyword)
         }
         return Page(
             page = queryProjectInfoDTO.page,
             pageSize = queryProjectInfoDTO.pageSize,
-            count = projectInfoDao.queryProjectAtomCount(dslContext, queryProjectInfoDTO.projectId),
+            count = projectInfoDao.queryProjectAtomCount(dslContext, queryProjectInfoDTO.projectId, keyword),
             records = records
         )
     }
