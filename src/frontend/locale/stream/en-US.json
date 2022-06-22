@@ -39,7 +39,7 @@
     "descriptionPlaceholder": "Please enter description",
     "new": "New",
     "reset": "Reset",
-    "dashboardNav": "Dashboard",
+    "dashboardNav": "Projects",
     "changeLog": "ChangeLog",
     "documentation": "Documentation",
     "issue": "Issue",
@@ -55,9 +55,11 @@
         "ymlNamePlaceholder": "Please enter yml name，such as build.yml",
         "commitMsg": "Commit Message",
         "commitMsgPlaceholder": "Please enter commit message",
+        "newPipeline": "New pipeline",
+        "yamlName": "Name",
         "yamlExample": "YAML Examples",
         "branch": "Branch",
-        "branchPlaceholder": "Please enter branch",
+        "branchPlaceholder": "Please select branch",
         "disabled": "Disabled",
         "enablePipeline": "Enable pipeline",
         "disablePipeline": "Disable pipeline",
@@ -156,9 +158,7 @@
         "alias": "Alias",
         "options": "Options",
         "defaultValue": "Default value",
-        "required": "Required",
-        "": "",
-        "": ""
+        "required": "Required"
     },
     "exception": {
         "systemErrTips": "'System error, please try again later!'",
@@ -184,7 +184,9 @@
         "recentProjects": "Recent Projects",
         "emptyCommit": "Empty commit messages",
         "noProject": "No Project",
-        "emptyDesc": "Empty project description"
+        "emptyDesc": "Empty project description",
+        "myProjects": "My Projects",
+        "filterByName": "Filter by name"
     },
     "setting": {
         "settings": "Settings",
@@ -198,6 +200,7 @@
         "buildPushedMergeRequest": "Build pushed merge request",
         "configMergeRequest": "Config merge request",
         "lockMrMerge": "Lock MR merge",
+        "authBy": "Authorized by @{0}. When running, it will use {0}'s permission to checkout current repository.",
         "disableCi": "Disable CI",
         "enableCi": "Enable CI",
         "ciAuthorization": "CI Authorization",
@@ -208,6 +211,8 @@
         "crossRepoUse": "Allow cross-repository use",
         "crossRepoUseTips": "Credential can be referenced across repositories when it's used in template.",
         "ticket": {
+            "addCredential": "Add Credential",
+            "editCredential": "Edit Credential",
             "emptyCredential": "Empty credential",
             "emptyCredentialTips": "You can create a new credential",
             "getCredentialError": "Error in getting credential list",
@@ -255,7 +260,9 @@
             "innerUsers": "OA users",
             "outerUsers": "Non-OA users",
             "innerUsersPlaceholder": "Please enter OA users",
-            "descPlaceholder": "Please enter a group description"
+            "descPlaceholder": "Please enter a group description",
+            "editGroup": "Edit experience group",
+            "addGroup": "Add experience group"
         },
         "agent": {
             "agentPools": "Agent Pools",
@@ -379,7 +386,7 @@
             "running": "Running",
             "succeed": "Succeed",
             "fail": "Fail",
-            "selectNodeTip": "Select agent to add",
+            "selectNodeTip": "Select agent to import",
             "total": "Total",
             "searchNodePlaceholder": "Seperate multiple IP by space, click enter to search",
             "model": "Model",

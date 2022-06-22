@@ -10,7 +10,7 @@
                 title: loading.title
             }">
             <div class="node-list-header">
-                <div class="title">Select agents to import{{$t('setting.agent.')}}
+                <div class="title">{{$t('setting.agent.selectNodeTip')}}
                     <span class="selected-node-prompt">
                         {{$t('total')}}<span class="node-count"> {{ selectHandlercConf.curTotalCount }} </span> {{$t('setting.agent.agents')}}
                     </span>

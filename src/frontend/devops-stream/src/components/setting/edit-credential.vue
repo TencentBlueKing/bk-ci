@@ -1,5 +1,5 @@
 <template>
-    <bk-sideslider :is-show.sync="show" :quick-close="true" @hidden="hidden" :width="622" :title="isEdit ? 'Edit Credential' : 'Add Credential'">
+    <bk-sideslider :is-show.sync="show" :quick-close="true" @hidden="hidden" :width="622" :title="isEdit ? $t('setting.ticket.editCredential') : $t('setting.ticket.addCredential')">
         <bk-form :model="formData" ref="credentialForm" slot="content" class="credential-form" form-type="vertical" label-width="400">
             <bk-form-item :label="$t('type')" :required="true" property="credentialType" :desc="{ content: computedTicket.desc, width: '400px' }" error-display-type="normal">
                 <bk-select v-model="formData.credentialType" :clearable="false" @change="changeCredentialType" :disabled="isEdit">

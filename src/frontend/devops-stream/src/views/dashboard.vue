@@ -49,7 +49,7 @@
                 </div>
                 <div class="content-container">
                     <div style="margin-bottom: 15px;">
-                        <bk-input :left-icon="'bk-icon icon-search'" placeholder="Filter by name" :clearable="true" v-model="searchStr" @enter="search" @clear="search"></bk-input>
+                        <bk-input :left-icon="'bk-icon icon-search'" :placeholder="$t('dashboard.filterByName')" :clearable="true" v-model="searchStr" @enter="search" @clear="search"></bk-input>
                     </div>
                     <div class="empty-repo" v-if="!slotProps.list.length">
                         <empty-tips :title="$t('dashboard.noProject')"></empty-tips>
@@ -129,16 +129,8 @@
                 typeList: [
                     {
                         type: 'MY_PROJECT',
-                        name: 'My Projects'
+                        name: this.$t('dashboard.myProjects')
                     }
-                    // {
-                    //     type: 'WATCHED',
-                    //     name: 'Watch Projects'
-                    // },
-                    // {
-                    //     type: 'STARRED',
-                    //     name: 'Starred Projects'
-                    // }
                 ]
             }
         },

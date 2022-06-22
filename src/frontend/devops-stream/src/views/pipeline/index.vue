@@ -68,9 +68,9 @@
 
         <router-view class="pipelines-main" v-if="!isLoading"></router-view>
 
-        <bk-sideslider @hidden="hidden" :is-show.sync="isShowAddYml" :quick-close="true" :width="622" title="New pipeline">
+        <bk-sideslider @hidden="hidden" :is-show.sync="isShowAddYml" :quick-close="true" :width="622" :title="$t('pipeline.newPipeline')">
             <bk-form :model="yamlData" ref="yamlForm" slot="content" class="yaml-form" form-type="vertical">
-                <bk-form-item label="Name" :rules="[requireRule('Name'), nameRule]" :required="true" property="file_name" error-display-type="normal">
+                <bk-form-item :label="$t('pipeline.yamlName')" :rules="[requireRule('Name'), nameRule]" :required="true" property="file_name" error-display-type="normal">
                     <bk-compose-form-item class="yaml-name-container">
                         <bk-input value=".ci / " disabled class="yaml-path"></bk-input>
                         <bk-input v-model="yamlData.file_name" class="yaml-name" :placeholder="$t('pipeline.ymlNamePlaceholder')"></bk-input>

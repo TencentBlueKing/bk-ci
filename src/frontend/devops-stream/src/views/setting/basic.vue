@@ -17,7 +17,7 @@
 
         <h3 class="setting-basic-head">{{$t('setting.ciAuthorization')}}</h3>
         <section class="basic-main">
-            <h5 class="main-title">Authorized by @{{form.enableUserId}}. When running, it will use {{form.enableUserId}}'s permission to checkout current repository.</h5>
+            <h5 class="main-title">{{ $t('setting.authBy', [form.enableUserId])}}</h5>
             <section class="main-checkbox">
                 <bk-button @click="resetAuthorization" :loading="isReseting">{{$t('setting.resetAuthorization')}}</bk-button>
             </section>
