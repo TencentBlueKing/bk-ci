@@ -1,7 +1,6 @@
 package com.tencent.devops.common.sdk.github.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import java.time.LocalDateTime
 
 data class CheckRunApp(
     @JsonProperty("created_at")

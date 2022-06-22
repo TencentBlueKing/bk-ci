@@ -1,7 +1,6 @@
 package com.tencent.devops.common.sdk.github.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import java.time.LocalDateTime
 
 data class GithubRepo(
     @JsonProperty("allow_forking")

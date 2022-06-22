@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.github.pojo.CheckRunApp
 import com.tencent.devops.common.sdk.github.pojo.CheckRunOutput
 import com.tencent.devops.common.sdk.github.pojo.CheckSuite
-import java.time.LocalDateTime
 
 data class CheckRunResponse(
     val app: CheckRunApp,
