@@ -32,7 +32,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import io.swagger.annotations.ApiModelProperty
 
 @Event(exchange = MQ.EXCHANGE_QUALITY_DAILY_FANOUT, routeKey = MQ.ROUTE_QUALITY_DAILY_FANOUT)
-data class QualityReportEvent (
+data class QualityReportEvent(
     @ApiModelProperty("统计时间")
     val statisticsTime: String,
     @ApiModelProperty("项目ID")

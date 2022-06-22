@@ -43,7 +43,7 @@ class QualityDailyReportJob @Autowired constructor(
     private val historyDao: HistoryDao,
     private val qualityDailyDispatch: QualityDailyDispatch,
     private val dslContext: DSLContext
-){
+) {
 
     private val logger = LoggerFactory.getLogger(QualityDailyReportJob::class.java)
 
@@ -76,5 +76,4 @@ class QualityDailyReportJob @Autowired constructor(
         }
         logger.info("finish to send quality daily data.")
     }
-
 }

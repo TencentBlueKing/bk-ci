@@ -39,7 +39,7 @@ import javax.annotation.Resource
 @Component
 class QualityDailyDispatch constructor(
     @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME) private val rabbitTemplate: RabbitTemplate
-): EventDispatcher<QualityReportEvent>{
+) : EventDispatcher<QualityReportEvent> {
 
     companion object {
         private val logger = LoggerFactory.getLogger(QualityDailyDispatch::class.java)
