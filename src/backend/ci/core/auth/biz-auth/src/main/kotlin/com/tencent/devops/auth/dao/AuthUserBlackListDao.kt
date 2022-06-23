@@ -25,36 +25,62 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.util
+package com.tencent.devops.auth.dao
 
-import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.AESUtil
-import org.springframework.beans.factory.annotation.Value
+import com.tencent.devops.model.auth.tables.TAuthUserBlacklist
+import com.tencent.devops.model.auth.tables.records.TAuthUserBlacklistRecord
+import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
 
-/**
- * password参数类型工具类
- */
-@Suppress("ALL")
 @Component
-class PswParameterUtils {
+class AuthUserBlackListDao {
 
-    @Value("\${parameter.password.pswKey}")
-    private val pswKey: String = ""
-
-    fun decrypt(content: String): String {
-        try {
-            return AESUtil.decrypt(pswKey, content)
-        } catch (e: Exception) {
-            throw OperationException("password: $content decrypt error.")
+    fun create(
+        dslContext: DSLContext,
+        userId: String,
+        remark: String
+    ): Int {
+        with(TAuthUserBlacklist.T_AUTH_USER_BLACKLIST) {
+            return dslContext.insertInto(
+                this,
+                USER_ID,
+                REMARK,
+                STATUS,
+                CREATE_TIME
+            ).values(
+                userId,
+                remark,
+                true,
+                LocalDateTime.now()
+            ).execute()
         }
     }
 
-    fun encrypt(content: String): String {
-        try {
-            return AESUtil.encrypt(pswKey, content)
-        } catch (e: Exception) {
-            throw OperationException("password: $content encrypt error.")
+    fun get(
+        dslContext: DSLContext,
+        userId: String
+    ): TAuthUserBlacklistRecord? {
+        with(TAuthUserBlacklist.T_AUTH_USER_BLACKLIST) {
+            return dslContext.selectFrom(this).where(USER_ID.eq(userId).and(STATUS.eq(true))).fetchAny()
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext
+    ): Result<TAuthUserBlacklistRecord>? {
+        with(TAuthUserBlacklist.T_AUTH_USER_BLACKLIST) {
+            return dslContext.selectFrom(this).where(STATUS.eq(true)).fetch()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        userId: String
+    ): Int {
+        with(TAuthUserBlacklist.T_AUTH_USER_BLACKLIST) {
+            return dslContext.update(this).set(STATUS, false).where(USER_ID.eq(userId).and(STATUS.eq(true))).execute()
         }
     }
 }

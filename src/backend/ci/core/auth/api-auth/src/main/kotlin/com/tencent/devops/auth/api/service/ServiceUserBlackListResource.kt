@@ -25,51 +25,51 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.user
+package com.tencent.devops.auth.api.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_BUILD"], description = "用户-构建资源")
-@Path("/user/builds")
+@Api(tags = ["AUTH_USER_BLACKLIST"], description = "黑名单用户")
+@Path("/service/user/blacklist")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface TXUserBuildResource {
+interface ServiceUserBlackListResource {
 
-    @ApiOperation("质量红线人工审核")
     @POST
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/qualityGateReview/{action}")
-    @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/qualityGateReview/{action}")
-    fun manualQualityGateReview(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
+    @Path("/")
+    @ApiOperation("添加黑名单用户")
+    fun createBlackListUser(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待拉黑用户Id")
         userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam("步骤Id", required = true)
-        @PathParam("elementId")
-        elementId: String,
-        @ApiParam("动作", required = true)
-        @PathParam("action")
-        action: ManualReviewAction
+        @QueryParam("remark")
+        @ApiParam("拉黑原因")
+        remark: String?
+    ): Result<Boolean>
+
+    @GET
+    @Path("/")
+    fun blackList(): Result<Set<String>>
+
+    @DELETE
+    @Path("/")
+    @ApiOperation("移出黑名单用户")
+    fun removeBlackListUser(
+        @QueryParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待移出用户Id")
+        removeUserId: String
     ): Result<Boolean>
 }

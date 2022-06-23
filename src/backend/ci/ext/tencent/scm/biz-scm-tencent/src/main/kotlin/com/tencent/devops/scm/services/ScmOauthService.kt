@@ -234,6 +234,7 @@ class ScmOauthService @Autowired constructor(
     }
 
     @BkTimed
+    @Suppress("NestedBlockDepth")
     fun addCommitCheck(
         request: CommitCheckRequest
     ) {
