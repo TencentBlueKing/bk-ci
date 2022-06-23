@@ -1,0 +1,5 @@
+.canvas-wrapper {
+  height: calc(100% - 40px);
+  width: 100%;
+  margin-top: 18px;
+}
