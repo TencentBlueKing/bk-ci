@@ -358,7 +358,7 @@ class GithubApiService(
     }
 
 
-    // 以下非接口实现
+    // 以下非StreamGitApiService接口实现
     /**
      * 获取两个commit之间的差异文件
      * @param from 旧commit
