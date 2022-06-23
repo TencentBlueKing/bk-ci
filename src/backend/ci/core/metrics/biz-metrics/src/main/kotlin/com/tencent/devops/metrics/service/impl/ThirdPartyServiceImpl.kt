@@ -43,7 +43,6 @@ import com.tencent.devops.metrics.pojo.dto.QueryPipelineSummaryInfoDTO
 import com.tencent.devops.metrics.pojo.qo.ThirdPartyOverviewInfoQO
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.math.BigDecimal

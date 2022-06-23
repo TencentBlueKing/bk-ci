@@ -50,6 +50,10 @@ spring:
 server:
   port: __BK_CI_METRICS_API_PORT__
 
+metrics:
+  devopsUrl: __BK_CI_PUBLIC_URL__
+  streamUrl: __BK_CI_STREAM_URL__  
+
 sharding:
   routing:
     cacheSize: 100000

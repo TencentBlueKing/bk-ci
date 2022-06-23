@@ -168,7 +168,7 @@ class ProjectInfoDao {
     fun batchCreatePipelineLabelData(
         dslContext: DSLContext,
         pipelineLabelRelateInfos: List<TProjectPipelineLabelInfoRecord>
-    ){
+    ) {
         with(TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO) {
             pipelineLabelRelateInfos.forEach {
                 dslContext.insertInto(this)

@@ -51,6 +51,7 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
+import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
@@ -318,8 +319,11 @@ class BuildEndControl @Autowired constructor(
         // 获取同流水线的下一个队首
         startNextBuild(pipelineRuntimeExtService.popNextQueueBuildInfo(projectId = projectId, pipelineId = pipelineId))
         // 获取同并发组的下一个队首
-        buildInfo.concurrencyGroup?.let {
-            startNextBuild(pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(projectId, it))
+        buildInfo.concurrencyGroup?.let { group ->
+            ConcurrencyGroupLock(redisOperation, group).use { groupLock ->
+                groupLock.lock()
+                startNextBuild(pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(projectId, group))
+            }
         }
     }
 

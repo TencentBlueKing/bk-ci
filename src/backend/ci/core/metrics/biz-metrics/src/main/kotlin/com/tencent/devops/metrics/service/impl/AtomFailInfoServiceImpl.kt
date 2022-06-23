@@ -45,7 +45,6 @@ import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryAtomFailInfoDTO
 import com.tencent.devops.metrics.pojo.qo.QueryAtomFailInfoQO
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
