@@ -110,6 +110,9 @@ instance.interceptors.response.use<ResponseData>((response: AxiosResponse) => {
         name: 'login',
       });
     }
+    return Promise.reject({
+      message: data.message,
+    });
   } else if (data.code !== 0 && config.method !== 'head') {
     return Promise.reject({
       message: data.message,
