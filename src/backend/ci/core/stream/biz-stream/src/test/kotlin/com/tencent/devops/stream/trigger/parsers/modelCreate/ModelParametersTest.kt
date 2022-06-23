@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger.parsers.modelCreate
 
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelParameters.addInputParams
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
@@ -109,7 +110,7 @@ internal class ModelParametersTest {
             )
         )
 
-        Assertions.assertEquals(resultData, originData.addInputParams(testData))
+        Assertions.assertEquals(resultData, originData.addInputParams(null, testData))
     }
 
     @DisplayName("测试inputs修改参数(异常报错)")
@@ -153,7 +154,12 @@ internal class ModelParametersTest {
             "array" to "[ 1, 2.2, \"3\" ]",
             "bool" to "true"
         )
+        val variables = mapOf(
+            "string" to Variable(
+                ""
+            )
+        )
 
-        Assertions.assertThrows(RuntimeException::class.java) { originData.addInputParams(testData) }
+        Assertions.assertThrows(RuntimeException::class.java) { originData.addInputParams(variables, testData) }
     }
 }

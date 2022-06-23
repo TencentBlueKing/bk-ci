@@ -67,14 +67,21 @@ object YamlObjects {
 
     private fun getVarProps(fromPath: String, props: Any): VariableProps {
         val propsMap = transValue<Map<String, Any?>>(fromPath, "props", props)
-        return VariableProps(
+        val va = VariableProps(
             label = getNullValue("label", propsMap),
             type = getNotNullValue("type", "props", propsMap),
             values = transNullValue(fromPath, "values", "values", propsMap),
             datasource = getVarPropDataSource(fromPath, propsMap["datasource"]),
             description = getNullValue("description", propsMap),
-            multiple = getNullValue("multiple", propsMap)?.toBoolean()
+            multiple = getNullValue("multiple", propsMap)?.toBoolean(),
+            required = getNullValue("required", propsMap)?.toBoolean()
         )
+
+        if (!va.values.isNullOrEmpty() && va.datasource != null) {
+            throw throw YamlFormatException("$fromPath variable format error: values and datasource cannot coexist")
+        }
+
+        return va
     }
 
     private fun getVarPropDataSource(fromPath: String, datasource: Any?): VariableDatasource? {

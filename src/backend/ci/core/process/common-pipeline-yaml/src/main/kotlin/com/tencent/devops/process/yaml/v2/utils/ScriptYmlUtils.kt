@@ -151,7 +151,6 @@ object ScriptYmlUtils {
     }
 
     fun parseVariableValue(value: String?, settingMap: Map<String, String?>): String? {
-
         if (value == null || value.isEmpty()) {
             return ""
         }

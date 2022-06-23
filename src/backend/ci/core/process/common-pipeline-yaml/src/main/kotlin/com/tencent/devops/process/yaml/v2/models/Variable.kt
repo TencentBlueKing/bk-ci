@@ -53,6 +53,7 @@ data class Variable(
  * @param datasource 下拉列表数据源，和 values 二选一
  * @param multiple 是否允许多选，缺省时为 false（type=selector时生效）
  * @param description 可选，描述
+ * @param required 可选，是否必填
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -62,7 +63,8 @@ data class VariableProps(
     val values: List<Any>? = null,
     val datasource: VariableDatasource? = null,
     val description: String? = null,
-    val multiple: Boolean? = false
+    val multiple: Boolean? = false,
+    val required: Boolean? = false
 )
 
 /**
@@ -104,7 +106,11 @@ enum class VariablePropType(val value: String) {
     TIPS("tips");
 
     companion object {
-        fun findType(value: String): VariablePropType? {
+        fun findType(value: String?): VariablePropType? {
+            if (value.isNullOrBlank()) {
+                return null
+            }
+
             values().forEach {
                 if (it.value == value) {
                     return it

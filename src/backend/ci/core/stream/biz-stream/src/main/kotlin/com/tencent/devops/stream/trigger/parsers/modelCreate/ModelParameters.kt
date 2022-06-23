@@ -113,8 +113,9 @@ object ModelParameters {
         }
 
         // 用户自定义变量
+        val userVariables = action.getUserVariables(yaml.variables) ?: yaml.variables
         val buildFormProperties = getBuildFormPropertyFromYmlVariable(
-            variables = action.getUserVariables(yaml.variables) ?: yaml.variables,
+            variables = userVariables,
             startParams = startParams
         )
 
@@ -140,15 +141,16 @@ object ModelParameters {
 
         // 对于额外的手动输入参数在最后处理逻辑
         if (manualInputs != null) {
-            result.addInputParams(manualInputs)
+            result.addInputParams(userVariables, manualInputs)
         }
 
         return result
     }
 
     fun MutableList<BuildFormProperty>.addInputParams(
+        userVariables: Map<String, Variable>?,
         inputsData: Map<String, String>
-    ) {
+    ): MutableList<BuildFormProperty> {
         this.forEach manualEach@{ prop ->
             val key = if (prop.id.startsWith(VARIABLE_PREFIX)) {
                 prop.id.removePrefix(VARIABLE_PREFIX)
@@ -160,13 +162,18 @@ object ModelParameters {
                 return@manualEach
             }
 
-            if (prop.readOnly == true) {
-                // 若variables 下定义的入参只读，则报错
-                throw RuntimeException("variable $key is readonly, can't edit")
-            } else {
-                prop.defaultValue = inputsData[key]!!
+            // inputs包含，但是配置不允许改，直接报错
+            if (userVariables != null &&
+                userVariables.containsKey(key) &&
+                userVariables[key]?.allowModifyAtStartup != true
+            ) {
+                throw RuntimeException("variable $key not allow modify at startup")
             }
+
+            prop.defaultValue = inputsData[key]!!
         }
+
+        return this
     }
 
     private fun getBuildFormPropertyFromYmlVariable(

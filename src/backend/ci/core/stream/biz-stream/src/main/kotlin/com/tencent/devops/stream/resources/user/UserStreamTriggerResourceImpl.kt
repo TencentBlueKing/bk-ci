@@ -31,8 +31,17 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.form.FormBuilder
+import com.tencent.devops.common.web.form.data.CheckboxPropData
+import com.tencent.devops.common.web.form.data.FormDataType
+import com.tencent.devops.common.web.form.data.InputPropData
+import com.tencent.devops.common.web.form.data.InputPropType
+import com.tencent.devops.common.web.form.data.RadioPropData
+import com.tencent.devops.common.web.form.data.SelectPropData
+import com.tencent.devops.common.web.form.data.TimePropData
 import com.tencent.devops.common.web.form.models.Form
+import com.tencent.devops.common.web.form.models.ui.DataSourceItem
 import com.tencent.devops.process.yaml.v2.models.Variable
+import com.tencent.devops.process.yaml.v2.models.VariablePropType
 import com.tencent.devops.stream.api.user.UserStreamTriggerResource
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.ManualTriggerInfo
@@ -45,7 +54,6 @@ import com.tencent.devops.stream.service.StreamPipelineService
 import com.tencent.devops.stream.service.StreamYamlService
 import com.tencent.devops.stream.trigger.ManualTriggerService
 import com.tencent.devops.stream.util.GitCommonUtils
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -123,7 +131,9 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
             return Result(ManualTriggerInfo(yaml = yaml, schema = null))
         }
 
-        return Result(ManualTriggerInfo(yaml = yaml, schema = parseVariablesToForm(variables)))
+        val schema = parseVariablesToForm(variables)
+
+        return Result(ManualTriggerInfo(yaml = yaml, schema = schema))
     }
 
     override fun checkYaml(userId: String, yaml: StreamGitYamlString): Result<String> {
@@ -155,12 +165,109 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(UserStreamTriggerResourceImpl::class.java)
-
         fun parseVariablesToForm(variables: Map<String, Variable>): Form {
             val builder = FormBuilder().setTitle("").setDescription("")
 
-            variables.forEach { (name, value) ->
+            // 去掉不能在前端页面展示的
+            variables.filter { it.value.allowModifyAtStartup == true }.forEach { (name, value) ->
+                when (VariablePropType.findType(value.props?.type)) {
+                    VariablePropType.VUEX_INPUT -> builder.setProp(
+                        InputPropData(
+                            id = name,
+                            type = FormDataType.STRING,
+                            title = value.props?.label ?: name,
+                            default = value.value,
+                            required = value.props?.required
+                        )
+                    )
+                    VariablePropType.VUEX_TEXTAREA -> builder.setProp(
+                        InputPropData(
+                            id = name,
+                            type = FormDataType.STRING,
+                            title = value.props?.label ?: name,
+                            default = value.value,
+                            required = value.props?.required,
+                            inputType = InputPropType.TEXTAREA
+                        )
+                    )
+                    VariablePropType.SELECTOR -> {
+                        builder.setProp(
+                            SelectPropData(
+                                id = name,
+                                type = FormDataType.STRING,
+                                title = value.props?.label ?: name,
+                                default = value.value,
+                                required = value.props?.required,
+                                multiple = value.props?.multiple,
+                                dataSource = when {
+                                    !value.props?.values.isNullOrEmpty() -> value.props?.values?.map {
+                                        DataSourceItem(
+                                            label = it.toString(),
+                                            value = it
+                                        )
+                                    }
+                                    // TODO: 需要确认url的写法
+                                    value.props?.datasource != null -> TODO()
+                                    else -> null
+                                }
+                            )
+                        )
+                    }
+                    VariablePropType.ATOM_CHECKBOX_LIST -> builder.setProp(
+                        CheckboxPropData(
+                            id = name,
+                            type = FormDataType.ARRAY,
+                            title = value.props?.label ?: name,
+                            default = value.value,
+                            required = value.props?.required,
+                            dataSource = value.props?.values?.map {
+                                DataSourceItem(
+                                    label = it.toString(),
+                                    value = it
+                                )
+                            } // TODO: 需要确认values为空时是否帮用户填默认值
+                        )
+                    )
+                    VariablePropType.BOOLEAN -> builder.setProp(
+                        RadioPropData(
+                            id = name,
+                            type = FormDataType.BOOLEAN,
+                            title = value.props?.label ?: name,
+                            default = value.value?.toBoolean(),
+                            required = value.props?.required,
+                            dataSource = listOf(
+                                DataSourceItem("true", true),
+                                DataSourceItem("false", false)
+                            )
+                        )
+                    )
+                    VariablePropType.TIME_PICKER -> builder.setProp(
+                        TimePropData(
+                            id = name,
+                            type = FormDataType.STRING,
+                            title = value.props?.label ?: name,
+                            default = value.value,
+                            required = value.props?.required,
+                            // TODO: 需要确认，展示的是什么类型的type
+                        )
+                    )
+                    VariablePropType.COMPANY_STAFF_INPUT -> {
+                        // TODO: 需要确认
+                    }
+                    VariablePropType.TIPS -> {
+                        // TODO: 需要确认
+                    }
+                    // 默认按input, string类型算
+                    else -> builder.setProp(
+                        InputPropData(
+                            id = name,
+                            type = FormDataType.STRING,
+                            title = value.props?.label ?: name,
+                            default = value.value,
+                            required = value.props?.required
+                        )
+                    )
+                }
             }
 
             return builder.build()
