@@ -98,10 +98,9 @@ class AtomStatisticsDao {
         if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
             conditions.add(pipelineLabelInfo.LABEL_ID.`in`(queryCondition.baseQueryReq.pipelineLabelIds))
         }
-        if(atomCodes.isNullOrEmpty()) {
+        if (!atomCodes.isNullOrEmpty()) {
             conditions.add(this.ATOM_CODE.`in`(atomCodes))
         }
-
         if (startDateTime!!.isEqual(endDateTime)) {
             conditions.add(this.STATISTICS_TIME.eq(startDateTime))
         } else {
@@ -118,7 +117,9 @@ class AtomStatisticsDao {
             if (!pipelineIds.isNullOrEmpty()) {
                 conditions.add(this.PIPELINE_ID.`in`(pipelineIds))
             }
-            conditions.add(this.ATOM_CODE.`in`(queryCondition.atomCodes))
+            if (!queryCondition.atomCodes.isNullOrEmpty()) {
+                conditions.add(this.ATOM_CODE.`in`(queryCondition.atomCodes))
+            }
             val startDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime)?.atStartOfDay()
             val endDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime)?.atStartOfDay()
             if (!queryCondition.errorTypes.isNullOrEmpty()) {
@@ -133,7 +134,7 @@ class AtomStatisticsDao {
             if (fetch.isNotEmpty) {
                 return fetch.map { it.value1() }
             }
-            return queryCondition.atomCodes
+            return listOf("")
         }
     }
 
