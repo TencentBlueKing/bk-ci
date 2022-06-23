@@ -14,15 +14,15 @@ class ServiceGithubCheckResourceImpl @Autowired constructor(
     val githubTokenService: GithubTokenService,
     val githubCheckService: GithubCheckService
 ) : ServiceGithubCheckResource {
-    
-    override fun createCheckRun(request: CreateCheckRunRequest, userId: String): CheckRunResponse {
+
+    override fun createCheckRun(userId: String, request: CreateCheckRunRequest): CheckRunResponse {
         return githubCheckService.createCheckRun(
             request = request,
             token = githubTokenService.getAccessTokenMustExist(userId).accessToken
         )
     }
-    
-    override fun updateCheckRun(request: UpdateCheckRunRequest, userId: String): CheckRunResponse {
+
+    override fun updateCheckRun(userId: String, request: UpdateCheckRunRequest): CheckRunResponse {
         return githubCheckService.updateCheckRun(
             request = request,
             token = githubTokenService.getAccessTokenMustExist(userId).accessToken

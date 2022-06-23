@@ -13,8 +13,8 @@ class ServiceGithubDatabaseResourceImpl @Autowired constructor(
     val githubTokenService: GithubTokenService,
     val githubDatabaseService: GithubDatabaseService
 ) : ServiceGithubDatabaseResource {
-    
-    override fun getTree(request: GetTreeRequest, userId: String): GithubTreeResponse {
+
+    override fun getTree(userId: String, request: GetTreeRequest): GithubTreeResponse {
         return githubDatabaseService.getTree(
             request = request,
             token = githubTokenService.getAccessTokenMustExist(userId).accessToken

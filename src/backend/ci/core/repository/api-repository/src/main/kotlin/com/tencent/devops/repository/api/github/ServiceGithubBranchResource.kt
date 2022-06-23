@@ -23,19 +23,19 @@ interface ServiceGithubBranchResource {
     @POST
     @Path("/listBranch")
     fun listBranch(
-        request: GHListBranchesRequest,
         @ApiParam("用户id", required = true)
         @QueryParam("userId")
-        userId: String
+        userId: String,
+        request: GHListBranchesRequest
     ): List<GHBranchResponse>
 
     @ApiOperation("获取仓库分支")
     @POST
     @Path("/getBranch")
     fun getBranch(
-        request: GHGetBranchRequest,
         @ApiParam("用户id", required = true)
         @QueryParam("userId")
-        userId: String
+        userId: String,
+        request: GHGetBranchRequest
     ): GHBranchResponse
 }

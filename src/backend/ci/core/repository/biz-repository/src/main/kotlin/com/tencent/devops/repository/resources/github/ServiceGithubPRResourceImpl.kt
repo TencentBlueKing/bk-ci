@@ -15,17 +15,17 @@ class ServiceGithubPRResourceImpl @Autowired constructor(
     val githubTokenService: GithubTokenService,
     val githubPRService: GithubPRService
 ) : ServiceGithubPRResource {
-    
-    override fun getPullRequest(request: GetPullRequestRequest, userId: String): PullRequestResponse {
+
+    override fun getPullRequest(userId: String, request: GetPullRequestRequest): PullRequestResponse {
         return githubPRService.getPullRequest(
             request = request,
             token = githubTokenService.getAccessTokenMustExist(userId).accessToken
         )
     }
-    
+
     override fun listPullRequestFiles(
-        request: ListPullRequestFileRequest,
-        userId: String
+        userId: String,
+        request: ListPullRequestFileRequest
     ): List<PullRequestFileResponse> {
         return githubPRService.listPullRequestFiles(
             request = request,

@@ -14,15 +14,15 @@ class ServiceGithubCommitsResourceImpl @Autowired constructor(
     val githubTokenService: GithubTokenService,
     val githubCommitsService: GithubCommitsService
 ) : ServiceGithubCommitsResource {
-    
-    override fun listCommits(request: ListCommitRequest, userId: String): List<CommitResponse> {
+
+    override fun listCommits(userId: String, request: ListCommitRequest): List<CommitResponse> {
         return githubCommitsService.listCommits(
             request = request,
             token = githubTokenService.getAccessTokenMustExist(userId).accessToken
         )
     }
-    
-    override fun getCommit(request: GetCommitRequest, userId: String): CommitResponse {
+
+    override fun getCommit(userId: String, request: GetCommitRequest): CommitResponse {
         return githubCommitsService.getCommit(
             request = request,
             token = githubTokenService.getAccessTokenMustExist(userId).accessToken

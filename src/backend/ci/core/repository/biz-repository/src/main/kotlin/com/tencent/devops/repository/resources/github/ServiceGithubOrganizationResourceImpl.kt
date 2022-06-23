@@ -41,8 +41,8 @@ class ServiceGithubOrganizationResourceImpl @Autowired constructor(
     val organizationService: GithubOrganizationService
 ) : ServiceGithubOrganizationResource {
     override fun listOrganizations(
-        request: ListOrganizationsRequest,
-        userId: String
+        userId: String,
+        request: ListOrganizationsRequest
     ): List<Organization> {
         return organizationService.listOrganizations(
             request = request,
