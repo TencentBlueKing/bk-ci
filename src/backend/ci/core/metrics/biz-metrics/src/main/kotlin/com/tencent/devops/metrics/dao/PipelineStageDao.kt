@@ -67,7 +67,7 @@ class PipelineStageDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATISTICS_TIME.between(startDateTime, endDateTime))
                 .groupBy(PIPELINE_ID)
-                .orderBy(field, PIPELINE_ID)
+                .orderBy(field.desc(), PIPELINE_ID)
                 .limit(DEFAULT_LIMIT_NUM)
                 .fetch().map { it.value1() }
         }
