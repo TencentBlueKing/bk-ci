@@ -39,6 +39,7 @@ import org.springframework.stereotype.Service
 class GithubPRService @Autowired constructor(
     private val defaultGithubClient: DefaultGithubClient,
 ) {
+
     fun getPullRequest(
         request: GetPullRequestRequest,
         token: String

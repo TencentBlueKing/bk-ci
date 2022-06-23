@@ -40,10 +40,12 @@ import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsR
 import com.tencent.devops.common.sdk.github.response.CreateOrUpdateFileContentsResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_REPOSITORY_GITHUB"], description = "服务-github-repository")
@@ -55,47 +57,59 @@ interface ServiceGithubRepositoryResource {
     @POST
     @Path("/createOrUpdateFile")
     fun createOrUpdateFile(
-        request: CreateOrUpdateFileContentsRequest,
-        userId: String
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        request: CreateOrUpdateFileContentsRequest
     ): CreateOrUpdateFileContentsResponse
 
     @ApiOperation("获取仓库内容，可以是文件、文件夹")
     @POST
     @Path("/getRepositoryContent")
     fun getRepositoryContent(
-        request: GetRepositoryContentRequest,
-        userId: String
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        request: GetRepositoryContentRequest
     ): RepositoryContent
 
     @ApiOperation("获取某个用户在某个仓库的权限和角色")
     @POST
     @Path("/getRepositoryPermissions")
     fun getRepositoryPermissions(
-        request: GetRepositoryPermissionsRequest,
-        userId: String
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        request: GetRepositoryPermissionsRequest
     ): RepositoryPermissions
 
     @ApiOperation("获取某个仓库的信息")
     @POST
     @Path("/getRepository")
     fun getRepository(
-        request: GetRepositoryRequest,
-        userId: String
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        request: GetRepositoryRequest
     ): Repository
 
     @ApiOperation("列出某个用户的仓库")
     @POST
     @Path("/listRepositories")
     fun listRepositories(
-        request: ListRepositoriesRequest,
-        userId: String
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        request: ListRepositoriesRequest
     ): List<Repository>
 
     @ApiOperation("列出某个仓库的所有成员")
     @POST
     @Path("/listRepositoryCollaborators")
     fun listRepositoryCollaborators(
-        request: ListRepositoryCollaboratorsRequest,
-        userId: String
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        request: ListRepositoryCollaboratorsRequest
     ): List<Collaborator>
 }

@@ -20,16 +20,16 @@ class StreamLoginService @Autowired constructor(
         private const val BK_LOGIN_CODE_KEY_EXPIRED = 60L
     }
 
-    fun githubCallback(code: String, state: String): String {
+    fun githubCallback(code: String, state: String?): String {
         val githubCallback =
             client.get(ServiceGithubOauthResource::class)
                 .githubCallback(code = code, state = state, channelCode = ChannelCode.GIT.name).data!!
-        val code = UUIDUtil.generate()
+        val authCode = UUIDUtil.generate()
         redisOperation.set(
             key = String.format(BK_LOGIN_CODE_KEY, "github", githubCallback.userId),
             value = code,
             expiredInSecond = BK_LOGIN_CODE_KEY_EXPIRED
         )
-        return String.format(streamLoginConfig.githubRedirectUrl, code, githubCallback.userId, "github")
+        return String.format(streamLoginConfig.githubRedirectUrl, authCode, githubCallback.userId, "github")
     }
 }

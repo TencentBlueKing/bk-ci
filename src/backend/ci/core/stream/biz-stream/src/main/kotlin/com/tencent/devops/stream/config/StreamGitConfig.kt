@@ -42,5 +42,8 @@ class StreamGitConfig {
     @Value("\${git.gitUrl:#{null}}")
     val gitUrl: String? = null
 
+    @Value("\${scm.external.github.signSecret:}")
+    val signSecret: String = ""
+
     fun getScmType() = ScmType.valueOf(scmType!!)
 }

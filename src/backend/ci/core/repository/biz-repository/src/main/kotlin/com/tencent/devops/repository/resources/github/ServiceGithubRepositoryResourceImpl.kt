@@ -50,8 +50,8 @@ class ServiceGithubRepositoryResourceImpl @Autowired constructor(
     val githubRepositoryService: GithubRepositoryService,
 ) : ServiceGithubRepositoryResource {
     override fun createOrUpdateFile(
-        request: CreateOrUpdateFileContentsRequest,
-        userId: String
+        userId: String,
+        request: CreateOrUpdateFileContentsRequest
     ): CreateOrUpdateFileContentsResponse {
         return githubRepositoryService.createOrUpdateFile(
             request = request,
@@ -60,8 +60,8 @@ class ServiceGithubRepositoryResourceImpl @Autowired constructor(
     }
 
     override fun getRepositoryContent(
-        request: GetRepositoryContentRequest,
-        userId: String
+        userId: String,
+        request: GetRepositoryContentRequest
     ): RepositoryContent {
         return githubRepositoryService.getRepositoryContent(
             request = request,
@@ -69,7 +69,10 @@ class ServiceGithubRepositoryResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getRepositoryPermissions(request: GetRepositoryPermissionsRequest, userId: String): RepositoryPermissions {
+    override fun getRepositoryPermissions(
+        userId: String,
+        request: GetRepositoryPermissionsRequest
+    ): RepositoryPermissions {
         return githubRepositoryService.getRepositoryPermissions(
             request = request,
             token = githubTokenService.getAccessTokenMustExist(userId).accessToken
@@ -77,8 +80,8 @@ class ServiceGithubRepositoryResourceImpl @Autowired constructor(
     }
 
     override fun getRepository(
-        request: GetRepositoryRequest,
-        userId: String
+        userId: String,
+        request: GetRepositoryRequest
     ): Repository {
         return githubRepositoryService.getRepository(
             request = request,
@@ -87,8 +90,8 @@ class ServiceGithubRepositoryResourceImpl @Autowired constructor(
     }
 
     override fun listRepositories(
-        request: ListRepositoriesRequest,
-        userId: String
+        userId: String,
+        request: ListRepositoriesRequest
     ): List<Repository> {
         return githubRepositoryService.listRepositories(
             request = request,
@@ -97,8 +100,8 @@ class ServiceGithubRepositoryResourceImpl @Autowired constructor(
     }
 
     override fun listRepositoryCollaborators(
-        request: ListRepositoryCollaboratorsRequest,
-        userId: String
+        userId: String,
+        request: ListRepositoryCollaboratorsRequest
     ): List<Collaborator> {
         return githubRepositoryService.listRepositoryCollaborators(
             request = request,
