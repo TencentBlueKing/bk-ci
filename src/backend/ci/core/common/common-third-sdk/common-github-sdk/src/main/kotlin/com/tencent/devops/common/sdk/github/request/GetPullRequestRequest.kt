@@ -16,5 +16,4 @@ data class GetPullRequestRequest(
     override fun getHttpMethod() = HttpMethod.GET
 
     override fun getApiPath() = "/repos/$owner/$repo/pulls/$pullNumber"
-
 }

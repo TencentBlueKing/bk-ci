@@ -39,14 +39,12 @@ import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
 import com.tencent.devops.common.sdk.github.response.CreateOrUpdateFileContentsResponse
-import com.tencent.devops.repository.github.config.GithubProperties
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class GithubRepositoryService @Autowired constructor(
     private val defaultGithubClient: DefaultGithubClient,
-    private val githubProperties: GithubProperties
 ) {
     fun createOrUpdateFile(
         request: CreateOrUpdateFileContentsRequest,

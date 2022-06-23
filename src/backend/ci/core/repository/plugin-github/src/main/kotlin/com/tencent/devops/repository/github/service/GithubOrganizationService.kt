@@ -30,14 +30,12 @@ package com.tencent.devops.repository.github.service
 import com.tencent.devops.common.sdk.github.DefaultGithubClient
 import com.tencent.devops.common.sdk.github.pojo.Organization
 import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
-import com.tencent.devops.repository.github.config.GithubProperties
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class GithubOrganizationService @Autowired constructor(
     private val defaultGithubClient: DefaultGithubClient,
-    private val githubProperties: GithubProperties
 ) {
     fun listOrganizations(
         request: ListOrganizationsRequest,
