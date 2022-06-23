@@ -28,6 +28,7 @@
 package com.tencent.devops.common.sdk.github
 
 import com.tencent.devops.common.sdk.github.request.GetUserRequest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 
 class GithubUserApiTest {
@@ -41,6 +42,12 @@ class GithubUserApiTest {
     private val repo = "bk-ci"
     private val owner = "Florence-y"
     private val defaultBranch = "master"
+    private val json = ""
+
+    @AfterEach
+    internal fun tearDown() {
+        TODO("Not yet implemented")
+    }
     @Test
     fun getUser() {
         val request = GetUserRequest()
