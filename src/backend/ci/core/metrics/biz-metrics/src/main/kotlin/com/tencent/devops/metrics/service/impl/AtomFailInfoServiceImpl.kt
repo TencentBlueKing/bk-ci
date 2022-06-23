@@ -44,6 +44,7 @@ import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryAtomFailInfoDTO
 import com.tencent.devops.metrics.pojo.qo.QueryAtomFailInfoQO
+import com.tencent.devops.metrics.utils.MetricsUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -163,7 +164,10 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 pageSize = queryAtomFailInfoDTO.pageSize
             )
         )
-        result.forEach { it.errorTypeName = errorDict[it.errorType] }
+        result.forEach {
+            it.errorTypeName = errorDict[it.errorType]
+            it.domain = MetricsUtils.getDomain(it.channelCode)
+        }
         return Page(
             page = queryAtomFailInfoDTO.page,
             pageSize = queryAtomFailInfoDTO.pageSize,

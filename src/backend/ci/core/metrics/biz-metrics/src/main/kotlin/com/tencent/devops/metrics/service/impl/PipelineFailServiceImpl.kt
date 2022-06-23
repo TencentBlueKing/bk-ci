@@ -52,6 +52,7 @@ import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineFailTrendInfoVO
 import com.tencent.devops.metrics.service.PipelineFailManageService
+import com.tencent.devops.metrics.utils.MetricsUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -190,7 +191,7 @@ class PipelineFailServiceImpl @Autowired constructor(
             result.map {
                 val channelCode = it.channelCode
                 // 根据渠道信息获取域名信息
-                val domain = getDomain(channelCode)
+                val domain = MetricsUtils.getDomain(channelCode)
                 PipelineFailDetailInfoDO(
                     pipelineBuildInfo = PipelineBuildInfoDO(
                         projectId = it.projectId,
@@ -222,19 +223,5 @@ class PipelineFailServiceImpl @Autowired constructor(
             count = queryPipelineFailDetailCount,
             records = detailInfos
         )
-    }
-
-    private fun getDomain(channelCode: String): String {
-        val url = if (channelCode == ChannelCode.GIT.name) {
-            metricsConfig.streamUrl
-        } else {
-            metricsConfig.devopsUrl
-        }
-        val index = url.indexOf("://")
-        return if (index != -1) {
-            url.substring(index + 3)
-        } else {
-            url
-        }
     }
 }
