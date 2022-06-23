@@ -61,5 +61,8 @@ data class DataPlatBuildDetail(
     @ApiModelProperty("结束时间", required = false)
     val endTime: String?,
     @ApiModelProperty("构建状态", required = false)
-    val status: String?
+    val status: String?,
+    val bgId: String,
+    val deptId: String,
+    val centerId: String
 )

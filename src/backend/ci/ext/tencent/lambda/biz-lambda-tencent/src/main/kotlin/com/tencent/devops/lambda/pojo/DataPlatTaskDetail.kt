@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.lambda.pojo
 
+import io.swagger.annotations.ApiModelProperty
 import org.json.simple.JSONObject
 
 data class DataPlatTaskDetail(
@@ -45,5 +46,11 @@ data class DataPlatTaskDetail(
     val endTime: String?,
     val costTime: Long,
     val starter: String?,
-    val washTime: String
+    val washTime: String,
+    val bgId: String,
+    val deptId: String,
+    val centerId: String,
+    val bgName: String,
+    val deptName: String,
+    val centerName: String
 )
