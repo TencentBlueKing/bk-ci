@@ -38,6 +38,7 @@ import org.springframework.stereotype.Service
 class GithubCommitsService @Autowired constructor(
     private val defaultGithubClient: DefaultGithubClient,
 ) {
+    
     fun listCommits(
         request: ListCommitRequest,
         token: String
