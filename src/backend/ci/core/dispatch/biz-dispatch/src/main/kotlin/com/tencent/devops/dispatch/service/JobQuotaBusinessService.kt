@@ -78,10 +78,11 @@ class JobQuotaBusinessService @Autowired constructor(
     ): Boolean {
         LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} >>> start check job quota.")
 
+        var result: Boolean
         val jobQuotaProjectLock = JobQuotaProjectLock(redisOperation, projectId)
         try {
             jobQuotaProjectLock.lock()
-            val result = checkJobQuotaBase(
+            result = checkJobQuotaBase(
                 projectId = projectId,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
