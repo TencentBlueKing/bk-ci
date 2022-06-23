@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiParam
 @ApiModel("插件统计信息查询请求报文")
 data class AtomStatisticsInfoReqVO(
     @ApiParam("流水线ID", required = false)
-    override val pipelineIds: List<String>? = null,
+    override var pipelineIds: List<String>? = null,
     @ApiParam("流水线标签", required = false)
     override val pipelineLabelIds: List<Long>? = null,
     @ApiParam("开始时间", required = false)
