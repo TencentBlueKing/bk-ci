@@ -56,6 +56,7 @@ import com.tencent.devops.stream.trigger.ManualTriggerService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("ComplexMethod")
 @RestResource
 class UserStreamTriggerResourceImpl @Autowired constructor(
     private val manualTriggerService: ManualTriggerService,

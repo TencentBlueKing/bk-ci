@@ -52,6 +52,7 @@ interface FormPropData {
     fun buildComponent(): UiComponent
 }
 
+@Suppress("ComplexCondition")
 fun FormPropData.buildProps(props: Map<String, Any?>?): Map<String, Any>? {
     if (props == null) {
         return null
