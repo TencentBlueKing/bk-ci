@@ -108,7 +108,7 @@ export default defineComponent({
                 <Popover class="quota-progress" placement="right">
                   {{
                     default: () => (
-                        <Progress type='circle' width={30} size='large' percent={cell} showText={false}></Progress>
+                        <Progress type='circle' width={26} percent={cell} showText={false}></Progress>
                     ),
                     content: () => (
                       <>
