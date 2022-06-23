@@ -50,6 +50,7 @@ export default defineComponent({
     });
 
     async function submitLogin() {
+      if (!loginable.value || locked.value) return
       try {
         submiting.value = true;
         const result = await store.dispatch(LOGIN, {
@@ -117,9 +118,9 @@ export default defineComponent({
     }
     return () => (
       <div class="bk-repo-login">
-        <img class="bg-login-img" src="/assets/bg_login.png" />
+        <img class="bg-login-img" src={`${process.env.BASE_URL}assets/bg_login.png`} />
         <section class="bk-repo-login-content">
-          <img src="/assets/logo_login.png" />
+          <img src={`${process.env.BASE_URL}assets/logo_login.png`} />
           <div class="bk-repo-login-form">
             {
               !!loginFailedTip.value && (
@@ -129,8 +130,20 @@ export default defineComponent({
               </div>
               )
             }
-            <Input class="bk-repo-login-input" size='large' v-model={state.username} placeholder={t('userNamePlaceholder')} />
-            <Input class="bk-repo-login-input" size='large' v-model={state.password} placeholder={t('pwdPlaceholder')} />
+            <Input
+              class="bk-repo-login-input"
+              size='large'
+              v-model={state.username}
+              placeholder={t('userNamePlaceholder')}
+              onEnter={submitLogin}
+            />
+            <Input
+              class="bk-repo-login-input"
+              size='large'
+              v-model={state.password}
+              placeholder={t('pwdPlaceholder')}
+              onEnter={submitLogin}
+            />
             <Button
               class="bk-repo-login-btn"
               theme='primary'
