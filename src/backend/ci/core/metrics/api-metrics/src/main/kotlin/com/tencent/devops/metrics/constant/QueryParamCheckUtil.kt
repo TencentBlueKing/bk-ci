@@ -46,7 +46,7 @@ object QueryParamCheckUtil {
     fun getIntervalTime(
         fromDate: LocalDateTime,
         toDate: LocalDateTime
-    ) = ChronoUnit.DAYS.between(fromDate, toDate)
+    ) = if (fromDate.isEqual(toDate)) 1 else ChronoUnit.DAYS.between(fromDate, toDate)
 
     val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     fun getStartDateTime(): String {
@@ -65,6 +65,9 @@ object QueryParamCheckUtil {
     }
 
     fun getBetweenDate(start: String, end: String): List<String> {
+        if (start == end) {
+            return listOf(start)
+        }
         val list: MutableList<String> = ArrayList()
         // LocalDate默认的时间格式为2020-02-02
         val startDate: LocalDate = LocalDate.parse(start)

@@ -28,9 +28,12 @@
 package com.tencent.devops.metrics.service.impl
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
+import com.tencent.devops.metrics.constant.Constants.METRICS_PIPELINE_ID_EXPIRED
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.PipelineStageDao
@@ -48,7 +51,8 @@ import java.time.LocalDateTime
 @Service
 class PipelineStageServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineStageDao: PipelineStageDao
+    private val pipelineStageDao: PipelineStageDao,
+    private val redisOperation: RedisOperation
 ) : PipelineStageManageService {
 
     override fun queryPipelineStageTrendInfo(
@@ -56,18 +60,28 @@ class PipelineStageServiceImpl @Autowired constructor(
     ): List<StageTrendSumInfoVO> {
         var stageTrendSumInfos: MutableMap<String, MutableMap<String, StageAvgCostTimeInfoDO>>
         val tags = pipelineStageDao.getStageTag(dslContext, queryPipelineOverviewDTO.projectId)
-        val startTime = queryPipelineOverviewDTO.baseQueryReq.startTime
-        val endTime = queryPipelineOverviewDTO.baseQueryReq.endTime
+        val baseQueryReq = queryPipelineOverviewDTO.baseQueryReq
+        val startTime = baseQueryReq.startTime
+        val endTime = baseQueryReq.endTime
         val betweenDate = QueryParamCheckUtil.getBetweenDate(startTime!!, endTime!!).toMutableList()
         var pipelineNames: MutableSet<String>
         return tags.map { tag -> // 根据stage标签分组获取数据
+            val pipelineIds =
+                if (baseQueryReq.pipelineIds.isNullOrEmpty() && baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+                    getStagePipelineIdByProject(
+                        projectId = queryPipelineOverviewDTO.projectId,
+                        startTime = startTime,
+                        endTime = endTime,
+                        tag = tag
+                    )
+            } else baseQueryReq.pipelineIds
             stageTrendSumInfos = mutableMapOf()
             pipelineNames = mutableSetOf()
             val result = pipelineStageDao.queryPipelineStageTrendInfo(
                 dslContext,
                 QueryPipelineStageTrendInfoQO(
                     projectId = queryPipelineOverviewDTO.projectId,
-                    pipelineIds = queryPipelineOverviewDTO.baseQueryReq.pipelineIds,
+                    pipelineIds = pipelineIds,
                     pipelineLabelIds = queryPipelineOverviewDTO.baseQueryReq.pipelineLabelIds,
                     startTime = startTime,
                     endTime = endTime,
@@ -106,6 +120,27 @@ class PipelineStageServiceImpl @Autowired constructor(
                 pipelineStageCostTimeInfoDOs.add(PipelineStageCostTimeInfoDO(pipelineName, pipelineStageInfos))
             }
             StageTrendSumInfoVO(tag, pipelineStageCostTimeInfoDOs)
+        }
+    }
+
+    fun getStagePipelineIdByProject(projectId: String, startTime: String, endTime: String, tag: String): List<String> {
+        val value = redisOperation.get("MetricsOverviewStageDefaultPipelineIds:$projectId:$tag")
+        if (value.isNullOrEmpty()) {
+            val pipelineIds = pipelineStageDao.getStagePipelineIdByProject(
+                dslContext = dslContext,
+                projectId = projectId,
+                startTime = startTime,
+                endTime = endTime,
+                tag = tag
+            )
+            redisOperation.set(
+                key = "MetricsOverviewStageDefaultPipelineIds:$projectId:$tag",
+                value = JsonUtil.toJson(pipelineIds),
+                expiredInSecond = METRICS_PIPELINE_ID_EXPIRED
+            )
+            return pipelineIds
+        } else {
+            return JsonUtil.to(value)
         }
     }
 }

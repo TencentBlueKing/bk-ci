@@ -93,13 +93,17 @@ class AtomStatisticsDao {
         if (!pipelineIds.isNullOrEmpty()) {
             conditions.add(this.PIPELINE_ID.`in`(pipelineIds))
         }
+        val startDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime)?.atStartOfDay()
+        val endDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime)?.atStartOfDay()
         if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
             conditions.add(pipelineLabelInfo.LABEL_ID.`in`(queryCondition.baseQueryReq.pipelineLabelIds))
         }
         conditions.add(this.ATOM_CODE.`in`(atomCodes))
-        val startTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime)?.atStartOfDay()
-        val endTimeDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime)?.atStartOfDay()
-        conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
+        if (startDateTime!!.isEqual(endDateTime)) {
+            conditions.add(this.STATISTICS_TIME.eq(startDateTime))
+        } else {
+            conditions.add(this.STATISTICS_TIME.between(startDateTime, endDateTime))
+        }
         return conditions
     }
 
@@ -112,14 +116,16 @@ class AtomStatisticsDao {
                 conditions.add(this.PIPELINE_ID.`in`(pipelineIds))
             }
             conditions.add(this.ATOM_CODE.`in`(queryCondition.atomCodes))
+            val startDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime)?.atStartOfDay()
+            val endDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime)?.atStartOfDay()
             if (!queryCondition.errorTypes.isNullOrEmpty()) {
                 conditions.add(this.ERROR_TYPE.`in`(queryCondition.errorTypes))
             }
-            val startTimeDateTime =
-                DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime)?.atStartOfDay()
-            val endTimeDateTime =
-                DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime)?.atStartOfDay()
-            conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
+            if (startDateTime!!.isEqual(endDateTime)) {
+                conditions.add(this.STATISTICS_TIME.eq(startDateTime))
+            } else {
+                conditions.add(this.STATISTICS_TIME.between(startDateTime, endDateTime))
+            }
             val fetch = dslContext.select(ATOM_CODE).from(this).where(conditions).groupBy(ATOM_CODE).fetch()
             if (fetch.isNotEmpty) {
                 return fetch.map { it.value1() }
