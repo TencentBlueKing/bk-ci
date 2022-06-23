@@ -28,6 +28,8 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.service.utils.JooqUtils
+import com.tencent.devops.metrics.constant.Constants
 import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
@@ -44,6 +46,32 @@ import java.time.LocalDateTime
 
 @Repository
 class PipelineStageDao {
+
+    fun getStagePipelineIdByProject(
+        dslContext: DSLContext,
+        projectId: String,
+        tag: String,
+        startTime: String,
+        endTime: String
+    ): List<String> {
+        with(TPipelineStageOverviewData.T_PIPELINE_STAGE_OVERVIEW_DATA) {
+            val startDateTime =
+                DateTimeUtil.stringToLocalDate(startTime)!!.atStartOfDay()
+            val endDateTime =
+                DateTimeUtil.stringToLocalDate(endTime)!!.atStartOfDay()
+            return dslContext.select(
+                PIPELINE_ID,
+                JooqUtils.sum<Long>(AVG_COST_TIME).`as`(Constants.BK_TOTAL_EXECUTE_COUNT_SUM)
+            ).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(STATISTICS_TIME.between(startDateTime, endDateTime))
+                .groupBy(PIPELINE_ID)
+                .orderBy(field(Constants.BK_TOTAL_EXECUTE_COUNT_SUM), PIPELINE_ID)
+                .limit(DEFAULT_LIMIT_NUM)
+                .fetch().map { it.value1() }
+        }
+    }
+
     fun getStageTrendPipelineInfo(
         dslContext: DSLContext,
         queryInfo: QueryPipelineStageTrendInfoQO

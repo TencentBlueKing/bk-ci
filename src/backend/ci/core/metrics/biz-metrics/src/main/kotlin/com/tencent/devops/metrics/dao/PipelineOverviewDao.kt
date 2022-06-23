@@ -53,23 +53,27 @@ import java.time.LocalDateTime
 @Repository
 class PipelineOverviewDao {
 
-    fun getPipelineIdByTotalExecuteCount(
+    fun getPipelineIdByProject(
         dslContext: DSLContext,
-        queryPipelineOverview: QueryPipelineOverviewQO
+        projectId: String,
+        startTime: String,
+        endTime: String
     ): List<String> {
         with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
-            val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            val step = dslContext.select(PIPELINE_ID).from(this)
-            val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo, null)
-            val pipelineLabelIds = queryPipelineOverview.baseQueryReq.pipelineLabelIds
-            if (!pipelineLabelIds.isNullOrEmpty()) {
-                    step.join(tProjectPipelineLabelInfo)
-                        .on(PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                }
-            return step.where(conditions)
-                .orderBy(TOTAL_EXECUTE_COUNT.desc())
+            val startDateTime =
+                DateTimeUtil.stringToLocalDate(startTime)!!.atStartOfDay()
+            val endDateTime =
+                DateTimeUtil.stringToLocalDate(endTime)!!.atStartOfDay()
+            return dslContext.select(
+                PIPELINE_ID,
+                sum<Long>(TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_EXECUTE_COUNT_SUM)
+            ).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(STATISTICS_TIME.between(startDateTime, endDateTime))
+                .groupBy(PIPELINE_ID)
+                .orderBy(field(BK_TOTAL_EXECUTE_COUNT_SUM), PIPELINE_ID)
                 .limit(DEFAULT_LIMIT_NUM)
-                .fetchInto(String::class.java)
+                .fetch().map { it.value1() }
         }
     }
 

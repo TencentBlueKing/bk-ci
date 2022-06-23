@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("基本查询条件请求报文")
 open class BaseQueryReqVO(
     @ApiModelProperty("流水线ID", required = false)
-    open val pipelineIds: List<String>? = null,
+    open var pipelineIds: List<String>? = null,
     @ApiModelProperty("流水线标签", required = false)
     open val pipelineLabelIds: List<Long>? = null,
     @ApiModelProperty("开始时间", required = false)

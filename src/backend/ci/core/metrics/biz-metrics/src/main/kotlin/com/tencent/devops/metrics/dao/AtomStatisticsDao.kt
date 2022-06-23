@@ -93,12 +93,12 @@ class AtomStatisticsDao {
         if (!pipelineIds.isNullOrEmpty()) {
             conditions.add(this.PIPELINE_ID.`in`(pipelineIds))
         }
+        val startDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime)?.atStartOfDay()
+        val endDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime)?.atStartOfDay()
         if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
             conditions.add(pipelineLabelInfo.LABEL_ID.`in`(queryCondition.baseQueryReq.pipelineLabelIds))
         }
         conditions.add(this.ATOM_CODE.`in`(atomCodes))
-        val startDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime)?.atStartOfDay()
-        val endDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime)?.atStartOfDay()
         if (startDateTime!!.isEqual(endDateTime)) {
             conditions.add(this.STATISTICS_TIME.eq(startDateTime))
         } else {
@@ -116,13 +116,11 @@ class AtomStatisticsDao {
                 conditions.add(this.PIPELINE_ID.`in`(pipelineIds))
             }
             conditions.add(this.ATOM_CODE.`in`(queryCondition.atomCodes))
+            val startDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime)?.atStartOfDay()
+            val endDateTime = DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime)?.atStartOfDay()
             if (!queryCondition.errorTypes.isNullOrEmpty()) {
                 conditions.add(this.ERROR_TYPE.`in`(queryCondition.errorTypes))
             }
-            val startDateTime =
-                DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime)?.atStartOfDay()
-            val endDateTime =
-                DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime)?.atStartOfDay()
             if (startDateTime!!.isEqual(endDateTime)) {
                 conditions.add(this.STATISTICS_TIME.eq(startDateTime))
             } else {

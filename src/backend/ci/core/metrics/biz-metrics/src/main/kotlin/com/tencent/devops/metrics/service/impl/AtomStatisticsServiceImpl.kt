@@ -27,6 +27,7 @@
 
 package com.tencent.devops.metrics.service.impl
 
+import com.tencent.bkrepo.common.api.constant.DEFAULT_PAGE_SIZE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -95,7 +96,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                     atomCodes = emptyList(),
                     keyword = null,
                     page = 1,
-                    pageSize = 10
+                    pageSize = DEFAULT_PAGE_SIZE
                 ).map { it.atomCode }
             }
         // 查询符合查询条件的记录数

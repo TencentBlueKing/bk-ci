@@ -68,6 +68,7 @@ object Constants {
 
     const val MAX_CREATE_COUNT = 100
     const val DEFAULT_LIMIT_NUM = 10
+    const val METRICS_PIPELINE_ID_EXPIRED = 7200L
 
     // 常量标志对应code
     const val BK_ATOM_CODE_FIELD_NAME_ENGLISH = "METRICS_ATOM_STATISTICS_HEADER_PLUG" // 插件
