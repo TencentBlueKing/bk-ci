@@ -700,27 +700,6 @@ class BkRepoClient constructor(
         }
     }
 
-    fun getFileContent(userId: String, projectId: String, repoName: String, path: String): Pair<ByteArray, MediaType> {
-        logger.info("getFileContent, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
-        val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/$projectId/$repoName/$path"
-        val request = Request.Builder()
-            .url(url)
-            // .header("Authorization", makeCredential())
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .get()
-            .build()
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.bytes()
-            val mediaType = response.body()!!.contentType()!!
-            if (!response.isSuccessful) {
-                logger.error("get file content failed, responseContent: $responseContent")
-                throw RemoteServiceException("get file content failed: $responseContent", response.code())
-            }
-            return Pair(responseContent, mediaType)
-        }
-    }
-
     fun matchBkRepoFile(
         userId: String,
         srcPath: String,
@@ -1034,10 +1013,12 @@ class BkRepoClient constructor(
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
                 if (notFound(response.code())) {
-                    logger.warn("create temporary access url failed, requestBody: $requestBody, responseContent: $responseContent")
+                    logger.warn("create temporary access url failed, " +
+                        "requestBody: $requestBody, responseContent: $responseContent")
                     throw NotFoundException("$fullPathSet not found")
                 }
-                logger.error("create temporary access url failed, requestBody: $requestBody, responseContent: $responseContent")
+                logger.error("create temporary access url failed, " +
+                    "requestBody: $requestBody, responseContent: $responseContent")
                 throw RemoteServiceException("create temporary access url failed: $responseContent")
             }
 
