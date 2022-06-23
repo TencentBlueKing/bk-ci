@@ -45,6 +45,8 @@ class StreamRepoTriggerAction(
         return this
     }
 
+    override fun needAddWebhookParams() = true
+
     override fun getProjectCode(gitProjectId: String?) = baseAction.getProjectCode(gitProjectId)
 
     override fun getGitCred(personToken: String?): StreamGitCred = baseAction.getGitCred(personToken)
