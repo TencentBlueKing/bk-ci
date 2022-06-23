@@ -18,7 +18,6 @@ const pipeline = () => import(/* webpackChunkName: 'pipelines' */'@/views/pipeli
 const buildList = () => import(/* webpackChunkName: 'pipelines' */'@/views/pipeline/build-list')
 const pipelineDetail = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/index')
 const buildDetail = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/detail')
-const buildArtifacts = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/artifacts')
 const buildReports = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/reports')
 const buildConfig = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/config')
 const webConsole = () => import(/* webpackChunkName: "webConsole" */'@/views/pipeline/web-console.vue')
@@ -87,11 +86,6 @@ const routes = [
                                         meta: {
                                             websocket: true
                                         }
-                                    },
-                                    {
-                                        path: 'artifacts',
-                                        name: 'buildArtifacts',
-                                        component: buildArtifacts
                                     },
                                     {
                                         path: 'reports',

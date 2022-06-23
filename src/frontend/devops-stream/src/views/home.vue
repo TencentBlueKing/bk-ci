@@ -27,13 +27,12 @@
                     </div>
 
                     <div class="gif-item leftAnima">
-                        <img class="leftImg" ref="leftImg" :src="require('./../images/home/ui.gif')" />
+                        <!-- <img class="leftImg" ref="leftImg" :src="require('./../images/home/ui.gif')" /> -->
                     </div>
                     <div class="gif-item rightAnima">
-                        <img class="rightImg" ref="rightImg" :src="require('./../images/home/code.gif')" />
+                        <!-- <img class="rightImg" ref="rightImg" :src="require('./../images/home/code.gif')" /> -->
                     </div>
                 </div>
-
             </div>
         </section>
 
@@ -57,7 +56,7 @@
                         </div>
                     </div>
                     <div class="feature-block--illu illu-shadow--right">
-                        <img loading="lazy" src="./../images/home/yaml.png" style="width:410px;height:554px;">
+                        <!-- <img loading="lazy" src="./../images/home/yaml.png" style="width:410px;height:554px;"> -->
                     </div>
                 </div>
             </div>
@@ -98,7 +97,7 @@
                             
                     </div>
                     <div class="feature-block--illu illu-shadow--right">
-                        <img loading="lazy" src="./../images/home/plugins.png" data-sizes="(max-width: 76px) 100%, 800px" class=" lazyloaded" sizes="(max-width: 76px) 100%, 800px">
+                        <!-- <img loading="lazy" src="./../images/home/plugins.png" data-sizes="(max-width: 76px) 100%, 800px" class=" lazyloaded" sizes="(max-width: 76px) 100%, 800px"> -->
                     </div>
                 </div>
                 
@@ -137,10 +136,10 @@
 </template>
 
 <script>
-    import uiGif from '@/images/home/ui.gif'
-    import uiJpg from '@/images/home/ui.jpg'
-    import codeGif from '@/images/home/code.gif'
-    import codeJpg from '@/images/home/code.jpg'
+    // import uiGif from '@/images/home/ui.gif'
+    // import uiJpg from '@/images/home/ui.jpg'
+    // import codeGif from '@/images/home/code.gif'
+    // import codeJpg from '@/images/home/code.jpg'
     import LINK_CONFIG from '@/conf/link-config.js'
     
     export default {
@@ -184,17 +183,17 @@
             },
 
             initGifAnimaShow () {
-                this.$refs.leftImg && (this.$refs.leftImg.src = uiGif)
-                this.$refs.rightImg && (this.$refs.rightImg.src = codeJpg)
+                // this.$refs.leftImg && (this.$refs.leftImg.src = uiGif)
+                // this.$refs.rightImg && (this.$refs.rightImg.src = codeJpg)
                 const gifItems = document.querySelectorAll('.gif-item')
                 
                 setTimeout(() => {
-                    this.$refs.leftImg && (this.$refs.leftImg.src = uiJpg)
-                    this.$refs.rightImg && (this.$refs.rightImg.src = codeGif)
+                    // this.$refs.leftImg && (this.$refs.leftImg.src = uiJpg)
+                    // this.$refs.rightImg && (this.$refs.rightImg.src = codeGif)
                     gifItems[1].style.zIndex = '999'
                     setTimeout(() => {
                         gifItems[1].style.zIndex = '0'
-                        this.$refs.rightImg && (this.$refs.rightImg.src = codeJpg)
+                        // this.$refs.rightImg && (this.$refs.rightImg.src = codeJpg)
                     }, 11300)
                 }, 4800)
                 this.gifTimer = setTimeout(() => {

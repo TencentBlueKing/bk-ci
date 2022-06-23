@@ -38,7 +38,6 @@
             return {
                 panels: [
                     { label: 'Build detail', name: 'buildDetail' },
-                    { label: 'Artifacts', name: 'buildArtifacts' },
                     { label: 'Reports', name: 'buildReports' },
                     { label: 'Configuration', name: 'buildConfig' }
                 ],
