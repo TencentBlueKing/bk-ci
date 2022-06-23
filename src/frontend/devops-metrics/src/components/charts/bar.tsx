@@ -69,6 +69,11 @@ export default defineComponent({
               },
             },
           },
+          scale: {
+            ticks: {
+              stepSize: 2
+            }
+          },
           scales: {
             y: {
               stacked: true,

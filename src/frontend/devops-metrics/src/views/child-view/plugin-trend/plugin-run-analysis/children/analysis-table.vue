@@ -52,6 +52,7 @@ const getData = () => {
     )
     .then((data) => {
       Object.entries(data.headerInfo).forEach(([field, label]) => {
+        if (field === 'atomCode') field = 'atomName'
         columns.value.push({
           label,
           field,

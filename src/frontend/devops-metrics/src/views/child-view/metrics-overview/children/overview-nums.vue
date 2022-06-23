@@ -183,7 +183,7 @@ onMounted(init);
           <render-empty-node-if-none :data="data.repoCodeccAvgScore">
             <bk-rate
               :editable="false"
-              :model-value="data.repoCodeccAvgScore"
+              :model-value="data.repoCodeccAvgScore / 20"
               size="large"
               class="card-num"
             />
