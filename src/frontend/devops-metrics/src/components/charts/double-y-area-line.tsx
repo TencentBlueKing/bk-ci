@@ -55,6 +55,11 @@ export default defineComponent({
         options: {
           maintainAspectRatio: false,
           responsive: true,
+          scale: {
+            ticks: {
+              stepSize: 2
+            }
+          },
           plugins: {
             tooltip: {
               bodySpacing: 10,

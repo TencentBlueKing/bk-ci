@@ -54,7 +54,7 @@ const clearStatus = () => {
     <bk-date-picker
       class="mr16 w240"
       type="daterange"
-      :value="[status.startTime, status.endTime]"
+      :model-value="[status.startTime, status.endTime]"
       @change="handleTimeChange"
       :key="setKey"
     />

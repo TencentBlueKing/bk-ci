@@ -101,15 +101,15 @@ const handleRowClick = (e, row) => {
   
   if (row.channelCode === 'BS') {
     if (indexMap.length === 3) {
-      window.open(`${window.WEB_URL_PREFIX}/pipeline/${projectId}/${pipelineId}/detail/${buildId}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&elementIndex=${elementIndex}`, '_blank')
+      window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&elementIndex=${elementIndex}`, '_blank')
     } else {
-      window.open(`${window.WEB_URL_PREFIX}/pipeline/${projectId}/${pipelineId}/detail/${buildId}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&containerGroupIndex=${containerGroupIndex}&elementIndex=${elementIndex}`, '_blank')
+      window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&containerGroupIndex=${containerGroupIndex}&elementIndex=${elementIndex}`, '_blank')
     }
   } else {
     if (indexMap.length === 3) {
-      window.open(`${window.STREAM_URL_PREFIX}/pipeline/${pipelineId}/detail/${buildId}/?page=1#/${projectId.split('_')[1]}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&elementIndex=${elementIndex}`, '_blank')
+      window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#/${projectId.split('_')[1]}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&elementIndex=${elementIndex}`, '_blank')
     } else {
-      window.open(`${window.STREAM_URL_PREFIX}/pipeline/${pipelineId}/detail/${buildId}/?page=1#/${projectId.split('_')[1]}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&containerGroupIndex=${containerGroupIndex}&elementIndex=${elementIndex}`, '_blank')
+      window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#/${projectId.split('_')[1]}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&containerGroupIndex=${containerGroupIndex}&elementIndex=${elementIndex}`, '_blank')
     }
   }
 }
