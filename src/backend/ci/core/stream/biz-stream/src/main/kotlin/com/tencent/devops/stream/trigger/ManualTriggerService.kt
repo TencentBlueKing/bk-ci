@@ -29,11 +29,9 @@ package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
-import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -113,28 +111,15 @@ class ManualTriggerService @Autowired constructor(
     fun parseManualVariables(
         userId: String,
         pipelineId: String,
-        triggerBuildReq: TriggerBuildReq
+        triggerBuildReq: TriggerBuildReq,
+        yamlObject: PreTemplateScriptBuildYaml
     ): Map<String, Variable>? {
         val streamTriggerSetting = getSetting(triggerBuildReq)
 
         val action = loadAction(streamTriggerSetting, userId, triggerBuildReq)
 
-        // 获取yaml对象，除了需要替换的 variables和一些信息剩余全部设置为空
-        val preYaml = YamlUtil.getObjectMapper().readValue(
-            ScriptYmlUtils.formatYaml(triggerBuildReq.yaml!!),
-            PreTemplateScriptBuildYaml::class.java
-        ).copy(
-            stages = null,
-            jobs = null,
-            steps = null,
-            extends = null,
-            notices = null,
-            finally = null,
-            concurrency = null
-        )
-
         return YamlTemplate(
-            yamlObject = preYaml,
+            yamlObject = yamlObject,
             filePath = StreamYamlTrigger.STREAM_TEMPLATE_ROOT_FILE,
             extraParameters = action,
             getTemplateMethod = yamlTemplateService::getTemplate,

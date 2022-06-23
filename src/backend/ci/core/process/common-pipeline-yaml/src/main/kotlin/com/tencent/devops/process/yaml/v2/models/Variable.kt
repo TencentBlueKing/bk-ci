@@ -99,7 +99,7 @@ enum class VariablePropType(val value: String) {
     VUEX_INPUT("vuex-input"),
     VUEX_TEXTAREA("vuex-textarea"),
     SELECTOR("selector"),
-    ATOM_CHECKBOX_LIST("atom-checkbox-list"),
+    CHECKBOX("checkbox"),
     BOOLEAN("boolean"),
     TIME_PICKER("time-picker"),
     COMPANY_STAFF_INPUT("company-staff-input"),

@@ -27,8 +27,10 @@
 
 package com.tencent.devops.stream.resources.user
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.form.FormBuilder
 import com.tencent.devops.common.web.form.data.CheckboxPropData
@@ -40,8 +42,11 @@ import com.tencent.devops.common.web.form.data.SelectPropData
 import com.tencent.devops.common.web.form.data.TimePropData
 import com.tencent.devops.common.web.form.models.Form
 import com.tencent.devops.common.web.form.models.ui.DataSourceItem
+import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.VariablePropType
+import com.tencent.devops.process.yaml.v2.models.on.EnableType
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.api.user.UserStreamTriggerResource
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.ManualTriggerInfo
@@ -55,6 +60,7 @@ import com.tencent.devops.stream.service.StreamYamlService
 import com.tencent.devops.stream.trigger.ManualTriggerService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @Suppress("ComplexMethod")
 @RestResource
@@ -113,9 +119,33 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
             return Result(ManualTriggerInfo(yaml = null, schema = null))
         }
 
+        // 获取yaml对象，除了需要替换的 variables和一些信息剩余全部设置为空
+        val preYaml = try {
+            YamlUtil.getObjectMapper().readValue(
+                ScriptYmlUtils.formatYaml(yaml),
+                PreTemplateScriptBuildYaml::class.java
+            ).copy(
+                stages = null,
+                jobs = null,
+                steps = null,
+                extends = null,
+                notices = null,
+                finally = null,
+                concurrency = null
+            )
+        } catch (e: Exception) {
+            throw CustomException(Response.Status.BAD_REQUEST, "YAML is invalid ${e.message}")
+        }
+
+        // 关闭了手动触发的直接返回
+        if (preYaml.triggerOn?.manual == EnableType.FALSE.value) {
+            return Result(ManualTriggerInfo(yaml = yaml, schema = null, enable = false))
+        }
+
         val variables = manualTriggerService.parseManualVariables(
-            userId, pipelineId,
-            TriggerBuildReq(
+            userId = userId,
+            pipelineId = pipelineId,
+            triggerBuildReq = TriggerBuildReq(
                 projectId = projectId,
                 branch = branchName,
                 customCommitMsg = null,
@@ -125,7 +155,8 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
                 payload = null,
                 eventType = null,
                 inputs = null
-            )
+            ),
+            yamlObject = preYaml
         )
 
         if (variables.isNullOrEmpty()) {
@@ -214,7 +245,7 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
                             )
                         )
                     }
-                    VariablePropType.ATOM_CHECKBOX_LIST -> builder.setProp(
+                    VariablePropType.CHECKBOX -> builder.setProp(
                         CheckboxPropData(
                             id = name,
                             type = FormDataType.ARRAY,
@@ -226,7 +257,7 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
                                     label = it.toString(),
                                     value = it
                                 )
-                            } // TODO: 需要确认values为空时是否帮用户填默认值
+                            }
                         )
                     )
                     VariablePropType.BOOLEAN -> builder.setProp(
@@ -249,7 +280,6 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
                             title = value.props?.label ?: name,
                             default = value.value,
                             required = value.props?.required
-                            // TODO: 需要确认，展示的是什么类型的type
                         )
                     )
                     VariablePropType.COMPANY_STAFF_INPUT -> {

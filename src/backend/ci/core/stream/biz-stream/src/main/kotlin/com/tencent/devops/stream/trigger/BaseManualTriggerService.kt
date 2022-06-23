@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -46,6 +47,7 @@ import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
+import com.tencent.devops.stream.trigger.actions.streamActions.StreamManualAction
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandlerUtil
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
@@ -211,6 +213,11 @@ abstract class BaseManualTriggerService @Autowired constructor(
         val yamlReplaceResult = streamYamlTrigger.prepareCIBuildYaml(action)!!
         val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlReplaceResult.preYaml)
         val normalizedYaml = YamlUtil.toYaml(yamlReplaceResult.normalYaml)
+
+        if ((action is StreamManualAction) && (yamlReplaceResult.preYaml.triggerOn?.manual == EnableType.FALSE.value)) {
+            throw CustomException(Response.Status.BAD_REQUEST, "manual trigger is disabled")
+        }
+
         action.data.context.parsedYaml = parsedYaml
         action.data.context.normalizedYaml = normalizedYaml
 

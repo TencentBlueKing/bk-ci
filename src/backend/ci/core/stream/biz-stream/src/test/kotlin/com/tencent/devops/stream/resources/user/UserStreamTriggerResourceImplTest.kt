@@ -74,11 +74,11 @@ internal class UserStreamTriggerResourceImplTest {
                     )
                     // TODO: url的等待补充
                 }
-                VariablePropType.ATOM_CHECKBOX_LIST -> variables["checkBox类型"] = Variable(
+                VariablePropType.CHECKBOX -> variables["checkBox类型"] = Variable(
                     "checkBox类型-v",
                     allowModifyAtStartup = true,
                     props = VariableProps(
-                        type = VariablePropType.ATOM_CHECKBOX_LIST.value
+                        type = VariablePropType.CHECKBOX.value
                     )
                 )
                 VariablePropType.BOOLEAN -> variables["boolean类型"] = Variable(
