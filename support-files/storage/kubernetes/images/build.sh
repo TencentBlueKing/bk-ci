@@ -21,8 +21,8 @@ BACKENDS=(repository auth generic docker helm npm pypi replication opdata)
 
 cd $(dirname $0)
 WORKING_DIR=$(pwd)
-ROOT_DIR=${WORKING_DIR%/*/*/*}
-BACKEND_DIR=$ROOT_DIR/src/backend
+ROOT_DIR=${WORKING_DIR%/*/*/*/*}
+BACKEND_DIR=$ROOT_DIR/src/backend/storage/core
 FRONTEND_DIR=$ROOT_DIR/src/frontend
 GATEWAY_DIR=$ROOT_DIR/src/gateway
 

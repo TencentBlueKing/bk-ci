@@ -32,7 +32,7 @@ import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamDeleteAction
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 internal class EventActionFactoryTest {
 

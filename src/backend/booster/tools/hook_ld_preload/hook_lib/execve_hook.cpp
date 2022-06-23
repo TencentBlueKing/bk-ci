@@ -237,17 +237,24 @@ void printEnvArg(char *const envp[])
     typedef ret_type name##_func params;        \
     name##_func name;                           \
     ret_type name params
-    */
+*/
 
 #define DEFINE_WRAPPER(ret_type, name, params) \
     typedef ret_type name##_func params;       \
     ret_type name params
 
+#if defined(__MACH__)
+#define SILENT_CALL_REAL(name, ...)                                   \
+    ({                                                                \
+		name(__VA_ARGS__);                                            \
+    })
+#else   
 #define SILENT_CALL_REAL(name, ...)                                   \
     ({                                                                \
         name##_func *real = (name##_func *)(dlsym(RTLD_NEXT, #name)); \
         real(__VA_ARGS__);                                            \
     })
+#endif
 
 static unsigned count_non_null_char_ptrs(va_list args)
 {
@@ -343,6 +350,222 @@ static char **getNewArgv(char *const argv[], std::vector<char *> &arg_array)
     return newArgv;
 }
 
+#if defined(__MACH__)
+int hookexecve (const char *file, char *const argv[], char *const envp[]);
+int hookexecvp (const char *file, char *const argv[]);
+int hookexecv(const char *path, char *const argv[]);
+
+int hookexecl(const char *path, const char *arg, ...)
+{
+    init(path);
+    bk_log(DEBUG, "enter hook execl with path[%s]...\n", path);
+
+    va_list args;
+    va_start(args, arg);
+    /* Need to cast away the constness, because execl*'s prototypes
+     * are buggy -- taking ptr to const char whereas execv* take ptr
+     * to const array of ptr to NON-CONST char */
+    char **argv = malloc_argv_from((char *)arg, args);
+    va_end(args);
+    int rc = hookexecv(path, argv);
+    free(argv);
+    return rc;
+}
+
+int hookexeclp(const char *file, const char *arg, ...)
+{
+    init(file);
+    bk_log(DEBUG, "enter hook execlp with file[%s]...\n", file);
+
+    va_list args;
+    va_start(args, arg);
+    /* Need to cast away the constness, because execl*'s prototypes
+     * are buggy -- taking ptr to const char whereas execv* take ptr
+     * to const array of ptr to NON-CONST char */
+    char **argv = malloc_argv_from((char *)arg, args);
+    va_end(args);
+    int rc = hookexecvp(file, argv);
+    free(argv);
+    return rc;
+}
+
+// 变参的最后一个参数是 char * const envp[]
+int hookexecle(const char *path, const char *arg, ...)
+{
+    init(path);
+    bk_log(DEBUG, "enter hook execle with path[%s]...\n", path);
+
+    va_list args;
+    va_start(args, arg);
+    char **argv = malloc_argv_from((char *)arg, args);
+    //ASSERT(NULL == va_arg(args, const char *));
+    char *const *envp = va_arg(args, char *const *);
+    va_end(args);
+    int rc = hookexecve(path, argv, envp);
+    free(argv);
+    return rc;
+}
+
+int hookexecv(const char *path, char *const argv[])
+{
+    init(path);
+    bk_log(DEBUG, "enter hook execv with path[%s]...\n", path);
+
+    return hookexecve(path, argv, environ);
+}
+
+typedef int execvp_func (const char *file, char *const argv[]); 
+int hookexecvp (const char *file, char *const argv[])
+{
+    init(file);
+    bk_log(ERROR, "enter hook execvp with file[%s]...\n", file);
+
+    printEnvArg(argv);
+    std::string target = "";
+    const char *src = file;
+    if (getEnvpLen(argv) > 1)
+    {
+        src = argv[0];
+    }
+
+    if (getReplaceCmd(src, target))
+    {
+        //printEnvArg(newenvp);
+        int rc = 0;
+        std::vector<std::string> result_array;
+        int size = split(target, " ", result_array);
+        if (size > 1)
+        {
+            std::vector<char *> arg_array;
+            for (size_t i = 0; i < result_array.size(); ++i)
+            {
+                size_t strlen = result_array[i].size();
+                char *arg = new char[strlen + 1];
+                strncpy(arg, result_array[i].c_str(), strlen);
+                arg[strlen] = '\0';
+                arg_array.push_back(arg);
+            }
+            char **newArgv = getNewArgv(argv, arg_array);
+
+            bk_log(ERROR, "enter hook execve with new cmd[%s]...\n", result_array[0].c_str());
+            printEnvArg(newArgv);
+
+            // run cmd
+            rc = SILENT_CALL_REAL(execvp, result_array[0].c_str(), newArgv);
+
+            // free arg_array
+            for (size_t i = 0; i < arg_array.size(); ++i)
+            {
+                delete[] arg_array[i];
+                arg_array[i] = NULL;
+            }
+
+            // free newArgv
+            free(newArgv);
+        }
+        else
+        {
+            bk_log(ERROR, "enter hook execve with new cmd[%s]...\n", result_array[0].c_str());
+            rc = SILENT_CALL_REAL(execvp, target.c_str(), argv);
+        }
+
+        return rc;
+    }
+    else
+    {
+        return SILENT_CALL_REAL(execvp, file, argv);
+    }
+}
+
+typedef int execve_func (const char *file, char *const argv[], char *const envp[]); 
+int hookexecve (const char *file, char *const argv[], char *const envp[])
+{
+    init(file);
+    bk_log(ERROR, "enter hook execve with file[%s]...\n", file);
+
+    printEnvArg(argv);
+    std::string target = "";
+    const char *src = file;
+    if (getEnvpLen(argv) > 1)
+    {
+        src = argv[0];
+    }
+    // if (getReplaceCmd(file, target))
+    if (getReplaceCmd(src, target))
+    {
+        // printEnvArg(envp);
+        size_t keyLen = strlen(full_hooked_flag_env);
+        char *newHookFlagEnv = new char[keyLen + 1];
+        strncpy(newHookFlagEnv, full_hooked_flag_env, keyLen);
+        newHookFlagEnv[keyLen] = '\0';
+        char **newenvp = getNewEnvp(envp, newHookFlagEnv);
+
+        //printEnvArg(newenvp);
+        int rc = 0;
+        std::vector<std::string> result_array;
+        int size = split(target, " ", result_array);
+        if (size > 1)
+        {
+            std::vector<char *> arg_array;
+            for (size_t i = 0; i < result_array.size(); ++i)
+            {
+                size_t strlen = result_array[i].size();
+                char *arg = new char[strlen + 1];
+                strncpy(arg, result_array[i].c_str(), strlen);
+                arg[strlen] = '\0';
+                arg_array.push_back(arg);
+            }
+            char **newArgv = getNewArgv(argv, arg_array);
+
+            bk_log(ERROR, "enter hook execve with new cmd[%s]...\n", result_array[0].c_str());
+            printEnvArg(newArgv);
+
+            // run cmd
+            rc = SILENT_CALL_REAL(execve, result_array[0].c_str(), newArgv, newenvp);
+
+            // free arg_array
+            for (size_t i = 0; i < arg_array.size(); ++i)
+            {
+                delete[] arg_array[i];
+                arg_array[i] = NULL;
+            }
+
+            // free newArgv
+            free(newArgv);
+        }
+        else
+        {
+            bk_log(ERROR, "enter hook execve with new cmd[%s]...\n", result_array[0].c_str());
+            rc = SILENT_CALL_REAL(execve, target.c_str(), argv, newenvp);
+        }
+
+        free(newenvp);
+        delete[] newHookFlagEnv;
+        newHookFlagEnv = NULL;
+
+        return rc;
+    }
+    else
+    {
+	bk_log(ERROR, "enter hook silent execve with file[%s]...\n", file);
+        return SILENT_CALL_REAL(execve, file, argv, envp);
+    }
+}
+
+__attribute__((used)) static struct {
+    const void* replacment; 
+    const void* replacee; 
+} interposing_functions[] __attribute__ ((section ("__DATA,__interpose"))) = {
+      {(const void*)(unsigned long)&hookexecl, (const void*)(unsigned long)&execl},
+      {(const void*)(unsigned long)&hookexeclp, (const void*)(unsigned long)&execlp},
+      {(const void*)(unsigned long)&hookexecle, (const void*)(unsigned long)&execle},
+      {(const void*)(unsigned long)&hookexecv, (const void*)(unsigned long)&execv},
+      {(const void*)(unsigned long)&hookexecvp, (const void*)(unsigned long)&execvp},
+    {(const void*)(unsigned long)&hookexecve, (const void*)(unsigned long)&execve},
+   };
+   
+#else
+
 int execl(const char *path, const char *arg, ...)
 {
     init(path);
@@ -402,87 +625,13 @@ int execv(const char *path, char *const argv[])
     return execve(path, argv, environ);
 }
 
-#if !defined(__MACH__)
+
 int execvp(const char *file, char *const argv[])
 {
     init(file);
     bk_log(DEBUG, "enter hook execvp with file[%s]...\n", file);
     return execvpe(file, argv, environ);
 }
-#else
-DEFINE_WRAPPER(int, execvp, (const char *file, char *const argv[]))
-{
-    init(file);
-    bk_log(ERROR, "enter hook execvp with file[%s]...\n", file);
-
-    printEnvArg(argv);
-    std::string target = "";
-    const char *src = file;
-    if (getEnvpLen(argv) > 1)
-    {
-        src = argv[0];
-    }
-
-    if (getReplaceCmd(src, target))
-    {
-        // char *const envp = environ;
-        // size_t keyLen = strlen(full_hooked_flag_env);
-        // char *newHookFlagEnv = new char[keyLen + 1];
-        // strncpy(newHookFlagEnv, full_hooked_flag_env, keyLen);
-        // newHookFlagEnv[keyLen] = '\0';
-        // char **newenvp = getNewEnvp(envp, newHookFlagEnv);
-
-        //printEnvArg(newenvp);
-        int rc = 0;
-        std::vector<std::string> result_array;
-        int size = split(target, " ", result_array);
-        if (size > 1)
-        {
-            std::vector<char *> arg_array;
-            for (size_t i = 0; i < result_array.size(); ++i)
-            {
-                size_t strlen = result_array[i].size();
-                char *arg = new char[strlen + 1];
-                strncpy(arg, result_array[i].c_str(), strlen);
-                arg[strlen] = '\0';
-                arg_array.push_back(arg);
-            }
-            char **newArgv = getNewArgv(argv, arg_array);
-
-            bk_log(ERROR, "enter hook execve with new cmd[%s]...\n", result_array[0].c_str());
-            printEnvArg(newArgv);
-
-            // run cmd
-            rc = SILENT_CALL_REAL(execvp, result_array[0].c_str(), newArgv);
-
-            // free arg_array
-            for (size_t i = 0; i < arg_array.size(); ++i)
-            {
-                delete[] arg_array[i];
-                arg_array[i] = NULL;
-            }
-
-            // free newArgv
-            free(newArgv);
-        }
-        else
-        {
-            bk_log(ERROR, "enter hook execve with new cmd[%s]...\n", result_array[0].c_str());
-            rc = SILENT_CALL_REAL(execvp, target.c_str(), argv);
-        }
-
-        // free(newenvp);
-        // delete[] newHookFlagEnv;
-        // newHookFlagEnv = NULL;
-
-        return rc;
-    }
-    else
-    {
-        return SILENT_CALL_REAL(execvp, file, argv);
-    }
-}
-#endif
 
 DEFINE_WRAPPER(int, execve, (const char *file, char *const argv[], char *const envp[]))
 {
@@ -557,7 +706,6 @@ DEFINE_WRAPPER(int, execve, (const char *file, char *const argv[], char *const e
     }
 }
 
-#if !defined(__MACH__)
 DEFINE_WRAPPER(int, execvpe, (const char *file, char *const argv[], char *const envp[]))
 {
     init(file);

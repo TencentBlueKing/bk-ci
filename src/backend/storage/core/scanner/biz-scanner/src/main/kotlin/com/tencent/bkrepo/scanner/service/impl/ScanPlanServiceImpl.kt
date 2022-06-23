@@ -162,7 +162,9 @@ class ScanPlanServiceImpl(
             val plan = scanPlanDao.find(projectId!!, id!!)
                 ?: throw NotFoundException(CommonMessageCode.RESOURCE_NOT_FOUND, request.toString())
 
-            scanPlanDao.update(ScanPlanConverter.convert(request, plan.repoNames, plan.rule.readJsonString()))
+            scanPlanDao.update(
+                ScanPlanConverter.convert(request, plan.repoNames, plan.rule.readJsonString(), plan.type)
+            )
             return scanPlanDao.findById(request.id!!)!!.let { ScanPlanConverter.convert(it) }
         }
     }
@@ -209,11 +211,15 @@ class ScanPlanServiceImpl(
                 }?.contentPath ?: throw NotFoundException(CommonMessageCode.RESOURCE_NOT_FOUND, packageKey!!, version!!)
             }
             permissionCheckHandler.checkNodePermission(projectId, repoName, fullPath!!, PermissionAction.READ)
-            val subtasks = planArtifactLatestSubScanTaskDao.findAll(projectId, repoName, fullPath!!, true)
-            val planIds = subtasks.map { it.planId!! }
+            val subtasks = planArtifactLatestSubScanTaskDao.findAll(projectId, repoName, fullPath!!)
+            val planIds = subtasks.filter { it.planId != null }.map { it.planId!! }
             val scanPlanMap = scanPlanDao.findByIds(planIds, true).associateBy { it.id!! }
             return subtasks.map {
-                ScanPlanConverter.convertToArtifactPlanRelation(it, scanPlanMap[it.planId!!]!!)
+                if (it.planId == null) {
+                    ScanPlanConverter.convertToArtifactPlanRelation(it, "_${it.scanner}")
+                } else {
+                    ScanPlanConverter.convertToArtifactPlanRelation(it, scanPlanMap[it.planId]!!.name)
+                }
             }
         }
     }

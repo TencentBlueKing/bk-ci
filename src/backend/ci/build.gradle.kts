@@ -18,6 +18,7 @@ allprojects {
     dependencyManagement {
         setApplyMavenExclusions(false)
         dependencies {
+            dependency("org.json:json:${Versions.orgJson}")
             dependency("org.mockito:mockito-all:${Versions.Mockito}")
             dependency("com.nhaarman:mockito-kotlin-kt1.1:${Versions.MockitoKt}")
             dependency("javax.ws.rs:javax.ws.rs-api:${Versions.Jaxrs}")
@@ -57,21 +58,21 @@ allprojects {
             dependency("org.bouncycastle:bcprov-ext-jdk15on:${Versions.BouncyCastle}")
             dependency("org.mybatis:mybatis:${Versions.MyBatis}")
             dependency("commons-io:commons-io:${Versions.CommonIo}")
-            dependencySet("org.glassfish.jersey.containers:${Versions.Jersey}"){
+            dependencySet("org.glassfish.jersey.containers:${Versions.Jersey}") {
                 entry("jersey-container-servlet-core")
                 entry("jersey-container-servlet")
             }
-            dependencySet("org.glassfish.jersey.core:${Versions.Jersey}"){
+            dependencySet("org.glassfish.jersey.core:${Versions.Jersey}") {
                 entry("jersey-server")
                 entry("jersey-common")
                 entry("jersey-client")
             }
-            dependencySet("org.glassfish.jersey.ext:${Versions.Jersey}"){
+            dependencySet("org.glassfish.jersey.ext:${Versions.Jersey}") {
                 entry("jersey-bean-validation")
                 entry("jersey-entity-filtering")
                 entry("jersey-spring5")
             }
-            dependencySet("org.glassfish.jersey.media:${Versions.Jersey}"){
+            dependencySet("org.glassfish.jersey.media:${Versions.Jersey}") {
                 entry("jersey-media-multipart")
                 entry("jersey-media-json-jackson")
             }
@@ -102,10 +103,6 @@ allprojects {
         }
     }
 
-    // 兼容Junit4
-    dependencies {
-        testImplementation("org.junit.vintage:junit-vintage-engine")
-    }
     // 兼容 Log4j
     configurations.forEach {
         it.exclude("org.springframework.boot", "spring-boot-starter-tomcat")

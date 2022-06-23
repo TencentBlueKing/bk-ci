@@ -354,18 +354,18 @@ class UserNodeController(
     private fun checkCrossRepoPermission(request: UserNodeMoveCopyRequest) {
         with(request) {
             permissionManager.checkNodePermission(
-                action = PermissionAction.WRITE,
-                projectId = srcProjectId,
-                repoName = srcRepoName,
-                path = PathUtils.normalizeFullPath(srcFullPath)
+                PermissionAction.WRITE,
+                srcProjectId,
+                srcRepoName,
+                PathUtils.normalizeFullPath(srcFullPath)
             )
             val toProjectId = request.destProjectId ?: srcProjectId
             val toRepoName = request.destRepoName ?: srcRepoName
             permissionManager.checkNodePermission(
-                action = PermissionAction.WRITE,
-                projectId = toProjectId,
-                repoName = toRepoName,
-                path = PathUtils.normalizeFullPath(destFullPath)
+                PermissionAction.WRITE,
+                toProjectId,
+                toRepoName,
+                PathUtils.normalizeFullPath(destFullPath)
             )
         }
     }

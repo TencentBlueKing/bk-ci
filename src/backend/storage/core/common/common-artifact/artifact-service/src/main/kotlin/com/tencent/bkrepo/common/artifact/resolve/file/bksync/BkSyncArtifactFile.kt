@@ -31,12 +31,13 @@ import com.tencent.bkrepo.common.artifact.api.ArtifactFile
 import com.tencent.bkrepo.common.artifact.resolve.file.ArtifactFileFactory
 import com.tencent.bkrepo.common.artifact.resolve.file.chunk.ChunkedFileOutputStream
 import com.tencent.bkrepo.common.bksync.BkSync
-import com.tencent.bkrepo.common.bksync.BlockInputStream
+import com.tencent.bkrepo.common.bksync.BlockChannel
 import java.io.File
 import java.io.InputStream
+import java.nio.channels.Channels
 
 class BkSyncArtifactFile(
-    private val blockInputStream: BlockInputStream,
+    private val blockChannel: BlockChannel,
     private val deltaInputStream: InputStream,
     private val blockSize: Int
 ) : ArtifactFile {
@@ -112,7 +113,8 @@ class BkSyncArtifactFile(
         try {
             // outputStream不能close,因为close后会删除临时文件。这里统一通过请求拦截器进行清理
             val outputStream = ChunkedFileOutputStream(chunkedArtifactFile).buffered()
-            bkSync.merge(blockInputStream, deltaInputStream, outputStream)
+            val channel = Channels.newChannel(outputStream)
+            bkSync.merge(blockChannel, deltaInputStream, channel)
             // buffered stream所以需要flush
             outputStream.flush()
             chunkedArtifactFile.finish()

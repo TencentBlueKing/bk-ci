@@ -27,7 +27,7 @@
 
 package com.tencent.devops.worker.common.api
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class ApiFactoryTest {
 

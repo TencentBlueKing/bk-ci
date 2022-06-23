@@ -34,6 +34,7 @@ package com.tencent.bkrepo.repository.service.query
 import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.bkrepo.repository.pojo.search.NodeQueryBuilder
 import com.tencent.bkrepo.repository.pojo.stage.ArtifactStageEnum
+import com.tencent.bkrepo.repository.search.common.LocalDatetimeRuleInterceptor
 import com.tencent.bkrepo.repository.search.common.RepoNameRuleInterceptor
 import com.tencent.bkrepo.repository.search.common.RepoTypeRuleInterceptor
 import com.tencent.bkrepo.repository.search.node.NodeQueryInterpreter
@@ -60,6 +61,9 @@ class NodeQueryInterpreterTest : ServiceBaseTest() {
     @MockBean
     private lateinit var repoTypeRuleInterceptor: RepoTypeRuleInterceptor
 
+    @MockBean
+    private lateinit var localDateTimeRuleInterceptor: LocalDatetimeRuleInterceptor
+
     @BeforeAll
     fun beforeAll() {
         initMock()
@@ -75,7 +79,12 @@ class NodeQueryInterpreterTest : ServiceBaseTest() {
             .sort(Sort.Direction.ASC, "name")
             .select("projectId", "repoName", "fullPath", "metadata")
             .build()
-        val interpreter = NodeQueryInterpreter(permissionManager, repoNameRuleInterceptor, repoTypeRuleInterceptor)
+        val interpreter = NodeQueryInterpreter(
+            permissionManager,
+            repoNameRuleInterceptor,
+            repoTypeRuleInterceptor,
+            localDateTimeRuleInterceptor
+        )
         val query = interpreter.interpret(queryModel)
         println(query.queryModel)
     }
@@ -91,7 +100,12 @@ class NodeQueryInterpreterTest : ServiceBaseTest() {
             .sort(Sort.Direction.ASC, "name")
             .select("projectId", "repoName", "fullPath", "metadata")
             .build()
-        val interpreter = NodeQueryInterpreter(permissionManager, repoNameRuleInterceptor, repoTypeRuleInterceptor)
+        val interpreter = NodeQueryInterpreter(
+            permissionManager,
+            repoNameRuleInterceptor,
+            repoTypeRuleInterceptor,
+            localDateTimeRuleInterceptor
+        )
         val query = interpreter.interpret(queryModel)
         println(query.queryModel)
     }

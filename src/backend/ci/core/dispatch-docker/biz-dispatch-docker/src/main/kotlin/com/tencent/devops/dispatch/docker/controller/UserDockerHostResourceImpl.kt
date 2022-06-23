@@ -46,7 +46,7 @@ import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoad
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
-import com.tencent.devops.dispatch.docker.service.DockerHostDebugService
+import com.tencent.devops.dispatch.docker.service.debug.impl.DockerHostDebugServiceImpl
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -59,7 +59,7 @@ import javax.ws.rs.core.Response
 @Suppress("ALL")
 class UserDockerHostResourceImpl @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService,
-    private val dockerHostDebugService: DockerHostDebugService,
+    private val dockerHostDebugService: DockerHostDebugServiceImpl,
     private val bkAuthPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val pipelineDockerDebugDao: PipelineDockerDebugDao,

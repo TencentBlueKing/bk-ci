@@ -31,44 +31,133 @@
 
 package com.tencent.bkrepo.oci.util
 
-import com.tencent.bkrepo.common.api.constant.HttpHeaders
+import com.tencent.bkrepo.common.api.constant.HttpHeaders.CONTENT_LENGTH
 import com.tencent.bkrepo.common.api.constant.HttpHeaders.CONTENT_TYPE
+import com.tencent.bkrepo.common.api.constant.HttpHeaders.RANGE
 import com.tencent.bkrepo.common.api.constant.HttpStatus
 import com.tencent.bkrepo.common.api.constant.MediaTypes
 import com.tencent.bkrepo.common.artifact.util.http.UrlFormatter
 import com.tencent.bkrepo.common.service.util.HttpContextHolder
+import com.tencent.bkrepo.oci.constant.BLOB_UPLOAD_SESSION_ID
 import com.tencent.bkrepo.oci.constant.DOCKER_API_VERSION
 import com.tencent.bkrepo.oci.constant.DOCKER_CONTENT_DIGEST
 import com.tencent.bkrepo.oci.constant.DOCKER_HEADER_API_VERSION
 import com.tencent.bkrepo.oci.constant.DOCKER_UPLOAD_UUID
+import com.tencent.bkrepo.oci.constant.HOST
+import com.tencent.bkrepo.oci.constant.HTTP_FORWARDED_PROTO
+import com.tencent.bkrepo.oci.constant.HTTP_PROTOCOL_HTTP
+import com.tencent.bkrepo.oci.constant.HTTP_PROTOCOL_HTTPS
 import com.tencent.bkrepo.oci.constant.OCI_API_PREFIX
 import com.tencent.bkrepo.oci.pojo.digest.OciDigest
+import java.net.URI
+import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.core.UriBuilder
+import org.springframework.http.HttpHeaders
 
 /**
  * oci 响应工具
  */
 object OciResponseUtils {
+    private const val LOCAL_HOST = "localhost"
 
-    fun getResponseLocationURI(path: String, domain: String): String {
+    fun getResponseURI(request: HttpServletRequest, enableHttp: Boolean): URI {
+        val hostHeaders = request.getHeaders(HOST)
+        var host = LOCAL_HOST
+        if (hostHeaders != null) {
+            val headers = hostHeaders.toList()
+            val parts = (headers[0] as String).split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            host = parts[0]
+        }
+        val builder = UriBuilder.fromPath(OCI_API_PREFIX).host(host).scheme(getProtocol(request, enableHttp))
+        return builder.build()
+    }
+
+    /**
+     * determine to return http protocol
+     * prefix or https prefix
+     */
+    private fun getProtocol(request: HttpServletRequest, enableHttp: Boolean): String {
+        if (enableHttp) return HTTP_PROTOCOL_HTTP
+        val protocolHeaders = request.getHeaders(HTTP_FORWARDED_PROTO) ?: return HTTP_PROTOCOL_HTTP
+        return if (protocolHeaders.hasMoreElements()) {
+            protocolHeaders.iterator().next() as String
+        } else {
+            HTTP_PROTOCOL_HTTPS
+        }
+    }
+
+    private fun getResponseLocationURI(path: String, domain: String): String {
         return UrlFormatter.format(
-            domain, OCI_API_PREFIX + path.trimStart('/')
+            domain, path.trimStart('/')
         )
     }
 
     fun buildUploadResponse(domain: String, digest: OciDigest, locationStr: String, response: HttpServletResponse) {
-        uploadResponse(domain, response, HttpStatus.CREATED, locationStr, digest.toString())
+        uploadResponse(
+            domain = domain,
+            response = response,
+            status = HttpStatus.CREATED,
+            locationStr = locationStr,
+            digest = digest.toString(),
+            contentLength = 0
+        )
     }
 
     fun buildBlobUploadUUIDResponse(domain: String, uuid: String, locationStr: String, response: HttpServletResponse) {
-        uploadResponse(domain, response, HttpStatus.ACCEPTED, locationStr, null, uuid)
+        uploadResponse(
+            domain = domain,
+            response = response,
+            status = HttpStatus.ACCEPTED,
+            locationStr = locationStr,
+            uuid = uuid,
+            contentLength = 0
+        )
     }
 
-    fun buildDownloadResponse(digest: OciDigest, response: HttpServletResponse, size: Long? = null) {
+    fun buildBlobUploadPatchResponse(
+        domain: String,
+        uuid: String,
+        locationStr: String,
+        status: HttpStatus = HttpStatus.ACCEPTED,
+        response: HttpServletResponse,
+        range: Long
+    ) {
+        uploadResponse(
+            domain = domain,
+            response = response,
+            status = status,
+            locationStr = locationStr,
+            uuid = uuid,
+            contentLength = 0,
+            range = range
+        )
+    }
+
+    fun buildBlobMountResponse(
+        domain: String,
+        locationStr: String,
+        status: HttpStatus = HttpStatus.ACCEPTED,
+        response: HttpServletResponse
+    ) {
+        uploadResponse(
+            domain = domain,
+            response = response,
+            status = status,
+            locationStr = locationStr
+        )
+    }
+
+    fun buildDownloadResponse(
+        digest: OciDigest,
+        response: HttpServletResponse,
+        size: Long? = null,
+        contentType: String = MediaTypes.APPLICATION_OCTET_STREAM
+    ) {
         downloadResponse(
             response,
             digest.toString(),
-            MediaTypes.APPLICATION_OCTET_STREAM,
+            contentType,
             size
         )
     }
@@ -83,7 +172,9 @@ object OciResponseUtils {
         status: HttpStatus,
         locationStr: String,
         digest: String? = null,
-        uuid: String? = null
+        uuid: String? = null,
+        range: Long? = null,
+        contentLength: Int? = null
     ) {
         val location = getResponseLocationURI(locationStr, domain)
         response.status = status.value
@@ -91,10 +182,16 @@ object OciResponseUtils {
         digest?.let {
             response.addHeader(DOCKER_CONTENT_DIGEST, digest)
         }
-        response.addHeader(DOCKER_UPLOAD_UUID, uuid)
         response.addHeader(HttpHeaders.LOCATION, location)
         uuid?.let {
+            response.addHeader(BLOB_UPLOAD_SESSION_ID, uuid)
             response.addHeader(DOCKER_UPLOAD_UUID, uuid)
+        }
+        contentLength?.let {
+            response.addHeader(CONTENT_LENGTH, contentLength.toString())
+        }
+        range?.let {
+            response.addHeader(RANGE, "0-${range - 1}")
         }
     }
 
@@ -109,7 +206,7 @@ object OciResponseUtils {
         response.addHeader(DOCKER_CONTENT_DIGEST, digest)
         response.addHeader(HttpHeaders.ETAG, digest)
         size?.let {
-            response.addHeader(HttpHeaders.CONTENT_LENGTH, size.toString())
+            response.addHeader(CONTENT_LENGTH, size.toString())
         }
         response.addHeader(CONTENT_TYPE, mediaType)
     }
