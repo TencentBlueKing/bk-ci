@@ -114,6 +114,8 @@ class OpenApiTriggerService @Autowired constructor(
         }
     }
 
+    override fun getInputParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String>? = null
+
     private fun loadPayloadOpenApiAction(
         streamTriggerSetting: StreamTriggerSetting,
         triggerBuildReq: TriggerBuildReq

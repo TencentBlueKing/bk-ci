@@ -1,0 +1,90 @@
+{
+  "title": "",
+  "description": "",
+  "type": "object",
+  "properties": {
+    "默认展示的，无特殊类型": {
+      "type": "string",
+      "title": "默认展示的，无特殊类型",
+      "default": "默认展示的，无特殊类型-v",
+      "ui:component": {
+        "name": "input"
+      }
+    },
+    "input类型": {
+      "type": "string",
+      "title": "input类型",
+      "default": "input类型-v",
+      "required": false,
+      "ui:component": {
+        "name": "input"
+      }
+    },
+    "input类型-text": {
+      "type": "string",
+      "title": "input类型-text",
+      "default": "input类型-text-v",
+      "required": false,
+      "ui:component": {
+        "name": "input",
+        "props": {
+          "type": "textarea"
+        }
+      }
+    },
+    "select类型": {
+      "type": "string",
+      "title": "select类型",
+      "default": "select类型-v",
+      "required": false,
+      "ui:component": {
+        "name": "select",
+        "props": {
+          "multiple": false
+        }
+      }
+    },
+    "checkBox类型": {
+      "type": "array",
+      "title": "checkBox类型",
+      "default": "checkBox类型-v",
+      "required": false,
+      "ui:component": {
+        "name": "checkbox"
+      }
+    },
+    "boolean类型": {
+      "type": "boolean",
+      "title": "boolean类型",
+      "default": false,
+      "required": false,
+      "ui:component": {
+        "name": "radio",
+        "props": {
+          "datasource": [
+            {
+              "label": "true",
+              "value": true
+            },
+            {
+              "label": "false",
+              "value": false
+            }
+          ]
+        }
+      }
+    },
+    "time类型": {
+      "type": "string",
+      "title": "time类型",
+      "default": "time类型-v",
+      "required": false,
+      "ui:component": {
+        "name": "bk-time-picker",
+        "props": {
+          "type": "time"
+        }
+      }
+    }
+  }
+}

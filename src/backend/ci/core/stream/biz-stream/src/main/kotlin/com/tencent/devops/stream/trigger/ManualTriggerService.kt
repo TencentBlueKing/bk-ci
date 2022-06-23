@@ -28,6 +28,12 @@
 package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.models.Variable
+import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -40,6 +46,7 @@ import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamManualEvent
 import com.tencent.devops.stream.trigger.service.StreamEventService
+import com.tencent.devops.stream.trigger.template.YamlTemplateService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,11 +62,12 @@ class ManualTriggerService @Autowired constructor(
     streamEventService: StreamEventService,
     streamBasicSettingService: StreamBasicSettingService,
     streamYamlTrigger: StreamYamlTrigger,
-    streamBasicSettingDao: StreamBasicSettingDao,
+    private val streamBasicSettingDao: StreamBasicSettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
     gitPipelineResourceDao: GitPipelineResourceDao,
     gitRequestEventBuildDao: GitRequestEventBuildDao,
-    streamYamlBuild: StreamYamlBuild
+    streamYamlBuild: StreamYamlBuild,
+    private val yamlTemplateService: YamlTemplateService
 ) : BaseManualTriggerService(
     dslContext = dslContext,
     streamGitConfig = streamGitConfig,
@@ -96,5 +104,69 @@ class ManualTriggerService @Autowired constructor(
 
     override fun getStartParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String> {
         return emptyMap()
+    }
+
+    override fun getInputParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String>? {
+        return triggerBuildReq.inputs
+    }
+
+    fun parseManualVariables(
+        userId: String,
+        pipelineId: String,
+        triggerBuildReq: TriggerBuildReq
+    ): Map<String, Variable>? {
+        val streamTriggerSetting = getSetting(triggerBuildReq)
+
+        val action = loadAction(streamTriggerSetting, userId, triggerBuildReq)
+
+        // 获取yaml对象，除了需要替换的 variables和一些信息剩余全部设置为空
+        val preYaml = YamlUtil.getObjectMapper().readValue(
+            ScriptYmlUtils.formatYaml(triggerBuildReq.yaml!!),
+            PreTemplateScriptBuildYaml::class.java
+        ).copy(
+            stages = null,
+            jobs = null,
+            steps = null,
+            extends = null,
+            notices = null,
+            finally = null,
+            concurrency = null
+        )
+
+        return YamlTemplate(
+            yamlObject = preYaml,
+            filePath = StreamYamlTrigger.STREAM_TEMPLATE_ROOT_FILE,
+            extraParameters = action,
+            getTemplateMethod = yamlTemplateService::getTemplate,
+            nowRepo = null,
+            repo = null,
+            resourcePoolMapExt = null
+        ).replace().variables
+    }
+
+    companion object {
+        fun parseInputs(inputs: Map<String, Any?>?): Map<String, String>? {
+            if (inputs == null) {
+                return null
+            }
+
+            return mutableMapOf<String, String>().also { result ->
+                inputs.forEach inputEach@{ (key, value) ->
+                    if (value == null) {
+                        return@inputEach
+                    }
+
+                    when (value) {
+                        is Iterable<*> -> {
+                            if (value.count() < 0) {
+                                return@inputEach
+                            }
+                            result[key] = JsonUtil.toJson(value)
+                        }
+                        else -> result[key] = value.toString()
+                    }
+                }
+            }
+        }
     }
 }

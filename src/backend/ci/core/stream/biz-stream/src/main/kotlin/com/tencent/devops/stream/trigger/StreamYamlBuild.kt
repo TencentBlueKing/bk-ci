@@ -106,7 +106,8 @@ class StreamYamlBuild @Autowired constructor(
         yaml: ScriptBuildYaml,
         gitBuildId: Long?,
         onlySavePipeline: Boolean,
-        yamlTransferData: YamlTransferData?
+        yamlTransferData: YamlTransferData?,
+        manualInputs: Map<String, String>?
     ): BuildId? {
         logger.info("|${action.data.context.requestEventId}|gitStartBuild|action|${action.format()}")
 
@@ -161,7 +162,8 @@ class StreamYamlBuild @Autowired constructor(
                     yaml = yaml,
                     gitBuildId = gitBuildId,
                     params = triggerResult.startParams,
-                    yamlTransferData = yamlTransferData
+                    yamlTransferData = yamlTransferData,
+                    manualInputs = manualInputs
                 )
             } else if (onlySavePipeline) {
                 savePipeline(
@@ -290,7 +292,8 @@ class StreamYamlBuild @Autowired constructor(
         yaml: ScriptBuildYaml,
         gitBuildId: Long,
         params: Map<String, String> = mapOf(),
-        yamlTransferData: YamlTransferData?
+        yamlTransferData: YamlTransferData?,
+        manualInputs: Map<String, String>?
     ): BuildId? {
         logger.info("|${action.data.context.requestEventId}|startBuildPipeline|action|${action.format()}")
 
@@ -304,7 +307,8 @@ class StreamYamlBuild @Autowired constructor(
             action = action,
             yaml = yaml,
             webhookParams = params,
-            yamlTransferData = yamlTransferData
+            yamlTransferData = yamlTransferData,
+            manualInputs = manualInputs
         )
 
         // create or refresh pipeline
@@ -340,7 +344,8 @@ class StreamYamlBuild @Autowired constructor(
             action = action,
             yaml = yaml,
             webhookParams = mapOf(),
-            yamlTransferData = null
+            yamlTransferData = null,
+            manualInputs = null
         )
 
         val modelAndSetting = modelCreate.createPipelineModel(
@@ -370,7 +375,8 @@ class StreamYamlBuild @Autowired constructor(
         action: BaseAction,
         yaml: ScriptBuildYaml,
         webhookParams: Map<String, String>,
-        yamlTransferData: YamlTransferData?
+        yamlTransferData: YamlTransferData?,
+        manualInputs: Map<String, String>?
     ): Pair<ModelCreateEvent, List<BuildFormProperty>> {
         val streamGitProjectInfo = streamTriggerCache.getAndSaveRequestGitProjectInfo(
             gitProjectKey = action.data.eventCommon.gitProjectId,
@@ -383,7 +389,8 @@ class StreamYamlBuild @Autowired constructor(
             yaml = yaml,
             streamGitProjectInfo = streamGitProjectInfo,
             webhookParams = webhookParams,
-            yamlTransferData = yamlTransferData
+            yamlTransferData = yamlTransferData,
+            manualInputs = manualInputs
         )
 
         val modelCreateEvent = ModelCreateEvent(

@@ -25,29 +25,57 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.common.web.form.data
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
 
-@ApiModel("TriggerBuild请求")
-data class TriggerBuildReq(
-    @ApiModelProperty("蓝盾项目ID")
-    val projectId: String,
-    @ApiModelProperty("分支")
-    val branch: String,
-    @ApiModelProperty("Custom commit message")
-    val customCommitMsg: String?,
-    @ApiModelProperty("yaml")
-    val yaml: String?,
-    @ApiModelProperty("描述")
-    val description: String?,
-    @ApiModelProperty("用户选择的触发CommitId")
-    val commitId: String? = null,
-    @ApiModelProperty("事件请求体")
-    val payload: String? = null,
-    @ApiModelProperty("模拟代码事件类型")
-    val eventType: String? = null,
-    @ApiModelProperty("手动触发输入参数")
-    val inputs: Map<String, String>? = null
-)
+@DisplayName("生成前端动态表单Props项工具类测试")
+internal class FormPropDataKtTest {
+
+    companion object {
+        private val formData = InputPropData("", FormDataType.STRING, "")
+    }
+
+    @DisplayName("测试都不为空的结果")
+    @Test
+    fun testAllNotNull() {
+        val data = mapOf(
+            "data" to listOf("aaa"),
+            "muta" to true
+        )
+        Assertions.assertEquals(
+            data, formData.buildProps(
+                data
+            )
+        )
+    }
+
+    @DisplayName("测试值为空的结果")
+    @Test
+    fun testValueNull() {
+        val data = mapOf(
+            "data" to emptyList<String>(),
+            "muta" to null,
+            "aaa" to mapOf<String, String>(),
+            "ccc" to "!23"
+        )
+        Assertions.assertEquals(
+            mapOf("ccc" to "!23"), formData.buildProps(
+                data
+            )
+        )
+    }
+
+    @DisplayName("测试值全为空的结果")
+    @Test
+    fun testAllNull() {
+        val data = null
+        Assertions.assertEquals(
+            data, formData.buildProps(
+                data
+            )
+        )
+    }
+}

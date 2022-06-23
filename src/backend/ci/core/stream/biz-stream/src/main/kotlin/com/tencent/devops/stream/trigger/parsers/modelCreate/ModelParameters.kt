@@ -60,7 +60,8 @@ object ModelParameters {
         yaml: ScriptBuildYaml,
         streamGitProjectInfo: StreamGitProjectCache,
         webhookParams: Map<String, String> = mapOf(),
-        yamlTransferData: YamlTransferData? = null
+        yamlTransferData: YamlTransferData? = null,
+        manualInputs: Map<String, String>?
     ): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
 
@@ -112,8 +113,9 @@ object ModelParameters {
         }
 
         // 用户自定义变量
+        val userVariables = action.getUserVariables(yaml.variables) ?: yaml.variables
         val buildFormProperties = getBuildFormPropertyFromYmlVariable(
-            variables = action.getUserVariables(yaml.variables) ?: yaml.variables,
+            variables = userVariables,
             startParams = startParams
         )
 
@@ -137,7 +139,41 @@ object ModelParameters {
         }
         result.addAll(buildFormProperties)
 
+        // 对于额外的手动输入参数在最后处理逻辑
+        if (manualInputs != null) {
+            result.addInputParams(userVariables, manualInputs)
+        }
+
         return result
+    }
+
+    fun MutableList<BuildFormProperty>.addInputParams(
+        userVariables: Map<String, Variable>?,
+        inputsData: Map<String, String>
+    ): MutableList<BuildFormProperty> {
+        this.forEach manualEach@{ prop ->
+            val key = if (prop.id.startsWith(VARIABLE_PREFIX)) {
+                prop.id.removePrefix(VARIABLE_PREFIX)
+            } else {
+                prop.id
+            }
+
+            if (!inputsData.containsKey(key)) {
+                return@manualEach
+            }
+
+            // inputs包含，但是配置不允许改，直接报错
+            if (userVariables != null &&
+                userVariables.containsKey(key) &&
+                userVariables[key]?.allowModifyAtStartup != true
+            ) {
+                throw RuntimeException("variable $key not allow modify at startup")
+            }
+
+            prop.defaultValue = inputsData[key]!!
+        }
+
+        return this
     }
 
     private fun getBuildFormPropertyFromYmlVariable(

@@ -25,29 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.common.web.form.models
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.web.form.models.ui.components.UiComponent
 
-@ApiModel("TriggerBuild请求")
-data class TriggerBuildReq(
-    @ApiModelProperty("蓝盾项目ID")
-    val projectId: String,
-    @ApiModelProperty("分支")
-    val branch: String,
-    @ApiModelProperty("Custom commit message")
-    val customCommitMsg: String?,
-    @ApiModelProperty("yaml")
-    val yaml: String?,
-    @ApiModelProperty("描述")
-    val description: String?,
-    @ApiModelProperty("用户选择的触发CommitId")
-    val commitId: String? = null,
-    @ApiModelProperty("事件请求体")
-    val payload: String? = null,
-    @ApiModelProperty("模拟代码事件类型")
-    val eventType: String? = null,
-    @ApiModelProperty("手动触发输入参数")
-    val inputs: Map<String, String>? = null
+/**
+ * 表单项
+ * @param type 必需，表单组件value的数据类型
+ * @param title 必需，表单组件的label
+ * @param default 可选，表单组件的默认值
+ * @param required 可选，是否为必填项，默认为false
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class FormProp(
+    val type: String,
+    val title: String,
+    val default: Any? = null,
+    val required: Boolean? = null,
+    @JsonProperty("ui:component")
+    val uiComponent: UiComponent
 )

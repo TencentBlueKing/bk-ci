@@ -29,8 +29,13 @@ package com.tencent.devops.process.yaml.parsers.template
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
+import com.tencent.devops.process.yaml.v2.models.Variable
+import com.tencent.devops.process.yaml.v2.models.VariableDatasource
+import com.tencent.devops.process.yaml.v2.models.VariablePropType
+import com.tencent.devops.process.yaml.v2.models.VariableProps
 import com.tencent.devops.process.yaml.v2.models.format
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
@@ -42,6 +47,8 @@ import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.StringReader
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.DisplayName
 
 @Suppress("LoopWithTooManyJumpStatements")
 class YamlTemplateTest {
@@ -88,7 +95,7 @@ class YamlTemplateTest {
         // resource
         val resourceExt = mutableMapOf<String, ResourcesPools>()
         replace("$sampleDir/$dir/resource/resources.yml", resourceExt)
-        assert(
+        Assertions.assertTrue(
             resourceExt.keys.equalss(
                 mutableListOf(
                     "lawrenzhang_testgroup/int/test_ci_temp@rezbuild+rezbuild",
@@ -98,7 +105,7 @@ class YamlTemplateTest {
         )
         resourceExt.clear()
         replace("$sampleDir/$dir/resource/resource-remote.yml", resourceExt)
-        assert(
+        Assertions.assertTrue(
             resourceExt.keys.equalss(
                 mutableListOf(
                     "xxxxx/int/test_ci_temp@rezbuild+rezbuild"
@@ -107,7 +114,7 @@ class YamlTemplateTest {
         )
         resourceExt.clear()
         replace("$sampleDir/$dir/resource/resource-remote-mul.yml", resourceExt)
-        assert(
+        Assertions.assertTrue(
             resourceExt.keys.equalss(
                 mutableListOf(
                     "xxxxx/int/test_ci_temp@rezbuild1+rezbuild1",
@@ -124,11 +131,57 @@ class YamlTemplateTest {
         check("$sampleDir/$dir/parameters.yml")
     }
 
+    @DisplayName("测试只替换variables模板(为手动输入参数)")
+    @Test
+    fun variablesSubTest() {
+        val vars = replace("$sampleDir/variablesSub/variablesSub.yml", null, false)
+        Assertions.assertEquals(
+            mapOf<String, Any>(
+                "USERNAME" to Variable(
+                    value = "VARIABLES", readonly = null, allowModifyAtStartup = true,
+                    props = VariableProps(
+                        label = "我是预定义下拉可选值的字段",
+                        type = VariablePropType.SELECTOR.value,
+                        values = listOf(1, 2, 3),
+                        multiple = true,
+                        description = "这是个允许多选的下拉选择字段",
+                        required = null
+                    )
+                ),
+                "cyc_USERNAME1" to Variable(
+                    value = "CYC_VARIABLES", readonly = null, allowModifyAtStartup = null,
+                    props = VariableProps(
+                        label = "我是通过url获取下拉可选值的字段",
+                        type = VariablePropType.SELECTOR.value,
+                        multiple = null,
+                        required = true,
+                        datasource = VariableDatasource(
+                            url = "sss",
+                            dataPath = "222",
+                            paramId = "",
+                            paramName = "123",
+                            hasAddItem = true,
+                            itemText = "123123",
+                            itemTargetUrl = "777"
+                        )
+                    )
+                ),
+                "cyc_USERNAME2" to Variable(value = "CYC_VARIABLES2", readonly = null, allowModifyAtStartup = null),
+                "RES_REPOA_VAR1_USERNAME" to Variable(
+                    value = "RES_VARIABLE",
+                    readonly = null,
+                    allowModifyAtStartup = null
+                ),
+                "RES_REPOA_VAR2_USERNAME" to Variable(value = "aaa", readonly = null, allowModifyAtStartup = null)
+            ), (vars as PreScriptBuildYaml).variables
+        )
+    }
+
     private fun check(file: String) {
         var flag = true
         val sample = BufferedReader(
             StringReader(
-                replace(file)
+                replace(file, null, true).toString()
             )
         )
         val compared = BufferedReader(
@@ -153,10 +206,14 @@ class YamlTemplateTest {
             line = sample.readLine()
             lineCompare = compared.readLine()
         }
-        assert(flag)
+        Assertions.assertTrue(flag)
     }
 
-    private fun replace(testYaml: String, resourceExt: MutableMap<String, ResourcesPools>? = null): String {
+    private fun replace(
+        testYaml: String,
+        resourceExt: MutableMap<String, ResourcesPools>? = null,
+        normalized: Boolean = true
+    ): Any {
         val sb = getStrFromResource(testYaml)
 
         val yaml = ScriptYmlUtils.formatYaml(sb)
@@ -173,6 +230,9 @@ class YamlTemplateTest {
             repo = null,
             resourcePoolMapExt = resourceExt
         ).replace()
+        if (!normalized) {
+            return preScriptBuildYaml
+        }
         val (normalOb, trans) = ScriptYmlUtils.normalizeGitCiYaml(preScriptBuildYaml, "")
         val yamls = YamlUtil.toYaml(normalOb)
         println(YamlCommonUtils.toYamlNotNull(preScriptBuildYaml))

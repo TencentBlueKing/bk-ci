@@ -25,29 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.common.web.form.data
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.web.form.models.ui.DataSourceItem
+import com.tencent.devops.common.web.form.models.ui.components.SelectComponent
 
-@ApiModel("TriggerBuild请求")
-data class TriggerBuildReq(
-    @ApiModelProperty("蓝盾项目ID")
-    val projectId: String,
-    @ApiModelProperty("分支")
-    val branch: String,
-    @ApiModelProperty("Custom commit message")
-    val customCommitMsg: String?,
-    @ApiModelProperty("yaml")
-    val yaml: String?,
-    @ApiModelProperty("描述")
-    val description: String?,
-    @ApiModelProperty("用户选择的触发CommitId")
-    val commitId: String? = null,
-    @ApiModelProperty("事件请求体")
-    val payload: String? = null,
-    @ApiModelProperty("模拟代码事件类型")
-    val eventType: String? = null,
-    @ApiModelProperty("手动触发输入参数")
-    val inputs: Map<String, String>? = null
-)
+data class SelectPropData(
+    override val id: String,
+    override val type: FormDataType,
+    override val title: String,
+    override val default: Any? = null,
+    override val required: Boolean? = false,
+    val dataSource: List<DataSourceItem>?,
+    val multiple: Boolean? = null
+) : FormPropData {
+    override fun buildComponent(): SelectComponent {
+        return SelectComponent(
+            props = this.buildProps(
+                mapOf(
+                    "datasource" to dataSource,
+                    "multiple" to multiple
+                )
+            )
+        )
+    }
+}

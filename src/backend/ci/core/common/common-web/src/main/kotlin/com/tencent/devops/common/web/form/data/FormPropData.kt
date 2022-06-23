@@ -25,29 +25,52 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.common.web.form.data
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.web.form.models.ui.components.UiComponent
 
-@ApiModel("TriggerBuild请求")
-data class TriggerBuildReq(
-    @ApiModelProperty("蓝盾项目ID")
-    val projectId: String,
-    @ApiModelProperty("分支")
-    val branch: String,
-    @ApiModelProperty("Custom commit message")
-    val customCommitMsg: String?,
-    @ApiModelProperty("yaml")
-    val yaml: String?,
-    @ApiModelProperty("描述")
-    val description: String?,
-    @ApiModelProperty("用户选择的触发CommitId")
-    val commitId: String? = null,
-    @ApiModelProperty("事件请求体")
-    val payload: String? = null,
-    @ApiModelProperty("模拟代码事件类型")
-    val eventType: String? = null,
-    @ApiModelProperty("手动触发输入参数")
-    val inputs: Map<String, String>? = null
-)
+/**
+ * 给构造器使用的，用户填写的表单项数据
+ */
+interface FormPropData {
+    // 必需， 单个表单组件的key，根据业务需求自定义
+    val id: String
+
+    // 必需，表单组件value的数据类型
+    val type: FormDataType
+
+    // 必需，表单组件的label
+    val title: String
+
+    // 可选，表单组件的默认值
+    val default: Any?
+
+    // 可选，是否为必填项，默认为false
+    val required: Boolean?
+
+    // 构造表单对象
+    fun buildComponent(): UiComponent
+}
+
+@Suppress("ComplexCondition")
+fun FormPropData.buildProps(props: Map<String, Any?>?): Map<String, Any>? {
+    if (props == null) {
+        return null
+    }
+
+    val result = mutableMapOf<String, Any>()
+
+    props.forEach { (name, value) ->
+        if (value == null || (value is Iterable<*> && value.count() == 0) || (value is Map<*, *> && value.isEmpty())) {
+            return@forEach
+        }
+
+        result[name] = value
+    }
+
+    return if (result.isEmpty()) {
+        null
+    } else {
+        result
+    }
+}

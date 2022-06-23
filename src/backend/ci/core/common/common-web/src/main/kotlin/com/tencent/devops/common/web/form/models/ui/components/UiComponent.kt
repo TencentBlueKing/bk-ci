@@ -25,29 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.common.web.form.models.ui.components
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("TriggerBuild请求")
-data class TriggerBuildReq(
-    @ApiModelProperty("蓝盾项目ID")
-    val projectId: String,
-    @ApiModelProperty("分支")
-    val branch: String,
-    @ApiModelProperty("Custom commit message")
-    val customCommitMsg: String?,
-    @ApiModelProperty("yaml")
-    val yaml: String?,
-    @ApiModelProperty("描述")
-    val description: String?,
-    @ApiModelProperty("用户选择的触发CommitId")
-    val commitId: String? = null,
-    @ApiModelProperty("事件请求体")
-    val payload: String? = null,
-    @ApiModelProperty("模拟代码事件类型")
-    val eventType: String? = null,
-    @ApiModelProperty("手动触发输入参数")
-    val inputs: Map<String, String>? = null
-)
+/**
+ * 表单项中的组件项接口类，不同组件自己实现
+ */
+interface UiComponent {
+    // 必需，所需渲染组件的名称，例如组件库里的bk-input、bk-table，也可以是通过插件注册的自定义组件
+    val name: String
+    // 可选，透传到组件的属性，可传入的属性由渲染的组件决定，组件支持的属性都可传入
+    val props: Map<String, Any>?
+}

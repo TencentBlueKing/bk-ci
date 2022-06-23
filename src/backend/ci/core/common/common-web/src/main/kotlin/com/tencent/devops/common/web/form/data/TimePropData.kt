@@ -25,29 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.common.web.form.data
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.web.form.models.ui.components.TimeComponent
 
-@ApiModel("TriggerBuild请求")
-data class TriggerBuildReq(
-    @ApiModelProperty("蓝盾项目ID")
-    val projectId: String,
-    @ApiModelProperty("分支")
-    val branch: String,
-    @ApiModelProperty("Custom commit message")
-    val customCommitMsg: String?,
-    @ApiModelProperty("yaml")
-    val yaml: String?,
-    @ApiModelProperty("描述")
-    val description: String?,
-    @ApiModelProperty("用户选择的触发CommitId")
-    val commitId: String? = null,
-    @ApiModelProperty("事件请求体")
-    val payload: String? = null,
-    @ApiModelProperty("模拟代码事件类型")
-    val eventType: String? = null,
-    @ApiModelProperty("手动触发输入参数")
-    val inputs: Map<String, String>? = null
-)
+/**
+ * input组件需要的参数
+ */
+data class TimePropData(
+    override val id: String,
+    override val type: FormDataType,
+    override val title: String,
+    override val default: Any? = null,
+    override val required: Boolean? = false,
+    val timeType: TimePropType? = null
+) : FormPropData {
+    override fun buildComponent(): TimeComponent {
+        return TimeComponent(
+            props = this.buildProps(
+                mapOf(
+                    "type" to if (timeType == TimePropType.TIMERANGE) {
+                        TimePropType.TIMERANGE.value
+                    } else {
+                        TimePropType.TIME.value
+                    }
+                )
+            )
+        )
+    }
+}
+
+enum class TimePropType(val value: String) {
+    TIME("time"),
+    TIMERANGE("timerange")
+}

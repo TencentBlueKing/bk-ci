@@ -6,6 +6,14 @@ parameters:
 variables:
   USERNAME:
     value: ${{ parameters.username }}
+    allow-modify-at-startup: true
+    props:
+      label: 我是预定义下拉可选值的字段
+      type: selector
+      values: [ 1,2,3 ]
+      multiple: true
+      description: 这是个允许多选的下拉选择字段
+
   template:
     - name: cyclic/variable/templates/variable1.yml
       parameters:

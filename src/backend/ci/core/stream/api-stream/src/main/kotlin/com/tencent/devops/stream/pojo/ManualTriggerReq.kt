@@ -30,24 +30,18 @@ package com.tencent.devops.stream.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("TriggerBuild请求")
-data class TriggerBuildReq(
+@ApiModel("手动触发请求")
+data class ManualTriggerReq(
     @ApiModelProperty("蓝盾项目ID")
     val projectId: String,
     @ApiModelProperty("分支")
     val branch: String,
     @ApiModelProperty("Custom commit message")
-    val customCommitMsg: String?,
-    @ApiModelProperty("yaml")
-    val yaml: String?,
-    @ApiModelProperty("描述")
-    val description: String?,
+    val customCommitMsg: String,
     @ApiModelProperty("用户选择的触发CommitId")
     val commitId: String? = null,
-    @ApiModelProperty("事件请求体")
-    val payload: String? = null,
-    @ApiModelProperty("模拟代码事件类型")
-    val eventType: String? = null,
-    @ApiModelProperty("手动触发输入参数")
-    val inputs: Map<String, String>? = null
+    @ApiModelProperty("yaml")
+    val yaml: String,
+    @ApiModelProperty("输入参数(json对象)")
+    val inputs: Map<String, Any?>?
 )

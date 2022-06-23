@@ -254,9 +254,23 @@ class TGitMrActionGit(
 
         if (!getChangeSet()!!.contains(fileName)) {
             return if (targetFile?.content.isNullOrBlank()) {
+                logger.warn(
+                    "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
+                        "get file $fileName content from ${event.object_attributes.target_project_id} " +
+                        "branch ${event.object_attributes.target_branch} is blank because no file"
+                )
                 ""
             } else {
-                String(Base64.getDecoder().decode(targetFile!!.content))
+                String(Base64.getDecoder().decode(targetFile!!.content)).also { c ->
+                    if (c.isBlank()) {
+                        logger.warn(
+                            "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
+                                "get file $fileName content from ${event.object_attributes.target_project_id} " +
+                                "target branch ${event.object_attributes.target_branch} is blank " +
+                                "because git content blank"
+                        )
+                    }
+                }
             }
         }
 
@@ -272,9 +286,23 @@ class TGitMrActionGit(
             retry = ApiRequestRetryInfo(true)
         )
         val sourceContent = if (sourceFile?.content.isNullOrBlank()) {
+            logger.warn(
+                "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
+                    "get file $fileName content from ${event.object_attributes.source_project_id} " +
+                    "source commit ${event.object_attributes.last_commit.id} is blank because no file"
+            )
             ""
         } else {
-            String(Base64.getDecoder().decode(sourceFile!!.content))
+            String(Base64.getDecoder().decode(sourceFile!!.content)).also { c ->
+                if (c.isBlank()) {
+                    logger.warn(
+                        "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
+                            "get file $fileName content from ${event.object_attributes.source_project_id} " +
+                            "source commit ${event.object_attributes.last_commit.id} is blank " +
+                            "because git content blank"
+                    )
+                }
+            }
         }
 
         if (targetFile?.blobId.isNullOrBlank()) {

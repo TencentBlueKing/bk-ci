@@ -25,29 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.common.web.form.models
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.fasterxml.jackson.annotation.JsonInclude
 
-@ApiModel("TriggerBuild请求")
-data class TriggerBuildReq(
-    @ApiModelProperty("蓝盾项目ID")
-    val projectId: String,
-    @ApiModelProperty("分支")
-    val branch: String,
-    @ApiModelProperty("Custom commit message")
-    val customCommitMsg: String?,
-    @ApiModelProperty("yaml")
-    val yaml: String?,
-    @ApiModelProperty("描述")
-    val description: String?,
-    @ApiModelProperty("用户选择的触发CommitId")
-    val commitId: String? = null,
-    @ApiModelProperty("事件请求体")
-    val payload: String? = null,
-    @ApiModelProperty("模拟代码事件类型")
-    val eventType: String? = null,
-    @ApiModelProperty("手动触发输入参数")
-    val inputs: Map<String, String>? = null
+/**
+ * 返回给前端的动态表单对象
+ * 注：创建请使用builder对象
+ * @see com.tencent.devops.common.web.form.FormBuilder
+ * @param title 整个表单的title说明
+ * @param description 可选，整个表单描述信息
+ * @param type 固定值为对象类型
+ * @param properties 表单项
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class Form(
+    var title: String,
+    var description: String? = null,
+    val type: String = "object",
+    val properties: MutableMap<String, FormProp>
 )

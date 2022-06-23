@@ -76,24 +76,7 @@ abstract class BaseManualTriggerService @Autowired constructor(
     open fun triggerBuild(userId: String, pipelineId: String, triggerBuildReq: TriggerBuildReq): TriggerBuildResult {
         logger.info("Trigger build, userId: $userId, pipeline: $pipelineId, triggerBuildReq: $triggerBuildReq")
 
-        val streamTriggerSetting = streamBasicSettingDao.getSettingByProjectCode(
-            dslContext = dslContext,
-            projectCode = triggerBuildReq.projectId
-        )?.let {
-            StreamTriggerSetting(
-                enableCi = it.enableCi,
-                buildPushedBranches = it.buildPushedBranches,
-                buildPushedPullRequest = it.buildPushedPullRequest,
-                enableUser = it.enableUserId,
-                gitHttpUrl = it.gitHttpUrl,
-                projectCode = it.projectCode,
-                enableCommitCheck = it.enableCommitCheck,
-                enableMrBlock = it.enableMrBlock,
-                name = it.name,
-                enableMrComment = it.enableMrComment,
-                homepage = it.homePage
-            )
-        } ?: throw CustomException(Response.Status.FORBIDDEN, message = TriggerReason.CI_DISABLED.detail)
+        val streamTriggerSetting = getSetting(triggerBuildReq)
 
         // open api 通过提供事件原文模拟事件触发
         val action = loadAction(
@@ -173,6 +156,28 @@ abstract class BaseManualTriggerService @Autowired constructor(
         )
     }
 
+    protected fun getSetting(triggerBuildReq: TriggerBuildReq): StreamTriggerSetting {
+        val streamTriggerSetting = streamBasicSettingDao.getSettingByProjectCode(
+            dslContext = dslContext,
+            projectCode = triggerBuildReq.projectId
+        )?.let {
+            StreamTriggerSetting(
+                enableCi = it.enableCi,
+                buildPushedBranches = it.buildPushedBranches,
+                buildPushedPullRequest = it.buildPushedPullRequest,
+                enableUser = it.enableUserId,
+                gitHttpUrl = it.gitHttpUrl,
+                projectCode = it.projectCode,
+                enableCommitCheck = it.enableCommitCheck,
+                enableMrBlock = it.enableMrBlock,
+                name = it.name,
+                enableMrComment = it.enableMrComment,
+                homepage = it.homePage
+            )
+        } ?: throw CustomException(Response.Status.FORBIDDEN, message = TriggerReason.CI_DISABLED.detail)
+        return streamTriggerSetting
+    }
+
     abstract fun loadAction(
         streamTriggerSetting: StreamTriggerSetting,
         userId: String,
@@ -180,6 +185,8 @@ abstract class BaseManualTriggerService @Autowired constructor(
     ): BaseAction
 
     abstract fun getStartParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String>
+
+    abstract fun getInputParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String>?
 
     fun handleTrigger(
         action: BaseAction,
@@ -244,7 +251,8 @@ abstract class BaseManualTriggerService @Autowired constructor(
             yaml = yamlReplaceResult.normalYaml,
             gitBuildId = gitBuildId,
             onlySavePipeline = false,
-            yamlTransferData = yamlReplaceResult.yamlTransferData
+            yamlTransferData = yamlReplaceResult.yamlTransferData,
+            manualInputs = getInputParams(action, triggerBuildReq)
         )
     }
 }

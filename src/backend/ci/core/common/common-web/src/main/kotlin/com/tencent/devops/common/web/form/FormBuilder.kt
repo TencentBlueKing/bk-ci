@@ -25,29 +25,51 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.common.web.form
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.web.form.data.CheckboxPropData
+import com.tencent.devops.common.web.form.data.FormDataType
+import com.tencent.devops.common.web.form.data.FormPropData
+import com.tencent.devops.common.web.form.models.Form
+import com.tencent.devops.common.web.form.models.FormProp
 
-@ApiModel("TriggerBuild请求")
-data class TriggerBuildReq(
-    @ApiModelProperty("蓝盾项目ID")
-    val projectId: String,
-    @ApiModelProperty("分支")
-    val branch: String,
-    @ApiModelProperty("Custom commit message")
-    val customCommitMsg: String?,
-    @ApiModelProperty("yaml")
-    val yaml: String?,
-    @ApiModelProperty("描述")
-    val description: String?,
-    @ApiModelProperty("用户选择的触发CommitId")
-    val commitId: String? = null,
-    @ApiModelProperty("事件请求体")
-    val payload: String? = null,
-    @ApiModelProperty("模拟代码事件类型")
-    val eventType: String? = null,
-    @ApiModelProperty("手动触发输入参数")
-    val inputs: Map<String, String>? = null
-)
+/**
+ * 表单对象的建造者类
+ */
+class FormBuilder {
+    private val form = Form("", properties = mutableMapOf())
+
+    fun setTitle(title: String): FormBuilder {
+        form.title = title
+        return this
+    }
+
+    fun setDescription(description: String): FormBuilder {
+        form.description = description
+        return this
+    }
+
+    fun setProp(prop: FormPropData): FormBuilder {
+        val uiComponent = prop.buildComponent()
+
+        val type = when (prop) {
+            // checkbox只能是array才能成立
+            is CheckboxPropData -> FormDataType.ARRAY.value
+            else -> prop.type.value
+        }
+
+        form.properties[prop.id] = FormProp(
+            type = type,
+            title = prop.title,
+            default = prop.default,
+            required = prop.required,
+            uiComponent = uiComponent
+        )
+
+        return this
+    }
+
+    fun build(): Form {
+        return form
+    }
+}

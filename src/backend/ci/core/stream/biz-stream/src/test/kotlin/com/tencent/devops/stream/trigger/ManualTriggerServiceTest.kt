@@ -25,29 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.stream.trigger
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
 
-@ApiModel("TriggerBuild请求")
-data class TriggerBuildReq(
-    @ApiModelProperty("蓝盾项目ID")
-    val projectId: String,
-    @ApiModelProperty("分支")
-    val branch: String,
-    @ApiModelProperty("Custom commit message")
-    val customCommitMsg: String?,
-    @ApiModelProperty("yaml")
-    val yaml: String?,
-    @ApiModelProperty("描述")
-    val description: String?,
-    @ApiModelProperty("用户选择的触发CommitId")
-    val commitId: String? = null,
-    @ApiModelProperty("事件请求体")
-    val payload: String? = null,
-    @ApiModelProperty("模拟代码事件类型")
-    val eventType: String? = null,
-    @ApiModelProperty("手动触发输入参数")
-    val inputs: Map<String, String>? = null
-)
+@DisplayName("stream手动触发相关测试")
+internal class ManualTriggerServiceTest {
+
+    @Test
+    fun parseInputsTest() {
+        val testData = mapOf(
+            "string" to "string",
+            "int" to 123,
+            "double" to 4.5,
+            "array" to listOf(1, 2.2, "3"),
+            "bool" to true
+        )
+
+        Assertions.assertEquals(
+            mapOf(
+                "string" to "string",
+                "int" to "123",
+                "double" to "4.5",
+                "array" to "[ 1, 2.2, \"3\" ]",
+                "bool" to "true"
+            ),
+            ManualTriggerService.parseInputs(testData)
+        )
+    }
+}
