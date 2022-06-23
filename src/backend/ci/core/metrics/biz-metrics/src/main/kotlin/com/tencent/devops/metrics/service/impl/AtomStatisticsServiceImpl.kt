@@ -88,11 +88,11 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         val pipelineLabelIds = queryAtomTrendInfoDTO.pipelineLabelIds
         val errorTypes = queryAtomTrendInfoDTO.errorTypes
         val atomCodes =
-            if (!pipelineIds.isNullOrEmpty() || !pipelineLabelIds.isNullOrEmpty() || !errorTypes.isNullOrEmpty()) {
-                // 未选择查询的插件时读取插件显示配置
-                if (!queryAtomTrendInfoDTO.atomCodes.isNullOrEmpty()) {
-                    queryAtomTrendInfoDTO.atomCodes!!
-                } else {
+            // 未选择查询的插件时读取插件显示配置
+            if (!queryAtomTrendInfoDTO.atomCodes.isNullOrEmpty()) {
+                queryAtomTrendInfoDTO.atomCodes
+            } else {
+                if (pipelineIds.isNullOrEmpty() && pipelineLabelIds.isNullOrEmpty() && errorTypes.isNullOrEmpty()) {
                     // 插件配置为空择读取项目下插件
                     atomDisplayConfigDao.getOptionalAtomDisplayConfig(
                         dslContext = dslContext,
@@ -102,8 +102,10 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                         page = 1,
                         pageSize = DEFAULT_LIMIT_NUM
                     ).map { it.atomCode }
+                } else {
+                    queryAtomTrendInfoDTO.atomCodes
                 }
-            } else queryAtomTrendInfoDTO.atomCodes
+            }
         // 查询符合查询条件的记录数
         val queryAtomExecuteStatisticsCount =
             atomStatisticsDao.queryAtomExecuteStatisticsInfoCount(
@@ -199,9 +201,9 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         val pipelineLabelIds = queryAtomTrendInfoDTO.pipelineLabelIds
         val errorTypes = queryAtomTrendInfoDTO.errorTypes
         val atomCodes =
-            if (!pipelineIds.isNullOrEmpty() || !pipelineLabelIds.isNullOrEmpty() || !errorTypes.isNullOrEmpty()) {
-                // 未选择查询的插件时读取插件显示配置
-                if (queryAtomTrendInfoDTO.atomCodes.isNullOrEmpty()) {
+            // 未选择查询的插件时读取插件显示配置
+            if (queryAtomTrendInfoDTO.atomCodes.isNullOrEmpty()) {
+                if (pipelineIds.isNullOrEmpty() && pipelineLabelIds.isNullOrEmpty() && errorTypes.isNullOrEmpty()) {
                     // 插件配置为空择读取项目下插件
                     atomDisplayConfigDao.getOptionalAtomDisplayConfig(
                         dslContext = dslContext,
@@ -212,9 +214,11 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                         pageSize = DEFAULT_LIMIT_NUM
                     ).map { it.atomCode }
                 } else {
-                    queryAtomTrendInfoDTO.atomCodes!!
+                    queryAtomTrendInfoDTO.atomCodes
                 }
-            } else queryAtomTrendInfoDTO.atomCodes
+            } else {
+                queryAtomTrendInfoDTO.atomCodes
+            }
         // 查询符合查询条件的记录数
         val queryAtomExecuteStatisticsCount =
             atomStatisticsDao.queryAtomExecuteStatisticsInfoCount(
