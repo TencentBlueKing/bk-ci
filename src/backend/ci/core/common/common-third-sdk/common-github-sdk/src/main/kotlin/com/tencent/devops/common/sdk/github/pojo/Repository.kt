@@ -51,5 +51,6 @@ data class Repository (
     @JsonProperty("avatar_url")
     val avatarUrl: String?,
     @JsonProperty("routerTag")
-    val routerTag: String?
+    val routerTag: String?,
+    val private:Boolean
 )

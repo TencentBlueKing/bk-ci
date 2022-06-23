@@ -45,8 +45,8 @@ class ListRepositoryCollaboratorsRequest(
     // Default: owner,collaborator,organization_member
     val affiliation: String? = null,
     @JsonProperty("per_page")
-    val perPage: Int = 30,
-    val page: Int = 1
+    var perPage: Int = 30,
+    var page: Int = 1
 ) : GithubRequest<List<Collaborator>>() {
     override fun getHttpMethod(): HttpMethod {
         return HttpMethod.GET

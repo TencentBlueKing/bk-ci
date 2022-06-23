@@ -25,14 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.pojo
+package com.tencent.devops.stream.trigger.git.pojo.github
 
-data class RepositoryContent(
-    val type: String,
-    val encoding: String?,
-    val size: String,
-    val name: String,
-    val path: String,
-    val content: String?,
-    val sha: String
-)
+import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.stream.trigger.git.pojo.StreamRevisionInfo
+
+data class GithubRevisionInfo(
+    override val revision: String,
+    override val updatedMessage: String,
+    override val branchName: String,
+    override val authorName: String
+) : StreamRevisionInfo {
+    constructor(r: RevisionInfo) : this(
+        revision = r.revision,
+        updatedMessage = r.updatedMessage,
+        branchName = r.branchName,
+        authorName = r.authorName
+    )
+}

@@ -25,14 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.pojo
+package com.tencent.devops.stream.trigger.git.pojo.github
 
-data class RepositoryContent(
-    val type: String,
-    val encoding: String?,
-    val size: String,
-    val name: String,
-    val path: String,
-    val content: String?,
-    val sha: String
-)
+import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.ChangeFileInfo
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitChangeFileInfo
+
+data class GithubChangeFileInfo(
+    override val oldPath: String,
+    override val newPath: String,
+    override val renameFile: Boolean,
+    override val deletedFile: Boolean
+) : StreamGitChangeFileInfo {
+
+    constructor(c: ChangeFileInfo) : this(
+        oldPath = c.oldPath,
+        newPath = c.newPath,
+        renameFile = c.renameFile,
+        deletedFile = c.deletedFile
+    )
+
+    constructor(c: GitMrChangeInfo.GitMrFile) : this(
+        oldPath = c.oldPath,
+        newPath = c.newPath,
+        renameFile = c.renameFile,
+        deletedFile = c.deletedFile
+    )
+}

@@ -25,54 +25,50 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.stream.trigger.git.pojo.github
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.sdk.github.pojo.Organization
-import com.tencent.devops.scm.pojo.GitCodeGroup
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.sdk.github.pojo.Repository
+import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
 
-@ApiModel("Git项目组列表信息")
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class StreamGitGroup(
-    val id: Long,
-    val name: String,
-    val path: String,
-    val description: String?,
-    @JsonProperty("avatar_url")
-    val avatarUrl: String?,
-    @JsonProperty("full_name")
-    val fullName: String?,
-    @JsonProperty("full_path")
-    val fullPath: String?,
-    @JsonProperty("web_url")
-    val webUrl: String?,
-    @JsonProperty("parent_id")
-    val parentId: Long?
-) {
-    constructor(g: GitCodeGroup) : this(
-        id = g.id,
+data class GithubProjectInfo(
+    override val gitProjectId: String,
+    override val defaultBranch: String?,
+    override val gitHttpUrl: String,
+    override val name: String,
+    override val gitSshUrl: String?,
+    override val homepage: String?,
+    override val gitHttpsUrl: String?,
+    override val description: String?,
+    override val avatarUrl: String?,
+    override val pathWithNamespace: String?,
+    override val nameWithNamespace: String
+) : StreamGitProjectInfo {
+    constructor(g: GitProjectInfo) : this(
+        gitProjectId = g.id.toString(),
+        defaultBranch = g.defaultBranch,
+        gitHttpUrl = g.repositoryUrl,
         name = g.name,
-        path = g.path,
+        gitSshUrl = g.gitSshUrl,
+        homepage = g.homepage,
+        gitHttpsUrl = g.gitHttpsUrl,
         description = g.description,
         avatarUrl = g.avatarUrl,
-        fullName = g.fullName,
-        fullPath = g.fullPath,
-        webUrl = g.webUrl,
-        parentId = g.parentId
+        pathWithNamespace = g.pathWithNamespace,
+        nameWithNamespace = g.namespaceName
     )
 
-    constructor(g: Organization) : this(
-        id = g.id,
+    constructor(g: Repository) : this(
+        gitProjectId = g.gitProjectId.toString(),
+        defaultBranch = g.defaultBranch,
+        gitHttpUrl = g.gitHttpUrl,
         name = g.name,
+        gitSshUrl = g.gitSshUrl,
+        homepage = g.homepage,
+        gitHttpsUrl = g.gitHttpUrl,
         description = g.description,
         avatarUrl = g.avatarUrl,
-        // 以下属性暂时都没有 //todo 补充属性或者其他方案
-        path = "",
-        fullName = null,
-        fullPath = null,
-        webUrl = null,
-        parentId = null
+        pathWithNamespace = g.nameWithNamespace,
+        nameWithNamespace = g.nameWithNamespace
     )
 }

@@ -25,14 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.pojo
+package com.tencent.devops.stream.trigger.git.pojo.github
 
-data class RepositoryContent(
-    val type: String,
-    val encoding: String?,
-    val size: String,
-    val name: String,
-    val path: String,
-    val content: String?,
-    val sha: String
-)
+import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitTreeFileInfo
+
+data class GithubTreeFileInfo(
+    override val name: String,
+    override val type: String
+) : StreamGitTreeFileInfo {
+    constructor(f: GitFileInfo) : this(
+        name = f.name,
+        type = f.type
+    )
+}

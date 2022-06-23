@@ -25,14 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.pojo
+package com.tencent.devops.stream.trigger.git.pojo.github
 
-data class RepositoryContent(
-    val type: String,
-    val encoding: String?,
-    val size: String,
-    val name: String,
-    val path: String,
-    val content: String?,
-    val sha: String
-)
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectUserInfo
+
+data class GithubProjectUserInfo(
+    // tgit的权限等级 GUEST = 10 FOLLOWER = 15 REPORTER = 20 DEVELOPER = 30 MASTER = 40 OWNER = 50
+    override val accessLevel: Int
+) : StreamGitProjectUserInfo

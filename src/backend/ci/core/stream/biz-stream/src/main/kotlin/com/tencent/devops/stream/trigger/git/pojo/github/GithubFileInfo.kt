@@ -25,14 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.pojo
+package com.tencent.devops.stream.trigger.git.pojo.github
 
-data class RepositoryContent(
-    val type: String,
-    val encoding: String?,
-    val size: String,
-    val name: String,
-    val path: String,
-    val content: String?,
-    val sha: String
-)
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitFileInfo
+
+data class GithubFileInfo(
+    // stream 的内容经过base64加码，需要解码
+    override val content: String,
+    override val blobId: String
+) : StreamGitFileInfo

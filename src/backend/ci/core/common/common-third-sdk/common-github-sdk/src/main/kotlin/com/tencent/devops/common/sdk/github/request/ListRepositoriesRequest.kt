@@ -50,13 +50,13 @@ class ListRepositoriesRequest(
     // The property to sort the results by.
     // Default: full_name
     // Can be one of: created, updated, pushed, full_name
-    val sort: String? = null,
+    var sort: String? = null,
     // The order to sort by. Default: asc when using full_name, otherwise desc.
     // Can be one of: asc, desc
-    val direction: String? = null,
+    var direction: String? = null,
     @JsonProperty("per_page")
-    val perPage: Int = 30,
-    val page: Int = 1,
+    var perPage: Int = 30,
+    var page: Int = 1,
     // Only show notifications updated after the given time. This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.
     val since: String? = null,
     // Only show notifications updated before the given time. This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.

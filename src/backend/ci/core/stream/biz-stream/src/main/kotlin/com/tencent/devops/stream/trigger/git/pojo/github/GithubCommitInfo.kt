@@ -25,14 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.pojo
+package com.tencent.devops.stream.trigger.git.pojo.github
 
-data class RepositoryContent(
-    val type: String,
-    val encoding: String?,
-    val size: String,
-    val name: String,
-    val path: String,
-    val content: String?,
-    val sha: String
-)
+import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitCommitInfo
+
+data class GithubCommitInfo(
+    override val commitId: String,
+    override val commitDate: String,
+    override val commitAuthor: String,
+    override val commitMsg: String
+) : StreamGitCommitInfo {
+    constructor(c: GitCommit) : this(
+        commitId = c.id,
+        commitDate = c.committed_date,
+        commitAuthor = c.author_email,
+        commitMsg = c.message
+    )
+}
