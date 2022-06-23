@@ -28,7 +28,6 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.common.service.utils.JooqUtils.sum
 import com.tencent.devops.metrics.constant.Constants
 import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
