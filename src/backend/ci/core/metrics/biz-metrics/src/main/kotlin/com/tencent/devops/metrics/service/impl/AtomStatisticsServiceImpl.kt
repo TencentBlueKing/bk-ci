@@ -27,7 +27,6 @@
 
 package com.tencent.devops.metrics.service.impl
 
-import com.tencent.bkrepo.common.api.constant.DEFAULT_PAGE_SIZE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -51,6 +50,7 @@ import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
+import com.tencent.devops.metrics.constant.Constants.DEFAULT_LIMIT_NUM
 import com.tencent.devops.metrics.constant.MetricsMessageCode
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getBetweenDate
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getIntervalTime
@@ -96,7 +96,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                     atomCodes = emptyList(),
                     keyword = null,
                     page = 1,
-                    pageSize = 10
+                    pageSize = DEFAULT_LIMIT_NUM
                 ).map { it.atomCode }
             }
         // 查询符合查询条件的记录数
