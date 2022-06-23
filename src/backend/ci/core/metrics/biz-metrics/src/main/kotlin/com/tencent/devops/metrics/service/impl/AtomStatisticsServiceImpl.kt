@@ -84,28 +84,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
     private val metricsConfig: MetricsConfig
 ) : AtomStatisticsManageService {
     override fun queryAtomTrendInfo(queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO): AtomTrendInfoVO {
-        val pipelineIds = queryAtomTrendInfoDTO.pipelineIds
-        val pipelineLabelIds = queryAtomTrendInfoDTO.pipelineLabelIds
-        val errorTypes = queryAtomTrendInfoDTO.errorTypes
-        val atomCodes =
-            // 未选择查询的插件时读取插件显示配置
-            if (!queryAtomTrendInfoDTO.atomCodes.isNullOrEmpty()) {
-                queryAtomTrendInfoDTO.atomCodes
-            } else {
-                if (pipelineIds.isNullOrEmpty() && pipelineLabelIds.isNullOrEmpty() && errorTypes.isNullOrEmpty()) {
-                    // 插件配置为空择读取项目下插件
-                    atomDisplayConfigDao.getOptionalAtomDisplayConfig(
-                        dslContext = dslContext,
-                        projectId = queryAtomTrendInfoDTO.projectId,
-                        atomCodes = emptyList(),
-                        keyword = null,
-                        page = 1,
-                        pageSize = DEFAULT_LIMIT_NUM
-                    ).map { it.atomCode }
-                } else {
-                    queryAtomTrendInfoDTO.atomCodes
-                }
-            }
+        val atomCodes = getDefaultAtomCodes(queryAtomTrendInfoDTO)
         // 查询符合查询条件的记录数
         val queryAtomExecuteStatisticsCount =
             atomStatisticsDao.queryAtomExecuteStatisticsInfoCount(
@@ -197,28 +176,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
     override fun queryAtomExecuteStatisticsInfo(
         queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO
     ): ListPageVO<AtomExecutionStatisticsInfoDO> {
-        val pipelineIds = queryAtomTrendInfoDTO.pipelineIds
-        val pipelineLabelIds = queryAtomTrendInfoDTO.pipelineLabelIds
-        val errorTypes = queryAtomTrendInfoDTO.errorTypes
-        val atomCodes =
-            // 未选择查询的插件时读取插件显示配置
-            if (queryAtomTrendInfoDTO.atomCodes.isNullOrEmpty()) {
-                if (pipelineIds.isNullOrEmpty() && pipelineLabelIds.isNullOrEmpty() && errorTypes.isNullOrEmpty()) {
-                    // 插件配置为空择读取项目下插件
-                    atomDisplayConfigDao.getOptionalAtomDisplayConfig(
-                        dslContext = dslContext,
-                        projectId = queryAtomTrendInfoDTO.projectId,
-                        atomCodes = emptyList(),
-                        keyword = null,
-                        page = 1,
-                        pageSize = DEFAULT_LIMIT_NUM
-                    ).map { it.atomCode }
-                } else {
-                    queryAtomTrendInfoDTO.atomCodes
-                }
-            } else {
-                queryAtomTrendInfoDTO.atomCodes
-            }
+        val atomCodes = getDefaultAtomCodes(queryAtomTrendInfoDTO)
         // 查询符合查询条件的记录数
         val queryAtomExecuteStatisticsCount =
             atomStatisticsDao.queryAtomExecuteStatisticsInfoCount(
@@ -337,6 +295,30 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             headerInfo = headerInfo,
             records = atomExecutionStatisticsInfos
         )
+    }
+
+    private fun getDefaultAtomCodes(queryAtomStatisticsInfoDTO: QueryAtomStatisticsInfoDTO): List<String>? {
+        val pipelineIds = queryAtomStatisticsInfoDTO.pipelineIds
+        val pipelineLabelIds = queryAtomStatisticsInfoDTO.pipelineLabelIds
+        val errorTypes = queryAtomStatisticsInfoDTO.errorTypes
+        // 未选择查询的插件时读取插件显示配置
+        return if (!queryAtomStatisticsInfoDTO.atomCodes.isNullOrEmpty()) {
+            queryAtomStatisticsInfoDTO.atomCodes
+        } else {
+            if (pipelineIds.isNullOrEmpty() && pipelineLabelIds.isNullOrEmpty() && errorTypes.isNullOrEmpty()) {
+                // 插件配置为空择读取项目下插件
+                atomDisplayConfigDao.getOptionalAtomDisplayConfig(
+                    dslContext = dslContext,
+                    projectId = queryAtomStatisticsInfoDTO.projectId,
+                    atomCodes = emptyList(),
+                    keyword = null,
+                    page = 1,
+                    pageSize = DEFAULT_LIMIT_NUM
+                ).map { it.atomCode }
+            } else {
+                queryAtomStatisticsInfoDTO.atomCodes
+            }
+        }
     }
 
     private fun getHeaderFieldName(type: String) = "errorCount-$type"
