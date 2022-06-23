@@ -79,7 +79,7 @@ class ExternalGithubResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun oauthCallback(code: String, state: String): Response {
+    override fun oauthCallback(code: String, state: String?): Response {
         val redirectUrl = streamLoginService.githubCallback(code, state)
         return Response.temporaryRedirect(UriBuilder.fromUri(redirectUrl).build())
             .status(Response.Status.TEMPORARY_REDIRECT).build()

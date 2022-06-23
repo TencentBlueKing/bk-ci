@@ -61,7 +61,7 @@ class GithubOAuthService @Autowired constructor(
 ) {
 
     fun getGithubOauth(projectId: String, userId: String, repoHashId: String?): GithubOauth {
-        val repoId = if (!repoHashId.isNullOrBlank()) HashUtil.decodeOtherIdToLong(repoHashId!!).toString() else ""
+        val repoId = if (!repoHashId.isNullOrBlank()) HashUtil.decodeOtherIdToLong(repoHashId).toString() else ""
         val state = "$userId,$projectId,$repoId,BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(RANDOM_ALPHA_NUM)}"
         val redirectUrl = "$GITHUB_URL/login/oauth/authorize" +
             "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubWebhookUrl}&state=$state"
@@ -70,7 +70,7 @@ class GithubOAuthService @Autowired constructor(
 
     fun getGithubAppUrl() = GithubAppUrl(gitConfig.githubAppUrl)
 
-    fun githubCallback(code: String, state: String, channelCode: String? = null): GithubOauthCallback {
+    fun githubCallback(code: String, state: String?, channelCode: String? = null): GithubOauthCallback {
         return if (channelCode == ChannelCode.GIT.name) {
             githubCallbackForGIT(code = code, state = state)
         } else {
@@ -78,8 +78,8 @@ class GithubOAuthService @Autowired constructor(
         }
     }
 
-    fun githubCallbackForBS(code: String, state: String): GithubOauthCallback {
-        if (!state.contains(",BK_DEVOPS__")) {
+    fun githubCallbackForBS(code: String, state: String?): GithubOauthCallback {
+        if (state.isNullOrBlank() || !state.contains(",BK_DEVOPS__")) {
             throw OperationException("TGIT call back contain invalid parameter: $state")
         }
 
@@ -96,7 +96,7 @@ class GithubOAuthService @Autowired constructor(
         )
     }
 
-    fun githubCallbackForGIT(code: String, state: String): GithubOauthCallback {
+    fun githubCallbackForGIT(code: String, state: String?): GithubOauthCallback {
         val githubToken = getAccessTokenImpl(code)
         val userResponse = githubUserService.getUser(githubToken.accessToken)
         githubTokenService.createAccessToken(
@@ -105,7 +105,7 @@ class GithubOAuthService @Autowired constructor(
             githubToken.tokenType,
             githubToken.scope
         )
-        val redirectUrl = if (state.isNotBlank()) {
+        val redirectUrl = if (!state.isNullOrBlank()) {
             val authParamDecodeJsonStr = URLDecoder.decode(state, "UTF-8")
             val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
             authParams["redirectUrl"]?.toString() ?: ""

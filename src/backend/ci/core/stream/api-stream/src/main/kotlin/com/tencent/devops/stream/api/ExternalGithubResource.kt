@@ -72,6 +72,6 @@ interface ExternalGithubResource {
         code: String,
         @ApiParam(value = "state")
         @QueryParam("state")
-        state: String
+        state: String?
     ): Response
 }

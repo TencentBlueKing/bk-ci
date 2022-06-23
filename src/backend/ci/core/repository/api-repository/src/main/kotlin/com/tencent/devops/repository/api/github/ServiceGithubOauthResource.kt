@@ -27,7 +27,7 @@ interface ServiceGithubOauthResource {
         code: String,
         @ApiParam(value = "state")
         @QueryParam("state")
-        state: String,
+        state: String?,
         @ApiParam(value = "channelCode")
         @QueryParam("channelCode")
         channelCode: String? = null

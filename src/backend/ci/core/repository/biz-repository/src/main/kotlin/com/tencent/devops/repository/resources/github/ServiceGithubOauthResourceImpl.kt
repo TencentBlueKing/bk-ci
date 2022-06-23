@@ -12,7 +12,7 @@ class ServiceGithubOauthResourceImpl @Autowired constructor(
     private val githubOAuthService: GithubOAuthService
 ) : ServiceGithubOauthResource {
 
-    override fun githubCallback(code: String, state: String, channelCode: String?): Result<GithubOauthCallback> {
+    override fun githubCallback(code: String, state: String?, channelCode: String?): Result<GithubOauthCallback> {
         return Result(githubOAuthService.githubCallback(code, state, channelCode))
     }
 }
