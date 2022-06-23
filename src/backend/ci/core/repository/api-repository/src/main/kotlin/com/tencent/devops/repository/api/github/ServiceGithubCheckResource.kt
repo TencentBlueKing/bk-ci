@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGithubCheckResource {
-    
+
     @ApiOperation("创建检查任务")
     @POST
     @Path("/createCheckRun")
@@ -24,7 +24,7 @@ interface ServiceGithubCheckResource {
         request: CreateCheckRunRequest,
         userId: String
     ): CheckRunResponse
-    
+
     @ApiOperation("更新检查任务")
     @POST
     @Path("/updateCheckRun")

@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGithubBranchResource {
-    
+
     @ApiOperation("仓库分支列表")
     @POST
     @Path("/listBranch")
@@ -24,7 +24,7 @@ interface ServiceGithubBranchResource {
         request: GHListBranchesRequest,
         userId: String
     ): List<GHBranchResponse>
-    
+
     @ApiOperation("获取仓库分支")
     @POST
     @Path("/getBranch")

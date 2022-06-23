@@ -17,7 +17,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGithubPRResource {
-    
+
     @ApiOperation("获取PR")
     @POST
     @Path("/getPullRequest")
@@ -25,7 +25,7 @@ interface ServiceGithubPRResource {
         request: GetPullRequestRequest,
         userId: String
     ): PullRequestResponse
-    
+
     @ApiOperation("PR文件列表")
     @POST
     @Path("/listPullRequestFiles")

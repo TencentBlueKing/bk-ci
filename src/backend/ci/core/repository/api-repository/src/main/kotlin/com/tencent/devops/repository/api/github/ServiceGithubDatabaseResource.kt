@@ -15,7 +15,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGithubDatabaseResource {
-    
+
     @ApiOperation("获取tree")
     @POST
     @Path("/getTree")

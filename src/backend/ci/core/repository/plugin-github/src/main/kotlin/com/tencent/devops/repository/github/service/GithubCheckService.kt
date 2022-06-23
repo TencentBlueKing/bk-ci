@@ -38,7 +38,7 @@ import org.springframework.stereotype.Service
 class GithubCheckService @Autowired constructor(
     private val defaultGithubClient: DefaultGithubClient,
 ) {
-    
+
     fun createCheckRun(
         request: CreateCheckRunRequest,
         token: String

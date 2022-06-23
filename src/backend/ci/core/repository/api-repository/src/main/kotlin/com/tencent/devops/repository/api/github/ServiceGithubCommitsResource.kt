@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGithubCommitsResource {
-    
+
     @ApiOperation("提交记录列表")
     @POST
     @Path("/listCommits")
@@ -24,7 +24,7 @@ interface ServiceGithubCommitsResource {
         request: ListCommitRequest,
         userId: String
     ): List<CommitResponse>
-    
+
     @ApiOperation("获取某个提交记录")
     @POST
     @Path("/getCommit")
