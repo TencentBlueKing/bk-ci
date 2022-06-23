@@ -51,7 +51,6 @@ import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.pojo.`do`.AtomFailDetailInfoDO
 import com.tencent.devops.metrics.pojo.qo.QueryAtomFailInfoQO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
-import com.tencent.devops.metrics.utils.MetricsUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1

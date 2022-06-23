@@ -47,11 +47,13 @@ import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
 @Service
+@RefreshScope
 class MetricsServiceImpl constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val measureEventDispatcher: MeasureEventDispatcher,
