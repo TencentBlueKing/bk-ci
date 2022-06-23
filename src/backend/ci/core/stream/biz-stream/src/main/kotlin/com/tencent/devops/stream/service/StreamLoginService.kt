@@ -27,7 +27,7 @@ class StreamLoginService @Autowired constructor(
         val authCode = UUIDUtil.generate()
         redisOperation.set(
             key = String.format(BK_LOGIN_CODE_KEY, "github", githubCallback.userId),
-            value = code,
+            value = authCode,
             expiredInSecond = BK_LOGIN_CODE_KEY_EXPIRED
         )
         return String.format(streamLoginConfig.githubRedirectUrl, authCode, githubCallback.userId, "github")
