@@ -151,6 +151,7 @@
     import {
         eventBus,
         hashID,
+        randomString,
         isTriggerContainer,
         convertMStoString
     } from './util'
@@ -352,7 +353,7 @@
             isQualityCheckAtom () {
                 return Array.isArray(this.matchRules)
                     && this.matchRules.some(rule => rule.taskId === this.atom.atomCode
-                        && rule.ruleList.every(val => this.atom.name.indexOf(val.gatewayId) < 0 || !val.gatewayId)
+                        && (rule.ruleList.some(val => this.atom.name.indexOf(val.gatewayId) > -1) || rule.ruleList.every(val => !val.gatewayId))
                     )
             }
         },
@@ -381,7 +382,7 @@
                     elementIndex: this.atomIndex,
                     element: JSON.parse(JSON.stringify({
                         ...restAttr,
-                        stepId: hashID(3),
+                        stepId: randomString(3),
                         id: `e-${hashID()}`
                     }))
                 })
@@ -418,8 +419,13 @@
                 if (this.hasReviewPerm) {
                     try {
                         this.isBusy = true
+                        const { stageIndex, containerIndex, containerGroupIndex, atomIndex } = this
                         const data = {
                             elementId: this.atom.id,
+                            stageIndex,
+                            containerIndex,
+                            containerGroupIndex,
+                            atomIndex,
                             action
                         }
                         await this.asyncEvent(ATOM_QUALITY_CHECK_EVENT_NAME, data)

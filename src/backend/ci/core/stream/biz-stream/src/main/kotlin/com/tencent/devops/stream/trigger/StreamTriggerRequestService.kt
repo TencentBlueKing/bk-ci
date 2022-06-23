@@ -98,7 +98,7 @@ class StreamTriggerRequestService @Autowired constructor(
         // 加载不同源的action
         val action = actionFactory.load(eventObject)
         if (action == null) {
-            logger.error("request event not support: $event")
+            logger.warn("request event not support: $event")
             return false
         }
 
@@ -252,6 +252,8 @@ class StreamTriggerRequestService @Autowired constructor(
                 checkAndTrigger(buildPipeline = buildPipeline, action = action)
             }
         }
+        // 流水线启动后，发送解锁webhook锁请求
+        action.sendUnlockWebhook()
         return true
     }
 

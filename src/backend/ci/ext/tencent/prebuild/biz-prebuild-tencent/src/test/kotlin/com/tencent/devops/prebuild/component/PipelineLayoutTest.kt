@@ -9,6 +9,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.prebuild.ServiceBaseTest
@@ -31,7 +32,7 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
-import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
+import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 
 @ExtendWith(MockitoExtension::class)
 class PipelineLayoutTest : ServiceBaseTest() {
@@ -42,14 +43,15 @@ class PipelineLayoutTest : ServiceBaseTest() {
     lateinit var serviceMarketAtomResource: ServiceMarketAtomResource
 
     fun setup(
-        @Mock consulClient: ConsulDiscoveryClient,
+        @Mock consulClient: CompositeDiscoveryClient,
         @Mock clientErrorDecoder: ClientErrorDecoder,
         @Mock commonConfig: CommonConfig,
-        @Mock objectMapper: ObjectMapper
+        @Mock objectMapper: ObjectMapper,
+        @Mock bkTag: BkTag
     ) {
         val theMock = Mockito.mockStatic(SpringContextUtil::class.java)
         theMock.`when`<Client> { SpringContextUtil.getBean(any(Client::class.java.javaClass)) }
-            .thenReturn(Client(consulClient, clientErrorDecoder, commonConfig, objectMapper))
+            .thenReturn(Client(consulClient, clientErrorDecoder, commonConfig, bkTag, objectMapper))
     }
 
     @Test

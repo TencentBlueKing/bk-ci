@@ -82,7 +82,7 @@
                     </div>
 
                     <div class="bk-form-item">
-                        <label class="bk-label">{{ $t('desc') }}：</label>
+                        <label class="bk-label">{{ $t('pipelineDesc') }}</label>
                         <div class="bk-form-content">
                             <input type="text" class="bk-form-input" :placeholder="$t('pipelineDescInputTips')"
                                 name="newPipelineDesc"
@@ -265,7 +265,7 @@
                 if (val) {
                     this.filter = {}
                     this.currentFilter = {}
-                    this.initPage()
+                    // this.initPage()
                     this.$nextTick(() => {
                         if (this.$refs.infiniteScroll) {
                             this.$refs.infiniteScroll.fetchData()
@@ -318,25 +318,29 @@
         },
 
         methods: {
-            async changeLayoutType (val) {
+            changeLayoutType (val) {
                 localStorage.setItem('pipelineLayout', val)
                 this.layout = val
             },
-            async changeOrderType (val) {
+            changeOrderType (val) {
                 localStorage.setItem('pipelineSortType', val)
                 this.sortType = val
-                this.$nextTick(() => {
+                this.$nextTick(async () => {
                     if (this.$refs.infiniteScroll) {
-                        this.$refs.infiniteScroll.updateList()
+                        this.togglePageLoading(true)
+                        await this.$refs.infiniteScroll.updateList()
+                        this.togglePageLoading(false)
                     }
                 })
             },
-            async filterCommit (data, currentFilter, needLoad = true) { // needLoad 阻止重复请求流水线列表
+            filterCommit (data, currentFilter, needLoad = true) { // needLoad 阻止重复请求流水线列表
                 this.filter = data
                 this.currentFilter = currentFilter
                 if (needLoad && this.$refs.infiniteScroll) {
-                    this.$nextTick(() => {
-                        this.$refs.infiniteScroll.updateList()
+                    this.$nextTick(async () => {
+                        this.togglePageLoading(true)
+                        await this.$refs.infiniteScroll.updateList()
+                        this.togglePageLoading(false)
                     })
                 }
                 this.isDisabled = false
@@ -354,7 +358,15 @@
             },
 
             toggleCreatePermission () {
-                this.setPermissionConfig(this.$permissionResourceMap.pipeline, this.$permissionActionMap.create)
+                this.$showAskPermissionDialog({
+                    noPermissionList: [{
+                        actionId: this.$permissionActionMap.create,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [],
+                        projectId: this.projectId
+                    }],
+                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_creator=pipeline:`
+                })
             },
             localConvertMStoString (num) {
                 return convertMStoString(num)
@@ -363,7 +375,11 @@
                 this.slideShow = val
             },
             togglePageLoading (val) {
-                this.$store.commit('pipelines/showPageLoading', val)
+                if (this.pageLoading !== val) {
+                    this.$nextTick(() => {
+                        this.$store.commit('pipelines/showPageLoading', val)
+                    })
+                }
             },
             calcLatestStartBuildTime (row) {
                 if (row.latestBuildStartTime) {
@@ -422,12 +438,8 @@
             },
 
             async initPage () {
-                performance.mark('initList:start')
                 this.togglePageLoading(true)
                 await this.init()
-
-                performance.mark('initList:end')
-                performance.measure('initList', 'initList:start', 'initList:end')
                 this.togglePageLoading(false)
             },
 
@@ -806,7 +818,7 @@
                         this.setPermissionConfig(this.$permissionResourceMap.pipeline, this.$permissionActionMap.execute, [{
                             id: curPipeline.pipelineId,
                             name: curPipeline.pipelineName
-                        }])
+                        }], projectId, this.getPermUrlByRole(projectId, curPipeline.pipelineId, this.roleMap.executor))
                         return
                     } else {
                         this.pipelineFeConfMap[pipelineId] = {
@@ -887,7 +899,7 @@
                             name: feConfig.pipelineName
                         }],
                         projectId
-                    }])
+                    }], this.getPermUrlByRole(projectId, pipelineId, this.roleMap.executor))
                 } finally {
                     this.pipelineFeConfMap[pipelineId].buttonAllow.terminatePipeline = true
                 }
@@ -1030,7 +1042,7 @@
                                         name: curPipeline.pipelineName
                                     }],
                                     projectId: this.projectId
-                                }])
+                                }], this.getPermUrlByRole(this.projectId, curPipeline.pipelineId, this.roleMap.manager))
                             } finally {
                                 message && this.$showTips({
                                     message,
@@ -1039,7 +1051,9 @@
                                 this.togglePageLoading(false)
                             }
                         }, 1000)
-                    }).catch(() => {})
+                    }).catch((e) => {
+                        console.log('catch', e)
+                    })
             },
             /**
              *  复制流水线弹窗的确认回调函数
@@ -1100,7 +1114,7 @@
                             name: prePipeline.pipelineName
                         }],
                         projectId
-                    }])
+                    }], this.getPermUrlByRole(projectId, prePipeline.pipelineId, this.roleMap.manager))
                 } finally {
                     setTimeout(() => {
                         copyConfig.loading = false

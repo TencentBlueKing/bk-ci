@@ -245,7 +245,6 @@ class NpmClientController(
         "/**/{projectId}/{repoName}/@{scope}/{name}/{separator:-|download}/@{scope}/{filename}/-rev/{rev}"
     )
     fun deleteVersion(
-        @RequestAttribute userId: String,
         @ArtifactPathVariable artifactInfo: NpmArtifactInfo,
         @PathVariable scope: String?,
         @PathVariable name: String,
@@ -257,7 +256,7 @@ class NpmClientController(
         val tgzPath = HttpContextHolder.getRequest().requestURI.substringAfterLast(artifactInfo.getRepoIdentify())
             .substringBeforeLast("/-rev")
         val version = NpmUtils.analyseVersionFromPackageName(filename, name)
-        npmClientService.deleteVersion(userId, artifactInfo, pkgName, version, tgzPath)
+        npmClientService.deleteVersion(artifactInfo, pkgName, version, tgzPath)
         return NpmDeleteResponse(true, pkgName, rev)
     }
 

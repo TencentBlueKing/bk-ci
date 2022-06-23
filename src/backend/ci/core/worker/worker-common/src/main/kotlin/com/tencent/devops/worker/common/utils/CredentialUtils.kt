@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.worker.common.api.ApiFactory
@@ -41,7 +42,6 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.SensitiveValueService
 import org.slf4j.LoggerFactory
 import java.util.Base64
-import javax.ws.rs.NotFoundException
 
 /**
  * This util is to get the credential from core
@@ -87,6 +87,22 @@ object CredentialUtils {
         }
     }
 
+    fun String.parseCredentialValue(
+        context: Map<String, String>? = null,
+        acrossProjectId: String? = null
+    ) = ReplacementUtils.replace(this, object : ReplacementUtils.KeyReplacement {
+        override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
+            // 支持嵌套的二次替换
+            context?.get(key)?.let { return it }
+            // 如果不是凭据上下文则直接返回原value值
+            return getCredentialContextValue(key, acrossProjectId) ?: if (doubleCurlyBraces) {
+                "\${{$key}}"
+            } else {
+                "\${$key}"
+            }
+        }
+    }, context)
+
     private fun requestCredential(
         credentialId: String,
         pair: DHKeyPair,
@@ -106,13 +122,21 @@ object CredentialUtils {
             if (acrossResult.isNotOk() || acrossResult.data == null) {
                 logger.error("Fail to get the across project($acrossProjectId) " +
                     "credential($credentialId) because of ${result.message}")
-                throw NotFoundException(result.message!!)
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = result.message!!
+                )
             }
             return acrossResult
         }
 
         logger.error("Fail to get the credential($credentialId) because of ${result.message}")
-        throw NotFoundException(result.message!!)
+        throw TaskExecuteException(
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+            errorType = ErrorType.USER,
+            errorMsg = result.message!!
+        )
     }
 
     fun getCredentialContextValue(key: String, acrossProjectId: String? = null): String? {

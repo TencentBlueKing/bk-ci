@@ -28,7 +28,7 @@
 package com.tencent.wetest
 
 import com.tencent.devops.plugin.client.WeTestClient
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class WetestClientTest {
     private val secretId = "tBQNvtJiwxglMLI3"

@@ -29,7 +29,9 @@ package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
@@ -119,9 +121,16 @@ interface OPDataSourceResource {
         projectId: String,
         @ApiParam("微服务code", required = true)
         @QueryParam("moduleCode")
-        moduleCode: String,
+        moduleCode: SystemModuleEnum,
         @ApiParam("集群名称", required = true)
         @QueryParam("clusterName")
-        clusterName: String
+        clusterName: String,
+        @ApiParam("规则类型", required = true)
+        @QueryParam("ruleType")
+        ruleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.DB,
+        @ApiParam("数据库表名称", required = false)
+        @QueryParam("tableName")
+        @BkField(minLength = 1, maxLength = 128, required = false)
+        tableName: String? = null
     ): Result<DataBasePiecewiseInfo?>
 }

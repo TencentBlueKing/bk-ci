@@ -14,15 +14,16 @@ object PathMatchUtils {
 
         logger.info("Exclude path set ($pathIgnoreList)")
 
-        fileChangeSet?.forEach { path ->
-            pathIgnoreList.forEach { excludePath ->
+        fileChangeSet?.forEach eventPath@{ path ->
+            pathIgnoreList.forEach userPath@{ excludePath ->
                 if (isPathMatch(path, excludePath)) {
-                    logger.info("The exclude path($excludePath) exclude the git update one($path)")
-                    return true
+                    return@eventPath
                 }
             }
+            logger.info("excluded event path($fileChangeSet) not match the user path($pathIgnoreList)")
+            return false
         }
-        return false
+        return true
     }
 
     fun isIncludePathMatch(pathList: List<String>?, fileChangeSet: Set<String>?): Boolean {

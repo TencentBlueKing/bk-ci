@@ -45,8 +45,7 @@ import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
 import com.tencent.bkrepo.repository.pojo.node.NodeSizeInfo
-import com.tencent.bkrepo.repository.pojo.node.user.UserNodeCopyRequest
-import com.tencent.bkrepo.repository.pojo.node.user.UserNodeMoveRequest
+import com.tencent.bkrepo.repository.pojo.node.user.UserNodeMoveCopyRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeRenameRequest
 import com.tencent.bkrepo.repository.pojo.project.UserProjectCreateRequest
 import com.tencent.bkrepo.repository.pojo.repo.RepoCreateRequest
@@ -521,6 +520,25 @@ class BkRepoClient constructor(
         }
     }
 
+    fun deleteNode(userName: String, projectId: String, repoName: String, path: String, authorization: String) {
+        logger.info("delete,  projectId: $projectId, repoName: $repoName, path: $path")
+        val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/delete/$projectId/$repoName/$path"
+        val request = Request.Builder()
+            .url(url)
+            .header("Authorization", authorization)
+            .header(BK_REPO_UID, userName)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .delete()
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            if (!response.isSuccessful) {
+                val responseContent = response.body()!!.string()
+                logger.error("delete node file failed, responseContent: $responseContent")
+                throw RemoteServiceException("delete node file failed: $responseContent", response.code())
+            }
+        }
+    }
+
     fun move(userId: String, projectId: String, repoName: String, fromPath: String, toPath: String) {
         // todo 校验path参数
         logger.info(
@@ -528,13 +546,12 @@ class BkRepoClient constructor(
                     " toPath: $toPath"
         )
         val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/move"
-        val requestData = UserNodeMoveRequest(
+        val requestData = UserNodeMoveCopyRequest(
             srcProjectId = projectId,
             srcRepoName = repoName,
             srcFullPath = fromPath,
             destProjectId = projectId,
             destRepoName = repoName,
-            destPath = toPath,
             destFullPath = toPath,
             overwrite = true
         )
@@ -573,14 +590,13 @@ class BkRepoClient constructor(
                     " toProject: $toProject, toRepo: $toRepo, toPath: $toPath"
         )
         val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/copy"
-        val requestData = UserNodeCopyRequest(
+        val requestData = UserNodeMoveCopyRequest(
             srcProjectId = fromProject,
             srcRepoName = fromRepo,
             srcFullPath = fromPath,
             destProjectId = toProject,
             destRepoName = toRepo,
             destFullPath = toPath,
-            destPath = toPath,
             overwrite = true
         )
         val request = Request.Builder()

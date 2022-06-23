@@ -39,7 +39,9 @@ enum class PipelineRunLockType {
     @ApiModelProperty("最多只能运行一个构建任务，且失败时锁定")
     SINGLE_LOCK,
     @ApiModelProperty("锁定流水线，任何触发方式都无法运行")
-    LOCK;
+    LOCK,
+    @ApiModelProperty("并发组锁定，项目级别，同一组的构建为SINGLE模式")
+    GROUP_LOCK;
 
     companion object {
         fun toValue(type: PipelineRunLockType?): Int {
@@ -49,6 +51,7 @@ enum class PipelineRunLockType {
                 SINGLE -> 2
                 SINGLE_LOCK -> 3
                 LOCK -> 4
+                GROUP_LOCK -> 5
             }
         }
 
@@ -58,6 +61,7 @@ enum class PipelineRunLockType {
                 2 -> SINGLE
                 3 -> SINGLE_LOCK
                 4 -> LOCK
+                5 -> GROUP_LOCK
                 else -> MULTIPLE
             }
         }

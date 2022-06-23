@@ -185,10 +185,6 @@
             .image-url {
                 margin: 7px 0
             }
-            label {
-                margin: 8px 0 0 0;
-                display: block;
-            }
             .badge-item {
                 display: flex;
                 align-items: center;

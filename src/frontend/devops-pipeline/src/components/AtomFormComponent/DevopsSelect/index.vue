@@ -119,7 +119,7 @@
                     if (this.isFocused && !this.disabled) {
                         this.$refs.inputArea.focus()
                     }
-                        
+
                     if (this.isMultiple) {
                         this.getMultipleDisplayName(this.value)
                     } else {
@@ -176,7 +176,7 @@
                                     id: child[paramId],
                                     name: child[paramName],
                                     active: child.id === this.value,
-                                    selected: this.selectedPointer === childIndex && this.selectedGroupPointer === index && !this.isMultiple
+                                    selected: this.selectedPointer === childIndex && this.selectedGroupPointer === index
                                 }
                             })
                             result.push({
@@ -245,7 +245,7 @@
                 this.isFocused = false
                 this.$refs.inputArea && this.$refs.inputArea.blur()
                 this.$emit('blur', null)
-                
+
                 if (this.isMultiple) {
                     if (this.displayName) {
                         this.getMultipleDisplayName(this.displayName, 'name')
@@ -270,7 +270,7 @@
                     this.$emit('focus', e)
                 }
             },
-            
+
             handleKeyPress (e) {
                 if (e.key === ',') {
                     this.resetSelectPointer()
@@ -387,19 +387,19 @@
                     } else {
                         this.displayName = this.getDisplayName(this.value)
                     }
-                    
+
                     this.loading = false
                 }
             },
             handleEnterOption () {
                 let option
-                
+
                 if (this.hasGroup && this.selectedGroupPointer >= 0 && this.selectedPointer >= 0) {
                     option = this.filteredList[this.selectedGroupPointer].children[this.selectedPointer]
                 } else if (this.selectedPointer >= 0) {
                     option = this.filteredList[this.selectedPointer]
                 }
-                
+
                 if (option) {
                     this.selectOption(option)
                 } else {

@@ -29,6 +29,7 @@ package com.tencent.devops.store.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.artifactory.api.ServiceArchiveStoreFileResource
 import com.tencent.devops.common.api.constant.APPROVE
 import com.tencent.devops.common.api.constant.BEGIN
 import com.tencent.devops.common.api.constant.COMMIT
@@ -50,10 +51,12 @@ import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.TEST_ENV_PREPARE
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -68,6 +71,7 @@ import com.tencent.devops.project.api.service.service.ServiceItemResource
 import com.tencent.devops.project.pojo.ITEM_BK_SERVICE_REDIS_KEY
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.config.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -76,9 +80,11 @@ import com.tencent.devops.store.dao.ExtServiceEnvDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.dao.ExtServiceItemRelDao
 import com.tencent.devops.store.dao.ExtServiceLableRelDao
+import com.tencent.devops.store.dao.ExtItemServiceDao
 import com.tencent.devops.store.dao.ExtServiceVersionLogDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StoreMediaInfoDao
+import com.tencent.devops.common.archive.config.BkRepoConfig
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
@@ -131,6 +137,7 @@ import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 import java.util.regex.Pattern
+import okhttp3.Request
 
 @Service
 abstract class ExtServiceBaseService @Autowired constructor() {
@@ -152,6 +159,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     @Autowired
     lateinit var extServiceItemRelDao: ExtServiceItemRelDao
     @Autowired
+    lateinit var extItemServiceDao: ExtItemServiceDao
+    @Autowired
     lateinit var extServiceCommonService: ExtServiceCommonService
     @Autowired
     lateinit var storeCommonService: StoreCommonService
@@ -159,6 +168,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     lateinit var extServiceVersionLogDao: ExtServiceVersionLogDao
     @Autowired
     lateinit var extServiceLabelDao: ExtServiceLableRelDao
+    @Autowired
+    lateinit var extServiceFeatureDao: ExtServiceFeatureDao
     @Autowired
     lateinit var client: Client
     @Autowired
@@ -185,6 +196,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     lateinit var bsProjectServiceCodec: BSProjectServiceCodec
     @Autowired
     lateinit var redisOperation: RedisOperation
+    @Autowired
+    private lateinit var bkRepoConfig: BkRepoConfig
 
     fun addExtService(
         userId: String,
@@ -632,6 +645,119 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             )
         }
         return Result(MyServiceVO(count, page, pageSize, myService))
+    }
+
+    fun deleteExtensionService(userId: String, serviceCode: String): Result<Boolean> {
+        logger.info("deleteService userId: $userId , serviceId: $serviceCode")
+        val result = extServiceDao.getExtServiceIds(dslContext, serviceCode)
+        var extServiceId: String? = null
+        val extServiceIdList = result.map {
+            if (it["latestFlag"] as Boolean) {
+                extServiceId = it["id"] as String
+            }
+            it["id"] as String
+        }
+        if (extServiceId.isNullOrBlank()) {
+            return MessageCodeUtil.generateResponseDataObject(
+                StoreMessageCode.USER_SERVICE_NOT_EXIST,
+                arrayOf(serviceCode)
+            )
+        }
+        val type = StoreTypeEnum.SERVICE.type.toByte()
+        if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, type)) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+        }
+        val releasedCount = extServiceDao.countReleaseServiceByCode(dslContext, serviceCode)
+        logger.info("releasedCount: $releasedCount")
+        if (releasedCount > 0) {
+            return MessageCodeUtil.generateResponseDataObject(
+                StoreMessageCode.USER_SERVICE_RELEASED_IS_NOT_ALLOW_DELETE,
+                arrayOf(serviceCode)
+            )
+        }
+        // 如果已经被安装到其他项目下使用，不能删除
+        val installedCount = storeProjectRelDao.countInstalledProject(dslContext, serviceCode, type)
+        logger.info("installedCount: $releasedCount")
+        if (installedCount > 0) {
+            return MessageCodeUtil.generateResponseDataObject(
+                StoreMessageCode.USER_SERVICE_USED_IS_NOT_ALLOW_DELETE,
+                arrayOf(serviceCode)
+            )
+        }
+        val initProjectCode =
+            storeProjectRelDao.getInitProjectCodeByStoreCode(
+                dslContext,
+                serviceCode,
+                StoreTypeEnum.SERVICE.type.toByte()
+            )
+        //  删除仓库镜像
+        try {
+            val serviceEnvRecord = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, extServiceId!!)
+            if (serviceEnvRecord != null && serviceEnvRecord.imagePath.isNotEmpty()) {
+                deleteNode(userId, serviceCode)
+            }
+        } catch (e: Exception) {
+            logger.error("delete repository image error: $e")
+        }
+
+        // 删除代码库
+        val extServiceRecord = extFeatureDao.getServiceByCode(dslContext, serviceCode)
+        deleteExtServiceRepository(
+            userId = userId,
+            projectCode = initProjectCode,
+            repositoryHashId = extServiceRecord!!.repositoryHashId,
+            tokenType = TokenTypeEnum.PRIVATE_KEY
+        )
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            storeCommonService.deleteStoreInfo(context, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
+            extServiceEnvDao.deleteEnvInfo(context, extServiceIdList)
+            extServiceFeatureDao.deleteExtFeatureServiceData(context, serviceCode)
+            extServiceVersionLogDao.deleteByServiceId(context, extServiceIdList)
+            extItemServiceDao.deleteByServiceId(context, extServiceIdList)
+            extServiceDao.deleteExtServiceData(context, serviceCode)
+        }
+        return Result(true)
+    }
+
+    fun deleteExtServiceRepository(
+        userId: String,
+        projectCode: String?,
+        repositoryHashId: String,
+        tokenType: TokenTypeEnum
+    ) {
+        // 删除代码库信息
+        if (!projectCode.isNullOrEmpty() && repositoryHashId.isNotBlank()) {
+            try {
+                val delGitRepositoryResult =
+                    client.get(ServiceGitRepositoryResource::class)
+                        .delete(
+                            userId = userId,
+                            projectId = projectCode!!,
+                            repositoryHashId = repositoryHashId,
+                            tokenType = tokenType
+                        )
+                logger.info("the delGitRepositoryResult is :$delGitRepositoryResult")
+            } catch (e: Exception) {
+                logger.error("delGitRepositoryError: $e")
+            }
+        }
+    }
+
+    fun deleteNode(userId: String, serviceCode: String) {
+        val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveStoreFileResource::class)
+        val serviceUrl = "$serviceUrlPrefix/service/artifactories/store/file/repos/" +
+                "${bkRepoConfig.bkrepoDockerRepoName}/$serviceCode/delete?type=${StoreTypeEnum.SERVICE.name}"
+        val request = Request.Builder()
+            .url(serviceUrl)
+            .delete()
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            if (!response.isSuccessful) {
+                val responseContent = response.body()!!.string()
+                throw RemoteServiceException("delete node file failed: $responseContent", response.code())
+            }
+        }
     }
 
     fun offlineService(userId: String, serviceCode: String, serviceOfflineDTO: ServiceOfflineDTO): Result<Boolean> {

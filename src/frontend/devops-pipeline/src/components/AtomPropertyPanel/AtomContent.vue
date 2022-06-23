@@ -43,7 +43,7 @@
                         @selected="handleUpdateVersion"
                         :disabled="!editable || showPanelType === 'PAUSE'"
                     >
-                        <bk-option v-for="v in atomVersionList" :key="v.versionName" :id="v.versionValue" :name="v.versionName"></bk-option>
+                        <bk-option v-for="v in computedAtomVersionList" :key="v.versionName" :id="v.versionValue" :name="v.versionName"></bk-option>
                     </bk-select>
                 </form-field>
             </div>
@@ -57,7 +57,7 @@
                     <p>{{ $t('editPage.noAtomVersion') }}</p>
                 </div>
 
-                <!-- <div class="quality-setting-tips" v-if="showSetRuleTips">
+                <div class="quality-setting-tips" v-if="showSetRuleTips">
                     <div class="quality-setting-desc">
                         {{ $t('details.quality.canSet') }}
                         <span class="quality-rule-link" @click="toSetRule()">{{ $t('details.quality.settingNow') }}
@@ -66,7 +66,7 @@
                     </div>
                     <div class="refresh-btn" v-if="isSetted && !refreshLoading" @click="refresh()">{{ $t('details.quality.reflashSetting') }}</div>
                     <i class="devops-icon icon-circle-2-1 executing-job" v-if="isSetted && refreshLoading"></i>
-                </div> -->
+                </div>
                 <qualitygate-tips v-if="showRuleList" :relative-rule-list="renderRelativeRuleList"></qualitygate-tips>
 
                 <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable && !isRemoteAtom }">
@@ -119,22 +119,39 @@
     import NormalAtom from './NormalAtom'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import Selector from '@/components/atomFormField/Selector'
+    import Gcloud from './Gcloud'
+    import JobExecuteTaskExt from './JobExecuteTaskExt'
     import FormField from './FormField'
     import BuildArchiveGet from './BuildArchiveGet'
+    import Codecc from './Codecc'
     import { isObject } from '@/utils/util'
     import { bus } from '@/utils/bus'
+    import JobDevopsFastExecuteScript from './JobDevopsFastExecuteScript'
+    import Tcls from './Tcls'
+    import JobDevOpsFastPushFile from './JobDevOpsFastPushFile'
+    import JobDevopsExecuteTaskExt from './JobDevopsExecuteTaskExt'
+    import ZhiyunInstanceMaintenance from './ZhiyunInstanceMaintenance'
     import TimerTrigger from './TimerTrigger'
+    import Tcm from './Tcm'
     import CodePullGitX from './CodePullGitX'
     import CodePullSvn from './CodePullSvn'
+    import ZhiyunUpdateAsyncEX from './ZhiyunUpdateAsyncEX'
     import IosCertInstall from './IosCertInstall'
+    import BcsContainerOp from './BcsContainerOp'
+    import NewBcsContainerOp from './NewBcsContainerOp'
     import CrossDistribute from './CrossDistribute'
+    import VersionExperience from './VersionExperience'
     import SendWechatNotify from './SendWechatNotify'
+    import WeTest from './WeTest'
+    import jobCloudsFastPush from './jobCloudsFastPush'
+    import jobCloudsFastExecuteScript from './jobCloudsFastExecuteScript'
     import CodeSvnWebHookTrigger from './CodeSvnWebHookTrigger'
     import ReportArchive from './ReportArchive'
     import PullGithub from './PullGithub'
     import CodeGithubWebHookTrigger from './CodeGithubWebHookTrigger'
     import PushImageToThirdRepo from './PushImageToThirdRepo'
     import ReferenceVariable from './ReferenceVariable'
+    import AtomFormWithAppID from './AtomFormWithAppID'
     import NormalAtomV2 from './NormalAtomV2'
     import CodeGitWebHookTrigger from './CodeGitWebHookTrigger'
     import CodeGitlabWebHookTrigger from './CodeGitlabWebHookTrigger'
@@ -150,18 +167,35 @@
             AtomOption,
             VuexInput,
             Selector,
+            Gcloud,
+            JobExecuteTaskExt,
             FormField,
             BuildArchiveGet,
+            Codecc,
+            JobDevopsFastExecuteScript,
+            Tcls,
+            JobDevOpsFastPushFile,
+            JobDevopsExecuteTaskExt,
+            ZhiyunInstanceMaintenance,
             CodePullGitX,
             CodePullSvn,
+            ZhiyunUpdateAsyncEX,
+            Tcm,
             IosCertInstall,
+            BcsContainerOp,
+            NewBcsContainerOp,
             CrossDistribute,
+            VersionExperience,
             SendWechatNotify,
             QualitygateTips,
+            WeTest,
             CodeGithubWebHookTrigger,
+            jobCloudsFastPush,
+            jobCloudsFastExecuteScript,
             ReportArchive,
             CodeSvnWebHookTrigger,
             PullGithub,
+            AtomFormWithAppID,
             NormalAtomV2,
             PushImageToThirdRepo,
             CodeGitWebHookTrigger,
@@ -309,7 +343,7 @@
                     atomCode,
                     version
                 })
-
+                console.log(atomMap, atomModal)
                 switch (true) {
                     case !isObject(atom) && !isObject(atomModal):
                         return null
@@ -336,7 +370,27 @@
                 return this.getRelativeRule(this.templateRuleList)
             },
             hasVersionList () {
-                return Array.isArray(this.atomVersionList) && this.atomVersionList.length > 0
+                return Array.isArray(this.computedAtomVersionList) && this.computedAtomVersionList.length > 0
+            },
+            computedAtomVersionList () {
+                try {
+                    if (typeof this.element.version === 'string') {
+                        const versionValid = this.atomVersionList.find(v => v.versionValue === this.element.version)
+                        if (typeof versionValid === 'undefined') {
+                            return [
+                                ...this.atomVersionList,
+                                {
+                                    versionValue: this.element.version,
+                                    versionName: this.element.version.replace('.*', '.latest')
+                                }
+                            ]
+                        }
+                    }
+                    return this.atomVersionList
+                } catch (error) {
+                    console.log(error)
+                    return this.atomVersionList
+                }
             },
             htmlTemplateVersion () {
                 return (this.atom.atomModal && this.atom.atomModal.htmlTemplateVersion) || this.atom.htmlTemplateVersion
@@ -362,6 +416,27 @@
                     CODE_SVN: CodePullSvn,
                     iosCertInstall: IosCertInstall,
                     acrossProjectDistribution: CrossDistribute,
+                    comDistribution: AtomFormWithAppID,
+                    cloudStone: AtomFormWithAppID,
+                    openStatePushFile: AtomFormWithAppID,
+                    gseKitProcRunCmdDev: AtomFormWithAppID,
+                    gseKitProcRunCmdProd: AtomFormWithAppID,
+                    linuxPaasCodeCCScript: Codecc,
+                    gcloud: Gcloud,
+                    jobExecuteTaskExt: JobExecuteTaskExt,
+                    jobDevOpsFastExecuteScript: JobDevopsFastExecuteScript,
+                    tclsAddVersion: Tcls,
+                    jobDevOpsFastPushFile: JobDevOpsFastPushFile,
+                    jobDevOpsExecuteTaskExt: JobDevopsExecuteTaskExt,
+                    zhiyunInstanceMaintenance: ZhiyunInstanceMaintenance,
+                    zhiyunUpdateAsyncEX: ZhiyunUpdateAsyncEX,
+                    tcmElement: Tcm,
+                    bcsContainerOp: BcsContainerOp,
+                    bcsContainerOpByName: NewBcsContainerOp,
+                    experience: VersionExperience,
+                    wetestElement: WeTest,
+                    jobCloudsFastPush: jobCloudsFastPush,
+                    jobCloudsFastExecuteScript: jobCloudsFastExecuteScript,
                     sendRTXNotify: SendWechatNotify,
                     reportArchive: ReportArchive,
                     reportArchiveService: ReportArchive,

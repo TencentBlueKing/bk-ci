@@ -3,23 +3,27 @@ package com.tencent.devops.stream.resources.service
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
+import com.tencent.devops.stream.pojo.openapi.StreamYamlCheck
 import com.tencent.devops.stream.service.StreamGitTokenService
 import com.tencent.devops.stream.service.StreamScmService
-import com.tencent.devops.stream.trigger.ManualTriggerService
+import com.tencent.devops.stream.service.StreamYamlService
+import com.tencent.devops.stream.trigger.OpenApiTriggerService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceStreamTriggerResourceImpl @Autowired constructor(
-    private val manualTriggerService: ManualTriggerService,
+    private val openApiTriggerService: OpenApiTriggerService,
     private val permissionService: StreamPermissionService,
     private val streamScmService: StreamScmService,
-    private val streamGitTokenService: StreamGitTokenService
+    private val streamGitTokenService: StreamGitTokenService,
+    private val streamYamlService: StreamYamlService
 ) : ServiceStreamTriggerResource {
 
     override fun triggerStartup(
@@ -47,7 +51,15 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
                 eventType = eventType
             )
         }
-        return Result(manualTriggerService.triggerBuild(userId, pipelineId, new))
+        return Result(openApiTriggerService.triggerBuild(userId, pipelineId, new))
+    }
+
+    override fun checkYaml(userId: String, yamlCheck: StreamYamlCheck): Result<String> {
+        return streamYamlService.checkYaml(
+            originYaml = yamlCheck.originYaml,
+            templateType = yamlCheck.templateType?.let { TemplateType.valueOf(it) },
+            isCiFile = yamlCheck.checkCiFile
+        )
     }
 
     private fun checkParam(userId: String) {

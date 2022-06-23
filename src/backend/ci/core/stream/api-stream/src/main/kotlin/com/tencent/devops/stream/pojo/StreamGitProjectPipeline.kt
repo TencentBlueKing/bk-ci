@@ -47,7 +47,11 @@ data class StreamGitProjectPipeline(
     @ApiModelProperty("最近一次构建详情", required = false)
     val latestBuildInfo: StreamBuildHistory?,
     @ApiModelProperty("自己一次构建分支", required = false)
-    val latestBuildBranch: String?
+    val latestBuildBranch: String?,
+    @ApiModelProperty("git yaml文件链接", required = false)
+    val yamlLink: String? = "",
+    @ApiModelProperty("最后一次更新分支", required = false)
+    val lastUpdateBranch: String? = ""
 )
 
 fun StreamGitProjectPipeline.isExist(): Boolean {

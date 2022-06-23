@@ -27,7 +27,7 @@
 
 package com.tencent.devops.project.utils
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit

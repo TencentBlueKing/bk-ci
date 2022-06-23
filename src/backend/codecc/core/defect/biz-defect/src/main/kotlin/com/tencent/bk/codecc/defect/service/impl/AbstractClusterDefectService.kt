@@ -58,7 +58,7 @@ abstract class AbstractClusterDefectService constructor(
      */
     fun getDefectStatistic(clusterResultVO: BaseClusterResultVO, taskId: Long, buildId: String, toolName: String) {
         logger.info("defect statistic")
-        val commonStatistic = commonStatisticRepository.findByTaskIdAndToolNameAndBuildId(
+        val commonStatistic = commonStatisticRepository.findFirstByTaskIdAndToolNameAndBuildId(
                 taskId,
                 toolName,
                 buildId
@@ -112,7 +112,7 @@ abstract class AbstractClusterDefectService constructor(
     @CCN
     fun getCCNStatistic(clusterResultVO: BaseClusterResultVO, taskId: Long, buildId: String, toolName: String) {
         logger.info("ccn statistic")
-        val ccnStatistic = ccnStatisticRepository.findByTaskIdAndBuildId(taskId, buildId) ?: return
+        val ccnStatistic = ccnStatisticRepository.findFirstByTaskIdAndBuildId(taskId, buildId) ?: return
         clusterResultVO.ccnBeyondThresholdSum = ccnStatistic.ccnBeyondThresholdSum
         clusterResultVO.totalCount = ccnStatistic.superHighCount + ccnStatistic.highCount+
                 ccnStatistic.mediumCount + ccnStatistic.lowCount

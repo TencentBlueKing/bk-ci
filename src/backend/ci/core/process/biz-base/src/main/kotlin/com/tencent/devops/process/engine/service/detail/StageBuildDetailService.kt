@@ -44,16 +44,17 @@ import org.springframework.stereotype.Service
 @Suppress("LongParameterList", "MagicNumber")
 @Service
 class StageBuildDetailService(
-    private val stageTagService: StageTagService,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
+    stageTagService: StageTagService,
     pipelineEventDispatcher: PipelineEventDispatcher,
     redisOperation: RedisOperation
 ) : BaseBuildDetailService(
     dslContext,
     pipelineBuildDao,
     buildDetailDao,
+    stageTagService,
     pipelineEventDispatcher,
     redisOperation
 ) {
@@ -78,7 +79,7 @@ class StageBuildDetailService(
                     } else if (buildStatus.isFinish() && stage.startEpoch != null) {
                         stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
                     }
-                    allStageStatus = fetchHistoryStageStatus(model)
+                    allStageStatus = fetchHistoryStageStatus(model, buildStatus)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -104,7 +105,7 @@ class StageBuildDetailService(
                     stage.containers.forEach {
                         it.status = BuildStatus.SKIP.name
                     }
-                    allStageStatus = fetchHistoryStageStatus(model)
+                    allStageStatus = fetchHistoryStageStatus(model, BuildStatus.RUNNING)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -138,7 +139,11 @@ class StageBuildDetailService(
                     stage.startEpoch = System.currentTimeMillis()
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
-                    allStageStatus = fetchHistoryStageStatus(model)
+                    allStageStatus = fetchHistoryStageStatus(
+                        model = model,
+                        buildStatus = BuildStatus.REVIEWING,
+                        reviewers = checkIn?.groupToReview()?.reviewers
+                    )
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -190,6 +195,12 @@ class StageBuildDetailService(
         checkOut: StagePauseCheck?
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_check_quality|stageId=$stageId|checkIn=$checkIn|checkOut=$checkOut")
+        val (oldBuildStatus, newBuildStatus) = if (checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name ||
+            checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
+            Pair(BuildStatus.RUNNING, BuildStatus.REVIEWING)
+        } else {
+            Pair(BuildStatus.REVIEWING, BuildStatus.RUNNING)
+        }
         var allStageStatus: List<BuildStageStatus>? = null
         update(projectId, buildId, object : ModelInterface {
             var update = false
@@ -200,7 +211,7 @@ class StageBuildDetailService(
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
-                    allStageStatus = fetchHistoryStageStatus(model)
+                    allStageStatus = fetchHistoryStageStatus(model, newBuildStatus)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -209,7 +220,8 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.RUNNING, operation = "stageCheckQuality#$stageId")
+        }, newBuildStatus, operation = "stageCheckQuality#$stageId")
+        pipelineBuildDao.updateStatus(dslContext, projectId, buildId, oldBuildStatus, newBuildStatus)
         return allStageStatus ?: emptyList()
     }
 
@@ -262,7 +274,7 @@ class StageBuildDetailService(
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
-                    allStageStatus = fetchHistoryStageStatus(model)
+                    allStageStatus = fetchHistoryStageStatus(model, BuildStatus.RUNNING)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -273,23 +285,5 @@ class StageBuildDetailService(
             }
         }, BuildStatus.RUNNING, operation = "stageStart#$stageId")
         return allStageStatus ?: emptyList()
-    }
-
-    private fun fetchHistoryStageStatus(model: Model): List<BuildStageStatus> {
-        val stageTagMap: Map<String, String>
-            by lazy { stageTagService.getAllStageTag().data?.associate { it.id to it.stageTagName } ?: emptyMap() }
-        // 更新Stage状态至BuildHistory
-        return model.stages.map {
-            BuildStageStatus(
-                stageId = it.id!!,
-                name = it.name ?: it.id!!,
-                status = it.status,
-                startEpoch = it.startEpoch,
-                elapsed = it.elapsed,
-                tag = it.tag?.map { _it ->
-                    stageTagMap.getOrDefault(_it, "null")
-                }
-            )
-        }
     }
 }

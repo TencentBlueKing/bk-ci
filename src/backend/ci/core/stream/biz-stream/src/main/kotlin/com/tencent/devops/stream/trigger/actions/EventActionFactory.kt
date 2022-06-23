@@ -49,6 +49,7 @@ import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.data.context.StreamTriggerContext
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamDeleteAction
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamManualAction
+import com.tencent.devops.stream.trigger.actions.streamActions.StreamRepoTriggerAction
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamScheduleAction
 import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamManualEvent
 import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamScheduleEvent
@@ -124,7 +125,9 @@ class EventActionFactory @Autowired constructor(
         if (actionSetting != null) {
             action.data.setting = actionSetting
         }
-        return action
+        return if (actionContext.repoTrigger != null) {
+            StreamRepoTriggerAction(action, client)
+        } else action
     }
 
     private fun loadEvent(event: CodeWebhookEvent): BaseAction? {

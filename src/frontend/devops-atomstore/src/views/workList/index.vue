@@ -54,6 +54,13 @@
                         links: [
                             { name: this.$t('store.镜像指引'), link: `${DOCS_URL_PREFIX}/store/ci-images/image-build` }
                         ]
+                    },
+                    {
+                        name: 'serviceWork',
+                        label: this.$t('store.微扩展'),
+                        links: [
+                            { name: this.$t('store.微扩展指引'), link: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=103523086` }
+                        ]
                     }
                 ]
             }
@@ -73,6 +80,9 @@
                         break
                     case 'imageWork':
                         name = this.$t('store.容器镜像')
+                        break
+                    case 'serviceWork':
+                        name = this.$t('store.微扩展')
                         break
                     default:
                         name = this.$t('store.流水线插件')
@@ -216,7 +226,7 @@
             display: flex;
         }
         .bk-tooltip {
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
             p {
                 max-width: 250px;
                 text-align: left;

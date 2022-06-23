@@ -61,6 +61,7 @@ import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
@@ -104,14 +105,16 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         userId: String,
         repository: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        search: String?
     ): List<GitBranch> {
         return client.getScm(ServiceGitResource::class).getBranch(
             accessToken = accessToken,
             userId = userId,
             repository = repository,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            search = search
         ).data ?: emptyList()
     }
 
@@ -646,6 +649,22 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             sort = sort,
             owned = owned,
             minAccessLevel = minAccessLevel
+        )
+    }
+
+    override fun getTapdWorkItems(
+        accessToken: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        type: String,
+        iid: Long
+    ): Result<List<TapdWorkItem>> {
+        return client.getScm(ServiceGitResource::class).getTapdWorkItems(
+            accessToken = accessToken,
+            tokenType = tokenType,
+            gitProjectId = gitProjectId,
+            type = type,
+            iid = iid
         )
     }
 }

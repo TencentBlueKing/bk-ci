@@ -30,9 +30,7 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_VAR
-import com.tencent.devops.model.process.tables.records.TPipelineBuildVarRecord
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
@@ -81,7 +79,7 @@ class PipelineBuildVarDao @Autowired constructor() {
                 baseStep.set(VAR_TYPE, valueType)
             }
             return baseStep.set(VALUE, value.toString())
-                .where(BUILD_ID.eq(buildId).and(KEY.eq(name)).and(READ_ONLY.notEqual(true))
+                .where(BUILD_ID.eq(buildId).and(KEY.eq(name)).and(READ_ONLY.isNull.or(READ_ONLY.eq(false)))
                     .and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
@@ -106,28 +104,6 @@ class PipelineBuildVarDao @Autowired constructor() {
                 map[it[KEY]] = it[VALUE]
             }
             return map
-        }
-    }
-
-    fun getVarsByProjectAndPipeline(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        key: String? = null,
-        value: String? = null,
-        offset: Int = 0,
-        limit: Int = 100
-    ): Result<TPipelineBuildVarRecord> {
-        return with(T_PIPELINE_BUILD_VAR) {
-            val selectConditionStep = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-
-            if (!key.isNullOrBlank()) selectConditionStep.and(KEY.eq(key))
-
-            if (!value.isNullOrBlank()) selectConditionStep.and(VALUE.eq(value))
-
-            selectConditionStep.limit(offset, limit).fetch()
         }
     }
 
@@ -158,12 +134,20 @@ class PipelineBuildVarDao @Autowired constructor() {
         }
     }
 
-    @Suppress("UNUSED")
-    fun deleteBuildVar(dslContext: DSLContext, projectId: String, buildId: String, varName: String? = null): Int {
+    fun deleteBuildVar(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        varName: String? = null,
+        readOnly: Boolean? = null
+    ): Int {
         return with(T_PIPELINE_BUILD_VAR) {
             val delete = dslContext.delete(this).where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
             if (!varName.isNullOrBlank()) {
                 delete.and(KEY.eq(varName))
+            }
+            if (readOnly != null) {
+                delete.and(READ_ONLY.eq(readOnly))
             }
             delete.execute()
         }
@@ -232,6 +216,13 @@ class PipelineBuildVarDao @Autowired constructor() {
                     )
                 ).execute()
             }
+        }
+    }
+
+    fun deleteBuildVars(dslContext: DSLContext, projectId: String, pipelineId: String, buildId: String) {
+        return with(T_PIPELINE_BUILD_VAR) {
+            dslContext.delete(this).where(PROJECT_ID.eq(projectId)).and(BUILD_ID.eq(buildId))
+                .and(PIPELINE_ID.eq(pipelineId)).execute()
         }
     }
 

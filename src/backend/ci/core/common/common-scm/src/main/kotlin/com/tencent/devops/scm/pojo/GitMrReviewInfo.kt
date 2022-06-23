@@ -83,6 +83,14 @@ import io.swagger.annotations.ApiModel
 
 @ApiModel("git mr reviewers信息")
 data class GitMrReviewInfo(
+    val author: GitMrInfoReviewer?,
+    @JsonProperty("project_id")
+    val projectId: Long?,
+    @JsonProperty("reviewable_id")
+    val reviewableId: Long?,
+    @JsonProperty("reviewable_type")
+    val reviewableType: String?,
+    val state: String?,
     @JsonProperty("created_at")
     val createTime: String? = "",
     @JsonProperty("updated_at")

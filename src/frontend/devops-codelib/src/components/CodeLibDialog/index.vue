@@ -11,11 +11,11 @@
                     <bk-radio value="HTTPS" v-if="isTGit">HTTPS</bk-radio>
                 </bk-radio-group>
             </div>
-            <div class="bk-form-item" v-if="(isGit || isGithub) && codelib.authType === 'OAUTH' || (isTGit && codelib.authType === 'T_GIT_OAUTH')">
+            <div class="bk-form-item" v-if="((isGit || isGithub) && codelib.authType === 'OAUTH') || (isTGit && codelib.authType === 'T_GIT_OAUTH')">
                 <div class="bk-form-item is-required" v-if="hasPower">
                     <!-- 源代码地址 start -->
                     <div class="bk-form-item is-required">
-                        <label class="bk-label">{{ $t('codelib.codelibUrl') }}:</label>
+                        <label class="bk-label">{{ `${codelibConfig.label} ${$t('codelib.codelibUrl')}` }}:</label>
                         <div class="bk-form-content">
                             <bk-select v-model="codelibUrl"
                                 searchable
@@ -24,9 +24,10 @@
                                 name="name"
                                 class="codelib-credential-selector"
                                 :placeholder="$t('codelib.codelibUrlPlaceholder')"
+                                :remote-method="handleSearchCodeLib"
                             >
-                                <bk-option v-for="(option, index) in oAuth.project"
-                                    :key="index"
+                                <bk-option v-for="option in oAuth.project"
+                                    :key="option.httpUrl"
                                     :id="option.httpUrl"
                                     :name="option.httpUrl">
                                 </bk-option>
@@ -122,7 +123,7 @@
                             @toggle="refreshTicket"
                         >
                             <bk-option v-for="(option, index) in credentialList"
-                                :key="index"
+                                :key="option.credentialId"
                                 :id="option.credentialId"
                                 :name="option.credentialId">
                                 <span>{{option.credentialId}}</span>
@@ -130,6 +131,7 @@
                             </bk-option>
                         </bk-select>
                         <span class="text-link" @click="addCredential">{{ $t('codelib.new') }}</span>
+                        <span class="error-tips" v-if="errors.has(&quot;credentialId&quot;)">{{ $t('codelib.credentialRequired') }}</span>
                     </div>
                     <span class="error-tips" v-if="errors.has('credentialId')">{{ $t('codelib.credentialRequired') }}</span>
                 </div>
@@ -142,7 +144,7 @@
 <script>
     import { mapActions, mapState } from 'vuex'
     import { getCodelibConfig, isSvn, isGit, isGithub, isTGit, isP4, isGitLab } from '../../config/'
-    import { parsePathAlias, parsePathRegion } from '../../utils'
+    import { parsePathAlias, extendParsePathAlias, parsePathRegion } from '../../utils'
     export default {
         name: 'codelib-dialog',
         props: {
@@ -246,7 +248,7 @@
                 )
             },
             title () {
-                return `${this.$t('codelib.link')}${this.$t(`codelib.${this.codelibConfig.label}`) || ''}${this.$t('codelib.codelib')}`
+                return `${this.codelibConfig.label} ${this.$t('codelib.repo')}`
             },
             isGit () {
                 return isGit(this.codelibTypeName)
@@ -275,6 +277,9 @@
             credentialTypes () {
                 return this.codelibConfig.credentialTypes
             },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
+            },
             credentialId: {
                 get () {
                     return this.codelib.credentialId
@@ -292,12 +297,9 @@
                 },
                 set (url) {
                     const { codelib, codelibTypeName } = this
-                    const { alias, msg } = parsePathAlias(
-                        codelibTypeName,
-                        url,
-                        codelib.authType,
-                        codelib.svnType
-                    )
+                    const { alias, msg } = this.isExtendTx
+                        ? extendParsePathAlias(codelibTypeName, url, codelib.authType, codelib.svnType)
+                        : parsePathAlias(codelibTypeName, url, codelib.authType, codelib.svnType)
                     if (msg) {
                         this.urlErrMsg = msg
                     }
@@ -336,8 +338,8 @@
             },
             urlPlaceholder () {
                 return (
-                    this.placeholders['url'][this.codelibConfig.label]
-                    || this.placeholders['url'][this.codelib.authType]
+                    this.placeholders.url[this.codelibConfig.label]
+                    || this.placeholders.url[this.codelib.authType]
                 )
             },
             credentialPlaceholder () {
@@ -389,6 +391,11 @@
                     this.hasValidate = true
                     this.saving = false
                 }
+            },
+            isShow (val) {
+                if (!val) {
+                    this.setTemplateCodelib()
+                }
             }
         },
 
@@ -400,7 +407,8 @@
                 'updateCodelib',
                 'gitOAuth',
                 'checkOAuth',
-                'checkTGitOAuth'
+                'checkTGitOAuth',
+                'setTemplateCodelib'
             ]),
             async submitCodelib () {
                 const {
@@ -429,7 +437,6 @@
                         this.toggleCodelibDialog(false)
                         this.hasValidate = false
                         this.saving = true
-                        this.codelib.url = ''
                         this.$bkMessage({
                             message: repositoryHashId
                                 ? this.$t('codelib.successfullyEdited')
@@ -452,7 +459,14 @@
                                     }]
                                     : null,
                                 projectId
-                            }]
+                            }],
+                            applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
+                                projectId
+                            }&service_code=code&${
+                                repositoryHashId
+                                    ? 'role_manager=repertory'
+                                    : 'role_creator=repertory'
+                            }`
                         })
                     } else {
                         this.$bkMessage({
@@ -464,6 +478,15 @@
                 } finally {
                     this.$nextTick(() => (this.loading = false))
                 }
+            },
+
+            handleSearchCodeLib (search) {
+                const { projectId, codelibTypeConstants } = this
+                this.checkOAuth({
+                    projectId,
+                    type: codelibTypeConstants,
+                    search
+                })
             },
 
             async openValidate () {
@@ -535,7 +558,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .code-lib-credential {
         display: flex;
         align-items: center;

@@ -37,15 +37,19 @@
                     <div class="intercept-item intercept-rank">
                         <p class="chart-name">流水线拦截Top5</p>
                         <chart class="chart-wrapper rankchart-wrapper"
-                            :options="processOptions('rank')"
-                            auto-resize>
+                            :loading="loading.isLoading"
+                            :option="processOptions('rank')"
+                            autoresize
+                        >
                         </chart>
                     </div>
                     <div class="intercept-item intercept-trend">
                         <p class="chart-name">生效流水线执行数/拦截数趋势</p>
                         <chart class="chart-wrapper trend-chart-wrapper"
-                            :options="processOptions('trend')"
-                            auto-resize>
+                            :option="processOptions('trend')"
+                            :loading="loading.isLoading"
+                            autoresize
+                        >
                         </chart>
                     </div>
                 </div>
@@ -109,13 +113,18 @@
 </template>
 
 <script>
-    import ECharts from 'vue-echarts/components/ECharts.vue'
-    import 'echarts/lib/chart/line'
-    import 'echarts/lib/chart/bar'
-    import 'echarts/lib/chart/pie'
-    import 'echarts/lib/component/tooltip'
-    import 'echarts/lib/component/title'
-    import 'echarts/lib/component/legend'
+    
+    import { use } from 'echarts/core'
+    import { CanvasRenderer } from 'echarts/renderers'
+    import { LineChart, BarChart, PieChart } from 'echarts/charts'
+    import {
+        GridComponent,
+        TitleComponent,
+        TooltipComponent,
+        LegendComponent
+    } from 'echarts/components'
+    import VChart from 'vue-echarts'
+    
     import {
         rankOptions,
         trendOptions
@@ -123,9 +132,20 @@
     import imageEmpty from '@/components/common/imageEmpty'
     import { convertTime } from '@/utils/util'
 
+    use([
+        CanvasRenderer,
+        LineChart,
+        BarChart,
+        GridComponent,
+        PieChart,
+        TitleComponent,
+        TooltipComponent,
+        LegendComponent
+    ])
+
     export default {
         components: {
-            chart: ECharts,
+            chart: VChart,
             'image-empty': imageEmpty
         },
         data () {
@@ -133,7 +153,7 @@
                 showContent: false,
                 isEmptyRule: false,
                 totalInterceptRecor: 0,
-                docsUrl: `${DOCS_URL_PREFIX}/x/MYbm`,
+                docsUrl: `${IWIKI_DOCS_URL}/x/MYbm`,
                 pipelineListLabel: [],
                 pipelineListValue: [],
                 trendList: [],
@@ -251,7 +271,7 @@
                         const colorList = ['#FFE356', '#FFCD56', '#FFB456', '#FF8E56', '#FF5656']
                         return colorList[params.dataIndex]
                     }
-
+                    console.log(this.pipelineListValue)
                     options.series[0].data = this.pipelineListValue
                 }
 
@@ -277,7 +297,7 @@
                         }
                         return parseInt(params)
                     }
-
+                    console.log(this.trendDate, this.trendList, this.pipelineExcuList)
                     options.xAxis.data = this.trendDate
                     options.series[1].data = this.trendList
                     options.series[0].data = this.pipelineExcuList

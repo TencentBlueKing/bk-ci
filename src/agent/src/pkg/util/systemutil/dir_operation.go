@@ -32,7 +32,7 @@ package systemutil
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/logs"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"os"
 	"syscall"
 )

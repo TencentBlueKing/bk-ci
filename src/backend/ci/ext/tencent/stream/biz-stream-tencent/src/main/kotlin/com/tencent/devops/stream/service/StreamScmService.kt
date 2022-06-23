@@ -699,7 +699,8 @@ class StreamScmService @Autowired constructor(
                         to = to,
                         straight = straight,
                         page = page,
-                        pageSize = pageSize
+                        pageSize = pageSize,
+                        useAccessToken = true
                     ).data ?: emptyList()
                 }
             )

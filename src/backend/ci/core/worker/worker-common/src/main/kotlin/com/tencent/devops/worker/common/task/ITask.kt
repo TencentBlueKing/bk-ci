@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.task
 
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
@@ -53,12 +54,13 @@ abstract class ITask {
         workspace: File
     ) {
         val params = buildTask.params
+        val newVariables = combineVariables(buildTask, buildVariables)
         if (params != null && null != params["additionalOptions"]) {
             val additionalOptionsStr = params["additionalOptions"]
             val additionalOptions = JsonUtil.toOrNull(additionalOptionsStr, ElementAdditionalOptions::class.java)
             if (additionalOptions?.enableCustomEnv == true && additionalOptions.customEnv?.isNotEmpty() == true) {
                 val variables = buildTask.buildVariable?.toMutableMap()
-                val variablesBuild = buildVariables.variables.toMutableMap()
+                val variablesBuild = newVariables.variables.toMutableMap()
                 if (variables != null) {
                     additionalOptions.customEnv!!.forEach {
                         if (!it.key.isNullOrBlank()) {
@@ -70,13 +72,31 @@ abstract class ITask {
                     }
                     return execute(
                         buildTask.copy(buildVariable = variables),
-                        buildVariables.copy(variables = variablesBuild),
+                        newVariables.copy(variables = variablesBuild),
                         workspace
                     )
                 }
             }
         }
-        execute(buildTask, buildVariables, workspace)
+        execute(buildTask, newVariables, workspace)
+    }
+
+    /**
+     *  如果之前的插件不是在构建机执行, 会缺少环境变量
+     */
+    private fun combineVariables(
+        buildTask: BuildTask,
+        buildVariables: BuildVariables
+    ): BuildVariables {
+        val buildVariable = buildTask.buildVariable ?: return buildVariables
+        val newVariables = buildVariables.variables.plus(buildVariable)
+        val buildParameters = buildVariable.map { (key, value) ->
+            BuildParameters(key, value)
+        }
+        // 以key去重, 并以buildTask中的为准
+        val newBuildParameters = buildVariables.variablesWithType.associateBy { it.key }
+            .plus(buildParameters.associateBy { it.key })
+        return buildVariables.copy(variables = newVariables, variablesWithType = newBuildParameters.values.toList())
     }
 
     protected abstract fun execute(

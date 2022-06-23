@@ -39,7 +39,7 @@
                                 </div>
                             </div>
                             <div class="bk-tab2-pane" v-else-if="curTab === 'external'">
-                                <div class="release-list-textarea">{{ curReleaseDetail.external_list.replace(',', '; ') }}</div>
+                                <div class="release-list-textarea">{{ curReleaseDetail.external_list.join(',') }}</div>
                             </div>
                         </bk-tab-panel>
                     </bk-tab>
@@ -48,7 +48,7 @@
             <div class="base-detail-item version-desc-item">
                 <label class="item-label">版本描述：</label>
                 <div class="item-content">
-                    <div class="version-desc">{{ curReleaseDetail.desc }}</div>
+                    <p class="version-desc" v-html="curReleaseDetail.desc"></p>
                 </div>
             </div>
         </div>
@@ -110,7 +110,7 @@
                     },
                     {
                         name: 'external',
-                        label: '附加外部QQ'
+                        label: '附加外部人员'
                     }
                 ]
             }
@@ -176,6 +176,8 @@
         .list-item,
         .version-desc-item {
             width: 90%;
+            white-space: pre-line;
+            line-height: 20px;
         }
 
         .list-item {

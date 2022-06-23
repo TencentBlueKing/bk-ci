@@ -168,9 +168,6 @@
             },
             showLog: {
                 type: Function
-            },
-            loadingMore: {
-                type: Boolean
             }
         },
         data () {
@@ -244,7 +241,7 @@
                             ...stage,
                             tooltip: this.getStageTooltip(stage),
                             icon: this.statusIconMap[stage.status] || 'circle',
-                            statusCls: `${stage.status}${stage.status === 'RUNNING' ? ' spin-icon' : ''}`
+                            statusCls: stage.status
                         }))
                         : null
                     return {
@@ -452,12 +449,14 @@
             async downloadFile ({ artifactoryType, path }, key = 'download') {
                 try {
                     const { projectId } = this.$route.params
+                    const isDevnet = await this.$store.dispatch('common/requestDevnetGateway')
                     const res = await this.$store.dispatch('common/requestDownloadUrl', {
                         projectId,
                         artifactoryType,
                         path
                     })
-                    window.open(res.url, '_self')
+                    const url = isDevnet ? res.url : res.url2
+                    window.open(url, '_self')
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'

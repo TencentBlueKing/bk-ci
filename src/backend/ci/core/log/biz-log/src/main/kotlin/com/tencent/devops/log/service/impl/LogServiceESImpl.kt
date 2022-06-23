@@ -29,7 +29,6 @@ package com.tencent.devops.log.service.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.common.log.pojo.LogLine
@@ -63,7 +62,7 @@ import org.elasticsearch.client.RequestOptions
 import org.elasticsearch.client.core.CountRequest
 import org.elasticsearch.client.indices.CreateIndexRequest
 import org.elasticsearch.client.indices.GetIndexRequest
-import org.elasticsearch.common.unit.TimeValue
+import org.elasticsearch.core.TimeValue
 import org.elasticsearch.index.query.BoolQueryBuilder
 import org.elasticsearch.index.query.Operator
 import org.elasticsearch.index.query.QueryBuilders
@@ -100,12 +99,6 @@ class LogServiceESImpl constructor(
         .maximumSize(100000)
         .expireAfterAccess(30, TimeUnit.MINUTES)
         .build<String/*BuildId*/, Boolean/*Has create the index*/>()
-
-    override fun pipelineFinish(event: PipelineBuildFinishBroadCastEvent) {
-        with(event) {
-            indexService.flushLineNum2DB(buildId)
-        }
-    }
 
     override fun addLogEvent(event: LogOriginEvent) {
         val logMessage = addLineNo(event.buildId, event.logs)

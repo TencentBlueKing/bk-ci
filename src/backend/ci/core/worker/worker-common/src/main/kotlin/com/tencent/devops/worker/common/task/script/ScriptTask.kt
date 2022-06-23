@@ -45,6 +45,7 @@ import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
+import com.tencent.devops.worker.common.utils.CredentialUtils.parseCredentialValue
 import com.tencent.devops.worker.common.utils.TaskUtil
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -83,17 +84,14 @@ open class ScriptTask : ITask() {
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
         val buildId = buildVariables.buildId
-        val runtimeVariables = buildVariables.variables
+        val runtimeVariables = buildVariables.variables.map {
+            it.key to it.value.parseCredentialValue(buildTask.buildVariable)
+        }.toMap()
+            .plus(buildTask.buildVariable ?: emptyMap())
         val projectId = buildVariables.projectId
 
         ScriptEnvUtils.cleanEnv(buildId, workspace)
         ScriptEnvUtils.cleanContext(buildId, workspace)
-
-        val variables = if (buildTask.buildVariable == null) {
-            runtimeVariables
-        } else {
-            runtimeVariables.plus(buildTask.buildVariable!!)
-        }
 
         try {
             command.execute(
@@ -102,7 +100,9 @@ open class ScriptTask : ITask() {
                 stepId = buildTask.stepId,
                 script = script,
                 taskParam = taskParams,
-                runtimeVariables = variables.plus(TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)),
+                runtimeVariables = runtimeVariables.plus(
+                    TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)
+                ),
                 projectId = projectId,
                 dir = workspace,
                 buildEnvs = takeBuildEnvs(buildTask, buildVariables),

@@ -103,6 +103,17 @@ class StreamBuildQualityCheckistener @Autowired constructor(
                         setting = setting,
                         event = objectMapper.readValue(requestEvent.event)
                     )
+                    StreamObjectKind.OPENAPI.value -> {
+                        // openApi可以手工触发也可以模拟事件触发,所以event有两种结构
+                        try {
+                            actionFactory.loadManualAction(
+                                setting = setting,
+                                event = objectMapper.readValue(requestEvent.event)
+                            )
+                        } catch (ignore: Exception) {
+                            actionFactory.load(objectMapper.readValue<GitEvent>(requestEvent.event))
+                        }
+                    }
                     else -> actionFactory.load(objectMapper.readValue<GitEvent>(requestEvent.event))
                 } ?: throw OperationException("stream not support action ${requestEvent.event}")
                 else -> TODO("对接其他Git平台时需要补充")

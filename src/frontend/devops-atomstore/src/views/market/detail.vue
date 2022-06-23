@@ -1,7 +1,7 @@
 <template>
     <article class="detail-home" v-bkloading="{ isLoading }">
         <bread-crumbs :bread-crumbs="navList" :type="type">
-            <router-link :to="{ name: 'atomWork' }" class="g-title-work"> {{ $t('store.工作台') }} </router-link>
+            <router-link :to="{ name: 'atomWork' }" class="g-title-work" v-if="type !== 'ide'"> {{ $t('store.工作台') }} </router-link>
         </bread-crumbs>
 
         <main class="store-main" v-if="!isLoading">
@@ -16,24 +16,33 @@
 </template>
 
 <script>
+    import api from '@/api'
     import { mapActions, mapGetters } from 'vuex'
+    import ideInfo from '../../components/common/detail-info/ide'
     import breadCrumbs from '@/components/bread-crumbs.vue'
     import atomInfo from '../../components/common/detail-info/atom'
     import templateInfo from '../../components/common/detail-info/template'
     import imageInfo from '../../components/common/detail-info/image'
+    import serviceInfo from '../../components/common/detail-info/service'
     import detailScore from '../../components/common/detailTab/detailScore'
     import codeSection from '../../components/common/detailTab/codeSection'
     import yamlDetail from '../../components/common/detailTab/yamlDetail'
+    import outputDetail from '../../components/common/detailTab/outputDetail'
+    import qualityDetail from '../../components/common/detailTab/qualityDetail'
 
     export default {
         components: {
             atomInfo,
             templateInfo,
+            ideInfo,
             imageInfo,
             detailScore,
+            serviceInfo,
             codeSection,
             breadCrumbs,
-            yamlDetail
+            yamlDetail,
+            outputDetail,
+            qualityDetail
         },
 
         data () {
@@ -58,15 +67,23 @@
                 return {
                     atom: [
                         { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' },
-                        { componentName: 'codeSection', label: this.$t('store.YAMLV1'), name: 'YAML', bindData: { code: this.detail.codeSection, limitHeight: false, name: 'YAML', currentTab: this.currentTab, getDataFunc: this.getAtomYaml }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) },
-                        { componentName: 'yamlDetail', label: this.$t('store.YAMLV2'), name: 'YAMLV2', bindData: { code: this.detail.codeSectionV2, limitHeight: false, name: 'YAMLV2', currentTab: this.currentTab, getDataFunc: this.getAtomYamlV2, qualityData: this.detail.qualityData }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) }
+                        // { componentName: 'codeSection', label: this.$t('store.YAMLV1'), name: 'YAML', bindData: { code: this.detail.codeSection, limitHeight: false, name: 'YAML', currentTab: this.currentTab, getDataFunc: this.getAtomYaml }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) },
+                        { componentName: 'yamlDetail', label: this.$t('store.YAMLV2'), name: 'YAMLV2', bindData: { code: this.detail.codeSectionV2, limitHeight: false, name: 'YAMLV2', currentTab: this.currentTab, getDataFunc: this.getAtomYamlV2 }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) },
+                        { componentName: 'outputDetail', label: this.$t('store.输出参数'), name: 'output', bindData: { outputData: this.detail.outputData, name: 'output', currentTab: this.currentTab, classifyCode: this.detail.classifyCode } },
+                        { componentName: 'qualityDetail', label: this.$t('store.质量红线指标'), name: 'quality', bindData: { qualityData: this.detail.qualityData }, hidden: this.detail.qualityData && !this.detail.qualityData.length }
                     ],
                     template: [
                         { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' }
                     ],
+                    ide: [
+                        { componentName: 'detailScore', label: this.$t('概述'), name: 'des' }
+                    ],
                     image: [
                         { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' },
                         { componentName: 'codeSection', label: 'Dockerfile', name: 'Dockerfile', bindData: { code: this.detail.codeSection, limitHeight: false } }
+                    ],
+                    service: [
+                        { componentName: 'detailScore', label: this.$t('概述'), name: 'des' }
                     ]
                 }
             },
@@ -79,6 +96,12 @@
                         break
                     case 'image':
                         name = this.$t('store.容器镜像')
+                        break
+                    case 'ide':
+                        name = this.$t('store.IDE插件')
+                        break
+                    case 'service':
+                        name = this.$t('store.微扩展')
                         break
                     default:
                         name = this.$t('store.流水线插件')
@@ -107,11 +130,12 @@
                 'requestAtom',
                 'requestAtomStatistic',
                 'requestTemplateDetail',
+                'requestIDE',
                 'requestImage',
                 'getUserApprovalInfo',
                 'requestImageCategorys',
-                'getAtomYaml',
-                'getAtomYamlV2'
+                'getAtomYamlV2',
+                'requestService'
             ]),
 
             getDetail () {
@@ -119,7 +143,9 @@
                 const funObj = {
                     atom: () => this.getAtomDetail(),
                     template: () => this.getTemplateDetail(),
-                    image: () => this.getImageDetail()
+                    ide: () => this.getIDEDetail(),
+                    image: () => this.getImageDetail(),
+                    service: () => this.getServiceDetail()
                 }
                 const getDetailMethod = funObj[type]
 
@@ -134,12 +160,14 @@
                 return Promise.all([
                     this.requestAtom(atomCode),
                     this.requestAtomStatistic({ storeCode: atomCode, storeType: 'ATOM' }),
-                    this.getUserApprovalInfo(atomCode)
-                ]).then(([atomDetail, atomStatic, userAppInfo]) => {
+                    this.getUserApprovalInfo(atomCode),
+                    this.getQualityData(atomCode)
+                ]).then(([atomDetail, atomStatic, userAppInfo, quality]) => {
                     const detail = atomDetail || {}
                     detail.detailId = atomDetail.atomId
                     detail.recentExecuteNum = atomStatic.recentExecuteNum || 0
                     detail.approveStatus = (userAppInfo || {}).approveStatus
+                    detail.qualityData = quality
                     this.setDetail(detail)
                 })
             },
@@ -150,6 +178,17 @@
                     const detail = templateDetail || {}
                     detail.detailId = templateDetail.templateId
                     detail.name = templateDetail.templateName
+                    this.setDetail(detail)
+                })
+            },
+
+            getIDEDetail () {
+                const atomCode = this.detailCode
+
+                return this.requestIDE({ atomCode }).then((res) => {
+                    const detail = res || {}
+                    detail.detailId = res.atomId
+                    detail.name = res.atomName
                     this.setDetail(detail)
                 })
             },
@@ -170,6 +209,25 @@
                     detail.needInstallToProject = setting.needInstallToProject
                     this.setDetail(detail)
                 })
+            },
+
+            getServiceDetail () {
+                const serviceCode = this.detailCode
+
+                return Promise.all([
+                    this.requestService({ serviceCode }),
+                    this.requestAtomStatistic({ storeCode: serviceCode, storeType: 'SERVICE' })
+                ]).then(([serviceDetail = {}, serviceStatic = {}]) => {
+                    const detail = serviceDetail || {}
+                    detail.downloads = serviceStatic.downloads || 0
+                    detail.detailId = serviceDetail.serviceId
+                    detail.name = serviceDetail.serviceName
+                    this.setDetail(detail)
+                })
+            },
+
+            getQualityData () {
+                return api.requestAtomQuality(this.detailCode)
             }
         }
     }

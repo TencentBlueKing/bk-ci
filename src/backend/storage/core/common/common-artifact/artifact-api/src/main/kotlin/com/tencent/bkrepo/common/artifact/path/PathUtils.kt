@@ -249,6 +249,20 @@ object PathUtils {
         return escapedString
     }
 
+    fun getCommonPath(fullPath1: String, fullPath2: String): String {
+        var commonPath = ""
+        val splitPath1 = resolveParent(fullPath1).split(StringPool.SLASH)
+        val splitPath2 = resolveParent(fullPath2).split(StringPool.SLASH)
+        for (i in 1 until Integer.min(splitPath1.size, splitPath2.size)) {
+            if (splitPath1[i] == splitPath2[i]) {
+                commonPath += StringPool.SLASH + splitPath1[i]
+            } else {
+                break
+            }
+        }
+        return commonPath.ensureSuffix(StringPool.SLASH)
+    }
+
     /**
      * 检查非法字符
      */

@@ -5,24 +5,24 @@
         :padding="0"
         :close-icon="organizationConf.closeIcon"
         :quick-close="organizationConf.quickClose"
+        :show-footer="false"
         :ok-text="$t('store.保存')"
-        @confirm="toConfirmLogo"
+        :confirm-fn="toConfirmLogo"
         @cancel="toCloseDialog"
     >
-        <main class="organization-select-content" v-bkloading="{ isLoading: organizationConf.isLoading }">
+        <main class="organization-select-content">
             <div class="organization-content">
                 <div class="organization-card organization-tree">
                     <div class="info-header"> {{ $t('store.全部组织架构') }} </div>
                     <div class="tree-content">
-                        <tree
+                        <bk-big-tree show-checkbox
+                            expand-on-click
                             ref="organizationTree"
                             :data="treeList"
-                            :multiple="true"
-                            :node-key="'id'"
-                            :has-border="false"
-                            @async-load-nodes="loadNodes"
-                            @on-click="handleChange">
-                        </tree>
+                            :check-strictly="false"
+                            :lazy-method="loadNodes"
+                            @check-change="handleChange">
+                        </bk-big-tree>
                     </div>
                 </div>
                 <div class="organization-card organization-selected">
@@ -32,117 +32,97 @@
                     </div>
                 </div>
             </div>
+            <section class="handle-footer">
+                <bk-button theme="primary" @click="toConfirmLogo" :loading="isLoading">{{ $t('store.保存') }}</bk-button>
+                <bk-button @click="$emit('cancelHandle')" :disabled="isLoading">{{ $t('store.取消') }}</bk-button>
+            </section>
         </main>
     </bk-dialog>
 </template>
 
 <script>
-    import tree from '@/components/common/tree'
-
     export default {
-        components: {
-            tree
-        },
         props: {
-            showDialog: Boolean
+            showDialog: Boolean,
+            isLoading: Boolean
         },
         data () {
             return {
                 width: 715,
-                treeList: [{ id: 0, name: this.$t('store.腾讯公司'), async: true }],
+                treeList: [{ id: 0, name: this.$t('store.腾讯公司') }],
                 selectedList: [],
                 organizationConf: {
                     hasHeader: false,
                     hasFooter: false,
                     closeIcon: false,
-                    quickClose: false,
-                    isLoading: false
+                    quickClose: false
                 }
-            }
-        },
-        computed: {
-            routeName () {
-                return this.$route.name
-            },
-            atomCode () {
-                return this.$route.params.atomCode
-            },
-            templateCode () {
-                return this.$route.params.templateCode
             }
         },
         watch: {
             showDialog (val) {
                 if (!val) {
                     this.selectedList = []
-                    this.treeList = [{ id: 0, name: this.$t('store.腾讯公司'), async: true }]
+                    this.treeList = [{ id: 0, name: this.$t('store.腾讯公司') }]
                 }
             }
         },
         methods: {
-            handleChange (node, $event) {
-                if ($event.target.className === 'checkbox-input') {
-                    if ($event.target.checked) {
-                        if (!node.parent || !node.parent.type) {
-                            node.displayName = node.name
-                        } else if (node.type === 'dept') {
-                            node.displayName = `${node.parent.name}/${node.name}`
-                        } else if (node.type === 'center') {
-                            node.displayName = `${node.parent.parent.name}/${node.parent.name}/${node.name}`
-                        }
-                        this.selectedList.push(node)
-                    } else {
-                        this.selectedList = this.selectedList.filter(val => val.id !== node.id)
+            handleChange (ids) {
+                this.selectedList = []
+                ids.forEach((id) => {
+                    const node = this.$refs.organizationTree.getNodeById(id)
+                    node.displayName = node.name
+                    let parentNode = node.parent
+                    while (parentNode) {
+                        node.displayName = `${parentNode.name}/${node.displayName}`
+                        parentNode = parentNode.parent
                     }
-                }
+                    this.selectedList.push(node)
+                })
             },
-            async loadNodes (node) {
-                const curType = node.type ? node.type === 'bg' ? 'dept' : 'center' : 'bg'
-                this.$set(node, 'loading', true)
 
+            async loadNodes (node) {
+                let curType = ''
+                switch (node.level) {
+                    case 0:
+                        curType = 'bg'
+                        break
+                    case 1:
+                        curType = 'dept'
+                        break
+                    default:
+                        curType = 'center'
+                        break
+                }
                 try {
                     const res = await this.$store.dispatch('store/requestOrganizations', {
                         type: curType,
                         id: node.id
                     })
-
-                    if (res.length) {
-                        res.forEach(el => {
-                            if (!node.hasOwnProperty('children')) {
-                                this.$set(node, 'children', [])
-                            }
-                            el.async = node.type !== 'dept'
-                            el.type = curType
-                            node.children.push(el)
-                        })
-                    }
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
+                    const data = []
+                    const leaf = []
+                    res.forEach(x => {
+                        x.type = curType
+                        data.push(x)
+                        if (node.level === 2) leaf.push(x.id)
                     })
-                } finally {
-                    this.$set(node, 'loading', false)
+                    return { data, leaf }
+                } catch (err) {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
                 }
             },
-            toCloseDialog () {
-                this.$emit('cancelHandle')
-            },
-            async toConfirmLogo () {
+            toConfirmLogo () {
+                if (this.isLoading) return
                 if (!this.selectedList.length) {
                     this.$bkMessage({
                         message: this.$t('store.请选择部门'),
                         theme: 'error'
                     })
-                    this.$emit('cancelHandle')
                 } else {
-                    let message, theme
                     const deptInfos = []
 
-                    this.selectedList.map(item => {
+                    this.selectedList.forEach(item => {
                         deptInfos.push({
                             deptId: item.id,
                             deptName: item.displayName
@@ -150,38 +130,10 @@
                     })
                     
                     const params = {
-                        deptInfos: deptInfos
+                        deptInfos
                     }
 
-                    if (this.routeName === 'visible') {
-                        params.atomCode = this.atomCode
-                    } else {
-                        params.templateCode = this.templateCode
-                    }
-
-                    this.organizationConf.isLoading = true
-
-                    try {
-                        if (this.routeName === 'visible') {
-                            await this.$store.dispatch('store/setVisableDept', { params })
-                        } else {
-                            await this.$store.dispatch('store/setTplVisableDept', { params })
-                        }
-
-                        message = this.$t('store.保存成功')
-                        theme = 'success'
-                    } catch (err) {
-                        message = err.message ? err.message : err
-                        theme = 'error'
-                    } finally {
-                        this.$bkMessage({
-                            message,
-                            theme
-                        })
-
-                        this.organizationConf.isLoading = false
-                        this.$emit('saveHandle')
-                    }
+                    this.$emit('saveHandle', params)
                 }
             }
         }
@@ -191,9 +143,13 @@
 <style lang="scss">
     @import '../assets/scss/conf';
     .organization-dialog {
+        ::v-deep .bk-dialog-body {
+            padding: 0;
+        }
         .organization-content {
             display: flex;
             justify-content: space-between;
+            padding: 0 24px;
         }
         .organization-card {
             width: 320px;
@@ -222,8 +178,10 @@
             }
         }
         .handle-footer {
-            padding: 10px 20px;
-            border: 1px solid #DDE4EB;
+            margin-top: 15px;
+            padding: 12px 24px;
+            border-top: 1px solid #DDE4EB;
+            background-color: #fafbfd;
             text-align: right;
             button {
                 margin-top: 0;

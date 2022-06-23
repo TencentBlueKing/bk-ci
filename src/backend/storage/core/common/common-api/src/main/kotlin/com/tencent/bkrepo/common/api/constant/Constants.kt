@@ -42,6 +42,11 @@ const val USER_KEY = "userId"
 const val PLATFORM_KEY = "platformId"
 
 /**
+ * Oauth认证成功后scope写入request attributes的key
+ */
+const val AUTHORITIES_KEY = "authorities"
+
+/**
  * 微服务调用请求标记key
  */
 const val MS_REQUEST_KEY = "MSRequest"
@@ -63,10 +68,13 @@ const val ACCESS_LOGGER_NAME = "AccessLogger"
  */
 const val DEFAULT_PAGE_NUMBER = 1
 const val DEFAULT_PAGE_SIZE = 20
+const val TOTAL_RECORDS_INFINITY = -1L
 
 /**
  * service name
  */
-const val REPOSITORY_SERVICE_NAME = "\${service.prefix:repo-}repository\${service.suffix:}"
-const val AUTH_SERVICE_NAME = "\${service.prefix:repo-}auth\${service.suffix:}"
-const val REPLICATION_SERVICE_NAME = "\${service.prefix:repo-}replication\${service.suffix:}"
+const val REPOSITORY_SERVICE_NAME = "\${service.prefix:}repository\${service.suffix:}"
+const val AUTH_SERVICE_NAME = "\${service.prefix:}auth\${service.suffix:}"
+const val REPLICATION_SERVICE_NAME = "\${service.prefix:}replication\${service.suffix:}"
+const val SCANNER_SERVICE_NAME = "\${service.prefix:}scanner\${service.suffix:}"
+const val HELM_SERVICE_NAME = "\${service.prefix:}helm\${service.suffix:}"

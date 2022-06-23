@@ -2,7 +2,8 @@
     <article class="pipeline-content"
         v-bkloading="{
             isLoading: pageLoading
-        }">
+        }"
+    >
         <pipeline-header :title="header.title">
             <span class="default-subheader-icon"
                 slot="logo">
@@ -183,7 +184,7 @@
                 }
             },
             tutorial () {
-                window.open(`${DOCS_URL_PREFIX}`, '_blank')
+                window.open(`${IWIKI_DOCS_URL}/x/RY6j`, '_blank')
             },
             routerToManage (type) {
                 this.$router.push({ name: type })

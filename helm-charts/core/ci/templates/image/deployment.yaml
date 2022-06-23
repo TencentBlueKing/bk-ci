@@ -1,0 +1,120 @@
+#image Deployment
+{{ if .Values.image.enabled -}}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-image
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: image
+spec:
+  selector:
+    matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: image
+  {{- if not .Values.image.autoscaling.enabled }}
+  replicas: {{ .Values.image.replicas }}
+  {{- end }}
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        {{- if .Values.image.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.image.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: image
+    spec:
+      serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      {{- if .Values.image.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.image.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.image.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.image.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.image.podAffinityPreset  "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.image.podAntiAffinityPreset  "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.image.nodeAffinityPreset.type "key" .Values.image.nodeAffinityPreset.key "values" .Values.image.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.image.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.image.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.image.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.image.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.image.priorityClassName }}
+      priorityClassName: {{ .Values.image.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.image.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.image.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}        
+      containers:
+        - name: image
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{- if .Values.image.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.image.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.image.resources }}
+          resources: {{- toYaml .Values.image.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: MS_NAME
+              value: image
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: RELEASE_NAME
+              value: {{ .Release.Name }}
+            - name: CHART_NAME
+              value: {{ .Chart.Name }}
+            - name: MULTI_CLUSTER
+              value: {{ .Values.multiCluster.enabled | quote }}
+            - name: DEFAULT_NAMESPACE
+              value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+          workingDir: /data/workspace/image
+          {{ if .Values.entrypoint.override }}
+          command:
+            - "/bin/bash"
+            - "-c"
+            - |
+              cp /data/workspace/backend.bkci.sh .;
+              /bin/bash backend.bkci.sh;
+          {{ end }}
+          livenessProbe:
+            httpGet:
+              path: /management/health/livenessState
+              port: http
+            initialDelaySeconds: 90
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /management/health/readinessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          volumeMounts:
+          - mountPath: /data/workspace/image/jvm
+            name: log-volume
+            subPathExpr: bkci/jvm/$(POD_NAME)
+      volumes:
+      - hostPath:
+          path: /data
+        name: log-volume
+{{- end -}}

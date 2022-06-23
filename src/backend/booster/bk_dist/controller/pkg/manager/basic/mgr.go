@@ -172,7 +172,7 @@ func (m *Mgr) Register(config *types.WorkRegisterConfig) error {
 func (m *Mgr) applyResource(config *types.WorkRegisterConfig) {
 	blog.Infof("basic: going to apply resource for work(%s) with project(%s) scene(%s)",
 		m.work.ID(), config.Apply.ProjectID, config.Apply.Scene)
-	if _, err := m.work.Resource().Apply(config.Apply); err != nil {
+	if _, err := m.work.Resource().Apply(config.Apply, false); err != nil {
 		blog.Errorf("basic: register work(%s) try apply resource with project(%s) scene(%s) failed: %v",
 			m.work.ID(), config.Apply.ProjectID, config.Apply.Scene, err)
 

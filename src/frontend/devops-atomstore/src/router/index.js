@@ -28,6 +28,7 @@ const workList = () => import(/* webpackChunkName: 'workList' */ '@/views/workLi
 const atomWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/atom.vue') // 工作台
 const templateWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/template.vue') // 工作台
 const imageWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/image.vue') // 工作台
+const serviceWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/service.vue') // 工作台
 
 const install = () => import(/* webpackChunkName: 'install' */ '@/views/install.vue') // 研发商店安装页面
 const manage = () => import(/* webpackChunkName: 'manage' */ '@/views/manage/index.vue') // 研发商店管理页面
@@ -39,11 +40,14 @@ const statisticData = () => import(/* webpackChunkName: 'overView' */ '@/views/m
 const statisticPipeline = () => import(/* webpackChunkName: 'overView' */ '@/views/manage/over-view/statistic-pipeline.vue') // 研发商店管理页面
 const approval = () => import(/* webpackChunkName: 'approval' */ '@/views/manage/approval.vue') // 研发商店管理页面
 const setting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/index.vue') // 研发商店管理页面
+const visibleSetting = () => import(/* webpackChunkName: 'visibleSetting' */ '@/views/manage/setting/visible-setting.vue') // 研发商店管理页面
 const memberSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/member-setting.vue') // 研发商店管理页面
 const privateSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/private-setting.vue') // 研发商店管理页面
 const apiSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/api-setting.vue') // 研发商店管理页面
 const releaseManage = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/index.vue') // 研发商店管理页面
 const version = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/version.vue') // 研发商店管理页面
+const environment = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/environment.vue') // 研发商店管理页面
+const codeCheck = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/code-check.vue') // 研发商店管理页面
 
 const editAtom = () => import(/* webpackChunkName: 'editAtom' */ '@/views/edit_atom.vue') // 上架/升级流水线插件
 const releaseProgress = () => import(/* webpackChunkName: 'releaseProgress' */ '@/views/release_progress.vue') // 发布进度
@@ -53,6 +57,10 @@ const upgradeTemplate = () => import(/* webpackChunkName: 'upgradeTemplate' */ '
 
 const editImage = () => import(/* webpackChunkName: 'editImage' */ '@/views/edit_image.vue') // 上架镜像
 const imageProgress = () => import(/* webpackChunkName: 'imageProgress' */ '@/views/imageProgress.vue') // 镜像进度
+
+const serviceProgress = () => import(/* webpackChunkName: 'serviceProgress' */ '@/views/serviceProgress.vue') // 微扩展进度
+const editService = () => import(/* webpackChunkName: 'editService' */ '@/views/edit_service.vue') // 微扩展上架页面
+const serviceManage = () => import(/* webpackChunkName: 'serviceManage' */ '@/views/serviceManage.vue') // 扩展管理
 
 const routes = [
     {
@@ -104,6 +112,17 @@ const routes = [
                 ]
             },
             {
+                path: 'serviceManage/:projectCode',
+                name: 'serviceManage',
+                component: serviceManage,
+                meta: {
+                    title: 'serviceManage',
+                    logo: 'store',
+                    header: 'store',
+                    to: 'atomHome'
+                }
+            },
+            {
                 path: 'atomStore/detail/:type/:code',
                 name: 'details',
                 component: marketDetail,
@@ -133,6 +152,11 @@ const routes = [
                         path: 'image',
                         name: 'imageWork',
                         component: imageWork
+                    },
+                    {
+                        path: 'service',
+                        name: 'serviceWork',
+                        component: serviceWork
                     }
                 ]
             },
@@ -174,6 +198,11 @@ const routes = [
                                 component: privateSetting
                             },
                             {
+                                path: 'visible',
+                                name: 'visible',
+                                component: visibleSetting
+                            },
+                            {
                                 path: 'api',
                                 name: 'api',
                                 component: apiSetting
@@ -211,6 +240,14 @@ const routes = [
                                 path: 'version',
                                 name: 'version',
                                 component: version
+                            }, {
+                                path: 'environment',
+                                name: 'environment',
+                                component: environment
+                            }, {
+                                path: 'check',
+                                name: 'check',
+                                component: codeCheck
                             }
                         ]
                     }
@@ -295,6 +332,28 @@ const routes = [
                 component: imageProgress,
                 meta: {
                     title: 'imageProgress',
+                    logo: 'store',
+                    header: 'store',
+                    to: 'atomHome'
+                }
+            },
+            {
+                path: 'editService/:serviceId',
+                name: 'editService',
+                component: editService,
+                meta: {
+                    title: 'editService',
+                    logo: 'store',
+                    header: 'store',
+                    to: 'atomHome'
+                }
+            },
+            {
+                path: 'serviceProgress/:serviceId',
+                name: 'serviceProgress',
+                component: serviceProgress,
+                meta: {
+                    title: 'serviceProgress',
                     logo: 'store',
                     header: 'store',
                     to: 'atomHome'

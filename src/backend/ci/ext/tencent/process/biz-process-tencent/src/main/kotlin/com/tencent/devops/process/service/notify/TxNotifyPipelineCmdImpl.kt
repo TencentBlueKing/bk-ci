@@ -110,9 +110,9 @@ class TxNotifyPipelineCmdImpl @Autowired constructor(
         val trigger = StartType.toReadableString(triggerType, channelCode)
 
         // TODO: 考虑是否有必要放在此处
-        if (triggerType == StartType.PIPELINE.name) {
-            checkPipelineCall(buildId = buildId!!, vars = vars) // 通知父流水线状态
-        }
+//        if (triggerType == StartType.PIPELINE.name) {
+//            checkPipelineCall(buildId = buildId!!, vars = vars) // 通知父流水线状态
+//        }
 
         return ExecutionVariables(
             pipelineVersion = pipelineVersion,

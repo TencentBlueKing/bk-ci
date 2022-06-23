@@ -116,6 +116,35 @@ interface ApigwTemplateInstanceResourceV4 {
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet
 
+    @ApiOperation("批量更新流水线模板实例", tags = ["v4_user_templateInstance_update", "v4_app_templateInstance_update"])
+    @PUT
+    @Path("/update")
+    fun updateTemplateInstances(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("模板ID", required = true)
+        @QueryParam("templateId")
+        templateId: String,
+        @ApiParam("版本名", required = true)
+        @QueryParam("versionName")
+        versionName: String,
+        @ApiParam("是否应用模板设置")
+        @QueryParam("useTemplateSettings")
+        useTemplateSettings: Boolean,
+        @ApiParam("模板实例", required = true)
+        instances: List<TemplateInstanceUpdate>
+    ): TemplateOperationRet
+
     @ApiOperation("获取流水线模板的实例列表", tags = ["v4_app_templateInstance_get", "v4_user_templateInstance_get"])
     @GET
     @Path("/")

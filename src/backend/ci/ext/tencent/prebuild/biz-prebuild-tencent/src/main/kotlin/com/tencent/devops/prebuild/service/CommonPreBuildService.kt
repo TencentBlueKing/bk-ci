@@ -5,6 +5,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
 import com.tencent.devops.prebuild.pojo.StartUpReq
+import com.tencent.devops.prebuild.v2.component.PipelineLayout
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
@@ -26,7 +27,7 @@ open class CommonPreBuildService constructor(
     private fun getPipelineByName(userId: String, preProjectId: String): Pipeline? {
         try {
             val pipelineList = client.get(ServicePipelineResource::class)
-                .list(userId, getUserProjectId(userId), 1, 1000).data!!.records
+                    .list(userId, getUserProjectId(userId), 1, 1000).data!!.records
 
             pipelineList.forEach {
                 if (it.pipelineName == preProjectId) {
@@ -72,7 +73,7 @@ open class CommonPreBuildService constructor(
         }
         // push/commit前扫描的文件路径
         if (startUpReq.extraParam!!.incrementFileList != null &&
-            startUpReq.extraParam!!.incrementFileList!!.isNotEmpty()
+                startUpReq.extraParam!!.incrementFileList!!.isNotEmpty()
         ) {
             whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
         }
@@ -96,6 +97,65 @@ open class CommonPreBuildService constructor(
         return whitePath
     }
 
+    protected fun getPipelineId(userId: String, preProjectId: String): String? {
+        return getPipelineByName(userId, preProjectId)?.pipelineId
+    }
+
+    protected fun createEmptyPipeline(
+        userId: String,
+        pipelineName: String
+    ): String {
+        val projectId = getUserProjectId(userId)
+        val emptyModel = PipelineLayout.Builder()
+                .pipelineName(pipelineName)
+                .description("From PreCI YAML 2.0")
+                .creator(userId)
+                .labels(emptyList())
+                .stagesEmpty()
+                .build()
+
+        val pipelineId =
+            client.get(ServicePipelineResource::class).create(userId, projectId, emptyModel, channelCode).data!!.id
+
+        prebuildProjectDao.createOrUpdate(
+            dslContext = dslContext,
+            prebuildProjectId = pipelineName,
+            projectId = projectId,
+            owner = userId,
+            yaml = "",
+            pipelineId = pipelineId,
+            workspace = "",
+            ideVersion = "",
+            pluginVersion = ""
+        )
+
+        return pipelineId
+    }
+
+    protected fun updatePipeline(
+        userId: String,
+        preProjectId: String,
+        startUpReq: StartUpReq,
+        model: Model,
+        pipelineId: String
+    ) {
+        val projectId = getUserProjectId(userId)
+        client.get(ServicePipelineResource::class).edit(userId, projectId, pipelineId, model, channelCode)
+        prebuildProjectDao.createOrUpdate(
+            dslContext = dslContext,
+            prebuildProjectId = preProjectId,
+            projectId = projectId,
+            owner = userId,
+            yaml = startUpReq.yaml.trim(),
+            pipelineId = pipelineId,
+            workspace = startUpReq.workspace,
+            ideVersion = startUpReq.extraParam?.ideVersion,
+            pluginVersion = startUpReq.extraParam?.pluginVersion
+        )
+
+        logger.info("preci projectId: $projectId, pipelineId: $pipelineId")
+    }
+
     protected fun createOrUpdatePipeline(
         userId: String,
         preProjectId: String,
@@ -106,10 +166,10 @@ open class CommonPreBuildService constructor(
         val pipeline = getPipelineByName(userId, preProjectId)
         val pipelineId = if (null == pipeline) {
             client.get(ServicePipelineResource::class)
-                .create(userId, projectId, model, channelCode).data!!.id
+                    .create(userId, projectId, model, channelCode).data!!.id
         } else {
             client.get(ServicePipelineResource::class)
-                .edit(userId, projectId, pipeline.pipelineId, model, channelCode)
+                    .edit(userId, projectId, pipeline.pipelineId, model, channelCode)
             pipeline.pipelineId
         }
 
@@ -125,7 +185,7 @@ open class CommonPreBuildService constructor(
             pluginVersion = startUpReq.extraParam?.pluginVersion
         )
 
-        logger.info("preci pipelineId: $pipelineId")
+        logger.info("preci projectId: $projectId, pipelineId: $pipelineId")
 
         return pipelineId
     }

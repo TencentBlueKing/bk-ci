@@ -34,70 +34,17 @@ export default {
         if (isTrigger) {
             return ['trigger']
         }
-
         return state.atomClassifyCodeList.filter(classifyCode => classifyCode !== 'trigger')
     },
-    getAtomTree: (state, getters) => (os, category, searchKey) => {
-        let atomCodeList = getters.getAtomCodeListByCategory(category)
-        if (searchKey) {
-            const searchStr = searchKey.toLowerCase()
-            atomCodeList = atomCodeList.filter(atomCode => {
-                const atom = state.atomMap[atomCode] || {}
-                const name = (atom.name || '').toLowerCase()
-                const summary = (atom.summary || '').toLowerCase()
-                return name.indexOf(searchStr) > -1 || summary.indexOf(searchStr) > -1
-            })
-        }
-        const classifyCodeList = getters.classifyCodeListByCategory(category)
-        const { atomClassifyMap, atomMap } = state
-        const atomTree = classifyCodeList.reduce((cMap, classifyCode) => {
-            const classify = atomClassifyMap[classifyCode]
-            if (classify) {
-                cMap[classifyCode] = {
-                    classifyCode,
-                    classifyName: classify.classifyName,
-                    level: 0,
-                    children: []
-                }
-            }
-            return cMap
-        }, {
-            all: {
-                classifyCode: 'all',
-                classifyName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.all')) || 'all',
-                level: 0,
-                children: atomCodeList.map(atomCode => {
-                    const atom = atomMap[atomCode]
-                    return {
-                        ...atom,
-                        level: 1,
-                        disabled: getters.isAtomDisabled({ os, atom, category })
-                    }
-                })
-            }
+    getAtomDisabled: (state, getters) => (list, os, category) => {
+        list.forEach(atom => {
+            atom.disabled = getters.isAtomDisabled({ os, atom, category })
         })
-
-        atomCodeList.forEach(atomCode => {
-            const atom = atomMap[atomCode]
-            const parent = atomTree[atom.classifyCode]
-            if (parent && Array.isArray(parent.children)) {
-                parent.children.push({
-                    ...atom,
-                    level: parent.level + 1,
-                    disabled: getters.isAtomDisabled({ os, atom, category })
-                })
-            }
-        })
-
-        Object.keys(atomTree).forEach(classify => { // 按disable排序
-            if (atomTree[classify] && Array.isArray(atomTree[classify].children)) {
-                atomTree[classify].children.sort((a, b) => a.disabled - b.disabled)
-            }
-        })
-
-        return atomTree
+        return list
     },
+    
     isAtomDisabled: state => ({ os, atom, category }) => {
+        if (atom.category === 'TRIGGER') return atom.category !== category
         return (!os && atom.os.length > 0 && category !== 'TRIGGER') || (os && atom.os.length > 0 && !atom.os.includes(os)) || (os && atom.os.length === 0 && !atom.buildLessRunFlag) || false
     },
     getAtomModal: state => ({ atomCode, version }) => {
@@ -311,6 +258,12 @@ export default {
         }
         return container
     },
+    getRealSeqId: state => (stages, stageIndex, containerIndex) => {
+        return stages.slice(0, stageIndex).reduce((acc, stage) => {
+            acc += stage.containers.length
+            return acc
+        }, 0) + containerIndex
+    },
     isDockerBuildResource: state => container => {
         return container && ((container.dispatchType && container.dispatchType.buildType === 'DOCKER') || container.dockerBuildVersion)
     },
@@ -319,6 +272,19 @@ export default {
     },
     isPublicResource: state => container => {
         return container && container.dispatchType && container.dispatchType.buildType === 'ESXi'
+    },
+    isPublicDevCloudContainer: state => container => { // 是否是第三方构建机
+        return container && container.dispatchType && typeof container.dispatchType.buildType === 'string' && container.dispatchType.buildType === 'PUBLIC_DEVCLOUD'
+    },
+    isBcsContainer: state => container => { // 是否是第三方构建机
+        return container && container.dispatchType && typeof container.dispatchType.buildType === 'string' && container.dispatchType.buildType === 'PUBLIC_BCS'
+    },
+    checkShowDebugDockerBtn: (state, getters) => (container, routeName, execDetail) => {
+        const isDocker = getters.isDockerBuildResource(container)
+        const isPublicDevCloud = getters.isPublicDevCloudContainer(container)
+        const isBcsContainer = getters.isBcsContainer(container)
+        const isLatestExecDetail = execDetail && execDetail.buildNum === execDetail.latestBuildNum && execDetail.curVersion === execDetail.latestVersion
+        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer) && (routeName === 'pipelinesEdit' || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
     },
     getElements: state => container => {
         return container && Array.isArray(container.elements)
