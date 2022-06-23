@@ -8,3 +8,10 @@ spring:
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21936
 server:
   port: __BK_CI_AUTH_API_PORT__
+
+login:
+  third:
+    # 第三方登陆重定向页面地址
+    url: __BK_CI_LOGIN_THIRD_CALLBACK_URL__
+    # 第三方登陆重定向cookie作用域
+    domain: __BK_CI_LOGIN_THIRD_COOKIE_DOMAIN__
