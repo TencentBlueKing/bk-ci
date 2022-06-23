@@ -43,7 +43,7 @@ data class AtomFailDetailInfoDO(
     @ApiModelProperty("渠道代码")
     val channelCode: String,
     @ApiModelProperty("域名")
-    var domain: String = "",
+    var domain: String? = null,
     @ApiModelProperty("构建ID")
     val buildId: String,
     @ApiModelProperty("构建序号")
