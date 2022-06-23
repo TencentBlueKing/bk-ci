@@ -98,7 +98,7 @@ object YamlObjects {
             paramName = getNullValue("param-name", datasourceMap),
             hasAddItem = getNullValue("has-add-item", datasourceMap)?.toBoolean(),
             itemText = getNullValue("item-text", datasourceMap),
-            itemTargetUrl = getNullValue("item-target-url", datasourceMap),
+            itemTargetUrl = getNullValue("item-target-url", datasourceMap)
         )
     }
 

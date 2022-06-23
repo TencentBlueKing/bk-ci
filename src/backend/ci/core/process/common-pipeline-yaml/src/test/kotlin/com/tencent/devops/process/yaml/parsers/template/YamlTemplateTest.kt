@@ -144,7 +144,8 @@ class YamlTemplateTest {
                         type = VariablePropType.SELECTOR.value,
                         values = listOf(1, 2, 3),
                         multiple = true,
-                        description = "这是个允许多选的下拉选择字段"
+                        description = "这是个允许多选的下拉选择字段",
+                        required = null
                     )
                 ),
                 "cyc_USERNAME1" to Variable(
@@ -153,10 +154,15 @@ class YamlTemplateTest {
                         label = "我是通过url获取下拉可选值的字段",
                         type = VariablePropType.SELECTOR.value,
                         multiple = null,
+                        required = true,
                         datasource = VariableDatasource(
                             url = "sss",
+                            dataPath = "222",
                             paramId = "",
-                            hasAddItem = true
+                            paramName = "123",
+                            hasAddItem = true,
+                            itemText = "123123",
+                            itemTargetUrl = "777"
                         )
                     )
                 ),

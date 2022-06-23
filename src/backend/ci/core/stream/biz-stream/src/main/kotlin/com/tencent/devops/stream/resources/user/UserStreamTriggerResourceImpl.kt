@@ -247,7 +247,7 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
                             type = FormDataType.STRING,
                             title = value.props?.label ?: name,
                             default = value.value,
-                            required = value.props?.required,
+                            required = value.props?.required
                             // TODO: 需要确认，展示的是什么类型的type
                         )
                     )

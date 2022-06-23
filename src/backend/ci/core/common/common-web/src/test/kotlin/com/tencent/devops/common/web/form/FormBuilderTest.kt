@@ -36,7 +36,6 @@ import com.tencent.devops.common.web.form.data.RadioPropData
 import com.tencent.devops.common.web.form.data.SelectPropData
 import com.tencent.devops.common.web.form.data.TimePropData
 import com.tencent.devops.common.web.form.models.ui.DataSourceItem
-import com.tencent.devops.common.web.form.models.ui.components.RadioComponent
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
