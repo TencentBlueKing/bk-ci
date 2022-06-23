@@ -98,7 +98,10 @@ class AtomStatisticsDao {
         if (!queryCondition.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
             conditions.add(pipelineLabelInfo.LABEL_ID.`in`(queryCondition.baseQueryReq.pipelineLabelIds))
         }
-        conditions.add(this.ATOM_CODE.`in`(atomCodes))
+        if(atomCodes.isNullOrEmpty()) {
+            conditions.add(this.ATOM_CODE.`in`(atomCodes))
+        }
+
         if (startDateTime!!.isEqual(endDateTime)) {
             conditions.add(this.STATISTICS_TIME.eq(startDateTime))
         } else {
