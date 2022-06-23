@@ -182,6 +182,14 @@ object Runner {
                         logger.info("Complete the task (${buildTask.elementName})")
                         // 获取执行结果
                         val buildTaskRst = taskDaemon.getBuildResult()
+                        // 杀掉task对应的进程（配置DEVOPS_DONT_KILL_PROCESS_TREE标识的插件除外）
+                        KillBuildProcessTree.killProcessTree(
+                            projectId = buildVariables.projectId,
+                            buildId = buildTask.buildId,
+                            vmSeqId = buildTask.vmSeqId,
+                            taskIds = setOf(buildTask.taskId!!),
+                            forceFlag = true
+                        )
                         EngineService.completeTask(buildTaskRst)
                         logger.info("Finish completing the task ($buildTask)")
                     } catch (ignore: Throwable) {
