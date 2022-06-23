@@ -64,12 +64,12 @@ class PipelineOverviewDao {
                 DateTimeUtil.stringToLocalDate(startTime)!!.atStartOfDay()
             val endDateTime =
                 DateTimeUtil.stringToLocalDate(endTime)!!.atStartOfDay()
-            val field = sum<Long>(TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_EXECUTE_COUNT_SUM)
+            val field = sum<Long>(TOTAL_EXECUTE_COUNT)
             return dslContext.select(PIPELINE_ID, field).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATISTICS_TIME.between(startDateTime, endDateTime))
                 .groupBy(PIPELINE_ID)
-                .orderBy(field, PIPELINE_ID)
+                .orderBy(field.desc(), PIPELINE_ID)
                 .limit(DEFAULT_LIMIT_NUM)
                 .fetch().map { it.value1() }
         }
