@@ -31,10 +31,12 @@ import com.tencent.devops.common.sdk.github.pojo.Organization
 import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_ORGANIZATION_GITHUB"], description = "服务-github-organization")
@@ -47,7 +49,9 @@ interface ServiceGithubOrganizationResource {
     @POST
     @Path("/listOrganizations")
     fun listOrganizations(
-        request: ListOrganizationsRequest,
-        userId: String
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        request: ListOrganizationsRequest
     ): List<Organization>
 }

@@ -4,10 +4,12 @@ import com.tencent.devops.common.sdk.github.request.GetTreeRequest
 import com.tencent.devops.common.sdk.github.response.GithubTreeResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_DATABASE_GITHUB"], description = "服务-github-database")
@@ -20,7 +22,9 @@ interface ServiceGithubDatabaseResource {
     @POST
     @Path("/getTree")
     fun getTree(
-        request: GetTreeRequest,
-        userId: String
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        request: GetTreeRequest
     ): GithubTreeResponse
 }

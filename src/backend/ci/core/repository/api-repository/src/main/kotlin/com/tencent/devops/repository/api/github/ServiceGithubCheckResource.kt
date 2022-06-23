@@ -5,10 +5,12 @@ import com.tencent.devops.common.sdk.github.request.UpdateCheckRunRequest
 import com.tencent.devops.common.sdk.github.response.CheckRunResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_CHECK_GITHUB"], description = "服务-github-check")
@@ -21,15 +23,19 @@ interface ServiceGithubCheckResource {
     @POST
     @Path("/createCheckRun")
     fun createCheckRun(
-        request: CreateCheckRunRequest,
-        userId: String
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        request: CreateCheckRunRequest
     ): CheckRunResponse
 
     @ApiOperation("更新检查任务")
     @POST
     @Path("/updateCheckRun")
     fun updateCheckRun(
-        request: UpdateCheckRunRequest,
-        userId: String
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        request: UpdateCheckRunRequest
     ): CheckRunResponse
 }

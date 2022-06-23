@@ -5,10 +5,12 @@ import com.tencent.devops.common.sdk.github.request.GHListBranchesRequest
 import com.tencent.devops.common.sdk.github.response.GHBranchResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_BRANCH_GITHUB"], description = "服务-github-branch")
@@ -22,6 +24,8 @@ interface ServiceGithubBranchResource {
     @Path("/listBranch")
     fun listBranch(
         request: GHListBranchesRequest,
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
         userId: String
     ): List<GHBranchResponse>
 
@@ -30,6 +34,8 @@ interface ServiceGithubBranchResource {
     @Path("/getBranch")
     fun getBranch(
         request: GHGetBranchRequest,
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
         userId: String
     ): GHBranchResponse
 }
