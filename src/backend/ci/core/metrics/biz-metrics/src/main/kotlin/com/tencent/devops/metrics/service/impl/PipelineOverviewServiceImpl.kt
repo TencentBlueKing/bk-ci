@@ -27,8 +27,6 @@
 
 package com.tencent.devops.metrics.service.impl
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.constant.Constants.BK_FAIL_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_FAIL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
@@ -37,7 +35,6 @@ import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
-import com.tencent.devops.metrics.constant.Constants.METRICS_PIPELINE_ID_EXPIRED
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.PipelineOverviewDao
 import com.tencent.devops.metrics.pojo.`do`.PipelineSumInfoDO
@@ -54,8 +51,7 @@ import java.time.LocalDateTime
 @Service
 class PipelineOverviewServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineOverviewDao: PipelineOverviewDao,
-    private val redisOperation: RedisOperation
+    private val pipelineOverviewDao: PipelineOverviewDao
 ) : PipelineOverviewManageService {
     override fun queryPipelineSumInfo(queryPipelineOverviewDTO: QueryPipelineOverviewDTO): PipelineSumInfoDO? {
         val result = pipelineOverviewDao.queryPipelineSumInfo(
@@ -83,19 +79,11 @@ class PipelineOverviewServiceImpl @Autowired constructor(
 
     override fun queryPipelineTrendInfo(queryPipelineOverviewDTO: QueryPipelineOverviewDTO): List<PipelineTrendInfoDO> {
         val projectId = queryPipelineOverviewDTO.projectId
-        val baseQueryReq = queryPipelineOverviewDTO.baseQueryReq
-            if (baseQueryReq.pipelineIds.isNullOrEmpty() && baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
-                baseQueryReq.pipelineIds = getDefaultPipelineIds(
-                    projectId = queryPipelineOverviewDTO.projectId,
-                    startTime = baseQueryReq.startTime!!,
-                    endTime = baseQueryReq.endTime!!
-                )
-            } else baseQueryReq.pipelineIds
         val result = pipelineOverviewDao.queryPipelineTrendInfo(
             dslContext,
             QueryPipelineOverviewQO(
                 projectId,
-                baseQueryReq
+                queryPipelineOverviewDTO.baseQueryReq
             )
         )
         val trendInfos = result?.map {
@@ -110,25 +98,5 @@ class PipelineOverviewServiceImpl @Autowired constructor(
             )
         }
         return trendInfos ?: emptyList()
-    }
-
-    fun getDefaultPipelineIds(projectId: String, startTime: String, endTime: String): List<String> {
-        val value = redisOperation.get("MetricsOverviewDefaultPipelineIds:$projectId")
-        if (value.isNullOrEmpty()) {
-            val pipelineIds = pipelineOverviewDao.getPipelineIdByProject(
-                dslContext = dslContext,
-                projectId = projectId,
-                startTime = startTime,
-                endTime = endTime
-            )
-            redisOperation.set(
-                key = "MetricsOverviewDefaultPipelineIds:$projectId",
-                value = JsonUtil.toJson(pipelineIds),
-                expiredInSecond = METRICS_PIPELINE_ID_EXPIRED
-            )
-            return pipelineIds
-        } else {
-            return JsonUtil.to(value)
-        }
     }
 }

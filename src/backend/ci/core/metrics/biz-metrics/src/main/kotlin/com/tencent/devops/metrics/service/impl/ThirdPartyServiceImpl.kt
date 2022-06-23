@@ -89,7 +89,7 @@ class ThirdPartyServiceImpl @Autowired constructor(
                 codeCheckInfo = CodeCheckInfoDO(
                     resolvedDefectNum = result?.get(BK_RESOLVED_DEFECT_NUM, Int::class.java),
                     repoCodeccAvgScore = if (repoCodeccAvgScore == null || totalExecuteCount == 0) null
-                    else repoCodeccAvgScore / totalExecuteCount.toDouble()
+                    else String.format("%.2f", repoCodeccAvgScore / totalExecuteCount.toDouble()).toDouble()
                 ),
                 qualityInfo = QualityInfoDO(
                     qualityInterceptionRate = qualityInterceptionRate,

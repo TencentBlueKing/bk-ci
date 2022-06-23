@@ -37,7 +37,6 @@ import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
-import com.tencent.devops.metrics.constant.Constants.DEFAULT_LIMIT_NUM
 import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
@@ -52,29 +51,6 @@ import java.time.LocalDateTime
 
 @Repository
 class PipelineOverviewDao {
-
-    fun getPipelineIdByProject(
-        dslContext: DSLContext,
-        projectId: String,
-        startTime: String,
-        endTime: String
-    ): List<String> {
-        with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
-            val startDateTime =
-                DateTimeUtil.stringToLocalDate(startTime)!!.atStartOfDay()
-            val endDateTime =
-                DateTimeUtil.stringToLocalDate(endTime)!!.atStartOfDay()
-            val field = sum<Long>(TOTAL_EXECUTE_COUNT)
-            return dslContext.select(PIPELINE_ID, field).from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(STATISTICS_TIME.between(startDateTime, endDateTime))
-                .groupBy(PIPELINE_ID)
-                .orderBy(field.desc(), PIPELINE_ID)
-                .limit(DEFAULT_LIMIT_NUM)
-                .fetch().map { it.value1() }
-        }
-    }
-
     fun queryPipelineSumInfo(
         dslContext: DSLContext,
         queryPipelineOverview: QueryPipelineOverviewQO
