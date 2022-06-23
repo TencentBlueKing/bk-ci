@@ -96,7 +96,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                     atomCodes = emptyList(),
                     keyword = null,
                     page = 1,
-                    pageSize = DEFAULT_PAGE_SIZE
+                    pageSize = 10
                 ).map { it.atomCode }
             }
         // 查询符合查询条件的记录数
