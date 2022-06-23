@@ -30,7 +30,7 @@ package com.tencent.devops.common.sdk.github.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class GithubCommit(
-    val sha: String,
+    val sha: String?,
     val url: String,
     val author: GithubCommitAuthor,
     val committer: GithubCommitAuthor,

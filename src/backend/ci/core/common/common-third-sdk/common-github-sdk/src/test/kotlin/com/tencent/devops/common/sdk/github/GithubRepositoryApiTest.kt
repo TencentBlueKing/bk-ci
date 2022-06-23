@@ -28,6 +28,7 @@
 package com.tencent.devops.common.sdk.github
 
 import com.tencent.devops.common.sdk.github.request.CreateOrUpdateFileContentsRequest
+import com.tencent.devops.common.sdk.github.request.GHGetBranchRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryPermissionsRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
@@ -77,6 +78,21 @@ class GithubRepositoryApiTest {
     @Test
     fun listRepositoriesRequest() {
         val request = ListRepositoriesRequest()
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
+
+
+    @Test
+    fun getBranch() {
+        val request = GHGetBranchRequest(
+            owner = owner,
+            repo = repo,
+            branch = defaultBranch
+        )
         val response = client.execute(
             oauthToken = token,
             request = request
