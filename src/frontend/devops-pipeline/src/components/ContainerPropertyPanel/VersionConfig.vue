@@ -2,9 +2,10 @@
     <div class="build-params-comp">
         <ul v-bkloading="{ isLoading: !buildParams }" v-if="isExecDetail">
             <li :class="{ 'param-item': true, 'diff-param-item': isDefaultDiff(param) }" v-for="param in buildParams" :key="param.key">
-                <vuex-input :disabled="true" name="key" :value="param.key" />
+                <vuex-input class="inner-item" :disabled="true" name="key" :value="param.key" />
                 <span>=</span>
-                <vuex-input :disabled="true" name="value" :value="param.value" />
+                <vuex-textarea class="inner-item" v-if="param.valueType === 'TEXTAREA'" :disabled="true" name="key" :value="param.value"></vuex-textarea>
+                <vuex-input class="inner-item" v-else :disabled="true" name="value" :value="param.value" />
             </li>
         </ul>
         <template v-else>
@@ -45,6 +46,7 @@
     import { deepCopy, getParamsValuesMap } from '@/utils/util'
     import Accordion from '@/components/atomFormField/Accordion'
     import VuexInput from '@/components/atomFormField/VuexInput'
+    import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import validMixins from '../validMixins'
@@ -57,6 +59,7 @@
         components: {
             Accordion,
             VuexInput,
+            VuexTextarea,
             FormField,
             AtomCheckbox,
             PipelineVersionsForm
@@ -366,12 +369,18 @@
         margin-bottom: 10px;
         > span {
             margin: 0 10px;
+            position: absolute;
+            right: 49%;
         }
         &.diff-param-item {
             .bk-form-input[name=value] {
                 color: #4cbd20 !important;
             }
 
+        }
+        .inner-item {
+            width: 49%;
+            right: 0;
         }
     }
 </style>
