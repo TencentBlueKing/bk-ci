@@ -241,6 +241,22 @@ class PipelineTaskService @Autowired constructor(
         )
     }
 
+    fun getTaskStatus(
+        transactionContext: DSLContext? = null,
+        projectId: String,
+        buildId: String,
+        taskId: String
+    ): BuildStatus? {
+        val statusOrdinal = pipelineBuildTaskDao.getTaskStatus(
+            dslContext = transactionContext ?: dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            taskId = taskId
+        ) ?: return null
+
+        return BuildStatus.values()[statusOrdinal.value1()]
+    }
+
     fun updateTaskParamWithElement(projectId: String, buildId: String, taskId: String, newElement: Element) {
         pipelineBuildTaskDao.updateTaskParam(
             dslContext = dslContext,
