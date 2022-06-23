@@ -18,30 +18,11 @@
                         <label class="bk-label">{{ $t('codelib.codelibUrl') }}:</label>
                         <div class="bk-form-content">
                             <bk-select
-                                v-if="isGit"
                                 v-model="codelibUrl"
-                                searchable
-                                :clearable="false"
+                                v-bind="selectComBindData"
                                 v-validate="'required'"
                                 name="name"
                                 class="codelib-credential-selector"
-                                :placeholder="$t('codelib.codelibUrlPlaceholder')"
-                                :remote-method="handleSearchCodeLib"
-                            >
-                                <bk-option v-for="option in oAuth.project"
-                                    :key="option.httpUrl"
-                                    :id="option.httpUrl"
-                                    :name="option.httpUrl">
-                                </bk-option>
-                            </bk-select>
-                            <bk-select v-else
-                                v-model="codelibUrl"
-                                searchable
-                                :clearable="false"
-                                v-validate="'required'"
-                                name="name"
-                                class="codelib-credential-selector"
-                                :placeholder="$t('codelib.codelibUrlPlaceholder')"
                             >
                                 <bk-option v-for="option in oAuth.project"
                                     :key="option.httpUrl"
@@ -184,6 +165,7 @@
                 saving: true,
                 urlErrMsg: '',
                 hasValidate: false,
+                selectComBindData: {},
                 placeholders: {
                     url: {
                         SVN: this.$t('codelib.svnUrlPlaceholder'),
@@ -412,6 +394,17 @@
                 if (!val) {
                     this.setTemplateCodelib()
                 }
+            }
+        },
+
+        created () {
+            this.selectComBindData = {
+                searchable: true,
+                clearable: false,
+                placeholder: this.$t('codelib.codelibUrlPlaceholder')
+            }
+            if (this.isGit) {
+                this.selectComBindData.remoteMethod = this.handleSearchCodeLib
             }
         },
 
