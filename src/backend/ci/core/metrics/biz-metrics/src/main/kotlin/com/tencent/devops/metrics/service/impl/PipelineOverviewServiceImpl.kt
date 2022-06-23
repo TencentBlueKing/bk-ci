@@ -83,19 +83,11 @@ class PipelineOverviewServiceImpl @Autowired constructor(
 
     override fun queryPipelineTrendInfo(queryPipelineOverviewDTO: QueryPipelineOverviewDTO): List<PipelineTrendInfoDO> {
         val projectId = queryPipelineOverviewDTO.projectId
-        val baseQueryReq = queryPipelineOverviewDTO.baseQueryReq
-            if (baseQueryReq.pipelineIds.isNullOrEmpty() && baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
-                baseQueryReq.pipelineIds = getDefaultPipelineIds(
-                    projectId = queryPipelineOverviewDTO.projectId,
-                    startTime = baseQueryReq.startTime!!,
-                    endTime = baseQueryReq.endTime!!
-                )
-            } else baseQueryReq.pipelineIds
         val result = pipelineOverviewDao.queryPipelineTrendInfo(
             dslContext,
             QueryPipelineOverviewQO(
                 projectId,
-                baseQueryReq
+                queryPipelineOverviewDTO.baseQueryReq
             )
         )
         val trendInfos = result?.map {
@@ -110,25 +102,5 @@ class PipelineOverviewServiceImpl @Autowired constructor(
             )
         }
         return trendInfos ?: emptyList()
-    }
-
-    fun getDefaultPipelineIds(projectId: String, startTime: String, endTime: String): List<String> {
-        val value = redisOperation.get("MetricsOverviewDefaultPipelineIds:$projectId")
-        if (value.isNullOrEmpty()) {
-            val pipelineIds = pipelineOverviewDao.getPipelineIdByProject(
-                dslContext = dslContext,
-                projectId = projectId,
-                startTime = startTime,
-                endTime = endTime
-            )
-            redisOperation.set(
-                key = "MetricsOverviewDefaultPipelineIds:$projectId",
-                value = JsonUtil.toJson(pipelineIds),
-                expiredInSecond = METRICS_PIPELINE_ID_EXPIRED
-            )
-            return pipelineIds
-        } else {
-            return JsonUtil.to(value)
-        }
     }
 }
