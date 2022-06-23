@@ -113,7 +113,7 @@ class AtomDisplayConfigDao {
             val step = dslContext.select(ATOM_CODE, ATOM_NAME).from(this)
                 .where(conditions)
                 return step.groupBy(ATOM_CODE)
-                    .orderBy(TOTAL_EXECUTE_COUNT.desc())
+                    .orderBy(SUCCESS_RATE)
                     .limit((page - 1) * pageSize, pageSize)
                     .fetchInto(AtomBaseInfoDO::class.java)
         }
