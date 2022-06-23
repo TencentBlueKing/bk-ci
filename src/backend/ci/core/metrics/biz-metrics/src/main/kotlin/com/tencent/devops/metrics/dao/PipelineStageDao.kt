@@ -29,6 +29,7 @@ package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.JooqUtils
+import com.tencent.devops.common.service.utils.JooqUtils.sum
 import com.tencent.devops.metrics.constant.Constants
 import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_NAME
@@ -59,14 +60,15 @@ class PipelineStageDao {
                 DateTimeUtil.stringToLocalDate(startTime)!!.atStartOfDay()
             val endDateTime =
                 DateTimeUtil.stringToLocalDate(endTime)!!.atStartOfDay()
+            val field = sum<Long>(AVG_COST_TIME).`as`(Constants.BK_TOTAL_EXECUTE_COUNT_SUM)
             return dslContext.select(
                 PIPELINE_ID,
-                JooqUtils.sum<Long>(AVG_COST_TIME).`as`(Constants.BK_TOTAL_EXECUTE_COUNT_SUM)
+                field
             ).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATISTICS_TIME.between(startDateTime, endDateTime))
                 .groupBy(PIPELINE_ID)
-                .orderBy(field(Constants.BK_TOTAL_EXECUTE_COUNT_SUM), PIPELINE_ID)
+                .orderBy(field, PIPELINE_ID)
                 .limit(DEFAULT_LIMIT_NUM)
                 .fetch().map { it.value1() }
         }
