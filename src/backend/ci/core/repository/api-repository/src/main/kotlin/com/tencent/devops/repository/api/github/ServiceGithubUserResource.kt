@@ -25,24 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.response
+package com.tencent.devops.repository.api.github
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.sdk.github.response.GHGetUserResponse
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-data class PullRequestFileResponse(
-    val additions: Int,
-    @JsonProperty("blob_url")
-    val blobUrl: String,
-    val changes: Int,
-    @JsonProperty("contents_url")
-    val contentsUrl: String,
-    val deletions: Int,
-    val filename: String,
-    val patch: String,
-    @JsonProperty("raw_url")
-    val rawUrl: String,
-    val sha: String,
-    val status: String,
-    @JsonProperty("previous_filename")
-    val previousFilename: String?
-)
+@Api(tags = ["SERVICE_USER_GITHUB"], description = "服务-github-user")
+@Path("/service/github/user")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceGithubUserResource {
+
+    @ApiOperation("创建或者更新文件内容")
+    @GET
+    @Path("/getUser")
+    fun getUser(
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+    ): GHGetUserResponse
+
+
+}

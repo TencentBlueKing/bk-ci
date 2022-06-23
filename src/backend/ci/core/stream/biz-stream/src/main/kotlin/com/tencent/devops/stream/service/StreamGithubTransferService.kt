@@ -31,18 +31,20 @@ import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.sdk.github.request.CreateOrUpdateFileContentsRequest
+import com.tencent.devops.common.sdk.github.request.GHListBranchesRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
+import com.tencent.devops.common.sdk.github.request.ListCommitRequest
 import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.github.ServiceGithubBranchResource
+import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
 import com.tencent.devops.repository.api.github.ServiceGithubOrganizationResource
 import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
-import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
-import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCommitInfo
@@ -242,18 +244,17 @@ class StreamGithubTransferService @Autowired constructor(
         page: Int?,
         perPage: Int?
     ): List<StreamCommitInfo>? {
-        // todo 未实现
-        return client.get(ServiceGitResource::class).getCommits(
-            gitProjectId = gitProjectId,
-            filePath = filePath,
-            branch = branch,
-            token = getAndCheckOauthToken(userId).accessToken,
-            since = since,
-            until = until,
-            page = page ?: 1,
-            perPage = perPage ?: 20,
-            tokenType = TokenTypeEnum.OAUTH
-        ).data?.map { StreamCommitInfo(it) }
+        return client.get(ServiceGithubCommitsResource::class).listCommits(
+            request = ListCommitRequest(
+                owner = userId,
+                // todo gitProjectId是 Long ，需要做兼容
+                repo = gitProjectId.toString(),
+                page = page ?: 1,
+                perPage = perPage ?: 30
+            ),
+            userId = userId
+        // todo commit 信息严重不足
+        )?.map { StreamCommitInfo(it) }
     }
 
     override fun createNewFile(
@@ -285,16 +286,15 @@ class StreamGithubTransferService @Autowired constructor(
         orderBy: StreamBranchesOrder?,
         sort: StreamSortAscOrDesc?
     ): List<String>? {
-        // todo 未实现
-
-        return client.get(ServiceGitResource::class).getBranch(
-            accessToken = getAndCheckOauthToken(userId).accessToken,
-            userId = userId,
-            repository = gitProjectId,
-            page = page,
-            pageSize = pageSize,
-            search = search
-        ).data?.map { it.name }
+        return client.get(ServiceGithubBranchResource::class).listBranch(
+            request = GHListBranchesRequest(
+                owner = userId,
+                repo = gitProjectId,
+                page = page ?: 1,
+                perPage = pageSize ?: 30
+            ),
+            userId = userId
+        ).map { it.name }
     }
 
     override fun getProjectGroupsList(

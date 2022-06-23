@@ -27,23 +27,30 @@
 
 package com.tencent.devops.stream.trigger.git.service
 
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.sdk.github.request.GHGetBranchRequest
+import com.tencent.devops.common.sdk.github.request.GetCommitRequest
+import com.tencent.devops.common.sdk.github.request.GetPullRequestRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryPermissionsRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
+import com.tencent.devops.common.sdk.github.request.GetTreeRequest
+import com.tencent.devops.common.sdk.github.request.ListPullRequestFileRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.github.ServiceGithubBranchResource
+import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
+import com.tencent.devops.repository.api.github.ServiceGithubDatabaseResource
+import com.tencent.devops.repository.api.github.ServiceGithubPRResource
 import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
+import com.tencent.devops.repository.api.github.ServiceGithubUserResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
-import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
@@ -103,7 +110,6 @@ class GithubApiService(
         }
     }
 
-    // todo repository还未提供接口
     override fun getGitCommitInfo(
         cred: StreamGitCred,
         gitProjectId: String,
@@ -115,21 +121,22 @@ class GithubApiService(
             log = "$gitProjectId get commit info $sha fail",
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_INFO_ERROR
         ) {
-            client.get(ServiceGitResource::class).getRepoRecentCommitInfo(
-                repoName = gitProjectId,
-                sha = sha,
-                token = cred.toToken(),
-                tokenType = cred.toTokenType()
-            ).data
+            client.get(ServiceGithubCommitsResource::class).getCommit(
+                request = GetCommitRequest(
+                    owner = cred.getUserId(),
+                    repo = gitProjectId,
+                    ref = sha
+                ),
+                userId = cred.getUserId()
+            )
+            // todo 注意信息是否正确
         }?.let { GithubCommitInfo(it) }
     }
 
-    // todo repository还未提供接口
     override fun getUserInfoByToken(cred: StreamGitCred): GithubUserInfo? {
-        return client.get(ServiceGitResource::class).getUserInfoByToken(
-            cred.toToken(),
-            cred.toTokenType()
-        ).data?.let { GithubUserInfo(id = it.id.toString(), username = it.username!!) }
+        return client.get(ServiceGithubUserResource::class).getUser(
+            userId = cred.getUserId()
+        ).let { GithubUserInfo(id = it.id.toString(), username = it.login) }
     }
 
 
@@ -151,7 +158,6 @@ class GithubApiService(
         }
     }
 
-    // todo repository还未提供接口
     override fun getMrInfo(
         cred: StreamGitCred,
         gitProjectId: String,
@@ -163,16 +169,20 @@ class GithubApiService(
             log = "$gitProjectId get mr $mrId info error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_INFO
         ) {
-            client.get(ServiceGitResource::class).getMergeRequestInfo(
-                token = cred.toToken(),
-                tokenType = cred.toTokenType(),
-                repoName = gitProjectId,
-                mrId = mrId.toLong()
-            ).data
+            client.get(ServiceGithubPRResource::class).getPullRequest(
+                userId = cred.getUserId(),
+                request = GetPullRequestRequest(
+                    owner = cred.getUserId(),
+                    repo = gitProjectId,
+                    // todo mrId和 pullNumber注意是否一致
+                    pullNumber = mrId
+                )
+            )
         }?.let {
             GithubMrInfo(
-                mergeStatus = it.mergeStatus,
-                baseCommit = it.baseCommit
+                mergeStatus = it.state,
+                // todo 注意basecommit是否一致
+                baseCommit = it.base.sha
             )
         }
     }
@@ -190,22 +200,25 @@ class GithubApiService(
             log = "$gitProjectId get mr $mrId changeInfo error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_CHANGE_INFO
         ) {
-            client.get(ServiceGitResource::class).getMergeRequestChangeInfo(
-                token = cred.toToken(),
-                tokenType = cred.toTokenType(),
-                repoName = gitProjectId,
-                mrId = mrId.toLong()
-            ).data
+            client.get(ServiceGithubPRResource::class).listPullRequestFiles(
+                userId = cred.getUserId(),
+                request = ListPullRequestFileRequest(
+                    owner = cred.getUserId(),
+                    repo = gitProjectId,
+                    // todo mrId和 pullNumber注意是否一致
+                    pullNumber = mrId
+                )
+            )
         }?.let {
             GithubMrChangeInfo(
-                files = it.files.map { f ->
+                files = it.map { f ->
+                    // todo 注意参数是否正确
                     GithubChangeFileInfo(f)
                 }
             )
         }
     }
 
-    // todo repository还未提供接口
     override fun getFileTree(
         cred: StreamGitCred,
         gitProjectId: String,
@@ -214,20 +227,24 @@ class GithubApiService(
         recursive: Boolean,
         retry: ApiRequestRetryInfo
     ): List<GithubTreeFileInfo> {
+
+
         return doRetryFun(
             retry = retry,
             log = "$gitProjectId get $path file tree error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR
         ) {
-            client.get(ServiceGitResource::class).getGitFileTree(
-                gitProjectId = gitProjectId.toLong(),
-                path = path ?: "",
-                token = cred.toToken(),
-                ref = ref,
-                recursive = recursive,
-                tokenType = cred.toTokenType()
-            ).data ?: emptyList()
-        }.map { GithubTreeFileInfo(it) }
+            client.get(ServiceGithubDatabaseResource::class).getTree(
+                userId = cred.getUserId(),
+                request = GetTreeRequest(
+                    owner = cred.getUserId(),
+                    repo = gitProjectId,
+                    // todo path 和ref组合在一起的tree_sha语法
+                    // /repos/Florence-y/note/git/trees/main:
+                    treeSha = "${ref ?: "master"}:${path ?: ""}"
+                )
+            )
+        }.tree.map { GithubTreeFileInfo(it) }
     }
 
     override fun getFileContent(
@@ -328,22 +345,20 @@ class GithubApiService(
             log = "timer|[$pipelineId] get latestRevision fail",
             apiErrorCode = ErrorCodeEnum.GET_GIT_LATEST_REVISION_ERROR
         ) {
-            client.get(ServiceScmOauthResource::class)
-                .getLatestRevision(
-                    token = GithubCred(userId = enableUserId).toToken(),
-                    projectName = GitUtils.getProjectName(gitUrl),
-                    url = gitUrl,
-                    type = ScmType.CODE_GIT,
-                    branchName = branch,
-                    userName = userName,
-                    region = null,
-                    privateKey = null,
-                    passPhrase = null,
-                    additionalPath = null
-                ).data?.let { GithubRevisionInfo(it) }
+            client.get(ServiceGithubBranchResource::class).getBranch(
+                    request = GHGetBranchRequest(
+                        owner = userName,
+                        repo = projectName,
+                        branch = branch
+                    ),
+                    userId = userName
+            // todo 注意信息是否正确
+                )?.let { GithubRevisionInfo(it) }
         }
     }
 
+
+    // 以下非接口实现
     /**
      * 获取两个commit之间的差异文件
      * @param from 旧commit

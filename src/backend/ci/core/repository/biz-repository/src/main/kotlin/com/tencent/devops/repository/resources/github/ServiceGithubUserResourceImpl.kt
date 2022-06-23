@@ -25,24 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.response
+package com.tencent.devops.repository.resources.github
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.sdk.github.response.GHGetUserResponse
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.github.ServiceGithubUserResource
+import com.tencent.devops.repository.github.service.GithubUserService
+import com.tencent.devops.repository.service.github.GithubTokenService
+import org.springframework.beans.factory.annotation.Autowired
 
-data class PullRequestFileResponse(
-    val additions: Int,
-    @JsonProperty("blob_url")
-    val blobUrl: String,
-    val changes: Int,
-    @JsonProperty("contents_url")
-    val contentsUrl: String,
-    val deletions: Int,
-    val filename: String,
-    val patch: String,
-    @JsonProperty("raw_url")
-    val rawUrl: String,
-    val sha: String,
-    val status: String,
-    @JsonProperty("previous_filename")
-    val previousFilename: String?
-)
+@RestResource
+
+class ServiceGithubUserResourceImpl @Autowired constructor(
+    val githubTokenService: GithubTokenService,
+    val githubUserService: GithubUserService
+) : ServiceGithubUserResource {
+    override fun getUser(userId: String): GHGetUserResponse {
+        return githubUserService.getUser(
+            githubTokenService.getAccessTokenMustExist(userId = userId).accessToken
+        )
+    }
+
+}
