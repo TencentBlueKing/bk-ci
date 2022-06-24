@@ -29,7 +29,8 @@ import (
 )
 
 const (
-	ExitErrorCode = 99
+	ExitErrorCode            = 99
+	DevOPSProcessTreeKillKey = "DEVOPS_DONT_KILL_PROCESS_TREE"
 )
 
 // RunServer run the detached server
@@ -42,6 +43,9 @@ func RunServer(command string) error {
 	)
 	cmd.SysProcAttr = GetSysProcAttr()
 	cmd.Dir = dcUtil.GetRuntimeDir()
+
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", DevOPSProcessTreeKillKey, "true"))
 
 	blog.Infof("syscall: ready to run cmd [%s]", cmd.String())
 

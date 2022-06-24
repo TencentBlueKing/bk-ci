@@ -25,9 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.exception
+package com.tencent.devops.dispatch.utils
 
-/**
- * yaml为空时的异常
- */
-class YamlBlankException(val filePath: String, val ref: String, val repo: String? = null) : RuntimeException()
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+
+class JobQuotaProjectLock(
+    redisOperation: RedisOperation,
+    projectId: String
+) {
+
+    private val redisLock = RedisLock(redisOperation, "DISPATCH_JOB_QUOTA_$projectId", 60L)
+
+    fun tryLock() = redisLock.tryLock()
+
+    fun lock() = redisLock.lock()
+
+    fun unlock() =
+        redisLock.unlock()
+}
