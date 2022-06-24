@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.git.pojo.github
 
+import com.tencent.devops.common.sdk.github.response.PullRequestFileResponse
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitChangeFileInfo
@@ -51,4 +52,13 @@ data class GithubChangeFileInfo(
         renameFile = c.renameFile,
         deletedFile = c.deletedFile
     )
+
+    constructor(c: PullRequestFileResponse) : this(
+        // todo 注意属性是否正确
+        oldPath = c.previousFilename ?: "",
+        newPath = c.filename,
+        renameFile = c.status == "renamed",
+        deletedFile = c.status == "removed"
+    )
+
 }

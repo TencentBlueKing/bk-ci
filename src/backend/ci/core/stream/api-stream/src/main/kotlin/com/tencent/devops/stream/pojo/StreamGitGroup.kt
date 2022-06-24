@@ -29,6 +29,7 @@ package com.tencent.devops.stream.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.sdk.github.pojo.Organization
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import io.swagger.annotations.ApiModel
 
@@ -60,5 +61,18 @@ data class StreamGitGroup(
         fullPath = g.fullPath,
         webUrl = g.webUrl,
         parentId = g.parentId
+    )
+
+    constructor(g: Organization) : this(
+        id = g.id,
+        name = g.name,
+        description = g.description,
+        avatarUrl = g.avatarUrl,
+        // 以下属性暂时都没有 //todo 补充属性或者其他方案
+        path = "",
+        fullName = null,
+        fullPath = null,
+        webUrl = null,
+        parentId = null
     )
 }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.git.pojo.github
 
+import com.tencent.devops.common.sdk.github.response.GHBranchResponse
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamRevisionInfo
 
@@ -41,5 +42,13 @@ data class GithubRevisionInfo(
         updatedMessage = r.updatedMessage,
         branchName = r.branchName,
         authorName = r.authorName
+    )
+
+    constructor(r: GHBranchResponse) : this(
+        // todo 注意参数是否正确
+        revision  = r.commit.sha,
+        updatedMessage = r.commit.message,
+        branchName = r.name,
+        authorName = r.commit.author.name
     )
 }

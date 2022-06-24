@@ -27,12 +27,17 @@
 
 package com.tencent.devops.common.sdk.github
 
-import com.tencent.devops.common.sdk.github.request.GetBranchRequest
-import com.tencent.devops.common.sdk.github.request.ListBranchesRequest
-import org.junit.jupiter.api.Disabled
+import com.tencent.devops.common.sdk.github.request.CreateCheckRunRequest
+import com.tencent.devops.common.sdk.github.request.GHGetBranchRequest
+import com.tencent.devops.common.sdk.github.request.GHListBranchesRequest
+import com.tencent.devops.common.sdk.github.request.GetCommitRequest
+import com.tencent.devops.common.sdk.github.request.GetPullRequestRequest
+import com.tencent.devops.common.sdk.github.request.GetTreeRequest
+import com.tencent.devops.common.sdk.github.request.ListCommitRequest
+import com.tencent.devops.common.sdk.github.request.ListPullRequestFileRequest
+import com.tencent.devops.common.sdk.github.request.UpdateCheckRunRequest
 import org.junit.jupiter.api.Test
 
-@Disabled
 class GithubApiTest {
 
     private val client = DefaultGithubClient(
@@ -40,9 +45,14 @@ class GithubApiTest {
         apiUrl = "https://api.github.com/"
     )
 
+    private val token = "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"
+    private val repo = "Study_Github"
+    private val owner = "liuandhisgithub"
+    private val defaultBranch = "master"
+
     @Test
     fun listBranches() {
-        val request = ListBranchesRequest(
+        val request = GHListBranchesRequest(
             owner = "Tencent",
             repo = "bk-ci"
         )
@@ -55,7 +65,7 @@ class GithubApiTest {
 
     @Test
     fun getBranch() {
-        val request = GetBranchRequest(
+        val request = GHGetBranchRequest(
             owner = "Tencent",
             repo = "bk-ci",
             branch = "master"
@@ -66,4 +76,103 @@ class GithubApiTest {
         )
         println(response)
     }
+
+    @Test
+    fun listCommit(){
+        val request = ListCommitRequest(
+            owner = owner,
+            repo = repo,
+        )
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
+
+    @Test
+    fun getCommit(){
+        val request = GetCommitRequest(
+            owner = owner,
+            repo = repo,
+            ref = "28dc82cd39da037bd836f41ae4b305eb0ef3c775"
+        )
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
+
+    @Test
+    fun getPullRequest(){
+        val request = GetPullRequestRequest(
+            owner = "Florence-y",
+            repo = "bk-ci",
+            pullNumber = "1"
+        )
+        val response = client.execute(
+            oauthToken = "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",
+            request = request
+        )
+        println(response)
+    }
+
+    @Test
+    fun listPullRequestFile(){
+        val request = ListPullRequestFileRequest(
+            owner = "Florence-y",
+            repo = "bk-ci",
+            pullNumber = "1"
+        )
+        val response = client.execute(
+            oauthToken = "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",
+            request = request
+        )
+        println(response)
+    }
+
+    @Test
+    fun getTree(){
+        val request = GetTreeRequest(
+            owner = owner,
+            repo = repo,
+            treeSha = "28dc82cd39da037bd836f41ae4b305eb0ef3c775"
+        )
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
+
+    @Test
+    fun createCheckRun(){
+        val request = CreateCheckRunRequest(
+            owner = owner,
+            repo = repo,
+            name = "code-coverage",
+            headSha = "28dc82cd39da037bd836f41ae4b305eb0ef3c775"
+        )
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
+
+    @Test
+    fun updateCheckRun(){
+        val request = UpdateCheckRunRequest(
+            owner = owner,
+            repo = repo,
+            checkRunId = "xxx"
+        )
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
+
 }

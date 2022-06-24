@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.service.github
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.repository.dao.GithubTokenDao
 import com.tencent.devops.repository.pojo.github.GithubToken
@@ -35,6 +36,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class GithubTokenService @Autowired constructor(
@@ -65,6 +67,12 @@ class GithubTokenService @Autowired constructor(
             githubTokenRecord.tokenType,
             githubTokenRecord.scope
         )
+    }
+
+    @Throws(CustomException::class)
+    fun getAccessTokenMustExist(userId: String): GithubToken {
+        return getAccessToken(userId)
+            ?: throw CustomException(status = Response.Status.NOT_FOUND, message = "$userId githubToken not exist")
     }
 
     companion object {

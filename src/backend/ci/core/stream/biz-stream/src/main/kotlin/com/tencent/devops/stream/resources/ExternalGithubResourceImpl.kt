@@ -23,30 +23,29 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.stream.resources
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.stream.api.ExternalGithubResource
-import com.tencent.devops.stream.api.ExternalScmResource
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.service.StreamLoginService
 import com.tencent.devops.stream.trigger.mq.streamRequest.StreamRequestDispatcher
 import com.tencent.devops.stream.trigger.mq.streamRequest.StreamRequestEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.UriBuilder
 
 @RestResource
 class ExternalGithubResourceImpl @Autowired constructor(
-    private val objectMapper: ObjectMapper,
+    private val streamLoginService: StreamLoginService,
     private val streamGitConfig: StreamGitConfig,
     private val rabbitTemplate: RabbitTemplate
 ) : ExternalGithubResource {
@@ -55,7 +54,7 @@ class ExternalGithubResourceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ExternalGithubResourceImpl::class.java)
     }
 
-    override fun webhookGithubCommit(event: String, guid: String, signature: String, body: String): Result<Boolean> {
+    override fun webhookCommit(event: String, guid: String, signature: String, body: String): Result<Boolean> {
         logger.info("Github webhook [event=$event, guid=$guid, signature=$signature, body=$body]")
         try {
             val removePrefixSignature = signature.removePrefix("sha1=")
@@ -78,5 +77,12 @@ class ExternalGithubResourceImpl @Autowired constructor(
             logger.info("Github webhook exception", t)
         }
         return Result(true)
+    }
+
+    override fun oauthCallback(code: String, state: String?): Response {
+        val redirectUrl = streamLoginService.githubCallback(code, state)
+        logger.info("github oauth callback redirectUrl: $redirectUrl")
+        return Response.temporaryRedirect(UriBuilder.fromUri(redirectUrl).build())
+            .status(Response.Status.TEMPORARY_REDIRECT).build()
     }
 }

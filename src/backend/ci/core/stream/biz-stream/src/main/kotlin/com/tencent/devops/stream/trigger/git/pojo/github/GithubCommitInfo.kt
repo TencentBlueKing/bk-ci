@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.git.pojo.github
 
+import com.tencent.devops.common.sdk.github.response.CommitResponse
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCommitInfo
 
@@ -41,5 +42,99 @@ data class GithubCommitInfo(
         commitDate = c.committed_date,
         commitAuthor = c.author_email,
         commitMsg = c.message
+    )
+
+
+    // "
+    // {
+    //		"sha": "1740cfb3ba6b66d6a1bbb79d320840005135bc57",
+    //		"node_id": "C_kwDOG8kG39oAKDE3NDBjZmIzYmE2YjY2ZDZhMWJiYjc5ZDMyMDg0MDAwNTEzNWJjNTc",
+    //		"commit": {
+    //			"author": {
+    //				"name": "lockiechen",
+    //				"email": "33082528+lockiechen@users.noreply.github.com",
+    //				"date": "2022-06-17T10:22:51Z"
+    //			},
+    //			"committer": {
+    //				"name": "GitHub",
+    //				"email": "noreply@github.com",
+    //				"date": "2022-06-17T10:22:51Z"
+    //			},
+    //			"message": "Merge pull request #7025 from zhanxu33/feature_6457_stream\n\nfeat: 新增Stream YAML服务 #6457",
+    //			"tree": {
+    //				"sha": "117caa25ab7d12c3f404728a043e4a40ae66ffa6",
+    //				"url": "https://api.github.com/repos/Florence-y/bk-ci/git/trees/117caa25ab7d12c3f404728a043e4a40ae66ffa6"
+    //			},
+    //			"url": "https://api.github.com/repos/Florence-y/bk-ci/git/commits/1740cfb3ba6b66d6a1bbb79d320840005135bc57",
+    //			"comment_count": 0,
+    //			"verification": {
+    //				"verified": true,
+    //				"reason": "valid",
+    //				"signature": "-----BEGIN PGP SIGNATURE-----\n\nwsBcBAABCAAQBQJirFX7CRBK7hj4Ov3rIwAAYEUIAG6giLG6mN381iAa6KVw1IDh\nkblB9we4fJ2Ebp7vxsqkYnNFtQDcpxfvW7YsGJjLqk6fbYzhxhx0pdjoubLJlxfy\naL1irLMo36pAqPG/VuG/6KYOTS8klwGaSLYK7DtnccsZI3cxSbMVOff/QHe0bqBX\n0nhyQepcCtEqmdNvYapI9V7nhKrJLIiX9q2M0XxmU7uH5U64MiE7Eh8IuEZF1W2s\nVuix3sR9PnE3myUj7Xa3jkaHWA0Ko27pSBp5naFNQjw8UWSHTlRS7jCknMFWbjNt\nw/wzF822FJbaag4s5GMHO/+8HMkcLneeOu5ENLMnM9SFK+ggV+Ne1Kpd60g4kb0=\n=HkWl\n-----END PGP SIGNATURE-----\n",
+    //				"payload": "tree 117caa25ab7d12c3f404728a043e4a40ae66ffa6\nparent 8b0fecd53ed49f908b2f3c9b5c4be8edd1895916\nparent d10bca04bc9970de4c66f813464b225eb7d4b716\nauthor lockiechen <33082528+lockiechen@users.noreply.github.com> 1655461371 +0800\ncommitter GitHub <noreply@github.com> 1655461371 +0800\n\nMerge pull request #7025 from zhanxu33/feature_6457_stream\n\nfeat: 新增Stream YAML服务 #6457"
+    //			}
+    //		},
+    //		"url": "https://api.github.com/repos/Florence-y/bk-ci/commits/1740cfb3ba6b66d6a1bbb79d320840005135bc57",
+    //		"html_url": "https://github.com/Florence-y/bk-ci/commit/1740cfb3ba6b66d6a1bbb79d320840005135bc57",
+    //		"comments_url": "https://api.github.com/repos/Florence-y/bk-ci/commits/1740cfb3ba6b66d6a1bbb79d320840005135bc57/comments",
+    //		"author": {
+    //			"login": "lockiechen",
+    //			"id": 33082528,
+    //			"node_id": "MDQ6VXNlcjMzMDgyNTI4",
+    //			"avatar_url": "https://avatars.githubusercontent.com/u/33082528?v=4",
+    //			"gravatar_id": "",
+    //			"url": "https://api.github.com/users/lockiechen",
+    //			"html_url": "https://github.com/lockiechen",
+    //			"followers_url": "https://api.github.com/users/lockiechen/followers",
+    //			"following_url": "https://api.github.com/users/lockiechen/following{/other_user}",
+    //			"gists_url": "https://api.github.com/users/lockiechen/gists{/gist_id}",
+    //			"starred_url": "https://api.github.com/users/lockiechen/starred{/owner}{/repo}",
+    //			"subscriptions_url": "https://api.github.com/users/lockiechen/subscriptions",
+    //			"organizations_url": "https://api.github.com/users/lockiechen/orgs",
+    //			"repos_url": "https://api.github.com/users/lockiechen/repos",
+    //			"events_url": "https://api.github.com/users/lockiechen/events{/privacy}",
+    //			"received_events_url": "https://api.github.com/users/lockiechen/received_events",
+    //			"type": "User",
+    //			"site_admin": false
+    //		},
+    //		"committer": {
+    //			"login": "web-flow",
+    //			"id": 19864447,
+    //			"node_id": "MDQ6VXNlcjE5ODY0NDQ3",
+    //			"avatar_url": "https://avatars.githubusercontent.com/u/19864447?v=4",
+    //			"gravatar_id": "",
+    //			"url": "https://api.github.com/users/web-flow",
+    //			"html_url": "https://github.com/web-flow",
+    //			"followers_url": "https://api.github.com/users/web-flow/followers",
+    //			"following_url": "https://api.github.com/users/web-flow/following{/other_user}",
+    //			"gists_url": "https://api.github.com/users/web-flow/gists{/gist_id}",
+    //			"starred_url": "https://api.github.com/users/web-flow/starred{/owner}{/repo}",
+    //			"subscriptions_url": "https://api.github.com/users/web-flow/subscriptions",
+    //			"organizations_url": "https://api.github.com/users/web-flow/orgs",
+    //			"repos_url": "https://api.github.com/users/web-flow/repos",
+    //			"events_url": "https://api.github.com/users/web-flow/events{/privacy}",
+    //			"received_events_url": "https://api.github.com/users/web-flow/received_events",
+    //			"type": "User",
+    //			"site_admin": false
+    //		},
+    //		"parents": [
+    //			{
+    //				"sha": "8b0fecd53ed49f908b2f3c9b5c4be8edd1895916",
+    //				"url": "https://api.github.com/repos/Florence-y/bk-ci/commits/8b0fecd53ed49f908b2f3c9b5c4be8edd1895916",
+    //				"html_url": "https://github.com/Florence-y/bk-ci/commit/8b0fecd53ed49f908b2f3c9b5c4be8edd1895916"
+    //			},
+    //			{
+    //				"sha": "d10bca04bc9970de4c66f813464b225eb7d4b716",
+    //				"url": "https://api.github.com/repos/Florence-y/bk-ci/commits/d10bca04bc9970de4c66f813464b225eb7d4b716",
+    //				"html_url": "https://github.com/Florence-y/bk-ci/commit/d10bca04bc9970de4c66f813464b225eb7d4b716"
+    //			}
+    //		]
+    //	}"
+    constructor(c: CommitResponse) : this(
+        // todo 注意信息是否正确
+        commitId = c.sha,
+        commitDate = c.commit.author.date,
+        commitAuthor = c.commit.author.name,
+        commitMsg = c.commit.message
     )
 }

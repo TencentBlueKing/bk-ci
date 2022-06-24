@@ -25,25 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.request
+package com.tencent.devops.common.sdk.github.response
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.sdk.enums.HttpMethod
-import com.tencent.devops.common.sdk.github.GithubRequest
-import com.tencent.devops.common.sdk.github.response.BranchResponse
 
-data class ListBranchesRequest(
-    @JsonIgnore
-    val owner: String,
-    @JsonIgnore
-    val repo: String,
-    val protected: Boolean? = null,
-    @JsonProperty("per_page")
-    val perPage: Int = 30,
-    val page: Int = 1
-) : GithubRequest<List<BranchResponse>>() {
-    override fun getHttpMethod() = HttpMethod.GET
-
-    override fun getApiPath() = "repos/$owner/$repo/branches"
-}
+data class PullRequestFileResponse(
+    val additions: Int,
+    @JsonProperty("blob_url")
+    val blobUrl: String,
+    val changes: Int,
+    @JsonProperty("contents_url")
+    val contentsUrl: String,
+    val deletions: Int,
+    val filename: String,
+    val patch: String,
+    @JsonProperty("raw_url")
+    val rawUrl: String,
+    val sha: String,
+    val status: String,
+    @JsonProperty("previous_filename")
+    val previousFilename: String?
+)

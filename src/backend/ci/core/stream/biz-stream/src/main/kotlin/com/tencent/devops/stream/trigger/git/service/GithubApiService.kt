@@ -27,43 +27,44 @@
 
 package com.tencent.devops.stream.trigger.git.service
 
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.sdk.github.request.GHGetBranchRequest
+import com.tencent.devops.common.sdk.github.request.GetCommitRequest
+import com.tencent.devops.common.sdk.github.request.GetPullRequestRequest
+import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
+import com.tencent.devops.common.sdk.github.request.GetRepositoryPermissionsRequest
+import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
+import com.tencent.devops.common.sdk.github.request.GetTreeRequest
+import com.tencent.devops.common.sdk.github.request.ListPullRequestFileRequest
+import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.github.ServiceGithubBranchResource
+import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
+import com.tencent.devops.repository.api.github.ServiceGithubDatabaseResource
+import com.tencent.devops.repository.api.github.ServiceGithubPRResource
+import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
+import com.tencent.devops.repository.api.github.ServiceGithubUserResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
-import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
-import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubChangeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubCommitInfo
+import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubFileInfo
+import com.tencent.devops.stream.trigger.git.pojo.github.GithubMrChangeInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubMrInfo
-import com.tencent.devops.stream.trigger.git.pojo.github.GithubPrChangeInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubProjectInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubUserInfo
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitChangeFileInfo
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCommitInfo
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitFileInfo
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitMrChangeInfo
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitMrInfo
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectInfo
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectUserInfo
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitRevisionInfo
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitTreeFileInfo
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitUserInfo
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.util.QualityUtils
 import com.tencent.devops.stream.util.RetryUtils
@@ -100,12 +101,14 @@ class GithubApiService @Autowired constructor(
             log = "$gitProjectId get project $gitProjectId fail",
             apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR
         ) {
-            // TODO: 2022/6/20 github获取项目信息接口 
-            todo client.get(ServiceGitResource::class).getProjectInfo(
-                token = cred.toToken(),
-                tokenType = cred.toTokenType(),
-                gitProjectId = gitProjectId
-            ).data
+            // TODO: 2022/6/20 github获取项目信息接口
+            client.get(ServiceGithubRepositoryResource::class).getRepository(
+                request = GetRepositoryRequest(
+                    owner = cred.getUserId(),
+                    repo = gitProjectId
+                ),
+                userId = cred.getUserId()
+            )
         }?.let {
             GithubProjectInfo(it)
         }
@@ -122,37 +125,43 @@ class GithubApiService @Autowired constructor(
             log = "$gitProjectId get commit info $sha fail",
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_INFO_ERROR
         ) {
-            // TODO: 2022/6/20 github根据hash值、分支名或tag 获取提交信息 
-            todo client.get(ServiceGitResource::class).getRepoRecentCommitInfo(
-                repoName = gitProjectId,
-                sha = sha,
-                token = cred.toToken(),
-                tokenType = cred.toTokenType()
-            ).data
+            // TODO: 2022/6/20 github根据hash值、分支名或tag 获取提交信息
+            client.get(ServiceGithubCommitsResource::class).getCommit(
+                request = GetCommitRequest(
+                    owner = cred.getUserId(),
+                    repo = gitProjectId,
+                    ref = sha
+                ),
+                userId = cred.getUserId()
+            )
+            // todo 注意信息是否正确
         }?.let { GithubCommitInfo(it) }
     }
 
     override fun getUserInfoByToken(cred: StreamGitCred): GithubUserInfo? {
-        // TODO: 2022/6/20 github 根据token 获取用户信息 
-        return todo client.get(ServiceGitResource::class).getUserInfoByToken(
-            cred.toToken(),
-            cred.toTokenType()
-        ).data?.let { GithubUserInfo(id = it.id.toString(), username = it.username!!) }
+        // TODO: 2022/6/20 github 根据token 获取用户信息
+        return client.get(ServiceGithubUserResource::class).getUser(
+            userId = cred.getUserId()
+        ).let { GithubUserInfo(id = it.id.toString(), username = it.login) }
     }
+
 
     override fun getProjectUserInfo(
         cred: StreamGitCred,
         userId: String,
         gitProjectId: String
     ): GithubProjectUserInfo {
-        // TODO: 2022/6/20 github 获取某项目下的用户相关信息 => 主要是获取access level 
-        return todo client.get(ServiceGitResource::class).getProjectUserInfo(
-            token = cred.toToken(),
-            tokenType = cred.toTokenType(),
-            gitProjectId = gitProjectId,
+        // TODO: 2022/6/20 github 获取某项目下的用户相关信息 => 主要是获取access level
+        return client.get(ServiceGithubRepositoryResource::class).getRepositoryPermissions(
+            request = GetRepositoryPermissionsRequest(
+                owner = userId,
+                repo = gitProjectId,
+                username = userId
+            ),
             userId = userId
-        ).data!!.let {
-            GithubProjectUserInfo(it.accessLevel)
+        ).let {
+            // todo 权限如何映射?
+            GithubProjectUserInfo(it)
         }
     }
 
@@ -167,42 +176,52 @@ class GithubApiService @Autowired constructor(
             log = "$gitProjectId get mr $mrId info error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_INFO
         ) {
-            // TODO: 2022/6/20 github 根据prId 获取到pr信息.=> 主要是获取pr状态. 
-            client.get(ServiceGitResource::class).getMergeRequestInfo(
-                token = cred.toToken(),
-                tokenType = cred.toTokenType(),
-                repoName = gitProjectId,
-                mrId = mrId.toLong()
-            ).data
+            // TODO: 2022/6/20 github 根据prId 获取到pr信息.=> 主要是获取pr状态.
+            client.get(ServiceGithubPRResource::class).getPullRequest(
+                userId = cred.getUserId(),
+                request = GetPullRequestRequest(
+                    owner = cred.getUserId(),
+                    repo = gitProjectId,
+                    // todo mrId和 pullNumber注意是否一致
+                    pullNumber = mrId
+                )
+            )
         }?.let {
             GithubMrInfo(
-                mergeStatus = it.mergeStatus,
-                baseCommit = it.baseCommit
+                mergeStatus = it.state,
+                // todo 注意basecommit是否一致
+                baseCommit = it.base.sha
             )
         }
     }
 
+
+    // todo repository还未提供接口
     override fun getMrChangeInfo(
         cred: StreamGitCred,
         gitProjectId: String,
         mrId: String,
         retry: ApiRequestRetryInfo
-    ): GithubPrChangeInfo? {
+    ): GithubMrChangeInfo? {
         return doRetryFun(
             retry = retry,
             log = "$gitProjectId get mr $mrId changeInfo error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_CHANGE_INFO
         ) {
-            // TODO: 2022/6/20 github 获得对应prid 的变更文件列表 主要获取4个字段 => oldPath newPath 是否renameFile 是否deletedFile 
-            todo client.get(ServiceGitResource::class).getMergeRequestChangeInfo(
-                token = cred.toToken(),
-                tokenType = cred.toTokenType(),
-                repoName = gitProjectId,
-                mrId = mrId.toLong()
-            ).data
+            // TODO: 2022/6/20 github 获得对应prid 的变更文件列表 主要获取4个字段 => oldPath newPath 是否renameFile 是否deletedFile
+            client.get(ServiceGithubPRResource::class).listPullRequestFiles(
+                userId = cred.getUserId(),
+                request = ListPullRequestFileRequest(
+                    owner = cred.getUserId(),
+                    repo = gitProjectId,
+                    // todo mrId和 pullNumber注意是否一致
+                    pullNumber = mrId
+                )
+            )
         }?.let {
-            GithubPrChangeInfo(
-                files = it.files.map { f ->
+            GithubMrChangeInfo(
+                files = it.map { f ->
+                    // todo 注意参数是否正确
                     GithubChangeFileInfo(f)
                 }
             )
@@ -217,21 +236,25 @@ class GithubApiService @Autowired constructor(
         recursive: Boolean,
         retry: ApiRequestRetryInfo
     ): List<GithubTreeFileInfo> {
+
+
         return doRetryFun(
             retry = retry,
             log = "$gitProjectId get $path file tree error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR
         ) {
             // TODO: 2022/6/20 github 通过路径和分支去获取对应目录的文件列表 主要需要2字段 => 文件名 文件类型
-            todo client.get(ServiceGitResource::class).getGitFileTree(
-                gitProjectId = gitProjectId.toLong(),
-                path = path ?: "",
-                token = cred.toToken(),
-                ref = ref,
-                recursive = recursive,
-                tokenType = cred.toTokenType()
-            ).data ?: emptyList()
-        }.map { GithubTreeFileInfo(it) }
+            client.get(ServiceGithubDatabaseResource::class).getTree(
+                userId = cred.getUserId(),
+                request = GetTreeRequest(
+                    owner = cred.getUserId(),
+                    repo = gitProjectId,
+                    // todo path 和ref组合在一起的tree_sha语法
+                    // /repos/Florence-y/note/git/trees/main:
+                    treeSha = "${ref ?: "master"}:${path ?: ""}"
+                )
+            )
+        }.tree.map { GithubTreeFileInfo(it) }
     }
 
     override fun getFileContent(
@@ -241,24 +264,22 @@ class GithubApiService @Autowired constructor(
         ref: String,
         retry: ApiRequestRetryInfo
     ): String {
-        cred as TGitCred
+        cred as GithubCred
         return doRetryFun(
             retry = retry,
             log = "$gitProjectId get yaml $fileName from $ref fail",
             apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR
         ) {
             // TODO: 2022/6/20 根据文件路径和分支名获取文件内容 => 得到文件内容
-            todo client.get(ServiceGitResource::class).getGitFileContent(
-                token = cred.toToken(),
-                authType = if (cred.useAccessToken) {
-                    RepoAuthType.OAUTH
-                } else {
-                    RepoAuthType.SSH
-                },
-                repoName = gitProjectId,
-                ref = getTriggerBranch(ref),
-                filePath = fileName
-            ).data!!
+            client.get(ServiceGithubRepositoryResource::class).getRepositoryContent(
+                request = GetRepositoryContentRequest(
+                    owner = cred.getUserId(),
+                    repo = gitProjectId,
+                    path = fileName,
+                    ref = ref
+                ),
+                userId = cred.getUserId()
+            ).content ?: ""
         }
     }
 
@@ -277,20 +298,23 @@ class GithubApiService @Autowired constructor(
         ref: String?,
         retry: ApiRequestRetryInfo
     ): GithubFileInfo? {
+
         return doRetryFun(
             retry = retry,
             log = "getFileInfo: [$gitProjectId|$fileName][$ref] error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR
         ) {
             // TODO: 2022/6/20 github 得到 => 文件内容(base64) blobId
-            todo client.get(ServiceGitResource::class).getGitFileInfo(
-                gitProjectId = gitProjectId,
-                filePath = fileName,
-                token = cred.toToken(),
-                ref = ref,
-                tokenType = cred.toTokenType()
-            ).data
-        }?.let { GithubFileInfo(content = it.content, blobId = it.blobId) }
+            client.get(ServiceGithubRepositoryResource::class).getRepositoryContent(
+                request = GetRepositoryContentRequest(
+                    owner = cred.getUserId(),
+                    repo = gitProjectId,
+                    path = fileName,
+                    ref = ref ?: "master"
+                ),
+                userId = cred.getUserId()
+            )
+        }.let { GithubFileInfo(content = it.content ?: "", blobId = it.sha) }
     }
 
     override fun getProjectList(
@@ -299,27 +323,22 @@ class GithubApiService @Autowired constructor(
         minAccessLevel: GitAccessLevelEnum?
     ): List<GithubProjectInfo>? {
         // TODO: 2022/6/20 获取用户(token)对应的项目列表
-        return todo client.get(ServiceGitResource::class).getGitCodeProjectList(
-            accessToken = cred.toToken(),
-            page = null,
-            pageSize = null,
-            search = search,
-            orderBy = null,
-            sort = null,
-            owned = null,
-            minAccessLevel = minAccessLevel
-        ).data?.map {
+        // todo search、minAccessLevel参数现在不可用
+        return client.get(ServiceGithubRepositoryResource::class).listRepositories(
+            request = ListRepositoriesRequest(),
+            userId = cred.getUserId()
+        ).map {
             GithubProjectInfo(
-                gitProjectId = it.id.toString(),
+                gitProjectId = it.gitProjectId.toString(),
                 defaultBranch = it.defaultBranch,
-                gitHttpUrl = it.httpUrlToRepo ?: "",
+                gitHttpUrl = it.gitHttpUrl ?: "",
                 name = it.name ?: "",
-                gitSshUrl = it.sshUrlToRepo,
-                homepage = it.webUrl,
-                gitHttpsUrl = it.httpsUrlToRepo,
+                gitSshUrl = it.gitSshUrl,
+                homepage = it.homepage,
+                gitHttpsUrl = it.gitHttpUrl,
                 description = it.description,
                 avatarUrl = it.avatarUrl,
-                pathWithNamespace = it.pathWithNamespace,
+                pathWithNamespace = it.nameWithNamespace,
                 nameWithNamespace = it.nameWithNamespace ?: ""
             )
         }
@@ -340,22 +359,20 @@ class GithubApiService @Autowired constructor(
             apiErrorCode = ErrorCodeEnum.GET_GIT_LATEST_REVISION_ERROR
         ) {
             // TODO: 2022/6/20  getLatestRevision并没有对github的实现
-            client.get(ServiceScmOauthResource::class)
-                .getLatestRevision(
-                    token = TGitCred(userId = enableUserId).toToken(),
-                    projectName = GitUtils.getProjectName(gitUrl),
-                    url = gitUrl,
-                    type = ScmType.CODE_GIT,
-                    branchName = branch,
-                    userName = userName,
-                    region = null,
-                    privateKey = null,
-                    passPhrase = null,
-                    additionalPath = null
-                ).data?.let { GithubRevisionInfo(it) }
+            client.get(ServiceGithubBranchResource::class).getBranch(
+                    request = GHGetBranchRequest(
+                        owner = userName,
+                        repo = projectName,
+                        branch = branch
+                    ),
+                    userId = userName
+            // todo 注意信息是否正确
+                )?.let { GithubRevisionInfo(it) }
         }
     }
 
+
+    // 以下非StreamGitApiService接口实现
     /**
      * 获取两个commit之间的差异文件
      * @param from 旧commit
@@ -363,7 +380,7 @@ class GithubApiService @Autowired constructor(
      * @param straight true：两个点比较差异，false：三个点比较差异。默认是 false
      */
     fun getCommitChangeList(
-        cred: TGitCred,
+        cred: GithubCred,
         gitProjectId: String,
         from: String,
         to: String,
@@ -377,7 +394,7 @@ class GithubApiService @Autowired constructor(
             log = "getCommitChangeFileListRetry from: $from to: $to error",
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR
         ) {
-            // TODO: 2022/6/20 获取两个commit之间的差异文件 
+            // TODO: 2022/6/20 获取两个commit之间的差异文件
             client.get(ServiceGitResource::class).getChangeFileList(
                 cred.toToken(),
                 cred.toTokenType(),
@@ -395,7 +412,7 @@ class GithubApiService @Autowired constructor(
      * 为mr添加评论
      */
     fun addMrComment(
-        cred: TGitCred,
+        cred: GithubCred,
         gitProjectId: String,
         mrId: Long,
         mrBody: MrCommentBody
@@ -412,7 +429,7 @@ class GithubApiService @Autowired constructor(
     }
 
     protected fun StreamGitCred.toToken(): String {
-        this as TGitCred
+        this as GithubCred
         if (this.accessToken != null) {
             return this.accessToken
         }
@@ -424,11 +441,23 @@ class GithubApiService @Autowired constructor(
     }
 
     protected fun StreamGitCred.toTokenType(): TokenTypeEnum {
-        this as TGitCred
+        this as GithubCred
         return if (this.useAccessToken) {
             TokenTypeEnum.OAUTH
         } else {
             TokenTypeEnum.PRIVATE_KEY
+        }
+    }
+
+    protected fun StreamGitCred.getUserId(): String {
+        this as GithubCred
+        return if (!this.userId.isNullOrBlank()) {
+            userId
+        } else {
+            throw CustomException(
+                Response.Status.FORBIDDEN,
+                "STEAM PROJECT ENABLE USER NO OAUTH PERMISSION"
+            )
         }
     }
 

@@ -25,17 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.response
+package com.tencent.devops.common.sdk.github.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.sdk.github.pojo.BranchCommit
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class BranchResponse(
+data class Committer(
     val name: String,
-    val commit: BranchCommit,
-    val protected: Boolean,
-    @JsonProperty("protection_url")
-    val protectionUrl: String?
+    val email: String,
+    val date: String? = null
 )

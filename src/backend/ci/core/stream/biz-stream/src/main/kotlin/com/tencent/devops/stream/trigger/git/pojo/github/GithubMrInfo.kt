@@ -34,7 +34,7 @@ data class GithubMrInfo(
     val baseCommit: String?
 ) : StreamGitMrInfo
 
-enum class GithubMrStatus(val value: String) {
+enum class GitHubMrStatus(val value: String) {
     MERGE_STATUS_UNCHECKED("unchecked"),
     MERGE_STATUS_CAN_BE_MERGED("can_be_merged"),
     MERGE_STATUS_CAN_NOT_BE_MERGED("cannot_be_merged")

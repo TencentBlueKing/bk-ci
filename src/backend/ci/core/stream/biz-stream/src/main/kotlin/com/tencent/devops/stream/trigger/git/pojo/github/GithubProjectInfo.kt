@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.git.pojo.github
 
+import com.tencent.devops.common.sdk.github.pojo.Repository
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
 
@@ -55,5 +56,19 @@ data class GithubProjectInfo(
         avatarUrl = g.avatarUrl,
         pathWithNamespace = g.pathWithNamespace,
         nameWithNamespace = g.namespaceName
+    )
+
+    constructor(g: Repository) : this(
+        gitProjectId = g.gitProjectId.toString(),
+        defaultBranch = g.defaultBranch,
+        gitHttpUrl = g.gitHttpUrl,
+        name = g.name,
+        gitSshUrl = g.gitSshUrl,
+        homepage = g.homepage,
+        gitHttpsUrl = g.gitHttpUrl,
+        description = g.description,
+        avatarUrl = g.avatarUrl,
+        pathWithNamespace = g.nameWithNamespace,
+        nameWithNamespace = g.nameWithNamespace
     )
 }

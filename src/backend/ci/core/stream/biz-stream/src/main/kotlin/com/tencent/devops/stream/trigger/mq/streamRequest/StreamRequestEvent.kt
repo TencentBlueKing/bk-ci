@@ -37,5 +37,6 @@ data class StreamRequestEvent(
     val event: String,
     val webHookType: String,
     val eventType: String? = null,
+    val webHookType: String? = null,
     val traceId: String? = MDC.get(TraceTag.BIZID)
 )
