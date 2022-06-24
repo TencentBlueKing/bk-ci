@@ -53,11 +53,11 @@ object QueryParamCheckUtil {
 
     val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     fun getStartDateTime(): String {
-        val startDateTime = LocalDate.now().minusDays(1).minusMonths(1)
+        val startDateTime = LocalDate.now().minusDays(minimumQueryDays).minusMonths(1)
         return startDateTime.format(DATE_FORMATTER)
     }
     fun getEndDateTime(): String {
-        val endDateTime = LocalDate.now()
+        val endDateTime = LocalDate.now().minusDays(minimumQueryDays)
         return endDateTime.format(DATE_FORMATTER)
     }
 
@@ -87,7 +87,7 @@ object QueryParamCheckUtil {
     fun checkDateInterval(startTime: String, endTime: String) {
         val startDate = DateTimeUtil.stringToLocalDate(startTime)
         val endDate = DateTimeUtil.stringToLocalDate(endTime)
-        val firstDate = LocalDate.now().minusDays(1)
+        val firstDate = LocalDate.now().minusDays(minimumQueryDays)
         val secondDate = firstDate.minusMonths(maximumQueryMonths)
         if (startDate!!.isBefore(secondDate)) {
             throw ErrorCodeException(
