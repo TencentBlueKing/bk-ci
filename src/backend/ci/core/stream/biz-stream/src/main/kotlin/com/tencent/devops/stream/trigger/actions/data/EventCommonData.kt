@@ -42,7 +42,7 @@ import com.tencent.devops.common.api.enums.ScmType
  */
 data class EventCommonData(
     val gitProjectId: String,
-    val scmType: ScmType,
+    val scmType: ScmType?,
     val branch: String,
     val commit: EventCommonDataCommit,
     val userId: String,

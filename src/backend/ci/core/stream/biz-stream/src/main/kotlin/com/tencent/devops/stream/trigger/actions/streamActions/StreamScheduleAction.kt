@@ -86,7 +86,8 @@ class StreamScheduleAction(
                 commitTimeStamp = GitActionCommon.getCommitTimeStamp(null),
                 commitAuthorName = event.commitAuthor
             ),
-            gitProjectName = null
+            gitProjectName = null,
+            scmType = null
         )
         return this
     }

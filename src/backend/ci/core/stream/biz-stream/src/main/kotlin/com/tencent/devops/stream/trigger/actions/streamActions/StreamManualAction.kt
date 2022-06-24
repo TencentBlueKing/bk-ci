@@ -94,7 +94,8 @@ class StreamManualAction(
                 commitTimeStamp = GitActionCommon.getCommitTimeStamp(null),
                 commitAuthorName = event.userId
             ),
-            gitProjectName = null
+            gitProjectName = null,
+            scmType = null
         )
         return this
     }

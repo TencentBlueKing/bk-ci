@@ -109,7 +109,7 @@ class GithubApiService @Autowired constructor(
                 ),
                 userId = cred.getUserId()
             )
-        }?.let {
+        }.let {
             GithubProjectInfo(it)
         }
     }
@@ -135,7 +135,7 @@ class GithubApiService @Autowired constructor(
                 userId = cred.getUserId()
             )
             // todo 注意信息是否正确
-        }?.let { GithubCommitInfo(it) }
+        }.let { GithubCommitInfo(it) }
     }
 
     override fun getUserInfoByToken(cred: StreamGitCred): GithubUserInfo? {

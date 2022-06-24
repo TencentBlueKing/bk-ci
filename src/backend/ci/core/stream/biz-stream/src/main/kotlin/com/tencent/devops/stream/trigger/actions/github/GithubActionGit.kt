@@ -34,6 +34,7 @@ import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
+import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
@@ -73,15 +74,15 @@ abstract class GithubActionGit(
         )?.gitHttpUrl?.let { gitHttpUrl -> GitUtils.getProjectName(gitHttpUrl) }
     } ?: data.eventCommon.gitProjectName!!
 
-    override fun getGitCred(personToken: String?): TGitCred {
+    override fun getGitCred(personToken: String?): GithubCred {
         if (personToken != null) {
-            return TGitCred(
+            return GithubCred(
                 userId = null,
                 accessToken = personToken,
                 useAccessToken = false
             )
         }
-        return TGitCred(data.setting.enableUser)
+        return GithubCred(data.setting.enableUser)
     }
 
     override fun getChangeSet(): Set<String>? = null

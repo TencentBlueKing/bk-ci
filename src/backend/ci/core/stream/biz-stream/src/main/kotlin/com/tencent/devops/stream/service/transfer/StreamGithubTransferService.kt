@@ -25,25 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.service.transfer
+package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.sdk.github.request.CreateOrUpdateFileContentsRequest
+import com.tencent.devops.common.sdk.github.request.GHListBranchesRequest
+import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
+import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
+import com.tencent.devops.common.sdk.github.request.ListCommitRequest
+import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
+import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
+import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
 import com.tencent.devops.repository.api.ServiceOauthResource
-import com.tencent.devops.repository.api.scm.ServiceGitResource
+import com.tencent.devops.repository.api.github.ServiceGithubBranchResource
+import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
+import com.tencent.devops.repository.api.github.ServiceGithubOrganizationResource
+import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.pojo.enums.GitCodeFileEncoding
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
-import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.repository.pojo.git.GitCreateFile
-import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
-import com.tencent.devops.stream.pojo.StreamFileEncoding
 import com.tencent.devops.stream.pojo.StreamGitGroup
 import com.tencent.devops.stream.pojo.StreamGitMember
 import com.tencent.devops.stream.pojo.StreamGitProjectBaseInfoCache
@@ -52,11 +57,7 @@ import com.tencent.devops.stream.pojo.StreamProjectGitInfo
 import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
 import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
-import com.tencent.devops.stream.pojo.enums.toGitCodeAscOrDesc
-import com.tencent.devops.stream.pojo.enums.toGitCodeOrderBy
-import com.tencent.devops.stream.service.StreamGitTransferService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
@@ -67,69 +68,56 @@ class StreamGithubTransferService @Autowired constructor(
     private val client: Client,
     private val streamBasicSettingDao: StreamBasicSettingDao
 ) : StreamGitTransferService {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(StreamGithubTransferService::class.java)
-    }
-
-    fun getAndCheckOauthToken(
-        userId: String
-    ): GitToken {
-        return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw OauthForbiddenException(
-            message = "用户[$userId]尚未进行OAUTH授权，请先授权。"
-        )
-    }
-
+    // gitProjectId在github中必须为项目名字
     override fun getGitProjectCache(
         gitProjectId: String,
         useAccessToken: Boolean,
         userId: String?,
         accessToken: String?
     ): StreamGitProjectBaseInfoCache {
-        return todo client.get(ServiceGitResource::class).getProjectInfo(
-            token = accessToken ?: getAndCheckOauthToken(userId!!).accessToken,
-            tokenType = if (useAccessToken) {
-                TokenTypeEnum.OAUTH
-            } else {
-                TokenTypeEnum.PRIVATE_KEY
-            },
-            gitProjectId = gitProjectId
-        ).data?.let {
-            StreamGitProjectBaseInfoCache(
-                gitProjectId = it.id.toString(),
-                gitHttpUrl = it.repositoryUrl,
-                homepage = it.homepage,
-                pathWithNamespace = it.pathWithNamespace,
-                defaultBranch = it.defaultBranch
-            )
+        return userId?.let {
+            client.get(ServiceGithubRepositoryResource::class).getRepository(
+                request = GetRepositoryRequest(
+                    owner = userId,
+                    repo = gitProjectId
+                ),
+                userId = it
+            ).let {
+                StreamGitProjectBaseInfoCache(
+                    gitProjectId = it.gitProjectId.toString(),
+                    gitHttpUrl = it.gitHttpUrl,
+                    homepage = it.homepage,
+                    pathWithNamespace = it.nameWithNamespace,
+                    defaultBranch = it.defaultBranch
+                )
+            }
         } ?: throw OauthForbiddenException(
             message = "get git project($gitProjectId) info error|useAccessToken=$useAccessToken"
         )
     }
 
-    override fun getGitProjectInfo(
-        gitProjectId: String,
-        userId: String?
-    ): StreamGitProjectInfoWithProject? {
+    override fun getGitProjectInfo(gitProjectId: String, userId: String?): StreamGitProjectInfoWithProject? {
         val realUserId = userId ?: try {
             streamBasicSettingDao.getSetting(dslContext, gitProjectId.toLong())?.enableUserId ?: return null
         } catch (e: NumberFormatException) {
             streamBasicSettingDao.getSettingByPathWithNameSpace(dslContext, gitProjectId)?.enableUserId ?: return null
         }
-        return todo client.get(ServiceGitResource::class).getProjectInfo(
-            token = getAndCheckOauthToken(realUserId).accessToken,
-            tokenType = TokenTypeEnum.OAUTH,
-            gitProjectId = gitProjectId
-        ).data!!.let {
+        return client.get(ServiceGithubRepositoryResource::class).getRepository(
+            request = GetRepositoryRequest(
+                owner = realUserId,
+                repo = gitProjectId
+            ),
+            userId = realUserId
+        ).let {
             StreamGitProjectInfoWithProject(
-                gitProjectId = it.id.toLong(),
+                gitProjectId = it.gitProjectId,
                 name = it.name,
                 homepage = it.homepage,
-                gitHttpUrl = it.repositoryUrl.replace("https", "http"),
-                gitHttpsUrl = it.gitHttpsUrl,
+                gitHttpUrl = it.gitHttpUrl.replace("https", "http"),
+                gitHttpsUrl = it.gitHttpUrl,
                 gitSshUrl = it.gitSshUrl,
-                nameWithNamespace = it.namespaceName,
-                pathWithNamespace = it.pathWithNamespace,
+                nameWithNamespace = it.nameWithNamespace,
+                pathWithNamespace = it.nameWithNamespace,
                 defaultBranch = it.defaultBranch,
                 description = it.description,
                 avatarUrl = it.avatarUrl,
@@ -144,13 +132,15 @@ class StreamGithubTransferService @Autowired constructor(
         fileName: String,
         ref: String
     ): String {
-        return todo client.get(ServiceGitResource::class).getGitFileContent(
-            repoName = gitProjectId,
-            filePath = fileName,
-            authType = RepoAuthType.OAUTH,
-            token = getAndCheckOauthToken(userId).accessToken,
-            ref = ref
-        ).data!!
+        return client.get(ServiceGithubRepositoryResource::class).getRepositoryContent(
+            request = GetRepositoryContentRequest(
+                owner = userId,
+                repo = gitProjectId,
+                path = fileName,
+                ref = ref
+            ),
+            userId = userId
+        ).content ?: ""
     }
 
     override fun getProjectList(
@@ -163,16 +153,30 @@ class StreamGithubTransferService @Autowired constructor(
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
     ): List<StreamProjectGitInfo>? {
-        return todo client.get(ServiceGitResource::class).getGitCodeProjectList(
-            accessToken = getAndCheckOauthToken(userId).accessToken,
-            page = page,
-            pageSize = pageSize,
-            search = search,
-            orderBy = orderBy.toGitCodeOrderBy(),
-            sort = sort.toGitCodeAscOrDesc(),
-            owned = owned,
-            minAccessLevel = minAccessLevel
-        ).data?.map { StreamProjectGitInfo(it) }
+        // search  owned  minAccessLevel 参数暂时没使用
+        return client.get(ServiceGithubRepositoryResource::class).listRepositories(
+            request = genListRepositoriesRequest(
+                page = page,
+                pageSize = pageSize,
+                orderBy = orderBy,
+                sort = sort
+            ),
+            userId = userId
+        ).map { StreamProjectGitInfo(it) }
+    }
+
+    private fun genListRepositoriesRequest(
+        page: Int?,
+        pageSize: Int?,
+        orderBy: StreamProjectsOrder?,
+        sort: StreamSortAscOrDesc?
+    ): ListRepositoriesRequest {
+        val request = ListRepositoriesRequest()
+        request.page = page ?: request.page
+        request.perPage = pageSize ?: request.perPage
+        request.sort = orderBy?.value ?: request.sort
+        request.direction = sort?.value ?: request.direction
+        return request
     }
 
     override fun getProjectMember(
@@ -182,20 +186,34 @@ class StreamGithubTransferService @Autowired constructor(
         pageSize: Int?,
         search: String?
     ): List<StreamGitMember> {
-        return todo client.get(ServiceGitResource::class).getMembers(
-            token = getAndCheckOauthToken(userId).accessToken,
-            gitProjectId = gitProjectId,
-            page = page ?: 1,
-            pageSize = pageSize ?: 20,
-            search = search,
-            tokenType = TokenTypeEnum.OAUTH
-        ).data?.map {
+        return client.get(ServiceGithubRepositoryResource::class).listRepositoryCollaborators(
+            request = genListRepositoryCollaboratorsRequest(
+                gitProjectId,
+                userId,
+                page,
+                pageSize
+            ),
+            userId = userId
+        ).map {
+            // state 属性无
             StreamGitMember(
                 id = it.id,
                 username = it.username,
-                state = it.state
+                state = ""
             )
-        } ?: emptyList()
+        }
+    }
+
+    private fun genListRepositoryCollaboratorsRequest(
+        gitProjectId: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?
+    ): ListRepositoryCollaboratorsRequest {
+        val request = ListRepositoryCollaboratorsRequest(owner = userId, repo = gitProjectId)
+        request.page = page ?: request.page
+        request.perPage = pageSize ?: request.perPage
+        return request
     }
 
     override fun isOAuth(
@@ -205,7 +223,7 @@ class StreamGithubTransferService @Autowired constructor(
         gitProjectId: Long?,
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
-        todo
+        // todo 未实现
         return client.get(ServiceOauthResource::class).isOAuth(
             userId = userId,
             redirectUrlType = redirectUrlType,
@@ -225,36 +243,37 @@ class StreamGithubTransferService @Autowired constructor(
         page: Int?,
         perPage: Int?
     ): List<StreamCommitInfo>? {
-        todo
-        return client.get(ServiceGitResource::class).getCommits(
-            gitProjectId = gitProjectId,
-            filePath = filePath,
-            branch = branch,
-            token = getAndCheckOauthToken(userId).accessToken,
-            since = since,
-            until = until,
-            page = page ?: 1,
-            perPage = perPage ?: 20,
-            tokenType = TokenTypeEnum.OAUTH
-        ).data?.map { StreamCommitInfo(it) }
+        return client.get(ServiceGithubCommitsResource::class).listCommits(
+            request = ListCommitRequest(
+                owner = userId,
+                // todo gitProjectId是 Long ，需要做兼容
+                repo = gitProjectId.toString(),
+                page = page ?: 1,
+                perPage = perPage ?: 30
+            ),
+            userId = userId
+        // todo commit 信息严重不足
+        )?.map { StreamCommitInfo(it) }
     }
 
-    override fun createNewFile(userId: String, gitProjectId: String, streamCreateFile: StreamCreateFileInfo): Boolean {
-        return client.get(ServiceGitResource::class).gitCreateFile(
-            gitProjectId = gitProjectId,
-            token = getAndCheckOauthToken(userId).accessToken,
-            gitCreateFile = GitCreateFile(
-                filePath = streamCreateFile.filePath,
-                branch = streamCreateFile.branch,
-                encoding = when (streamCreateFile.encoding) {
-                    StreamFileEncoding.TEXT -> GitCodeFileEncoding.TEXT
-                    StreamFileEncoding.BASE64 -> GitCodeFileEncoding.BASE64
-                },
-                content = streamCreateFile.content,
-                commitMessage = streamCreateFile.commitMessage
-            ),
-            tokenType = TokenTypeEnum.OAUTH
-        ).data ?: false
+    override fun createNewFile(
+        userId: String,
+        gitProjectId: String,
+        streamCreateFile: StreamCreateFileInfo
+    ): Boolean {
+        val createOrUpdateFile = client.get(ServiceGithubRepositoryResource::class).createOrUpdateFile(
+            request = with(streamCreateFile) {
+                CreateOrUpdateFileContentsRequest(
+                    owner = userId,
+                    repo = gitProjectId,
+                    message = commitMessage,
+                    content = content,
+                    path = filePath
+                )
+            },
+            userId = userId
+        )
+        return true
     }
 
     override fun getProjectBranches(
@@ -266,25 +285,29 @@ class StreamGithubTransferService @Autowired constructor(
         orderBy: StreamBranchesOrder?,
         sort: StreamSortAscOrDesc?
     ): List<String>? {
-        return client.get(ServiceGitResource::class).getBranch(
-            accessToken = getAndCheckOauthToken(userId).accessToken,
-            userId = userId,
-            repository = gitProjectId,
-            page = page,
-            pageSize = pageSize,
-            search = search
-        ).data?.map { it.name }
+        return client.get(ServiceGithubBranchResource::class).listBranch(
+            request = GHListBranchesRequest(
+                owner = userId,
+                repo = gitProjectId,
+                page = page ?: 1,
+                perPage = pageSize ?: 30
+            ),
+            userId = userId
+        ).map { it.name }
     }
 
-    override fun getProjectGroupsList(userId: String, page: Int, pageSize: Int): List<StreamGitGroup>? {
-        return client.get(ServiceGitResource::class).getProjectGroupsList(
-            accessToken = getAndCheckOauthToken(userId).accessToken,
-            page = page,
-            pageSize = pageSize,
-            owned = false,
-            minAccessLevel = GitAccessLevelEnum.DEVELOPER,
-            tokenType = TokenTypeEnum.OAUTH
-        ).data?.ifEmpty { null }?.map {
+    override fun getProjectGroupsList(
+        userId: String,
+        page: Int,
+        pageSize: Int
+    ): List<StreamGitGroup>? {
+        return client.get(ServiceGithubOrganizationResource::class).listOrganizations(
+            request = ListOrganizationsRequest(
+                page = page,
+                perPage = pageSize
+            ),
+            userId = userId
+        ).ifEmpty { null }?.map {
             StreamGitGroup(it)
         }
     }
