@@ -2,7 +2,7 @@
     <article class="pipelines-home">
         <aside class="aside-nav section-box" v-bkloading="{ isLoading }">
             <h3 class="nav-title">
-                {{$t('pipielines')}}
+                {{$t('pipelines')}}
                 <div
                     v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }"
                     class="nav-button"

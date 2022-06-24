@@ -103,6 +103,7 @@
         "parsedYaml": "Parsed YAML",
         "noArtifacts": "No artifacts yet",
         "path": "Path",
+        "size": "Size",
         "qrCode": "QRCode",
         "download": "Download",
         "downloadFailTips": "You do not have the permission to download components of the pipeline and you cannot download",
@@ -213,7 +214,7 @@
         "ticket": {
             "addCredential": "Add Credential",
             "editCredential": "Edit Credential",
-            "emptyCredential": "Empty credential",
+            "emptyCredential": "No credential",
             "emptyCredentialTips": "You can create a new credential",
             "getCredentialError": "Error in getting credential list",
             "deleteCredentialTips": "Delete this credential ( {0} ) ?",
