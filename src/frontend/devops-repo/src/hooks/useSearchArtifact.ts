@@ -40,7 +40,7 @@ export default function useSearchArtifact() {
   const router = useRouter();
   const currentRoute = useRoute();
   const repoParams = useRouteParams();
-  const isSearching = ref(false);
+  const isSearching = ref(true);
   const { pagination, updatePagination, handleCurrentChange } = usePagination();
   const { t } = useI18n();
   const artifactList = ref<Artifact[]>([]);

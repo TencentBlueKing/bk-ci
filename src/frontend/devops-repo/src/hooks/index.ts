@@ -34,6 +34,7 @@ import useRouteParams from './useRouteParam';
 import { useInstallGuide, useHelmInstallGuide, useGitInstallGuide } from './useInstallGuide';
 import usePagination from './usePagination';
 import useRepoInfo from './useRepoInfo';
+import useDomain from './useDomain';
 export {
   useArtifactOperation,
   useDownloadPackage,
@@ -55,4 +56,5 @@ export {
   useOperation,
   usePagination,
   useRepoInfo,
+  useDomain,
 };
