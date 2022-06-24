@@ -38,6 +38,7 @@ import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEven
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -167,7 +168,7 @@ class MetricsServiceImpl constructor(
             if (!groupContainers.isNullOrEmpty()) {
                 groupContainers.forEachIndexed { groupContainerIndex, groupContainer ->
                     val groupContainerStatus = groupContainer.status
-                    if (!checkMetricsReportCondition(groupContainerStatus)) {
+                    if (!checkMetricsReportCondition(groupContainerStatus) || groupContainer is TriggerContainer) {
                         return@nextContainer
                     }
                     doContainerBus(
@@ -182,7 +183,7 @@ class MetricsServiceImpl constructor(
             } else {
                 // 判断container是否执行过,未执行过的container无需上报数据
                 val containerStatus = container.status
-                if (!checkMetricsReportCondition(containerStatus)) {
+                if (!checkMetricsReportCondition(containerStatus) || container is TriggerContainer) {
                     return@nextContainer
                 }
                 doContainerBus(
