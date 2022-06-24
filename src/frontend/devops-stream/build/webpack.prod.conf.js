@@ -128,7 +128,7 @@ const prodConf = merge(baseConf, {
         new webpack.DefinePlugin(config.build.env),
 
         new HtmlWebpackPlugin({
-            filename: 'index.html',
+            filename: 'frontend#stream#index.html',
             template: join(__dirname, '..', '/index.html'),
             inject: true,
             minify: {

@@ -263,3 +263,15 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .stream-hourglass:before {
 	content: "\e161";
 }
+.stream-metric-link:before {
+	content: "\e166";
+}
+.stream-setting-link:before {
+	content: "\e164";
+}
+.stream-pipeline-link:before {
+	content: "\e165";
+}
+.stream-locale:before {
+	content: "\e167";
+}

@@ -31,6 +31,8 @@
             var DEVOPS_HOST = '__DEVOPS_HOST__'
             // 仓库 host
             var BKREPO_HOST = '__BKREPO_HOST__'
+            // app key
+            var APP_KEY = '__APP_KEY__'
         </script>
         <script>
             function getLoginUrl (domain = LOGIN_SERVICE_URL) {
@@ -42,7 +44,7 @@
                 url.searchParams.append('c_url', cUrl)
                 
                 loginUrl.searchParams.append('title', 'bklogin')
-                loginUrl.searchParams.append('appkey', '')
+                loginUrl.searchParams.append('appkey', APP_KEY)
                 loginUrl.searchParams.append('url', url)
                 
                 return loginUrl.href

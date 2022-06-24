@@ -408,7 +408,6 @@
     .pipelines-home {
         display: flex;
         padding: 25px;
-        height: calc(100vh - 60px);
     }
     .nav-title {
         justify-content: space-between;

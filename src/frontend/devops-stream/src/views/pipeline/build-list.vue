@@ -30,7 +30,7 @@
         <section class="main-body section-box">
             <section class="build-filter">
                 <bk-input v-model="filterData.commitMsg" class="filter-item w300" :placeholder="$t('pipeline.commitMsg')"></bk-input>
-                <bk-input v-model="filterData.triggerUser" class="filter-item w300" :placeholder="$t('pipeline.actor')"></bk-input>
+                <bk-input :value="filterData.triggerUser.join(',')" class="filter-item w300" :placeholder="$t('pipeline.actor')"></bk-input>
                 <bk-select v-model="filterData.branch"
                     class="filter-item"
                     :placeholder="$t('pipeline.branch')"
@@ -240,7 +240,7 @@
                 buildList: [],
                 compactPaging: {
                     limit: 10,
-                    current: this.$route.query.page,
+                    current: +this.$route.query.page,
                     count: 0
                 },
                 filterData: {
@@ -432,7 +432,7 @@
                         page
                     }
                 })
-                this.compactPaging.current = page
+                this.compactPaging.current = +page
                 this.initBuildData()
             },
 

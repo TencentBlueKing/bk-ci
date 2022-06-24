@@ -1,27 +1,35 @@
 <template>
-    <bk-exception :type="infoMap.typeMap[exceptionType] || '403'" class="exception-home">
-        <section class="exception-content">
-            <span>{{ infoMap.titleMap[exceptionType] }}</span>
-            <span class="exception-title">
-                {{ exceptionInfo.message || infoMap.messageMap[exceptionType] || $t('exception.systemErrTips') }}
-                <bk-link theme="primary" target="_blank" :href="LINK_CONFIG.STREAM" v-if="exceptionType === 520">{{$t('exception.learnMore')}}</bk-link>
-                <bk-link theme="primary" target="_blank" :href="LINK_CONFIG.STREAM_PERMISSION" v-if="exceptionType === 403">{{$t('exception.learnMore')}}</bk-link>
-            </span>
-            <div v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }" v-if="exceptionType === 419">
-                <bk-button theme="primary" @click="enable" :loading="isSaving" :disabled="!permission">{{$t('enable')}}</bk-button>
-            </div>
-            <bk-button theme="primary" v-if="exceptionType === 418" @click="oauth" :loading="isSaving">{{$t('exception.oauthAuth')}}</bk-button>
-            <bk-button theme="primary" v-if="[500, 403].includes(exceptionType)" @click="refresh">{{$t('refresh')}}</bk-button>
-        </section>
-    </bk-exception>
+    <section>
+        <dashboard-header></dashboard-header>
+        <bk-exception :type="infoMap.typeMap[exceptionType] || '403'" class="exception-home">
+            <section class="exception-content">
+                <span>{{ infoMap.titleMap[exceptionType] }}</span>
+                <span class="exception-title">
+                    {{ exceptionInfo.message || infoMap.messageMap[exceptionType] || $t('exception.systemErrTips') }}
+                    <bk-link theme="primary" target="_blank" :href="LINK_CONFIG.STREAM" v-if="exceptionType === 520">{{$t('exception.learnMore')}}</bk-link>
+                    <bk-link theme="primary" target="_blank" :href="LINK_CONFIG.STREAM_PERMISSION" v-if="exceptionType === 403">{{$t('exception.learnMore')}}</bk-link>
+                </span>
+                <div v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }" v-if="exceptionType === 419">
+                    <bk-button theme="primary" @click="enable" :loading="isSaving" :disabled="!permission">{{$t('enable')}}</bk-button>
+                </div>
+                <bk-button theme="primary" v-if="exceptionType === 418" @click="oauth" :loading="isSaving">{{$t('exception.oauthAuth')}}</bk-button>
+                <bk-button theme="primary" v-if="[500, 403].includes(exceptionType)" @click="refresh">{{$t('refresh')}}</bk-button>
+            </section>
+        </bk-exception>
+    </section>
 </template>
 
 <script>
     import { common, setting } from '@/http'
     import { mapState } from 'vuex'
     import LINK_CONFIG from '@/conf/link-config.js'
+    import dashboardHeader from '@/components/dashboard-header'
 
     export default {
+        components: {
+            dashboardHeader
+        },
+
         data () {
             return {
                 isSaving: false,
@@ -103,7 +111,7 @@
 
 <style lang="postcss" scoped>
     .exception-home {
-        margin-top: calc(50vh - 300px);
+        padding-top: calc(50vh - 300px);
     }
     .exception-content {
         display: flex;
