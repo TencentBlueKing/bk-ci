@@ -59,7 +59,7 @@ const webpackConfig = merge(baseConf, {
 
         new HtmlWebpackPlugin({
             filename: 'index.html',
-            template: 'index-dev.html',
+            template: 'index.html',
             inject: true
         }),
 
