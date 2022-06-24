@@ -326,7 +326,7 @@ class LambdaDataService @Autowired constructor(
                     centerId = projectInfo.centerId,
                     bgName = projectInfo.bgName,
                     deptName = projectInfo.deptName,
-                    centerName = projectInfo.centerName,
+                    centerName = projectInfo.centerName
                 )
                 logger.info("pushTaskDetail buildId: ${dataPlatTaskDetail.buildId}| taskId: ${dataPlatTaskDetail.itemId}")
                 val taskDetailTopic = checkParamBlank(lambdaKafkaTopicConfig.taskDetailTopic, "taskDetailTopic")

@@ -26,7 +26,6 @@
  */
 package com.tencent.devops.lambda.pojo
 
-import io.swagger.annotations.ApiModelProperty
 import org.json.simple.JSONObject
 
 data class DataPlatTaskDetail(
