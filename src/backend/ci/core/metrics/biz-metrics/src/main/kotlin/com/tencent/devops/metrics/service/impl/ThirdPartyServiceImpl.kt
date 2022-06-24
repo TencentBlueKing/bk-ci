@@ -27,14 +27,12 @@
 
 package com.tencent.devops.metrics.service.impl
 
-import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
 import com.tencent.devops.metrics.constant.Constants.BK_QUALITY_PIPELINE_EXECUTE_NUM
 import com.tencent.devops.metrics.constant.Constants.BK_QUALITY_PIPELINE_INTERCEPTION_NUM
 import com.tencent.devops.metrics.constant.Constants.BK_REPO_CODECC_AVG_SCORE
 import com.tencent.devops.metrics.constant.Constants.BK_RESOLVED_DEFECT_NUM
 import com.tencent.devops.metrics.constant.Constants.BK_TURBO_SAVE_TIME
 import com.tencent.devops.metrics.dao.ThirdPartyOverviewInfoDao
-import com.tencent.devops.metrics.measure.MetricsEventDispatcher
 import com.tencent.devops.metrics.service.ThirdPartyManageService
 import com.tencent.devops.metrics.pojo.`do`.CodeCheckInfoDO
 import com.tencent.devops.metrics.pojo.`do`.QualityInfoDO
@@ -46,13 +44,11 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
-import java.time.LocalDateTime
 
 @Service
 class ThirdPartyServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val thirdPartyOverviewInfoDao: ThirdPartyOverviewInfoDao,
-    private val measureEventDispatcher: MetricsEventDispatcher
+    private val thirdPartyOverviewInfoDao: ThirdPartyOverviewInfoDao
 ) : ThirdPartyManageService {
     override fun queryPipelineSummaryInfo(
         queryPipelineSummaryInfoDTO: QueryPipelineSummaryInfoDTO
@@ -99,10 +95,4 @@ class ThirdPartyServiceImpl @Autowired constructor(
                 turboInfo = TurboInfoDO(result?.get(BK_TURBO_SAVE_TIME, BigDecimal::class.java)?.toDouble())
             )
         }
-
-    override fun addPipelineSummaryInfo(projectId: String) {
-        measureEventDispatcher.dispatch(
-            QualityReportEvent("${LocalDateTime.now()}", projectId, 10, 10)
-        )
-    }
 }

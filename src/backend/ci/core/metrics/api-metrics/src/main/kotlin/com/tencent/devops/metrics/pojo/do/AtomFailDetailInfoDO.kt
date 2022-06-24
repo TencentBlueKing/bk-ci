@@ -60,16 +60,16 @@ data class AtomFailDetailInfoDO(
     val startUser: String,
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty("启动时间")
-    val startTime: LocalDateTime,
+    val startTime: LocalDateTime?,
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty("结束时间")
-    val endTime: LocalDateTime,
+    val endTime: LocalDateTime?,
     @ApiModelProperty("错误的类型标识")
-    val errorType: Int,
+    val errorType: Int?,
     @ApiModelProperty("错误的类型标识名称")
     var errorTypeName: String? = null,
     @ApiModelProperty("错误的标识码")
-    val errorCode: Int,
+    val errorCode: Int?,
     @ApiModelProperty("错误描述")
     val errorMsg: String?
 )
