@@ -144,6 +144,10 @@ class ShardingRoutingRuleDao {
     fun update(dslContext: DSLContext, id: String, shardingRoutingRule: ShardingRoutingRule) {
         with(TShardingRoutingRule.T_SHARDING_ROUTING_RULE) {
             dslContext.update(this)
+                .set(TYPE, shardingRoutingRule.type.name)
+                .set(CLUSTER_NAME, shardingRoutingRule.clusterName)
+                .set(MODULE_CODE, shardingRoutingRule.moduleCode.name)
+                .set(DATA_SOURCE_NAME, shardingRoutingRule.dataSourceName)
                 .set(ROUTING_NAME, shardingRoutingRule.routingName)
                 .set(ROUTING_RULE, shardingRoutingRule.routingRule)
                 .set(UPDATE_TIME, LocalDateTime.now())

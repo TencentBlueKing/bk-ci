@@ -23,69 +23,18 @@
 * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 * IN THE SOFTWARE.
 */
-import { Artifact, OperationDialogProps, Permission, Project, RepoItem, UserInfo } from '@/utils/vue-ts';
-import { InjectionKey } from 'vue';
-import { createStore, Store, useStore as vuexUseStore, createLogger } from 'vuex';
-import actions from './actions';
-import getters from './getters';
-import mutations from './mutations';
-const debug = process.env.NODE_ENV !== 'production';
-const plugins = [];
-if (debug) {
-  plugins.push(createLogger({}));
-}
-const initDoamin = {
-  docker: '',
-  npm: '',
-};
-const repoInfo = {
-  name: '',
-  desc: '',
-  type: '',
-  showGuide: false,
-};
-export interface State {
-  projectList: Project[]
-  repoList: RepoItem[]
-  userMap: Record<string, string>,
-  operationProps: OperationDialogProps
-  currentUser?: UserInfo
-  domain: typeof initDoamin,
-  repoMap: Map<string, Artifact>
-  permission: Permission
-  repoInfo: typeof repoInfo,
-};
-export type DomainKey = keyof typeof initDoamin;
+import { DomainKey, useStore } from '@/store';
+import { GET_DOMAIN } from '@/store/constants';
+import { DOCKER_REPO, NPM_REPO } from '@/utils/conf';
+import useRouteParams from './useRouteParam';
 
-export const key: InjectionKey<Store<State>>  = Symbol();
+export default function useDomain() {
+  const routeParams = useRouteParams();
+  const store = useStore();
+  const repoType = routeParams.value.repoType as DomainKey;
 
-export default createStore<State>({
-  state: {
-    projectList: [],
-    operationProps: {
-      isShow: false,
-      artifact: undefined,
-      operation: undefined,
-      filesCount: 0,
-      done: undefined,
-    },
-    repoInfo,
-    domain: initDoamin,
-    repoList: [],
-    userMap: {},
-    repoMap: new Map(),
-    permission: {
-      write: true,
-      edit: true,
-      delete: true,
-    },
-  },
-  actions,
-  getters,
-  mutations,
-  plugins,
-});
-
-export function useStore() {
-  return vuexUseStore(key);
+  if ([DOCKER_REPO, NPM_REPO].includes(repoType) && !store.state.domain[repoType]) {
+    store.dispatch(GET_DOMAIN, repoType);
+  }
+  return store.state.domain[repoType];
 }

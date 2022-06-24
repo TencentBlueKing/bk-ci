@@ -27,10 +27,10 @@ import * as StoreConst from './constants';
 import JSEncrypt from 'jsencrypt';
 import request from '@/utils/request';
 import { ActionContext } from 'vuex';
-import { State } from '.';
+import { DomainKey, State } from '.';
 import { RepoItem, LOG_REPO_NAME, REPORT_REPO_NAME, PageApiResponse, MoveOrCopyParam } from '@/utils/vue-ts';
 import { formatArtifactNode, formatPath, formatTreeNode, generateRule, generateRuleObject, getRepoParams, IS_CI_MODE, OPERATION, RELATION, SORT_TYPE } from '@/utils';
-import { GENERIC_REPO } from '@/utils/conf';
+import { DOCKER_REPO, GENERIC_REPO, NPM_REPO } from '@/utils/conf';
 
 export const REPO_API_PREFIX = '/repository/api';
 export const SCANNER_API_PREFIX = 'scanner/api';
@@ -543,6 +543,24 @@ export default {
     };
 
     return request.post(`${SCANNER_API_PREFIX}/scan`, body);
+  },
+  [StoreConst.GET_DOMAIN]: async ({ commit }: ActionContext<State, State>, type: DomainKey) => {
+    let domainUrl;
+    switch (type) {
+      case DOCKER_REPO:
+        domainUrl = '/docker/ext/addr';
+        break;
+      case NPM_REPO:
+        domainUrl = '/npm/ext/address';
+        break;
+    }
+    if (domainUrl) {
+      const domain = await request.get(domainUrl);
+      commit(StoreConst.SET_DOMAIN, {
+        type,
+        domain,
+      });
+    }
   },
 };
 
