@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "better-npm-run dev",
     "clean": "rimraf dist",
-    "clean-dll": "rimraf static/lib*",
     "build": "better-npm-run build",
     "build:analyzer": "better-npm-run build:analyzer",
     "dll": "better-npm-run dll",
@@ -19,26 +18,20 @@
   "keywords": [],
   "license": "ISC",
   "betterScripts": {
-    "dll": {
-      "command": "babel-node build/build-dll.js",
-      "env": {
-        "NODE_ENV": "production"
-      }
-    },
     "dev": {
-      "command": "babel-node build/check-dll.js && babel-node build/dev-server.js",
+      "command": "babel-node build/dev-server.js",
       "env": {
         "NODE_ENV": "development"
       }
     },
     "build": {
-      "command": "npm run clean && npm run clean-dll && npm run dll && babel-node build/build.js",
+      "command": "npm run clean && babel-node build/build.js",
       "env": {
         "NODE_ENV": "production"
       }
     },
     "build:analyzer": {
-      "command": "npm run clean && npm run clean-dll && npm run dll && babel-node build/build.js",
+      "command": "npm run clean && babel-node build/build.js",
       "env": {
         "NODE_ENV": "production",
         "npm_config_report": 1
@@ -100,7 +93,6 @@
     "http-proxy-middleware": "~0.19.1",
     "mini-css-extract-plugin": "~0.6.0",
     "moment": "^2.24.0",
-    "npm": "~6.9.0",
     "open": "^8.3.0",
     "optimize-css-assets-webpack-plugin": "~5.0.1",
     "postcss": "^8.3.9",
