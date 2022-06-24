@@ -1,56 +1,141 @@
 <template>
-    <div v-if="pipelineSetting" class="bkdevops-running-lock-setting-tab">
-        <enum-input class="running-lock-radio" :list="runTypeList" :value="pipelineSetting.runLockType" name="runLockType" :handle-change="handleRunningLockChange"></enum-input>
-        <div class="bk-form-item opera-lock" v-if="pipelineSetting.runLockType === 'SINGLE'">
-            <div class="opera-lock-item">
-                <label class="opera-lock-label">{{ $t('settings.largestNum') }}：</label>
-                <div>
-                    <vuex-input input-type="number" name="maxQueueSize" :placeholder="$t('settings.itemPlaceholder')" v-validate.initial="&quot;required|numeric|max_value:20|min_value:0&quot;" :value="pipelineSetting.maxQueueSize" :handle-change="handleRunningLockChange" />
-                    <span>{{ $t('settings.item') }}</span>
-                    <p v-if="errors.has('maxQueueSize')" class="is-danger">{{errors.first("maxQueueSize")}}</p>
+    <bk-form
+        v-if="pipelineSetting"
+        class="bkdevops-running-lock-setting-tab"
+        :model="pipelineSetting"
+        :rules="formRule"
+        form-type="vertical"
+    >
+        <bk-form-item :label="$t('settings.parallelSetting')">
+            <bk-radio-group :value="pipelineSetting.runLockType" @change="(val) => handleRunningLockChange('runLockType', val)">
+                <div class="run-lock-radio-item">
+                    <bk-radio
+                        value="MULTIPLE"
+                    >
+                        {{$t('settings.runningOption.multiple')}}
+                    </bk-radio>
                 </div>
-            </div>
-            <div class="opera-lock-item">
-                <label class="opera-lock-label">{{ $t('settings.lagestTime') }}：</label>
-                <div>
-                    <vuex-input input-type="number" name="waitQueueTimeMinute" :placeholder="$t('settings.itemPlaceholder')" v-validate.initial="'required|numeric|max_value:1440|min_value:1'" :value="pipelineSetting.waitQueueTimeMinute" :handle-change="handleRunningLockChange" />
-                    <span>{{ $t('settings.minutes') }}</span>
-                    <p v-if="errors.has('waitQueueTimeMinute')" class="is-danger">{{errors.first("waitQueueTimeMinute")}}</p>
+                <div class="run-lock-radio-item">
+                    <bk-radio
+                        value="SINGLE"
+                    >
+                        {{$t('settings.runningOption.single')}}
+                    </bk-radio>
                 </div>
-            </div>
+            </bk-radio-group>
+        </bk-form-item>
+        <div class="single-lock-sub-form" v-if="isSingleLock">
+            <bk-form-item
+                :required="isSingleLock"
+                property="concurrencyGroup"
+                desc-type="icon"
+                desc-icon="bk-icon icon-info-circle"
+                :label="$t('group.groupName')"
+                :desc="$t('settings.lockGroupDesc')"
+            >
+                <bk-input
+                    :placeholder="$t('settings.itemPlaceholder')"
+                    v-model="pipelineSetting.concurrencyGroup"
+                />
+            </bk-form-item>
+
+            <bk-form-item property="concurrencyCancelInProgress">
+                <bk-checkbox
+                    :checked="pipelineSetting.concurrencyCancelInProgress"
+                    @change="(val) => handleRunningLockChange('concurrencyCancelInProgress', val)"
+                >
+                    {{$t('settings.stopWhenNewCome')}}
+                </bk-checkbox>
+            </bk-form-item>
+            <bk-form-item
+                :required="isSingleLock"
+                :label="$t('settings.largestNum')"
+                property="maxQueueSize"
+            >
+                <bk-input
+                    type="number"
+                    :placeholder="$t('settings.itemPlaceholder')"
+                    v-model="pipelineSetting.maxQueueSize"
+                />
+            </bk-form-item>
+            <bk-form-item
+                :required="isSingleLock"
+                :label="$t('settings.lagestTime')"
+                property="waitQueueTimeMinute"
+            >
+                <bk-input
+                    type="number"
+                    :placeholder="$t('settings.itemPlaceholder')"
+                    v-model="pipelineSetting.waitQueueTimeMinute"
+                />
+            </bk-form-item>
         </div>
-    </div>
+        <bk-form-item :label="$t('settings.disableSetting')">
+            <span @click="handleRunningLockChange('runLockType', runTypeMap.LOCK)">
+                <bk-radio
+                    :checked="pipelineSetting.runLockType === runTypeMap.LOCK"
+                    value="LOCK"
+                >
+                    {{$t('settings.runningOption.lock')}}
+                </bk-radio>
+            </span>
+        </bk-form-item>
+    </bk-form>
+
 </template>
 
 <script>
-    import EnumInput from '@/components/atomFormField/EnumInput/index.vue'
-    import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
+
     export default {
         name: 'bkdevops-running-lock-setting-tab',
-        components: {
-            EnumInput,
-            VuexInput
-        },
         props: {
             pipelineSetting: Object,
             handleRunningLockChange: Function
         },
         computed: {
-            runTypeList () {
-                return [
-                    {
-                        label: this.$t('settings.runningOption.multiple'),
-                        value: 'MULTIPLE'
-                    },
-                    {
-                        label: this.$t('settings.runningOption.lock'),
-                        value: 'LOCK'
-                    },
-                    {
-                        label: this.$t('settings.runningOption.single'),
-                        value: 'SINGLE'
-                    }
-                ]
+            runTypeMap () {
+                return {
+                    MULTIPLE: 'MULTIPLE',
+                    SINGLE: 'SINGLE',
+                    LOCK: 'LOCK'
+                }
+            },
+            isSingleLock () {
+                return this.pipelineSetting.runLockType === this.runTypeMap.SINGLE
+            },
+            formRule () {
+                const requiredRule = {
+                    required: this.isSingleLock,
+                    message: this.$t('editPage.checkParamTip'),
+                    trigger: 'blur'
+                }
+                return {
+                    concurrencyGroup: [
+                        requiredRule
+                    ],
+                    maxQueueSize: [
+                        requiredRule,
+                        {
+                            validator: (val) => {
+                                const intVal = parseInt(val, 10)
+                                return !this.isSingleLock || (intVal <= 20 && intVal >= 0)
+                            },
+                            message: `${this.$t('settings.largestNum')}${this.$t('numberRange', [0, 20])}`,
+                            trigger: 'change'
+                        }
+                    ],
+                    waitQueueTimeMinute: [
+                        requiredRule,
+                        {
+                            validator: (val) => {
+                                const intVal = parseInt(val, 10)
+                                return !this.isSingleLock || (intVal <= 1440 && intVal >= 1)
+                            },
+                            message: `${this.$t('settings.lagestTime')}${this.$t('numberRange', [1, 1440])}`,
+                            trigger: 'change'
+                        }
+                    ]
+                }
             }
         }
     }
@@ -58,36 +143,11 @@
 
 <style lang="scss">
     .bkdevops-running-lock-setting-tab {
-        .bkdevops-radio {
-            display: block;
-            margin: 8px 0;
+        .single-lock-sub-form {
+            margin-left: 20px
         }
-        .opera-lock-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 12px;
-            font-size: 12px;
-            .opera-lock-label {
-                line-height: 32px;
-                align-self: flex-start;
-            }
-            > div {
-                position: relative;
-                width: 360px;
-                > span {
-                    position: absolute;
-                    top: 0;
-                    right: 0;
-                    line-height: 30px;
-                    background: #f2f4f8;
-                    padding: 0 20px;
-                    border: 1px solid #c4c6cc;
-                }
-                > p {
-                    margin-top:10px;
-                    color: #ff5656;
-                }
-            }
+        .run-lock-radio-item {
+            margin: 10px 0;
         }
     }
 </style>
