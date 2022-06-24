@@ -9,7 +9,7 @@ import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
@@ -33,6 +33,7 @@ class StreamDeleteAction(
     }
 
     override fun getProjectCode(gitProjectId: String?) = gitAction.getProjectCode(gitProjectId)
+    override fun getGitProjectIdOrName() = gitAction.getGitProjectIdOrName()
 
     override fun getGitCred(personToken: String?) = gitAction.getGitCred(personToken)
 
@@ -51,9 +52,9 @@ class StreamDeleteAction(
     }
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
-        return TGitActionCommon.getYamlPathList(
+        return GitActionCommon.getYamlPathList(
             action = gitAction,
-            gitProjectId = data.getGitProjectId(),
+            gitProjectId = getGitProjectIdOrName(),
             ref = data.context.defaultBranch
         ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
     }
@@ -63,7 +64,7 @@ class StreamDeleteAction(
             data.context.defaultBranch!!,
             api.getFileContent(
                 cred = gitAction.getGitCred(),
-                gitProjectId = data.getGitProjectId(),
+                gitProjectId = getGitProjectIdOrName(),
                 fileName = fileName,
                 ref = data.context.defaultBranch!!,
                 retry = ApiRequestRetryInfo(true)

@@ -25,22 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.stream.trigger.git.pojo.github
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitFileInfo
 
-data class StreamProjectSimpleInfo(
-    @JsonProperty("id")
-    @ApiModelProperty(name = "id")
-    val id: Long?,
-    @JsonProperty("path_with_namespace")
-    @ApiModelProperty(name = "path_with_namespace")
-    val pathWithNamespace: String?,
-    @JsonProperty("description")
-    @ApiModelProperty(name = "description")
-    val description: String?,
-    @JsonProperty("avatar_url")
-    @ApiModelProperty(name = "avatar_url")
-    val avatarUrl: String?
-)
+data class GithubFileInfo(
+    // stream 的内容经过base64加码，需要解码
+    override val content: String,
+    override val blobId: String
+) : StreamGitFileInfo

@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
+import com.tencent.devops.stream.api.ExternalGithubResource
 import com.tencent.devops.stream.api.ExternalScmResource
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.trigger.mq.streamRequest.StreamRequestDispatcher
@@ -44,32 +45,38 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ExternalScmResourceImpl @Autowired constructor(
+class ExternalGithubResourceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper,
+    private val streamGitConfig: StreamGitConfig,
     private val rabbitTemplate: RabbitTemplate
-) : ExternalScmResource {
+) : ExternalGithubResource {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ExternalScmResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(ExternalGithubResourceImpl::class.java)
     }
 
-    override fun webHookCodeGitCommit(token: String, eventType: String, event: String): Result<Boolean> {
-        logger.info("webHook event: $event, eventType:$eventType")
-        val body = if (eventType == "Review Hook") {
-            // 工蜂cr事件的webhook body不统一，没有objectKind字段,需要再转换
-            val gitReviewEvent = objectMapper.readValue<GitReviewEvent>(event)
-            JsonUtil.toJson(gitReviewEvent.copy(objectKind = GitReviewEvent.classType))
-        } else {
-            event
-        }
-        StreamRequestDispatcher.dispatch(
-            rabbitTemplate = rabbitTemplate,
-            event = StreamRequestEvent(
-                eventType = eventType,
-                webHookType = ScmType.CODE_TGIT.name,
-                event = body
+    override fun webhookGithubCommit(event: String, guid: String, signature: String, body: String): Result<Boolean> {
+        logger.info("Github webhook [event=$event, guid=$guid, signature=$signature, body=$body]")
+        try {
+            val removePrefixSignature = signature.removePrefix("sha1=")
+            val genSignature = ShaUtils.hmacSha1(streamGitConfig.signSecret.toByteArray(), body.toByteArray())
+            logger.info("signature($removePrefixSignature) and generate signature ($genSignature)")
+            if (!ShaUtils.isEqual(removePrefixSignature, genSignature)) {
+                logger.warn("signature($removePrefixSignature) and generate signature ($genSignature) not match")
+                return Result(false)
+            }
+
+            StreamRequestDispatcher.dispatch(
+                rabbitTemplate = rabbitTemplate,
+                event = StreamRequestEvent(
+                    eventType = event,
+                    webHookType = ScmType.GITHUB.name,
+                    event = body
+                )
             )
-        )
+        } catch (t: Throwable) {
+            logger.info("Github webhook exception", t)
+        }
         return Result(true)
     }
 }

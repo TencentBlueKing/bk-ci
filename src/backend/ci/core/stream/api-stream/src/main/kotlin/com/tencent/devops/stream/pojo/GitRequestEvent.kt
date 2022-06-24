@@ -27,9 +27,11 @@
 
 package com.tencent.devops.stream.pojo
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -77,7 +79,7 @@ data class GitRequestEvent(
     @ApiModelProperty("合并请求标题")
     var mrTitle: String?,
     @ApiModelProperty("Git事件对象")
-    var gitEvent: GitEvent?,
+    var gitEvent: CodeWebhookEvent?,
     @ApiModelProperty("去掉头部url的homepage")
     var gitProjectName: String?,
     @ApiModelProperty("远程仓库触发时得到的主库流水线列表")

@@ -25,17 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.mq.streamRequest
+package com.tencent.devops.stream.trigger.git.pojo.github
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.stream.constant.MQ
-import org.slf4j.MDC
+import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.ChangeFileInfo
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitChangeFileInfo
 
-@Event(MQ.EXCHANGE_STREAM_REQUEST_EVENT, MQ.ROUTE_STREAM_REQUEST_EVENT)
-data class StreamRequestEvent(
-    val event: String,
-    val webHookType: String,
-    val eventType: String? = null,
-    val traceId: String? = MDC.get(TraceTag.BIZID)
-)
+data class GithubChangeFileInfo(
+    override val oldPath: String,
+    override val newPath: String,
+    override val renameFile: Boolean,
+    override val deletedFile: Boolean
+) : StreamGitChangeFileInfo {
+
+    constructor(c: ChangeFileInfo) : this(
+        oldPath = c.oldPath,
+        newPath = c.newPath,
+        renameFile = c.renameFile,
+        deletedFile = c.deletedFile
+    )
+
+    constructor(c: GitMrChangeInfo.GitMrFile) : this(
+        oldPath = c.oldPath,
+        newPath = c.newPath,
+        renameFile = c.renameFile,
+        deletedFile = c.deletedFile
+    )
+}

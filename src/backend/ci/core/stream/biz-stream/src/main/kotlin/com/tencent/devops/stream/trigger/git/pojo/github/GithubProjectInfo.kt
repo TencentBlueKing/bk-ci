@@ -25,17 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.mq.streamRequest
+package com.tencent.devops.stream.trigger.git.pojo.github
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.stream.constant.MQ
-import org.slf4j.MDC
+import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
 
-@Event(MQ.EXCHANGE_STREAM_REQUEST_EVENT, MQ.ROUTE_STREAM_REQUEST_EVENT)
-data class StreamRequestEvent(
-    val event: String,
-    val webHookType: String,
-    val eventType: String? = null,
-    val traceId: String? = MDC.get(TraceTag.BIZID)
-)
+data class GithubProjectInfo(
+    override val gitProjectId: String,
+    override val defaultBranch: String?,
+    override val gitHttpUrl: String,
+    override val name: String,
+    override val gitSshUrl: String?,
+    override val homepage: String?,
+    override val gitHttpsUrl: String?,
+    override val description: String?,
+    override val avatarUrl: String?,
+    override val pathWithNamespace: String?,
+    override val nameWithNamespace: String
+) : StreamGitProjectInfo {
+    constructor(g: GitProjectInfo) : this(
+        gitProjectId = g.id.toString(),
+        defaultBranch = g.defaultBranch,
+        gitHttpUrl = g.repositoryUrl,
+        name = g.name,
+        gitSshUrl = g.gitSshUrl,
+        homepage = g.homepage,
+        gitHttpsUrl = g.gitHttpsUrl,
+        description = g.description,
+        avatarUrl = g.avatarUrl,
+        pathWithNamespace = g.pathWithNamespace,
+        nameWithNamespace = g.namespaceName
+    )
+}

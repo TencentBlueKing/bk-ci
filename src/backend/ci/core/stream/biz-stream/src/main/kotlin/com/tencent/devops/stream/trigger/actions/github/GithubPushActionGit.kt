@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.actions.tgit
+package com.tencent.devops.stream.trigger.actions.github
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
@@ -34,6 +34,9 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubCommit
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
+import com.tencent.devops.common.webhook.pojo.code.github.checkCreateAndUpdate
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.DeleteRule
@@ -55,12 +58,14 @@ import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
-import com.tencent.devops.stream.trigger.git.service.TGitApiService
+import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
+import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
+import com.tencent.devops.stream.trigger.parsers.triggerParameter.GithubRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.service.DeleteEventService
@@ -72,21 +77,22 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
-class TGitPushActionGit(
+class GithubPushActionGit(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val apiService: TGitApiService,
+    private val apiService: GithubApiService,
     private val streamEventService: StreamEventService,
     private val streamTimerService: StreamTimerService,
     private val streamPipelineBranchService: StreamPipelineBranchService,
     private val streamDeleteEventService: DeleteEventService,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val pipelineDelete: PipelineDelete,
-    private val gitCheckService: GitCheckService
-) : TGitActionGit(apiService, gitCheckService), GitBaseAction {
+    private val gitCheckService: GitCheckService,
+    private val streamTriggerCache: StreamTriggerCache
+) : GithubActionGit(apiService, gitCheckService, streamTriggerCache), GitBaseAction {
 
     companion object {
-        val logger = LoggerFactory.getLogger(TGitPushActionGit::class.java)
+        val logger = LoggerFactory.getLogger(GithubPushActionGit::class.java)
         val SKIP_CI_KEYS = setOf("skip ci", "ci skip", "no ci", "ci.skip")
         private const val PUSH_OPTIONS_PREFIX = "ci.variable::"
     }
@@ -94,9 +100,9 @@ class TGitPushActionGit(
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.PUSH)
 
     override lateinit var data: ActionData
-    override fun event() = data.event as GitPushEvent
+    override fun event() = data.event as GithubPushEvent
 
-    override val api: TGitApiService
+    override val api: GithubApiService
         get() = apiService
 
     override fun init(): BaseAction? {
@@ -107,8 +113,8 @@ class TGitPushActionGit(
         val event = event()
         val lastCommit = getLatestCommit(event)
         this.data.eventCommon = EventCommonData(
-            gitProjectId = event.project_id.toString(),
-            scmType = ScmType.CODE_TGIT,
+            gitProjectId = event.repository.id.toString(),
+            scmType = ScmType.GITHUB,
             branch = event.ref.removePrefix("refs/heads/"),
             commit = EventCommonDataCommit(
                 commitId = event.after,
@@ -116,28 +122,22 @@ class TGitPushActionGit(
                 commitTimeStamp = GitActionCommon.getCommitTimeStamp(lastCommit?.timestamp),
                 commitAuthorName = lastCommit?.author?.name
             ),
-            userId = event.user_name,
-            gitProjectName = GitUtils.getProjectName(event.repository.homepage)
+            userId = event.sender.login,
+            gitProjectName = event.repository.fullName,
+            eventType = GithubPushEvent.classType
         )
         return this
     }
 
     private fun getLatestCommit(
-        event: GitPushEvent
-    ): GitCommit? {
-        if (event.isDeleteEvent()) {
+        event: GithubPushEvent
+    ): GithubCommit? {
+        if (event.deleted) {
             return null
         }
         val commitId = event.after
         val commits = event.commits
-        if (commitId == null) {
-            return if (commits.isNullOrEmpty()) {
-                null
-            } else {
-                commits.last()
-            }
-        }
-        commits?.forEach {
+        commits.forEach {
             if (it.id == commitId) {
                 return it
             }
@@ -145,13 +145,13 @@ class TGitPushActionGit(
         return null
     }
 
-    override fun isStreamDeleteAction() = event().isDeleteEvent()
+    override fun isStreamDeleteAction() = event().deleted
 
     override fun buildRequestEvent(eventStr: String): GitRequestEvent? {
         if (!event().pushEventFilter()) {
             return null
         }
-        return GitRequestEventHandle.createPushEvent(event(), eventStr)
+        return GithubRequestEventHandle.createPushEvent(event(), eventStr)
     }
 
     override fun skipStream(): Boolean {
@@ -179,7 +179,7 @@ class TGitPushActionGit(
 
     override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {
         // 直接删除分支,挪到前面，不需要对deleteYamlFiles获取后再做判断。
-        if (event().isDeleteBranch()) {
+        if (event().deleted == true) {
             val pipelines = streamPipelineBranchService.getBranchPipelines(
                 this.data.getGitProjectId().toLong(),
                 this.data.eventCommon.branch
@@ -201,13 +201,9 @@ class TGitPushActionGit(
             return
         }
 
-        val deleteYamlFiles = event().commits?.flatMap {
-            if (it.removed != null) {
-                it.removed!!.asIterable()
-            } else {
-                emptyList()
-            }
-        }?.filter { StreamCommonUtils.isCiFile(it) }
+        val deleteYamlFiles = event().commits.flatMap {
+            it.removed.asIterable()
+        }.filter { StreamCommonUtils.isCiFile(it) }
         pipelineDelete.checkAndDeletePipeline(this, path2PipelineExists, deleteYamlFiles)
     }
 
@@ -221,8 +217,7 @@ class TGitPushActionGit(
 
     override fun getYamlContent(fileName: String): Pair<String, String> {
         return Pair(
-            data.eventCommon.branch,
-            api.getFileContent(
+            data.eventCommon.branch, api.getFileContent(
                 cred = this.getGitCred(),
                 gitProjectId = getGitProjectIdOrName(),
                 fileName = fileName,
@@ -239,19 +234,19 @@ class TGitPushActionGit(
         }
 
         val gitEvent = event()
-        if (gitEvent.create_and_update != null) {
+        if (gitEvent.created == true) {
             return getSpecialChangeSet(gitEvent)
         }
         val changeSet = mutableSetOf<String>()
 
         // git push -f 使用反向进行三点比较可以比较出rebase的真实提交
-        val from = if (gitEvent.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
+        val from = if (gitEvent.forced == true) {
             gitEvent.after
         } else {
             gitEvent.before
         }
 
-        val to = if (gitEvent.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
+        val to = if (gitEvent.forced == true) {
             gitEvent.before
         } else {
             gitEvent.after
@@ -289,14 +284,14 @@ class TGitPushActionGit(
         return this.data.context.changeSet
     }
 
-    private fun getSpecialChangeSet(gitEvent: GitPushEvent): Set<String> {
-        // 为 false 时表示为纯创建分支
-        if (gitEvent.create_and_update == false) return mutableSetOf()
+    private fun getSpecialChangeSet(gitEvent: GithubPushEvent): Set<String> {
+        // github commits为空表示只创建了分支
+        if (gitEvent.commits.isEmpty()) return mutableSetOf()
         val changeSet = mutableSetOf<String>()
-        gitEvent.commits?.forEach {
-            changeSet.addAll(it.removed.orEmpty())
-            changeSet.addAll(it.modified.orEmpty())
-            changeSet.addAll(it.added.orEmpty())
+        gitEvent.commits.forEach {
+            changeSet.addAll(it.removed)
+            changeSet.addAll(it.modified)
+            changeSet.addAll(it.added)
         }
         return changeSet
     }
@@ -333,7 +328,7 @@ class TGitPushActionGit(
             eventBranch = data.eventCommon.branch,
             changeSet = changeSet,
             userId = data.getUserId(),
-            checkCreateAndUpdate = event().create_and_update
+            checkCreateAndUpdate = event().checkCreateAndUpdate()
         )
         val params = GitActionCommon.getStartParams(
             action = this,
@@ -410,34 +405,7 @@ class TGitPushActionGit(
     }
 
     override fun getUserVariables(yamlVariables: Map<String, Variable>?): Map<String, Variable>? {
-        return replaceVariablesByPushOptions(yamlVariables, event().push_options)
-    }
-
-    // git push -o ci.variable::<name>="<value>" -o ci.variable::<name>="<value>"
-    private fun replaceVariablesByPushOptions(
-        variables: Map<String, Variable>?,
-        pushOptions: Map<String, String>?
-    ): Map<String, Variable>? {
-        if (variables.isNullOrEmpty() || pushOptions.isNullOrEmpty()) {
-            return variables
-        }
-        val variablesOptionsKeys = pushOptions.keys.filter { it.startsWith(PUSH_OPTIONS_PREFIX) }
-            .map { it.removePrefix(PUSH_OPTIONS_PREFIX) }
-
-        val result = variables.toMutableMap()
-        variables.forEach { (key, value) ->
-            // 不替换只读变量
-            if (value.readonly != null && value.readonly == true) {
-                return@forEach
-            }
-            if (key in variablesOptionsKeys) {
-                result[key] = Variable(
-                    value = pushOptions["${PUSH_OPTIONS_PREFIX}$key"],
-                    readonly = value.readonly
-                )
-            }
-        }
-        return result
+        return yamlVariables
     }
 
     override fun getWebHookStartParam(triggerOn: TriggerOn): Map<String, String> {
@@ -449,38 +417,33 @@ class TGitPushActionGit(
 
     override fun needSaveOrUpdateBranch() = true
 
-    override fun needSendCommitCheck() = !event().isDeleteBranch()
+    override fun needSendCommitCheck() = !event().deleted
 }
 
 @SuppressWarnings("ReturnCount")
-private fun GitPushEvent.pushEventFilter(): Boolean {
+private fun GithubPushEvent.pushEventFilter(): Boolean {
     // 放开删除分支操作为了流水线删除功能
-    if (isDeleteBranch()) {
+    if (deleted) {
         return true
     }
-    if (total_commits_count <= 0) {
-        TGitPushActionGit.logger.info("$checkout_sha Git push web hook no commit($total_commits_count)")
+    if (commits.isEmpty()) {
+        GithubPushActionGit.logger.info("$after Github push web hook no commit")
         return false
     }
     if (GitUtils.isPrePushBranch(ref)) {
-        TGitPushActionGit.logger.info("Git web hook is pre-push event|branchName=$ref")
+        GithubPushActionGit.logger.info("Github web hook is pre-push event|branchName=$ref")
         return false
     }
     return true
 }
 
-private fun GitPushEvent.skipStream(): Boolean {
+private fun GithubPushEvent.skipStream(): Boolean {
     // 判断commitMsg
-    commits?.filter { it.id == after }?.forEach { commit ->
-        TGitPushActionGit.SKIP_CI_KEYS.forEach { key ->
+    commits.filter { it.id == after }.forEach { commit ->
+        GithubPushActionGit.SKIP_CI_KEYS.forEach { key ->
             if (commit.message.contains(key)) {
                 return true
             }
-        }
-    }
-    push_options?.keys?.forEach {
-        if (it == "ci.skip") {
-            return true
         }
     }
     return false

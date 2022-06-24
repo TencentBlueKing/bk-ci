@@ -25,17 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.mq.streamRequest
+package com.tencent.devops.stream.trigger.git.pojo.github
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.stream.constant.MQ
-import org.slf4j.MDC
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 
-@Event(MQ.EXCHANGE_STREAM_REQUEST_EVENT, MQ.ROUTE_STREAM_REQUEST_EVENT)
-data class StreamRequestEvent(
-    val event: String,
-    val webHookType: String,
-    val eventType: String? = null,
-    val traceId: String? = MDC.get(TraceTag.BIZID)
-)
+data class GithubCred(
+    // 获取stream OAUTH时用户的唯一凭证
+    val userId: String?,
+    // 具体的accessToken有时优先使用
+    val accessToken: String? = null,
+    // stream 分为oauth和private key的token，private的请求方式不同
+    val useAccessToken: Boolean = true
+) : StreamGitCred

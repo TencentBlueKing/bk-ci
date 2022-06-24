@@ -25,17 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.mq.streamRequest
+package com.tencent.devops.stream.api
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.stream.constant.MQ
-import org.slf4j.MDC
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Event(MQ.EXCHANGE_STREAM_REQUEST_EVENT, MQ.ROUTE_STREAM_REQUEST_EVENT)
-data class StreamRequestEvent(
-    val event: String,
-    val webHookType: String,
-    val eventType: String? = null,
-    val traceId: String? = MDC.get(TraceTag.BIZID)
-)
+@Api(tags = ["EXTERNAL_GIT_HOOKS"], description = "GIT WebHooks触发")
+@Path("/external")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ExternalGithubResource {
+    @ApiOperation("Github仓库提交")
+    @POST
+    @Path("/github/commit")
+    fun webhookGithubCommit(
+        @ApiParam(value = "事件类型", required = true)
+        @HeaderParam("X-GitHub-Event")
+        event: String,
+        @ApiParam(value = "事件ID", required = true)
+        @HeaderParam("X-Github-Delivery")
+        guid: String,
+        @ApiParam(value = "secretKey签名(sha1)", required = true)
+        @HeaderParam("X-Hub-Signature")
+        signature: String,
+        body: String
+    ): Result<Boolean>
+}

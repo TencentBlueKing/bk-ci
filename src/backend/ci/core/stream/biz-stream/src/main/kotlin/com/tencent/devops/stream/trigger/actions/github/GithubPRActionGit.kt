@@ -25,21 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.actions.tgit
+package com.tencent.devops.stream.trigger.actions.github
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.webhook.enums.code.github.GithubPrEventAction
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeExtensionActionKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isMrForkEvent
-import com.tencent.devops.common.webhook.pojo.code.git.isMrForkNotMergeEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isMrMergeEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.github.isPrForkEvent
+import com.tencent.devops.common.webhook.pojo.code.github.isPrForkNotMergeEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
@@ -51,18 +52,21 @@ import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
+import com.tencent.devops.stream.trigger.actions.tgit.TGitMrActionGit
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
+import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
+import com.tencent.devops.stream.trigger.git.pojo.github.GithubFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitFileInfo
-import com.tencent.devops.stream.trigger.git.service.TGitApiService
+import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
+import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
-import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
+import com.tencent.devops.stream.trigger.parsers.triggerParameter.GithubRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
@@ -73,47 +77,48 @@ import com.tencent.devops.stream.util.StreamCommonUtils
 import org.slf4j.LoggerFactory
 import java.util.Base64
 
-class TGitMrActionGit(
-    private val apiService: TGitApiService,
+class GithubPRActionGit(
+    private val apiService: GithubApiService,
     private val mrConflictCheck: MergeConflictCheck,
     private val pipelineDelete: PipelineDelete,
     private val gitCheckService: GitCheckService,
-    private val streamTriggerTokenService: StreamTriggerTokenService
-) : TGitActionGit(apiService, gitCheckService), StreamMrAction {
+    private val streamTriggerTokenService: StreamTriggerTokenService,
+    private val streamTriggerCache: StreamTriggerCache
+) : GithubActionGit(apiService, gitCheckService, streamTriggerCache), StreamMrAction {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TGitMrActionGit::class.java)
+        private val logger = LoggerFactory.getLogger(GithubPRActionGit::class.java)
     }
 
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.MERGE_REQUEST)
 
     override lateinit var data: ActionData
-    override fun event() = data.event as GitMergeRequestEvent
+    override fun event() = data.event as GithubPullRequestEvent
 
     override val mrIId: String
-        get() = event().object_attributes.iid.toString()
+        get() = event().pullRequest.id.toString()
 
     override fun addMrComment(body: MrCommentBody) {
         apiService.addMrComment(
             cred = getGitCred(),
             gitProjectId = data.eventCommon.gitProjectId,
-            mrId = event().object_attributes.id,
+            mrId = event().pullRequest.id.toLong(),
             mrBody = body
         )
     }
 
-    override val api: TGitApiService
+    override val api: GithubApiService
         get() = apiService
 
     // 获取Fork库的凭证数据
-    private fun getForkGitCred(): TGitCred {
+    private fun getForkGitCred(): GithubCred {
         return streamTriggerTokenService.getGitProjectToken(data.eventCommon.sourceGitProjectId)?.let {
-            TGitCred(
+            GithubCred(
                 accessToken = it,
                 useAccessToken = true,
                 userId = null
             )
-        } ?: TGitCred(data.setting.enableUser)
+        } ?: GithubCred(data.setting.enableUser)
     }
 
     override fun init(): BaseAction? {
@@ -122,40 +127,48 @@ class TGitMrActionGit(
 
     private fun initCommonData(): GitBaseAction {
         val event = event()
-        this.data.eventCommon = EventCommonData(
-            gitProjectId = event.object_attributes.target_project_id.toString(),
-            scmType = ScmType.CODE_TGIT,
-            sourceGitProjectId = event.object_attributes.source_project_id.toString(),
-            branch = if (event.object_attributes.action == TGitMergeActionKind.MERGE.value) {
-                event.object_attributes.target_branch
+        val lastCommit = api.getGitCommitInfo(
+            cred = if (event.isPrForkEvent()) {
+                getForkGitCred()
             } else {
-                event.object_attributes.source_branch
+                getGitCred()
+            }, gitProjectId = event.pullRequest.head.repo.fullName,
+            sha = event.pullRequest.head.sha,
+            retry = ApiRequestRetryInfo(retry = true)
+        )
+        this.data.eventCommon = EventCommonData(
+            gitProjectId = event.pullRequest.base.repo.id.toString(),
+            scmType = ScmType.GITHUB,
+            sourceGitProjectId = event.pullRequest.head.repo.id.toString(),
+            branch = if (event.pullRequest.merged == true) {
+                event.pullRequest.head.ref
+            } else {
+                event.pullRequest.base.ref
             },
             commit = EventCommonDataCommit(
-                commitId = event.object_attributes.last_commit.id,
-                commitMsg = event.object_attributes.last_commit.message,
-                commitAuthorName = event.object_attributes.last_commit.author.name,
-                commitTimeStamp = GitActionCommon.getCommitTimeStamp(event.object_attributes.last_commit.timestamp)
+                commitId = event.pullRequest.head.sha,
+                commitMsg = lastCommit?.commitMsg,
+                commitAuthorName = event.pullRequest.head.user.login,
+                commitTimeStamp = lastCommit?.commitDate
             ),
-            userId = event.user.username,
-            gitProjectName = GitUtils.getProjectName(event.object_attributes.target.http_url)
+            userId = event.sender.login,
+            gitProjectName = event.pullRequest.base.repo.fullName,
+            eventType = GithubPullRequestEvent.classType
         )
         return this
     }
 
-    override fun isStreamDeleteAction() = event().isDeleteEvent()
+    override fun isStreamDeleteAction() = false
 
     override fun buildRequestEvent(eventStr: String): GitRequestEvent? {
         val event = event()
         // 目前不支持Mr信息更新的触发
-        if (event.object_attributes.action == "update" &&
-            event.object_attributes.extension_action != "push-update"
-        ) {
-            logger.info("Git web hook is ${event.object_attributes.action} merge request")
+        if (event.action == GithubPrEventAction.EDITED.value) {
+            logger.info("Github web hook is ${event.action} merge request")
             return null
         }
 
-        return GitRequestEventHandle.createMergeEvent(event, eventStr)
+        return GithubRequestEventHandle.createMergeEvent(event, eventStr)
     }
 
     override fun skipStream(): Boolean {
@@ -170,21 +183,21 @@ class TGitMrActionGit(
 
     override fun checkMrConflict(path2PipelineExists: Map<String, StreamTriggerPipeline>): Boolean {
         // 已合并的无需检查
-        if (event().object_attributes.action != TGitMergeActionKind.MERGE.value) {
+        if (event().pullRequest.merged == true) {
             return true
         }
         return mrConflictCheck.checkMrConflict(this, path2PipelineExists)
     }
 
     override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {
-        if (event().isMrForkNotMergeEvent()) {
+        if (event().isPrForkNotMergeEvent()) {
             return
         }
         val deleteList = mutableListOf<String>()
         val gitMrChangeInfo = apiService.getMrChangeInfo(
             cred = this.getGitCred(),
             gitProjectId = data.eventCommon.gitProjectId,
-            mrId = event().object_attributes.id.toString(),
+            mrId = event().pullRequest.id.toString(),
             retry = ApiRequestRetryInfo(retry = true)
         )
         gitMrChangeInfo?.files?.forEach { file ->
@@ -201,20 +214,20 @@ class TGitMrActionGit(
         val targetBranchYamlPathList = GitActionCommon.getYamlPathList(
             action = this,
             gitProjectId = getGitProjectIdOrName(),
-            ref = GitActionCommon.getTriggerBranch(event.object_attributes.target_branch)
+            ref = GitActionCommon.getTriggerBranch(event.pullRequest.base.ref)
         ).toSet()
 
         // 已经merged的直接返回目标分支的文件列表即可
-        if (event.isMrMergeEvent()) {
+        if (event.pullRequest.merged == true) {
             return targetBranchYamlPathList.map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
         }
 
         // 获取源分支文件列表
         val sourceBranchYamlPathList = GitActionCommon.getYamlPathList(
             this,
-            event.object_attributes.source_project_id.toString(),
+            event.pullRequest.head.repo.id.toString(),
             ref = data.eventCommon.commit.commitId,
-            cred = if (event.isMrForkEvent()) {
+            cred = if (event.isPrForkEvent()) {
                 getForkGitCred()
             } else {
                 null
@@ -237,7 +250,7 @@ class TGitMrActionGit(
      */
     override fun getYamlContent(fileName: String): Pair<String, String> {
         val event = event()
-        if (event.isMrMergeEvent()) {
+        if (event.pullRequest.merged == true) {
             return Pair(
                 data.eventCommon.branch, api.getFileContent(
                     cred = this.getGitCred(),
@@ -251,9 +264,9 @@ class TGitMrActionGit(
 
         val targetFile = getFileInfo(
             cred = getGitCred(),
-            gitProjectId = event.object_attributes.target_project_id.toString(),
+            gitProjectId = event.pullRequest.base.repo.id.toString(),
             fileName = fileName,
-            ref = event.object_attributes.target_branch,
+            ref = event.pullRequest.base.ref,
             retry = ApiRequestRetryInfo(true)
         )
 
@@ -261,55 +274,55 @@ class TGitMrActionGit(
             return if (targetFile?.content.isNullOrBlank()) {
                 logger.warn(
                     "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
-                        "get file $fileName content from ${event.object_attributes.target_project_id} " +
-                        "branch ${event.object_attributes.target_branch} is blank because no file"
+                        "get file $fileName content from ${event.pullRequest.base.repo.fullName} " +
+                        "branch ${event.pullRequest.base.ref} is blank because no file"
                 )
                 Pair(
-                    event.object_attributes.target_branch, ""
+                    event.pullRequest.base.ref, ""
                 )
             } else {
                 val c = String(Base64.getDecoder().decode(targetFile!!.content))
                 if (c.isBlank()) {
                     logger.warn(
                         "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
-                            "get file $fileName content from ${event.object_attributes.target_project_id} " +
-                            "target branch ${event.object_attributes.target_branch} is blank " +
+                            "get file $fileName content from ${event.pullRequest.base.repo.fullName} " +
+                            "target branch ${event.pullRequest.base.ref} is blank " +
                             "because git content blank"
                     )
                 }
-                Pair(event.object_attributes.target_branch, c)
+                Pair(event.pullRequest.base.ref, c)
             }
         }
 
         val sourceFile = getFileInfo(
-            cred = if (event.isMrForkEvent()) {
+            cred = if (event.isPrForkEvent()) {
                 getForkGitCred()
             } else {
                 getGitCred()
             },
-            gitProjectId = event.object_attributes.source_project_id.toString(),
+            gitProjectId = event.pullRequest.head.repo.id.toString(),
             fileName = fileName,
-            ref = event.object_attributes.last_commit.id,
+            ref = event.pullRequest.head.sha,
             retry = ApiRequestRetryInfo(true)
         )
         val sourceContent = if (sourceFile?.content.isNullOrBlank()) {
             logger.warn(
                 "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
-                    "get file $fileName content from ${event.object_attributes.source_project_id} " +
-                    "source commit ${event.object_attributes.last_commit.id} is blank because no file"
+                    "get file $fileName content from ${event.pullRequest.head.repo.fullName} " +
+                    "source commit ${event.pullRequest.head.sha} is blank because no file"
             )
-            Pair(event.object_attributes.last_commit.id, "")
+            Pair(event.pullRequest.head.sha, "")
         } else {
             val c = String(Base64.getDecoder().decode(sourceFile!!.content))
             if (c.isBlank()) {
                 logger.warn(
                     "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
-                        "get file $fileName content from ${event.object_attributes.source_project_id} " +
-                        "source commit ${event.object_attributes.last_commit.id} is blank " +
+                        "get file $fileName content from ${event.pullRequest.head.repo.fullName} " +
+                        "source commit ${event.pullRequest.head.sha} is blank " +
                         "because git content blank"
                 )
             }
-            Pair(event.object_attributes.last_commit.id, c)
+            Pair(event.pullRequest.head.sha, c)
         }
 
         if (targetFile?.blobId.isNullOrBlank()) {
@@ -322,13 +335,13 @@ class TGitMrActionGit(
 
         val mergeRequest = apiService.getMrInfo(
             cred = getGitCred(),
-            gitProjectId = event.object_attributes.target_project_id.toString(),
-            mrId = event.object_attributes.id.toString(),
+            gitProjectId = event.pullRequest.base.repo.id.toString(),
+            mrId = event.pullRequest.id.toString(),
             retry = ApiRequestRetryInfo(true)
         )!!
         val baseTargetFile = getFileInfo(
             cred = getGitCred(),
-            gitProjectId = event.object_attributes.target_project_id.toString(),
+            gitProjectId = event.pullRequest.base.repo.id.toString(),
             fileName = fileName,
             ref = mergeRequest.baseCommit,
             retry = ApiRequestRetryInfo(true)
@@ -358,8 +371,8 @@ class TGitMrActionGit(
         apiService.getMrChangeInfo(
             cred = (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as TGitCred,
             // 获取mr信息的project Id和事件强关联，不一定是流水线所处库
-            gitProjectId = data.eventCommon.gitProjectId,
-            mrId = event().object_attributes.id.toString(),
+            gitProjectId = data.eventCommon.gitProjectName!!,
+            mrId = event().pullRequest.id.toString(),
             retry = ApiRequestRetryInfo(true)
         )?.files?.forEach {
             if (it.deletedFile) {
@@ -383,7 +396,7 @@ class TGitMrActionGit(
         fileName: String,
         ref: String?,
         retry: ApiRequestRetryInfo
-    ): TGitFileInfo? {
+    ): GithubFileInfo? {
         return try {
             apiService.getFileInfo(
                 cred = cred,
@@ -450,8 +463,8 @@ class TGitMrActionGit(
         val mrAction = event.getActionValue() ?: false
         val isMatch = TriggerMatcher.isMrMatch(
             triggerOn = triggerOn,
-            sourceBranch = GitActionCommon.getTriggerBranch(event.object_attributes.source_branch),
-            targetBranch = GitActionCommon.getTriggerBranch(event.object_attributes.target_branch),
+            sourceBranch = GitActionCommon.getTriggerBranch(event.pullRequest.head.ref),
+            targetBranch = GitActionCommon.getTriggerBranch(event.pullRequest.base.ref),
             changeSet = getChangeSet(),
             userId = data.getUserId(),
             mrAction = mrAction
@@ -475,33 +488,18 @@ class TGitMrActionGit(
         )
     }
 
-    override fun needSaveOrUpdateBranch() = !event().isMrForkEvent()
+    override fun needSaveOrUpdateBranch() = !event().isPrForkEvent()
 
-    override fun sendUnlockWebhook() {
-        if (event().manual_unlock == true) {
-            gitCheckService.sendUnlockWebhook(
-                gitProjectId = data.getGitProjectId(),
-                mrId = event().object_attributes.id,
-                // 解锁延迟5s，确保在commit check发送后再发送webhook锁解锁
-                delayMills = 5000
-            )
-        }
-    }
+    override fun sendUnlockWebhook() {}
 }
 
-private fun GitMergeRequestEvent.getActionValue(): String? {
-    return when (object_attributes.action) {
-        TGitMergeActionKind.OPEN.value -> StreamMrEventAction.OPEN.value
-        TGitMergeActionKind.CLOSE.value -> StreamMrEventAction.CLOSE.value
-        TGitMergeActionKind.REOPEN.value -> StreamMrEventAction.REOPEN.value
-        TGitMergeActionKind.UPDATE.value -> {
-            if (object_attributes.extension_action == TGitMergeExtensionActionKind.PUSH_UPDATE.value) {
-                StreamMrEventAction.PUSH_UPDATE.value
-            } else {
-                null
-            }
-        }
-        TGitMergeActionKind.MERGE.value -> StreamMrEventAction.MERGE.value
+private fun GithubPullRequestEvent.getActionValue(): String? {
+    return when (GithubPrEventAction.get(this)) {
+        GithubPrEventAction.OPEN -> StreamMrEventAction.OPEN.value
+        GithubPrEventAction.CLOSE -> StreamMrEventAction.CLOSE.value
+        GithubPrEventAction.REOPEN -> StreamMrEventAction.REOPEN.value
+        GithubPrEventAction.PUSH_UPDATE -> StreamMrEventAction.PUSH_UPDATE.value
+        GithubPrEventAction.MERGE -> StreamMrEventAction.MERGE.value
         else -> null
     }
 }

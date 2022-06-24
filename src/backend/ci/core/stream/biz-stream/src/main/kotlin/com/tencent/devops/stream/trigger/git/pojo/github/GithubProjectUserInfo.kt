@@ -25,17 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.mq.streamRequest
+package com.tencent.devops.stream.trigger.git.pojo.github
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.stream.constant.MQ
-import org.slf4j.MDC
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectUserInfo
 
-@Event(MQ.EXCHANGE_STREAM_REQUEST_EVENT, MQ.ROUTE_STREAM_REQUEST_EVENT)
-data class StreamRequestEvent(
-    val event: String,
-    val webHookType: String,
-    val eventType: String? = null,
-    val traceId: String? = MDC.get(TraceTag.BIZID)
-)
+data class GithubProjectUserInfo(
+    // tgit的权限等级 GUEST = 10 FOLLOWER = 15 REPORTER = 20 DEVELOPER = 30 MASTER = 40 OWNER = 50
+    override val accessLevel: Int
+) : StreamGitProjectUserInfo

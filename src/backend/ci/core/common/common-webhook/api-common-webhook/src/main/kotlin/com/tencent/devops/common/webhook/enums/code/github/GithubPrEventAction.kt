@@ -25,17 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.mq.streamRequest
+package com.tencent.devops.common.webhook.enums.code.github
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.stream.constant.MQ
-import org.slf4j.MDC
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 
-@Event(MQ.EXCHANGE_STREAM_REQUEST_EVENT, MQ.ROUTE_STREAM_REQUEST_EVENT)
-data class StreamRequestEvent(
-    val event: String,
-    val webHookType: String,
-    val eventType: String? = null,
-    val traceId: String? = MDC.get(TraceTag.BIZID)
-)
+/*
+ * Stream Mr 事件支持动作
+ * 根据Webhook事件抽象Stream action
+ */
+
+enum class GithubPrEventAction(val value: String) {
+    OPEN("opened"),
+    CLOSE("closed"),
+    REOPEN("reopened"),
+    PUSH_UPDATE("synchronize"),
+    MERGE("also closed"),
+    EDITED("edited"), // 修改mr信息
+    /**
+     * assigned/auto_merge_disabled/auto_merge_enabled/
+     * converted_to_draft/edited/labeled/locked/ready_for_review/
+     * review_request_removed/review_requested/unassigned/unlabeled/unlocked
+     */
+    STREAM_NOT_SUPPORT("other action");
+
+    companion object {
+        fun get(eventAction: GithubPullRequestEvent): GithubPrEventAction {
+            if (eventAction.pullRequest.merged == true && eventAction.action == CLOSE.value) return MERGE
+            values().forEach {
+                if (eventAction.action == it.value) return it
+            }
+            return STREAM_NOT_SUPPORT
+        }
+    }
+}

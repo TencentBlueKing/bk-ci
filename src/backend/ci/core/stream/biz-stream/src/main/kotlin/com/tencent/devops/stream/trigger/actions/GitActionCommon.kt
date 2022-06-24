@@ -1,4 +1,4 @@
-package com.tencent.devops.stream.trigger.actions.tgit
+package com.tencent.devops.stream.trigger.actions
 
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
@@ -9,7 +9,6 @@ import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.Constansts
-import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitTreeFileInfo
@@ -20,9 +19,9 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 
-object TGitActionCommon {
+object GitActionCommon {
 
-    private val logger = LoggerFactory.getLogger(TGitActionCommon::class.java)
+    private val logger = LoggerFactory.getLogger(GitActionCommon::class.java)
 
     fun getStartParams(
         action: BaseAction,

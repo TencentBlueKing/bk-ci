@@ -25,17 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.mq.streamRequest
+package com.tencent.devops.stream.service.transfer
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.stream.constant.MQ
-import org.slf4j.MDC
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
+import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import org.jooq.DSLContext
+import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-@Event(MQ.EXCHANGE_STREAM_REQUEST_EVENT, MQ.ROUTE_STREAM_REQUEST_EVENT)
-data class StreamRequestEvent(
-    val event: String,
-    val webHookType: String,
-    val eventType: String? = null,
-    val traceId: String? = MDC.get(TraceTag.BIZID)
-)
+@Configuration
+class StreamTransferConfig {
+
+    @Bean
+    @ConditionalOnProperty(prefix = "stream", value = ["scmType"], havingValue = "GITHUB")
+    fun streamGithubTransferService(
+        dslContext: DSLContext,
+        client: Client,
+        streamBasicSettingDao: StreamBasicSettingDao
+    ) = StreamGithubTransferService(dslContext, client, streamBasicSettingDao)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "stream", value = ["scmType"], havingValue = "CODE_GIT")
+    fun streamTGitTransferService(
+        dslContext: DSLContext,
+        client: Client,
+        streamBasicSettingDao: StreamBasicSettingDao
+    ) = StreamTGitTransferService(dslContext, client, streamBasicSettingDao)
+}

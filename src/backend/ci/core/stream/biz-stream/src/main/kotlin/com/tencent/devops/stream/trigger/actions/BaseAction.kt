@@ -43,6 +43,13 @@ interface BaseAction {
     fun getProjectCode(gitProjectId: String? = null): String
 
     /**
+     *  由于API接口所需参数不同,所以区分
+     *  TGIT -> 接口需要 git project id
+     *  Github -> 接口需要 git project name
+     */
+    fun getGitProjectIdOrName(): String
+
+    /**
      * 获取调用当前git平台信息的cred，可能会请求Git api,所以放到action
      * @param personToken yaml语法中会直接填写的accessToken或tickId转换的token
      */

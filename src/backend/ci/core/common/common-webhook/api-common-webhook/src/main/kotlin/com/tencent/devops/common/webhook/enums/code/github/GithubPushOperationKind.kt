@@ -25,17 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.mq.streamRequest
+package com.tencent.devops.common.webhook.enums.code.github
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.stream.constant.MQ
-import org.slf4j.MDC
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 
-@Event(MQ.EXCHANGE_STREAM_REQUEST_EVENT, MQ.ROUTE_STREAM_REQUEST_EVENT)
-data class StreamRequestEvent(
-    val event: String,
-    val webHookType: String,
-    val eventType: String? = null,
-    val traceId: String? = MDC.get(TraceTag.BIZID)
-)
+/*
+ * operation_kind字段
+ * create：创建分支、合并普通MR的push
+ * delete：删除分支的push
+ * update：文件修改的push
+ * update_nonfastword：non-fast-forward提交
+*/
+enum class GithubPushOperationKind(val value: String) {
+    CREAT("create"),
+    DELETE("delete"),
+    UPDATE("update"),
+    UPDATE_NONFASTFORWORD("update_nonfastforward");
+
+    companion object {
+        fun getOperationKind(pushEvent: GithubPushEvent): GithubPushOperationKind {
+            return when {
+                pushEvent.forced -> UPDATE_NONFASTFORWORD
+                pushEvent.deleted -> DELETE
+                pushEvent.created -> CREAT
+                else -> UPDATE
+            }
+        }
+    }
+}

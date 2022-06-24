@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.service
+package com.tencent.devops.stream.service.transfer
 
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
@@ -54,6 +54,7 @@ import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
 import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.pojo.enums.toGitCodeAscOrDesc
 import com.tencent.devops.stream.pojo.enums.toGitCodeOrderBy
+import com.tencent.devops.stream.service.StreamGitTransferService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,7 +62,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
 @Service
-@ConditionalOnProperty(prefix = "stream", value = ["scmType"], havingValue = "CODE_GIT")
 class StreamTGitTransferService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,

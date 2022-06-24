@@ -10,7 +10,7 @@ import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
@@ -48,6 +48,7 @@ class StreamRepoTriggerAction(
     override fun needAddWebhookParams() = true
 
     override fun getProjectCode(gitProjectId: String?) = baseAction.getProjectCode(gitProjectId)
+    override fun getGitProjectIdOrName() = baseAction.getGitProjectIdOrName()
 
     override fun getGitCred(personToken: String?): StreamGitCred = baseAction.getGitCred(personToken)
 
@@ -66,9 +67,9 @@ class StreamRepoTriggerAction(
     override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {}
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
-        return TGitActionCommon.getYamlPathList(
+        return GitActionCommon.getYamlPathList(
             action = baseAction,
-            gitProjectId = data.getGitProjectId(),
+            gitProjectId = getGitProjectIdOrName(),
             ref = data.context.repoTrigger!!.branch
         ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
     }
@@ -78,7 +79,7 @@ class StreamRepoTriggerAction(
             data.context.repoTrigger!!.branch,
             api.getFileContent(
                 cred = baseAction.getGitCred(),
-                gitProjectId = data.getGitProjectId(),
+                gitProjectId = getGitProjectIdOrName(),
                 fileName = fileName,
                 ref = data.context.repoTrigger!!.branch,
                 retry = ApiRequestRetryInfo(true)

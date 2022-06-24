@@ -25,16 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.actions.tgit
+package com.tencent.devops.stream.trigger.actions.github
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
@@ -43,100 +46,81 @@ import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
+import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
+import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
+import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
+import com.tencent.devops.stream.trigger.parsers.triggerParameter.GithubRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.service.GitCheckService
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
-class TGitIssueActionGit(
-    private val dslContext: DSLContext,
-    private val apiService: TGitApiService,
+class GithubTagPushActionGit(
+    private val apiService: GithubApiService,
     private val gitCheckService: GitCheckService,
-    private val basicSettingDao: StreamBasicSettingDao
-) : TGitActionGit(apiService, gitCheckService), GitBaseAction {
+    private val streamTriggerCache: StreamTriggerCache
+) : GithubActionGit(apiService, gitCheckService, streamTriggerCache), GitBaseAction {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TGitIssueActionGit::class.java)
+        val logger = LoggerFactory.getLogger(GithubTagPushActionGit::class.java)
     }
 
-    override val metaData: ActionMetaData = ActionMetaData(
-        streamObjectKind = StreamObjectKind.ISSUE
-    )
+    override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.TAG_PUSH)
 
     override lateinit var data: ActionData
-    override fun event() = data.event as GitIssueEvent
+    override fun event() = data.event as GithubPushEvent
 
-    override val api: TGitApiService
+    override val api: GithubApiService
         get() = apiService
 
     override fun init(): BaseAction? {
-        if (data.isSettingInitialized) {
-            return initCommonData()
-        }
-        val setting = basicSettingDao.getSetting(dslContext, event().objectAttributes.projectId)
-        if (null == setting || !setting.enableCi) {
-            logger.info(
-                "git ci is not enabled, but it has repo trigger , git project id: ${event().objectAttributes.projectId}"
-            )
-            return null
-        }
-        data.setting = StreamTriggerSetting(setting)
         return initCommonData()
     }
 
     private fun initCommonData(): GitBaseAction {
         val event = event()
-        val gitProjectId = event.objectAttributes.projectId
+        val lastCommit = event.headCommit
 
-        val defaultBranch = apiService.getGitProjectInfo(
-            cred = this.getGitCred(),
-            gitProjectId = gitProjectId.toString(),
-            retry = ApiRequestRetryInfo(true)
-        )!!.defaultBranch!!
-        val latestCommit = apiService.getGitCommitInfo(
-            cred = this.getGitCred(),
-            gitProjectId = gitProjectId.toString(),
-            sha = defaultBranch,
-            retry = ApiRequestRetryInfo(retry = true)
-        )
         this.data.eventCommon = EventCommonData(
-            gitProjectId = event.objectAttributes.projectId.toString(),
-            scmType = ScmType.CODE_TGIT,
-            branch = defaultBranch,
+            gitProjectId = event.repository.id.toString(),
+            scmType = ScmType.GITHUB,
+            branch = event.ref.removePrefix("refs/tags/"),
             commit = EventCommonDataCommit(
-                commitId = latestCommit?.commitId ?: "0",
-                commitMsg = event.objectAttributes.title,
-                commitTimeStamp = GitActionCommon.getCommitTimeStamp(latestCommit?.commitDate),
-                commitAuthorName = latestCommit?.commitAuthor
+                commitId = event.after,
+                commitMsg = lastCommit.message,
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(lastCommit.timestamp),
+                commitAuthorName = lastCommit.author.name
             ),
-            userId = event.user.username,
-            gitProjectName = GitUtils.getProjectName(event.repository.homepage)
+            userId = event.sender.login,
+            gitProjectName = event.repository.fullName,
+            eventType = GithubPushEvent.classType
         )
         return this
     }
 
-    override fun isStreamDeleteAction() = event().isDeleteEvent()
+    override fun isStreamDeleteAction() = event().deleted
 
-    override fun buildRequestEvent(eventStr: String): GitRequestEvent {
-        return GitRequestEventHandle.createIssueEvent(
-            gitIssueEvent = event(),
-            e = eventStr,
-            defaultBranch = data.eventCommon.branch,
-            latestCommit = data.eventCommon.commit
-        )
+    override fun buildRequestEvent(eventStr: String): GitRequestEvent? {
+        if (!event().tagPushEventFilter()) {
+            return null
+        }
+        return GithubRequestEventHandle.createTagPushEvent(event(), eventStr)
     }
 
     override fun skipStream(): Boolean {
         return false
     }
 
-    override fun checkProjectConfig() {}
+    override fun checkProjectConfig() {
+        if (!data.setting.buildPushedBranches) {
+            throw StreamTriggerException(this, TriggerReason.BUILD_PUSHED_BRANCHES_DISABLED)
+        }
+    }
 
     override fun checkMrConflict(path2PipelineExists: Map<String, StreamTriggerPipeline>): Boolean {
         return true
@@ -166,16 +150,43 @@ class TGitIssueActionGit(
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
-        val (isTrigger, startParams) = GitActionCommon.matchAndStartParams(this, triggerOn)
+        val event = event()
+        val isMatch = TriggerMatcher.isTagPushMatch(
+            triggerOn,
+            GitActionCommon.getTriggerBranch(event.ref),
+            data.getUserId(),
+            GitActionCommon.getTriggerBranch(event.baseRef!!)
+        )
+        val params = GitActionCommon.getStartParams(
+            action = this,
+            triggerOn = triggerOn
+        )
         return TriggerResult(
-            trigger = isTrigger,
-            startParams = startParams,
+            trigger = isMatch,
+            startParams = params,
             timeTrigger = false,
             deleteTrigger = false
         )
     }
 
     override fun getWebHookStartParam(triggerOn: TriggerOn): Map<String, String> {
-        return GitActionCommon.matchAndStartParams(this, triggerOn).second
+        return GitActionCommon.getStartParams(
+            action = this,
+            triggerOn = triggerOn
+        )
     }
+
+    override fun needSendCommitCheck() = !event().deleted
+}
+
+private fun GithubPushEvent.tagPushEventFilter(): Boolean {
+    // 放开删除分支操作为了流水线删除功能
+    if (deleted) {
+        return true
+    }
+    if (commits.isEmpty()) {
+        GithubPushActionGit.logger.info("$after Github tag web hook no commit")
+        return false
+    }
+    return true
 }

@@ -25,17 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.mq.streamRequest
+package com.tencent.devops.stream.trigger.git.pojo.github
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.stream.constant.MQ
-import org.slf4j.MDC
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitMrInfo
 
-@Event(MQ.EXCHANGE_STREAM_REQUEST_EVENT, MQ.ROUTE_STREAM_REQUEST_EVENT)
-data class StreamRequestEvent(
-    val event: String,
-    val webHookType: String,
-    val eventType: String? = null,
-    val traceId: String? = MDC.get(TraceTag.BIZID)
-)
+data class GithubMrInfo(
+    override val mergeStatus: String,
+    val baseCommit: String?
+) : StreamGitMrInfo
+
+enum class GithubMrStatus(val value: String) {
+    MERGE_STATUS_UNCHECKED("unchecked"),
+    MERGE_STATUS_CAN_BE_MERGED("can_be_merged"),
+    MERGE_STATUS_CAN_NOT_BE_MERGED("cannot_be_merged")
+    // 项目有配置 mr hook，当创建mr后，发送mr hook前，这个状态是hook_intercept,与stream无关
+    // MERGE_STATUS_HOOK_INTERCEPT("hook_intercept")
+}

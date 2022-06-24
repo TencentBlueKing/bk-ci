@@ -42,11 +42,13 @@ import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamManualEvent
-import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
+import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
+import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
@@ -89,12 +91,18 @@ class StreamManualAction(
             commit = EventCommonDataCommit(
                 commitId = event.commitId ?: (latestCommit?.commitId ?: ""),
                 commitMsg = event.customCommitMsg,
-                commitTimeStamp = TGitActionCommon.getCommitTimeStamp(null),
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(null),
                 commitAuthorName = event.userId
             ),
             gitProjectName = null
         )
         return this
+    }
+
+    override fun getGitProjectIdOrName() = when (api) {
+        is TGitApiService -> data.eventCommon.gitProjectId
+        is GithubApiService -> data.eventCommon.gitProjectName!!
+        else -> data.eventCommon.gitProjectId
     }
 
     override fun getProjectCode(gitProjectId: String?) = if (gitProjectId != null) {
@@ -140,7 +148,7 @@ class StreamManualAction(
             data.eventCommon.branch,
             api.getFileContent(
                 cred = this.getGitCred(),
-                gitProjectId = data.getGitProjectId(),
+                gitProjectId = getGitProjectIdOrName(),
                 fileName = fileName,
                 ref = data.eventCommon.branch,
                 retry = ApiRequestRetryInfo(true)
