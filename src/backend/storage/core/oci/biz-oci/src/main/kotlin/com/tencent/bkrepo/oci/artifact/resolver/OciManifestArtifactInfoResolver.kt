@@ -55,13 +55,12 @@ class OciManifestArtifactInfoResolver : ArtifactInfoResolver {
         artifactUri: String,
         request: HttpServletRequest
     ): ArtifactInfo {
-        var requestURL = request.requestURL.toString()
+        var requestUrl = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString()
         if (enablePrefix) {
-            requestURL = requestURL.removePrefix("/oci")
+            requestUrl = requestUrl.removePrefix("/oci")
         }
         return when {
-            requestURL.contains(MANIFEST_CONTENT_PREFIX) -> {
-                val requestUrl = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString()
+            requestUrl.contains(MANIFEST_CONTENT_PREFIX) -> {
                 val artifactUrl = requestUrl.removePrefix("$USER_API_PREFIX/manifest/$projectId/$repoName/")
                 val attributes = request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE) as Map<*, *>
                 val reference = attributes["tag"].toString().trim()
@@ -69,7 +68,6 @@ class OciManifestArtifactInfoResolver : ArtifactInfoResolver {
                 OciManifestArtifactInfo(projectId, repoName, packageName, "", reference, false)
             }
             else -> {
-                val requestUrl = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString()
                 val packageName = requestUrl.substringBeforeLast("/manifests").removePrefix("/v2/$projectId/$repoName/")
                 val attributes = request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE) as Map<*, *>
                 // 解析tag
