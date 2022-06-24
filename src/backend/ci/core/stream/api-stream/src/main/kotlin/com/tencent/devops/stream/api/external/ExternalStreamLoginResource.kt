@@ -23,36 +23,34 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.stream.api
+package com.tencent.devops.stream.api.external
 
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXTERNAL_GIT_HOOKS"], description = "GIT WebHooks触发")
-@Path("/service/scm")
+@Api(tags = ["EXTERNAL_STREAM_LOGIN"], description = "External-STREAM_LOGIN")
+@Path("/external/stream/login")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ExternalScmResource {
+interface ExternalStreamLoginResource {
 
-    @ApiOperation("Code平台Git仓库提交")
+    @ApiOperation("获取登录url")
     @POST
-    @Path("/codegit/commit")
-    fun webHookCodeGitCommit(
-        @HeaderParam("X-Token")
-        token: String,
-        @ApiParam("X-Event")
-        @HeaderParam("X-Event")
-        eventType: String,
-        event: String
-    ): Result<Boolean>
+    @Path("url")
+    fun loginUrl(
+        @ApiParam(value = "type")
+        @QueryParam("type")
+        type: String
+    ): Result<String>
 }
