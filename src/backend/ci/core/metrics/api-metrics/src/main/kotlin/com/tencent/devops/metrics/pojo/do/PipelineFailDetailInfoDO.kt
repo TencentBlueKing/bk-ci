@@ -13,10 +13,10 @@ data class PipelineFailDetailInfoDO(
     val startUser: String,
     @ApiModelProperty("启动时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    val startTime: LocalDateTime,
+    val startTime: LocalDateTime?,
     @ApiModelProperty("结束时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    val endTime: LocalDateTime,
+    val endTime: LocalDateTime?,
     @ApiModelProperty("错误信息")
-    val errorInfo: ErrorCodeInfoDO
+    val errorInfo: ErrorCodeInfoDO?
 )

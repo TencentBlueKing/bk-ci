@@ -51,8 +51,7 @@ import java.time.LocalDateTime
 @Service
 class ThirdPartyServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val thirdPartyOverviewInfoDao: ThirdPartyOverviewInfoDao,
-    private val measureEventDispatcher: MetricsEventDispatcher
+    private val thirdPartyOverviewInfoDao: ThirdPartyOverviewInfoDao
 ) : ThirdPartyManageService {
     override fun queryPipelineSummaryInfo(
         queryPipelineSummaryInfoDTO: QueryPipelineSummaryInfoDTO
@@ -99,10 +98,4 @@ class ThirdPartyServiceImpl @Autowired constructor(
                 turboInfo = TurboInfoDO(result?.get(BK_TURBO_SAVE_TIME, BigDecimal::class.java)?.toDouble())
             )
         }
-
-    override fun addPipelineSummaryInfo(projectId: String) {
-        measureEventDispatcher.dispatch(
-            QualityReportEvent("${LocalDateTime.now()}", projectId, 10, 10)
-        )
-    }
 }
