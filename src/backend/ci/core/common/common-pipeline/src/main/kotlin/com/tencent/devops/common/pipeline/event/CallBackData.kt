@@ -109,8 +109,9 @@ data class PipelineEvent(
 
 data class StreamEnabledEvent(
     val userId: String,
-    val repoId: String,
-    val repoUrl: String
+    val gitProjectId: Long,
+    val gitProjectUrl: String,
+    val enable: Boolean
 )
 
 data class BuildEvent(

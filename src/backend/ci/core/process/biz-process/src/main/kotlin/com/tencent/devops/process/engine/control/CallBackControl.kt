@@ -55,6 +55,7 @@ import com.tencent.devops.process.pojo.CallBackHeader
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.pipeline.event.StreamEnabledEvent
 import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import okhttp3.MediaType
@@ -102,20 +103,21 @@ class CallBackControl @Autowired constructor(
         callBackPipelineEvent(projectId, pipelineId, CallBackEvent.RESTORE_PIPELINE)
     }
 
-    fun piplineStreamEnabledEvent(projectId: String, repoId: String, repoUrl: String, userId: String) {
-        logger.info("$projectId|STREAM_ENABLED|callback pipeline event")
-        val list = projectPipelineCallBackService.listProjectCallBack(
-            projectId = projectId,
-            events = CallBackEvent.STREAM_ENABLED.name
-        )
-
-        val pipelineStreamEnabled = StreamEnabledEvent(
-            repoId = repoId,
-            repoUrl = repoUrl,
-            userId = userId
-        )
-
-        sendToCallBack(CallBackData(event = CallBackEvent.STREAM_ENABLED, data = pipelineStreamEnabled), list)
+    fun pipelineStreamEnabledEvent(event: PipelineStreamEnabledEvent) {
+        with(event) {
+            logger.info("$projectId|STREAM_ENABLED|callback stream enable event")
+            val list = projectPipelineCallBackService.listProjectCallBack(
+                projectId = projectId,
+                events = CallBackEvent.STREAM_ENABLED.name
+            )
+            val streamEnabledEvent = StreamEnabledEvent(
+                gitProjectId = gitProjectId,
+                gitProjectUrl = gitProjectUrl,
+                userId = userId,
+                enable = enable
+            )
+            sendToCallBack(CallBackData(event = CallBackEvent.STREAM_ENABLED, data = streamEnabledEvent), list)
+        }
     }
 
     private fun callBackPipelineEvent(projectId: String, pipelineId: String, callBackEvent: CallBackEvent) {

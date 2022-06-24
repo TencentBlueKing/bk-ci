@@ -18,6 +18,7 @@ data class PipelineStreamEnabledEvent(
     override val userId: String,
     override var actionType: ActionType = ActionType.START,
     override var delayMills: Int = 0,
-    val repoId: String,
-    val repoUrl: String
+    val gitProjectId: Long,
+    val gitProjectUrl: String,
+    val enable: Boolean
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
