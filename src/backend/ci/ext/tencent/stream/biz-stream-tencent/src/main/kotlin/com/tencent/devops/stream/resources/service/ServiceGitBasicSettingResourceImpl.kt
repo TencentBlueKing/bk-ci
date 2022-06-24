@@ -105,8 +105,9 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = "",
                 userId = userId,
-                repoId = setting!!.gitProjectId.toString(),
-                repoUrl = setting!!.gitHttpUrl
+                gitProjectId = setting!!.gitProjectId,
+                gitProjectUrl = setting.gitHttpUrl,
+                enable = enabled
             )
         )
         return Result(result)
