@@ -43,7 +43,10 @@ default_value_dict = {
     'bkCiDocsUrl': 'https://bk.tencent.com/docs/markdown/持续集成平台/产品白皮书',
     'bkCiArtifactoryRealm': 'local',
     'bkRepoHost': 'repo.demo.com',
-    'bkRepoGatewayIp': '127.0.0.1'
+    'bkRepoGatewayIp': '127.0.0.1',
+    'bkCiStreamScmType': 'CODE_GIT',
+    'bkCiStreamUrl': 'devops.example.com',
+    'bkCiStreamGitUrl': 'www.github.com'
 }
 
 if os.path.isfile(default_value_json):
@@ -72,7 +75,7 @@ include_dict = {
     '__BK_CI_INFLUXDB_ADDR__': 'http://{{ include "bkci.influxdbHost" . }}:{{ include "bkci.influxdbPort" . }}',
     '__BK_CI_VERSION__': '{{ .Chart.AppVersion }}',
     '__BK_CI_DISPATCH_KUBERNETES_NS__': '{{ .Release.Namespace }}',
-    '__BK_CI_CONSUL_DISCOVERY_TAG__':'{{ .Release.Namespace }}'
+    '__BK_CI_CONSUL_DISCOVERY_TAG__': '{{ .Release.Namespace }}'
 }
 
 # 读取变量映射
