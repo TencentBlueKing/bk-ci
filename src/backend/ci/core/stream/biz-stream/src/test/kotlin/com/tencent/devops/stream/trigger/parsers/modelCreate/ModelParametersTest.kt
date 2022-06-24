@@ -57,10 +57,10 @@ internal class ModelParametersTest {
                 properties = null
             ),
             BuildFormProperty(
-                id = "array",
+                id = "variables.array",
                 required = false,
                 type = BuildFormPropertyType.STRING,
-                defaultValue = "[1, 2]",
+                defaultValue = "1,2",
                 options = null,
                 desc = null,
                 repoHashId = null,
@@ -75,7 +75,7 @@ internal class ModelParametersTest {
             "string" to "string",
             "int" to "123",
             "double" to "4.5",
-            "array" to "[ 1, 2.2, \"3\" ]",
+            "array" to "1,2.2,3",
             "bool" to "true"
         )
 
@@ -84,7 +84,7 @@ internal class ModelParametersTest {
                 id = "string",
                 required = false,
                 type = BuildFormPropertyType.STRING,
-                defaultValue = "string",
+                defaultValue = "str",
                 options = null,
                 desc = null,
                 repoHashId = null,
@@ -95,10 +95,10 @@ internal class ModelParametersTest {
                 properties = null
             ),
             BuildFormProperty(
-                id = "array",
+                id = "variables.array",
                 required = false,
                 type = BuildFormPropertyType.STRING,
-                defaultValue = "[ 1, 2.2, \"3\" ]",
+                defaultValue = "1,2.2,3",
                 options = null,
                 desc = null,
                 repoHashId = null,
@@ -118,7 +118,7 @@ internal class ModelParametersTest {
     fun inputsParamsExceptionTest() {
         val originData = mutableListOf(
             BuildFormProperty(
-                id = "string",
+                id = "variables.string",
                 required = false,
                 type = BuildFormPropertyType.STRING,
                 defaultValue = "str",
@@ -135,7 +135,7 @@ internal class ModelParametersTest {
                 id = "array",
                 required = false,
                 type = BuildFormPropertyType.STRING,
-                defaultValue = "[1, 2]",
+                defaultValue = "1,2",
                 options = null,
                 desc = null,
                 repoHashId = null,
@@ -151,7 +151,7 @@ internal class ModelParametersTest {
             "string" to "string",
             "int" to "123",
             "double" to "4.5",
-            "array" to "[ 1, 2.2, \"3\" ]",
+            "array" to "1,2.2,3",
             "bool" to "true"
         )
         val variables = mapOf(

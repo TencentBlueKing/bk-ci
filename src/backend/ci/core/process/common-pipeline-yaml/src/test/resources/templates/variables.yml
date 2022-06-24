@@ -10,7 +10,13 @@ variables:
     props:
       label: 我是预定义下拉可选值的字段
       type: selector
-      values: [ 1,2,3 ]
+      options:
+      - id: 1
+      - id: 2
+        label: 二
+      - id: 3
+        description: xxx
+      - id: VARIABLES
       multiple: true
       description: 这是个允许多选的下拉选择字段
 

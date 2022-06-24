@@ -28,15 +28,29 @@
 package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.web.form.FormBuilder
+import com.tencent.devops.common.web.form.data.CheckboxPropData
+import com.tencent.devops.common.web.form.data.FormDataType
+import com.tencent.devops.common.web.form.data.InputPropData
+import com.tencent.devops.common.web.form.data.InputPropType
+import com.tencent.devops.common.web.form.data.RadioPropData
+import com.tencent.devops.common.web.form.data.SelectPropData
+import com.tencent.devops.common.web.form.data.TimePropData
+import com.tencent.devops.common.web.form.models.Form
+import com.tencent.devops.common.web.form.models.ui.DataSourceItem
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
+import com.tencent.devops.process.yaml.v2.models.VariablePropType
+import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.pojo.ManualTriggerInfo
 import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
@@ -52,7 +66,7 @@ import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 @Service
-@SuppressWarnings("LongParameterList", "ThrowsCount")
+@SuppressWarnings("LongParameterList", "ThrowsCount", "ComplexMethod")
 class ManualTriggerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val actionFactory: EventActionFactory,
@@ -77,6 +91,83 @@ class ManualTriggerService @Autowired constructor(
     gitRequestEventBuildDao = gitRequestEventBuildDao,
     streamYamlBuild = streamYamlBuild
 ) {
+
+    fun getManualTriggerInfo(
+        yaml: String,
+        userId: String,
+        pipelineId: String,
+        projectId: String,
+        branchName: String,
+        commitId: String?
+    ): ManualTriggerInfo {
+        // 获取yaml对象，除了需要替换的 variables和一些信息剩余全部设置为空
+        val preYaml = try {
+            YamlUtil.getObjectMapper().readValue(
+                ScriptYmlUtils.formatYaml(yaml),
+                PreTemplateScriptBuildYaml::class.java
+            ).copy(
+                stages = null,
+                jobs = null,
+                steps = null,
+                extends = null,
+                notices = null,
+                finally = null,
+                concurrency = null
+            )
+        } catch (e: Exception) {
+            throw CustomException(Response.Status.BAD_REQUEST, "YAML is invalid ${e.message}")
+        }
+
+        // 关闭了手动触发的直接返回
+        if (preYaml.triggerOn?.manual == EnableType.FALSE.value) {
+            return ManualTriggerInfo(yaml = yaml, schema = null, enable = false)
+        }
+
+        val variables = parseManualVariables(
+            userId = userId,
+            triggerBuildReq = TriggerBuildReq(
+                projectId = projectId,
+                branch = branchName,
+                customCommitMsg = null,
+                yaml = yaml,
+                description = null,
+                commitId = commitId,
+                payload = null,
+                eventType = null,
+                inputs = null
+            ),
+            yamlObject = preYaml
+        )
+
+        if (variables.isNullOrEmpty()) {
+            return ManualTriggerInfo(yaml = yaml, schema = null)
+        }
+
+        val schema = parseVariablesToForm(variables)
+
+        return ManualTriggerInfo(yaml = yaml, schema = schema)
+    }
+
+    private fun parseManualVariables(
+        userId: String,
+        triggerBuildReq: TriggerBuildReq,
+        yamlObject: PreTemplateScriptBuildYaml
+    ): Map<String, Variable>? {
+        val streamTriggerSetting = getSetting(triggerBuildReq)
+
+        val action = loadAction(streamTriggerSetting, userId, triggerBuildReq)
+
+        return YamlTemplate(
+            yamlObject = yamlObject,
+            filePath = StreamYamlTrigger.STREAM_TEMPLATE_ROOT_FILE,
+            extraParameters = action,
+            getTemplateMethod = yamlTemplateService::getTemplate,
+            nowRepo = null,
+            repo = null,
+            resourcePoolMapExt = null
+        ).replace().variables
+    }
+
     override fun loadAction(
         streamTriggerSetting: StreamTriggerSetting,
         userId: String,
@@ -108,30 +199,117 @@ class ManualTriggerService @Autowired constructor(
         return triggerBuildReq.inputs
     }
 
-    fun parseManualVariables(
-        userId: String,
-        pipelineId: String,
-        triggerBuildReq: TriggerBuildReq,
-        yamlObject: PreTemplateScriptBuildYaml
-    ): Map<String, Variable>? {
-        val streamTriggerSetting = getSetting(triggerBuildReq)
-
-        val action = loadAction(streamTriggerSetting, userId, triggerBuildReq)
-
-        return YamlTemplate(
-            yamlObject = yamlObject,
-            filePath = StreamYamlTrigger.STREAM_TEMPLATE_ROOT_FILE,
-            extraParameters = action,
-            getTemplateMethod = yamlTemplateService::getTemplate,
-            nowRepo = null,
-            repo = null,
-            resourcePoolMapExt = null
-        ).replace().variables
-    }
-
     companion object {
+        fun parseVariablesToForm(variables: Map<String, Variable>): Form {
+            val builder = FormBuilder().setTitle("").setDescription("")
+
+            // 去掉不能在前端页面展示的
+            variables.filter { it.value.allowModifyAtStartup == true }.forEach { (name, value) ->
+                when (VariablePropType.findType(value.props?.type)) {
+                    VariablePropType.VUEX_INPUT -> builder.setProp(
+                        InputPropData(
+                            id = name,
+                            type = FormDataType.STRING,
+                            title = value.props?.label ?: name,
+                            default = value.value,
+                            required = value.props?.required
+                        )
+                    )
+                    VariablePropType.VUEX_TEXTAREA -> builder.setProp(
+                        InputPropData(
+                            id = name,
+                            type = FormDataType.STRING,
+                            title = value.props?.label ?: name,
+                            default = value.value,
+                            required = value.props?.required,
+                            inputType = InputPropType.TEXTAREA
+                        )
+                    )
+                    VariablePropType.SELECTOR -> {
+                        builder.setProp(
+                            SelectPropData(
+                                id = name,
+                                type = FormDataType.STRING,
+                                title = value.props?.label ?: name,
+                                default = value.value,
+                                required = value.props?.required,
+                                multiple = value.props?.multiple,
+                                dataSource = when {
+                                    !value.props?.options.isNullOrEmpty() -> value.props?.options?.map { option ->
+                                        DataSourceItem(
+                                            label = option.label ?: option.id.toString(),
+                                            value = option
+                                        )
+                                    }
+                                    // TODO: 确认下description用法
+                                    // TODO: 需要确认url的写法
+                                    value.props?.datasource != null -> TODO()
+                                    else -> null
+                                }
+                            )
+                        )
+                    }
+                    VariablePropType.CHECKBOX -> builder.setProp(
+                        CheckboxPropData(
+                            id = name,
+                            type = FormDataType.ARRAY,
+                            title = value.props?.label ?: name,
+                            default = value.value,
+                            required = value.props?.required,
+                            dataSource = value.props?.options?.map { option ->
+                                DataSourceItem(
+                                    label = option.label ?: option.id.toString(),
+                                    value = option.id
+                                )
+                            }
+                        )
+                    )
+                    VariablePropType.BOOLEAN -> builder.setProp(
+                        RadioPropData(
+                            id = name,
+                            type = FormDataType.BOOLEAN,
+                            title = value.props?.label ?: name,
+                            default = value.value?.toBoolean(),
+                            required = value.props?.required,
+                            dataSource = listOf(
+                                DataSourceItem("true", true),
+                                DataSourceItem("false", false)
+                            )
+                        )
+                    )
+                    VariablePropType.TIME_PICKER -> builder.setProp(
+                        TimePropData(
+                            id = name,
+                            type = FormDataType.STRING,
+                            title = value.props?.label ?: name,
+                            default = value.value,
+                            required = value.props?.required
+                        )
+                    )
+                    VariablePropType.COMPANY_STAFF_INPUT -> {
+                        // TODO: 需要确认
+                    }
+                    VariablePropType.TIPS -> {
+                        // TODO: 需要确认
+                    }
+                    // 默认按input, string类型算
+                    else -> builder.setProp(
+                        InputPropData(
+                            id = name,
+                            type = FormDataType.STRING,
+                            title = value.props?.label ?: name,
+                            default = value.value,
+                            required = value.props?.required
+                        )
+                    )
+                }
+            }
+
+            return builder.build()
+        }
+
         fun parseInputs(inputs: Map<String, Any?>?): Map<String, String>? {
-            if (inputs == null) {
+            if (inputs.isNullOrEmpty()) {
                 return null
             }
 
@@ -146,7 +324,7 @@ class ManualTriggerService @Autowired constructor(
                             if (value.count() < 0) {
                                 return@inputEach
                             }
-                            result[key] = JsonUtil.toJson(value)
+                            result[key] = value.joinToString(",")
                         }
                         else -> result[key] = value.toString()
                     }

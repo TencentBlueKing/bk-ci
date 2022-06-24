@@ -155,7 +155,7 @@ object ModelParameters {
             val key = if (prop.id.startsWith(VARIABLE_PREFIX)) {
                 prop.id.removePrefix(VARIABLE_PREFIX)
             } else {
-                prop.id
+                return@manualEach
             }
 
             if (!inputsData.containsKey(key)) {

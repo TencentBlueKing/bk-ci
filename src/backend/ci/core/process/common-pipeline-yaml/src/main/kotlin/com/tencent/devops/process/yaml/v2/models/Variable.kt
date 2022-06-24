@@ -49,7 +49,7 @@ data class Variable(
  * Variable 属性变量
  * @param label 可选, 预定义下拉可选值的字段
  * @param type 类型
- * @param values 下拉列表可选值，和 datasource 二选一
+ * @param options 下拉列表可选值，和 datasource 二选一
  * @param datasource 下拉列表数据源，和 values 二选一
  * @param multiple 是否允许多选，缺省时为 false（type=selector时生效）
  * @param description 可选，描述
@@ -60,11 +60,25 @@ data class Variable(
 data class VariableProps(
     val label: String? = null,
     val type: String,
-    val values: List<Any>? = null,
+    val options: List<VariablePropOption>? = null,
     val datasource: VariableDatasource? = null,
     val description: String? = null,
     val multiple: Boolean? = false,
     val required: Boolean? = false
+)
+
+/**
+ * Variable 属性中的选项对象
+ * @param id 预定义下拉可选值的字段
+ * @param label 可选, 选项说明
+ * @param description 可选, 选项描述
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class VariablePropOption(
+    val id: Any,
+    val label: String? = null,
+    val description: String? = null
 )
 
 /**

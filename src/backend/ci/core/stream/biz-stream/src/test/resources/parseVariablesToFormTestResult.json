@@ -40,6 +40,28 @@
       "ui:component": {
         "name": "select",
         "props": {
+          "datasource": [
+            {
+              "label": "select类型-v",
+              "value": {
+                "id": "select类型-v"
+              }
+            },
+            {
+              "label": "第二个",
+              "value": {
+                "id": 123,
+                "label": "第二个"
+              }
+            },
+            {
+              "label": "true",
+              "value": {
+                "id": true,
+                "description": "第三个"
+              }
+            }
+          ],
           "multiple": false
         }
       }
@@ -50,7 +72,23 @@
       "default": "checkBox类型-v",
       "required": false,
       "ui:component": {
-        "name": "checkbox"
+        "name": "checkbox",
+        "props": {
+          "datasource": [
+            {
+              "label": "checkBox类型-v",
+              "value": "checkBox类型-v"
+            },
+            {
+              "label": "第二个",
+              "value": 123
+            },
+            {
+              "label": "true",
+              "value": true
+            }
+          ]
+        }
       }
     },
     "boolean类型": {
