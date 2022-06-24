@@ -39,20 +39,27 @@ import com.tencent.bkrepo.common.artifact.resolve.path.Resolver
 import com.tencent.bkrepo.oci.constant.OCI_TAG
 import com.tencent.bkrepo.oci.constant.USER_API_PREFIX
 import com.tencent.bkrepo.oci.pojo.artifact.OciTagArtifactInfo
-import javax.servlet.http.HttpServletRequest
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerMapping
+import javax.servlet.http.HttpServletRequest
 
 @Component
 @Resolver(OciTagArtifactInfo::class)
 class OciTagArtifactInfoResolver : ArtifactInfoResolver {
+    @Value("\${auth.security.enablePrefix:false}")
+    var enablePrefix: Boolean = false
+
     override fun resolve(
         projectId: String,
         repoName: String,
         artifactUri: String,
         request: HttpServletRequest
     ): ArtifactInfo {
-        val requestURL = request.requestURL
+        var requestURL = request.requestURL.toString()
+        if (enablePrefix) {
+            requestURL = requestURL.removePrefix("/oci")
+        }
         return when {
             requestURL.contains(TAG_PREFIX) -> {
                 val requestUrl = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString()

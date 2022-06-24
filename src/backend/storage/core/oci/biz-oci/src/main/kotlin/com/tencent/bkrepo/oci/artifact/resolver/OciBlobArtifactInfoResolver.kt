@@ -38,20 +38,27 @@ import com.tencent.bkrepo.common.artifact.resolve.path.ArtifactInfoResolver
 import com.tencent.bkrepo.common.artifact.resolve.path.Resolver
 import com.tencent.bkrepo.oci.pojo.artifact.OciBlobArtifactInfo
 import io.undertow.servlet.spec.HttpServletRequestImpl
-import javax.servlet.http.HttpServletRequest
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerMapping
+import javax.servlet.http.HttpServletRequest
 
 @Component
 @Resolver(OciBlobArtifactInfo::class)
 class OciBlobArtifactInfoResolver : ArtifactInfoResolver {
+    @Value("\${auth.security.enablePrefix:false}")
+    var enablePrefix: Boolean = false
+
     override fun resolve(
         projectId: String,
         repoName: String,
         artifactUri: String,
         request: HttpServletRequest
     ): ArtifactInfo {
-        val requestUrl = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString()
+        var requestUrl = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString()
+        if (enablePrefix) {
+            requestUrl = requestUrl.removePrefix("/oci")
+        }
         val packageName = requestUrl.replaceAfterLast("/blobs", StringPool.EMPTY).removeSuffix("/blobs")
             .removePrefix("/v2/$projectId/$repoName/")
         validate(packageName)

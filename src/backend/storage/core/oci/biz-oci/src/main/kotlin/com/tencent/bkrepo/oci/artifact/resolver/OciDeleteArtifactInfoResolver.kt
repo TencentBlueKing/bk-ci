@@ -41,6 +41,7 @@ import com.tencent.bkrepo.oci.constant.PACKAGE_KEY
 import com.tencent.bkrepo.oci.constant.VERSION
 import com.tencent.bkrepo.oci.pojo.artifact.OciArtifactInfo
 import com.tencent.bkrepo.oci.util.OciUtils
+import org.springframework.beans.factory.annotation.Value
 import javax.servlet.http.HttpServletRequest
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerMapping
@@ -50,6 +51,8 @@ import org.springframework.web.servlet.HandlerMapping
 class OciDeleteArtifactInfoResolver(
     private val artifactConfigurerSupport: OciRegistryArtifactConfigurer
 ) : ArtifactInfoResolver {
+    @Value("\${auth.security.enablePrefix:false}")
+    var enablePrefix: Boolean = false
     override fun resolve(
         projectId: String,
         repoName: String,
@@ -57,7 +60,10 @@ class OciDeleteArtifactInfoResolver(
         request: HttpServletRequest
     ): ArtifactInfo {
         // 判断是客户端的请求还是页面发送的请求分别进行处理
-        val requestURL = request.requestURL
+        var requestURL = request.requestURL.toString()
+        if (enablePrefix) {
+            requestURL = requestURL.removePrefix("/oci")
+        }
         return when {
             // 页面删除包请求
             requestURL.contains(PACKAGE_DELETE_PREFIX) -> {

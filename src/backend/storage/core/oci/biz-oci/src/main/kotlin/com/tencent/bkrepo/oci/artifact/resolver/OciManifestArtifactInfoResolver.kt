@@ -38,6 +38,7 @@ import com.tencent.bkrepo.common.artifact.resolve.path.Resolver
 import com.tencent.bkrepo.oci.constant.USER_API_PREFIX
 import com.tencent.bkrepo.oci.pojo.artifact.OciManifestArtifactInfo
 import com.tencent.bkrepo.oci.pojo.digest.OciDigest
+import org.springframework.beans.factory.annotation.Value
 import javax.servlet.http.HttpServletRequest
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerMapping
@@ -45,13 +46,19 @@ import org.springframework.web.servlet.HandlerMapping
 @Component
 @Resolver(OciManifestArtifactInfo::class)
 class OciManifestArtifactInfoResolver : ArtifactInfoResolver {
+    @Value("\${auth.security.enablePrefix:false}")
+    var enablePrefix: Boolean = false
+
     override fun resolve(
         projectId: String,
         repoName: String,
         artifactUri: String,
         request: HttpServletRequest
     ): ArtifactInfo {
-        val requestURL = request.requestURL
+        var requestURL = request.requestURL.toString()
+        if (enablePrefix) {
+            requestURL = requestURL.removePrefix("/oci")
+        }
         return when {
             requestURL.contains(MANIFEST_CONTENT_PREFIX) -> {
                 val requestUrl = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString()
