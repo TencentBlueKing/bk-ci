@@ -130,10 +130,10 @@ class AtomDisplayConfigDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ATOM_CODE.notIn(atomCodes))
-            val conditionStep =
-                if (!keyword.isNullOrBlank()) step.and(ATOM_NAME.like("%$keyword%")) else step
-            return conditionStep
-                .execute().toLong()
+                if (!keyword.isNullOrBlank()) {
+                    step.and(ATOM_NAME.like("%$keyword%"))
+                }
+            return step.execute().toLong()
         }
     }
 }
