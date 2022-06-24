@@ -33,7 +33,7 @@
                 navList: [
                     { link: { name: 'credentialList' }, title: this.$t('setting.credentialSetting') },
                     { link: '', title: this.$route.params.credentialId },
-                    { link: '', title: 'Settings' }
+                    { link: '', title: this.$t('setting.settings') }
                 ]
             }
         },

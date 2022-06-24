@@ -11,7 +11,7 @@
             :header-cell-style="{ background: '#fafbfd' }"
             @page-change="pageChange"
             @page-limit-change="pageLimitChange"
-            empty-text="No credential yet"
+            :empty-text="$t('setting.ticket.emptyCredential')"
             class="credential-table"
         >
             <bk-table-column label="Key" prop="credentialId"></bk-table-column>
