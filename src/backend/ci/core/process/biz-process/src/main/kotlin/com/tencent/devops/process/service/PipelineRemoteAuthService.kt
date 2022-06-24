@@ -99,12 +99,12 @@ class PipelineRemoteAuthService @Autowired constructor(
 
         logger.info("Start the pipeline remotely of $userId ${pipeline.pipelineId} of project ${pipeline.projectId}")
         // #5779 为兼容多集群的场景。流水线的启动需要路由到项目对应的集群。此处携带X-DEVOPS-PROJECT-ID头重新请求网关,由网关路由到项目对应的集群
-        // #7095 因Bktag设置了router_tag 默认为本集群，导致网关不会根据X-DEVOPS-PROJECT-ID路由。故直接根据项目获取router，做feign调用
+        /* #7095 因Bktag设置了router_tag 默认为本集群，导致网关不会根据X-DEVOPS-PROJECT-ID路由。故直接根据项目获取router
+                 不使用client.get直接调用，因client内不支持同服务间的feign调用。故只能通过网关代理下 */
         val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, pipeline.projectId)
-
-        return bkTag.invokeByTag(projectConsulTag
-        ) {
-            client.get(ServiceBuildResource::class).manualStartupNew(
+        return bkTag.invokeByTag(projectConsulTag) {
+            logger.info("start call service api ${pipeline.projectId} ${pipeline.pipelineId}, $projectConsulTag ${bkTag.getFinalTag()}")
+            client.getGateway(ServiceBuildResource::class).manualStartupNew(
                 userId = userId!!,
                 projectId = pipeline.projectId,
                 pipelineId = pipeline.pipelineId,
