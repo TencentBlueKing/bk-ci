@@ -1,26 +1,31 @@
 /**
- * @file webpack dev conf
+ * @file webpack build conf
  * @author Blueking
  */
 
-import path from 'path'
-
+import { resolve, join } from 'path'
 import webpack from 'webpack'
 import merge from 'webpack-merge'
-import HtmlWebpackPlugin from 'html-webpack-plugin'
-import FriendlyErrorsPlugin from 'friendly-errors-webpack-plugin'
+import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import TerserPlugin from 'terser-webpack-plugin'
 import OptimizeCSSPlugin from 'optimize-css-assets-webpack-plugin'
-
+import HtmlWebpackPlugin from 'html-webpack-plugin'
+import CopyWebpackPlugin from 'copy-webpack-plugin'
+ 
 import config from './config'
+import { assetsPath } from './util'
 import baseConf from './webpack.base.conf'
-
-const webpackConfig = merge(baseConf, {
+import ReplaceCssStaticUrl from './replace-css-static-url-plugin'
+ 
+const devConf = merge(baseConf, {
     mode: 'development',
     entry: {
         main: './src/main.js'
     },
-
+    output: {
+        filename: assetsPath('js/[name].js'),
+        chunkFilename: assetsPath('js/[name].js')
+    },
     optimization: {
         minimizer: [
             new TerserPlugin({
@@ -94,13 +99,12 @@ const webpackConfig = merge(baseConf, {
             }
         }
     },
-
     module: {
         rules: [
             {
-                test: /\.(css|postcss)$/,
+                test: /\.(css|postcss)?$/,
                 use: [
-                    'vue-style-loader',
+                    MiniCssExtractPlugin.loader,
                     {
                         loader: 'css-loader',
                         options: {
@@ -111,7 +115,7 @@ const webpackConfig = merge(baseConf, {
                         loader: 'postcss-loader',
                         options: {
                             config: {
-                                path: path.resolve(__dirname, '..', 'postcss.config.js')
+                                path: resolve(__dirname, '..', 'postcss.config.js')
                             }
                         }
                     }
@@ -119,26 +123,36 @@ const webpackConfig = merge(baseConf, {
             }
         ]
     },
-
     plugins: [
         new webpack.DefinePlugin(config.dev.env),
-
-        new webpack.HotModuleReplacementPlugin(),
-
-        new webpack.NoEmitOnErrorsPlugin(),
-
+ 
         new HtmlWebpackPlugin({
             filename: 'index.html',
-            template: 'index.html',
-            inject: true
+            template: join(__dirname, '..', '/index.html'),
+            inject: true,
+            minify: {
+                removeComments: true,
+                collapseWhitespace: true,
+                removeAttributeQuotes: true
+            },
+            sourceMap: true,
+            chunksSortMode: 'none'
         }),
-
-        new FriendlyErrorsPlugin()
+ 
+        new MiniCssExtractPlugin({
+            filename: assetsPath('css/[name].css')
+        }),
+ 
+        new ReplaceCssStaticUrl({}),
+ 
+        new CopyWebpackPlugin([
+            {
+                from: resolve(__dirname, '../static'),
+                to: resolve(config.build.assetsRoot, 'static'),
+                ignore: ['.*']
+            }
+        ])
     ]
 })
-
-Object.keys(webpackConfig.entry).forEach(name => {
-    webpackConfig.entry[name] = ['./build/dev-client'].concat(webpackConfig.entry[name])
-})
-
-export default webpackConfig
+ 
+export default devConf
