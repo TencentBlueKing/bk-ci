@@ -67,7 +67,7 @@ class QualityDailyReportJob @Autowired constructor(
             )
             qualityDailyDispatch.dispatch(
                 QualityReportEvent(
-                    statisticsTime = endTime.format(DateTimeFormatter.ISO_DATE),
+                    statisticsTime = startTime.format(DateTimeFormatter.ISO_DATE),
                     projectId = it.value1(),
                     interceptedCount = interceptCount.toInt(),
                     totalCount = it.value2()
