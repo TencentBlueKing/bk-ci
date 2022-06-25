@@ -57,11 +57,9 @@ import com.tencent.devops.stream.pojo.enums.toGitCodeOrderBy
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
 @Service
-@ConditionalOnProperty(prefix = "stream", value = ["scmType"], havingValue = "CODE_GIT")
 class StreamTGitTransferService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,

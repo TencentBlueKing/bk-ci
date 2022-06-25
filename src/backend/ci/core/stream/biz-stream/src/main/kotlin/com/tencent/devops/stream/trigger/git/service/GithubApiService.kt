@@ -69,8 +69,10 @@ import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.util.QualityUtils
 import com.tencent.devops.stream.util.RetryUtils
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
+@Service
 class GithubApiService(
     private val client: Client
 ) : StreamGitApiService {
