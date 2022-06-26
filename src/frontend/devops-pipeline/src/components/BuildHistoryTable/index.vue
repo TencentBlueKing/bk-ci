@@ -52,11 +52,14 @@
                     <span v-else>--</span>
                 </template>
                 <template v-else-if="col.prop === 'appVersions'" v-slot="props">
-                    <template v-if="props.row.appVersions.length">
-                        <div class="app-version-list-cell">
+                    <bk-popover v-if="props.row.appVersions.length" :delay="500" placement="top">
+                        <div class="build-app-version-list">
+                            <p v-for="(appVersion, index) in props.row.visibleAppVersions" :key="index">{{ appVersion }}</p>
+                        </div>
+                        <div slot="content" style="white-space: normal;">
                             <p v-for="(appVersion, index) in props.row.appVersions" :key="index">{{ appVersion }}</p>
                         </div>
-                    </template>
+                    </bk-popover>
                     <span v-else>--</span>
                 </template>
                 <template v-else-if="col.prop === 'startType'" v-slot="props">
@@ -255,6 +258,7 @@
                         needShowAll,
                         shortUrl,
                         appVersions,
+                        visibleAppVersions: !active && Array.isArray(appVersions) && appVersions.length > 1 ? appVersions.slice(0, 1) : appVersions,
                         startTime: item.startTime ? convertMiniTime(item.startTime) : '--',
                         endTime: item.endTime ? convertMiniTime(item.endTime) : '--',
                         queueTime: item.queueTime ? convertMiniTime(item.queueTime) : '--',
@@ -665,11 +669,17 @@
             }
         }
         .artifact-list-cell {
+            display: flex;
+            flex-direction: column;
             height: 100%;
             canvas {
                 padding: 2px;
                 border: 1px solid #DDE4EB;
             }
+        }
+        .build-app-version-list {
+          display: flex;
+          flex-direction: column;
         }
         .remark-cell {
             position: relative;
