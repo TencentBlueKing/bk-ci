@@ -8,11 +8,10 @@
 /src/agent @hingbong @irwinsun @tangruotian
 /src/gateway @stubenhuang @irwinsun
 /src/app @lockiechen
-/src/frontend @lockiechen
+/src/frontend @lockiechen @zhanxu33
 /support-files @irwinsun 
 /src/backend/codecc @austingod @foxdd
 /src/backend/codecc_tools @austingod @foxdd
 /src/backend/ci @irwinsun @mingshewhe @hingbong @stubenhuang @carlyin0801 @fitzcao
 /src/backend/storage @irwinsun @owenlxu
 /src/backend/booster @tming
-/src/frontend @zhanxu33
