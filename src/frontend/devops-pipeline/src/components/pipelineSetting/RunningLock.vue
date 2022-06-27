@@ -98,12 +98,13 @@
             runTypeMap () {
                 return {
                     MULTIPLE: 'MULTIPLE',
+                    SINGLE: 'SINGLE',
                     GROUP: 'GROUP_LOCK',
                     LOCK: 'LOCK'
                 }
             },
             isSingleLock () {
-                return this.pipelineSetting.runLockType === this.runTypeMap.GROUP
+                return [this.runTypeMap.GROUP, this.runTypeMap.SINGLE].includes(this.pipelineSetting.runLockType)
             },
             formRule () {
                 const requiredRule = {
@@ -138,6 +139,12 @@
                         }
                     ]
                 }
+            }
+        },
+        created () {
+            // TODO: hack old data ugly!!!!!!
+            if (this.pipelineSetting.runLockType === this.runTypeMap.SINGLE) {
+                this.handleLockTypeChange(this.runTypeMap.GROUP)
             }
         },
         methods: {
