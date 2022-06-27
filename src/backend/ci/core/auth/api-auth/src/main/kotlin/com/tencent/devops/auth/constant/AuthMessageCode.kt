@@ -76,5 +76,6 @@ object AuthMessageCode {
     const val STRATEGT_NAME_EXIST = "2121208" // 权限系统： 权限集合名称重复
     const val STRATEGT_NAME_NOT_EXIST = "2121209" // 权限系统： 权限集合{0}不存在
 
-    const val LOGIN_THIRD_CODE_INVALID = "2121509" // 权限系统： 第三方登陆code校验失败
+    const val LOGIN_THIRD_CODE_INVALID = "2121501" // 权限系统： 第三方登陆code校验失败
+    const val LOGIN_USER_INFO_EXIST = "2121502" // 权限系统： 用户已存在，无需重复创建
 }

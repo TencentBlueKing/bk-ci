@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.pojo.enum.LoginType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_CI_LOGIN_TOKEN
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -44,7 +45,8 @@ import javax.ws.rs.core.UriBuilder
 
 @Service
 class ThirdLoginService @Autowired constructor(
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val userInfoService: UserInfoService
 ) {
 
     @Value("\${login.third.url:#{null}}")
@@ -63,6 +65,13 @@ class ThirdLoginService @Autowired constructor(
 
         val token = buildLoginToken(userId, type)
         val cookie = Cookie(AUTH_HEADER_BK_CI_LOGIN_TOKEN,"$type:$token", "/", domain)
+        try {
+            // 第三方登陆需同步注册账号
+            userInfoService.thridLoginAndRegister(userId, LoginType.getTypeNum(type).typeNum)
+        } catch (e: Exception) {
+            logger.warn("thirdLogin $userId $type register account fail: $e")
+        }
+
         logger.info("cookie: $cookie")
         return Response.temporaryRedirect(
             UriBuilder.fromUri(callbackUrl).build())
