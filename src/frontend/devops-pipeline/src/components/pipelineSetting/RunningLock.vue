@@ -150,7 +150,8 @@
         methods: {
             handleLockTypeChange (runLockType) {
                 this.handleRunningLockChange({
-                    runLockType
+                    runLockType,
+                    concurrencyGroup: this.pipelineSetting.concurrencyGroup || '${{ci.pipeline_id}}'
                 })
             },
             handleConCurrencyCancel (val) {
@@ -165,7 +166,7 @@
 <style lang="scss">
     .bkdevops-running-lock-setting-tab {
         .single-lock-sub-form {
-            margin-left: 20px
+            margin: 0 0 10px 20px;
         }
         .run-lock-radio-item {
             margin: 10px 0;
