@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.actions.BaseAction
@@ -53,7 +54,8 @@ class PipelineDelete @Autowired constructor(
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val streamPipelineBranchService: StreamPipelineBranchService,
     private val streamEventService: StreamEventService,
-    private val repoTriggerEventService: RepoTriggerEventService
+    private val repoTriggerEventService: RepoTriggerEventService,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineDelete::class.java)
@@ -128,14 +130,17 @@ class PipelineDelete @Autowired constructor(
                 )
                 gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
                 val pipelineInfoResult = processClient.getPipelineInfo(
-                    projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong()),
+                    projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong(), streamGitConfig.getScmType()),
                     pipelineId = pipelineId,
                     channelCode = channelCode
                 )
                 if (pipelineInfoResult.data != null) {
                     processClient.delete(
                         userId = action.data.getUserId(),
-                        projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong()),
+                        projectId = GitCommonUtils.getCiProjectId(
+                            gitProjectId.toLong(),
+                            streamGitConfig.getScmType()
+                        ),
                         pipelineId = pipelineId,
                         channelCode = channelCode
                     )

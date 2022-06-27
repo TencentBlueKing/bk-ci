@@ -54,6 +54,7 @@ import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitUserInfo
+import com.tencent.devops.stream.trigger.git.service.StreamApiUtil.doRetryFun
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.util.QualityUtils
 import com.tencent.devops.stream.util.RetryUtils
@@ -86,6 +87,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): TGitProjectInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get project $gitProjectId fail",
             apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR
@@ -107,6 +109,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): TGitCommitInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get commit info $sha fail",
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_INFO_ERROR
@@ -149,6 +152,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): TGitMrInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get mr $mrId info error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_INFO
@@ -174,6 +178,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): TGitMrChangeInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get mr $mrId changeInfo error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_CHANGE_INFO
@@ -202,6 +207,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): List<TGitTreeFileInfo> {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get $path file tree error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR
@@ -226,6 +232,7 @@ class TGitApiService @Autowired constructor(
     ): String {
         cred as TGitCred
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get yaml $fileName from $ref fail",
             apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR
@@ -260,6 +267,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): TGitFileInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "getFileInfo: [$gitProjectId|$fileName][$ref] error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR
@@ -315,6 +323,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): TGitRevisionInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "timer|[$pipelineId] get latestRevision fail",
             apiErrorCode = ErrorCodeEnum.GET_GIT_LATEST_REVISION_ERROR
@@ -352,6 +361,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): List<TGitChangeFileInfo> {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "getCommitChangeFileListRetry from: $from to: $to error",
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR
@@ -406,71 +416,6 @@ class TGitApiService @Autowired constructor(
             TokenTypeEnum.OAUTH
         } else {
             TokenTypeEnum.PRIVATE_KEY
-        }
-    }
-
-    protected fun <T> doRetryFun(
-        retry: ApiRequestRetryInfo,
-        log: String,
-        apiErrorCode: ErrorCodeEnum,
-        action: () -> T
-    ): T {
-        return if (retry.retry) {
-            retryFun(
-                retry = retry,
-                log = log,
-                apiErrorCode = apiErrorCode
-            ) {
-                action()
-            }
-        } else {
-            action()
-        }
-    }
-
-    private fun <T> retryFun(
-        retry: ApiRequestRetryInfo,
-        log: String,
-        apiErrorCode: ErrorCodeEnum,
-        action: () -> T
-    ): T {
-        try {
-            return RetryUtils.clientRetry(
-                retry.retryTimes,
-                retry.retryPeriodMills
-            ) {
-                action()
-            }
-        } catch (e: ClientException) {
-            logger.warn("retry 5 times $log", e)
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
-                defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
-            )
-        } catch (e: RemoteServiceException) {
-            logger.warn("GIT_API_ERROR $log", e)
-            throw ErrorCodeException(
-                statusCode = e.httpStatus,
-                errorCode = apiErrorCode.errorCode.toString(),
-                defaultMessage = "$log: ${e.errorMessage}"
-            )
-        } catch (e: CustomException) {
-            logger.warn("GIT_SCM_ERROR $log", e)
-            throw ErrorCodeException(
-                statusCode = e.status.statusCode,
-                errorCode = apiErrorCode.errorCode.toString(),
-                defaultMessage = "$log: ${e.message}"
-            )
-        } catch (e: Throwable) {
-            logger.error("retryFun error $log", e)
-            throw ErrorCodeException(
-                errorCode = apiErrorCode.errorCode.toString(),
-                defaultMessage = if (e.message.isNullOrBlank()) {
-                    "$log: ${apiErrorCode.formatErrorMessage}"
-                } else {
-                    "$log: ${e.message}"
-                }
-            )
         }
     }
 }

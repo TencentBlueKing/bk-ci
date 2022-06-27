@@ -30,8 +30,12 @@ package com.tencent.devops.stream.trigger
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -80,28 +84,44 @@ class StreamTriggerRequestService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StreamTriggerRequestService::class.java)
     }
 
-    fun externalCodeGitBuild(eventType: String?, event: String): Boolean? {
-        logger.info("Trigger code git build($event, $eventType)")
-        val eventObject = try {
-            objectMapper.readValue<GitEvent>(event)
-        } catch (ignore: Exception) {
-            logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
-            return false
+    fun externalCodeGitBuild(eventType: String?, webHookType: String, event: String): Boolean? {
+        logger.info("Trigger code git build($event, $eventType, $webHookType)")
+        when (ScmType.valueOf(webHookType)) {
+            ScmType.CODE_TGIT -> {
+                val eventObject = try {
+                    objectMapper.readValue<GitEvent>(event)
+                } catch (ignore: Exception) {
+                    logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
+                    return false
+                }
+                // 处理不需要项目信息的，或不同软件源的预处理逻辑
+
+                return start(eventObject, event, ScmType.CODE_TGIT)
+            }
+            ScmType.GITHUB -> {
+                val eventObject: GithubEvent = when (eventType) {
+                    GithubPushEvent.classType -> objectMapper.readValue<GithubPushEvent>(event)
+                    GithubPullRequestEvent.classType -> objectMapper.readValue<GithubPullRequestEvent>(event)
+                    else -> {
+                        logger.info("Github event($eventType) is ignored")
+                        return true
+                    }
+                }
+                return start(eventObject, event, ScmType.GITHUB)
+            }
+            // 对接其他平台时扩充
+            else -> {}
         }
-
-        // 处理不需要项目信息的，或不同软件源的预处理逻辑
-
-        return start(eventObject, event)
+        return false
     }
 
-    fun start(eventObject: GitEvent, event: String): Boolean? {
+    fun start(eventObject: CodeWebhookEvent, event: String, scmType: ScmType): Boolean? {
         // 加载不同源的action
         val action = actionFactory.load(eventObject)
         if (action == null) {
             logger.warn("request event not support: $event")
             return false
         }
-
         // 获取前端展示相关的requestEvent
         val requestEvent = action.buildRequestEvent(event) ?: return false
 
@@ -139,7 +159,7 @@ class StreamTriggerRequestService @Autowired constructor(
 
             if (null == gitCIBasicSetting || !gitCIBasicSetting.enableCi) {
                 logger.info(
-                    "git ci is not enabled , but it has repo trigger , git project id: ${action.data.getGitProjectId()}"
+                    "git ci is not enabled, but it has repo trigger, git project id: ${action.data.getGitProjectId()}"
                 )
                 return null
             }
@@ -273,7 +293,7 @@ class StreamTriggerRequestService @Autowired constructor(
             throw StreamTriggerException(action, TriggerReason.PIPELINE_DISABLE)
         }
 
-        val originYaml = action.getYamlContent(filePath)
+        val (ref, originYaml) = action.getYamlContent(filePath)
         action.data.context.originYaml = originYaml
 
         // 如果当前文件没有内容直接不触发
@@ -294,7 +314,7 @@ class StreamTriggerRequestService @Autowired constructor(
         trigger(action)
     }
 
-    protected fun trigger(action: BaseAction) = when (streamGitConfig.getScmType()) {
+    private fun trigger(action: BaseAction) = when (streamGitConfig.getScmType()) {
         ScmType.CODE_GIT -> StreamTriggerDispatch.dispatch(
             rabbitTemplate = rabbitTemplate,
             event = StreamTriggerEvent(
@@ -307,6 +327,15 @@ class StreamTriggerRequestService @Autowired constructor(
                 } else {
                     objectMapper.writeValueAsString(action.data.event as GitEvent)
                 },
+                actionCommonData = action.data.eventCommon,
+                actionContext = action.data.context,
+                actionSetting = action.data.setting
+            )
+        )
+        ScmType.GITHUB -> StreamTriggerDispatch.dispatch(
+            rabbitTemplate = rabbitTemplate,
+            event = StreamTriggerEvent(
+                eventStr = objectMapper.writeValueAsString(action.data.event as GithubEvent),
                 actionCommonData = action.data.eventCommon,
                 actionContext = action.data.context,
                 actionSetting = action.data.setting

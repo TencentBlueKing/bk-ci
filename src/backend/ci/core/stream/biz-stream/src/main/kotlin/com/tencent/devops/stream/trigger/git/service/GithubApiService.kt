@@ -27,10 +27,7 @@
 
 package com.tencent.devops.stream.trigger.git.service
 
-import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.sdk.github.request.GHGetBranchRequest
 import com.tencent.devops.common.sdk.github.request.GetCommitRequest
@@ -65,20 +62,21 @@ import com.tencent.devops.stream.trigger.git.pojo.github.GithubProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubUserInfo
+import com.tencent.devops.stream.trigger.git.service.StreamApiUtil.doRetryFun
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.util.QualityUtils
-import com.tencent.devops.stream.util.RetryUtils
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 @Service
-class GithubApiService(
+class GithubApiService @Autowired constructor(
     private val client: Client
 ) : StreamGitApiService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TGitApiService::class.java)
+        private val logger = LoggerFactory.getLogger(GithubApiService::class.java)
     }
 
     /**
@@ -96,10 +94,12 @@ class GithubApiService(
         retry: ApiRequestRetryInfo
     ): GithubProjectInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get project $gitProjectId fail",
             apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR
         ) {
+            // TODO: 2022/6/20 github获取项目信息接口
             client.get(ServiceGithubRepositoryResource::class).getRepository(
                 request = GetRepositoryRequest(
                     owner = cred.getUserId(),
@@ -107,7 +107,7 @@ class GithubApiService(
                 ),
                 userId = cred.getUserId()
             )
-        }?.let {
+        }.let {
             GithubProjectInfo(it)
         }
     }
@@ -119,10 +119,12 @@ class GithubApiService(
         retry: ApiRequestRetryInfo
     ): GithubCommitInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get commit info $sha fail",
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_INFO_ERROR
         ) {
+            // TODO: 2022/6/20 github根据hash值、分支名或tag 获取提交信息
             client.get(ServiceGithubCommitsResource::class).getCommit(
                 request = GetCommitRequest(
                     owner = cred.getUserId(),
@@ -132,21 +134,22 @@ class GithubApiService(
                 userId = cred.getUserId()
             )
             // todo 注意信息是否正确
-        }?.let { GithubCommitInfo(it) }
+        }.let { GithubCommitInfo(it) }
     }
 
     override fun getUserInfoByToken(cred: StreamGitCred): GithubUserInfo? {
+        // TODO: 2022/6/20 github 根据token 获取用户信息
         return client.get(ServiceGithubUserResource::class).getUser(
             userId = cred.getUserId()
         ).let { GithubUserInfo(id = it.id.toString(), username = it.login) }
     }
-
 
     override fun getProjectUserInfo(
         cred: StreamGitCred,
         userId: String,
         gitProjectId: String
     ): GithubProjectUserInfo {
+        // TODO: 2022/6/20 github 获取某项目下的用户相关信息 => 主要是获取access level
         return client.get(ServiceGithubRepositoryResource::class).getRepositoryPermissions(
             request = GetRepositoryPermissionsRequest(
                 owner = userId,
@@ -167,10 +170,12 @@ class GithubApiService(
         retry: ApiRequestRetryInfo
     ): GithubMrInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get mr $mrId info error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_INFO
         ) {
+            // TODO: 2022/6/20 github 根据prId 获取到pr信息.=> 主要是获取pr状态.
             client.get(ServiceGithubPRResource::class).getPullRequest(
                 userId = cred.getUserId(),
                 request = GetPullRequestRequest(
@@ -180,7 +185,7 @@ class GithubApiService(
                     pullNumber = mrId
                 )
             )
-        }?.let {
+        }.let {
             GithubMrInfo(
                 mergeStatus = it.state,
                 // todo 注意basecommit是否一致
@@ -188,7 +193,6 @@ class GithubApiService(
             )
         }
     }
-
 
     // todo repository还未提供接口
     override fun getMrChangeInfo(
@@ -198,10 +202,12 @@ class GithubApiService(
         retry: ApiRequestRetryInfo
     ): GithubMrChangeInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get mr $mrId changeInfo error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_CHANGE_INFO
         ) {
+            // TODO: 2022/6/20 github 获得对应prid 的变更文件列表 主要获取4个字段 => oldPath newPath 是否renameFile 是否deletedFile
             client.get(ServiceGithubPRResource::class).listPullRequestFiles(
                 userId = cred.getUserId(),
                 request = ListPullRequestFileRequest(
@@ -211,7 +217,7 @@ class GithubApiService(
                     pullNumber = mrId
                 )
             )
-        }?.let {
+        }.let {
             GithubMrChangeInfo(
                 files = it.map { f ->
                     // todo 注意参数是否正确
@@ -230,12 +236,13 @@ class GithubApiService(
         retry: ApiRequestRetryInfo
     ): List<GithubTreeFileInfo> {
 
-
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get $path file tree error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR
         ) {
+            // TODO: 2022/6/20 github 通过路径和分支去获取对应目录的文件列表 主要需要2字段 => 文件名 文件类型
             client.get(ServiceGithubDatabaseResource::class).getTree(
                 userId = cred.getUserId(),
                 request = GetTreeRequest(
@@ -258,10 +265,12 @@ class GithubApiService(
     ): String {
         cred as GithubCred
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get yaml $fileName from $ref fail",
             apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR
         ) {
+            // TODO: 2022/6/20 根据文件路径和分支名获取文件内容 => 得到文件内容
             client.get(ServiceGithubRepositoryResource::class).getRepositoryContent(
                 request = GetRepositoryContentRequest(
                     owner = cred.getUserId(),
@@ -291,10 +300,12 @@ class GithubApiService(
     ): GithubFileInfo? {
 
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "getFileInfo: [$gitProjectId|$fileName][$ref] error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR
         ) {
+            // TODO: 2022/6/20 github 得到 => 文件内容(base64) blobId
             client.get(ServiceGithubRepositoryResource::class).getRepositoryContent(
                 request = GetRepositoryContentRequest(
                     owner = cred.getUserId(),
@@ -312,6 +323,7 @@ class GithubApiService(
         search: String?,
         minAccessLevel: GitAccessLevelEnum?
     ): List<GithubProjectInfo>? {
+        // TODO: 2022/6/20 获取用户(token)对应的项目列表
         // todo search、minAccessLevel参数现在不可用
         return client.get(ServiceGithubRepositoryResource::class).listRepositories(
             request = ListRepositoriesRequest(),
@@ -343,22 +355,23 @@ class GithubApiService(
         retry: ApiRequestRetryInfo
     ): GithubRevisionInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "timer|[$pipelineId] get latestRevision fail",
             apiErrorCode = ErrorCodeEnum.GET_GIT_LATEST_REVISION_ERROR
         ) {
+            // TODO: 2022/6/20  getLatestRevision并没有对github的实现
             client.get(ServiceGithubBranchResource::class).getBranch(
-                    request = GHGetBranchRequest(
-                        owner = userName,
-                        repo = projectName,
-                        branch = branch
-                    ),
-                    userId = userName
-            // todo 注意信息是否正确
-                )?.let { GithubRevisionInfo(it) }
+                request = GHGetBranchRequest(
+                    owner = userName,
+                    repo = projectName,
+                    branch = branch
+                ),
+                userId = userName
+                // todo 注意信息是否正确
+            ).let { GithubRevisionInfo(it) }
         }
     }
-
 
     // 以下非StreamGitApiService接口实现
     /**
@@ -378,10 +391,12 @@ class GithubApiService(
         retry: ApiRequestRetryInfo
     ): List<GithubChangeFileInfo> {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "getCommitChangeFileListRetry from: $from to: $to error",
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR
         ) {
+            // TODO: 2022/6/20 获取两个commit之间的差异文件
             client.get(ServiceGitResource::class).getChangeFileList(
                 cred.toToken(),
                 cred.toTokenType(),
@@ -405,6 +420,7 @@ class GithubApiService(
         mrBody: MrCommentBody
     ) {
         // 暂时无法兼容，服务间调用 mrBody 字符串转义存在问题
+        // TODO: 2022/6/20 github版添加评论注意mrbody的问题
         return client.get(ServiceGitResource::class).addMrComment(
             token = cred.toToken(),
             gitProjectId = gitProjectId,
@@ -443,71 +459,6 @@ class GithubApiService(
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 "STEAM PROJECT ENABLE USER NO OAUTH PERMISSION"
-            )
-        }
-    }
-
-    protected fun <T> doRetryFun(
-        retry: ApiRequestRetryInfo,
-        log: String,
-        apiErrorCode: ErrorCodeEnum,
-        action: () -> T
-    ): T {
-        return if (retry.retry) {
-            retryFun(
-                retry = retry,
-                log = log,
-                apiErrorCode = apiErrorCode
-            ) {
-                action()
-            }
-        } else {
-            action()
-        }
-    }
-
-    private fun <T> retryFun(
-        retry: ApiRequestRetryInfo,
-        log: String,
-        apiErrorCode: ErrorCodeEnum,
-        action: () -> T
-    ): T {
-        try {
-            return RetryUtils.clientRetry(
-                retry.retryTimes,
-                retry.retryPeriodMills
-            ) {
-                action()
-            }
-        } catch (e: ClientException) {
-            logger.warn("retry 5 times $log", e)
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
-                defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
-            )
-        } catch (e: RemoteServiceException) {
-            logger.warn("GIT_API_ERROR $log", e)
-            throw ErrorCodeException(
-                statusCode = e.httpStatus,
-                errorCode = apiErrorCode.errorCode.toString(),
-                defaultMessage = "$log: ${e.errorMessage}"
-            )
-        } catch (e: CustomException) {
-            logger.warn("GIT_SCM_ERROR $log", e)
-            throw ErrorCodeException(
-                statusCode = e.status.statusCode,
-                errorCode = apiErrorCode.errorCode.toString(),
-                defaultMessage = "$log: ${e.message}"
-            )
-        } catch (e: Throwable) {
-            logger.error("retryFun error $log", e)
-            throw ErrorCodeException(
-                errorCode = apiErrorCode.errorCode.toString(),
-                defaultMessage = if (e.message.isNullOrBlank()) {
-                    "$log: ${apiErrorCode.formatErrorMessage}"
-                } else {
-                    "$log: ${e.message}"
-                }
             )
         }
     }

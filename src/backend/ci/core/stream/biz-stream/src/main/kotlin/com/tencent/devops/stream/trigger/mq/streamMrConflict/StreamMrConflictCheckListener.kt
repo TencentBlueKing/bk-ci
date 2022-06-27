@@ -30,6 +30,7 @@ package com.tencent.devops.stream.trigger.mq.streamMrConflict
 import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.trigger.StreamTriggerRequestService
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
+import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.tgit.TGitMrActionGit
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
@@ -82,11 +83,9 @@ constructor(
                 return
             }
 
-            action as TGitMrActionGit
             val (isFinish, isTrigger) = with(checkEvent) {
                 mergeConflictCheck.checkMrConflictByListener(
-                    action = action,
-                    path2PipelineExists = path2PipelineExists,
+                    action = action as GitBaseAction,
                     isEndCheck = retryTime == 1,
                     notBuildRecordId = notBuildRecordId
                 )

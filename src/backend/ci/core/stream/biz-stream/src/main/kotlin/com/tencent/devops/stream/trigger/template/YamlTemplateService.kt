@@ -50,7 +50,8 @@ import org.springframework.stereotype.Service
 class YamlTemplateService @Autowired constructor(
     private val client: Client,
     private val yamlSchemaCheck: YamlSchemaCheck,
-    private val streamTriggerCache: StreamTriggerCache
+    private val streamTriggerCache: StreamTriggerCache,
+    private val streamGitConfig: StreamGitConfig
 ) {
 
     companion object {
@@ -77,10 +78,10 @@ class YamlTemplateService @Autowired constructor(
         with(param) {
             // 获取当前库的模板
             if (targetRepo == null) {
-                val content = extraParameters.getYamlContent(templateDirectory + path)
+                val (ref, content) = extraParameters.getYamlContent(templateDirectory + path)
 
                 if (content.isBlank()) {
-                    throw YamlBlankException(templateDirectory + path)
+                    throw YamlBlankException(templateDirectory + path, ref)
                 }
 
                 schemaCheck(templateDirectory + path, content, templateType)
@@ -89,17 +90,18 @@ class YamlTemplateService @Autowired constructor(
             }
             // 获取目标库模板，但没有填写凭证token信息，使用开启人的
             if (targetRepo?.credentials?.personalAccessToken.isNullOrBlank()) {
+                val ref = targetRepo?.ref ?: streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                    gitProjectKey = targetRepo!!.repository,
+                    action = extraParameters,
+                    getProjectInfo = extraParameters.api::getGitProjectInfo
+                )!!.defaultBranch!!
                 val content = extraParameters.api.getFileContent(
                     cred = extraParameters.getGitCred(),
                     gitProjectId = targetRepo!!.repository,
                     fileName = templateDirectory + path,
-                    ref = targetRepo?.ref ?: streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                        gitProjectKey = targetRepo!!.repository,
-                        action = extraParameters,
-                        getProjectInfo = extraParameters.api::getGitProjectInfo
-                    )!!.defaultBranch!!,
+                    ref = ref,
                     retry = ApiRequestRetryInfo(true)
-                ).ifBlank { throw YamlBlankException(templateDirectory + path, targetRepo?.repository) }
+                ).ifBlank { throw YamlBlankException(templateDirectory + path, ref, targetRepo?.repository) }
 
                 schemaCheck(templateDirectory + path, content, templateType)
 
@@ -122,18 +124,19 @@ class YamlTemplateService @Autowired constructor(
             } else {
                 key
             }
+            val ref = targetRepo?.ref ?: streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                gitProjectKey = targetRepo?.repository!!,
+                action = extraParameters,
+                getProjectInfo = extraParameters.api::getGitProjectInfo,
+                cred = extraParameters.getGitCred(personToken)
+            )!!.defaultBranch!!
             val content = extraParameters.api.getFileContent(
                 cred = extraParameters.getGitCred(personToken = personToken),
                 gitProjectId = targetRepo?.repository!!,
                 fileName = templateDirectory + path,
-                ref = targetRepo?.ref ?: streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                    gitProjectKey = targetRepo?.repository!!,
-                    action = extraParameters,
-                    getProjectInfo = extraParameters.api::getGitProjectInfo,
-                    cred = extraParameters.getGitCred(personToken)
-                )!!.defaultBranch!!,
+                ref = ref,
                 retry = ApiRequestRetryInfo(true)
-            ).ifBlank { throw YamlBlankException(templateDirectory + path, targetRepo?.repository) }
+            ).ifBlank { throw YamlBlankException(templateDirectory + path, ref, targetRepo?.repository) }
 
             // 针对模板替换时，如果类型为空就不校验
             schemaCheck(templateDirectory + path, content, templateType)
@@ -167,7 +170,10 @@ class YamlTemplateService @Autowired constructor(
             try {
                 return CommonCredentialUtils.getCredential(
                     client = client,
-                    projectId = GitCommonUtils.getCiProjectId(acrossGitProjectId.toLong()),
+                    projectId = GitCommonUtils.getCiProjectId(
+                        acrossGitProjectId.toLong(),
+                        streamGitConfig.getScmType()
+                    ),
                     credentialId = key,
                     type = CredentialType.ACCESSTOKEN,
                     acrossProject = true
@@ -203,18 +209,18 @@ class YamlTemplateService @Autowired constructor(
     private fun getCredentialKey(key: String): String {
         // 参考CredentialType
         return if (key.startsWith("settings.") && (
-            key.endsWith(".password") ||
-                key.endsWith(".access_token") ||
-                key.endsWith(".username") ||
-                key.endsWith(".secretKey") ||
-                key.endsWith(".appId") ||
-                key.endsWith(".privateKey") ||
-                key.endsWith(".passphrase") ||
-                key.endsWith(".token") ||
-                key.endsWith(".cosappId") ||
-                key.endsWith(".secretId") ||
-                key.endsWith(".region")
-            )
+                key.endsWith(".password") ||
+                    key.endsWith(".access_token") ||
+                    key.endsWith(".username") ||
+                    key.endsWith(".secretKey") ||
+                    key.endsWith(".appId") ||
+                    key.endsWith(".privateKey") ||
+                    key.endsWith(".passphrase") ||
+                    key.endsWith(".token") ||
+                    key.endsWith(".cosappId") ||
+                    key.endsWith(".secretId") ||
+                    key.endsWith(".region")
+                )
         ) {
             key.substringAfter("settings.").substringBeforeLast(".")
         } else {

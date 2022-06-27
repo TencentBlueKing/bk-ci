@@ -346,7 +346,10 @@ class StreamPipelineService @Autowired constructor(
             gitProjectId = gitProjectId,
             filePath = pipeline.filePath
         )
-        val gitProjectCode = GitCommonUtils.getCiProjectId(gitProjectId = gitProjectId.toLong())
+        val gitProjectCode = GitCommonUtils.getCiProjectId(
+            gitProjectId = gitProjectId.toLong(),
+            scmType = gitConfig.getScmType()
+        )
         val realPipeline: StreamTriggerPipeline
         // 避免出现多个触发拿到空的pipelineId后依次进来创建，所以需要在锁后重新获取pipeline
         triggerLock.use {

@@ -180,7 +180,7 @@ data class StreamCommitInfo(
         committerEmail =c.commit.committer.email,
         committerName = c.commit.committer.name,
         // todo 属性缺失
-        createdAt = null,
+        createdAt = "",
         id = c.nodeId,
         message = c.commit.message,
         // 注意这个属性是否正确

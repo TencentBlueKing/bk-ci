@@ -31,10 +31,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.tgit.TGitMrActionGit
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
@@ -69,14 +71,15 @@ class MergeConflictCheck @Autowired constructor(
      * - 没有冲突，进行后续操作
      */
     fun checkMrConflict(
-        action: TGitMrActionGit,
+        action: GitBaseAction,
         path2PipelineExists: Map<String, StreamTriggerPipeline>
     ): Boolean {
         val projectId = action.data.getGitProjectId()
-        val mrRequestId = action.event().object_attributes.id.toString()
+        val event = action.event() as GitMergeRequestEvent
+        val mrRequestId = event.object_attributes.id.toString()
 
         val mrInfo = action.api.getMrInfo(
-            gitProjectId = projectId,
+            gitProjectId = action.getGitProjectIdOrName(),
             mrId = mrRequestId,
             cred = action.getGitCred(),
             retry = ApiRequestRetryInfo(retry = true)
@@ -121,8 +124,7 @@ class MergeConflictCheck @Autowired constructor(
     // 检查是否存在冲突，供Rabbit Listener使用
     // 需要抓住里面的异常防止mq不停消费
     fun checkMrConflictByListener(
-        action: TGitMrActionGit,
-        path2PipelineExists: Map<String, StreamTriggerPipeline>,
+        action: GitBaseAction,
         // 是否是最后一次的检查
         isEndCheck: Boolean = false,
         notBuildRecordId: Long
@@ -130,10 +132,11 @@ class MergeConflictCheck @Autowired constructor(
         var isFinish: Boolean
         var isTrigger: Boolean
         val projectId = action.data.getGitProjectId()
-        val mrRequestId = action.event().object_attributes.id.toString()
+        val event = action.event() as GitMergeRequestEvent
+        val mrRequestId = event.object_attributes.id.toString()
         val mrInfo = try {
             action.api.getMrInfo(
-                gitProjectId = projectId,
+                gitProjectId = action.getGitProjectIdOrName(),
                 mrId = mrRequestId,
                 cred = action.getGitCred(),
                 retry = ApiRequestRetryInfo(retry = true)

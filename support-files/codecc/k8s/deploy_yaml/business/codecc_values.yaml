@@ -115,7 +115,6 @@ env:
   BK_CI_CODEOA_API_URL:   # 无默认值. 废弃. 待清理配置文件及相关代码.
   BK_CI_CODEOA_GIT_URL:   # 无默认值. 废弃. 待清理配置文件及相关代码.
   BK_CI_ENVIRONMENT_AGENT_COLLECTOR_ON: false   # 默认false. 按需修改. 第三方构建机状态上报, 如开启, 则需要influxdb.
-  BK_CI_PIPELINE_PARAMETER_ENCRYPT_PASSWORD:   # 无默认值. 废弃. 待清理配置文件及相关代码.
   BK_CI_PROCESS_EVENT_CONCURRENT: 20   # 默认20. 无需修改. process并发保护.
   BK_CI_REPOSITORY_GITHUB_APP:   # 无默认值. 废弃. 待清理配置文件及相关代码.
   BK_CI_REPOSITORY_GITHUB_CLIENT_ID:   # 无默认值. 废弃. 待清理配置文件及相关代码.

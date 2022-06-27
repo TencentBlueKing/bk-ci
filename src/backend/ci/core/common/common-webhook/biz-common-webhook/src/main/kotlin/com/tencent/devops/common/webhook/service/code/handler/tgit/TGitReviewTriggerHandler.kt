@@ -119,13 +119,21 @@ class TGitReviewTriggerHandler(
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_ID] = event.id
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_IID] = event.iid
         startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/reviews/${event.iid}"
-        if (event.reviewableType == "merge_request" && event.reviewableId != null) {
+        if (event.reviewableType == "merge_request" &&
+            event.reviewableId != null &&
+            projectId != null &&
+            repository != null
+        ) {
+            // MR提交人
+            val mrInfo = gitScmService.getMergeRequestInfo(projectId, event.reviewableId, repository)
+            val reviewers =
+                gitScmService.getMergeRequestReviewersInfo(projectId, event.reviewableId, repository)?.reviewers
+
             startParams.putAll(
                 WebhookUtils.mrStartParam(
-                    gitScmService = gitScmService,
+                    mrInfo = mrInfo,
+                    reviewers = reviewers,
                     mrRequestId = event.reviewableId!!,
-                    projectId = projectId,
-                    repository = repository,
                     homepage = event.repository.homepage
                 )
             )

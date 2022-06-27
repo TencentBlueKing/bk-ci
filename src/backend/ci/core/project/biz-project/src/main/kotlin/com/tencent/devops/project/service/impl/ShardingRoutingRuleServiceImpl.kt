@@ -64,7 +64,7 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
             routingName = routingName,
             tableName = shardingRoutingRule.tableName
         )
-        val lock = RedisLock(redisOperation, key, 10)
+        val lock = RedisLock(redisOperation, "$key:add", 10)
         try {
             lock.lock()
             val nameCount = shardingRoutingRuleDao.countByName(
@@ -141,7 +141,7 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
             routingName = routingName,
             tableName = shardingRoutingRule.tableName
         )
-        val lock = RedisLock(redisOperation, key, 10)
+        val lock = RedisLock(redisOperation, "$key:update", 10)
         try {
             lock.lock()
             val nameCount = shardingRoutingRuleDao.countByName(
@@ -234,9 +234,9 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
                     expired = false
                 )
                 ShardingRoutingRule(
-                    clusterName = record.clusterName,
+                    clusterName = record.clusterName ?: "",
                     moduleCode = moduleCode,
-                    dataSourceName = record.dataSourceName,
+                    dataSourceName = record.dataSourceName ?: "",
                     tableName = record.tableName,
                     type = ruleType,
                     routingName = routingName,

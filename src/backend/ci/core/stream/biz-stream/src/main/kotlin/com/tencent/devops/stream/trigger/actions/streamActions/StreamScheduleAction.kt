@@ -42,11 +42,13 @@ import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamScheduleEvent
-import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
+import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
+import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
@@ -81,18 +83,28 @@ class StreamScheduleAction(
             commit = EventCommonDataCommit(
                 commitId = event.commitId,
                 commitMsg = event.commitMsg,
-                commitTimeStamp = TGitActionCommon.getCommitTimeStamp(null),
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(null),
                 commitAuthorName = event.commitAuthor
             ),
-            gitProjectName = null
+            gitProjectName = null,
+            scmType = null
         )
         return this
     }
 
     override fun getProjectCode(gitProjectId: String?) = if (gitProjectId != null) {
-        GitCommonUtils.getCiProjectId(gitProjectId.toLong())
+        GitCommonUtils.getCiProjectId(
+            gitProjectId.toLong(),
+            streamGitConfig.getScmType()
+        )
     } else {
         event().projectCode
+    }
+
+    override fun getGitProjectIdOrName() = when (api) {
+        is TGitApiService -> data.eventCommon.gitProjectId
+        is GithubApiService -> data.eventCommon.gitProjectName!!
+        else -> data.eventCommon.gitProjectId
     }
 
     override fun getGitCred(personToken: String?): StreamGitCred {
@@ -126,13 +138,16 @@ class StreamScheduleAction(
         return emptyList()
     }
 
-    override fun getYamlContent(fileName: String): String {
-        return api.getFileContent(
-            cred = this.getGitCred(),
-            gitProjectId = data.getGitProjectId(),
-            fileName = fileName,
-            ref = data.eventCommon.branch,
-            retry = ApiRequestRetryInfo(true)
+    override fun getYamlContent(fileName: String): Pair<String, String> {
+        return Pair(
+            data.eventCommon.branch,
+            api.getFileContent(
+                cred = this.getGitCred(),
+                gitProjectId = getGitProjectIdOrName(),
+                fileName = fileName,
+                ref = data.eventCommon.branch,
+                retry = ApiRequestRetryInfo(true)
+            )
         )
     }
 

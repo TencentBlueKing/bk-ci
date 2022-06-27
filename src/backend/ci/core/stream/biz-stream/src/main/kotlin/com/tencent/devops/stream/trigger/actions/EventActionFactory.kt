@@ -39,14 +39,21 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.service.StreamPipelineBranchService
+import com.tencent.devops.stream.trigger.StreamTriggerRequestService
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.data.context.StreamTriggerContext
+import com.tencent.devops.stream.trigger.actions.github.GithubPRActionGit
+import com.tencent.devops.stream.trigger.actions.github.GithubPushActionGit
+import com.tencent.devops.stream.trigger.actions.github.GithubTagPushActionGit
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamDeleteAction
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamManualAction
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamRepoTriggerAction
@@ -59,9 +66,11 @@ import com.tencent.devops.stream.trigger.actions.tgit.TGitNoteActionGit
 import com.tencent.devops.stream.trigger.actions.tgit.TGitPushActionGit
 import com.tencent.devops.stream.trigger.actions.tgit.TGitReviewActionGit
 import com.tencent.devops.stream.trigger.actions.tgit.TGitTagPushActionGit
+import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
+import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.service.DeleteEventService
 import com.tencent.devops.stream.trigger.service.GitCheckService
 import com.tencent.devops.stream.trigger.service.StreamEventService
@@ -78,6 +87,7 @@ class EventActionFactory @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val tGitApiService: TGitApiService,
+    private val githubApiService: GithubApiService,
     private val streamEventService: StreamEventService,
     private val streamTimerService: StreamTimerService,
     private val streamPipelineBranchService: StreamPipelineBranchService,
@@ -88,7 +98,8 @@ class EventActionFactory @Autowired constructor(
     private val gitCheckService: GitCheckService,
     private val mrConflictCheck: MergeConflictCheck,
     private val streamGitConfig: StreamGitConfig,
-    private val streamTriggerTokenService: StreamTriggerTokenService
+    private val streamTriggerTokenService: StreamTriggerTokenService,
+    private val streamTriggerCache: StreamTriggerCache
 ) {
 
     companion object {
@@ -114,6 +125,16 @@ class EventActionFactory @Autowired constructor(
                 } catch (ignore: Exception) {
                     logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
                     return null
+                }
+            }
+            ScmType.GITHUB -> {
+                 when (actionCommonData.eventType) {
+                    GithubPushEvent.classType -> objectMapper.readValue<GithubPushEvent>(eventStr)
+                    GithubPullRequestEvent.classType -> objectMapper.readValue<GithubPullRequestEvent>(eventStr)
+                    else -> {
+                        logger.info("Github event(${actionCommonData.eventType}) is ignored")
+                        return null
+                    }
                 }
             }
             else -> TODO("对接其他Git平台时需要补充")
@@ -192,6 +213,39 @@ class EventActionFactory @Autowired constructor(
                 )
                 tGitNoteAction
             }
+            is GithubPushEvent -> {
+                when{
+                    event.ref.startsWith("refs/heads/") -> GithubPushActionGit(
+                        dslContext = dslContext,
+                        client = client,
+                        apiService = githubApiService,
+                        streamEventService = streamEventService,
+                        streamTimerService = streamTimerService,
+                        streamPipelineBranchService = streamPipelineBranchService,
+                        streamDeleteEventService = streamDeleteEventService,
+                        gitPipelineResourceDao = gitPipelineResourceDao,
+                        pipelineDelete = pipelineDelete,
+                        gitCheckService = gitCheckService,
+                        streamTriggerCache = streamTriggerCache
+                    )
+                    event.ref.startsWith("refs/tags/") -> GithubTagPushActionGit(
+                        apiService = githubApiService,
+                        gitCheckService = gitCheckService,
+                        streamTriggerCache = streamTriggerCache
+                    )
+                    else -> return null
+                }
+            }
+            is GithubPullRequestEvent -> {
+                GithubPRActionGit(
+                    apiService = githubApiService,
+                    mrConflictCheck = mrConflictCheck,
+                    pipelineDelete = pipelineDelete,
+                    gitCheckService = gitCheckService,
+                    streamTriggerTokenService = streamTriggerTokenService,
+                    streamTriggerCache = streamTriggerCache
+                )
+            }
             else -> {
                 return null
             }
@@ -217,6 +271,7 @@ class EventActionFactory @Autowired constructor(
         streamManualAction.data = ActionData(event, StreamTriggerContext())
         streamManualAction.api = when (streamGitConfig.getScmType()) {
             ScmType.CODE_GIT -> tGitApiService
+            ScmType.GITHUB -> githubApiService
             else -> TODO("对接其他Git平台时需要补充")
         }
         streamManualAction.data.setting = setting
@@ -233,6 +288,7 @@ class EventActionFactory @Autowired constructor(
 
         streamScheduleAction.api = when (streamGitConfig.getScmType()) {
             ScmType.CODE_GIT -> tGitApiService
+            ScmType.GITHUB -> githubApiService
             else -> TODO("对接其他Git平台时需要补充")
         }
         streamScheduleAction.data.setting = setting

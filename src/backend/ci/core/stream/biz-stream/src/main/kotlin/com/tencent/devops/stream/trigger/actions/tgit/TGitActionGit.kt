@@ -29,6 +29,12 @@ abstract class TGitActionGit(
             "git_${data.getGitProjectId()}"
         }
     }
+    /**
+     * 提供拿取gitProjectId的公共方法
+     * 因为会存在跨库触发导致的event的gitProjectId和触发的不一致的问题
+     * 所以会优先拿取pipeline的gitProjectId
+     */
+    override fun getGitProjectIdOrName() = data.context.pipeline?.gitProjectId ?: data.eventCommon.gitProjectId
 
     override fun getGitCred(personToken: String?): TGitCred {
         if (personToken != null) {

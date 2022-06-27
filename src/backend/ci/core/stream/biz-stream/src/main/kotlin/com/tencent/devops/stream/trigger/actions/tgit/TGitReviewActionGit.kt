@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.actions.tgit
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
@@ -35,6 +36,7 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
@@ -66,7 +68,7 @@ class TGitReviewActionGit(
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.REVIEW)
 
     override lateinit var data: ActionData
-    fun event() = data.event as GitReviewEvent
+    override fun event() = data.event as GitReviewEvent
 
     override val api: TGitApiService
         get() = apiService
@@ -102,11 +104,12 @@ class TGitReviewActionGit(
         )
         this.data.eventCommon = EventCommonData(
             gitProjectId = event.projectId.toString(),
+            scmType = ScmType.CODE_TGIT,
             branch = defaultBranch,
             commit = EventCommonDataCommit(
                 commitId = latestCommit?.commitId ?: "0",
                 commitMsg = latestCommit?.commitMsg,
-                commitTimeStamp = TGitActionCommon.getCommitTimeStamp(latestCommit?.commitDate),
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(latestCommit?.commitDate),
                 commitAuthorName = latestCommit?.commitAuthor
             ),
             userId = if (event.reviewer == null) {
@@ -143,25 +146,28 @@ class TGitReviewActionGit(
     override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {}
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
-        return TGitActionCommon.getYamlPathList(
+        return GitActionCommon.getYamlPathList(
             action = this,
-            gitProjectId = this.data.getGitProjectId(),
+            gitProjectId = this.getGitProjectIdOrName(),
             ref = this.data.eventCommon.branch
         ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
     }
 
-    override fun getYamlContent(fileName: String): String {
-        return api.getFileContent(
-            cred = this.getGitCred(),
-            gitProjectId = data.getGitProjectId(),
-            fileName = fileName,
-            ref = data.eventCommon.branch,
-            retry = ApiRequestRetryInfo(true)
+    override fun getYamlContent(fileName: String): Pair<String, String> {
+        return Pair(
+            data.eventCommon.branch,
+            api.getFileContent(
+                cred = this.getGitCred(),
+                gitProjectId = getGitProjectIdOrName(),
+                fileName = fileName,
+                ref = data.eventCommon.branch,
+                retry = ApiRequestRetryInfo(true)
+            )
         )
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
-        val (isTrigger, startParams) = TGitActionCommon.matchAndStartParams(this, triggerOn)
+        val (isTrigger, startParams) = GitActionCommon.matchAndStartParams(this, triggerOn)
         return TriggerResult(
             trigger = isTrigger,
             startParams = startParams,
@@ -171,6 +177,6 @@ class TGitReviewActionGit(
     }
 
     override fun getWebHookStartParam(triggerOn: TriggerOn): Map<String, String> {
-        return TGitActionCommon.matchAndStartParams(this, triggerOn).second
+        return GitActionCommon.matchAndStartParams(this, triggerOn).second
     }
 }
