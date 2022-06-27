@@ -7,17 +7,17 @@
         form-type="vertical"
     >
         <bk-form-item :label="$t('settings.parallelSetting')">
-            <bk-radio-group :value="pipelineSetting.runLockType" @change="(val) => handleRunningLockChange('runLockType', val)">
+            <bk-radio-group :value="pipelineSetting.runLockType" @change="handleLockTypeChange">
                 <div class="run-lock-radio-item">
                     <bk-radio
-                        value="MULTIPLE"
+                        :value="runTypeMap.MULTIPLE"
                     >
                         {{$t('settings.runningOption.multiple')}}
                     </bk-radio>
                 </div>
                 <div class="run-lock-radio-item">
                     <bk-radio
-                        value="SINGLE"
+                        :value="runTypeMap.GROUP"
                     >
                         {{$t('settings.runningOption.single')}}
                     </bk-radio>
@@ -42,39 +42,41 @@
             <bk-form-item property="concurrencyCancelInProgress">
                 <bk-checkbox
                     :checked="pipelineSetting.concurrencyCancelInProgress"
-                    @change="(val) => handleRunningLockChange('concurrencyCancelInProgress', val)"
+                    @change="handleConCurrencyCancel"
                 >
                     {{$t('settings.stopWhenNewCome')}}
                 </bk-checkbox>
             </bk-form-item>
-            <bk-form-item
-                :required="isSingleLock"
-                :label="$t('settings.largestNum')"
-                property="maxQueueSize"
-            >
-                <bk-input
-                    type="number"
-                    :placeholder="$t('settings.itemPlaceholder')"
-                    v-model="pipelineSetting.maxQueueSize"
-                />
-            </bk-form-item>
-            <bk-form-item
-                :required="isSingleLock"
-                :label="$t('settings.lagestTime')"
-                property="waitQueueTimeMinute"
-            >
-                <bk-input
-                    type="number"
-                    :placeholder="$t('settings.itemPlaceholder')"
-                    v-model="pipelineSetting.waitQueueTimeMinute"
-                />
-            </bk-form-item>
+            <template v-if="!pipelineSetting.concurrencyCancelInProgress">
+                <bk-form-item
+                    :required="isSingleLock && !pipelineSetting.concurrencyCancelInProgress"
+                    :label="$t('settings.largestNum')"
+                    property="maxQueueSize"
+                >
+                    <bk-input
+                        type="number"
+                        :placeholder="$t('settings.itemPlaceholder')"
+                        v-model="pipelineSetting.maxQueueSize"
+                    />
+                </bk-form-item>
+                <bk-form-item
+                    :required="isSingleLock && !pipelineSetting.concurrencyCancelInProgress"
+                    :label="$t('settings.lagestTime')"
+                    property="waitQueueTimeMinute"
+                >
+                    <bk-input
+                        type="number"
+                        :placeholder="$t('settings.itemPlaceholder')"
+                        v-model="pipelineSetting.waitQueueTimeMinute"
+                    />
+                </bk-form-item>
+            </template>
         </div>
         <bk-form-item :label="$t('settings.disableSetting')">
-            <span @click="handleRunningLockChange('runLockType', runTypeMap.LOCK)">
+            <span @click="handleLockTypeChange(runTypeMap.LOCK)">
                 <bk-radio
                     :checked="pipelineSetting.runLockType === runTypeMap.LOCK"
-                    value="LOCK"
+                    :value="runTypeMap.LOCK"
                 >
                     {{$t('settings.runningOption.lock')}}
                 </bk-radio>
@@ -96,12 +98,12 @@
             runTypeMap () {
                 return {
                     MULTIPLE: 'MULTIPLE',
-                    SINGLE: 'SINGLE',
+                    GROUP: 'GROUP_LOCK',
                     LOCK: 'LOCK'
                 }
             },
             isSingleLock () {
-                return this.pipelineSetting.runLockType === this.runTypeMap.SINGLE
+                return this.pipelineSetting.runLockType === this.runTypeMap.GROUP
             },
             formRule () {
                 const requiredRule = {
@@ -136,6 +138,18 @@
                         }
                     ]
                 }
+            }
+        },
+        methods: {
+            handleLockTypeChange (runLockType) {
+                this.handleRunningLockChange({
+                    runLockType
+                })
+            },
+            handleConCurrencyCancel (val) {
+                this.handleRunningLockChange({
+                    concurrencyCancelInProgress: val
+                })
             }
         }
     }
