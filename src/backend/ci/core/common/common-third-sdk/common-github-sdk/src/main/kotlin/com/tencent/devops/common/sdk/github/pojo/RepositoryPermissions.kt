@@ -33,5 +33,5 @@ data class RepositoryPermissions(
     val permission: String,
     @JsonProperty("role_name")
     val roleName: String,
-    val user: User
+    val user: GithubUser
 )

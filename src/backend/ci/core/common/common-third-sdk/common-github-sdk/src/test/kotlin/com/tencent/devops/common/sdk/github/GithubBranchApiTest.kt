@@ -23,27 +23,41 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.sdk.github.request
+package com.tencent.devops.common.sdk.github
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.sdk.enums.HttpMethod
-import com.tencent.devops.common.sdk.github.GithubRequest
-import com.tencent.devops.common.sdk.github.response.GHBranchResponse
+import com.tencent.devops.common.sdk.github.request.GetBranchRequest
+import com.tencent.devops.common.sdk.github.request.ListBranchesRequest
+import org.junit.jupiter.api.Test
 
-data class GHListBranchesRequest(
-    @JsonIgnore
-    val owner: String,
-    @JsonIgnore
-    val repo: String,
-    val protected: Boolean? = null,
-    @JsonProperty("per_page")
-    val perPage: Int = 30,
-    val page: Int = 1
-) : GithubRequest<List<GHBranchResponse>>() {
-    override fun getHttpMethod() = HttpMethod.GET
+class GithubBranchApiTest : GithubApiTest() {
 
-    override fun getApiPath() = "repos/$owner/$repo/branches"
+    @Test
+    fun listBranches() {
+        val request = ListBranchesRequest(
+            owner = owner,
+            repo = repo
+        )
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
+
+    @Test
+    fun getBranch() {
+        val request = GetBranchRequest(
+            owner = owner,
+            repo = repo,
+            branch = "master"
+        )
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
 }

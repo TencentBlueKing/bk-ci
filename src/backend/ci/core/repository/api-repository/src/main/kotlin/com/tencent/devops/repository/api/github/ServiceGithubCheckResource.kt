@@ -1,5 +1,6 @@
 package com.tencent.devops.repository.api.github
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.sdk.github.request.CreateCheckRunRequest
 import com.tencent.devops.common.sdk.github.request.UpdateCheckRunRequest
 import com.tencent.devops.common.sdk.github.response.CheckRunResponse
@@ -27,7 +28,7 @@ interface ServiceGithubCheckResource {
         @QueryParam("userId")
         userId: String,
         request: CreateCheckRunRequest
-    ): CheckRunResponse
+    ): Result<CheckRunResponse>
 
     @ApiOperation("更新检查任务")
     @POST
@@ -37,5 +38,5 @@ interface ServiceGithubCheckResource {
         @QueryParam("userId")
         userId: String,
         request: UpdateCheckRunRequest
-    ): CheckRunResponse
+    ): Result<CheckRunResponse>
 }

@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.sdk.github.pojo
 
+import java.util.Base64
+
 data class RepositoryContent(
     val type: String,
     val encoding: String?,
@@ -35,4 +37,6 @@ data class RepositoryContent(
     val path: String,
     val content: String?,
     val sha: String
-)
+) {
+    fun getDecodedContentAsString() = content?.let { String(Base64.getMimeDecoder().decode(content)) }
+}

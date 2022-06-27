@@ -28,28 +28,19 @@
 package com.tencent.devops.common.sdk.github
 
 import com.tencent.devops.common.sdk.github.request.CreateOrUpdateFileContentsRequest
-import com.tencent.devops.common.sdk.github.request.GHGetBranchRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryPermissionsRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
+import com.tencent.devops.common.sdk.util.SdkJsonUtil
 import org.junit.jupiter.api.Test
 
-class GithubRepositoryApiTest {
-    private val client = DefaultGithubClient(
-        serverUrl = "https://github.com/",
-        apiUrl = "https://api.github.com/"
-    )
-
-    private val token = "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"
-    private val repo = "bk-ci"
-    private val owner = "Florence-y"
-    private val defaultBranch = "master"
+class GithubRepositoryApiTest : GithubApiTest() {
 
     @Test
-    fun getRepositery() {
+    fun getRepository() {
         val request = GetRepositoryRequest(
             repo = repo,
             owner = owner
@@ -58,23 +49,26 @@ class GithubRepositoryApiTest {
             oauthToken = token,
             request = request
         )
-        println(response)
+        println(SdkJsonUtil.toJson(response))
     }
 
     @Test
-    fun getRepositeryContent() {
+    fun getRepositoryContent() {
         val request = GetRepositoryContentRequest(
-            repo = "chatroom",
+            repo = repo,
             owner = owner,
             ref = "master",
-            path = "README5555.md"
+            path = "README.md"
         )
         val response = client.execute(
             oauthToken = token,
             request = request
         )
+
         println(response)
+        println(response.getDecodedContentAsString())
     }
+
     @Test
     fun listRepositoriesRequest() {
         val request = ListRepositoriesRequest()
@@ -85,20 +79,6 @@ class GithubRepositoryApiTest {
         println(response)
     }
 
-
-    @Test
-    fun getBranch() {
-        val request = GHGetBranchRequest(
-            owner = owner,
-            repo = repo,
-            branch = defaultBranch
-        )
-        val response = client.execute(
-            oauthToken = token,
-            request = request
-        )
-        println(response)
-    }
 //    @Test
     fun createOrUpdateFileContents() {
         // create
@@ -124,7 +104,7 @@ class GithubRepositoryApiTest {
             // (update in new file) encoding by base64
             content = "YWRhc2Rhc2Rhcw==",
             sha = "0d5a690c8fad5e605a6e8766295d9d459d65de42",
-            branch = defaultBranch
+            branch = "master"
         )
 
         val updateResponse = client.execute(
@@ -163,7 +143,7 @@ class GithubRepositoryApiTest {
         val request = GetRepositoryPermissionsRequest(
             owner = owner,
             repo = repo,
-            username = owner
+            username = "mingshewhe"
         )
         val response = client.execute(
             oauthToken = token,

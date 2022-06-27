@@ -1,5 +1,6 @@
 package com.tencent.devops.repository.resources.github
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.sdk.github.request.GetCommitRequest
 import com.tencent.devops.common.sdk.github.request.ListCommitRequest
 import com.tencent.devops.common.sdk.github.response.CommitResponse
@@ -15,17 +16,21 @@ class ServiceGithubCommitsResourceImpl @Autowired constructor(
     val githubCommitsService: GithubCommitsService
 ) : ServiceGithubCommitsResource {
 
-    override fun listCommits(userId: String, request: ListCommitRequest): List<CommitResponse> {
-        return githubCommitsService.listCommits(
-            request = request,
-            token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+    override fun listCommits(userId: String, request: ListCommitRequest): Result<List<CommitResponse>> {
+        return Result(
+            githubCommitsService.listCommits(
+                request = request,
+                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+            )
         )
     }
 
-    override fun getCommit(userId: String, request: GetCommitRequest): CommitResponse {
-        return githubCommitsService.getCommit(
-            request = request,
-            token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+    override fun getCommit(userId: String, request: GetCommitRequest): Result<CommitResponse?> {
+        return Result(
+            githubCommitsService.getCommit(
+                request = request,
+                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+            )
         )
     }
 }

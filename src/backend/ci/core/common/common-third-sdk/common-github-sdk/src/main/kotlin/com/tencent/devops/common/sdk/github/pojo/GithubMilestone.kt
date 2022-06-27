@@ -2,14 +2,14 @@ package com.tencent.devops.common.sdk.github.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-data class Milestone(
+data class GithubMilestone(
     @JsonProperty("closed_at")
     val closedAt: String,
     @JsonProperty("closed_issues")
     val closedIssues: Int,
     @JsonProperty("created_at")
     val createdAt: String,
-    val creator: GithubAuthor,
+    val creator: GithubUser,
     val description: String,
     @JsonProperty("due_on")
     val dueOn: String,

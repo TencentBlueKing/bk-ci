@@ -23,16 +23,27 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.sdk.github.pojo
+package com.tencent.devops.common.sdk.github
 
-import com.fasterxml.jackson.annotation.JsonProperty
-// member
-data class Collaborator(
-    val id: Int,
-    @JsonProperty("login")
-    val username: String
+import com.tencent.devops.common.sdk.github.request.GetTreeRequest
+import org.junit.jupiter.api.Test
 
-    // TODO: 2022/6/20 无state属性
-)
+class GithubDatabaseTest : GithubApiTest() {
+
+    @Test
+    fun getTree() {
+        val request = GetTreeRequest(
+            owner = owner,
+            repo = repo,
+            treeSha = "882a08e85c342961e4db014a97124c40cf56c9b6"
+        )
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
+}

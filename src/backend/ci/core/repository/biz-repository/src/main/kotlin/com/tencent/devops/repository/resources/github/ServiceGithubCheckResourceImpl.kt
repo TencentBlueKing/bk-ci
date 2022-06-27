@@ -1,5 +1,6 @@
 package com.tencent.devops.repository.resources.github
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.sdk.github.request.CreateCheckRunRequest
 import com.tencent.devops.common.sdk.github.request.UpdateCheckRunRequest
 import com.tencent.devops.common.sdk.github.response.CheckRunResponse
@@ -15,17 +16,21 @@ class ServiceGithubCheckResourceImpl @Autowired constructor(
     val githubCheckService: GithubCheckService
 ) : ServiceGithubCheckResource {
 
-    override fun createCheckRun(userId: String, request: CreateCheckRunRequest): CheckRunResponse {
-        return githubCheckService.createCheckRun(
-            request = request,
-            token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+    override fun createCheckRun(userId: String, request: CreateCheckRunRequest): Result<CheckRunResponse> {
+        return Result(
+            githubCheckService.createCheckRun(
+                request = request,
+                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+            )
         )
     }
 
-    override fun updateCheckRun(userId: String, request: UpdateCheckRunRequest): CheckRunResponse {
-        return githubCheckService.updateCheckRun(
-            request = request,
-            token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+    override fun updateCheckRun(userId: String, request: UpdateCheckRunRequest): Result<CheckRunResponse> {
+        return Result(
+            githubCheckService.updateCheckRun(
+                request = request,
+                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+            )
         )
     }
 }

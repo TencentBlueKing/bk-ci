@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.resources.github
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.sdk.github.pojo.Organization
 import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
 import com.tencent.devops.common.web.RestResource
@@ -40,13 +41,16 @@ class ServiceGithubOrganizationResourceImpl @Autowired constructor(
     val githubTokenService: GithubTokenService,
     val organizationService: GithubOrganizationService
 ) : ServiceGithubOrganizationResource {
+
     override fun listOrganizations(
         userId: String,
         request: ListOrganizationsRequest
-    ): List<Organization> {
-        return organizationService.listOrganizations(
-            request = request,
-            token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+    ): Result<List<Organization>> {
+        return Result(
+            organizationService.listOrganizations(
+                request = request,
+                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+            )
         )
     }
 }

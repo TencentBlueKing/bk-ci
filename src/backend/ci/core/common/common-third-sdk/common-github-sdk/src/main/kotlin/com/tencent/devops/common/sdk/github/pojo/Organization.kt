@@ -28,6 +28,7 @@
 package com.tencent.devops.common.sdk.github.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+
 // group
 data class Organization(
     @JsonProperty("login")

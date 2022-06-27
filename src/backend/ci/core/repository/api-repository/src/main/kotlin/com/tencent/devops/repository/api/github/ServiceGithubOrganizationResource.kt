@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.api.github
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.sdk.github.pojo.Organization
 import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
 import io.swagger.annotations.Api
@@ -53,5 +54,5 @@ interface ServiceGithubOrganizationResource {
         @QueryParam("userId")
         userId: String,
         request: ListOrganizationsRequest
-    ): List<Organization>
+    ): Result<List<Organization>>
 }

@@ -23,24 +23,44 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.sdk.github.request
+package com.tencent.devops.repository.pojo.enums
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.tencent.devops.common.sdk.enums.HttpMethod
-import com.tencent.devops.common.sdk.github.GithubRequest
-import com.tencent.devops.common.sdk.github.response.GHBranchResponse
+/**
+ * github权限枚举
+ */
+enum class GithubAccessLevelEnum(val level: Int) {
+    GUEST(10),
+    READ(15),
+    TRIAGE(20),
+    WRITE(30),
+    MAINTAIN(40),
+    ADMIN(50);
 
-data class GHGetBranchRequest(
-    @JsonIgnore
-    val owner: String,
-    @JsonIgnore
-    val repo: String,
-    @JsonIgnore
-    val branch: String
-) : GithubRequest<GHBranchResponse>() {
-    override fun getHttpMethod() = HttpMethod.GET
+    companion object {
+        fun getGithubAccessLevel(level: Int): GithubAccessLevelEnum {
+            return when (level) {
+                10 -> GUEST
+                15 -> READ
+                20 -> TRIAGE
+                30 -> WRITE
+                40 -> MAINTAIN
+                50 -> ADMIN
+                else -> GUEST
+            }
+        }
 
-    override fun getApiPath() = "/repos/$owner/$repo/branches/$branch"
+        fun getGithubAccessLevel(permission: String): GithubAccessLevelEnum {
+            return when (permission) {
+                "read" -> READ
+                "triage" -> TRIAGE
+                "write" -> WRITE
+                "maintain" -> MAINTAIN
+                "admin" -> ADMIN
+                else -> GUEST
+            }
+        }
+    }
 }

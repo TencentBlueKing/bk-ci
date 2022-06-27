@@ -23,11 +23,43 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.sdk.github.pojo
+package com.tencent.devops.common.sdk.github
 
-data class GHBranchCommit(
-    val sha: String,
-    val url: String
-)
+import com.tencent.devops.common.sdk.github.request.GetPullRequestRequest
+import com.tencent.devops.common.sdk.github.request.ListPullRequestFileRequest
+import org.junit.jupiter.api.Test
+
+class GithubPRTest : GithubApiTest() {
+
+    @Test
+    fun getPullRequest() {
+        val request = GetPullRequestRequest(
+            owner = owner,
+            repo = repo,
+            pullNumber = "7100"
+        )
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
+
+    @Test
+    fun listPullRequestFile() {
+        val request = ListPullRequestFileRequest(
+            owner = owner,
+            repo = repo,
+            pullNumber = "7100"
+        )
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+        println(true.toString())
+    }
+}

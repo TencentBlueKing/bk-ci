@@ -28,8 +28,8 @@
 package com.tencent.devops.repository.github.service
 
 import com.tencent.devops.common.sdk.github.DefaultGithubClient
-import com.tencent.devops.common.sdk.github.pojo.Collaborator
-import com.tencent.devops.common.sdk.github.pojo.Repository
+import com.tencent.devops.common.sdk.github.pojo.GithubRepo
+import com.tencent.devops.common.sdk.github.pojo.GithubUser
 import com.tencent.devops.common.sdk.github.pojo.RepositoryContent
 import com.tencent.devops.common.sdk.github.pojo.RepositoryPermissions
 import com.tencent.devops.common.sdk.github.request.CreateOrUpdateFileContentsRequest
@@ -79,7 +79,7 @@ class GithubRepositoryService @Autowired constructor(
     fun getRepository(
         request: GetRepositoryRequest,
         token: String
-    ): Repository {
+    ): GithubRepo {
         return defaultGithubClient.execute(
             request = request,
             oauthToken = token
@@ -89,7 +89,7 @@ class GithubRepositoryService @Autowired constructor(
     fun listRepositories(
         request: ListRepositoriesRequest,
         token: String
-    ): List<Repository> {
+    ): List<GithubRepo> {
         return defaultGithubClient.execute(
             request = request,
             oauthToken = token
@@ -99,7 +99,7 @@ class GithubRepositoryService @Autowired constructor(
     fun listRepositoryCollaborators(
         request: ListRepositoryCollaboratorsRequest,
         token: String
-    ): List<Collaborator> {
+    ): List<GithubUser> {
         return defaultGithubClient.execute(
             request = request,
             oauthToken = token

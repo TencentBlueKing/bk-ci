@@ -28,10 +28,7 @@
 package com.tencent.devops.stream.trigger.git.service
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
@@ -58,11 +55,10 @@ import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitUserInfo
 import com.tencent.devops.stream.trigger.git.service.StreamApiUtil.doRetryFun
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.util.QualityUtils
-import com.tencent.devops.stream.util.RetryUtils
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class TGitApiService @Autowired constructor(
@@ -414,7 +410,7 @@ class TGitApiService @Autowired constructor(
         )
     }
 
-    protected fun StreamGitCred.toToken(): String {
+    private fun StreamGitCred.toToken(): String {
         this as TGitCred
         if (this.accessToken != null) {
             return this.accessToken
@@ -426,7 +422,7 @@ class TGitApiService @Autowired constructor(
             )
     }
 
-    protected fun StreamGitCred.toTokenType(): TokenTypeEnum {
+    private fun StreamGitCred.toTokenType(): TokenTypeEnum {
         this as TGitCred
         return if (this.useAccessToken) {
             TokenTypeEnum.OAUTH

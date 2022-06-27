@@ -1,5 +1,6 @@
 package com.tencent.devops.repository.api.github
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.sdk.github.request.GetPullRequestRequest
 import com.tencent.devops.common.sdk.github.request.ListPullRequestFileRequest
 import com.tencent.devops.common.sdk.github.response.PullRequestFileResponse
@@ -28,7 +29,7 @@ interface ServiceGithubPRResource {
         @QueryParam("userId")
         userId: String,
         request: GetPullRequestRequest
-    ): PullRequestResponse
+    ): Result<PullRequestResponse?>
 
     @ApiOperation("PR文件列表")
     @POST
@@ -38,5 +39,5 @@ interface ServiceGithubPRResource {
         @QueryParam("userId")
         userId: String,
         request: ListPullRequestFileRequest
-    ): List<PullRequestFileResponse>
+    ): Result<List<PullRequestFileResponse>>
 }

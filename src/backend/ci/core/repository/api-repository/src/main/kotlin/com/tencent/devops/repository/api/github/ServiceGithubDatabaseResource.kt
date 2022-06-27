@@ -1,7 +1,8 @@
 package com.tencent.devops.repository.api.github
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.sdk.github.request.GetTreeRequest
-import com.tencent.devops.common.sdk.github.response.GithubTreeResponse
+import com.tencent.devops.common.sdk.github.response.GetTreeResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -26,5 +27,5 @@ interface ServiceGithubDatabaseResource {
         @QueryParam("userId")
         userId: String,
         request: GetTreeRequest
-    ): GithubTreeResponse
+    ): Result<GetTreeResponse?>
 }

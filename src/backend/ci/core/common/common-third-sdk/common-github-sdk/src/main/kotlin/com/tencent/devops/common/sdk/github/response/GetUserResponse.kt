@@ -1,12 +1,10 @@
 package com.tencent.devops.common.sdk.github.response
 
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.sdk.github.pojo.GHUserPlan
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class GHGetUserResponse(
+data class GetUserResponse(
     @JsonProperty("avatar_url")
     val avatarUrl: String,
     @JsonProperty("bio")
@@ -55,8 +53,6 @@ data class GHGetUserResponse(
     val organizationsUrl: String,
     @JsonProperty("owned_private_repos")
     val ownedPrivateRepos: Int,
-    @JsonProperty("plan")
-    val GHUserPlan: GHUserPlan?,
     @JsonProperty("private_gists")
     val privateGists: Int,
     @JsonProperty("public_gists")

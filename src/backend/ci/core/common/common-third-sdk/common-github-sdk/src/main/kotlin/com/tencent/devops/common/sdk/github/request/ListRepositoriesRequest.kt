@@ -30,7 +30,8 @@ package com.tencent.devops.common.sdk.github.request
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
-import com.tencent.devops.common.sdk.github.pojo.Repository
+import com.tencent.devops.common.sdk.github.pojo.GithubRepo
+
 @Suppress("all")
 class ListRepositoriesRequest(
     // Limit results to repositories with the specified visibility.
@@ -40,10 +41,12 @@ class ListRepositoriesRequest(
     // Comma-separated list of values. Can include:
     // * owner: Repositories that are owned by the authenticated user.
     // * collaborator: Repositories that the user has been added to as a collaborator.
-    // * organization_member: Repositories that the user has access to through being a member of an organization. This includes every repository on every team that the user is on.
+    // * organization_member: Repositories that the user has access to through being a member of an organization.
+    // This includes every repository on every team that the user is on.
     // Default: owner,collaborator,organization_member
     val affiliation: String? = null,
-    // Limit results to repositories of the specified type. Will cause a 422 error if used in the same request as visibility or affiliation.
+    // Limit results to repositories of the specified type.
+    // Will cause a 422 error if used in the same request as visibility or affiliation.
     // Default: all
     // Can be one of: all, owner, public, private, member
     val type: String? = null,
@@ -57,11 +60,13 @@ class ListRepositoriesRequest(
     @JsonProperty("per_page")
     var perPage: Int = 30,
     var page: Int = 1,
-    // Only show notifications updated after the given time. This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.
+    // Only show notifications updated after the given time. This is a timestamp in ISO 8601
+    // format: YYYY-MM-DDTHH:MM:SSZ.
     val since: String? = null,
-    // Only show notifications updated before the given time. This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.
+    // Only show notifications updated before the given time. This is a timestamp in ISO 8601
+    // format: YYYY-MM-DDTHH:MM:SSZ.
     val before: String? = null
-) : GithubRequest<List<Repository>>() {
+) : GithubRequest<List<GithubRepo>>() {
     override fun getHttpMethod(): HttpMethod {
         return HttpMethod.GET
     }

@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.trigger.git.pojo.github
 
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitMrInfo
+import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitMrStatus
 
 data class GithubMrInfo(
     override val mergeStatus: String,
@@ -35,9 +36,34 @@ data class GithubMrInfo(
 ) : StreamGitMrInfo
 
 enum class GitHubMrStatus(val value: String) {
-    MERGE_STATUS_UNCHECKED("unchecked"),
-    MERGE_STATUS_CAN_BE_MERGED("can_be_merged"),
-    MERGE_STATUS_CAN_NOT_BE_MERGED("cannot_be_merged")
-    // 项目有配置 mr hook，当创建mr后，发送mr hook前，这个状态是hook_intercept,与stream无关
-    // MERGE_STATUS_HOOK_INTERCEPT("hook_intercept")
+    // Merge conflict. Merging will be blocked
+    DIRTY("dirty"),
+    // Mergeability was not checked yet. Merging will be blocked
+    UNKNOWN("unknown"),
+    // Blocked by a failing/missing required status check.
+    BLOCKED("blocked"),
+    // Head branch is behind the base branch. Only if required status checks is enabled but loose policy is not.
+    // Merging will be blocked.
+    BEHIND("behind"),
+    // Failing/pending commit status that is not part of the required status checks. Merging is allowed (yellow box).
+    UNSTABLE("unstable"),
+    // GitHub Enterprise only, if a repo has custom pre-receive hooks. Merging is allowed (green box)
+    HAS_HOOKS("has_hooks"),
+    //  No conflicts, everything good. Merging is allowed (green box).
+    CLEAN("clean");
+
+    companion object {
+        fun convertTGitMrStatus(value: String): TGitMrStatus {
+            return when (value) {
+                "dirty" -> TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED
+                "unknown" -> TGitMrStatus.MERGE_STATUS_UNCHECKED
+                "blocked" -> TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED
+                "behind" -> TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED
+                "unstable" -> TGitMrStatus.MERGE_STATUS_CAN_BE_MERGED
+                "has_hooks" -> TGitMrStatus.MERGE_STATUS_CAN_BE_MERGED
+                "clean" -> TGitMrStatus.MERGE_STATUS_CAN_BE_MERGED
+                else -> TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED
+            }
+        }
+    }
 }
