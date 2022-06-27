@@ -5,7 +5,7 @@
             title: loadingTitle
         }">
             <div class="console-header">
-                <bk-button class="debug-btn" theme="danger" @click="stopDebug">Stop Debug</bk-button>
+                <bk-button class="debug-btn" theme="danger" @click="stopDebug">{{$t('pipeline.stopDebug')}}</bk-button>
                 <p class="debug-tips" v-show="isRunning">{{ fromRunningTips }}</p>
             </div>
             <div class="container">
@@ -44,11 +44,11 @@
                 isRunning: false,
                 isExiting: false,
                 config: {
-                    title: 'Failed in login to debug',
-                    desc: 'Illegal name for mirroring or other errors'
+                    title: this.$t('pipeline.debugFailTitle'),
+                    desc: this.$t('pipeline.debugFailDesc')
                 },
                 containerName: '',
-                fromRunningTips: 'Go to the current debugging through the portal of pipeline at runtime and the container for debugging is the one used for the current build'
+                fromRunningTips: this.$t('pipeline.debugRunningTips')
             }
         },
         computed: {
@@ -57,7 +57,7 @@
                 return !this.url
             },
             loadingTitle () {
-                return !this.isExiting ? `If the container can't be activated after one minute you did so, please contact DevOps (customer service from Blue Shield)` : 'exiting'
+                return !this.isExiting ? this.$t('pipeline.debugLoadingTitle') : 'exiting'
             },
             pipelineId () {
                 return this.$route.query.pipelineId
@@ -85,26 +85,26 @@
             linkConsole () {
                 const { projectId, pipelineId, buildId, vmSeqId, cmd } = this
                 pipelines.startDebugDocker(
-                {
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    vmSeqId,
-                    cmd  
-                }).then((res) => {
+                    {
+                        projectId,
+                        pipelineId,
+                        buildId,
+                        vmSeqId,
+                        cmd
+                    }
+                ).then((res) => {
                     this.url = res
-                })
-                .catch((err) => {
+                }).catch((err) => {
                     console.log(err)
-                        this.connectError = true
-                        this.config.desc = err.message || this.$t('editPage.docker.failDesc')
+                    this.connectError = true
+                    err.message && (this.config.desc = err.message)
                 })
             },
             async stopDebug () {
-                const content = 'You will leave this page after stop debugging sucessfully'
+                const content = this.$t('pipeline.stopDebugTips')
 
                 this.$bkInfo({
-                    title: 'Confirm stopping debugging',
+                    title: this.$t('pipeline.stopDebugTitle'),
                     subTitle: content,
                     confirmLoading: true,
                     confirmFn: async () => {
@@ -136,7 +136,7 @@
                 window.removeEventListener('beforeunload', this.leaveSure)
             },
             leaveSure (e) {
-                const dialogText = 'If leave, the data of new edition will be lost'
+                const dialogText = this.$t('pipeline.debugLeaveTips')
                 e.returnValue = dialogText
                 return dialogText
             }

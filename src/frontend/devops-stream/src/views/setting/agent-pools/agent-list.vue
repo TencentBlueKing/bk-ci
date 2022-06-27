@@ -9,8 +9,8 @@
         <main class="agent-list-main" v-if="!isLoading">
             <section v-if="agentList.length">
                 <div class="operate-agent">
-                    <bk-button theme="primary" @click="goToAddAgent">Add Self-hosted agent</bk-button>
-                    <bk-button theme="primary" class="import-agent" @click="importNewNode">Import Self-hosted agent</bk-button>
+                    <bk-button theme="primary" @click="goToAddAgent">{{$t('setting.agent.addAgent')}}</bk-button>
+                    <bk-button theme="primary" class="import-agent" @click="importNewNode">{{$t('setting.agent.importAgent')}}</bk-button>
                 </div>
                 <bk-table class="agent-table"
                     :data="agentList"
@@ -18,7 +18,7 @@
                     :header-border="false"
                     :header-cell-style="{ background: '#fafbfd' }"
                 >
-                    <bk-table-column label="Display Name" prop="displayName">
+                    <bk-table-column :label="$t('displayName')" prop="displayName">
                         <template slot-scope="props">
                             <div class="bk-form-content node-item-content" v-if="props.row.nodeHashId === curEditAgentId">
                                 <div class="edit-content">
@@ -29,8 +29,8 @@
                                         v-model="curEditDisplayName"
                                         :class="{ 'is-danger': errors.has('nodeName') }">
                                     <div class="handler-btn">
-                                        <span class="edit-base save" @click="saveEdit(props.row)">Save</span>
-                                        <span class="edit-base cancel" @click="cancelEdit(props.row.nodeHashId)">Cancel</span>
+                                        <span class="edit-base save" @click="saveEdit(props.row)">{{$t('save')}}</span>
+                                        <span class="edit-base cancel" @click="cancelEdit(props.row.nodeHashId)">{{$t('cancel')}}</span>
                                     </div>
                                 </div>
                             </div>
@@ -43,23 +43,23 @@
                             </div>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="HostName" prop="name"></bk-table-column>
+                    <bk-table-column :label="$t('hostName')" prop="name"></bk-table-column>
                     <bk-table-column label="Ip" prop="ip"></bk-table-column>
                     <bk-table-column label="OS" prop="osName"></bk-table-column>
-                    <bk-table-column label="Status" prop="nodeStatus"></bk-table-column>
-                    <bk-table-column label="Operation" width="200" class-name="handler-btn">
+                    <bk-table-column :label="$t('cancel')" prop="nodeStatus"></bk-table-column>
+                    <bk-table-column :label="$t('operation')" width="200" class-name="handler-btn">
                         <template slot-scope="props">
-                            <span class="update-btn" @click="showDelete(props.row)">Remove from the pool</span>
+                            <span class="update-btn" @click="showDelete(props.row)">{{$t('setting.agent.removeAgentTips')}}</span>
                         </template>
                     </bk-table-column>
                 </bk-table>
             </section>
             <section v-else class="table-empty">
-                <h3>Import your first agent</h3>
-                <h5>Agent can be yourself development machine, or the compile machine of your team</h5>
+                <h3>{{$t('setting.agent.emptyAgentTitle')}}</h3>
+                <h5>{{$t('setting.agent.emptyAgentTips')}}</h5>
                 <div>
-                    <bk-button theme="primary" @click="goToAddAgent">Add Self-hosted agent</bk-button>
-                    <bk-button theme="primary" class="import-agent" @click="importNewNode">Import Self-hosted agent</bk-button>
+                    <bk-button theme="primary" @click="goToAddAgent">{{$t('setting.agent.addSelfAgent')}}</bk-button>
+                    <bk-button theme="primary" class="import-agent" @click="importNewNode">{{$t('setting.agent.importSelfAgent')}}</bk-button>
                 </div>
             </section>
         </main>
@@ -79,8 +79,8 @@
             :mask-close="false"
             :loading="isDeleteing"
             @confirm="deleteAgent"
-            title="Remove from the pool">
-            Are you sure to remove 【{{deleteRow.displayName}}】？
+            :title="$t('setting.agent.removeAgentTips')">
+            {{$t('deleteTips')}} 【{{deleteRow.displayName}}】？
         </bk-dialog>
     </article>
 </template>
@@ -101,7 +101,7 @@
         data () {
             return {
                 navList: [
-                    { link: { name: 'agentPools' }, title: 'Agent Pools' },
+                    { link: { name: 'agentPools' }, title: this.$t('setting.agent.agentPools') },
                     { link: '', title: this.$route.params.poolName }
                 ],
                 agentList: [],

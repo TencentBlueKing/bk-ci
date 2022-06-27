@@ -6,11 +6,11 @@
         <section v-if="showDebugBtn" class="web-console" :style="{ right: executeCount > 1 ? '390px' : '280px' }">
             <bk-popover placement="bottom" ref="consoleRef" ext-cls="console-menu-wrapper">
                 <span>
-                    Web Console
+                    {{$t('pipeline.webConsle')}}
                 </span>
                 <ul class="console-ul-list" slot="content">
-                    <li @click="startDebug('/bin/sh')"><span>Login via /bin/sh</span></li>
-                    <li @click="startDebug('/bin/bash')"><span>Login via /bin/bash</span></li>
+                    <li @click="startDebug('/bin/sh')"><span>{{$t('pipeline.viaSh')}}</span></li>
+                    <li @click="startDebug('/bin/bash')"><span>{{$t('pipeline.viaBash')}}</span></li>
                 </ul>
             </bk-popover>
         </section>

@@ -3,13 +3,13 @@
         <header class="card-header">
             <h5 class="header-info">
                 <span class="info-title">{{ pool.name }}</span>
-                <span class="info-num" v-if="editable">Agent：{{ pool.nodeCount }}</span>
+                <span class="info-num" v-if="editable">{{$t('setting.agent.agent')}}：{{ pool.nodeCount }}</span>
             </h5>
 
             <opt-menu v-if="editable">
-                <li @click="toPage('agentList')">Self-hosted Agents</li>
-                <li @click="toPage('poolSettings')">Settings</li>
-                <li @click="showDelete = true">Delete Agent Pool</li>
+                <li @click="toPage('agentList')">{{$t('setting.agent.selfAgents')}}</li>
+                <li @click="toPage('poolSettings')">{{$t('settings')}}</li>
+                <li @click="showDelete = true">{{$t('setting.agent.deletePool')}}</li>
             </opt-menu>
         </header>
 
@@ -22,10 +22,10 @@
                 <bk-progress :theme="getTheme(usage.val)" :percent="usage.val" :show-text="false"></bk-progress>
             </li>
         </ul>
-        <bk-exception class="exception-wrap-item exception-part card-useages" type="empty" scene="part" v-else>No Data</bk-exception>
+        <bk-exception class="exception-wrap-item exception-part card-useages" type="empty" scene="part" v-else>{{$t('noData')}}</bk-exception>
         <div v-if="editable" class="operate-btns">
-            <bk-button @click="addAgent" class="card-button">Add agent</bk-button>
-            <bk-button @click="importNewNode" class="card-button">Import agent</bk-button>
+            <bk-button @click="addAgent" class="card-button">{{$t('setting.agent.addAgent')}}</bk-button>
+            <bk-button @click="importNewNode" class="card-button">{{$t('setting.agent.importAgent')}}</bk-button>
         </div>
         <bk-dialog v-model="showDelete"
             theme="danger"
@@ -87,9 +87,9 @@
 
             cpuUsages () {
                 return [
-                    { name: 'CPU Usage', showVal: this.pool.averageCpuLoad, val: this.pool.averageCpuLoad / 100 },
-                    { name: 'Memory Usage', showVal: this.pool.averageMemLoad, val: this.pool.averageMemLoad / 100 },
-                    { name: 'Disk Usage', showVal: this.pool.averageDiskLoad, val: this.pool.averageDiskLoad / 100 }
+                    { name: this.$t('setting.agent.cpuUsage'), showVal: this.pool.averageCpuLoad, val: this.pool.averageCpuLoad / 100 },
+                    { name: this.$t('setting.agent.memoryUsage'), showVal: this.pool.averageMemLoad, val: this.pool.averageMemLoad / 100 },
+                    { name: this.$t('setting.agent.diskUsage'), showVal: this.pool.averageDiskLoad, val: this.pool.averageDiskLoad / 100 }
                 ]
             }
         },

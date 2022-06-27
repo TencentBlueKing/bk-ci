@@ -2,8 +2,8 @@
     <section class="plugin-log">
         <bk-log-search :execute-count="plugin.executeCount" @change-execute="changeExecute" class="log-tools">
             <template #tool>
-                <li class="more-button" @click="toggleShowDebugLog">{{ showDebug ? 'Hide Debug Log' : 'Show Debug Log' }}</li>
-                <li class="more-button" @click="downloadLog">Download Log</li>
+                <li class="more-button" @click="toggleShowDebugLog">{{ showDebug ? $t('pipeline.showLog') : $t('pipeline.hideLog')}}</li>
+                <li class="more-button" @click="downloadLog">{{$t('pipeline.downloadLog')}}</li>
             </template>
         </bk-log-search>
         <bk-log class="bk-log" ref="scroll" @tag-change="tagChange"></bk-log>
@@ -99,17 +99,16 @@
                         let errMessage
                         switch (res.status) {
                             case 1:
-                                errMessage = '日志为空'
+                                errMessage = this.$t('pipeline.logEmpty')
                                 break
                             case 2:
-                                errMessage = '日志被清理'
+                                errMessage = this.$t('pipeline.logCleared')
                                 break
                             case 3:
-                                errMessage = '日志关闭'
+                                errMessage = this.$t('pipeline.logClosed')
                                 break
                             default:
-                                errMessage = '日志错误'
-                                break
+                                errMessage = this.$t('pipeline.logErr')
                         }
                         scroll.handleApiErr(errMessage)
                         return
