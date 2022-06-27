@@ -32,4 +32,9 @@ interface ServiceGithubOauthResource {
         @QueryParam("channelCode")
         channelCode: String? = null
     ): Result<GithubOauthCallback>
+
+    @ApiOperation("github授权url")
+    @GET
+    @Path("/oauthUrl")
+    fun oauthUrl(redirectUrl: String): Result<String>
 }

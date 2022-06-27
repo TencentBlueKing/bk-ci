@@ -1,11 +1,13 @@
 package com.tencent.devops.stream.service
 
+import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.repository.api.github.ServiceGithubOauthResource
 import com.tencent.devops.stream.config.StreamLoginConfig
+import com.tencent.devops.stream.pojo.enums.StreamLoginType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -26,10 +28,24 @@ class StreamLoginService @Autowired constructor(
                 .githubCallback(code = code, state = state, channelCode = ChannelCode.GIT.name).data!!
         val authCode = UUIDUtil.generate()
         redisOperation.set(
-            key = String.format(BK_LOGIN_CODE_KEY, "github", githubCallback.userId),
+            key = String.format(BK_LOGIN_CODE_KEY, StreamLoginType.GITHUB.value, githubCallback.userId),
             value = authCode,
             expiredInSecond = BK_LOGIN_CODE_KEY_EXPIRED
         )
-        return String.format(streamLoginConfig.githubRedirectUrl, authCode, githubCallback.userId, "github")
+        return String.format(
+            streamLoginConfig.githubRedirectUrl,
+            authCode,
+            githubCallback.userId,
+            StreamLoginType.GITHUB.value
+        )
+    }
+
+    fun loginUrl(type: String): String {
+        return when (type) {
+            StreamLoginType.GITHUB.value ->
+                client.get(ServiceGithubOauthResource::class).oauthUrl(streamLoginConfig.githubRedirectUrl).data!!
+            else ->
+                throw ClientException(message = "stream login not support $type type")
+        }
     }
 }

@@ -27,10 +27,7 @@
 
 package com.tencent.devops.stream.trigger.git.service
 
-import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.sdk.github.request.GHGetBranchRequest
 import com.tencent.devops.common.sdk.github.request.GetCommitRequest
@@ -68,7 +65,6 @@ import com.tencent.devops.stream.trigger.git.pojo.github.GithubUserInfo
 import com.tencent.devops.stream.trigger.git.service.StreamApiUtil.doRetryFun
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.util.QualityUtils
-import com.tencent.devops.stream.util.RetryUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

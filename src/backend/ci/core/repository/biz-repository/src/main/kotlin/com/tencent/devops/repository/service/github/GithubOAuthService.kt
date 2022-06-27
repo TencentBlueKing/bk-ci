@@ -49,6 +49,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.URLDecoder
+import java.net.URLEncoder
 import javax.ws.rs.core.Response
 
 @Service
@@ -69,6 +70,14 @@ class GithubOAuthService @Autowired constructor(
     }
 
     fun getGithubAppUrl() = GithubAppUrl(gitConfig.githubAppUrl)
+
+    fun oauthUrl(redirectUrl: String): String {
+        val stateParams = mapOf(
+            "redirectUrl" to redirectUrl,
+            "randomStr" to RandomStringUtils.randomAlphanumeric(RANDOM_ALPHA_NUM)
+        )
+        return URLEncoder.encode(JsonUtil.toJson(stateParams), "UTF-8")
+    }
 
     fun githubCallback(code: String, state: String?, channelCode: String? = null): GithubOauthCallback {
         return if (channelCode == ChannelCode.GIT.name) {

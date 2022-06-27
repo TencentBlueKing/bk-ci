@@ -23,55 +23,23 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.stream.api
+package com.tencent.devops.stream.resources.external
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.stream.api.external.ExternalStreamLoginResource
+import com.tencent.devops.stream.service.StreamLoginService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["EXTERNAL_GITHUB"], description = "External-Github")
-@Path("/external/github/")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ExternalGithubResource {
+@RestResource
+class ExternalStreamLoginResourceImpl @Autowired constructor(
+    private val streamLoginService: StreamLoginService
+) : ExternalStreamLoginResource {
 
-    @ApiOperation("Github仓库提交")
-    @POST
-    @Path("/webhook/commit")
-    fun webhookCommit(
-        @ApiParam(value = "事件类型", required = true)
-        @HeaderParam("X-GitHub-Event")
-        event: String,
-        @ApiParam(value = "事件ID", required = true)
-        @HeaderParam("X-Github-Delivery")
-        guid: String,
-        @ApiParam(value = "secretKey签名(sha1)", required = true)
-        @HeaderParam("X-Hub-Signature")
-        signature: String,
-        body: String
-    ): Result<Boolean>
-
-    @ApiOperation("Github Oauth回调")
-    @GET
-    @Path("/oauth/callback")
-    fun oauthCallback(
-        @ApiParam(value = "code")
-        @QueryParam("code")
-        code: String,
-        @ApiParam(value = "state")
-        @QueryParam("state")
-        state: String?
-    ): Response
+    override fun loginUrl(type: String): Result<String> {
+        return Result(streamLoginService.loginUrl(type))
+    }
 }
