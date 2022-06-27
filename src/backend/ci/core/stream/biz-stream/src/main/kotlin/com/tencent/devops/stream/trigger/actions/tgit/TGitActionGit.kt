@@ -93,7 +93,8 @@ abstract class TGitActionGit(
             } else {
                 false
             },
-            reportData = reportData
+            reportData = reportData,
+            addCommitCheck = api::addCommitCheck
         )
     }
 

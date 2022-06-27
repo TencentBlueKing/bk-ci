@@ -39,6 +39,7 @@ import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
@@ -341,6 +342,21 @@ class TGitApiService @Autowired constructor(
                     passPhrase = null,
                     additionalPath = null
                 ).data?.let { TGitRevisionInfo(it) }
+        }
+    }
+
+    override fun addCommitCheck(
+        request: CommitCheckRequest,
+        retry: ApiRequestRetryInfo
+    ) {
+        doRetryFun(
+            logger = logger,
+            retry = retry,
+            log = "commit check|[${request.commitId}] for state[${request.state}] " +
+                "in tgit project[${request.projectName}] fail",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_LATEST_REVISION_ERROR
+        ) {
+            client.get(ServiceScmOauthResource::class).addCommitCheck(request)
         }
     }
 

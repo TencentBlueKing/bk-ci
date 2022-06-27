@@ -45,6 +45,7 @@ import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamSchedu
 import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
+import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
@@ -110,6 +111,11 @@ class StreamScheduleAction(
     override fun getGitCred(personToken: String?): StreamGitCred {
         return when (streamGitConfig.getScmType()) {
             ScmType.CODE_GIT -> TGitCred(
+                userId = event().userId,
+                accessToken = personToken,
+                useAccessToken = personToken == null
+            )
+            ScmType.GITHUB -> GithubCred(
                 userId = event().userId,
                 accessToken = personToken,
                 useAccessToken = personToken == null
@@ -197,7 +203,8 @@ class StreamScheduleAction(
             targetUrl = targetUrl,
             description = description,
             mrId = null,
-            reportData = reportData
+            reportData = reportData,
+            addCommitCheck = api::addCommitCheck
         )
     }
 

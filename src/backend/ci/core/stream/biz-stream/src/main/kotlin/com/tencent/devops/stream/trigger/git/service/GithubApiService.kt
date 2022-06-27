@@ -48,6 +48,7 @@ import com.tencent.devops.repository.api.github.ServiceGithubUserResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
@@ -371,6 +372,10 @@ class GithubApiService @Autowired constructor(
                 // todo 注意信息是否正确
             ).let { GithubRevisionInfo(it) }
         }
+    }
+
+    override fun addCommitCheck(request: CommitCheckRequest, retry: ApiRequestRetryInfo) {
+        TODO("Not yet implemented")
     }
 
     // 以下非StreamGitApiService接口实现

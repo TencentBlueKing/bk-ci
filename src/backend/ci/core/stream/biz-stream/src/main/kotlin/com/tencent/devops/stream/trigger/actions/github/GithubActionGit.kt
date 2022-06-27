@@ -56,9 +56,9 @@ abstract class GithubActionGit(
 
     override fun getProjectCode(gitProjectId: String?): String {
         return if (gitProjectId != null) {
-            "git_$gitProjectId"
+            "github_$gitProjectId"
         } else {
-            "git_${data.getGitProjectId()}"
+            "github_${data.getGitProjectId()}"
         }
     }
     /**
@@ -114,9 +114,9 @@ abstract class GithubActionGit(
             pipelineId = data.context.pipeline!!.pipelineId,
             commitId = data.eventCommon.commit.commitId,
             gitHttpUrl = data.setting.gitHttpUrl,
-            scmType = ScmType.CODE_GIT,
+            scmType = ScmType.GITHUB,
             token = api.getToken(getGitCred()),
-            state = state.toGitState(ScmType.CODE_GIT),
+            state = state.toGitState(ScmType.GITHUB),
             block = block,
             context = context,
             targetUrl = targetUrl,
@@ -131,7 +131,8 @@ abstract class GithubActionGit(
             } else {
                 false
             },
-            reportData = reportData
+            reportData = reportData,
+            addCommitCheck = api::addCommitCheck
         )
     }
 
