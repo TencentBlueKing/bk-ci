@@ -50,7 +50,8 @@ import org.springframework.stereotype.Service
 class YamlTemplateService @Autowired constructor(
     private val client: Client,
     private val yamlSchemaCheck: YamlSchemaCheck,
-    private val streamTriggerCache: StreamTriggerCache
+    private val streamTriggerCache: StreamTriggerCache,
+    private val streamGitConfig: StreamGitConfig
 ) {
 
     companion object {
@@ -169,7 +170,10 @@ class YamlTemplateService @Autowired constructor(
             try {
                 return CommonCredentialUtils.getCredential(
                     client = client,
-                    projectId = GitCommonUtils.getCiProjectId(acrossGitProjectId.toLong()),
+                    projectId = GitCommonUtils.getCiProjectId(
+                        acrossGitProjectId.toLong(),
+                        streamGitConfig.getScmType()
+                    ),
                     credentialId = key,
                     type = CredentialType.ACCESSTOKEN,
                     acrossProject = true
@@ -205,18 +209,18 @@ class YamlTemplateService @Autowired constructor(
     private fun getCredentialKey(key: String): String {
         // 参考CredentialType
         return if (key.startsWith("settings.") && (
-            key.endsWith(".password") ||
-                key.endsWith(".access_token") ||
-                key.endsWith(".username") ||
-                key.endsWith(".secretKey") ||
-                key.endsWith(".appId") ||
-                key.endsWith(".privateKey") ||
-                key.endsWith(".passphrase") ||
-                key.endsWith(".token") ||
-                key.endsWith(".cosappId") ||
-                key.endsWith(".secretId") ||
-                key.endsWith(".region")
-            )
+                key.endsWith(".password") ||
+                    key.endsWith(".access_token") ||
+                    key.endsWith(".username") ||
+                    key.endsWith(".secretKey") ||
+                    key.endsWith(".appId") ||
+                    key.endsWith(".privateKey") ||
+                    key.endsWith(".passphrase") ||
+                    key.endsWith(".token") ||
+                    key.endsWith(".cosappId") ||
+                    key.endsWith(".secretId") ||
+                    key.endsWith(".region")
+                )
         ) {
             key.substringAfter("settings.").substringBeforeLast(".")
         } else {

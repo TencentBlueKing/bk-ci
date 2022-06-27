@@ -107,7 +107,10 @@ class StreamManualAction(
     }
 
     override fun getProjectCode(gitProjectId: String?) = if (gitProjectId != null) {
-        GitCommonUtils.getCiProjectId(gitProjectId.toLong())
+        GitCommonUtils.getCiProjectId(
+            gitProjectId.toLong(),
+            streamGitConfig.getScmType()
+        )
     } else {
         event().projectCode
     }
