@@ -32,7 +32,7 @@ import com.tencent.devops.common.web.mq.EXTEND_CONNECTION_FACTORY_NAME
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_ADMIN_NAME
 import com.tencent.devops.metrics.listener.CodeCheckDailyMessageListener
 import com.tencent.devops.metrics.listener.QualityReportDailyMessageListener
-import com.tencent.devops.metrics.listener.TurboDailyReportDailyMessageListener
+import com.tencent.devops.metrics.listener.TurboDailyReportMessageListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.FanoutExchange
@@ -160,7 +160,7 @@ class MetricsThirdPartyListenerConfiguration {
         @Qualifier(EXTEND_CONNECTION_FACTORY_NAME) @Autowired connectionFactory: ConnectionFactory,
         @Autowired metricsTurboDailyReportQueue: Queue,
         @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME) @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: TurboDailyReportDailyMessageListener,
+        @Autowired listener: TurboDailyReportMessageListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
