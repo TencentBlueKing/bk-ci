@@ -34,6 +34,9 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -157,16 +160,30 @@ class OpenApiTriggerService @Autowired constructor(
                 message = "eventType can't be empty"
             )
         }
+        val eventStr = triggerBuildReq.payload!!
 
         return when (streamGitConfig.getScmType()) {
             ScmType.CODE_GIT -> try {
-                objectMapper.readValue<GitEvent>(triggerBuildReq.payload!!)
+                objectMapper.readValue<GitEvent>(eventStr)
             } catch (ignore: Exception) {
                 logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
                 throw CustomException(
                     status = Response.Status.BAD_REQUEST,
                     message = "Fail to parse the git web hook commit event, errMsg: ${ignore.message}"
                 )
+            }
+            ScmType.GITHUB -> {
+                when (triggerBuildReq.eventType) {
+                    GithubPushEvent.classType -> objectMapper.readValue<GithubPushEvent>(eventStr)
+                    GithubPullRequestEvent.classType -> objectMapper.readValue<GithubPullRequestEvent>(eventStr)
+                    else -> {
+                        logger.info("Github event(${triggerBuildReq.eventType}) is ignored")
+                        throw CustomException(
+                            status = Response.Status.BAD_REQUEST,
+                            message = "event not support"
+                        )
+                    }
+                }
             }
             else -> throw CustomException(
                 status = Response.Status.BAD_REQUEST,

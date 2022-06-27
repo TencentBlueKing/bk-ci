@@ -81,7 +81,7 @@ object GithubRequestEventHandle {
     fun createMergeEvent(gitMrEvent: GithubPullRequestEvent, e: String): GitRequestEvent {
         return GitRequestEvent(
             id = null,
-            objectKind = StreamObjectKind.MERGE_REQUEST.value,
+            objectKind = StreamObjectKind.PULL_REQUEST.value,
             operationKind = null,
             extensionAction = GithubPrEventAction.get(gitMrEvent).value,
             gitProjectId = gitMrEvent.pullRequest.base.repo.id.toLong(),

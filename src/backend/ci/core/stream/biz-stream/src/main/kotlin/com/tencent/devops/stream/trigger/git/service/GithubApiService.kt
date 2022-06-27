@@ -49,6 +49,7 @@ import com.tencent.devops.repository.api.github.ServiceGithubUserResource
 import com.tencent.devops.repository.pojo.enums.GithubAccessLevelEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
@@ -376,6 +377,11 @@ class GithubApiService @Autowired constructor(
         )
     }
 
+    override fun addCommitCheck(request: CommitCheckRequest, retry: ApiRequestRetryInfo) {
+        TODO("Not yet implemented")
+    }
+
+    // 以下非StreamGitApiService接口实现
     /**
      * 获取两个commit之间的差异文件
      * @param from 旧commit

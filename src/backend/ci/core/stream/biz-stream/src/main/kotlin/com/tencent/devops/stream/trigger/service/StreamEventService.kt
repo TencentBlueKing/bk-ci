@@ -118,7 +118,8 @@ class StreamEventService @Autowired constructor(
                     ),
                     context = "${context.pipeline!!.filePath}@${action.metaData.streamObjectKind.name}",
                     description = TriggerReason.getTriggerReason(reason)?.summary ?: reason,
-                    mrId = null
+                    mrId = null,
+                    addCommitCheck = action.api::addCommitCheck
                 )
             }
             return saveNotBuildEvent(

@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.trigger.git.service
 
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCommitInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
@@ -176,4 +177,12 @@ interface StreamGitApiService {
         enableUserId: String,
         retry: ApiRequestRetryInfo
     ): StreamRevisionInfo?
+
+    /**
+     *  发送commit check
+     */
+    fun addCommitCheck(
+        request: CommitCheckRequest,
+        retry: ApiRequestRetryInfo
+    )
 }
