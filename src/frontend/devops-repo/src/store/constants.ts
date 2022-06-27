@@ -70,6 +70,7 @@ export const DELETE_PACKAGE = 'DELETE_PACKAGE';
 export const PACKAGE_UPGRADE = 'PACKAGE_UPGRADE';
 export const FETCH_SEC_SCAN_LIST = 'FETCH_SEC_SCAN_LIST';
 export const SCAN = 'SCAN';
+export const GET_DOMAIN = 'GET_DOMAIN';
 
 // mutation const
 export const SET_REPO_LIST = 'SET_REPO_LIST';
@@ -82,3 +83,4 @@ export const ACTIVE_OPERATION = 'ACTIVE_OPERATION';
 export const SET_USER_INFO = 'SET_USER_INFO';
 export const SET_PROJECT_LIST = 'SET_PROJECT_LIST';
 export const SET_USER_MAP = 'SET_USER_MAP';
+export const SET_DOMAIN = 'SET_DOMAIN';
