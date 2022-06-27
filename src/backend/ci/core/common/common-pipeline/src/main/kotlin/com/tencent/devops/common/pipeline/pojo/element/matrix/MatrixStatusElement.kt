@@ -51,6 +51,8 @@ data class MatrixStatusElement(
     var originClassType: String,
     @ApiModelProperty("原插件的市场标识")
     var originAtomCode: String,
+    @ApiModelProperty("原插件的内置标识")
+    var originTaskAtom: String,
     // 当状态插件为质量红线插件是需要专门保存
     @ApiModelProperty("审核人", required = true)
     var reviewUsers: MutableList<String>? = null,
@@ -72,7 +74,7 @@ data class MatrixStatusElement(
 
     override fun getClassType() = classType
 
-    override fun getTaskAtom() = originClassType
+    override fun getTaskAtom() = originTaskAtom
 
     override fun getAtomCode() = originAtomCode
 }
