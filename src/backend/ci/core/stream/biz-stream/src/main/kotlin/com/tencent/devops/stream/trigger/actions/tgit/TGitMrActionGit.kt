@@ -232,15 +232,17 @@ class TGitMrActionGit(
      *      - 如果不同，报错提示用户yml文件版本落后需要更新
      * 注：注意存在fork库不同projectID的提交
      */
-    override fun getYamlContent(fileName: String): String {
+    override fun getYamlContent(fileName: String): Pair<String, String> {
         val event = event()
         if (event.isMrMergeEvent()) {
-            return api.getFileContent(
-                cred = this.getGitCred(),
-                gitProjectId = data.getGitProjectId(),
-                fileName = fileName,
-                ref = data.eventCommon.branch,
-                retry = ApiRequestRetryInfo(true)
+            return Pair(
+                data.eventCommon.branch, api.getFileContent(
+                    cred = this.getGitCred(),
+                    gitProjectId = data.getGitProjectId(),
+                    fileName = fileName,
+                    ref = data.eventCommon.branch,
+                    retry = ApiRequestRetryInfo(true)
+                )
             )
         }
 
@@ -259,18 +261,20 @@ class TGitMrActionGit(
                         "get file $fileName content from ${event.object_attributes.target_project_id} " +
                         "branch ${event.object_attributes.target_branch} is blank because no file"
                 )
-                ""
+                Pair(
+                    event.object_attributes.target_branch, ""
+                )
             } else {
-                String(Base64.getDecoder().decode(targetFile!!.content)).also { c ->
-                    if (c.isBlank()) {
-                        logger.warn(
-                            "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
-                                "get file $fileName content from ${event.object_attributes.target_project_id} " +
-                                "target branch ${event.object_attributes.target_branch} is blank " +
-                                "because git content blank"
-                        )
-                    }
+                val c = String(Base64.getDecoder().decode(targetFile!!.content))
+                if (c.isBlank()) {
+                    logger.warn(
+                        "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
+                            "get file $fileName content from ${event.object_attributes.target_project_id} " +
+                            "target branch ${event.object_attributes.target_branch} is blank " +
+                            "because git content blank"
+                    )
                 }
+                Pair(event.object_attributes.target_branch, c)
             }
         }
 
@@ -291,18 +295,18 @@ class TGitMrActionGit(
                     "get file $fileName content from ${event.object_attributes.source_project_id} " +
                     "source commit ${event.object_attributes.last_commit.id} is blank because no file"
             )
-            ""
+            Pair(event.object_attributes.last_commit.id, "")
         } else {
-            String(Base64.getDecoder().decode(sourceFile!!.content)).also { c ->
-                if (c.isBlank()) {
-                    logger.warn(
-                        "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
-                            "get file $fileName content from ${event.object_attributes.source_project_id} " +
-                            "source commit ${event.object_attributes.last_commit.id} is blank " +
-                            "because git content blank"
-                    )
-                }
+            val c = String(Base64.getDecoder().decode(sourceFile!!.content))
+            if (c.isBlank()) {
+                logger.warn(
+                    "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
+                        "get file $fileName content from ${event.object_attributes.source_project_id} " +
+                        "source commit ${event.object_attributes.last_commit.id} is blank " +
+                        "because git content blank"
+                )
             }
+            Pair(event.object_attributes.last_commit.id, c)
         }
 
         if (targetFile?.blobId.isNullOrBlank()) {

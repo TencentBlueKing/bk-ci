@@ -53,7 +53,10 @@
                 </template>
                 <template v-else-if="col.prop === 'appVersions'" v-slot="props">
                     <template v-if="props.row.appVersions.length">
-                        <div class="app-version-list-cell">
+                        <div class="build-app-version-list" v-bk-tooltips="versionToolTipsConf">
+                            <p v-for="(appVersion, index) in props.row.visibleAppVersions" :key="index">{{ appVersion }}</p>
+                        </div>
+                        <div id="app-version-tooltip-content">
                             <p v-for="(appVersion, index) in props.row.appVersions" :key="index">{{ appVersion }}</p>
                         </div>
                     </template>
@@ -183,6 +186,13 @@
             }
         },
         computed: {
+            versionToolTipsConf () {
+                return {
+                    allowHtml: true,
+                    delay: 500,
+                    content: '#app-version-tooltip-content'
+                }
+            },
             statusIconMap () {
                 return {
                     SUCCEED: 'check-circle-shape',
@@ -225,7 +235,7 @@
                                 shortUrl = artifactory.shortUrl
                             }
                             if (artifactory.appVersion) {
-                                appVersions.push(artifactory.appVersion)
+                                appVersions.push(`${artifactory.appVersion} (${artifactory.name})`)
                             }
                             sumSize += artifactory.size
                             return {
@@ -252,6 +262,7 @@
                         needShowAll,
                         shortUrl,
                         appVersions,
+                        visibleAppVersions: !active && Array.isArray(appVersions) && appVersions.length > 1 ? appVersions.slice(0, 1) : appVersions,
                         startTime: item.startTime ? convertMiniTime(item.startTime) : '--',
                         endTime: item.endTime ? convertMiniTime(item.endTime) : '--',
                         queueTime: item.queueTime ? convertMiniTime(item.queueTime) : '--',
@@ -439,7 +450,7 @@
                         const targetRect = e.target.getBoundingClientRect()
 
                         ele.style.top = `${targetRect.y - parseInt(triangleStyle.top)}px`
-                        ele.style.left = `${targetRect.x - parseInt(eleStyle.width) - 16}px`
+                        ele.style.left = `${Math.max(0, targetRect.x - parseInt(eleStyle.width) - 16)}px`
                     }
                 })
             },
@@ -664,11 +675,20 @@
             }
         }
         .artifact-list-cell {
+            display: flex;
+            flex-direction: column;
             height: 100%;
             canvas {
                 padding: 2px;
                 border: 1px solid #DDE4EB;
             }
+        }
+        .build-app-version-list {
+          display: flex;
+          flex-direction: column;
+          > p {
+            @include ellipsis();
+          }
         }
         .remark-cell {
             position: relative;
