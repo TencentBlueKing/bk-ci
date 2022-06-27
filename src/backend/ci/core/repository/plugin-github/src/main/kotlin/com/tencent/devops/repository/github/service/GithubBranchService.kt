@@ -28,9 +28,9 @@
 package com.tencent.devops.repository.github.service
 
 import com.tencent.devops.common.sdk.github.DefaultGithubClient
-import com.tencent.devops.common.sdk.github.request.GHGetBranchRequest
-import com.tencent.devops.common.sdk.github.request.GHListBranchesRequest
-import com.tencent.devops.common.sdk.github.response.GHBranchResponse
+import com.tencent.devops.common.sdk.github.request.GetBranchRequest
+import com.tencent.devops.common.sdk.github.request.ListBranchesRequest
+import com.tencent.devops.common.sdk.github.response.BranchResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -40,16 +40,16 @@ class GithubBranchService @Autowired constructor(
 ) {
 
     fun listBranch(
-        request: GHListBranchesRequest,
+        request: ListBranchesRequest,
         token: String
-    ): List<GHBranchResponse> {
+    ): List<BranchResponse> {
         return defaultGithubClient.execute(request = request, oauthToken = token)
     }
 
     fun getBranch(
-        request: GHGetBranchRequest,
+        request: GetBranchRequest,
         token: String
-    ): GHBranchResponse {
+    ): BranchResponse {
         return defaultGithubClient.execute(request = request, oauthToken = token)
     }
 }

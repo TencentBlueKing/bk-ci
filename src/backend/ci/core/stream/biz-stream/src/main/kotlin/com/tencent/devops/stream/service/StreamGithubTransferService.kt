@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.sdk.github.request.CreateOrUpdateFileContentsRequest
-import com.tencent.devops.common.sdk.github.request.GHListBranchesRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
+import com.tencent.devops.common.sdk.github.request.ListBranchesRequest
 import com.tencent.devops.common.sdk.github.request.ListCommitRequest
 import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
@@ -46,6 +46,7 @@ import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
@@ -76,22 +77,21 @@ class StreamGithubTransferService @Autowired constructor(
         userId: String?,
         accessToken: String?
     ): StreamGitProjectBaseInfoCache {
-        return userId?.let {
-            client.get(ServiceGithubRepositoryResource::class).getRepository(
-                request = GetRepositoryRequest(
-                    owner = userId,
-                    repo = gitProjectId
-                ),
-                userId = it
-            ).let {
-                StreamGitProjectBaseInfoCache(
-                    gitProjectId = it.gitProjectId.toString(),
-                    gitHttpUrl = it.gitHttpUrl,
-                    homepage = it.homepage,
-                    pathWithNamespace = it.nameWithNamespace,
-                    defaultBranch = it.defaultBranch
-                )
-            }
+        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
+        return client.get(ServiceGithubRepositoryResource::class).getRepository(
+            request = GetRepositoryRequest(
+                owner = owner,
+                repo = repo
+            ),
+            userId = userId!!
+        ).data?.let {
+            StreamGitProjectBaseInfoCache(
+                gitProjectId = it.id.toString(),
+                gitHttpUrl = it.cloneUrl,
+                homepage = it.homepage,
+                pathWithNamespace = it.fullName,
+                defaultBranch = it.defaultBranch
+            )
         } ?: throw OauthForbiddenException(
             message = "get git project($gitProjectId) info error|useAccessToken=$useAccessToken"
         )
@@ -103,25 +103,26 @@ class StreamGithubTransferService @Autowired constructor(
         } catch (e: NumberFormatException) {
             streamBasicSettingDao.getSettingByPathWithNameSpace(dslContext, gitProjectId)?.enableUserId ?: return null
         }
+        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return client.get(ServiceGithubRepositoryResource::class).getRepository(
             request = GetRepositoryRequest(
-                owner = realUserId,
-                repo = gitProjectId
+                owner = owner,
+                repo = repo
             ),
             userId = realUserId
-        ).let {
+        ).data?.let {
             StreamGitProjectInfoWithProject(
-                gitProjectId = it.gitProjectId,
+                gitProjectId = it.id,
                 name = it.name,
                 homepage = it.homepage,
-                gitHttpUrl = it.gitHttpUrl.replace("https", "http"),
-                gitHttpsUrl = it.gitHttpUrl,
-                gitSshUrl = it.gitSshUrl,
-                nameWithNamespace = it.nameWithNamespace,
-                pathWithNamespace = it.nameWithNamespace,
+                gitHttpUrl = it.cloneUrl,
+                gitHttpsUrl = it.cloneUrl,
+                gitSshUrl = it.sshUrl,
+                nameWithNamespace = it.fullName,
+                pathWithNamespace = it.fullName,
                 defaultBranch = it.defaultBranch,
                 description = it.description,
-                avatarUrl = it.avatarUrl,
+                avatarUrl = it.owner.avatarUrl,
                 routerTag = null
             )
         }
@@ -133,15 +134,16 @@ class StreamGithubTransferService @Autowired constructor(
         fileName: String,
         ref: String
     ): String {
+        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return client.get(ServiceGithubRepositoryResource::class).getRepositoryContent(
             request = GetRepositoryContentRequest(
-                owner = userId,
-                repo = gitProjectId,
+                owner = owner,
+                repo = repo,
                 path = fileName,
                 ref = ref
             ),
             userId = userId
-        ).content ?: ""
+        ).data?.getDecodedContentAsString() ?: ""
     }
 
     override fun getProjectList(
@@ -156,28 +158,14 @@ class StreamGithubTransferService @Autowired constructor(
     ): List<StreamProjectGitInfo>? {
         // search  owned  minAccessLevel 参数暂时没使用
         return client.get(ServiceGithubRepositoryResource::class).listRepositories(
-            request = genListRepositoriesRequest(
-                page = page,
-                pageSize = pageSize,
-                orderBy = orderBy,
-                sort = sort
+            request = ListRepositoriesRequest(
+                page = page ?: 1,
+                perPage = pageSize ?: 30,
+                sort = sort?.value,
+                direction = orderBy?.value
             ),
             userId = userId
-        ).map { StreamProjectGitInfo(it) }
-    }
-
-    private fun genListRepositoriesRequest(
-        page: Int?,
-        pageSize: Int?,
-        orderBy: StreamProjectsOrder?,
-        sort: StreamSortAscOrDesc?
-    ): ListRepositoriesRequest {
-        val request = ListRepositoriesRequest()
-        request.page = page ?: request.page
-        request.perPage = pageSize ?: request.perPage
-        request.sort = orderBy?.value ?: request.sort
-        request.direction = sort?.value ?: request.direction
-        return request
+        ).data?.map { StreamProjectGitInfo(it) }
     }
 
     override fun getProjectMember(
@@ -187,34 +175,24 @@ class StreamGithubTransferService @Autowired constructor(
         pageSize: Int?,
         search: String?
     ): List<StreamGitMember> {
+        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
+        val request = ListRepositoryCollaboratorsRequest(
+            owner = owner,
+            repo = repo,
+            page = page ?: 1,
+            perPage = pageSize ?: 30
+        )
         return client.get(ServiceGithubRepositoryResource::class).listRepositoryCollaborators(
-            request = genListRepositoryCollaboratorsRequest(
-                gitProjectId,
-                userId,
-                page,
-                pageSize
-            ),
+            request = request,
             userId = userId
-        ).map {
+        ).data!!.map {
             // state 属性无
             StreamGitMember(
                 id = it.id,
-                username = it.username,
+                username = it.login,
                 state = ""
             )
         }
-    }
-
-    private fun genListRepositoryCollaboratorsRequest(
-        gitProjectId: String,
-        userId: String,
-        page: Int?,
-        pageSize: Int?
-    ): ListRepositoryCollaboratorsRequest {
-        val request = ListRepositoryCollaboratorsRequest(owner = userId, repo = gitProjectId)
-        request.page = page ?: request.page
-        request.perPage = pageSize ?: request.perPage
-        return request
     }
 
     override fun isOAuth(
@@ -254,7 +232,7 @@ class StreamGithubTransferService @Autowired constructor(
             ),
             userId = userId
         // todo commit 信息严重不足
-        )?.map { StreamCommitInfo(it) }
+        ).data?.map { StreamCommitInfo(it) }
     }
 
     override fun createNewFile(
@@ -262,7 +240,7 @@ class StreamGithubTransferService @Autowired constructor(
         gitProjectId: String,
         streamCreateFile: StreamCreateFileInfo
     ): Boolean {
-        val createOrUpdateFile = client.get(ServiceGithubRepositoryResource::class).createOrUpdateFile(
+        client.get(ServiceGithubRepositoryResource::class).createOrUpdateFile(
             request = with(streamCreateFile) {
                 CreateOrUpdateFileContentsRequest(
                     owner = userId,
@@ -287,14 +265,14 @@ class StreamGithubTransferService @Autowired constructor(
         sort: StreamSortAscOrDesc?
     ): List<String>? {
         return client.get(ServiceGithubBranchResource::class).listBranch(
-            request = GHListBranchesRequest(
+            request = ListBranchesRequest(
                 owner = userId,
                 repo = gitProjectId,
                 page = page ?: 1,
                 perPage = pageSize ?: 30
             ),
             userId = userId
-        ).map { it.name }
+        ).data?.map { it.name }
     }
 
     override fun getProjectGroupsList(
@@ -308,7 +286,7 @@ class StreamGithubTransferService @Autowired constructor(
                 perPage = pageSize
             ),
             userId = userId
-        ).ifEmpty { null }?.map {
+        ).data?.ifEmpty { null }?.map {
             StreamGitGroup(it)
         }
     }

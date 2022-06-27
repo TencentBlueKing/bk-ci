@@ -1,5 +1,6 @@
 package com.tencent.devops.repository.api.github
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.sdk.github.request.GetCommitRequest
 import com.tencent.devops.common.sdk.github.request.ListCommitRequest
 import com.tencent.devops.common.sdk.github.response.CommitResponse
@@ -27,7 +28,7 @@ interface ServiceGithubCommitsResource {
         @QueryParam("userId")
         userId: String,
         request: ListCommitRequest
-    ): List<CommitResponse>
+    ): Result<List<CommitResponse>>
 
     @ApiOperation("获取某个提交记录")
     @POST
@@ -37,5 +38,5 @@ interface ServiceGithubCommitsResource {
         @QueryParam("userId")
         userId: String,
         request: GetCommitRequest
-    ): CommitResponse
+    ): Result<CommitResponse?>
 }

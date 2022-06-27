@@ -27,8 +27,9 @@
 
 package com.tencent.devops.repository.resources.github
 
-import com.tencent.devops.common.sdk.github.pojo.Collaborator
-import com.tencent.devops.common.sdk.github.pojo.Repository
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.sdk.github.pojo.GithubRepo
+import com.tencent.devops.common.sdk.github.pojo.GithubUser
 import com.tencent.devops.common.sdk.github.pojo.RepositoryContent
 import com.tencent.devops.common.sdk.github.pojo.RepositoryPermissions
 import com.tencent.devops.common.sdk.github.request.CreateOrUpdateFileContentsRequest
@@ -52,60 +53,72 @@ class ServiceGithubRepositoryResourceImpl @Autowired constructor(
     override fun createOrUpdateFile(
         userId: String,
         request: CreateOrUpdateFileContentsRequest
-    ): CreateOrUpdateFileContentsResponse {
-        return githubRepositoryService.createOrUpdateFile(
-            request = request,
-            token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+    ): Result<CreateOrUpdateFileContentsResponse> {
+        return Result(
+            githubRepositoryService.createOrUpdateFile(
+                request = request,
+                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+            )
         )
     }
 
     override fun getRepositoryContent(
         userId: String,
         request: GetRepositoryContentRequest
-    ): RepositoryContent {
-        return githubRepositoryService.getRepositoryContent(
-            request = request,
-            token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+    ): Result<RepositoryContent?> {
+        return Result(
+            githubRepositoryService.getRepositoryContent(
+                request = request,
+                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+            )
         )
     }
 
     override fun getRepositoryPermissions(
         userId: String,
         request: GetRepositoryPermissionsRequest
-    ): RepositoryPermissions {
-        return githubRepositoryService.getRepositoryPermissions(
-            request = request,
-            token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+    ): Result<RepositoryPermissions?> {
+        return Result(
+            githubRepositoryService.getRepositoryPermissions(
+                request = request,
+                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+            )
         )
     }
 
     override fun getRepository(
         userId: String,
         request: GetRepositoryRequest
-    ): Repository {
-        return githubRepositoryService.getRepository(
-            request = request,
-            token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+    ): Result<GithubRepo?> {
+        return Result(
+            githubRepositoryService.getRepository(
+                request = request,
+                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+            )
         )
     }
 
     override fun listRepositories(
         userId: String,
         request: ListRepositoriesRequest
-    ): List<Repository> {
-        return githubRepositoryService.listRepositories(
-            request = request,
-            token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+    ): Result<List<GithubRepo>> {
+        return Result(
+            githubRepositoryService.listRepositories(
+                request = request,
+                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+            )
         )
     }
 
     override fun listRepositoryCollaborators(
         userId: String,
         request: ListRepositoryCollaboratorsRequest
-    ): List<Collaborator> {
-        return githubRepositoryService.listRepositoryCollaborators(
-            request = request,
-            token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+    ): Result<List<GithubUser>> {
+        return Result(
+            githubRepositoryService.listRepositoryCollaborators(
+                request = request,
+                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+            )
         )
     }
 }

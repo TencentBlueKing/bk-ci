@@ -1,8 +1,9 @@
 package com.tencent.devops.repository.resources.github
 
-import com.tencent.devops.common.sdk.github.request.GHGetBranchRequest
-import com.tencent.devops.common.sdk.github.request.GHListBranchesRequest
-import com.tencent.devops.common.sdk.github.response.GHBranchResponse
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.sdk.github.request.GetBranchRequest
+import com.tencent.devops.common.sdk.github.request.ListBranchesRequest
+import com.tencent.devops.common.sdk.github.response.BranchResponse
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubBranchResource
 import com.tencent.devops.repository.github.service.GithubBranchService
@@ -15,17 +16,21 @@ class ServiceGithubBranchResourceImpl @Autowired constructor(
     val githubBranchService: GithubBranchService
 ) : ServiceGithubBranchResource {
 
-    override fun listBranch(userId: String, request: GHListBranchesRequest): List<GHBranchResponse> {
-        return githubBranchService.listBranch(
-            request = request,
-            token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+    override fun listBranch(userId: String, request: ListBranchesRequest): Result<List<BranchResponse>> {
+        return Result(
+            githubBranchService.listBranch(
+                request = request,
+                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+            )
         )
     }
 
-    override fun getBranch(userId: String, request: GHGetBranchRequest): GHBranchResponse {
-        return githubBranchService.getBranch(
-            request = request,
-            token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+    override fun getBranch(userId: String, request: GetBranchRequest): Result<BranchResponse> {
+        return Result(
+            githubBranchService.getBranch(
+                request = request,
+                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+            )
         )
     }
 }

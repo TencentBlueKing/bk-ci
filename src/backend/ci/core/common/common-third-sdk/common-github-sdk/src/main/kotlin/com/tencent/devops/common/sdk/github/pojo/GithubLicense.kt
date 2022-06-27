@@ -2,7 +2,7 @@ package com.tencent.devops.common.sdk.github.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-data class License(
+data class GithubLicense(
     val key: String,
     val name: String,
     @JsonProperty("node_id")

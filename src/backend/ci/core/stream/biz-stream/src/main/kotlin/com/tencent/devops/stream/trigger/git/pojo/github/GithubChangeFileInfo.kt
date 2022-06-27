@@ -60,5 +60,4 @@ data class GithubChangeFileInfo(
         renameFile = c.status == "renamed",
         deletedFile = c.status == "removed"
     )
-
 }

@@ -25,10 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.pojo
+package com.tencent.devops.common.sdk.github.request
 
-data class Committer(
-    val name: String,
-    val email: String,
-    val date: String? = null
-)
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.tencent.devops.common.sdk.enums.HttpMethod
+import com.tencent.devops.common.sdk.github.GithubRequest
+import com.tencent.devops.common.sdk.github.response.BranchResponse
+
+data class GetBranchRequest(
+    @JsonIgnore
+    val owner: String,
+    @JsonIgnore
+    val repo: String,
+    @JsonIgnore
+    val branch: String
+) : GithubRequest<BranchResponse>() {
+    override fun getHttpMethod() = HttpMethod.GET
+
+    override fun getApiPath() = "/repos/$owner/$repo/branches/$branch"
+}

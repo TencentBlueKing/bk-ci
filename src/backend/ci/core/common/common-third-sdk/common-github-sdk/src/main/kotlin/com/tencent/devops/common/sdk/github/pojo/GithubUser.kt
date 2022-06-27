@@ -2,7 +2,7 @@ package com.tencent.devops.common.sdk.github.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-data class GithubAuthor(
+data class GithubUser(
     val login: String,
     val id: Int,
     @JsonProperty("node_id")

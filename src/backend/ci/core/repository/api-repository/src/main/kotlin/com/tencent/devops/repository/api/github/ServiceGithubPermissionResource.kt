@@ -23,12 +23,12 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.repository.api.github
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.github.response.GetUserResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -39,18 +39,54 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_USER_GITHUB"], description = "服务-github-user")
-@Path("/service/github/user")
+@Api(tags = ["SERVICE_PERMISSION_GITHUB"], description = "服务-github-权限")
+@Path("/service/github/permission")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceGithubUserResource {
+interface ServiceGithubPermissionResource {
 
-    @ApiOperation("创建或者更新文件内容")
+    @ApiOperation("判断github是否是公开项目")
     @GET
-    @Path("/getUser")
-    fun getUser(
-        @ApiParam("用户id", required = true)
+    @Path("isPublicProject")
+    fun isPublicProject(
+        @ApiParam("授权用户ID", required = true)
+        @QueryParam("authUserId")
+        authUserId: String,
+        @ApiParam("github项目名", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String
+    ): Result<Boolean>
+
+    @ApiOperation("判断是否是项目成员")
+    @GET
+    @Path("isProjectMember")
+    fun isProjectMember(
+        @ApiParam("授权用户ID", required = true)
+        @QueryParam("authUserId")
+        authUserId: String,
+        @ApiParam("授权用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-    ): Result<GetUserResponse?>
+        @ApiParam("github项目名", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String
+    ): Result<Boolean>
+
+    @ApiOperation("判断用户是否有权限")
+    @GET
+    @Path("checkUserAuth")
+    fun checkUserAuth(
+        @ApiParam("授权用户ID", required = true)
+        @QueryParam("authUserId")
+        authUserId: String,
+        @ApiParam("userId", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam("accessLevel", required = true)
+        @QueryParam("accessLevel")
+        accessLevel: Int
+    ): Result<Boolean>
 }

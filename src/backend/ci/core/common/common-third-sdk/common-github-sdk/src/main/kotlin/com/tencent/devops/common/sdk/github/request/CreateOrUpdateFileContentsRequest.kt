@@ -30,7 +30,7 @@ package com.tencent.devops.common.sdk.github.request
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
-import com.tencent.devops.common.sdk.github.pojo.Committer
+import com.tencent.devops.common.sdk.github.pojo.GithubCommitUser
 import com.tencent.devops.common.sdk.github.response.CreateOrUpdateFileContentsResponse
 
 class CreateOrUpdateFileContentsRequest(
@@ -48,9 +48,9 @@ class CreateOrUpdateFileContentsRequest(
     val sha: String? = null,
     val branch: String? = null,
     // The person that committed the file. Default: the authenticated user.
-    val committer: Committer? = null,
+    val committer: GithubCommitUser? = null,
     // The author of the file. Default: The committer or the authenticated user if you omit committer.
-    val author: Committer? = null,
+    val author: GithubCommitUser? = null,
 ) : GithubRequest<CreateOrUpdateFileContentsResponse>() {
     override fun getHttpMethod(): HttpMethod {
         return HttpMethod.PUT

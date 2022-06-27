@@ -25,16 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.response
+package com.tencent.devops.common.sdk.github.request
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.sdk.enums.HttpMethod
+import com.tencent.devops.common.sdk.github.GithubRequest
+import com.tencent.devops.common.sdk.github.response.BranchResponse
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GHBranchResponse(
-    val name: String,
-    val commit: CommitResponse,
-    val protected: Boolean,
-    @JsonProperty("protection_url")
-    val protectionUrl: String?
-)
+data class ListBranchesRequest(
+    @JsonIgnore
+    val owner: String,
+    @JsonIgnore
+    val repo: String,
+    val protected: Boolean? = null,
+    @JsonProperty("per_page")
+    val perPage: Int = 30,
+    val page: Int = 1
+) : GithubRequest<List<BranchResponse>>() {
+    override fun getHttpMethod() = HttpMethod.GET
+
+    override fun getApiPath() = "repos/$owner/$repo/branches"
+}

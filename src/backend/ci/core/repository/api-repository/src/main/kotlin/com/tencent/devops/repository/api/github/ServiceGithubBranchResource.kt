@@ -1,8 +1,9 @@
 package com.tencent.devops.repository.api.github
 
-import com.tencent.devops.common.sdk.github.request.GHGetBranchRequest
-import com.tencent.devops.common.sdk.github.request.GHListBranchesRequest
-import com.tencent.devops.common.sdk.github.response.GHBranchResponse
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.sdk.github.request.GetBranchRequest
+import com.tencent.devops.common.sdk.github.request.ListBranchesRequest
+import com.tencent.devops.common.sdk.github.response.BranchResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -26,8 +27,8 @@ interface ServiceGithubBranchResource {
         @ApiParam("用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        request: GHListBranchesRequest
-    ): List<GHBranchResponse>
+        request: ListBranchesRequest
+    ): Result<List<BranchResponse>>
 
     @ApiOperation("获取仓库分支")
     @POST
@@ -36,6 +37,6 @@ interface ServiceGithubBranchResource {
         @ApiParam("用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        request: GHGetBranchRequest
-    ): GHBranchResponse
+        request: GetBranchRequest
+    ): Result<BranchResponse>
 }

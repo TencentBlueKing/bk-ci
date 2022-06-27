@@ -2,11 +2,10 @@ package com.tencent.devops.common.sdk.github.response
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.sdk.github.pojo.GithubCommitPointer
+import com.tencent.devops.common.sdk.github.pojo.GithubMilestone
 import com.tencent.devops.common.sdk.github.pojo.GithubTeam
-import com.tencent.devops.common.sdk.github.pojo.GithubAuthor
-import com.tencent.devops.common.sdk.github.pojo.GithubHead
-import com.tencent.devops.common.sdk.github.pojo.Links
-import com.tencent.devops.common.sdk.github.pojo.Milestone
+import com.tencent.devops.common.sdk.github.pojo.GithubUser
 import com.tencent.devops.common.sdk.github.pojo.PullRequestLabel
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -37,10 +36,10 @@ data class PullRequestResponse(
     val state: String,
     val locked: Boolean,
     val title: String,
-    val user: GithubAuthor,
+    val user: GithubUser,
     val body: String?,
     val labels: List<PullRequestLabel>,
-    val milestone: Milestone?,
+    val milestone: GithubMilestone?,
     @JsonProperty("active_lock_reason")
     val activeLockReason: String?,
     @JsonProperty("create_at")
@@ -53,16 +52,14 @@ data class PullRequestResponse(
     val mergedAt: String?,
     @JsonProperty("merge_commit_sha")
     val mergeCommitSha: String?,
-    val assignee: GithubAuthor,
-    val assignees: List<GithubAuthor>,
+    val assignee: GithubUser?,
+    val assignees: List<GithubUser>,
     @JsonProperty("requested_reviewers")
-    val requestedReviewers: List<GithubAuthor>,
+    val requestedReviewers: List<GithubUser>,
     @JsonProperty("requested_teams")
     val requestedTeams: List<GithubTeam>,
-    val head: GithubHead,
-    val base: GithubHead,
-    @JsonProperty("_links")
-    val links: Links,
+    val head: GithubCommitPointer,
+    val base: GithubCommitPointer,
     @JsonProperty("author_association")
     val authorAssociation: String,
     @JsonProperty("auto_merge")
@@ -74,7 +71,7 @@ data class PullRequestResponse(
     @JsonProperty("mergeable_state")
     val mergeableState: String,
     @JsonProperty("merged_by")
-    val mergedBy: GithubAuthor?,
+    val mergedBy: GithubUser?,
     val comments: Int,
     @JsonProperty("review_comments")
     val reviewComments: Int,

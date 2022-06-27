@@ -25,12 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.sdk.github.pojo
+package com.tencent.devops.common.sdk.github.response
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.sdk.github.pojo.GithubSha
 
-data class User(
-    val id: String,
-    @JsonProperty("login")
-    val username: String
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class BranchResponse(
+    val name: String,
+    val commit: GithubSha,
+    val protected: Boolean,
+    @JsonProperty("protection_url")
+    val protectionUrl: String?
 )

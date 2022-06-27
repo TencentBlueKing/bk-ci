@@ -38,7 +38,6 @@ data class PullRequestFileResponse(
     val contentsUrl: String,
     val deletions: Int,
     val filename: String,
-    val patch: String,
     @JsonProperty("raw_url")
     val rawUrl: String,
     val sha: String,

@@ -15,7 +15,7 @@ data class CheckRunApp(
     val name: String,
     @JsonProperty("node_id")
     val nodeId: String,
-    val owner: GithubAuthor,
+    val owner: GithubUser,
     val permissions: CheckRunAppPermissions,
     val slug: String,
     @JsonProperty("updated_at")

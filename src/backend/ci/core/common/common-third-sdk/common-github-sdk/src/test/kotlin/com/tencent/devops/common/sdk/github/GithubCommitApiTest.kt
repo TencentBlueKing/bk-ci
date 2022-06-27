@@ -23,20 +23,41 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.sdk.github.pojo
+package com.tencent.devops.common.sdk.github
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.sdk.github.request.GetCommitRequest
+import com.tencent.devops.common.sdk.github.request.ListCommitRequest
+import org.junit.jupiter.api.Test
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GithubCommit(
-    val url: String,
-    val author: GithubCommitUser,
-    val committer: GithubCommitUser,
-    val message: String,
-    val tree: GithubSha,
-    @JsonProperty("comment_count")
-    val commentCount: Int
-)
+class GithubCommitApiTest : GithubApiTest() {
+
+    @Test
+    fun listCommit() {
+        val request = ListCommitRequest(
+            owner = owner,
+            repo = repo,
+        )
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
+
+    @Test
+    fun getCommit() {
+        val request = GetCommitRequest(
+            owner = owner,
+            repo = repo,
+            ref = "master"
+        )
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
+}

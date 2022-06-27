@@ -27,7 +27,8 @@
 
 package com.tencent.devops.repository.resources.github
 
-import com.tencent.devops.common.sdk.github.response.GHGetUserResponse
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.sdk.github.response.GetUserResponse
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubUserResource
 import com.tencent.devops.repository.github.service.GithubUserService
@@ -40,10 +41,12 @@ class ServiceGithubUserResourceImpl @Autowired constructor(
     val githubTokenService: GithubTokenService,
     val githubUserService: GithubUserService
 ) : ServiceGithubUserResource {
-    override fun getUser(userId: String): GHGetUserResponse {
-        return githubUserService.getUser(
-            githubTokenService.getAccessTokenMustExist(userId = userId).accessToken
+
+    override fun getUser(userId: String): Result<GetUserResponse?> {
+        return Result(
+            githubUserService.getUser(
+                githubTokenService.getAccessTokenMustExist(userId = userId).accessToken
+            )
         )
     }
-
 }

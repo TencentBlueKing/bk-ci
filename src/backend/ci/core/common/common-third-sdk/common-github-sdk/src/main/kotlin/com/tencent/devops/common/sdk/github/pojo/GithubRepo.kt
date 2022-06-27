@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.common.sdk.github.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -12,7 +39,7 @@ data class GithubRepo(
     @JsonProperty("allow_squash_merge")
     val allowSquashMerge: Boolean,
     @JsonProperty("archive_url")
-    val archiveUrl: String,
+    val archiveUrl: String?,
     val archived: Boolean,
     @JsonProperty("assignees_url")
     val assigneesUrl: String,
@@ -40,7 +67,7 @@ data class GithubRepo(
     val defaultBranch: String,
     @JsonProperty("deployments_url")
     val deploymentsUrl: String,
-    val description: String,
+    val description: String?,
     val disabled: Boolean,
     @JsonProperty("downloads_url")
     val downloadsUrl: String,
@@ -72,12 +99,12 @@ data class GithubRepo(
     val hasProjects: Boolean,
     @JsonProperty("has_wiki")
     val hasWiki: Boolean,
-    val homepage: String,
+    val homepage: String?,
     @JsonProperty("hooks_url")
-    val hooksUrl: String,
+    val hooksUrl: String?,
     @JsonProperty("html_url")
     val htmlUrl: String,
-    val id: Int,
+    val id: Long,
     @JsonProperty("issue_comment_url")
     val issueCommentUrl: String,
     @JsonProperty("issue_events_url")
@@ -91,11 +118,11 @@ data class GithubRepo(
     val language: String?,
     @JsonProperty("languages_url")
     val languagesUrl: String,
-    val license: License,
+    val license: GithubLicense?,
     @JsonProperty("merges_url")
     val mergesUrl: String,
     @JsonProperty("milestones_url")
-    val milestonesUrl: String,
+    val milestonesUrl: String?,
     @JsonProperty("mirror_url")
     val mirrorUrl: String?,
     val name: String,
@@ -107,7 +134,7 @@ data class GithubRepo(
     val openIssues: Int,
     @JsonProperty("open_issues_count")
     val openIssuesCount: Int,
-    val owner: GithubAuthor,
+    val owner: GithubUser,
     val permissions: GithubRepoPermissions?,
     val private: Boolean,
     @JsonProperty("pulls_url")
@@ -115,16 +142,16 @@ data class GithubRepo(
     @JsonProperty("pushed_at")
     val pushedAt: String,
     @JsonProperty("releases_url")
-    val releasesUrl: String,
+    val releasesUrl: String?,
     val size: Int,
     @JsonProperty("ssh_url")
     val sshUrl: String,
     @JsonProperty("stargazers_count")
     val stargazersCount: Int,
     @JsonProperty("stargazers_url")
-    val stargazersUrl: String,
+    val stargazersUrl: String?,
     @JsonProperty("statuses_url")
-    val statusesUrl: String,
+    val statusesUrl: String?,
     @JsonProperty("subscribers_url")
     val subscribersUrl: String,
     @JsonProperty("subscription_url")
@@ -134,7 +161,7 @@ data class GithubRepo(
     @JsonProperty("tags_url")
     val tagsUrl: String,
     @JsonProperty("teams_url")
-    val teamsUrl: String,
+    val teamsUrl: String?,
     @JsonProperty("temp_clone_token")
     val tempCloneToken: String?,
     val topics: List<String>,

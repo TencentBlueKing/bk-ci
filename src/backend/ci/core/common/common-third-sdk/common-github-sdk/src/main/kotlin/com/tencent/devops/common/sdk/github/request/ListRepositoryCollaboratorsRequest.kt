@@ -31,7 +31,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
-import com.tencent.devops.common.sdk.github.pojo.Collaborator
+import com.tencent.devops.common.sdk.github.pojo.GithubUser
+
 @Suppress("all")
 class ListRepositoryCollaboratorsRequest(
     @JsonIgnore
@@ -41,13 +42,14 @@ class ListRepositoryCollaboratorsRequest(
     // Comma-separated list of values. Can include:
     // * owner: Repositories that are owned by the authenticated user.
     // * collaborator: Repositories that the user has been added to as a collaborator.
-    // * organization_member: Repositories that the user has access to through being a member of an organization. This includes every repository on every team that the user is on.
+    // * organization_member: Repositories that the user has access to through being a member of an organization.
+    // This includes every repository on every team that the user is on.
     // Default: owner,collaborator,organization_member
     val affiliation: String? = null,
     @JsonProperty("per_page")
     var perPage: Int = 30,
     var page: Int = 1
-) : GithubRequest<List<Collaborator>>() {
+) : GithubRequest<List<GithubUser>>() {
     override fun getHttpMethod(): HttpMethod {
         return HttpMethod.GET
     }

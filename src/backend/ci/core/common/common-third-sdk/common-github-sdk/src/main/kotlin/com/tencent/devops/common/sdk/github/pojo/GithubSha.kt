@@ -27,30 +27,7 @@
 
 package com.tencent.devops.common.sdk.github.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
-data class Repository (
-    @JsonProperty("id")
-    val gitProjectId: Long,
-    val name: String,
-    @JsonProperty("html_url")
-    val homepage: String?,
-    @JsonProperty("clone_url")
-    val gitHttpUrl: String,
-//    @JsonProperty("clone_url")
-//    val gitHttpsUrl: String?,
-    @JsonProperty("ssh_url")
-    val gitSshUrl: String?,
-    @JsonProperty("full_name")
-    val nameWithNamespace: String,
-//    @JsonProperty("full_name")
-//    val pathWithNamespace: String?,
-    @JsonProperty("default_branch")
-    val defaultBranch: String?,
-    val description: String?,
-    @JsonProperty("avatar_url")
-    val avatarUrl: String?,
-    @JsonProperty("routerTag")
-    val routerTag: String?,
-    val private:Boolean
+data class GithubSha(
+    val sha: String,
+    val url: String
 )

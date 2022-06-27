@@ -30,17 +30,8 @@ package com.tencent.devops.common.sdk.github
 import com.tencent.devops.common.sdk.github.request.GetUserRequest
 import org.junit.jupiter.api.Test
 
-class GithubUserApiTest {
+class GithubUserApiTest : GithubApiTest() {
 
-    private val client = DefaultGithubClient(
-        serverUrl = "https://github.com/",
-        apiUrl = "https://api.github.com/"
-    )
-
-    private val token = "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"
-    private val repo = "bk-ci"
-    private val owner = "Florence-y"
-    private val defaultBranch = "master"
     @Test
     fun getUser() {
         val request = GetUserRequest()

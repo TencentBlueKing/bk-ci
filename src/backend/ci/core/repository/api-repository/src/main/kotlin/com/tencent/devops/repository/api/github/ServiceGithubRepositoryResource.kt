@@ -27,8 +27,9 @@
 
 package com.tencent.devops.repository.api.github
 
-import com.tencent.devops.common.sdk.github.pojo.Collaborator
-import com.tencent.devops.common.sdk.github.pojo.Repository
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.sdk.github.pojo.GithubRepo
+import com.tencent.devops.common.sdk.github.pojo.GithubUser
 import com.tencent.devops.common.sdk.github.pojo.RepositoryContent
 import com.tencent.devops.common.sdk.github.pojo.RepositoryPermissions
 import com.tencent.devops.common.sdk.github.request.CreateOrUpdateFileContentsRequest
@@ -61,7 +62,7 @@ interface ServiceGithubRepositoryResource {
         @QueryParam("userId")
         userId: String,
         request: CreateOrUpdateFileContentsRequest
-    ): CreateOrUpdateFileContentsResponse
+    ): Result<CreateOrUpdateFileContentsResponse>
 
     @ApiOperation("获取仓库内容，可以是文件、文件夹")
     @POST
@@ -71,7 +72,7 @@ interface ServiceGithubRepositoryResource {
         @QueryParam("userId")
         userId: String,
         request: GetRepositoryContentRequest
-    ): RepositoryContent
+    ): Result<RepositoryContent?>
 
     @ApiOperation("获取某个用户在某个仓库的权限和角色")
     @POST
@@ -81,7 +82,7 @@ interface ServiceGithubRepositoryResource {
         @QueryParam("userId")
         userId: String,
         request: GetRepositoryPermissionsRequest
-    ): RepositoryPermissions
+    ): Result<RepositoryPermissions?>
 
     @ApiOperation("获取某个仓库的信息")
     @POST
@@ -91,7 +92,7 @@ interface ServiceGithubRepositoryResource {
         @QueryParam("userId")
         userId: String,
         request: GetRepositoryRequest
-    ): Repository
+    ): Result<GithubRepo?>
 
     @ApiOperation("列出某个用户的仓库")
     @POST
@@ -101,7 +102,7 @@ interface ServiceGithubRepositoryResource {
         @QueryParam("userId")
         userId: String,
         request: ListRepositoriesRequest
-    ): List<Repository>
+    ): Result<List<GithubRepo>>
 
     @ApiOperation("列出某个仓库的所有成员")
     @POST
@@ -111,5 +112,5 @@ interface ServiceGithubRepositoryResource {
         @QueryParam("userId")
         userId: String,
         request: ListRepositoryCollaboratorsRequest
-    ): List<Collaborator>
+    ): Result<List<GithubUser>>
 }
