@@ -30,4 +30,4 @@ package com.tencent.devops.stream.trigger.exception
 /**
  * yaml为空时的异常
  */
-class YamlBlankException(val filePath: String, val repo: String? = null) : RuntimeException()
+class YamlBlankException(val filePath: String, val ref: String, val repo: String? = null) : RuntimeException()
