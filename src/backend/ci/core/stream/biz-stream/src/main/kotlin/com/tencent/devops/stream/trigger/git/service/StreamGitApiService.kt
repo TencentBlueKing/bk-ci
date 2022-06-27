@@ -27,12 +27,7 @@
 
 package com.tencent.devops.stream.trigger.git.service
 
-import com.tencent.devops.common.api.exception.ClientException
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
-import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCommitInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
@@ -44,8 +39,6 @@ import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamRevisionInfo
-import com.tencent.devops.stream.util.RetryUtils
-import org.slf4j.LoggerFactory
 
 /**
  * Stream 需要用到的各平台的标准接口
@@ -183,73 +176,4 @@ interface StreamGitApiService {
         enableUserId: String,
         retry: ApiRequestRetryInfo
     ): StreamRevisionInfo?
-
-    fun <T> doRetryFun(
-        retry: ApiRequestRetryInfo,
-        log: String,
-        apiErrorCode: ErrorCodeEnum,
-        action: () -> T
-    ): T {
-        return if (retry.retry) {
-            retryFun(
-                retry = retry,
-                log = log,
-                apiErrorCode = apiErrorCode
-            ) {
-                action()
-            }
-        } else {
-            action()
-        }
-    }
-
-    private fun <T> retryFun(
-        retry: ApiRequestRetryInfo,
-        log: String,
-        apiErrorCode: ErrorCodeEnum,
-        action: () -> T
-    ): T {
-        try {
-            return RetryUtils.clientRetry(
-                retry.retryTimes,
-                retry.retryPeriodMills
-            ) {
-                action()
-            }
-        } catch (e: ClientException) {
-            logger.warn("retry 5 times $log", e)
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
-                defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
-            )
-        } catch (e: RemoteServiceException) {
-            logger.warn("GIT_API_ERROR $log", e)
-            throw ErrorCodeException(
-                statusCode = e.httpStatus,
-                errorCode = apiErrorCode.errorCode.toString(),
-                defaultMessage = "$log: ${e.errorMessage}"
-            )
-        } catch (e: CustomException) {
-            logger.warn("GIT_SCM_ERROR $log", e)
-            throw ErrorCodeException(
-                statusCode = e.status.statusCode,
-                errorCode = apiErrorCode.errorCode.toString(),
-                defaultMessage = "$log: ${e.message}"
-            )
-        } catch (ignore: Throwable) {
-            logger.error("retryFun error $log", ignore)
-            throw ErrorCodeException(
-                errorCode = apiErrorCode.errorCode.toString(),
-                defaultMessage = if (ignore.message.isNullOrBlank()) {
-                    "$log: ${apiErrorCode.formatErrorMessage}"
-                } else {
-                    "$log: ${ignore.message}"
-                }
-            )
-        }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(StreamGitApiService::class.java)
-    }
 }

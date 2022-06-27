@@ -43,7 +43,9 @@ import com.tencent.devops.repository.api.github.ServiceGithubDatabaseResource
 import com.tencent.devops.repository.api.github.ServiceGithubPRResource
 import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
 import com.tencent.devops.repository.api.github.ServiceGithubUserResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.GithubAccessLevelEnum
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
@@ -61,10 +63,14 @@ import com.tencent.devops.stream.trigger.git.pojo.github.GithubProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubUserInfo
+import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitChangeFileInfo
+import com.tencent.devops.stream.trigger.git.service.StreamApiUtil.doRetryFun
+import com.tencent.devops.stream.trigger.pojo.MrCommentBody
+import com.tencent.devops.stream.util.QualityUtils
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class GithubApiService @Autowired constructor(
@@ -91,6 +97,7 @@ class GithubApiService @Autowired constructor(
     ): GithubProjectInfo? {
         val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get project $gitProjectId fail",
             apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR
@@ -115,6 +122,7 @@ class GithubApiService @Autowired constructor(
     ): GithubCommitInfo? {
         val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get commit info $sha fail",
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_INFO_ERROR
@@ -162,6 +170,7 @@ class GithubApiService @Autowired constructor(
     ): GithubMrInfo? {
         val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get mr $mrId info error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_INFO
@@ -190,6 +199,7 @@ class GithubApiService @Autowired constructor(
     ): GithubMrChangeInfo? {
         val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get mr $mrId changeInfo error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_CHANGE_INFO
@@ -221,6 +231,7 @@ class GithubApiService @Autowired constructor(
     ): List<GithubTreeFileInfo> {
         val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get $path file tree error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR
@@ -248,6 +259,7 @@ class GithubApiService @Autowired constructor(
         val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         cred as GithubCred
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get yaml $fileName from $ref fail",
             apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR
@@ -273,6 +285,7 @@ class GithubApiService @Autowired constructor(
     ): GithubFileInfo? {
         val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "getFileInfo: [$gitProjectId|$fileName][$ref] error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR
@@ -314,6 +327,7 @@ class GithubApiService @Autowired constructor(
     ): GithubRevisionInfo? {
         val (owner, repo) = GitUtils.getRepoGroupAndName(projectName)
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "timer|[$pipelineId] get latestRevision fail",
             apiErrorCode = ErrorCodeEnum.GET_GIT_LATEST_REVISION_ERROR
@@ -334,6 +348,60 @@ class GithubApiService @Autowired constructor(
                 authorName = it.commit.author.name
             )
         }
+    }
+
+    /**
+     * 为mr添加评论
+     */
+    fun addMrComment(
+        cred: GithubCred,
+        gitProjectId: String,
+        mrId: Long,
+        mrBody: MrCommentBody
+    ) {
+        // 暂时无法兼容，服务间调用 mrBody 字符串转义存在问题
+        return client.get(ServiceGitResource::class).addMrComment(
+            token = cred.toToken(),
+            gitProjectId = gitProjectId,
+            mrId = mrId,
+            mrBody = QualityUtils.getQualityReport(mrBody.reportData.first, mrBody.reportData.second),
+            tokenType = TokenTypeEnum.OAUTH
+        )
+    }
+
+    /**
+     * 获取两个commit之间的差异文件
+     * @param from 旧commit
+     * @param to 新commit
+     * @param straight true：两个点比较差异，false：三个点比较差异。默认是 false
+     */
+    fun getCommitChangeList(
+        cred: GithubCred,
+        gitProjectId: String,
+        from: String,
+        to: String,
+        straight: Boolean,
+        page: Int,
+        pageSize: Int,
+        retry: ApiRequestRetryInfo
+    ): List<TGitChangeFileInfo> {
+        return doRetryFun(
+            logger = logger,
+            retry = retry,
+            log = "getCommitChangeFileListRetry from: $from to: $to error",
+            apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR
+        ) {
+            client.get(ServiceGitResource::class).getChangeFileList(
+                cred.toToken(),
+                TokenTypeEnum.OAUTH,
+                gitProjectId = gitProjectId,
+                from = from,
+                to = to,
+                straight = straight,
+                page = page,
+                pageSize = pageSize
+            ).data ?: emptyList()
+        }.map { TGitChangeFileInfo(it) }
     }
 
     private fun StreamGitCred.toToken(): String {
