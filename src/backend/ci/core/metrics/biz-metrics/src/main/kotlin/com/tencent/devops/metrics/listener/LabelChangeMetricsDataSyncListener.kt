@@ -45,7 +45,7 @@ class LabelChangeMetricsDataSyncListener @Autowired constructor(
     override fun execute(event: LabelChangeMetricsBroadCastEvent) {
         try {
             val pipelineLabelRelateInfos = event.pipelineLabelRelateInfos
-            logger.info("Receive LableChangeMetricsBroadCastEvent - $pipelineLabelRelateInfos|${event.type}")
+            logger.info("Receive LabelChangeMetricsBroadCastEvent - $pipelineLabelRelateInfos|${event.type}")
             when (event.type) {
                 PipelineLabelChangeTypeEnum.CREATE -> {
                     syncPipelineRelateLabelDataService.syncCreatePipelineRelateLabelData(
