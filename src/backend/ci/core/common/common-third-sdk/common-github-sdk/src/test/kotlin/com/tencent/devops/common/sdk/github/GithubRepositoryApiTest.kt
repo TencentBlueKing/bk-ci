@@ -34,6 +34,7 @@ import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
+import com.tencent.devops.common.sdk.github.request.SearchRepositoriesRequest
 import com.tencent.devops.common.sdk.util.SdkJsonUtil
 import org.junit.jupiter.api.Test
 
@@ -145,6 +146,18 @@ class GithubRepositoryApiTest : GithubApiTest() {
             repo = repo,
             username = "mingshewhe"
         )
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(response)
+    }
+
+    @Test
+    fun searchRepositories() {
+        val request = SearchRepositoriesRequest()
+        request.name("bk-ci")
+        request.org("Tencent")
         val response = client.execute(
             oauthToken = token,
             request = request

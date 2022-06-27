@@ -23,18 +23,35 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.sdk.github
+package com.tencent.devops.common.sdk.github.response
 
-open class GithubApiTest {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.sdk.github.pojo.GithubUser
 
-    protected val client = DefaultGithubClient(
-        serverUrl = "https://github.com/",
-        apiUrl = "https://api.github.com/"
-    )
-
-    protected val token = "d501d306428d8d34656c726a0c8980c08f5caa55"
-    protected val repo = "bk-ci"
-    protected val owner = "Tencent"
-}
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class CreateIssueCommentResponse(
+    @JsonProperty("author_association")
+    val authorAssociation: String,
+    @JsonProperty("body")
+    val body: String,
+    @JsonProperty("created_at")
+    val createdAt: String,
+    @JsonProperty("html_url")
+    val htmlUrl: String,
+    @JsonProperty("id")
+    val id: Int,
+    @JsonProperty("issue_url")
+    val issueUrl: String,
+    @JsonProperty("node_id")
+    val nodeId: String,
+    @JsonProperty("updated_at")
+    val updatedAt: String,
+    @JsonProperty("url")
+    val url: String,
+    @JsonProperty("user")
+    val user: GithubUser
+)

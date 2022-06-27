@@ -23,18 +23,25 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.common.sdk.github
 
-open class GithubApiTest {
+import com.tencent.devops.common.sdk.github.request.CreateIssueCommentRequest
+import org.junit.jupiter.api.Test
 
-    protected val client = DefaultGithubClient(
-        serverUrl = "https://github.com/",
-        apiUrl = "https://api.github.com/"
-    )
+class GithubIssueTest : GithubApiTest() {
 
-    protected val token = "d501d306428d8d34656c726a0c8980c08f5caa55"
-    protected val repo = "bk-ci"
-    protected val owner = "Tencent"
+    @Test
+    fun createIssueComment() {
+        val request = CreateIssueCommentRequest(
+            owner = "mingshewhe",
+            repo = "mr_test",
+            issueNumber = 10L,
+            body = "test issue comment"
+        )
+        val response = client.execute(oauthToken = token, request = request)
+        println(response)
+    }
 }

@@ -23,18 +23,35 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.sdk.github
+package com.tencent.devops.repository.resources.github
 
-open class GithubApiTest {
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.sdk.github.request.CreateIssueCommentRequest
+import com.tencent.devops.common.sdk.github.response.CreateIssueCommentResponse
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.github.ServiceGithubIssuesResource
+import com.tencent.devops.repository.github.service.GithubIssueService
+import com.tencent.devops.repository.service.github.GithubTokenService
+import org.springframework.beans.factory.annotation.Autowired
 
-    protected val client = DefaultGithubClient(
-        serverUrl = "https://github.com/",
-        apiUrl = "https://api.github.com/"
-    )
+@RestResource
+class ServiceGithubIssuesResourceImpl @Autowired constructor(
+    private val githubTokenService: GithubTokenService,
+    private val githubIssueService: GithubIssueService
+) : ServiceGithubIssuesResource {
 
-    protected val token = "d501d306428d8d34656c726a0c8980c08f5caa55"
-    protected val repo = "bk-ci"
-    protected val owner = "Tencent"
+    override fun createIssueComment(
+        userId: String,
+        request: CreateIssueCommentRequest
+    ): Result<CreateIssueCommentResponse?> {
+        return Result(
+            githubIssueService.createIssueComment(
+                token = githubTokenService.getAccessTokenMustExist(userId).accessToken,
+                request = request
+            )
+        )
+    }
 }

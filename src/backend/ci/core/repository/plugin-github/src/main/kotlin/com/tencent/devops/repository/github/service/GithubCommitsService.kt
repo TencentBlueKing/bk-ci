@@ -28,9 +28,11 @@
 package com.tencent.devops.repository.github.service
 
 import com.tencent.devops.common.sdk.github.DefaultGithubClient
+import com.tencent.devops.common.sdk.github.request.CompareTwoCommitsRequest
 import com.tencent.devops.common.sdk.github.request.GetCommitRequest
 import com.tencent.devops.common.sdk.github.request.ListCommitRequest
 import com.tencent.devops.common.sdk.github.response.CommitResponse
+import com.tencent.devops.common.sdk.github.response.CompareTwoCommitsResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -50,6 +52,13 @@ class GithubCommitsService @Autowired constructor(
         request: GetCommitRequest,
         token: String
     ): CommitResponse {
+        return defaultGithubClient.execute(request = request, oauthToken = token)
+    }
+
+    fun compareTwoCommits(
+        token: String,
+        request: CompareTwoCommitsRequest
+    ): CompareTwoCommitsResponse? {
         return defaultGithubClient.execute(request = request, oauthToken = token)
     }
 }

@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.service
+package com.tencent.devops.stream.service.transfer
 
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
@@ -36,8 +36,8 @@ import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.common.sdk.github.request.ListBranchesRequest
 import com.tencent.devops.common.sdk.github.request.ListCommitRequest
 import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
-import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
+import com.tencent.devops.common.sdk.github.request.SearchRepositoriesRequest
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.github.ServiceGithubBranchResource
 import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
@@ -58,9 +58,9 @@ import com.tencent.devops.stream.pojo.StreamProjectGitInfo
 import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
 import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
+import com.tencent.devops.stream.service.StreamGitTransferService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
 @Service
@@ -156,13 +156,19 @@ class StreamGithubTransferService @Autowired constructor(
         minAccessLevel: GitAccessLevelEnum?
     ): List<StreamProjectGitInfo>? {
         // search  owned  minAccessLevel 参数暂时没使用
-        return client.get(ServiceGithubRepositoryResource::class).listRepositories(
-            request = ListRepositoriesRequest(
-                page = page ?: 1,
-                perPage = pageSize ?: 30,
-                sort = sort?.value,
-                direction = orderBy?.value
-            ),
+        val request = SearchRepositoriesRequest(
+            page = page ?: 1,
+            perPage = pageSize ?: 30,
+            sort = sort?.value
+        )
+        if (!search.isNullOrBlank()) {
+            request.name(search)
+        }
+        // todo 先只查tencent组织下项目
+        request.org("Tencent")
+
+        return client.get(ServiceGithubRepositoryResource::class).searchRepositories(
+            request = request,
             userId = userId
         ).data?.map { StreamProjectGitInfo(it) }
     }

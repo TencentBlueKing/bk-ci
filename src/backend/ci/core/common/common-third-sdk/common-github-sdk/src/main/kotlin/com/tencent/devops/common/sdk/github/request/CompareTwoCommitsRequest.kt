@@ -23,18 +23,32 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.sdk.github
+package com.tencent.devops.common.sdk.github.request
 
-open class GithubApiTest {
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.sdk.enums.HttpMethod
+import com.tencent.devops.common.sdk.github.GithubRequest
+import com.tencent.devops.common.sdk.github.response.CompareTwoCommitsResponse
 
-    protected val client = DefaultGithubClient(
-        serverUrl = "https://github.com/",
-        apiUrl = "https://api.github.com/"
-    )
+data class CompareTwoCommitsRequest(
+    @JsonIgnore
+    val owner: String,
+    @JsonIgnore
+    val repo: String,
+    // The base branch and head branch to compare. This parameter expects the format {base}...{head}
+    @JsonIgnore
+    val base: String,
+    @JsonIgnore
+    val head: String,
+    @JsonProperty("per_page")
+    var perPage: Int = 30,
+    var page: Int = 1,
+) : GithubRequest<CompareTwoCommitsResponse>() {
+    override fun getHttpMethod() = HttpMethod.GET
 
-    protected val token = "d501d306428d8d34656c726a0c8980c08f5caa55"
-    protected val repo = "bk-ci"
-    protected val owner = "Tencent"
+    override fun getApiPath() = "repos/$owner/$repo/compare/$base...$head"
 }

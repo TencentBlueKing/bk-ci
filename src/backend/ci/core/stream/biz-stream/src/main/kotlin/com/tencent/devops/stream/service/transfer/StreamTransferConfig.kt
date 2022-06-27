@@ -29,7 +29,6 @@ package com.tencent.devops.stream.service.transfer
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
-import com.tencent.devops.stream.service.StreamGithubTransferService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean

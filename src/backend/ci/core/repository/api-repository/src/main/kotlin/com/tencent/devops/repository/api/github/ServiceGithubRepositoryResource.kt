@@ -38,6 +38,7 @@ import com.tencent.devops.common.sdk.github.request.GetRepositoryPermissionsRequ
 import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
+import com.tencent.devops.common.sdk.github.request.SearchRepositoriesRequest
 import com.tencent.devops.common.sdk.github.response.CreateOrUpdateFileContentsResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -113,4 +114,11 @@ interface ServiceGithubRepositoryResource {
         userId: String,
         request: ListRepositoryCollaboratorsRequest
     ): Result<List<GithubUser>>
+
+    fun searchRepositories(
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        request: SearchRepositoriesRequest
+    ): Result<List<GithubRepo>>
 }

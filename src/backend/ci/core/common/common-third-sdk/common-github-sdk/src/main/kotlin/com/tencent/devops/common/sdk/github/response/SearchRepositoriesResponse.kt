@@ -23,18 +23,20 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.sdk.github
+package com.tencent.devops.common.sdk.github.response
 
-open class GithubApiTest {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.sdk.github.pojo.GithubRepo
 
-    protected val client = DefaultGithubClient(
-        serverUrl = "https://github.com/",
-        apiUrl = "https://api.github.com/"
-    )
-
-    protected val token = "d501d306428d8d34656c726a0c8980c08f5caa55"
-    protected val repo = "bk-ci"
-    protected val owner = "Tencent"
-}
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class SearchRepositoriesResponse(
+    @JsonProperty("total_count")
+    val totalCount: Int,
+    @JsonProperty("incomplete_results")
+    val incompleteResults: Boolean,
+    val items: List<GithubRepo>
+)

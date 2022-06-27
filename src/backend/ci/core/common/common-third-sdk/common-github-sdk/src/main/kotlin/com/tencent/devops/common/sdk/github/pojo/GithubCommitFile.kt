@@ -23,18 +23,24 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.sdk.github
+package com.tencent.devops.common.sdk.github.pojo
 
-open class GithubApiTest {
+import com.fasterxml.jackson.annotation.JsonProperty
 
-    protected val client = DefaultGithubClient(
-        serverUrl = "https://github.com/",
-        apiUrl = "https://api.github.com/"
-    )
-
-    protected val token = "d501d306428d8d34656c726a0c8980c08f5caa55"
-    protected val repo = "bk-ci"
-    protected val owner = "Tencent"
-}
+data class GithubCommitFile(
+    val filename: String,
+    val additions: Int,
+    val deletions: Int,
+    val changes: Int,
+    // added, removed, modified, or renamed
+    val status: String,
+    @JsonProperty("raw_url")
+    val rawUrl: String,
+    @JsonProperty("blob_url")
+    val blobUrl: String,
+    @JsonProperty("previous_filename")
+    val previousFilename: String?
+)

@@ -38,6 +38,7 @@ import com.tencent.devops.common.sdk.github.request.GetRepositoryPermissionsRequ
 import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
+import com.tencent.devops.common.sdk.github.request.SearchRepositoriesRequest
 import com.tencent.devops.common.sdk.github.response.CreateOrUpdateFileContentsResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -104,5 +105,15 @@ class GithubRepositoryService @Autowired constructor(
             request = request,
             oauthToken = token
         )
+    }
+
+    fun searchRepositories(
+        token: String,
+        request: SearchRepositoriesRequest
+    ): List<GithubRepo> {
+        return defaultGithubClient.execute(
+            oauthToken = token,
+            request = request
+        ).items
     }
 }

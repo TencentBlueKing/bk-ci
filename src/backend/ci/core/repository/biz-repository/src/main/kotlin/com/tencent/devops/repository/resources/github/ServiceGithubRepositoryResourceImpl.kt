@@ -38,6 +38,7 @@ import com.tencent.devops.common.sdk.github.request.GetRepositoryPermissionsRequ
 import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
+import com.tencent.devops.common.sdk.github.request.SearchRepositoriesRequest
 import com.tencent.devops.common.sdk.github.response.CreateOrUpdateFileContentsResponse
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
@@ -118,6 +119,18 @@ class ServiceGithubRepositoryResourceImpl @Autowired constructor(
             githubRepositoryService.listRepositoryCollaborators(
                 request = request,
                 token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+            )
+        )
+    }
+
+    override fun searchRepositories(
+        userId: String,
+        request: SearchRepositoriesRequest
+    ): Result<List<GithubRepo>> {
+        return Result(
+            githubRepositoryService.searchRepositories(
+                token = githubTokenService.getAccessTokenMustExist(userId).accessToken,
+                request = request
             )
         )
     }

@@ -23,18 +23,37 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.sdk.github
+package com.tencent.devops.repository.api.github
 
-open class GithubApiTest {
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.sdk.github.request.CreateIssueCommentRequest
+import com.tencent.devops.common.sdk.github.response.CreateIssueCommentResponse
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-    protected val client = DefaultGithubClient(
-        serverUrl = "https://github.com/",
-        apiUrl = "https://api.github.com/"
-    )
+@Api(tags = ["SERVICE_ISSUES_GITHUB"], description = "服务-github-issues")
+@Path("/service/github/issues")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceGithubIssuesResource {
 
-    protected val token = "d501d306428d8d34656c726a0c8980c08f5caa55"
-    protected val repo = "bk-ci"
-    protected val owner = "Tencent"
+    @ApiOperation("创建issue评论")
+    @POST
+    @Path("/createIssueComment")
+    fun createIssueComment(
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        request: CreateIssueCommentRequest
+    ): Result<CreateIssueCommentResponse?>
 }

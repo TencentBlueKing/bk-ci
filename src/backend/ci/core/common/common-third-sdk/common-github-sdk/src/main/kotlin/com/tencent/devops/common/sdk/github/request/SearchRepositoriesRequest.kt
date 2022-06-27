@@ -26,51 +26,68 @@
  *
  */
 
-package com.tencent.devops.common.sdk.github
+package com.tencent.devops.common.sdk.github.request
 
-import com.tencent.devops.common.sdk.github.request.CompareTwoCommitsRequest
-import com.tencent.devops.common.sdk.github.request.GetCommitRequest
-import com.tencent.devops.common.sdk.github.request.ListCommitRequest
-import org.junit.jupiter.api.Test
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.sdk.enums.HttpMethod
+import com.tencent.devops.common.sdk.github.GithubRequest
+import com.tencent.devops.common.sdk.github.response.SearchRepositoriesResponse
 
-class GithubCommitApiTest : GithubApiTest() {
+/**
+ * 参考：https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories
+ */
+data class SearchRepositoriesRequest(
 
-    @Test
-    fun listCommit() {
-        val request = ListCommitRequest(
-            owner = owner,
-            repo = repo,
-        )
-        val response = client.execute(
-            oauthToken = token,
-            request = request
-        )
-        println(response)
+    // Can be one of: stars, forks, help-wanted-issues, updated,Default: best match
+    val sort: String? = null,
+    // Can be one of: desc, asc,Default: desc
+    val order: String? = null,
+    @JsonProperty("per_page")
+    var perPage: Int = 30,
+    var page: Int = 1,
+) : GithubRequest<SearchRepositoriesResponse>() {
+
+    private val terms = mutableListOf<String>()
+
+    val q: String
+        get() = terms.joinToString(" ")
+
+    override fun getHttpMethod() = HttpMethod.GET
+
+    override fun getApiPath() = "search/repositories"
+
+    /**
+     * 按照仓库size搜索
+     */
+    fun size(v: String) {
+        terms.add("size:$v")
     }
 
-    @Test
-    fun getCommit() {
-        val request = GetCommitRequest(
-            owner = owner,
-            repo = repo,
-            ref = "master"
-        )
-        val response = client.execute(
-            oauthToken = token,
-            request = request
-        )
-        println(response)
+    /**
+     * 按照组织搜索
+     */
+    fun org(v: String) {
+        terms.add("org:$v")
     }
 
-    @Test
-    fun compareTwoCommits() {
-        val request = CompareTwoCommitsRequest(
-            owner = owner,
-            repo = repo,
-            base = "530e45d8163aeb04bb3af5d69ec1f1d24782f179",
-            head = "1c166db7bcb0266e4b0f8e469890614ff0f2c33f"
-        )
-        val response = client.execute(oauthToken = token, request = request)
-        println(response)
+    /**
+     * 按照用户搜索
+     */
+    fun user(v: String) {
+        terms.add("user:$v")
+    }
+
+    /**
+     * 按照具体仓库搜索
+     */
+    fun repo(v: String) {
+        terms.add("repo:$v")
+    }
+
+    /**
+     * 按照名称搜索
+     */
+    fun name(v: String) {
+        terms.add("$v in:name")
     }
 }

@@ -1,9 +1,11 @@
 package com.tencent.devops.repository.api.github
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.sdk.github.request.CompareTwoCommitsRequest
 import com.tencent.devops.common.sdk.github.request.GetCommitRequest
 import com.tencent.devops.common.sdk.github.request.ListCommitRequest
 import com.tencent.devops.common.sdk.github.response.CommitResponse
+import com.tencent.devops.common.sdk.github.response.CompareTwoCommitsResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -39,4 +41,14 @@ interface ServiceGithubCommitsResource {
         userId: String,
         request: GetCommitRequest
     ): Result<CommitResponse?>
+
+    @ApiOperation("对比两个commit变更记录")
+    @POST
+    @Path("/compareTwoCommits")
+    fun compareTwoCommits(
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        request: CompareTwoCommitsRequest
+    ): Result<CompareTwoCommitsResponse?>
 }

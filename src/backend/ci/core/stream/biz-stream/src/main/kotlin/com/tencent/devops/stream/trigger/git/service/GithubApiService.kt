@@ -29,6 +29,8 @@ package com.tencent.devops.stream.trigger.git.service
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.sdk.github.request.CompareTwoCommitsRequest
+import com.tencent.devops.common.sdk.github.request.CreateIssueCommentRequest
 import com.tencent.devops.common.sdk.github.request.GetCommitRequest
 import com.tencent.devops.common.sdk.github.request.GetPullRequestRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
@@ -36,16 +38,15 @@ import com.tencent.devops.common.sdk.github.request.GetRepositoryPermissionsRequ
 import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.common.sdk.github.request.GetTreeRequest
 import com.tencent.devops.common.sdk.github.request.ListPullRequestFileRequest
-import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
+import com.tencent.devops.common.sdk.github.request.SearchRepositoriesRequest
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
 import com.tencent.devops.repository.api.github.ServiceGithubDatabaseResource
+import com.tencent.devops.repository.api.github.ServiceGithubIssuesResource
 import com.tencent.devops.repository.api.github.ServiceGithubPRResource
 import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
 import com.tencent.devops.repository.api.github.ServiceGithubUserResource
-import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.GithubAccessLevelEnum
-import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
@@ -63,7 +64,6 @@ import com.tencent.devops.stream.trigger.git.pojo.github.GithubProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubUserInfo
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitChangeFileInfo
 import com.tencent.devops.stream.trigger.git.service.StreamApiUtil.doRetryFun
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.util.QualityUtils
@@ -307,10 +307,15 @@ class GithubApiService @Autowired constructor(
         search: String?,
         minAccessLevel: GitAccessLevelEnum?
     ): List<GithubProjectInfo> {
-        // todo search、minAccessLevel参数现在不可用
-        return client.get(ServiceGithubRepositoryResource::class).listRepositories(
-            request = ListRepositoriesRequest(),
-            userId = cred.getUserId()
+        val request = SearchRepositoriesRequest()
+        if (!search.isNullOrBlank()) {
+            request.name(search)
+        }
+        // todo 先只查tencent组织下项目
+        request.org("Tencent")
+        return client.get(ServiceGithubRepositoryResource::class).searchRepositories(
+            userId = cred.getUserId(),
+            request = request
         ).data!!.map {
             GithubProjectInfo(it)
         }
@@ -359,13 +364,15 @@ class GithubApiService @Autowired constructor(
         mrId: Long,
         mrBody: MrCommentBody
     ) {
-        // 暂时无法兼容，服务间调用 mrBody 字符串转义存在问题
-        return client.get(ServiceGitResource::class).addMrComment(
-            token = cred.toToken(),
-            gitProjectId = gitProjectId,
-            mrId = mrId,
-            mrBody = QualityUtils.getQualityReport(mrBody.reportData.first, mrBody.reportData.second),
-            tokenType = TokenTypeEnum.OAUTH
+        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
+        client.get(ServiceGithubIssuesResource::class).createIssueComment(
+            userId = cred.getUserId(),
+            request = CreateIssueCommentRequest(
+                owner = owner,
+                repo = repo,
+                issueNumber = mrId,
+                body = QualityUtils.getQualityReport(mrBody.reportData.first, mrBody.reportData.second)
+            )
         )
     }
 
@@ -384,24 +391,27 @@ class GithubApiService @Autowired constructor(
         page: Int,
         pageSize: Int,
         retry: ApiRequestRetryInfo
-    ): List<TGitChangeFileInfo> {
+    ): List<GithubChangeFileInfo> {
+        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
+
         return doRetryFun(
             logger = logger,
             retry = retry,
             log = "getCommitChangeFileListRetry from: $from to: $to error",
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR
         ) {
-            client.get(ServiceGitResource::class).getChangeFileList(
-                cred.toToken(),
-                TokenTypeEnum.OAUTH,
-                gitProjectId = gitProjectId,
-                from = from,
-                to = to,
-                straight = straight,
-                page = page,
-                pageSize = pageSize
-            ).data ?: emptyList()
-        }.map { TGitChangeFileInfo(it) }
+            client.get(ServiceGithubCommitsResource::class).compareTwoCommits(
+                userId = cred.getUserId(),
+                request = CompareTwoCommitsRequest(
+                    owner = owner,
+                    repo = repo,
+                    base = from,
+                    head = to,
+                    page = page,
+                    perPage = pageSize
+                )
+            ).data?.files ?: emptyList()
+        }.map { GithubChangeFileInfo(it) }
     }
 
     private fun StreamGitCred.toToken(): String {
