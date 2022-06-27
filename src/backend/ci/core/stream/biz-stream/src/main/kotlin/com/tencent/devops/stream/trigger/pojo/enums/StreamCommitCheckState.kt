@@ -28,6 +28,9 @@
 package com.tencent.devops.stream.trigger.pojo.enums
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
+import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS
+import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
 
 enum class StreamCommitCheckState {
     PENDING,
@@ -45,10 +48,10 @@ fun StreamCommitCheckState.toGitState(scmType: ScmType): String {
             StreamCommitCheckState.FAILURE -> "failure"
         }
         ScmType.GITHUB -> when (this) {
-            StreamCommitCheckState.PENDING -> "pending"
-            StreamCommitCheckState.SUCCESS -> "success"
-            StreamCommitCheckState.ERROR -> "error"
-            StreamCommitCheckState.FAILURE -> "failure"
+            StreamCommitCheckState.PENDING -> GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
+            StreamCommitCheckState.SUCCESS -> GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS
+            StreamCommitCheckState.ERROR -> GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
+            StreamCommitCheckState.FAILURE -> GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
         }
         else -> TODO("对接其他Git平台时需要补充")
     }

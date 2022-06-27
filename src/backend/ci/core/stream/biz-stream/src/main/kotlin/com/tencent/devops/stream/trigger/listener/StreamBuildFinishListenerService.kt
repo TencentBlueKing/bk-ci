@@ -129,7 +129,7 @@ class StreamBuildFinishListenerService @Autowired constructor(
                     )
                 } catch (ignore: Exception) {
                     actionFactory.load(
-                        loadEvent(
+                        actionFactory.loadEvent(
                             requestEvent.event,
                             streamGitConfig.getScmType(),
                             requestEvent.objectKind
@@ -138,7 +138,7 @@ class StreamBuildFinishListenerService @Autowired constructor(
                 }
             }
             else -> actionFactory.load(
-                loadEvent(
+                actionFactory.loadEvent(
                     requestEvent.event,
                     streamGitConfig.getScmType(),
                     requestEvent.objectKind
@@ -183,20 +183,5 @@ class StreamBuildFinishListenerService @Autowired constructor(
 
         // 发送通知
         sendNotify.sendNotify(action)
-    }
-
-    private fun loadEvent(event: String, scmType: ScmType, objectKind: String): CodeWebhookEvent = when (scmType) {
-        ScmType.CODE_TGIT -> {
-            objectMapper.readValue<GitEvent>(event)
-        }
-        ScmType.GITHUB -> {
-            when (objectKind) {
-                StreamObjectKind.PULL_REQUEST.value -> objectMapper.readValue<GithubPullRequestEvent>(event)
-                StreamObjectKind.PUSH.value -> objectMapper.readValue<GithubPushEvent>(event)
-                StreamObjectKind.TAG_PUSH.value -> objectMapper.readValue<GithubPushEvent>(event)
-                else -> throw IllegalArgumentException("$objectKind in github load action not support yet")
-            }
-        }
-        else -> TODO("对接其他Git平台时需要补充")
     }
 }

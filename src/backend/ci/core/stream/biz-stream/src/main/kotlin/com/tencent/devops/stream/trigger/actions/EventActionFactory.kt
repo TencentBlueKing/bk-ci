@@ -41,6 +41,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
+import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -147,6 +148,21 @@ class EventActionFactory @Autowired constructor(
         return if (actionContext.repoTrigger != null) {
             StreamRepoTriggerAction(action, client)
         } else action
+    }
+
+    fun loadEvent(event: String, scmType: ScmType, objectKind: String): CodeWebhookEvent = when (scmType) {
+        ScmType.CODE_TGIT -> {
+            objectMapper.readValue<GitEvent>(event)
+        }
+        ScmType.GITHUB -> {
+            when (objectKind) {
+                StreamObjectKind.PULL_REQUEST.value -> objectMapper.readValue<GithubPullRequestEvent>(event)
+                StreamObjectKind.PUSH.value -> objectMapper.readValue<GithubPushEvent>(event)
+                StreamObjectKind.TAG_PUSH.value -> objectMapper.readValue<GithubPushEvent>(event)
+                else -> throw IllegalArgumentException("$objectKind in github load action not support yet")
+            }
+        }
+        else -> TODO("对接其他Git平台时需要补充")
     }
 
     private fun loadEvent(event: CodeWebhookEvent): BaseAction? {
