@@ -54,7 +54,7 @@ object CommonCredentialUtils {
             encoder.encodeToString(pair.publicKey)
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
-            logger.error(
+            logger.warn(
                 "Fail to get the credential($credentialId) of project($projectId) " +
                     "because of ${credentialResult.message}"
             )
@@ -63,7 +63,7 @@ object CommonCredentialUtils {
 
         val credential = credentialResult.data!!
         if (type != credential.credentialType) {
-            logger.error("CredentialId is invalid, expect:${type.name}, but real:${credential.credentialType.name}")
+            logger.warn("CredentialId is invalid, expect:${type.name}, but real:${credential.credentialType.name}")
             throw ParamBlankException("Fail to get the credential($credentialId) of project($projectId)")
         }
 

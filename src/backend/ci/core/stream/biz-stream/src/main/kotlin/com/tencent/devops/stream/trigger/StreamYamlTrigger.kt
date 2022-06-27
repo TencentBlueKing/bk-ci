@@ -117,7 +117,7 @@ class StreamYamlTrigger @Autowired constructor(
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
         val gitProjectInfo = action.api.getGitProjectInfo(
             action.getGitCred(),
-            action.data.getGitProjectId(),
+            action.getGitProjectIdOrName(),
             ApiRequestRetryInfo(true)
         )!!
         action.data.setting = action.data.setting.copy(gitHttpUrl = gitProjectInfo.gitHttpUrl)

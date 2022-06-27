@@ -61,15 +61,18 @@ import com.tencent.devops.stream.trigger.git.pojo.github.GithubProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubUserInfo
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
-class GithubApiService(
+@Service
+class GithubApiService @Autowired constructor(
     private val client: Client
 ) : StreamGitApiService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TGitApiService::class.java)
+        private val logger = LoggerFactory.getLogger(GithubApiService::class.java)
     }
 
     /**

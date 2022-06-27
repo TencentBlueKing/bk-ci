@@ -18,6 +18,7 @@ allprojects {
     dependencyManagement {
         setApplyMavenExclusions(false)
         dependencies {
+            dependency("org.json:json:${Versions.orgJson}")
             dependency("org.mockito:mockito-all:${Versions.Mockito}")
             dependency("com.nhaarman:mockito-kotlin-kt1.1:${Versions.MockitoKt}")
             dependency("javax.ws.rs:javax.ws.rs-api:${Versions.Jaxrs}")

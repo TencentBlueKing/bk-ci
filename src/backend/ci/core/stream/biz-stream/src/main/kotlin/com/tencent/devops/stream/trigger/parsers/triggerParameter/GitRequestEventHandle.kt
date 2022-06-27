@@ -40,6 +40,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
+import com.tencent.devops.common.webhook.pojo.code.github.GithubCommit
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
@@ -337,23 +338,23 @@ object GitRequestEventHandle {
             else -> ref
         }
     }
-}
 
-private fun getLatestCommit(
-    commitId: String?,
-    commits: List<GitCommit>?
-): GitCommit? {
-    if (commitId == null) {
-        return if (commits.isNullOrEmpty()) {
-            null
-        } else {
-            commits.last()
+    private fun getLatestCommit(
+        commitId: String?,
+        commits: List<GitCommit>?
+    ): GitCommit? {
+        if (commitId == null) {
+            return if (commits.isNullOrEmpty()) {
+                null
+            } else {
+                commits.last()
+            }
         }
-    }
-    commits?.forEach {
-        if (it.id == commitId) {
-            return it
+        commits?.forEach {
+            if (it.id == commitId) {
+                return it
+            }
         }
+        return null
     }
-    return null
 }

@@ -27,21 +27,27 @@
 
 package com.tencent.devops.stream.trigger.actions.data
 
+import com.tencent.devops.common.api.enums.ScmType
+
 /**
  * 需要根据各事件源的event去拿的通用数据，随event改变可能会不同
  * @param gitProjectId Git平台项目唯一标识
+ * @param scmType 当前事件 git平台唯一标识
  * @param branch 当前event的触发branch
  * @param commit 当前event的commitId
  * @param userId 当前event的触发人
  * @param gitProjectName Git平台项目全称: namespace/name
+ * @param eventType 当前事件类型 仅在github需要
  * @param sourceGitProjectId mr触发时的源Git库
  */
 data class EventCommonData(
     val gitProjectId: String,
+    val scmType: ScmType?,
     val branch: String,
     val commit: EventCommonDataCommit,
     val userId: String,
     val gitProjectName: String?,
+    val eventType: String? = null,
     val sourceGitProjectId: String? = null
 )
 

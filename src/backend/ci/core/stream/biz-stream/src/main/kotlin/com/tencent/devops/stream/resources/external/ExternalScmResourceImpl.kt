@@ -30,6 +30,7 @@ package com.tencent.devops.stream.resources.external
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
@@ -64,6 +65,7 @@ class ExternalScmResourceImpl @Autowired constructor(
             rabbitTemplate = rabbitTemplate,
             event = StreamRequestEvent(
                 eventType = eventType,
+                webHookType = ScmType.CODE_TGIT.name,
                 event = body
             )
         )

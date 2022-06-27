@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.actions.tgit
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
@@ -37,6 +38,7 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
@@ -66,7 +68,7 @@ class TGitTagPushActionGit(
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.TAG_PUSH)
 
     override lateinit var data: ActionData
-    fun event() = data.event as GitTagPushEvent
+    override fun event() = data.event as GitTagPushEvent
 
     override val api: TGitApiService
         get() = apiService
@@ -81,11 +83,12 @@ class TGitTagPushActionGit(
 
         this.data.eventCommon = EventCommonData(
             gitProjectId = event.project_id.toString(),
+            scmType = ScmType.CODE_TGIT,
             branch = event.ref.removePrefix("refs/tags/"),
             commit = EventCommonDataCommit(
                 commitId = event.after,
                 commitMsg = lastCommit?.message,
-                commitTimeStamp = TGitActionCommon.getCommitTimeStamp(lastCommit?.timestamp),
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(lastCommit?.timestamp),
                 commitAuthorName = lastCommit?.author?.name
             ),
             userId = event.user_name,
@@ -140,20 +143,23 @@ class TGitTagPushActionGit(
     override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {}
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
-        return TGitActionCommon.getYamlPathList(
+        return GitActionCommon.getYamlPathList(
             action = this,
-            gitProjectId = this.data.getGitProjectId(),
+            gitProjectId = this.getGitProjectIdOrName(),
             ref = this.data.eventCommon.branch
         ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
     }
 
-    override fun getYamlContent(fileName: String): String {
-        return api.getFileContent(
-            cred = this.getGitCred(),
-            gitProjectId = data.getGitProjectId(),
-            fileName = fileName,
-            ref = data.eventCommon.branch,
-            retry = ApiRequestRetryInfo(true)
+    override fun getYamlContent(fileName: String): Pair<String, String> {
+        return Pair(
+            data.eventCommon.branch,
+            api.getFileContent(
+                cred = this.getGitCred(),
+                gitProjectId = getGitProjectIdOrName(),
+                fileName = fileName,
+                ref = data.eventCommon.branch,
+                retry = ApiRequestRetryInfo(true)
+            )
         )
     }
 
@@ -161,11 +167,11 @@ class TGitTagPushActionGit(
         val event = event()
         val isMatch = TriggerMatcher.isTagPushMatch(
             triggerOn,
-            TGitActionCommon.getTriggerBranch(event.ref),
+            GitActionCommon.getTriggerBranch(event.ref),
             data.getUserId(),
             event.create_from
         )
-        val params = TGitActionCommon.getStartParams(
+        val params = GitActionCommon.getStartParams(
             action = this,
             triggerOn = triggerOn
         )
@@ -178,7 +184,7 @@ class TGitTagPushActionGit(
     }
 
     override fun getWebHookStartParam(triggerOn: TriggerOn): Map<String, String> {
-        return TGitActionCommon.getStartParams(
+        return GitActionCommon.getStartParams(
             action = this,
             triggerOn = triggerOn
         )

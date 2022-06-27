@@ -23,7 +23,6 @@ import (
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/dashboard"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/manager"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/types"
-	"github.com/Tencent/bk-ci/src/booster/common"
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
 	"github.com/Tencent/bk-ci/src/booster/common/http/httpserver"
 )
@@ -118,10 +117,10 @@ func Run(conf *config.ServerConfig) error {
 		defer unlock()
 	}
 
-	if err := common.SavePid(conf.ProcessConfig); err != nil {
-		blog.Errorf("save pid failed: %v", err)
-		return err
-	}
+	// if err := common.SavePid(conf.ProcessConfig); err != nil {
+	// 	blog.Errorf("save pid failed: %v", err)
+	// 	return err
+	// }
 
 	server, err := NewServer(conf)
 	if err != nil {

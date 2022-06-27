@@ -37,6 +37,7 @@ import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.StreamNoEnableException
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -54,7 +55,8 @@ class StreamBasicSettingService @Autowired constructor(
     private val client: Client,
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val streamGitTransferService: StreamGitTransferService
+    private val streamGitTransferService: StreamGitTransferService,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamBasicSettingService::class.java)
@@ -197,7 +199,10 @@ class StreamBasicSettingService @Autowired constructor(
             // 增加判断可能存在stream 侧项目名称删除后，新建同名项目，这时候开启CI就会出现插入project表同名冲突失败的情况,
             checkSameGitProjectName(userId, gitProjectName)
 
-            val projectCode = GitCommonUtils.getCiProjectId(setting.gitProjectId)
+            val projectCode = GitCommonUtils.getCiProjectId(
+                setting.gitProjectId,
+                streamGitConfig.getScmType()
+            )
             val projectResult = client.get(ServiceProjectResource::class).createExtSystem(
                 userId = userId,
                 projectInfo = ProjectCreateInfo(
@@ -261,7 +266,10 @@ class StreamBasicSettingService @Autowired constructor(
             try {
                 client.get(ServiceProjectResource::class).updateProjectName(
                     userId = userId,
-                    projectCode = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId),
+                    projectCode = GitCommonUtils.getCiProjectId(
+                        projectInfo.gitProjectId,
+                        streamGitConfig.getScmType()
+                    ),
                     projectName = projectInfo.name
                 )
             } catch (e: Throwable) {
@@ -357,7 +365,10 @@ class StreamBasicSettingService @Autowired constructor(
 
             client.get(ServiceProjectResource::class).updateProjectName(
                 userId = userId,
-                projectCode = GitCommonUtils.getCiProjectId(projectId.toLong()),
+                projectCode = GitCommonUtils.getCiProjectId(
+                    projectId.toLong(),
+                    streamGitConfig.getScmType()
+                ),
                 projectName = deletedProjectName
             )
         } catch (e: Throwable) {
