@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption.Companion.MATRIX_CASE_MAX_COUNT
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
@@ -496,15 +497,18 @@ class InitializeMatrixGroupStageCmd(
             // 刷新ID为新的唯一值，强制设为无法重试
             e.id = newTaskId
             e.canRetry = false
-            val (interceptTask, interceptTaskName) = when (e) {
+            val (interceptTask, interceptTaskName, reviewUsers) = when (e) {
                 is QualityGateInElement -> {
-                    Pair(e.interceptTask, e.interceptTaskName)
+                    Triple(e.interceptTask, e.interceptTaskName, e.reviewUsers)
                 }
                 is QualityGateOutElement -> {
-                    Pair(e.interceptTask, e.interceptTaskName)
+                    Triple(e.interceptTask, e.interceptTaskName, e.reviewUsers)
+                }
+                is ManualReviewUserTaskElement -> {
+                    Triple(null, null, e.reviewUsers)
                 }
                 else -> {
-                    Pair(null, null)
+                    Triple(null, null, null)
                 }
             }
             MatrixStatusElement(
@@ -516,7 +520,8 @@ class InitializeMatrixGroupStageCmd(
                 originAtomCode = e.getAtomCode(),
                 originTaskAtom = e.getTaskAtom(),
                 interceptTask = interceptTask,
-                interceptTaskName = interceptTaskName
+                interceptTaskName = interceptTaskName,
+                reviewUsers = reviewUsers?.toMutableList()
             )
         }
     }
