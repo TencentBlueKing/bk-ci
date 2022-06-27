@@ -28,3 +28,8 @@
 package config
 
 const AgentVersion = "v1.9.3"
+
+var (
+	GitCommit string
+	BuildTime string
+)
