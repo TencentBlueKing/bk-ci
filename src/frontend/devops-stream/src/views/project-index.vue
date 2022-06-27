@@ -1,5 +1,8 @@
 <template>
-    <router-view v-if="!isLoading"></router-view>
+    <section>
+        <project-header></project-header>
+        <router-view v-if="!isLoading" class="project-content"></router-view>
+    </section>
 </template>
 
 <script>
@@ -8,8 +11,13 @@
     import streamWebSocket from '@/utils/websocket'
     import register from '@/utils/websocket-register'
     import { setCookie, getCookie, deleteCookie } from '@/utils'
+    import projectHeader from '@/components/project-header'
 
     export default {
+        components: {
+            projectHeader
+        },
+
         data () {
             return {
                 isLoading: false
@@ -100,3 +108,10 @@
         }
     }
 </script>
+
+<style lang="postcss" scoped>
+    .project-content {
+        height: calc(100vh - 61px);
+        width: 100vw;
+    }
+</style>

@@ -3,6 +3,7 @@
     <head>
         <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon" />
         <link rel="shortcut icon" href="/static/images/favicon.ico" type="image/x-icon" />
+        <link href="/static/iconcool/style.css" rel="stylesheet">
         <meta charset="utf-8">
         <title> 蓝盾 | Stream </title>
     </head>
@@ -30,6 +31,8 @@
             var DEVOPS_HOST = '__DEVOPS_HOST__'
             // 仓库 host
             var BKREPO_HOST = '__BKREPO_HOST__'
+            // app key
+            var APP_KEY = '__APP_KEY__'
         </script>
         <script>
             function getLoginUrl (domain = LOGIN_SERVICE_URL) {
@@ -41,12 +44,12 @@
                 url.searchParams.append('c_url', cUrl)
                 
                 loginUrl.searchParams.append('title', 'bklogin')
-                loginUrl.searchParams.append('appkey', '909a565c052c4379b90d3d82152d2da1')
+                loginUrl.searchParams.append('appkey', APP_KEY)
                 loginUrl.searchParams.append('url', url)
                 
                 return loginUrl.href
             }
         </script>
-        <script src="/static/lib.bundle.js"></script>
+        <link href="/static/iconcool/iconcool.js" rel="stylesheet">
     </body>
 </html>

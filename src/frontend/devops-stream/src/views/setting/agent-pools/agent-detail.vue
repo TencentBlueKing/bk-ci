@@ -12,9 +12,9 @@
             </div>
             <div slot="right" class="node-handle">
                 <span class="copy-btn" @click="copyHandle">
-                    {{ nodeDetails.os === 'WINDOWS' ? 'Copy download link' : 'Copy install command'}}
+                    {{ nodeDetails.os === 'WINDOWS' ? $t('setting.agent.copyDownloadLink') : $t('setting.agent.copyInstallCommand')}}
                 </span>
-                <span class="download-btn" v-if="nodeDetails.os === 'WINDOWS'" @click="downloadHandle">Download installation package</span>
+                <span class="download-btn" v-if="nodeDetails.os === 'WINDOWS'" @click="downloadHandle">{{$t('setting.agent.downloadPackage')}}</span>
                 <i class="bk-icon icon-refresh" @click="refresh"></i>
             </div>
         </div>
@@ -49,10 +49,10 @@
                 nodeDetails: {},
                 showContent: false,
                 basePrototypeList: [
-                    { id: 'hostname', name: 'HostName', value: '' },
+                    { id: 'hostname', name: this.$t('setting.agent.hostName'), value: '' },
                     { id: 'ip', name: 'IP', value: '' },
                     { id: 'ncpus', name: 'CPU', value: '' },
-                    { id: 'memTotal', name: 'Memory', value: '' },
+                    { id: 'memTotal', name: this.$t('setting.agent.memory'), value: '' },
                     { id: 'createdUser', name: 'Owner', value: '' },
                     { id: 'osName', name: 'OS', value: '' }
                 ],
@@ -72,8 +72,8 @@
             },
             navList () {
                 return [
-                    { link: { name: 'agentPools' }, title: 'Agent Pools' },
-                    { link: { name: 'agentList' }, title: 'Agent list' },
+                    { link: { name: 'agentPools' }, title: this.$t('setting.agent.agentPools') },
+                    { link: { name: 'agentList' }, title: this.$t('setting.agent.agentList') },
                     { link: '', title: this.nodeDetails.displayName }
                 ]
             }
