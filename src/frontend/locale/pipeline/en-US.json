@@ -271,7 +271,7 @@
     "validatebuildNum": "Only supports [a-z A-Z 0-9 . - _ : + ? $ {} ()]",
     "correctBuildNumber": "Please enter the correct build number format",
     "emptyPipelineName": "Please enter pipeline name",
-    "runLock": "Locking behavior",
+    "runLock": "运行设置",
     "namePlaceholder": "Please enter a name for this pipeline within 40 letters",
     "descPlaceholder": "Please add a description within 100 letters",
     "largestNum": "Largest number of queues",
