@@ -55,18 +55,7 @@ object GitActionCommon {
 
         val matcher = TriggerBuilder.buildGitWebHookMatcher(gitEvent)
         val repository = if (action.data.context.repoTrigger != null) {
-            val projectName = action.data.eventCommon.gitProjectName
-                ?: GitUtils.getProjectName(action.data.setting.gitHttpUrl)
-            CodeGitRepository(
-                aliasName = projectName,
-                url = action.data.setting.gitHttpUrl,
-                credentialId = "",
-                projectName = projectName,
-                userName = action.data.getUserId(),
-                authType = RepoAuthType.OAUTH,
-                projectId = action.getProjectCode(action.data.eventCommon.gitProjectId),
-                repoHashId = null
-            )
+            TriggerBuilder.buildCodeGitForRepoRepository(action)
         } else TriggerBuilder.buildCodeGitRepository(action.data.setting)
         val isMatch = if (needMatch) {
             matcher.isMatch(

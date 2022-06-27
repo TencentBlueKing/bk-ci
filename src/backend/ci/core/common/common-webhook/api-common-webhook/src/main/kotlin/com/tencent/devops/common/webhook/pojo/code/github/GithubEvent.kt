@@ -156,8 +156,8 @@ data class GithubRepository(
 //    val blobsUrl: String, // https://api.github.com/repos/yongyiduan/webhook-test/git/blobs{/sha}
 //    @JsonProperty("branches_url")
 //    val branchesUrl: String, // https://api.github.com/repos/yongyiduan/webhook-test/branches{/branch}
-//    @JsonProperty("clone_url")
-//    val cloneUrl: String, // https://github.com/yongyiduan/webhook-test.git
+    @JsonProperty("clone_url")
+    val cloneUrl: String, // https://github.com/yongyiduan/webhook-test.git
 //    @JsonProperty("collaborators_url")
 //    val collaboratorsUrl: String, // https://api.github.com/repos/yongyiduan/webhook-test/collaborators{/collaborator}
 //    @JsonProperty("comments_url")

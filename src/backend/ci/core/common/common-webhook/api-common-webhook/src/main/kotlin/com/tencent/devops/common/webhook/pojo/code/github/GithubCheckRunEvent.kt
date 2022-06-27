@@ -34,7 +34,7 @@ data class GithubCheckRunEvent(
     @JsonProperty("check_run")
     val checkRun: CheckRun,
     val repository: GithubRepository,
-    override val sender: GithubSender
+    override val sender: GithubUser
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "check_run"

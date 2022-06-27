@@ -65,6 +65,7 @@ import com.tencent.devops.stream.trigger.git.pojo.github.GithubProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubUserInfo
+import com.tencent.devops.stream.trigger.git.service.StreamApiUtil.doRetryFun
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.util.QualityUtils
 import com.tencent.devops.stream.util.RetryUtils
@@ -97,6 +98,7 @@ class GithubApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): GithubProjectInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get project $gitProjectId fail",
             apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR
@@ -121,6 +123,7 @@ class GithubApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): GithubCommitInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get commit info $sha fail",
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_INFO_ERROR
@@ -144,7 +147,6 @@ class GithubApiService @Autowired constructor(
             userId = cred.getUserId()
         ).let { GithubUserInfo(id = it.id.toString(), username = it.login) }
     }
-
 
     override fun getProjectUserInfo(
         cred: StreamGitCred,
@@ -172,6 +174,7 @@ class GithubApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): GithubMrInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get mr $mrId info error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_INFO
@@ -186,7 +189,7 @@ class GithubApiService @Autowired constructor(
                     pullNumber = mrId
                 )
             )
-        }?.let {
+        }.let {
             GithubMrInfo(
                 mergeStatus = it.state,
                 // todo 注意basecommit是否一致
@@ -194,7 +197,6 @@ class GithubApiService @Autowired constructor(
             )
         }
     }
-
 
     // todo repository还未提供接口
     override fun getMrChangeInfo(
@@ -204,6 +206,7 @@ class GithubApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): GithubMrChangeInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get mr $mrId changeInfo error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_CHANGE_INFO
@@ -218,7 +221,7 @@ class GithubApiService @Autowired constructor(
                     pullNumber = mrId
                 )
             )
-        }?.let {
+        }.let {
             GithubMrChangeInfo(
                 files = it.map { f ->
                     // todo 注意参数是否正确
@@ -237,8 +240,8 @@ class GithubApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): List<GithubTreeFileInfo> {
 
-
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get $path file tree error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR
@@ -266,6 +269,7 @@ class GithubApiService @Autowired constructor(
     ): String {
         cred as GithubCred
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get yaml $fileName from $ref fail",
             apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR
@@ -300,6 +304,7 @@ class GithubApiService @Autowired constructor(
     ): GithubFileInfo? {
 
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "getFileInfo: [$gitProjectId|$fileName][$ref] error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR
@@ -354,23 +359,23 @@ class GithubApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): GithubRevisionInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "timer|[$pipelineId] get latestRevision fail",
             apiErrorCode = ErrorCodeEnum.GET_GIT_LATEST_REVISION_ERROR
         ) {
             // TODO: 2022/6/20  getLatestRevision并没有对github的实现
             client.get(ServiceGithubBranchResource::class).getBranch(
-                    request = GHGetBranchRequest(
-                        owner = userName,
-                        repo = projectName,
-                        branch = branch
-                    ),
-                    userId = userName
-            // todo 注意信息是否正确
-                )?.let { GithubRevisionInfo(it) }
+                request = GHGetBranchRequest(
+                    owner = userName,
+                    repo = projectName,
+                    branch = branch
+                ),
+                userId = userName
+                // todo 注意信息是否正确
+            ).let { GithubRevisionInfo(it) }
         }
     }
-
 
     // 以下非StreamGitApiService接口实现
     /**
@@ -390,6 +395,7 @@ class GithubApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): List<GithubChangeFileInfo> {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "getCommitChangeFileListRetry from: $from to: $to error",
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR
@@ -457,71 +463,6 @@ class GithubApiService @Autowired constructor(
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 "STEAM PROJECT ENABLE USER NO OAUTH PERMISSION"
-            )
-        }
-    }
-
-    protected fun <T> doRetryFun(
-        retry: ApiRequestRetryInfo,
-        log: String,
-        apiErrorCode: ErrorCodeEnum,
-        action: () -> T
-    ): T {
-        return if (retry.retry) {
-            retryFun(
-                retry = retry,
-                log = log,
-                apiErrorCode = apiErrorCode
-            ) {
-                action()
-            }
-        } else {
-            action()
-        }
-    }
-
-    private fun <T> retryFun(
-        retry: ApiRequestRetryInfo,
-        log: String,
-        apiErrorCode: ErrorCodeEnum,
-        action: () -> T
-    ): T {
-        try {
-            return RetryUtils.clientRetry(
-                retry.retryTimes,
-                retry.retryPeriodMills
-            ) {
-                action()
-            }
-        } catch (e: ClientException) {
-            logger.warn("retry 5 times $log", e)
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
-                defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
-            )
-        } catch (e: RemoteServiceException) {
-            logger.warn("GIT_API_ERROR $log", e)
-            throw ErrorCodeException(
-                statusCode = e.httpStatus,
-                errorCode = apiErrorCode.errorCode.toString(),
-                defaultMessage = "$log: ${e.errorMessage}"
-            )
-        } catch (e: CustomException) {
-            logger.warn("GIT_SCM_ERROR $log", e)
-            throw ErrorCodeException(
-                statusCode = e.status.statusCode,
-                errorCode = apiErrorCode.errorCode.toString(),
-                defaultMessage = "$log: ${e.message}"
-            )
-        } catch (e: Throwable) {
-            logger.error("retryFun error $log", e)
-            throw ErrorCodeException(
-                errorCode = apiErrorCode.errorCode.toString(),
-                defaultMessage = if (e.message.isNullOrBlank()) {
-                    "$log: ${apiErrorCode.formatErrorMessage}"
-                } else {
-                    "$log: ${e.message}"
-                }
             )
         }
     }

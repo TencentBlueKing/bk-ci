@@ -29,11 +29,6 @@ package com.tencent.devops.stream.trigger.actions.github
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
-import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
-import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
-import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
-import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCommit
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.common.webhook.pojo.code.github.checkCreateAndUpdate
@@ -57,14 +52,13 @@ import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
+import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
 import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
-import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GithubRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
@@ -217,7 +211,8 @@ class GithubPushActionGit(
 
     override fun getYamlContent(fileName: String): Pair<String, String> {
         return Pair(
-            data.eventCommon.branch, api.getFileContent(
+            data.eventCommon.branch,
+            api.getFileContent(
                 cred = this.getGitCred(),
                 gitProjectId = getGitProjectIdOrName(),
                 fileName = fileName,
@@ -254,7 +249,7 @@ class GithubPushActionGit(
 
         for (i in 1..10) {
             val result = apiService.getCommitChangeList(
-                cred = (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as TGitCred,
+                cred = (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as GithubCred,
                 gitProjectId = data.eventCommon.gitProjectId,
                 from = from,
                 to = to,

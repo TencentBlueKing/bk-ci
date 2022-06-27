@@ -122,7 +122,7 @@ data class GithubPullRequest(
     @JsonProperty("merged_by")
     val mergedBy: String?, // null
     @JsonProperty("milestone")
-    val milestone: String?, // null
+    val milestone: GithubMilestone?, // null
     @JsonProperty("node_id")
     val nodeId: String, // PR_kwDOHiUKK846Aw9V
     @JsonProperty("number")
@@ -132,7 +132,7 @@ data class GithubPullRequest(
     @JsonProperty("rebaseable")
     val rebaseable: String?, // null
     @JsonProperty("requested_reviewers")
-    val requestedReviewers: List<Any>,
+    val requestedReviewers: List<GithubUser>,
     @JsonProperty("requested_teams")
     val requestedTeams: List<Any>,
     @JsonProperty("review_comment_url")
@@ -153,6 +153,41 @@ data class GithubPullRequest(
     val url: String, // https://api.github.com/repos/yongyiduan/webhook-test/pulls/1
     @JsonProperty("user")
     val user: GithubUser
+)
+
+data class GithubMilestone(
+    @JsonProperty("closed_at")
+    val closedAt: String, // 2013-02-12T13:22:01Z
+    @JsonProperty("closed_issues")
+    val closedIssues: Int, // 8
+    @JsonProperty("created_at")
+    val createdAt: String, // 2011-04-10T20:09:31Z
+    @JsonProperty("creator")
+    val creator: GithubUser,
+    @JsonProperty("description")
+    val description: String, // Tracking milestone for version 1.0
+    @JsonProperty("due_on")
+    val dueOn: String, // 2012-10-09T23:39:01Z
+    @JsonProperty("html_url")
+    val htmlUrl: String, // https://github.com/octocat/Hello-World/milestones/v1.0
+    @JsonProperty("id")
+    val id: Int, // 1002604
+//    @JsonProperty("labels_url")
+//    val labelsUrl: String, // https://api.github.com/repos/octocat/Hello-World/milestones/1/labels
+    @JsonProperty("node_id")
+    val nodeId: String, // MDk6TWlsZXN0b25lMTAwMjYwNA==
+    @JsonProperty("number")
+    val number: Int, // 1
+    @JsonProperty("open_issues")
+    val openIssues: Int, // 4
+    @JsonProperty("state")
+    val state: String, // open
+    @JsonProperty("title")
+    val title: String, // v1.0
+    @JsonProperty("updated_at")
+    val updatedAt: String, // 2014-03-03T18:58:10Z
+//    @JsonProperty("url")
+//    val url: String // https://api.github.com/repos/octocat/Hello-World/milestones/1
 )
 
 @Suppress("ALL")

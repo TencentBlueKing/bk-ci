@@ -2,9 +2,12 @@ package com.tencent.devops.stream.trigger.parsers.triggerMatch
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
@@ -12,6 +15,8 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.common.webhook.service.code.matcher.GitWebHookMatcher
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
@@ -23,6 +28,7 @@ import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 
 object TriggerBuilder {
@@ -30,10 +36,11 @@ object TriggerBuilder {
     private const val JOIN_SEPARATOR = ","
 
     fun buildCodeGitWebHookTriggerElement(
-        gitEvent: GitEvent,
+        gitEvent: CodeWebhookEvent,
         triggerOn: TriggerOn?
-    ): CodeGitWebHookTriggerElement? {
+    ): WebHookTriggerElement? {
         return when (gitEvent) {
+            // T_GIT
             is GitPushEvent ->
                 buildGitPushEventElement(gitEvent, triggerOn)
             is GitTagPushEvent ->
@@ -46,6 +53,11 @@ object TriggerBuilder {
                 buildGitReviewElement(gitEvent, triggerOn)
             is GitNoteEvent ->
                 buildGitNoteElement(gitEvent, triggerOn)
+            // GITHUB
+            is GithubPushEvent ->
+                buildGithubPushEventElement(gitEvent, triggerOn)
+            is GithubPullRequestEvent ->
+                buildGithubPrEventElement(gitEvent, triggerOn)
             else -> null
         }
     }
@@ -154,6 +166,23 @@ object TriggerBuilder {
         }
     }
 
+    fun buildCodeGitForRepoRepository(
+        action: BaseAction
+    ): CodeGitRepository {
+        val projectName = action.data.eventCommon.gitProjectName
+            ?: GitUtils.getProjectName(action.data.setting.gitHttpUrl)
+        return CodeGitRepository(
+            aliasName = projectName,
+            url = action.data.setting.gitHttpUrl,
+            credentialId = "",
+            projectName = projectName,
+            userName = action.data.getUserId(),
+            authType = RepoAuthType.OAUTH,
+            projectId = action.getProjectCode(action.data.eventCommon.gitProjectId),
+            repoHashId = null
+        )
+    }
+
     fun buildGitWebHookMatcher(gitEvent: GitEvent): ScmWebhookMatcher {
         return GitWebHookMatcher(gitEvent)
     }
@@ -179,6 +208,25 @@ object TriggerBuilder {
             includeUsers = triggerOn.push?.users,
             block = false,
             eventType = CodeEventType.PUSH
+        )
+    }
+
+    private fun buildGithubPushEventElement(
+        githubPushEvent: GithubPushEvent,
+        triggerOn: TriggerOn?
+    ): CodeGithubWebHookTriggerElement? {
+        if (triggerOn?.push == null) {
+            return null
+        }
+        return CodeGithubWebHookTriggerElement(
+            id = "0",
+            repositoryHashId = null,
+            repositoryName = githubPushEvent.repository.id.toString(),
+            repositoryType = RepositoryType.NAME,
+            eventType = CodeEventType.PUSH,
+            branchName = triggerOn.push?.branches?.joinToString(JOIN_SEPARATOR),
+            excludeBranchName = triggerOn.push?.branchesIgnore?.joinToString(JOIN_SEPARATOR),
+            excludeUsers = triggerOn.push?.usersIgnore?.joinToString(JOIN_SEPARATOR)
         )
     }
 
@@ -244,6 +292,25 @@ object TriggerBuilder {
             } else {
                 triggerOn.mr!!.action
             }
+        )
+    }
+
+    private fun buildGithubPrEventElement(
+        githubPrEvent: GithubPullRequestEvent,
+        triggerOn: TriggerOn?
+    ): CodeGithubWebHookTriggerElement? {
+        if (triggerOn?.mr == null) {
+            return null
+        }
+        return CodeGithubWebHookTriggerElement(
+            id = "0",
+            repositoryHashId = null,
+            repositoryName = githubPrEvent.pullRequest.base.repo.id.toString(),
+            repositoryType = RepositoryType.NAME,
+            branchName = triggerOn.mr?.targetBranches?.joinToString(JOIN_SEPARATOR),
+            excludeBranchName = null,
+            excludeUsers = triggerOn.mr?.usersIgnore?.joinToString(JOIN_SEPARATOR),
+            eventType = CodeEventType.PULL_REQUEST
         )
     }
 }

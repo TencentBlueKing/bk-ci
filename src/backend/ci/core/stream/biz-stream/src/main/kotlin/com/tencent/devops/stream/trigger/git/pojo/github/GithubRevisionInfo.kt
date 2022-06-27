@@ -46,9 +46,9 @@ data class GithubRevisionInfo(
 
     constructor(r: GHBranchResponse) : this(
         // todo 注意参数是否正确
-        revision  = r.commit.sha,
-        updatedMessage = r.commit.message,
+        revision = r.commit.sha,
+        updatedMessage = r.commit.commit.message,
         branchName = r.name,
-        authorName = r.commit.author.name
+        authorName = r.commit.author?.login ?: ""
     )
 }

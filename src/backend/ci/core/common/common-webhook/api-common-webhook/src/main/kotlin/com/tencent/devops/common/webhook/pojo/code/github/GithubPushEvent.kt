@@ -69,7 +69,7 @@ data class GithubPushEvent(
 * 兼容 tGit
 */
 fun GithubPushEvent.checkCreateAndUpdate(): Boolean? = when {
-    this.created == true && this.commits.isEmpty() -> false
-    this.created == true && this.commits.isNotEmpty() -> true
+    this.created && this.commits.isEmpty() -> false
+    this.created && this.commits.isNotEmpty() -> true
     else -> null
 }
