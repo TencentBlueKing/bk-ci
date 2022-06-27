@@ -52,7 +52,6 @@
     "bk-magic-vue": "^2.4.4",
     "bkui-pipeline": "^0.1.15",
     "codemirror": "^5.61.0",
-    "cookie": "~0.4.0",
     "core-js": "^3.14.0",
     "core-js-compat": "^3.8.3",
     "vue-i18n": "^8.18.1",

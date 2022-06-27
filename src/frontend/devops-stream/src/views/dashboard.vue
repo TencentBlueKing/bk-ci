@@ -1,5 +1,6 @@
 <template>
     <section>
+        <dashboard-header></dashboard-header>
         <section class="dashboard-container">
             <infinite-scroll class="repo-container-wrapper" ref="infiniteScroll" :data-fetcher="getRepoList" :page-size="limit" scroll-box-class-name="dashboard-container" v-slot="slotProps">
                 <section v-if="recentProjects.length" class="recent-projects">
@@ -112,11 +113,13 @@
     import emptyTips from '@/components/empty-tips'
     import gitcode from './../images/home/gitcode.png'
     import infiniteScroll from '@/components/infinite-scroll'
+    import dashboardHeader from '../components/dashboard-header.vue'
 
     export default {
         components: {
             emptyTips,
-            infiniteScroll
+            infiniteScroll,
+            dashboardHeader
         },
         data () {
             return {

@@ -18,13 +18,15 @@ import VueCompositionAPI from '@vue/composition-api'
 import { bkMessage } from 'bk-magic-vue'
 import bkPipeline from 'bkui-pipeline'
 
-import cookies from 'js-cookie'
+import {
+    getCookie
+} from '@/utils'
 import VueI18n from 'vue-i18n'
 Vue.use(VueI18n)
 const DEFAULT_LANG = 'en-US'
 const COOKIE_KEY = 'stream_language'
 
-const lang = cookies.get(COOKIE_KEY) || DEFAULT_LANG
+const lang = getCookie(COOKIE_KEY) || DEFAULT_LANG
 const i18n = new VueI18n({
     locale: lang,
     messages: {
@@ -55,4 +57,3 @@ window.mainComponent = new Vue({
     components: { App },
     template: '<App/>'
 })
-console.log(window.mainComponent, 6676)
