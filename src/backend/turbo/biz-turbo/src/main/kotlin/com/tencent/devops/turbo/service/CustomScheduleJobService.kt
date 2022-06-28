@@ -2,7 +2,6 @@ package com.tencent.devops.turbo.service
 
 import com.tencent.devops.common.api.exception.TurboException
 import com.tencent.devops.common.api.exception.code.SUB_CLASS_CHECK_ERROR
-import com.tencent.devops.turbo.job.BkMetricsDailyJob
 import com.tencent.devops.turbo.pojo.CustomScheduleJobModel
 import org.quartz.CronScheduleBuilder
 import org.quartz.Job
@@ -51,7 +50,7 @@ class CustomScheduleJobService @Autowired constructor(
         }
         val className = jobClassName.asSubclass(Job::class.java)
 
-        val jobBuilder = JobBuilder.newJob(BkMetricsDailyJob::class.java).withIdentity(jobKey)
+        val jobBuilder = JobBuilder.newJob(className).withIdentity(jobKey)
         // 检查是否有Job入参参数
         if (!customScheduleJobModel.jobDataMap.isNullOrEmpty()) {
             jobBuilder.usingJobData(JobDataMap(customScheduleJobModel.jobDataMap))
