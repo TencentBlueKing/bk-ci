@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.task.market
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.annotation.SkipLogField
 import com.tencent.devops.common.api.constant.ARTIFACT
 import com.tencent.devops.common.api.constant.ARTIFACTORY_TYPE
 import com.tencent.devops.common.api.constant.LABEL
@@ -514,7 +515,7 @@ open class MarketAtomTask : ITask() {
                 )
             }
         }
-        logger.info("sdkEnv is:$sdkEnv")
+        logger.info("sdkEnv is:${JsonUtil.skipLogFields(sdkEnv)}")
         inputFileFile.writeText(JsonUtil.toJson(sdkEnv))
     }
 
@@ -563,6 +564,7 @@ open class MarketAtomTask : ITask() {
         val buildType: BuildType,
         val projectId: String,
         val agentId: String,
+        @SkipLogField
         val secretKey: String,
         val gateway: String,
         val buildId: String,

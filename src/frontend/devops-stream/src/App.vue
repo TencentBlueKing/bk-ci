@@ -1,20 +1,12 @@
 <template>
-    <article class="stream-main">
-        <stream-header></stream-header>
-        <router-view class="stream-content" :name="childRouteName"></router-view>
-    </article>
+    <router-view class="stream-main" :name="childRouteName"></router-view>
 </template>
 
 <script>
-    import streamHeader from '@/components/header'
     import { mapState } from 'vuex'
 
     export default {
         name: 'App',
-
-        components: {
-            streamHeader
-        },
 
         computed: {
             ...mapState(['exceptionInfo']),
@@ -28,13 +20,8 @@
 
         created () {
             if (this.pathName === '/') {
-                let routeName = 'dashboard'
-                if (!localStorage.getItem('visited-stream-home')) {
-                    localStorage.setItem('visited-stream-home', true)
-                    routeName = 'home'
-                }
                 this.$router.push({
-                    name: routeName
+                    name: 'dashboard'
                 })
             }
         }
@@ -61,10 +48,5 @@
             width: 6px !important;
             height: 6px !important;
         }
-    }
-
-    .stream-content {
-        height: calc(100% - 61px);
-        overflow: auto;
     }
 </style>
