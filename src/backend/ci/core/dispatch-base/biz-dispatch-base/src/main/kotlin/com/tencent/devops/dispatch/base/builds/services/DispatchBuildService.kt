@@ -594,7 +594,6 @@ class DispatchBuildService @Autowired constructor(
                 if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
                     logger.info("[$buildId]|[$vmSeqId]|[$executeCount] stop ${dispatchType.value} builder success.")
                 } else {
-                    // TODO 告警通知
                     logger.info(
                         "[$buildId]|[$vmSeqId]|[$executeCount] stop ${dispatchType.value} builder failed, msg: $failMsg"
                     )

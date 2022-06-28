@@ -32,7 +32,6 @@ import com.tencent.devops.dispatch.common.pojo.DispatchEnumType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
-// TODO: job计数是否需要区分平台
 @Component
 class JobRedisUtils @Autowired constructor(
     private val redisOperation: RedisOperation

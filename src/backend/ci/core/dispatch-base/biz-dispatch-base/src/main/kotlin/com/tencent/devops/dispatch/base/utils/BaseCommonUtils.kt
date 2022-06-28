@@ -31,7 +31,7 @@ import com.tencent.devops.dispatch.common.pojo.DispatchEnumType
 
 object BaseCommonUtils {
 
-    // 用来针对面向前端接口校验dispatch类型 TODO: 看是否需要特殊返回
+    // 用来针对面向前端接口校验dispatch类型
     fun checkDispatchType(dispatchType: String): DispatchEnumType {
         return DispatchEnumType.getDispatchEnumType(dispatchType)
             ?: throw RuntimeException("not found dispatch type enum $dispatchType")

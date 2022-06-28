@@ -25,12 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.bcs.utils
+package com.tencent.devops.dispatch.base.pojo.base
 
-import org.apache.commons.lang3.RandomStringUtils
+import com.fasterxml.jackson.annotation.JsonProperty
 
-object BcsCommonUtils {
+data class DispatchBuildImageReq(
+    @JsonProperty("image_name")
+    val imageName: String,
+    @JsonProperty("image_version")
+    val imageVersion: String,
+    val model: String = "commit",
+    val registry: Registry,
+    val auths: List<Auth>,
+    @JsonProperty("build_args")
+    val buildArgs: Map<String, Any>,
+    val labels: Map<String, String>,
+    @JsonProperty("work_path")
+    val workPath: String,
+    @JsonProperty("docker_file")
+    val dockerFile: String,
+    @JsonProperty("pod_name")
+    val podName: String,
+    @JsonProperty("container_name")
+    val containerName: String,
+    @JsonProperty("builder_name")
+    val builderName: String
+)
 
-    fun getOnlyName(userId: String) = "bcs-${userId}${System.currentTimeMillis()}-" +
-        RandomStringUtils.randomAlphabetic(16)
-}
+data class Registry(
+    val host: String,
+    val username: String,
+    val password: String
+)
+
+data class Auth(
+    val host: String,
+    val token: String
+)

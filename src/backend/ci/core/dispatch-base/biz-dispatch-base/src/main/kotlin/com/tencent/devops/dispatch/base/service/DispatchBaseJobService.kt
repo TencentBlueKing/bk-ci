@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.base.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.dispatch.base.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.base.pojo.base.DispatchBuildImageReq
 import com.tencent.devops.dispatch.base.pojo.base.DispatchBuildStatusResp
 import com.tencent.devops.dispatch.base.pojo.base.DispatchJobLogResp
 import com.tencent.devops.dispatch.base.pojo.base.DispatchJobReq
@@ -82,5 +83,16 @@ class DispatchBaseJobService @Autowired constructor(
         sinceTime: Int?
     ): DispatchJobLogResp {
         return dispatchFactory.load(dispatchType).getJobLogs(userId, jobName, sinceTime)
+    }
+
+    fun buildAndPushImage(
+        userId: String,
+        projectId: String,
+        buildId: String,
+        dispatchType: DispatchEnumType,
+        dispatchBuildImageReq: DispatchBuildImageReq
+    ): DispatchTaskResp {
+        return dispatchFactory.load(dispatchType)
+            .buildAndPushImage(userId, projectId, buildId, dispatchBuildImageReq)
     }
 }

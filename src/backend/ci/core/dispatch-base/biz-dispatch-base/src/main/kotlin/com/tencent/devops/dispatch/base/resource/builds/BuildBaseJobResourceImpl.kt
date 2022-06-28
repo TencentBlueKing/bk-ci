@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.base.resource.builds
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.base.api.builds.BuildBaseJobResource
+import com.tencent.devops.dispatch.base.pojo.base.DispatchBuildImageReq
 import com.tencent.devops.dispatch.base.pojo.base.DispatchBuildStatusResp
 import com.tencent.devops.dispatch.base.pojo.base.DispatchJobLogResp
 import com.tencent.devops.dispatch.base.pojo.base.DispatchJobReq
@@ -82,6 +83,24 @@ class BuildBaseJobResourceImpl @Autowired constructor(
                 dispatchType = BaseCommonUtils.checkDispatchType(dispatchType),
                 jobName = jobName,
                 sinceTime = sinceTime
+            )
+        )
+    }
+
+    override fun buildAndPushImage(
+        userId: String,
+        projectId: String,
+        buildId: String,
+        dispatchType: String,
+        buildImageReq: DispatchBuildImageReq
+    ): Result<DispatchTaskResp> {
+        return Result(
+            dispatchBaseJobService.buildAndPushImage(
+                userId = userId,
+                projectId = projectId,
+                buildId = buildId,
+                dispatchType = BaseCommonUtils.checkDispatchType(dispatchType),
+                dispatchBuildImageReq = buildImageReq
             )
         )
     }

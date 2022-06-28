@@ -41,6 +41,7 @@ enum class ErrorCodeEnum(
     OPERATE_VM_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2123007, "第三方服务-BCS 异常，异常信息 - 操作构建机接口异常"),
     OPERATE_VM_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2123008, "第三方服务-BCS 异常，异常信息 - 操作构建机接口返回失败"),
     VM_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2123009, "第三方服务-BCS 异常，异常信息 - 获取构建机详情接口异常"),
+    CREATE_IMAGE_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2123010, "第三方服务-BCS 异常，异常信息 - 创建镜像接口异常"),
     TASK_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2123014, "第三方服务-BCS 异常，异常信息 - 获取TASK状态接口异常"),
     WEBSOCKET_URL_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2123015, "第三方服务-BCS 异常，异常信息 - 获取websocket接口异常"),
 }

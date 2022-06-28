@@ -28,6 +28,8 @@
 package com.tencent.devops.dispatch.bcs.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.dispatch.base.pojo.base.DispatchBuildImageReq
 import com.tencent.devops.dispatch.base.pojo.base.DispatchBuildStatusEnum
 import com.tencent.devops.dispatch.base.pojo.base.DispatchBuildStatusResp
 import com.tencent.devops.dispatch.base.pojo.base.DispatchJobLogResp
@@ -167,7 +169,7 @@ class BcsDispatchTypeService @Autowired constructor(
         }
         // 请求成功但是任务失败
         if (status != null && status.isFailed()) {
-            return DispatchBuildStatusResp(DispatchBuildStatusEnum.failed.name, taskResponse.data!!.message)
+            return DispatchBuildStatusResp(DispatchBuildStatusEnum.failed.name, taskResponse.data.message)
         }
         return when {
             status!!.isRunning() -> DispatchBuildStatusResp(DispatchBuildStatusEnum.running.name)
@@ -255,7 +257,7 @@ class BcsDispatchTypeService @Autowired constructor(
         val status = bcsBuilderClient.waitContainerRunning(
             projectId = projectId,
             pipelineId = pipelineId,
-            buildId = buildId ?: "",
+            buildId = buildId,
             vmSeqId = vmSeqId,
             userId = userId,
             containerName = builderName
@@ -276,5 +278,19 @@ class BcsDispatchTypeService @Autowired constructor(
         builderName: String
     ): String {
         return bcsBuilderClient.getWebsocketUrl(projectId, pipelineId, staffName, builderName).data!!
+    }
+
+    override fun buildAndPushImage(
+        userId: String,
+        projectId: String,
+        buildId: String,
+        dispatchBuildImageReq: DispatchBuildImageReq
+    ): DispatchTaskResp {
+        logger.info("projectId: $projectId, buildId: $buildId build and push image. " +
+                        JsonUtil.toJson(dispatchBuildImageReq)
+        )
+
+        return DispatchTaskResp(bcsBuilderClient.buildAndPushImage(
+            userId, dispatchBuildImageReq))
     }
 }

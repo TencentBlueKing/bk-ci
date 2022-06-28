@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.common.interfaces
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.base.pojo.base.DispatchBuildImageReq
 import com.tencent.devops.dispatch.base.pojo.base.DispatchBuildStatusResp
 import com.tencent.devops.dispatch.base.pojo.base.DispatchJobLogResp
 import com.tencent.devops.dispatch.base.pojo.base.DispatchJobReq
@@ -126,4 +127,14 @@ interface DispatchTypeService {
         staffName: String,
         builderName: String
     ): String
+
+    /**
+     * 构建推送镜像接口
+     */
+    fun buildAndPushImage(
+        userId: String,
+        projectId: String,
+        buildId: String,
+        dispatchBuildImageReq: DispatchBuildImageReq
+    ): DispatchTaskResp
 }
