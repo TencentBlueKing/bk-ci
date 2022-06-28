@@ -49,7 +49,6 @@
             </bk-form-item>
             <template v-if="!pipelineSetting.concurrencyCancelInProgress">
                 <bk-form-item
-                    :required="isSingleLock && !pipelineSetting.concurrencyCancelInProgress"
                     :label="$t('settings.largestNum')"
                     property="maxQueueSize"
                 >
@@ -57,10 +56,13 @@
                         type="number"
                         :placeholder="$t('settings.itemPlaceholder')"
                         v-model="pipelineSetting.maxQueueSize"
-                    />
+                    >
+                        <template slot="append">
+                            <span class="pipeline-setting-unit">{{$t('settings.item')}}</span>
+                        </template>
+                    </bk-input>
                 </bk-form-item>
                 <bk-form-item
-                    :required="isSingleLock && !pipelineSetting.concurrencyCancelInProgress"
                     :label="$t('settings.lagestTime')"
                     property="waitQueueTimeMinute"
                 >
@@ -68,7 +70,11 @@
                         type="number"
                         :placeholder="$t('settings.itemPlaceholder')"
                         v-model="pipelineSetting.waitQueueTimeMinute"
-                    />
+                    >
+                        <template slot="append">
+                            <span class="pipeline-setting-unit">{{$t('settings.minutes')}}</span>
+                        </template>
+                    </bk-input>
                 </bk-form-item>
             </template>
         </div>
@@ -170,6 +176,16 @@
         }
         .run-lock-radio-item {
             margin: 10px 0;
+        }
+        .pipeline-setting-unit {
+            display: flex;
+            background: #f1f4f8;
+            color: #63656e;
+            width: 50px;
+            font-size: 12px;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
         }
     }
 </style>
