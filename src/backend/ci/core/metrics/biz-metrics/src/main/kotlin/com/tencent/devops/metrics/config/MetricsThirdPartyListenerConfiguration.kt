@@ -161,10 +161,10 @@ class MetricsThirdPartyListenerConfiguration {
         @Autowired metricsTurboDailyReportQueue: Queue,
         @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME) @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired listener: TurboDailyReportMessageListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
+        @Autowired metricsMessageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
+        adapter.setMessageConverter(metricsMessageConverter)
         val container = getContainer(connectionFactory, rabbitAdmin, adapter)
         container.setQueueNames(metricsTurboDailyReportQueue.name)
         return container
