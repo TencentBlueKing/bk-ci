@@ -27,12 +27,12 @@
 
 package com.tencent.bkrepo.oci.service
 
-import com.tencent.bkrepo.oci.pojo.artifact.OciArtifactInfo
+import com.tencent.bkrepo.oci.pojo.artifact.OciTagArtifactInfo
 import com.tencent.bkrepo.oci.pojo.tags.TagsInfo
 
 interface OciTagService {
     /**
      * 根据[artifactInfo]信息以及tag信息经查询对应tag列表
      */
-    fun getTagList(artifactInfo: OciArtifactInfo, size: Int?, name: String?): TagsInfo
+    fun getTagList(artifactInfo: OciTagArtifactInfo, n: Int?, last: String?): TagsInfo
 }

@@ -59,6 +59,11 @@ interface ChartRepositoryService {
     fun regenerateIndexYaml(@ArtifactPathVariable artifactInfo: HelmArtifactInfo)
 
     /**
+     * updatePackageForRemote
+     */
+    fun updatePackageForRemote(@ArtifactPathVariable artifactInfo: HelmArtifactInfo)
+
+    /**
      * batch install chart
      */
     fun batchInstallTgz(@ArtifactPathVariable artifactInfo: HelmArtifactInfo, @RequestParam startTime: LocalDateTime)

@@ -49,6 +49,12 @@ interface ArtifactConfigurer {
     fun getRepositoryType(): RepositoryType
 
     /**
+     * 依赖源类型List[RepositoryType]
+     * 一个仓库支持多种类型
+     */
+    fun getRepositoryTypes(): List<RepositoryType> { return emptyList() }
+
+    /**
      * 本地仓库实现逻辑[LocalRepository]
      */
     fun getLocalRepository(): LocalRepository

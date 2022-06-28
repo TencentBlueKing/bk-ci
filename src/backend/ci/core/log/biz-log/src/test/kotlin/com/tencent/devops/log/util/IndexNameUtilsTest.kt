@@ -1,9 +1,9 @@
 package com.tencent.devops.log.util
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import junit.framework.Assert.assertEquals
 import java.util.concurrent.TimeUnit
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class IndexNameUtilsTest {
 

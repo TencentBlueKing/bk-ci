@@ -1,2 +1,2 @@
-service.name: oci
-server.port: 25907
+spring.application.name: oci
+server.port: 25811

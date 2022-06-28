@@ -40,7 +40,7 @@ import com.tencent.bkrepo.repository.pojo.list.HeaderItem
 import com.tencent.bkrepo.repository.pojo.list.ListViewObject
 import com.tencent.bkrepo.repository.pojo.list.RowItem
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
-import org.apache.commons.lang.StringEscapeUtils
+import org.apache.commons.text.StringEscapeUtils
 import java.io.PrintWriter
 import java.net.URLEncoder.encode
 
@@ -108,7 +108,7 @@ class ViewModelService(
             rowList.forEachIndexed { rowIndex, row ->
                 row.itemList.forEachIndexed { columnIndex, item ->
                     if (columnIndex == 0) {
-                        val escapedItem = StringEscapeUtils.escapeXml(item)
+                        val escapedItem = StringEscapeUtils.escapeXml11(item)
                         // 不对末尾的'/'进行URLEncode，避免在访问目录链接时触发重定向
                         val encodedItem = if (item.endsWith(UNIX_SEPARATOR)) {
                             encode(item.substring(0, item.length - 1), Charsets.UTF_8.name()) + UNIX_SEPARATOR

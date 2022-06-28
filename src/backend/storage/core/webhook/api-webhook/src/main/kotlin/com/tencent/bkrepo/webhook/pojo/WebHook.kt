@@ -39,12 +39,16 @@ data class WebHook(
     val id: String,
     @ApiModelProperty("回调地址")
     val url: String,
+    @ApiModelProperty("自定义请求头")
+    val headers: Map<String, String>? = null,
     @ApiModelProperty("触发事件")
     val triggers: List<EventType>,
     @ApiModelProperty("关联对象类型")
     val associationType: AssociationType,
     @ApiModelProperty("关联对象id")
     val associationId: String,
+    @ApiModelProperty("事件资源key正则模式")
+    val resourceKeyPattern: String? = null,
     @ApiModelProperty("创建人")
     val createdBy: String,
     @ApiModelProperty("创建时间")

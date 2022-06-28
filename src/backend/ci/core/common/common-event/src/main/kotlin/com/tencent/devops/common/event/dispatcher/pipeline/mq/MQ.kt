@@ -266,6 +266,9 @@ object MQ {
     // 流水线webhook commit记录
     const val EXCHANGE_PIPELINE_BUILD_COMMIT_FINISH_FANOUT = "e.engine.pipeline.build.commits.finish.fanout"
 
+    // 流水线质量红线人工审核时间广播
+    const val EXCHANGE_PIPELINE_BUILD_QUALITY_REVIEW_FANOUT = "e.quality.pipeline.build.review.fanout"
+
     const val ROUTE_PIPELINE_STREAM_ENABLED = "r.engine.pipeline.stream.enabled"
     const val QUEUE_PIPELINE_STREAM_ENABLED = "q.engine.pipeline.stream.enabled"
 }

@@ -31,12 +31,15 @@
 
 package com.tencent.bkrepo.common.artifact.event.listener
 
+import com.tencent.bkrepo.common.api.constant.StringPool.UNKNOWN
 import com.tencent.bkrepo.common.artifact.constant.DEFAULT_STORAGE_KEY
 import com.tencent.bkrepo.common.artifact.event.ArtifactReceivedEvent
 import com.tencent.bkrepo.common.artifact.event.ArtifactResponseEvent
 import com.tencent.bkrepo.common.artifact.metrics.ArtifactMetrics
 import com.tencent.bkrepo.common.artifact.metrics.ArtifactTransferRecord
 import com.tencent.bkrepo.common.artifact.metrics.InfluxMetricsExporter
+import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContextHolder
+import com.tencent.bkrepo.common.service.util.HttpContextHolder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.event.EventListener
@@ -48,7 +51,6 @@ import java.util.concurrent.LinkedBlockingQueue
  * 构件传输事件监听器
  */
 class ArtifactTransferListener(
-    private val artifactMetrics: ArtifactMetrics,
     private val influxMetricsExporter: ObjectProvider<InfluxMetricsExporter>
 ) {
 
@@ -57,10 +59,10 @@ class ArtifactTransferListener(
     @EventListener(ArtifactReceivedEvent::class)
     fun listen(event: ArtifactReceivedEvent) {
         with(event) {
-            artifactMetrics.uploadedSizeCounter.increment(throughput.bytes.toDouble())
-            artifactMetrics.uploadedConsumeTimer.record(throughput.duration)
             logger.info("Receive artifact file, $throughput.")
 
+            val repositoryDetail = ArtifactContextHolder.getRepoDetail()
+            val clientIp: String = HttpContextHolder.getClientAddress()
             val record = ArtifactTransferRecord(
                 time = Instant.now(),
                 type = ArtifactTransferRecord.RECEIVE,
@@ -68,19 +70,23 @@ class ArtifactTransferListener(
                 bytes = throughput.bytes,
                 average = throughput.average(),
                 storage = storageCredentials?.key ?: DEFAULT_STORAGE_KEY,
-                sha256 = artifactFile.getFileSha256()
+                sha256 = artifactFile.getFileSha256(),
+                project = repositoryDetail?.projectId ?: UNKNOWN,
+                repoName = repositoryDetail?.name ?: UNKNOWN,
+                clientIp = clientIp
             )
             queue.offer(record)
+            ArtifactMetrics.getUploadedDistributionSummary().record(throughput.bytes.toDouble())
         }
     }
 
     @EventListener(ArtifactResponseEvent::class)
     fun listen(event: ArtifactResponseEvent) {
         with(event) {
-            artifactMetrics.downloadedSizeCounter.increment(throughput.bytes.toDouble())
-            artifactMetrics.downloadedConsumeTimer.record(throughput.duration)
             logger.info("Response artifact file, $throughput.")
 
+            val repositoryDetail = ArtifactContextHolder.getRepoDetail()
+            val clientIp: String = HttpContextHolder.getClientAddress()
             val record = ArtifactTransferRecord(
                 time = Instant.now(),
                 type = ArtifactTransferRecord.RESPONSE,
@@ -88,8 +94,12 @@ class ArtifactTransferListener(
                 bytes = throughput.bytes,
                 average = throughput.average(),
                 storage = storageCredentials?.key ?: DEFAULT_STORAGE_KEY,
-                sha256 = artifactResource.node?.sha256.orEmpty()
+                sha256 = artifactResource.node?.sha256.orEmpty(),
+                project = repositoryDetail?.projectId ?: UNKNOWN,
+                repoName = repositoryDetail?.name ?: UNKNOWN,
+                clientIp = clientIp
             )
+            ArtifactMetrics.getDownloadedDistributionSummary().record(throughput.bytes.toDouble())
             queue.offer(record)
         }
     }

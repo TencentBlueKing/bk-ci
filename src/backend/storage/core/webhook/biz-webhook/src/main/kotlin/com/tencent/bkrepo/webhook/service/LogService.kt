@@ -30,7 +30,6 @@ package com.tencent.bkrepo.webhook.service
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.webhook.pojo.ListWebHookLogOption
 import com.tencent.bkrepo.webhook.pojo.WebHookLog
-import java.time.LocalDateTime
 
 /**
  * WebHook日志服务接口
@@ -41,9 +40,4 @@ interface LogService {
      * 分页获取日志列表
      */
     fun listLog(webHookId: String, option: ListWebHookLogOption): Page<WebHookLog>
-
-    /**
-     * 删除[date]日期之前的WebHook日志
-     */
-    fun deleteLogBeforeDate(date: LocalDateTime): Long
 }

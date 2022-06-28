@@ -28,9 +28,13 @@
 package com.tencent.bkrepo.common.redis
 
 import com.tencent.bkrepo.common.redis.concurrent.SimpleRateLimiter
+import io.lettuce.core.ClientOptions
+import io.lettuce.core.protocol.ProtocolVersion
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.data.redis.LettuceClientConfigurationBuilderCustomizer
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -57,5 +61,15 @@ class RedisAutoConfiguration {
     @Bean
     fun simpleRateLimiter(@Autowired redisOperation: RedisOperation): SimpleRateLimiter {
         return SimpleRateLimiter(redisOperation)
+    }
+
+    /**
+     * Lettuce 6.x版本开始，使用RESP3（Redis 6.x引入）的HELLO命令进行版本自适应判断，但是对于不支持HELLO命令的低版本实例，兼容性存在
+     * 一定问题。需要指定使用RESP2协议（兼容Redis 4/5）的版本来使用
+     */
+    @Bean
+    @ConditionalOnProperty(name = ["spring.redis.client-type"], havingValue = "lettuce", matchIfMissing = true)
+    fun lettuceConfigurationCustomizer() = LettuceClientConfigurationBuilderCustomizer {
+        it.clientOptions(ClientOptions.builder().protocolVersion(ProtocolVersion.RESP2).build())
     }
 }

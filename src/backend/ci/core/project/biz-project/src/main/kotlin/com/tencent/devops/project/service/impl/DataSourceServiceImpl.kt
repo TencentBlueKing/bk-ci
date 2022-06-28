@@ -30,18 +30,20 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.project.dao.DataSourceDao
+import com.tencent.devops.project.dao.ShardingRoutingRuleDao
 import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
 import com.tencent.devops.project.pojo.DataSource
 import com.tencent.devops.project.service.DataSourceService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.util.StringUtils
 
 @Service
 class DataSourceServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
+    private val shardingRoutingRuleDao: ShardingRoutingRuleDao,
     private val dataSourceDao: DataSourceDao
 ) : DataSourceService {
 
@@ -113,22 +115,32 @@ class DataSourceServiceImpl @Autowired constructor(
 
     override fun getDataBasePiecewiseById(
         projectId: String,
-        moduleCode: String,
-        clusterName: String
+        moduleCode: SystemModuleEnum,
+        clusterName: String,
+        ruleType: ShardingRuleTypeEnum,
+        tableName: String?
     ): DataBasePiecewiseInfo? {
-        val routingRule = dataSourceDao.getRoutingRule(dslContext, projectId)?.get(0)
-        if (!StringUtils.isEmpty(routingRule)) {
+        val routingRuleRecord = shardingRoutingRuleDao.get(
+            dslContext = dslContext,
+            clusterName = clusterName,
+            moduleCode = moduleCode,
+            type = ruleType,
+            routingName = projectId,
+            tableName = tableName
+        )
+        if (routingRuleRecord != null) {
             val dataSource = dataSourceDao.getDataBasePiecewiseById(
                 dslContext = dslContext,
                 moduleCode = moduleCode,
                 clusterName = clusterName,
-                routingRule = routingRule as String
+                routingRule = routingRuleRecord.routingRule
             ) ?: return null
             return DataBasePiecewiseInfo(
                 projectId = projectId,
                 moduleCode = moduleCode,
                 clusterName = dataSource.clusterName,
                 dataSourceName = dataSource.dataSourceName,
+                routingRule = routingRuleRecord.routingRule,
                 dsUrl = dataSource.dsUrl
             )
         }

@@ -44,6 +44,7 @@ bk-ci提供了流水线、代码检查、代码库、凭证管理、环境管理
 ## Getting started
 - [下载与编译](docs/overview/source_compile.md)
 - [一分钟安装部署](docs/overview/installation.md)
+- [独立部署storage模块](docs/storage/README.md)
 
 ## Support
 1. [GitHub讨论区](https://github.com/Tencent/bk-ci/discussions)

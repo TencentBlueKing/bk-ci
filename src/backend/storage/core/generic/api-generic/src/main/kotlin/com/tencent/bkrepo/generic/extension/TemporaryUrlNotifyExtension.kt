@@ -31,7 +31,7 @@
 
 package com.tencent.bkrepo.generic.extension
 
-import com.tencent.bkrepo.common.plugin.api.ExtensionPoint
+import com.tencent.devops.plugin.api.ExtensionPoint
 
 /**
  * 临时url通知扩展点
