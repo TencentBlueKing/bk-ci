@@ -84,12 +84,13 @@ class ModelElement @Autowired(required = false) constructor(
                         RunCondition.PRE_TASK_FAILED_ONLY
                     else -> RunCondition.CUSTOM_CONDITION_MATCH
                 },
-                customCondition = step.ifFiled
+                customCondition = step.ifFiled,
+                manualRetry = false
             )
 
             additionalOptions.enable = jobEnable && PathMatchUtils.isIncludePathMatch(step.ifModify, changeSet)
             // bash
-            val element: Element = when {
+            val element: Element? = when {
                 step.run != null -> {
                     makeRunElement(step, job, additionalOptions)
                 }
@@ -97,25 +98,19 @@ class ModelElement @Autowired(required = false) constructor(
                     inner!!.makeCheckoutElement(step, event, additionalOptions)
                 }
                 else -> {
-                    val data = mutableMapOf<String, Any>()
-                    data["input"] = step.with ?: Any()
-                    MarketBuildAtomElement(
-                        id = step.taskId,
-                        name = step.name ?: step.uses!!.split('@')[0],
-                        stepId = step.id,
-                        atomCode = step.uses!!.split('@')[0],
-                        version = step.uses!!.split('@')[1],
-                        data = data,
-                        additionalOptions = additionalOptions
-                    )
+                    inner!!.makeMarketBuildAtomElement(job, step, event, additionalOptions)
                 }
             }
 
-            elementList.add(element)
+            if (element != null) {
+                // 统一禁用插件的retry属性
+                element.canRetry = false
+                elementList.add(element)
 
-            if (element is MarketBuildAtomElement) {
-                logger.info("install market atom: ${element.getAtomCode()}")
-                ModelCommon.installMarketAtom(client, event.projectCode, event.userId, element.getAtomCode())
+                if (element is MarketBuildAtomElement) {
+                    logger.info("install market atom: ${element.getAtomCode()}")
+                    ModelCommon.installMarketAtom(client, event.projectCode, event.userId, element.getAtomCode())
+                }
             }
         }
 
@@ -129,7 +124,10 @@ class ModelElement @Autowired(required = false) constructor(
     ): Element {
         return if (inner!!.marketRunTask) {
             val data = mutableMapOf<String, Any>()
-            data["input"] = mapOf("script" to step.run)
+            data["input"] = mapOf(
+                "script" to step.run,
+                "shell" to (step.runAdditionalOptions?.get("shell") ?: "")
+            )
             MarketBuildAtomElement(
                 id = step.taskId,
                 name = step.name ?: "run",

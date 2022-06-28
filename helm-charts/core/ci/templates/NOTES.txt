@@ -1,0 +1,12 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+验证步骤:
+
+1. 配置{{ .Values.config.bkCiHost }}域名解析(如果域名可以被DNS正确解析，您可以跳过此步骤)
+
+2. 访问http://{{ .Values.config.bkCiHost }} 验证服务能否正常访问
+    **TIP** 如果使用NodePort或port-forward方式访问，请注意添加端口
+
+3. 更多说明请参考页面操作指引以及API文档

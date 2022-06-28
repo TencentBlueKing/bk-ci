@@ -58,18 +58,21 @@ class StreamDeleteAction(
         ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
     }
 
-    override fun getYamlContent(fileName: String): String {
-        return api.getFileContent(
-            cred = gitAction.getGitCred(),
-            gitProjectId = data.getGitProjectId(),
-            fileName = fileName,
-            ref = data.context.defaultBranch!!,
-            retry = ApiRequestRetryInfo(true)
+    override fun getYamlContent(fileName: String): Pair<String, String> {
+        return Pair(
+            data.context.defaultBranch!!,
+            api.getFileContent(
+                cred = gitAction.getGitCred(),
+                gitProjectId = data.getGitProjectId(),
+                fileName = fileName,
+                ref = data.context.defaultBranch!!,
+                retry = ApiRequestRetryInfo(true)
+            )
         )
     }
 
     override fun getChangeSet(): Set<String>? {
-        return gitAction.getChangeSet()
+        return null
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
@@ -111,5 +114,9 @@ class StreamDeleteAction(
 
     override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) {
         gitAction.registerCheckRepoTriggerCredentials(repoHook)
+    }
+
+    override fun updateLastBranch(pipelineId: String, branch: String) {
+        gitAction.updateLastBranch(pipelineId, branch)
     }
 }

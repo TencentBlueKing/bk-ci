@@ -48,6 +48,7 @@ import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.TaskUtils
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
@@ -61,11 +62,13 @@ class TaskBuildDetailService(
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
+    stageTagService: StageTagService,
     redisOperation: RedisOperation
 ) : BaseBuildDetailService(
     dslContext,
     pipelineBuildDao,
     buildDetailDao,
+    stageTagService,
     pipelineEventDispatcher,
     redisOperation
 ) {
@@ -243,9 +246,9 @@ class TaskBuildDetailService(
 
             var update = false
             override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
-                // 判断取消的task任务对应的container是否包含post任务
-                val cancelTaskPostFlag = buildStatus == BuildStatus.CANCELED && c.containPostTaskFlag == true
                 if (e.id == taskId) {
+                    // 判断取消的task任务对应的container是否包含post任务
+                    val cancelTaskPostFlag = buildStatus == BuildStatus.CANCELED && c.containPostTaskFlag == true
                     e.status = buildStatus.name
                     if (e.startEpoch == null) {
                         e.elapsed = 0

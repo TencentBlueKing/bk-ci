@@ -75,7 +75,7 @@ import com.tencent.bkrepo.npm.utils.TimeUtil
 import com.tencent.bkrepo.repository.api.MetadataClient
 import com.tencent.bkrepo.repository.pojo.metadata.MetadataSaveRequest
 import org.apache.commons.codec.binary.Base64
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service

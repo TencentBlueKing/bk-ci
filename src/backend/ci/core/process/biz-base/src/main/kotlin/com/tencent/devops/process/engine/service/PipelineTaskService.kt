@@ -66,7 +66,6 @@ import com.tencent.devops.process.utils.KEY_PROJECT_ID
 import com.tencent.devops.store.pojo.common.KEY_VERSION
 import org.jooq.DSLContext
 import org.jooq.Result
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -229,7 +228,7 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun getTaskRecord(
-        transactionContext: DSLContext?,
+        transactionContext: DSLContext? = null,
         projectId: String,
         buildId: String,
         taskId: String
@@ -240,6 +239,22 @@ class PipelineTaskService @Autowired constructor(
             buildId = buildId,
             taskId = taskId
         )
+    }
+
+    fun getTaskStatus(
+        transactionContext: DSLContext? = null,
+        projectId: String,
+        buildId: String,
+        taskId: String
+    ): BuildStatus? {
+        val statusOrdinal = pipelineBuildTaskDao.getTaskStatus(
+            dslContext = transactionContext ?: dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            taskId = taskId
+        ) ?: return null
+
+        return BuildStatus.values()[statusOrdinal.value1()]
     }
 
     fun updateTaskParamWithElement(projectId: String, buildId: String, taskId: String, newElement: Element) {
@@ -253,7 +268,7 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun updateTaskParam(
-        transactionContext: DSLContext?,
+        transactionContext: DSLContext? = null,
         projectId: String,
         buildId: String,
         taskId: String,
@@ -341,11 +356,7 @@ class PipelineTaskService @Autowired constructor(
         )
     }
 
-    fun updateTaskStatusInfo(
-        transactionContext: DSLContext?,
-        userId: String? = null,
-        updateTaskInfo: UpdateTaskInfo
-    ) {
+    fun updateTaskStatusInfo(userId: String? = null, updateTaskInfo: UpdateTaskInfo) {
         var starter: String? = null
         var approver: String? = null
         var startTime: LocalDateTime? = null
@@ -356,7 +367,7 @@ class PipelineTaskService @Autowired constructor(
         val taskId = updateTaskInfo.taskId
         val taskStatus = updateTaskInfo.taskStatus
         val taskRecord = pipelineBuildTaskDao.get(
-            dslContext = transactionContext ?: dslContext,
+            dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
             taskId = taskId
@@ -393,10 +404,7 @@ class PipelineTaskService @Autowired constructor(
         updateTaskInfo.startTime = startTime
         updateTaskInfo.endTime = endTime
         updateTaskInfo.totalTime = totalTime
-        pipelineBuildTaskDao.updateTaskInfo(
-            dslContext = transactionContext ?: dslContext,
-            updateTaskInfo = updateTaskInfo
-        )
+        pipelineBuildTaskDao.updateTaskInfo(dslContext = dslContext, updateTaskInfo = updateTaskInfo)
     }
 
     /**
@@ -646,10 +654,10 @@ class PipelineTaskService @Autowired constructor(
         val buildId = task.buildId
         val taskId = task.taskId
         val taskName = task.taskName
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            logger.info("${task.buildId}|UPDATE_TASK_STATUS|$taskName|$taskStatus|$userId|$errorCode")
-            val updateTaskInfo = UpdateTaskInfo(
+        logger.info("${task.buildId}|UPDATE_TASK_STATUS|$taskName|$taskStatus|$userId|$errorCode")
+        updateTaskStatusInfo(
+            userId = userId,
+            updateTaskInfo = UpdateTaskInfo(
                 projectId = projectId,
                 buildId = buildId,
                 taskId = taskId,
@@ -660,12 +668,7 @@ class PipelineTaskService @Autowired constructor(
                 platformCode = platformCode,
                 platformErrorCode = platformErrorCode
             )
-            updateTaskStatusInfo(
-                transactionContext = transactionContext,
-                userId = userId,
-                updateTaskInfo = updateTaskInfo
-            )
-        }
+        )
         // #5109 非事务强相关，减少影响。仅做摘要展示，无需要时时更新
         if (buildStatus.isRunning()) {
             pipelineBuildSummaryDao.updateCurrentBuildTask(

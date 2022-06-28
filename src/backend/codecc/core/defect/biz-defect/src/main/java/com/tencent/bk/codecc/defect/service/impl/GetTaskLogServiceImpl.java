@@ -67,7 +67,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -95,8 +95,7 @@ import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USE
  * @date 2019/5/12
  */
 @Service
-public class GetTaskLogServiceImpl implements GetTaskLogService
-{
+public class GetTaskLogServiceImpl implements GetTaskLogService {
 
     @Autowired
     private Client client;
@@ -123,15 +122,15 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
 
 
     @Override
-    public Result<QueryTaskLogVO> queryTaskLog(QueryTaskLogVO queryTaskLogVO)
-    {
+    public Result<QueryTaskLogVO> queryTaskLog(QueryTaskLogVO queryTaskLogVO) {
         int pageNum = queryTaskLogVO.getPage() - 1;
         pageNum = Math.max(pageNum, 0);
         int pageSize = queryTaskLogVO.getPageSize() <= 0 ? 10 : queryTaskLogVO.getPageSize();
-        Pageable pageable = new PageRequest(pageNum, pageSize);
+        Pageable pageable = PageRequest.of(pageNum, pageSize);
 
         // 查询分析记录
-        List<TaskLogEntity> taskLogEntities = taskLogRepository.findByTaskIdAndToolName(queryTaskLogVO.getTaskId(), queryTaskLogVO.getToolName());
+        List<TaskLogEntity> taskLogEntities = taskLogRepository.findByTaskIdAndToolName(queryTaskLogVO.getTaskId(),
+                queryTaskLogVO.getToolName());
 
         // 排序和分页
         taskLogEntities.sort(((o1, o2) -> {
@@ -142,15 +141,15 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
         int totalCount = taskLogEntities.size();
         int subListBeginIdx = pageNum * pageSize;
         int subListEndIdx = subListBeginIdx + pageSize;
-        if (subListBeginIdx > totalCount)
-        {
+        if (subListBeginIdx > totalCount) {
             subListBeginIdx = 0;
         }
         taskLogEntities = taskLogEntities.subList(subListBeginIdx, Math.min(subListEndIdx, totalCount));
 
         String taskLogEntityListJsonStr = JsonUtil.INSTANCE.toJson(taskLogEntities);
         List<TaskLogVO> taskLogVOList = JsonUtil.INSTANCE.to(
-            taskLogEntityListJsonStr, new TypeReference<List<TaskLogVO>>() {});
+                taskLogEntityListJsonStr, new TypeReference<List<TaskLogVO>>() {
+                });
 
         Page<TaskLogVO> taskLogVoPage = new PageImpl<>(taskLogVOList, pageable, totalCount);
         queryTaskLogVO.setTaskLogPage(taskLogVoPage);
@@ -170,10 +169,10 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
      * @return 日志信息
      */
     @Override
-    public QueryLogRepVO queryAnalysisLog(String projectId, String pipelineId, String buildId, String queryKeywords, String tag)
-    {
+    public QueryLogRepVO queryAnalysisLog(String userId, String projectId, String pipelineId, String buildId,
+                                          String queryKeywords, String tag) {
         validatePermission(pipelineId);
-        return logService.getAnalysisLog(projectId, pipelineId, buildId, queryKeywords, tag);
+        return logService.getAnalysisLog(userId, projectId, pipelineId, buildId, queryKeywords, tag);
     }
 
 
@@ -192,10 +191,12 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
      * @return 日志信息
      */
     @Override
-    public QueryLogRepVO getMoreLogs(String projectId, String pipelineId, String buildId, Integer num, Boolean fromStart, Long start, Long end, String tag, Integer executeCount)
-    {
+    // NOCC:ParameterNumber(设计如此:)
+    public QueryLogRepVO getMoreLogs(String userId, String projectId, String pipelineId, String buildId, Integer num,
+                                     Boolean fromStart, Long start, Long end, String tag, Integer executeCount) {
         validatePermission(pipelineId);
-        return logService.getMoreLogs(projectId, pipelineId, buildId, num, fromStart, start, end, tag, executeCount);
+        return logService.getMoreLogs(userId, projectId, pipelineId, buildId, num,
+                fromStart, start, end, tag, executeCount);
     }
 
 
@@ -207,13 +208,12 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
      * @param buildId      构建号ID
      * @param tag          对应element ID
      * @param executeCount 执行次数
-     * @return 日志信息
      */
     @Override
-    public void downloadLogs(String projectId, String pipelineId, String buildId, String tag, Integer executeCount)
-    {
+    public void downloadLogs(String userId, String projectId, String pipelineId, String buildId,
+                             String tag, Integer executeCount) {
         validatePermission(pipelineId);
-        logService.downloadLogs(projectId, pipelineId, buildId, tag, executeCount);
+        logService.downloadLogs(userId, projectId, pipelineId, buildId, tag, executeCount);
     }
 
 
@@ -228,10 +228,12 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
      * @return 日志信息
      */
     @Override
-    public QueryLogRepVO getAfterLogs(String projectId, String pipelineId, String buildId, Long start, String queryKeywords, String tag, Integer executeCount)
-    {
+    // NOCC:ParameterNumber(设计如此:)
+    public QueryLogRepVO getAfterLogs(String userId, String projectId, String pipelineId, String buildId,
+                                      Long start, String queryKeywords, String tag, Integer executeCount) {
         validatePermission(pipelineId);
-        return logService.getAfterLogs(projectId, pipelineId, buildId, start, queryKeywords, tag, executeCount);
+        return logService.getAfterLogs(userId, projectId, pipelineId, buildId, start,
+                queryKeywords, tag, executeCount);
     }
 
     /**
@@ -241,8 +243,7 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
      * @return activeTaskList
      */
     @Override
-    public DeptTaskDefectRspVO getActiveTaskList(DeptTaskDefectReqVO deptTaskDefectReqVO)
-    {
+    public DeptTaskDefectRspVO getActiveTaskList(DeptTaskDefectReqVO deptTaskDefectReqVO) {
         logger.info("getActiveTaskList req content: {}", deptTaskDefectReqVO);
         DeptTaskDefectRspVO deptTaskListRspVO = new DeptTaskDefectRspVO();
 
@@ -254,8 +255,7 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
                 client.get(ServiceTaskRestResource.class).batchGetTaskList(queryTaskListReqVO);
 
         List<TaskDetailVO> taskDetailVoList = result.getData();
-        if (CollectionUtils.isNotEmpty(taskDetailVoList))
-        {
+        if (CollectionUtils.isNotEmpty(taskDetailVoList)) {
             Set<Long> taskIdSet = taskDetailVoList.stream()
                     .filter(taskDetailVO -> StringUtils.isNotEmpty(taskDetailVO.getToolNames()))
                     .map(TaskDetailVO::getTaskId).collect(Collectors.toSet());
@@ -274,18 +274,16 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
             Result<Map<String, List<MetadataVO>>> metaDataResult =
                     client.get(UserMetaRestResource.class).metadatas(ComConstants.KEY_CODE_LANG);
             Map<String, List<MetadataVO>> metaDataResultData = metaDataResult.getData();
-            if (metaDataResultData == null)
-            {
+            if (metaDataResultData == null) {
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
             }
             List<MetadataVO> metadataVoList = metaDataResultData.get(ComConstants.KEY_CODE_LANG);
 
             // 获取组织架构信息
             Map<String, String> deptInfo =
-                (Map<String, String>) redisTemplate.opsForHash().entries(RedisKeyConstants.KEY_DEPT_INFOS);
+                    (Map<String, String>) redisTemplate.opsForHash().entries(RedisKeyConstants.KEY_DEPT_INFOS);
 
-            activeTaskList = taskDetailVoList.stream().map(taskDetailVO ->
-            {
+            activeTaskList = taskDetailVoList.stream().map(taskDetailVO -> {
                 ActiveTaskStatisticsVO activeTaskVO = new ActiveTaskStatisticsVO();
                 BeanUtils.copyProperties(taskDetailVO, activeTaskVO);
 
@@ -306,19 +304,15 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
     }
 
     @NotNull
-    private Map<Long, String> getActiveTaskMap(List<TaskLogEntity> taskLogList)
-    {
+    private Map<Long, String> getActiveTaskMap(List<TaskLogEntity> taskLogList) {
         Map<Long, String> activeTaskMap = Maps.newHashMap();
-        if (CollectionUtils.isNotEmpty(taskLogList))
-        {
-            for (TaskLogEntity taskLogEntity : taskLogList)
-            {
+        if (CollectionUtils.isNotEmpty(taskLogList)) {
+            for (TaskLogEntity taskLogEntity : taskLogList) {
                 long taskId = taskLogEntity.getTaskId();
 
 
                 String status = activeTaskMap.get(taskId);
-                if (StringUtils.isNotEmpty(status))
-                {
+                if (StringUtils.isNotEmpty(status)) {
                     continue;
                 }
 
@@ -326,19 +320,14 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
                 int currStep = taskLogEntity.getCurrStep();
                 int flag = taskLogEntity.getFlag();
 
-                if (ComConstants.Tool.COVERITY.name().equals(toolName))
-                {
-                    if (currStep == ComConstants.Step4Cov.DEFECT_SYNS.value() &&
-                            flag == ComConstants.StepFlag.SUCC.value())
-                    {
+                if (ComConstants.Tool.COVERITY.name().equals(toolName)) {
+                    if (currStep == ComConstants.Step4Cov.DEFECT_SYNS.value()
+                            && flag == ComConstants.StepFlag.SUCC.value()) {
                         activeTaskMap.put(taskId, "活跃");
                     }
-                }
-                else
-                {
-                    if (currStep == ComConstants.Step4MutliTool.COMMIT.value() &&
-                            flag == ComConstants.StepFlag.SUCC.value())
-                    {
+                } else {
+                    if (currStep == ComConstants.Step4MutliTool.COMMIT.value()
+                            && flag == ComConstants.StepFlag.SUCC.value()) {
                         activeTaskMap.put(taskId, "活跃");
                     }
                 }
@@ -353,15 +342,14 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
      *
      * @param pipelineId
      */
-    private void validatePermission(String pipelineId)
-    {
+    private void validatePermission(String pipelineId) {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attributes.getRequest();
         String userName = request.getHeader(AUTH_HEADER_DEVOPS_USER_ID);
 
-        Result<PipelineTaskVO> taskInfo = client.get(ServiceTaskRestResource.class).getPipelineTask(pipelineId, "");
-        if (taskInfo.isNotOk() || null == taskInfo.getData())
-        {
+        Result<PipelineTaskVO> taskInfo =
+                client.get(ServiceTaskRestResource.class).getPipelineTask(pipelineId, "");
+        if (taskInfo.isNotOk() || null == taskInfo.getData()) {
             logger.error("get task detail info fail! pipeline id: {}", pipelineId);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
@@ -369,34 +357,27 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
         PipelineTaskVO taskDetail = taskInfo.getData();
         String projectId = taskDetail.getProjectId();
         long taskId = taskDetail.getTaskId();
-        if (StringUtils.isBlank(userName) || StringUtils.isBlank(projectId) || taskId == 0)
-        {
+        if (StringUtils.isBlank(userName) || StringUtils.isBlank(projectId) || taskId == 0) {
             logger.error("insufficient param info! user: {}, taskId: {}, projectId: {}", userName, taskId, projectId);
             throw new UnauthorizedException("insufficient param info!");
         }
 
         String taskCreateFrom = authTaskService.getTaskCreateFrom(taskId);
         List<BkAuthExResourceActionModel> result;
-        if (ComConstants.BsTaskCreateFrom.BS_PIPELINE.value().equals(taskCreateFrom))
-        {
+        if (ComConstants.BsTaskCreateFrom.BS_PIPELINE.value().equals(taskCreateFrom)) {
             result = bkAuthExPermissionApi.validatePipelineBatchPermission(userName,
                     String.valueOf(taskId), projectId, Sets.newHashSet(PipelineAuthAction.VIEW.getActionName()));
-        }
-        else
-        {
+        } else {
             result = bkAuthExPermissionApi.validateTaskBatchPermission(userName,
                     String.valueOf(taskId), projectId, Sets.newHashSet(CodeCCAuthAction.REPORT_VIEW.getActionName()));
         }
-        if (CollectionUtils.isEmpty(result))
-        {
+        if (CollectionUtils.isEmpty(result)) {
             logger.error("empty validate result: {}", userName);
             throw new UnauthorizedException("unauthorized user permission!");
         }
 
-        for (BkAuthExResourceActionModel auth : result)
-        {
-            if (Objects.nonNull(auth) && auth.isPass())
-            {
+        for (BkAuthExResourceActionModel auth : result) {
+            if (Objects.nonNull(auth) && auth.isPass()) {
                 return;
             }
         }

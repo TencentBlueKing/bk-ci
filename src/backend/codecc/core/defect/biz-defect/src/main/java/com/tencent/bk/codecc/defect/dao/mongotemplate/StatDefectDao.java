@@ -72,7 +72,7 @@ public class StatDefectDao {
         Query query = new Query();
         query.addCriteria(
                 Criteria.where("task_id").is(taskId).and("tool_name").is(toolName).and("status").is("ENABLED"));
-        query.with(new Sort(new Order(Direction.DESC, "time_stamp")));
+        query.with(Sort.by(new Order(Direction.DESC, "time_stamp")));
         query.limit(1);
         return mongoTemplate.find(query, StatDefectEntity.class, "t_stat_defect");
     }

@@ -93,6 +93,8 @@ class StartContainerStageCmd(
 
         if (stageStatus.isFinish() || stageStatus == BuildStatus.STAGE_SUCCESS) {
             commandContext.buildStatus = stageStatus // 已经是结束或者是STAGE_SUCCESS就直接返回
+        } else if (commandContext.containers.isEmpty()) {
+            commandContext.buildStatus = BuildStatus.SUCCEED
         } else {
             stageStatus = pickJob(commandContext, actionType = newActionType, userId = event.userId)
 
@@ -168,14 +170,18 @@ class StartContainerStageCmd(
                 commandContext.concurrency += jobCount
                 sendBuildContainerEvent(commandContext, container, actionType = actionType, userId = userId)
 
-                LOG.info("ENGINE|${container.buildId}|STAGE_CONTAINER_SEND|s(${container.stageId})|" +
-                    "j(${container.containerId})|status=${container.status}|newActonType=$actionType")
+                LOG.info(
+                    "ENGINE|${container.buildId}|STAGE_CONTAINER_SEND|s(${container.stageId})|" +
+                        "j(${container.containerId})|status=${container.status}|newActonType=$actionType"
+                )
             }
         }
 
         if (commandContext.concurrency > commandContext.maxConcurrency) { // #5109 增加日志埋点监控，以免影响Redis性能
-            LOG.warn("ENGINE|${stage.buildId}|JOB_BOMB_CK|${stage.projectId}|${stage.pipelineId}|s(${stage.stageId})" +
-                    "|concurrency=${commandContext.concurrency}")
+            LOG.warn(
+                "ENGINE|${stage.buildId}|JOB_BOMB_CK|${stage.projectId}|${stage.pipelineId}|s(${stage.stageId})" +
+                    "|concurrency=${commandContext.concurrency}"
+            )
         }
 
         // 如果有运行态,否则返回失败，如无失败，则返回取消，最后成功

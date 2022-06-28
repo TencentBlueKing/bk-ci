@@ -33,7 +33,7 @@ package com.tencent.bkrepo.oci.pojo.digest
 
 import com.tencent.bkrepo.common.api.constant.CharPool
 import com.tencent.bkrepo.common.api.constant.StringPool
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 
 /**
  * OCI digest
@@ -44,7 +44,7 @@ data class OciDigest(val digest: String? = null) {
 
     init {
         digest?.let {
-            val sepIndex = StringUtils.indexOf(digest, CharPool.COLON)
+            val sepIndex = StringUtils.indexOf(digest, CharPool.COLON.toInt())
             require(sepIndex >= 0) { "could not find ':' in digest: $digest" }
             this.alg = StringUtils.substring(digest, 0, sepIndex)
             this.hex = StringUtils.substring(digest, sepIndex + 1)

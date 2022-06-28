@@ -32,7 +32,13 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.PROFILE_AUTO
+import com.tencent.devops.common.service.PROFILE_DEFAULT
+import com.tencent.devops.common.service.PROFILE_DEVELOPMENT
+import com.tencent.devops.common.service.PROFILE_PRODUCTION
+import com.tencent.devops.common.service.PROFILE_STREAM
+import com.tencent.devops.common.service.PROFILE_TEST
+import com.tencent.devops.common.service.Profile
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.i18n.LocaleContextHolder
@@ -60,15 +66,6 @@ object CommonUtils {
     private const val EN = "EN" // 英文
 
     private const val ZH_HK = "ZH_HK" // 香港繁体中文
-
-    private var defaultLocale: String? = null
-        get() {
-            if (field == null) {
-                val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-                field = commonConfig.bkLocale ?: EN
-            }
-            return field
-        }
 
     private val simpleCnLanList = listOf(ZH_CN, "ZH-CN")
 
@@ -170,8 +167,7 @@ object CommonUtils {
         return if (null != attributes) {
             val request = attributes.request
             val cookieLan = CookieUtil.getCookieValue(request, "blueking_language")
-            // 获取字符集（与http请求头中的Accept-Language有关）
-            cookieLan ?: defaultLocale ?: LocaleContextHolder.getLocale().toString()
+            cookieLan ?: LocaleContextHolder.getLocale().toString() // 获取字符集（与http请求头中的Accept-Language有关）
         } else {
             ZH_CN // 取不到语言信息默认为中文
         }
@@ -186,7 +182,7 @@ object CommonUtils {
         return when {
             simpleCnLanList.contains(locale.toUpperCase()) -> ZH_CN // 简体中文
             twCnLanList.contains(locale.toUpperCase()) -> ZH_TW // 繁体中文
-            else -> "EN"
+            else -> EN // 英文描述
         }
     }
 
@@ -197,5 +193,39 @@ object CommonUtils {
         return if (string != null && string.length > length) {
             string.substring(0, length - 1)
         } else string
+    }
+
+    /**
+     * 获取db集群名称
+     */
+    fun getDbClusterName(): String {
+        val profile = SpringContextUtil.getBean(Profile::class.java)
+        return when {
+            profile.isDev() -> {
+                PROFILE_DEVELOPMENT
+            }
+            profile.isTest() -> {
+                PROFILE_TEST
+            }
+            profile.isProd() -> {
+                when {
+                    profile.isAuto() -> {
+                        PROFILE_AUTO
+                    }
+                    profile.isStream() -> {
+                        PROFILE_STREAM
+                    }
+                    else -> {
+                        PROFILE_PRODUCTION
+                    }
+                }
+            }
+            profile.isLocal() -> {
+                PROFILE_DEFAULT
+            }
+            else -> {
+                PROFILE_PRODUCTION
+            }
+        }
     }
 }

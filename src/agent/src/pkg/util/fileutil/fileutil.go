@@ -38,7 +38,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/astaxie/beego/logs"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 )
 
 func Exists(file string) bool {
@@ -184,7 +184,7 @@ func unzipFile(file *zip.File, path string) error {
 	if err != nil {
 		return err
 	}
-	defer func() {_ = fileReader.Close() } ()
+	defer func() { _ = fileReader.Close() }()
 
 	targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
 	if err != nil {

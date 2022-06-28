@@ -202,6 +202,11 @@ func (tc *TextureCompressor) PreExecute(command []string) (*dcSDK.BKDistCommand,
 	}, nil
 }
 
+// NeedRemoteResource check whether this command need remote resource
+func (tc *TextureCompressor) NeedRemoteResource(command []string) bool {
+	return true
+}
+
 // RemoteRetryTimes will return the remote retry times
 func (tc *TextureCompressor) RemoteRetryTimes() int {
 	return 0

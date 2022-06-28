@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.auth.utils
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 internal class IamGroupUtilsTest {
 
@@ -37,7 +37,7 @@ internal class IamGroupUtilsTest {
         val projectName = "测试项目"
         val groupName = "管理员"
         val group = IamGroupUtils.buildIamGroup(projectName, groupName)
-        Assert.assertEquals("测试项目-管理员", group)
+        Assertions.assertEquals("测试项目-管理员", group)
     }
 
     @Test
@@ -46,7 +46,7 @@ internal class IamGroupUtilsTest {
         val groupName = "管理员"
         val userId = "admin"
         val group = IamGroupUtils.buildDefaultDescription(projectName, groupName, userId)
-        Assert.assertNotEquals("测试项目 分级管理员, 由admin 创建于 2021-04-27T21:58:52+0800", group)
+        Assertions.assertNotEquals("测试项目 分级管理员, 由admin 创建于 2021-04-27T21:58:52+0800", group)
     }
 
     @Test
@@ -54,6 +54,6 @@ internal class IamGroupUtilsTest {
         val projectName = "测试项目"
         val userId = "admin"
         val group = IamGroupUtils.buildManagerDescription(projectName, userId)
-        Assert.assertNotEquals("测试项目 用户组:管理员, 由admin 创建于 2021-04-27T21:58:52+0800", group)
+        Assertions.assertNotEquals("测试项目 用户组:管理员, 由admin 创建于 2021-04-27T21:58:52+0800", group)
     }
 }

@@ -320,6 +320,21 @@ class PipelineBuildDao {
         }
     }
 
+    fun getOneConcurrencyQueueBuild(
+        dslContext: DSLContext,
+        projectId: String,
+        concurrencyGroup: String
+    ): TPipelineBuildHistoryRecord? {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val select = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+                .and(STATUS.eq(BuildStatus.QUEUE.ordinal))
+                .orderBy(QUEUE_TIME.asc()).limit(1)
+            select.fetchAny()
+        }
+    }
+
     /**
      * 1：开始构建
      */
@@ -871,29 +886,24 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         buildId: String,
-        stageStatus: List<BuildStageStatus>
+        stageStatus: List<BuildStageStatus>,
+        oldBuildStatus: BuildStatus? = null,
+        newBuildStatus: BuildStatus? = null
     ): Int {
-        return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.update(this)
-                .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
-                .where(BUILD_ID.eq(buildId))
-                .and(PROJECT_ID.eq(projectId))
-                .execute()
-        }
-    }
-
-    fun updateBuildParameters(
-        dslContext: DSLContext,
-        projectId: String,
-        buildId: String,
-        buildParameters: List<BuildParameters>
-    ) {
         with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.update(this)
-                .set(BUILD_PARAMETERS, JsonUtil.toJson(buildParameters, formatted = false))
-                .where(BUILD_ID.eq(buildId))
-                .and(PROJECT_ID.eq(projectId))
-                .execute()
+            val update = dslContext.update(this)
+                .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
+            newBuildStatus?.let { update.set(STATUS, newBuildStatus.ordinal) }
+            return if (oldBuildStatus == null) {
+                update.where(BUILD_ID.eq(buildId))
+                    .and(PROJECT_ID.eq(projectId))
+                    .execute()
+            } else {
+                update.where(BUILD_ID.eq(buildId))
+                    .and(PROJECT_ID.eq(projectId))
+                    .and(STATUS.eq(oldBuildStatus.ordinal))
+                    .execute()
+            }
         }
     }
 

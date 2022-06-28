@@ -275,7 +275,7 @@ export const CODE_LIB_TYPE = [
         name: 'GITHUB'
     },
     {
-        id: 'GITLAB',
+        id: 'CODE_GITLAB',
         name: 'GITLAB'
     }
 ]

@@ -302,7 +302,7 @@ open class NodeMoveCopySupport(
                 PathUtils.combinePath(path, name)
             }
             val srcRootNodePath = toPath(srcNode.fullPath)
-            val listOption = NodeListOption(includeFolder = true, includeMetadata = false, deep = true, sort = false)
+            val listOption = NodeListOption(includeFolder = true, includeMetadata = true, deep = true, sort = false)
             val query = NodeQueryHelper.nodeListQuery(srcNode.projectId, srcNode.repoName, srcRootNodePath, listOption)
             // 目录下的节点 -> 创建好的目录
             nodeDao.find(query).forEach {

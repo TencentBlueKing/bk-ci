@@ -1,2 +1,2 @@
-service.name: webhook
-server.port: 25907
+spring.application.name: webhook
+server.port: 25908

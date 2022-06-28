@@ -32,5 +32,5 @@ dependencies {
     api(fileTree(mapOf("dir" to "lib", "include" to listOf("*.jar"))))
     implementation(project(":common:common-api"))
     compileOnly("org.springframework.cloud:spring-cloud-openfeign-core")
-    api(project(":common:common-plugin:plugin-api"))
+    api("com.tencent.devops:devops-boot-starter-plugin")
 }

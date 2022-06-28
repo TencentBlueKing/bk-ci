@@ -39,7 +39,6 @@ import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
-import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.service.BizServiceFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -155,7 +154,7 @@ public abstract class AbstractTreeService implements TreeService
         List<CodeFileUrlEntity> codeFileUrlList = codeFileUrlRepository.findByTaskId(taskId);
         Map<String, String> relatePathMap = new HashMap<>(codeFileUrlList.size());
 
-        CodeRepoFromAnalyzeLogEntity codeRepoFromAnalyzeLogEntity = codeRepoFromAnalyzeLogRepository.findCodeRepoFromAnalyzeLogEntityByTaskId(taskId);
+        CodeRepoFromAnalyzeLogEntity codeRepoFromAnalyzeLogEntity = codeRepoFromAnalyzeLogRepository.findCodeRepoFromAnalyzeLogEntityFirstByTaskId(taskId);
         if (codeRepoFromAnalyzeLogEntity != null)
         {
             Set<CodeRepoFromAnalyzeLogEntity.CodeRepo> codeRepoList = codeRepoFromAnalyzeLogEntity.getCodeRepoList();

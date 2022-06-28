@@ -98,7 +98,7 @@ class StreamTriggerRequestService @Autowired constructor(
         // 加载不同源的action
         val action = actionFactory.load(eventObject)
         if (action == null) {
-            logger.error("request event not support: $event")
+            logger.warn("request event not support: $event")
             return false
         }
 
@@ -273,7 +273,7 @@ class StreamTriggerRequestService @Autowired constructor(
             throw StreamTriggerException(action, TriggerReason.PIPELINE_DISABLE)
         }
 
-        val originYaml = action.getYamlContent(filePath)
+        val (ref, originYaml) = action.getYamlContent(filePath)
         action.data.context.originYaml = originYaml
 
         // 如果当前文件没有内容直接不触发

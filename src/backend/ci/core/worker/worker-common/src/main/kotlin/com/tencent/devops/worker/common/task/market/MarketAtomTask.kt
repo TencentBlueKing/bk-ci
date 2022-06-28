@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.task.market
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.annotation.SkipLogField
 import com.tencent.devops.common.api.constant.ARTIFACT
 import com.tencent.devops.common.api.constant.ARTIFACTORY_TYPE
 import com.tencent.devops.common.api.constant.LABEL
@@ -64,7 +65,6 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.KEY_TARGET
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
-import com.tencent.devops.worker.common.ATOM_CREATOR
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
@@ -141,7 +141,7 @@ open class MarketAtomTask : ITask() {
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
-        addTaskErrorMessage(ATOM_CREATOR, atomData.creator)
+
         // val atomWorkspace = File("${workspace.absolutePath}/${atomCode}_${buildTask.taskId}_data")
         val atomTmpSpace = Files.createTempDirectory("${atomCode}_${buildTask.taskId}_data").toFile()
         buildTask.elementVersion = atomData.version
@@ -156,24 +156,28 @@ open class MarketAtomTask : ITask() {
         cleanOutput(atomTmpSpace)
 
         // 将Job传入的流水线变量先进行凭据替换
-        // 插件接收的流水线参数 = Job级别参数 + Task调度时参数 + 本插件上下文 + 环境参数
+        // 插件接收的流水线参数 = Job级别参数 + Task调度时参数 + 本插件上下文 + 编译机环境参数
         val acrossInfo by lazy { TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId) }
         var variables = buildVariables.variables.map {
             it.key to it.value.parseCredentialValue(
                 context = buildTask.buildVariable,
                 acrossProjectId = acrossInfo?.targetProjectId
             )
-        }.toMap()
-            .plus(buildTask.buildVariable ?: emptyMap())
-            .plus(WORKSPACE_ENV to workspacePath)
-            .plus(getStepContextMap(buildTask, buildVariables, workspacePath))
+        }.toMap().plus(buildTask.buildVariable ?: emptyMap())
 
         // 解析输入输出字段模板
         val props = JsonUtil.toMutableMap(atomData.props!!)
         val inputTemplate = props["input"]?.let { it as Map<String, Map<String, Any>> } ?: mutableMapOf()
         val outputTemplate = props["output"]?.let { props["output"] as Map<String, Map<String, Any>> } ?: mutableMapOf()
 
-        val inputParams = parseInputParams(map, variables, acrossInfo)
+        // 解析并打印插件执行传入的所有参数
+        val inputParams = map["input"]?.let { input ->
+            parseInputParams(
+                inputMap = input as Map<String, Any>,
+                variables = variables.plus(getContainerVariables(buildTask, buildVariables, workspacePath)),
+                acrossInfo = acrossInfo
+            )
+        } ?: emptyMap()
         printInput(atomData, inputParams, inputTemplate)
 
         if (atomData.target?.isBlank() == true) {
@@ -190,7 +194,7 @@ open class MarketAtomTask : ITask() {
             // 无构建环境下运行的插件的workspace取临时文件的路径
             atomTmpSpace.absolutePath
         } else {
-            workspace.absolutePath
+            workspacePath
         }
         variables = variables.plus(
             mapOf(
@@ -208,7 +212,7 @@ open class MarketAtomTask : ITask() {
         writeSdkEnv(atomTmpSpace, buildTask, buildVariables)
         writeParamEnv(atomCode, atomTmpSpace, workspace, buildTask, buildVariables)
 
-        // 环境变量 = 所有插件变量 + Worker端执行插件依赖的变量
+        // 环境变量 = 所有插件变量 + Worker端执行插件依赖的预置变量
         val runtimeVariables = variables.plus(
             mapOf(
                 DIR_ENV to atomTmpSpace.absolutePath,
@@ -246,7 +250,7 @@ open class MarketAtomTask : ITask() {
             val buildEnvs = buildVariables.buildEnvs
             if (!preCmd.isNullOrBlank()) {
                 val preCmds = mutableListOf<String>()
-                if (preCmd.contains(Regex("^\\s*\\[[\\w\\s\\S\\W]*\\]\\s*$"))) {
+                if (preCmd.contains(Regex("^\\s*\\[[\\w\\s\\S\\W]*]\\s*$"))) {
                     preCmds.addAll(JsonUtil.to(preCmd))
                 } else {
                     preCmds.add(preCmd)
@@ -344,11 +348,14 @@ open class MarketAtomTask : ITask() {
         }
     }
 
-    private fun parseInputParams(map: MutableMap<String, Any>, variables: Map<String, String>, acrossInfo: BuildTemplateAcrossInfo?): MutableMap<String, String> {
+    private fun parseInputParams(
+        inputMap: Map<String, Any>,
+        variables: Map<String, String>,
+        acrossInfo: BuildTemplateAcrossInfo?
+    ): Map<String, String> {
         val atomParams = mutableMapOf<String, String>()
         try {
-            val inputMap = map["input"] as Map<String, Any>?
-            inputMap?.forEach { (name, value) ->
+            inputMap.forEach { (name, value) ->
                 // 修复插件input环境变量替换问题 #5682
                 atomParams[name] = EnvUtils.parseEnv(
                     command = JsonUtil.toJson(value),
@@ -429,7 +436,7 @@ open class MarketAtomTask : ITask() {
 
     private fun printInput(
         atomData: AtomEnv,
-        atomParams: MutableMap<String, String>,
+        atomParams: Map<String, String>,
         inputTemplate: Map<String, Map<String, Any>>
     ) {
         LoggerService.addFoldStartLine("[Plugin info]")
@@ -508,7 +515,7 @@ open class MarketAtomTask : ITask() {
                 )
             }
         }
-        logger.info("sdkEnv is:$sdkEnv")
+        logger.info("sdkEnv is:${JsonUtil.skipLogFields(sdkEnv)}")
         inputFileFile.writeText(JsonUtil.toJson(sdkEnv))
     }
 
@@ -557,6 +564,7 @@ open class MarketAtomTask : ITask() {
         val buildType: BuildType,
         val projectId: String,
         val agentId: String,
+        @SkipLogField
         val secretKey: String,
         val gateway: String,
         val buildId: String,
@@ -712,7 +720,8 @@ open class MarketAtomTask : ITask() {
                         atomCode,
                         buildTask.taskId ?: "",
                         buildTask.elementName ?: "",
-                        qualityMap)
+                        qualityMap
+                    )
                 }
             } else {
                 if (atomResult.qualityData != null && atomResult.qualityData.isNotEmpty()) {
@@ -934,23 +943,27 @@ open class MarketAtomTask : ITask() {
 
     private fun getJavaFile() = File(System.getProperty("java.home"), "/bin/java")
 
-    private fun getStepContextMap(
+    private fun getContainerVariables(
         buildTask: BuildTask,
         buildVariables: BuildVariables,
         workspacePath: String
     ): Map<String, String> {
-        val stepId = buildTask.stepId ?: return mapOf()
-        val context = mutableMapOf(
-            "steps.$stepId.name" to (buildTask.elementName ?: ""),
-            "steps.$stepId.id" to stepId,
-            "steps.$stepId.status" to BuildStatus.RUNNING.name
-        )
+        val context = mutableMapOf<String, String>()
+        // 只将本插件的状态改为RUNNING，其他插件上下文保持引擎传入
+        buildTask.stepId?.let { stepId ->
+            context["step.status"] = BuildStatus.RUNNING.name
+            context["steps.$stepId.status"] = BuildStatus.RUNNING.name
+        }
+        // 将token加入上下文
+        buildVariables.variables[CI_TOKEN_CONTEXT]?.let { context[CI_TOKEN_CONTEXT] = it }
+
+        // 如果为有编译环境则追加WORKSPACE，无编译环境不添加
         if (buildTask.containerType == VMBuildContainer.classType) {
             // 只有构建环境下运行的插件才有workspace变量
             context.putAll(
                 mapOf(
+                    WORKSPACE_ENV to workspacePath,
                     WORKSPACE_CONTEXT to workspacePath,
-                    CI_TOKEN_CONTEXT to (buildVariables.variables[CI_TOKEN_CONTEXT] ?: ""),
                     JOB_OS_CONTEXT to AgentEnv.getOS().name
                 )
             )

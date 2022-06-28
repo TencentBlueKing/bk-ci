@@ -277,7 +277,7 @@ object ScriptYmlUtils {
         return sb.toString()
     }
 
-    private fun formatStage(preScriptBuildYaml: PreScriptBuildYaml, transferData: YamlTransferData?): List<Stage> {
+    fun formatStage(preScriptBuildYaml: PreScriptBuildYaml, transferData: YamlTransferData?): List<Stage> {
         return when {
             preScriptBuildYaml.steps != null -> {
                 val jobId = randomString(jobNamespace)
@@ -313,7 +313,7 @@ object ScriptYmlUtils {
         }
     }
 
-    private fun preJobs2Jobs(preJobs: Map<String, PreJob>?, transferData: YamlTransferData?): List<Job> {
+    fun preJobs2Jobs(preJobs: Map<String, PreJob>?, transferData: YamlTransferData?): List<Job> {
         if (preJobs == null) {
             return emptyList()
         }
@@ -438,6 +438,7 @@ object ScriptYmlUtils {
                     retryTimes = preStep.retryTimes,
                     env = preStep.env,
                     run = preStep.run,
+                    runAdditionalOptions = mapOf("shell" to preStep.shell),
                     checkout = preStep.checkout,
                     taskId = taskId
                 )

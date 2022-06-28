@@ -39,6 +39,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.DSLContext
+import org.jooq.Record1
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -212,6 +213,24 @@ class PipelineBuildTaskDao {
         }
     }
 
+    fun getTaskStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        taskId: String?
+    ): Record1<Int>? {
+
+        return with(T_PIPELINE_BUILD_TASK) {
+            val where = dslContext.select(STATUS)
+                .from(this)
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
+            if (taskId != null) {
+                where.and(TASK_ID.eq(taskId))
+            }
+            where.fetchAny()
+        }
+    }
+
     fun listByStatus(
         dslContext: DSLContext,
         projectId: String,
@@ -327,10 +346,7 @@ class PipelineBuildTaskDao {
         }
     }
 
-    fun updateTaskInfo(
-        dslContext: DSLContext,
-        updateTaskInfo: UpdateTaskInfo
-    ) {
+    fun updateTaskInfo(dslContext: DSLContext, updateTaskInfo: UpdateTaskInfo) {
         with(T_PIPELINE_BUILD_TASK) {
             val projectId = updateTaskInfo.projectId
             val buildId = updateTaskInfo.buildId

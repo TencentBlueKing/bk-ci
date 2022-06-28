@@ -57,8 +57,7 @@ func Test_SetExecutable_01(t *testing.T) {
 	t.Log("md5: " + md5)
 }
 
-
-func Test_unzip(t*testing.T) {
+func Test_unzip(t *testing.T) {
 	err := fileutil.Unzip("/Users/xxx/Downloads/1/agent.zip", "/Users/xxx/Downloads/1/")
 	if err != nil {
 		t.Error("err: ", err.Error())

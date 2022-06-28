@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.SimpleResult
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
@@ -46,8 +47,10 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatu
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,31 +68,29 @@ class ThirdPartyAgentService @Autowired constructor(
 ) {
 
     fun queueBuild(
-        projectId: String,
-        agentId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: String,
+        agent: ThirdPartyAgent,
         thirdPartyAgentWorkspace: String,
-        pipelineName: String,
-        buildNo: Int,
-        taskName: String
+        event: PipelineAgentStartupEvent
     ) {
-        val count = thirdPartyAgentBuildDao.add(
-            dslContext = dslContext,
-            projectId = projectId,
-            agentId = agentId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            thirdPartyAgentWorkspace = thirdPartyAgentWorkspace,
-            pipelineName = pipelineName,
-            buildNum = buildNo,
-            taskName = taskName
-        )
-        if (count != 1) {
-            logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|$agentId|$count)")
-            throw OperationException("Fail to add the third party agent build")
+        with(event) {
+            val count = thirdPartyAgentBuildDao.add(
+                dslContext = dslContext,
+                projectId = projectId,
+                agentId = agent.agentId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                thirdPartyAgentWorkspace = thirdPartyAgentWorkspace,
+                pipelineName = pipelineName,
+                buildNum = buildNo,
+                taskName = taskName,
+                agentIp = agent.ip,
+                nodeId = HashUtil.decodeIdToLong(agent.nodeId ?: "")
+            )
+            if (count != 1) {
+                logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}|$count)")
+                throw OperationException("Fail to add the third party agent build")
+            }
         }
     }
 

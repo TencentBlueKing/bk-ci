@@ -32,9 +32,9 @@ import com.tencent.bk.sdk.iam.constants.ExpressionOperationEnum
 import com.tencent.bk.sdk.iam.dto.action.ActionPolicyDTO
 import com.tencent.bk.sdk.iam.dto.expression.ExpressionDTO
 import com.tencent.devops.common.auth.api.AuthResourceType
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class AuthUtilsTest {
 
@@ -45,7 +45,7 @@ class AuthUtilsTest {
 
     private val newExpressionList = mutableListOf<ExpressionDTO>()
 
-    @Before
+    @BeforeEach
     fun setUp() {
         val actionPolicy = ActionPolicyDTO()
         val expression = ExpressionDTO()
@@ -300,7 +300,7 @@ class AuthUtilsTest {
         val mockList = mutableSetOf<String>()
         mockList.add("p-12b2c343109f43a58a79dcb9e3721c1b")
         mockList.add("p-098b68a251ae4ec4b6f4fde87767387f")
-        Assert.assertEquals(instanceList, mockList)
+        Assertions.assertEquals(instanceList, mockList)
         print(instanceList)
     }
 
@@ -309,7 +309,7 @@ class AuthUtilsTest {
         val instanceList = AuthUtils.getResourceInstance(expressionList, "v3test", AuthResourceType.PIPELINE_DEFAULT)
         val mockList = mutableSetOf<String>()
         mockList.add("*")
-        Assert.assertEquals(instanceList, mockList)
+        Assertions.assertEquals(instanceList, mockList)
         print(instanceList)
     }
 
@@ -318,7 +318,7 @@ class AuthUtilsTest {
         val instanceList = AuthUtils.getResourceInstance(expressionList, "v3test1", AuthResourceType.PIPELINE_DEFAULT)
         val mockList = mutableSetOf<String>()
         mockList.add("*")
-        Assert.assertEquals(instanceList, mockList)
+        Assertions.assertEquals(instanceList, mockList)
         print(instanceList)
     }
 
@@ -328,8 +328,8 @@ class AuthUtilsTest {
         val mockList = mutableSetOf<String>()
         mockList.add("*")
         val emptyList = emptySet<String>()
-        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[0], "test1", resourceType))
-        Assert.assertEquals(emptyList, AuthUtils.getResourceInstance(newExpressionList[0], "demo", resourceType))
+        Assertions.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[0], "test1", resourceType))
+        Assertions.assertEquals(emptyList, AuthUtils.getResourceInstance(newExpressionList[0], "demo", resourceType))
     }
 
     @Test
@@ -340,8 +340,8 @@ class AuthUtilsTest {
         mockList.add("p-12b2c343109f43a58a79dcb9e3721c1b")
         mockList.add("p-54a8619d1f754d32b5b2bc249a74f26c")
         val emptyList = emptySet<String>()
-        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[1], "demo", resourceType))
-        Assert.assertEquals(emptyList, AuthUtils.getResourceInstance(newExpressionList[1], "test1", resourceType))
+        Assertions.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[1], "demo", resourceType))
+        Assertions.assertEquals(emptyList, AuthUtils.getResourceInstance(newExpressionList[1], "test1", resourceType))
     }
 
     @Test
@@ -354,8 +354,8 @@ class AuthUtilsTest {
         val mockList1 = mutableSetOf<String>()
         mockList1.add("p-0d1fff4dabca4fc282e5ff63644bd339")
         mockList1.add("p-54fb8b6562584df4b3693f7c787c105a")
-        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[2], "demo", resourceType))
-        Assert.assertEquals(mockList1, AuthUtils.getResourceInstance(newExpressionList[2], "v3test", resourceType))
+        Assertions.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[2], "demo", resourceType))
+        Assertions.assertEquals(mockList1, AuthUtils.getResourceInstance(newExpressionList[2], "v3test", resourceType))
     }
 
     @Test
@@ -366,8 +366,8 @@ class AuthUtilsTest {
         val mockList1 = mutableSetOf<String>()
         mockList1.add("p-0d1fff4dabca4fc282e5ff63644bd339")
         mockList1.add("p-54fb8b6562584df4b3693f7c787c105a")
-        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[3], "demo", resourceType))
-        Assert.assertEquals(mockList1, AuthUtils.getResourceInstance(newExpressionList[3], "v3test", resourceType))
+        Assertions.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[3], "demo", resourceType))
+        Assertions.assertEquals(mockList1, AuthUtils.getResourceInstance(newExpressionList[3], "v3test", resourceType))
     }
 
     @Test
@@ -378,8 +378,8 @@ class AuthUtilsTest {
         val mockList1 = mutableSetOf<String>()
         mockList1.add("test")
         mockList1.add("test_3")
-        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[4], "", resourceType))
-        Assert.assertEquals(mockList1, AuthUtils.getResourceInstance(newExpressionList[4], "v3test", resourceType))
+        Assertions.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[4], "", resourceType))
+        Assertions.assertEquals(mockList1, AuthUtils.getResourceInstance(newExpressionList[4], "v3test", resourceType))
     }
 
     @Test
@@ -391,8 +391,8 @@ class AuthUtilsTest {
         val mockList1 = mutableSetOf<String>()
         mockList1.add("test")
         mockList1.add("test_3")
-        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[4], "v3test", resourceType))
-        Assert.assertEquals(mockList1, AuthUtils.getResourceInstance(newExpressionList[4], "v3test", resourceType))
+        Assertions.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[4], "v3test", resourceType))
+        Assertions.assertEquals(mockList1, AuthUtils.getResourceInstance(newExpressionList[4], "v3test", resourceType))
     }
 
     @Test
@@ -418,7 +418,7 @@ class AuthUtilsTest {
         val resourceType = AuthResourceType.TICKET_CREDENTIAL.value
         val mockList = mutableSetOf<String>()
         mockList.add("*")
-        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(expression1, "fitztest", resourceType))
+        Assertions.assertEquals(mockList, AuthUtils.getResourceInstance(expression1, "fitztest", resourceType))
         print(AuthUtils.getResourceInstance(expression1, "fitztest", resourceType))
     }
 
@@ -489,7 +489,7 @@ class AuthUtilsTest {
         mockList.add("001")
         mockList.add("002")
         mockList.add("003")
-        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(e1, "aa20200908", resourceType))
+        Assertions.assertEquals(mockList, AuthUtils.getResourceInstance(e1, "aa20200908", resourceType))
         print(AuthUtils.getResourceInstance(e1, "aa20200908", resourceType))
     }
 
@@ -533,7 +533,7 @@ class AuthUtilsTest {
         val resourceType = AuthResourceType.TICKET_CREDENTIAL.value
         val mockList = mutableSetOf<String>()
         mockList.add("*")
-        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(expression1, "jttest", resourceType))
+        Assertions.assertEquals(mockList, AuthUtils.getResourceInstance(expression1, "jttest", resourceType))
         print(AuthUtils.getResourceInstance(expression1, "jttest", resourceType))
     }
 
@@ -546,7 +546,7 @@ class AuthUtilsTest {
         val resourceType = AuthResourceType.PIPELINE_DEFAULT.value
         val mockSet = mutableSetOf<String>()
         mockSet.add("*")
-        Assert.assertEquals(mockSet, AuthUtils.getResourceInstance(expression, "testProject", resourceType))
+        Assertions.assertEquals(mockSet, AuthUtils.getResourceInstance(expression, "testProject", resourceType))
     }
 
     @Test
@@ -565,12 +565,12 @@ class AuthUtilsTest {
         val resultSet2 = mutableSetOf<String>()
         resultSet2.addAll(mockSet2)
         resultSet2.addAll(mockSet3)
-        Assert.assertEquals(mockSet1, AuthUtils.getResourceInstance(actionPolicys1[0].condition, "bkdevops", resourceType))
-        Assert.assertEquals(mockSet1, AuthUtils.getResourceInstance(actionPolicys1[1].condition, "bkdevops", resourceType))
-        Assert.assertEquals(resultSet1, AuthUtils.getResourceInstance(actionPolicys1[2].condition, "bkdevops", resourceType))
-        Assert.assertEquals(resultSet1, AuthUtils.getResourceInstance(actionPolicys1[3].condition, "bkdevops", resourceType))
-        Assert.assertEquals(resultSet1, AuthUtils.getResourceInstance(actionPolicys1[4].condition, "bkdevops", resourceType))
-        Assert.assertEquals(resultSet2, AuthUtils.getResourceInstance(actionPolicys1[5].condition, "bkdevops", resourceType))
+        Assertions.assertEquals(mockSet1, AuthUtils.getResourceInstance(actionPolicys1[0].condition, "bkdevops", resourceType))
+        Assertions.assertEquals(mockSet1, AuthUtils.getResourceInstance(actionPolicys1[1].condition, "bkdevops", resourceType))
+        Assertions.assertEquals(resultSet1, AuthUtils.getResourceInstance(actionPolicys1[2].condition, "bkdevops", resourceType))
+        Assertions.assertEquals(resultSet1, AuthUtils.getResourceInstance(actionPolicys1[3].condition, "bkdevops", resourceType))
+        Assertions.assertEquals(resultSet1, AuthUtils.getResourceInstance(actionPolicys1[4].condition, "bkdevops", resourceType))
+        Assertions.assertEquals(resultSet2, AuthUtils.getResourceInstance(actionPolicys1[5].condition, "bkdevops", resourceType))
     }
 
     @Test
@@ -581,11 +581,11 @@ class AuthUtilsTest {
         val mockSet2 = mutableSetOf<String>()
         mockSet2.add("*")
         mockSet2.add("868835")
-        Assert.assertEquals(mockSet1, AuthUtils.getResourceInstance(actionPolicys1[0].condition, "iamV3test-080303", resourceType))
-        Assert.assertEquals(mockSet1, AuthUtils.getResourceInstance(actionPolicys1[1].condition, "iamV3test-080303", resourceType))
-        Assert.assertEquals(mockSet2, AuthUtils.getResourceInstance(actionPolicys1[2].condition, "iamV3test-080303", resourceType))
-        Assert.assertEquals(mockSet2, AuthUtils.getResourceInstance(actionPolicys1[3].condition, "iamV3test-080303", resourceType))
-        Assert.assertEquals(mockSet1, AuthUtils.getResourceInstance(actionPolicys1[4].condition, "iamV3test-080303", resourceType))
+        Assertions.assertEquals(mockSet1, AuthUtils.getResourceInstance(actionPolicys1[0].condition, "iamV3test-080303", resourceType))
+        Assertions.assertEquals(mockSet1, AuthUtils.getResourceInstance(actionPolicys1[1].condition, "iamV3test-080303", resourceType))
+        Assertions.assertEquals(mockSet2, AuthUtils.getResourceInstance(actionPolicys1[2].condition, "iamV3test-080303", resourceType))
+        Assertions.assertEquals(mockSet2, AuthUtils.getResourceInstance(actionPolicys1[3].condition, "iamV3test-080303", resourceType))
+        Assertions.assertEquals(mockSet1, AuthUtils.getResourceInstance(actionPolicys1[4].condition, "iamV3test-080303", resourceType))
     }
 
     private fun print(projectList: List<String>) {

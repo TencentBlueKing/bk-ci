@@ -42,6 +42,7 @@ const val OVERWRITE = "isOverwrite"
 const val FULL_PATH = "_full_path"
 const val META_DETAIL = "meta_detail"
 const val FILE_TYPE = "file_type"
+const val PROXY_URL = "proxyUrl"
 
 const val V1 = "v1"
 const val CHART_YAML = "Chart.yaml"
