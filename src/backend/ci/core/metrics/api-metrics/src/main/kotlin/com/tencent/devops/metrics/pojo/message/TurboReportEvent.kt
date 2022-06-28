@@ -32,10 +32,21 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("Turbo上报消息")
 data class TurboReportEvent(
+    /**
+     * 统计日期，格式yyyy-MM-dd
+     */
     @ApiModelProperty("统计日期")
-    val statisticsDate: String,
+    val statisticsTime: String,
+
+    /**
+     * 项目ID
+     */
     @ApiModelProperty("项目ID")
     val projectId: String,
+
+    /**
+     * 编译加速节省时间，单位：秒 保留2位小数
+     */
     @ApiModelProperty("编译加速节省时间，单位：秒")
-    val turboSaveTime: Double
+    val turboSaveTime: Double,
 )
