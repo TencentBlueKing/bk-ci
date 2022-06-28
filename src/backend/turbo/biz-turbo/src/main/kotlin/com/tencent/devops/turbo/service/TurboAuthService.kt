@@ -51,7 +51,7 @@ class TurboAuthService @Autowired constructor(
     /**
      * 校验是否是平台管理员
      */
-    private fun validatePlatformMember(projectId : String, userId: String) : Boolean {
+    fun validatePlatformMember(projectId : String, userId: String) : Boolean {
         val adminValidateResult =  try {
             serviceManagerResource.validateManagerPermission(
                 userId = userId,
@@ -61,7 +61,6 @@ class TurboAuthService @Autowired constructor(
                 action = "VIEW"
             ).data ?: false
         } catch (e : Exception) {
-            e.printStackTrace()
             logger.info("validate admin member fail! error message : ${e.message}")
             false
         }
