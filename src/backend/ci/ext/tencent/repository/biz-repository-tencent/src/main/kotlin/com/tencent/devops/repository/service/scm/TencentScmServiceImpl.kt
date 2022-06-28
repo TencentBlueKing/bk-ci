@@ -163,8 +163,8 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
             projectName = projectName,
             url = url,
             type = type,
-            privateKey = privateKey,
-            passPhrase = passPhrase?.let { URLEncoder.encode(passPhrase, "UTF-8") },
+            privateKey = privateKey?.let { URLEncoder.encode(it, "UTF-8")  },
+            passPhrase = passPhrase?.let { URLEncoder.encode(it, "UTF-8") },
             token = token,
             region = region,
             userName = userName
