@@ -27,16 +27,68 @@
 
 package com.tencent.devops.auth.service.stream
 
+import com.google.common.cache.CacheBuilder
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.repository.api.github.ServiceGithubPermissionResource
+import com.tencent.devops.stream.api.service.ServiceStreamBasicSettingResource
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import sun.misc.MessageUtils
+import java.util.concurrent.TimeUnit
 
-class GithubStreamPermissionServiceImpl @Autowired constructor() : StreamPermissionServiceImpl() {
+class GithubStreamPermissionServiceImpl @Autowired constructor(
+    val client: Client
+) : StreamPermissionServiceImpl() {
+
+    private val publicProjectCache =
+        CacheBuilder.newBuilder()
+            .maximumSize(MAX_SIZE)
+            .expireAfterAccess(5, TimeUnit.MINUTES)
+            .build<String, Boolean?>()
+
+    private val projectAuthUserCache =
+        CacheBuilder.newBuilder()
+            .maximumSize(MAX_SIZE)
+            .expireAfterAccess(1, TimeUnit.HOURS)
+            .build<String, String>()
+
+    private val projectMemberCache =
+        CacheBuilder.newBuilder()
+            .maximumSize(MAX_SIZE)
+            .expireAfterAccess(5, TimeUnit.MINUTES)
+            .build<String, Boolean?>()
+
+    private val projectExecuteCache =
+        CacheBuilder.newBuilder()
+            .maximumSize(MAX_SIZE)
+            .expireAfterAccess(5, TimeUnit.MINUTES)
+            .build<String, Boolean?>()
+
     override fun isPublicProject(projectCode: String): Boolean {
-        TODO("Not yet implemented")
+        if (publicProjectCache.getIfPresent(projectCode) != null) {
+            return publicProjectCache.getIfPresent(projectCode)!!
+        }
+
+        val authUser = getProjectAuthUser(projectCode)
+        val publicProject = client.get(ServiceGithubPermissionResource::class)
+            .isPublicProject(authUser, projectCode).data
+        publicProjectCache.put(projectCode, publicProject!!)
+        return publicProject
     }
 
     override fun isProjectMember(projectCode: String, userId: String): Pair<Boolean, Boolean> {
-        TODO("Not yet implemented")
+        val authUser = getProjectAuthUser(projectCode)
+        // 是否是项目成员
+        val checkProjectMember = checkProjectMemeber(projectCode, userId, authUser)
+        if (!checkProjectMember) {
+            return Pair(false,false)
+        }
+        val projectExecute = checkProjectExecutePermission(projectCode, userId, authUser)
+        return Pair(checkProjectMember, projectExecute)
     }
 
     override fun extPermission(
@@ -45,6 +97,74 @@ class GithubStreamPermissionServiceImpl @Autowired constructor() : StreamPermiss
         action: AuthPermission,
         resourceType: String
     ): Boolean {
-        TODO("Not yet implemented")
+        return false
+    }
+
+    // 获取github项目在stream内创建auth的用户名（github stream项目的开启人）
+    private fun getProjectAuthUser(projectCode: String): String {
+        if (!projectAuthUserCache.getIfPresent(projectCode).isNullOrEmpty()) {
+            return projectAuthUserCache.getIfPresent(projectCode)!!
+        }
+        // TODO: userID如何获取
+        val projectInfo = client.get(ServiceStreamBasicSettingResource::class).getStreamConf("", projectCode).data
+        if (projectInfo == null) {
+            logger.warn("$projectCode not exist")
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST)
+            )
+        }
+        val projectAuthUser = projectInfo!!.enableUserId
+        projectAuthUserCache.put(projectCode, projectAuthUser)
+        return projectAuthUser
+    }
+
+    private fun projectMemberKey(projectCode: String, userId: String) : String {
+        return projectCode + userId
+    }
+
+    private fun checkProjectMemeber(
+        projectCode: String,
+        userId: String,
+        authUser: String
+    ): Boolean {
+        var projectMember: Boolean?
+        projectMember = projectMemberCache.getIfPresent(projectMemberKey(projectCode, userId))
+        if (projectMember == null) {
+            // 是否是项目成员
+            projectMember = client.get(ServiceGithubPermissionResource::class).isProjectMember(
+                authUserId = authUser,
+                userId = userId,
+                gitProjectId = projectCode
+            ).data
+            projectMemberCache.put(projectMemberKey(projectCode, userId), projectMember!!)
+        }
+        return projectMember
+    }
+
+    private fun checkProjectExecutePermission(
+        projectCode: String,
+        userId: String,
+        authUser: String
+    ): Boolean {
+        var executePermission: Boolean?
+        executePermission = projectExecuteCache.getIfPresent(projectMemberKey(projectCode, userId))
+        if (executePermission == null) {
+            // 是否有操作权限
+            executePermission = client.get(ServiceGithubPermissionResource::class).checkUserAuth(
+                authUserId = authUser,
+                userId = userId,
+                gitProjectId = projectCode,
+                accessLevel = ACCESSLEVEL
+            ).data
+            projectMemberCache.put(projectMemberKey(projectCode, userId), executePermission!!)
+        }
+        return executePermission
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(GithubStreamPermissionServiceImpl::class.java)
+        const val MAX_SIZE = 500L
+        const val ACCESSLEVEL = 30
     }
 }
