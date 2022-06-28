@@ -13,7 +13,7 @@
         setup () {
             const metricUrl = computed(() => {
                 const projectId = store.state.projectId
-                return `//${DEVOPS_HOST}/console/metrics/${projectId}`
+                return `//${DEVOPS_HOST}/metrics/${projectId}`
             })
             return {
                 metricUrl
