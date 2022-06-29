@@ -47,6 +47,7 @@ import com.tencent.bkrepo.oci.pojo.artifact.OciArtifactInfo.Companion.OCI_USER_R
 import com.tencent.bkrepo.oci.pojo.artifact.OciArtifactInfo.Companion.OCI_USER_TAG_SUFFIX
 import com.tencent.bkrepo.oci.pojo.artifact.OciArtifactInfo.Companion.OCI_VERSION_DELETE_URL
 import com.tencent.bkrepo.oci.pojo.artifact.OciArtifactInfo.Companion.OCI_VERSION_DETAIL
+import com.tencent.bkrepo.oci.pojo.artifact.OciDeleteArtifactInfo
 import com.tencent.bkrepo.oci.pojo.artifact.OciManifestArtifactInfo
 import com.tencent.bkrepo.oci.pojo.response.OciImageResult
 import com.tencent.bkrepo.oci.pojo.response.OciTagResult
@@ -95,7 +96,7 @@ class UserOciController(
     @Permission(type = ResourceType.REPO, action = PermissionAction.WRITE)
     fun deletePackage(
         @RequestAttribute userId: String,
-        artifactInfo: OciArtifactInfo,
+        artifactInfo: OciDeleteArtifactInfo,
         @ApiParam(value = "包唯一key", required = true)
         @RequestParam packageKey: String
     ): Response<Void> {
@@ -108,7 +109,7 @@ class UserOciController(
     @Permission(type = ResourceType.REPO, action = PermissionAction.WRITE)
     fun deleteVersion(
         @RequestAttribute userId: String,
-        artifactInfo: OciArtifactInfo,
+        artifactInfo: OciDeleteArtifactInfo,
         @ApiParam(value = "包唯一key", required = true)
         @RequestParam packageKey: String,
         @ApiParam(value = "包版本", required = true)
