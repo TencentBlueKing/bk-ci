@@ -93,7 +93,7 @@ class ThirdLoginService @Autowired constructor(
 
     private fun buildLoginToken(userId: String, type: String): String {
         val token = UUIDUtil.generate()
-        redisOperation.set(LOGIN_REDIS_KEY + userId, "$type:$token", LOGIN_EXPIRE_TIME)
+        redisOperation.set(LOGIN_REDIS_KEY + "$type:$token", userId, LOGIN_EXPIRE_TIME)
         return token
     }
 
