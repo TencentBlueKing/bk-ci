@@ -104,7 +104,10 @@ data class DataPlatBuildHistory(
     var channel: String?,
     @ApiModelProperty("流水线标签", required = false)
     var labels: List<String>?,
+    @ApiModelProperty("事业群ID", required = false)
     val bgId: String,
+    @ApiModelProperty("部门ID", required = false)
     val deptId: String,
+    @ApiModelProperty("中心ID", required = false)
     val centerId: String
 )
