@@ -1006,7 +1006,7 @@ class PipelineRepositoryService constructor(
                 buildNumRule = t.buildNumRule,
                 concurrencyCancelInProgress = t.concurrencyCancelInProgress,
                 concurrencyGroup = t.concurrencyGroup,
-                cleanVariablesWhenRetry = t.cleanVariablesWhenRetey
+                cleanVariablesWhenRetry = t.cleanVariablesWhenRetry
             )
         } else null
     }
