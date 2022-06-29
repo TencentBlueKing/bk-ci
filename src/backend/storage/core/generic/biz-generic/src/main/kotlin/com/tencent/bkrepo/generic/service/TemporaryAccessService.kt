@@ -44,8 +44,8 @@ import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContextHold
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactDownloadContext
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactUploadContext
 import com.tencent.bkrepo.common.artifact.util.http.UrlFormatter
-import com.tencent.bkrepo.common.plugin.api.PluginManager
-import com.tencent.bkrepo.common.plugin.api.applyExtension
+import com.tencent.devops.plugin.api.PluginManager
+import com.tencent.devops.plugin.api.applyExtension
 import com.tencent.bkrepo.common.security.constant.AUTH_HEADER_UID
 import com.tencent.bkrepo.common.security.util.SecurityUtils
 import com.tencent.bkrepo.common.service.util.HttpContextHolder
@@ -205,13 +205,13 @@ class TemporaryAccessService(
     /**
      * 增量签名
      * */
-    fun sign(artifactInfo: GenericArtifactInfo) {
+    fun sign(artifactInfo: GenericArtifactInfo, md5: String?) {
         with(artifactInfo) {
             val repo = repositoryClient.getRepoDetail(projectId, repoName).data
                 ?: throw ErrorCodeException(ArtifactMessageCode.REPOSITORY_NOT_FOUND, repoName)
             val request = HttpContextHolder.getRequest()
             request.setAttribute(REPO_KEY, repo)
-            deltaSyncService.sign()
+            deltaSyncService.downloadSignFile(md5)
         }
     }
 
@@ -226,6 +226,13 @@ class TemporaryAccessService(
             request.setAttribute(REPO_KEY, repo)
             return deltaSyncService.patch(oldFilePath, deltaFile)
         }
+    }
+
+    /**
+     * 上传sign file
+     * */
+    fun uploadSignFile(signFile: ArtifactFile, artifactInfo: GenericArtifactInfo, md5: String) {
+        deltaSyncService.uploadSignFile(signFile, artifactInfo, md5)
     }
 
     /**

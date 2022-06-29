@@ -179,28 +179,35 @@ func readUtf8(filename string) (string, error) {
 }
 
 // return compile options and source files
-func readResponse(f string) (string, error) {
-	if !dcFile.Stat(f).Exist() {
-		return "", fmt.Errorf("%s dose not exist", f)
+func readResponse(f, dir string) (string, error) {
+	newf := f
+	if !dcFile.Stat(newf).Exist() {
+		// try with dir
+		tempf, _ := filepath.Abs(filepath.Join(dir, newf))
+		if !dcFile.Stat(tempf).Exist() {
+			return "", fmt.Errorf("%s or %s dose not exist", newf, tempf)
+		} else {
+			newf = tempf
+		}
 	}
 
-	charset, err := checkResponseFileCharset(f)
+	charset, err := checkResponseFileCharset(newf)
 	if err != nil {
 		return "", err
 	}
 
 	data := ""
 	if charset == "UTF-16LE" {
-		data, err = readBom(f)
+		data, err = readBom(newf)
 	} else {
-		data, err = readUtf8(f)
+		data, err = readUtf8(newf)
 	}
 	if err != nil {
 		return "", err
 	}
 
 	if data == "" {
-		return "", fmt.Errorf("%s is empty", f)
+		return "", fmt.Errorf("%s is empty", newf)
 	}
 
 	return data, nil
@@ -248,7 +255,7 @@ func replaceWithNextExclude(s string, old byte, new string, nextExcludes []byte)
 }
 
 // ensure compiler exist in args.
-func ensureCompiler(args []string) (string, []string, bool, error) {
+func ensureCompiler(args []string, workdir string) (string, []string, bool, error) {
 	responseFile := ""
 	if len(args) == 0 {
 		blog.Warnf("cl: ensure compiler got empty arg")
@@ -271,7 +278,7 @@ func ensureCompiler(args []string) (string, []string, bool, error) {
 			data := ""
 			if responseFile != "" {
 				var err error
-				data, err = readResponse(responseFile)
+				data, err = readResponse(responseFile, workdir)
 				if err != nil {
 					blog.Infof("cl: failed to read response file:%s,err:%v", responseFile, err)
 					return responseFile, nil, showinclude, err
@@ -379,11 +386,15 @@ var (
 	// skip options and skip its value in the next index
 	skipLocalOptionsWithValue = map[string]bool{
 		"/D":                  true, // Defines constants and macros.
+		"-D":                  true, // same with /D, supported by vs 2022
 		"/I":                  true, // Searches a directory for include files.
+		"-I":                  true, // same with /I, supported by vs 2022
 		"/U":                  true, // Removes a predefined macro.
 		"/FI":                 true,
 		"/Yu":                 true,
 		"/sourceDependencies": true,
+		"/external:":          true, //specify compiler diagnostic behavior for certain header files
+		"-external:":          true, //specify compiler diagnostic behavior for certain header files
 	}
 
 	// skip options without value
@@ -396,14 +407,18 @@ var (
 
 	// skip options start with flags
 	skipLocalOptionStartWith = map[string]bool{
-		"/D":  true,
-		"/I":  true,
-		"/U":  true,
-		"/Fd": true,
-		"/FI": true, // Preprocesses the specified include file.
-		"/Fp": true, // Preprocesses the specified include file.
-		"/Yu": true, // Uses a precompiled header file during build.
-		"/Zm": true, // Specifies the precompiled header memory allocation limit.
+		"/D":         true,
+		"/I":         true,
+		"-D":         true,
+		"-I":         true,
+		"/U":         true,
+		"/Fd":        true,
+		"/FI":        true, // Preprocesses the specified include file.
+		"/Fp":        true, // Preprocesses the specified include file.
+		"/Yu":        true, // Uses a precompiled header file during build.
+		"/Zm":        true, // Specifies the precompiled header memory allocation limit.
+		"/external:": true, //specify compiler diagnostic behavior for certain header files
+		"-external:": true, //specify compiler diagnostic behavior for certain header files
 	}
 )
 
@@ -476,9 +491,10 @@ func stripLocalArgs(args []string) []string {
 }
 
 type ccArgs struct {
-	inputFile  string
-	outputFile string
-	args       []string
+	inputFile           string
+	outputFile          string
+	args                []string
+	specifiedSourceType bool
 }
 
 // scanArgs receive the complete compiling args, and the first item should always be a compiler name.
@@ -511,6 +527,10 @@ func scanArgs(args []string) (*ccArgs, error) {
 
 			case "/c":
 				seenOptionC = true
+				continue
+
+			case "/TC", "/Tc", "/TP", "/Tp":
+				r.specifiedSourceType = true
 				continue
 			}
 
@@ -549,6 +569,12 @@ func scanArgs(args []string) (*ccArgs, error) {
 				continue
 			}
 			continue
+		} else if strings.HasPrefix(arg, "-") {
+			switch arg {
+			case "-c":
+				seenOptionC = true
+				continue
+			}
 		}
 
 		// if this is not start with /, then it maybe a file.
@@ -575,7 +601,7 @@ func scanArgs(args []string) (*ccArgs, error) {
 	}
 
 	if !seenOptionC {
-		blog.Warnf("cl: scan args: no /c found, compiler apparently called not for compile")
+		blog.Warnf("cl: scan args: no /c or -c found, compiler apparently called not for compile")
 		return nil, ErrorMissingOption
 	}
 
@@ -717,13 +743,17 @@ func setActionOptionE(args []string) ([]string, error) {
 			found = true
 			r = append(r, "/E")
 			continue
+		} else if arg == "-c" {
+			found = true
+			r = append(r, "/E")
+			continue
 		}
 
 		r = append(r, arg)
 	}
 
 	if !found {
-		blog.Warnf("cl: failed to find /c")
+		blog.Warnf("cl: failed to find /c or -c")
 		return nil, ErrorMissingOption
 	}
 
@@ -747,7 +777,7 @@ func getPreloadConfig(configPath string) (*dcSDK.PreloadConfig, error) {
 	return &pConfig, nil
 }
 
-func saveResultFile(rf *dcSDK.FileDesc) error {
+func saveResultFile(rf *dcSDK.FileDesc, dir string) error {
 	fp := rf.FilePath
 	data := rf.Buffer
 	blog.Debugf("cl: ready save file [%s]", fp)
@@ -758,8 +788,17 @@ func saveResultFile(rf *dcSDK.FileDesc) error {
 
 	f, err := os.Create(fp)
 	if err != nil {
-		blog.Errorf("cl: create file %s error: [%s]", fp, err.Error())
-		return err
+		if !filepath.IsAbs(fp) && dir != "" {
+			newfp, _ := filepath.Abs(filepath.Join(dir, fp))
+			f, err = os.Create(newfp)
+			if err != nil {
+				blog.Errorf("cl: create file %s or %s error: [%s]", fp, newfp, err.Error())
+				return err
+			}
+		} else {
+			blog.Errorf("cl: create file %s error: [%s]", fp, err.Error())
+			return err
+		}
 	}
 	defer func() {
 		_ = f.Close()

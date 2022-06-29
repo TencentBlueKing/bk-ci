@@ -139,7 +139,11 @@ class StageBuildDetailService(
                     stage.startEpoch = System.currentTimeMillis()
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
-                    allStageStatus = fetchHistoryStageStatus(model, BuildStatus.REVIEWING)
+                    allStageStatus = fetchHistoryStageStatus(
+                        model = model,
+                        buildStatus = BuildStatus.REVIEWING,
+                        reviewers = checkIn?.groupToReview()?.reviewers
+                    )
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE

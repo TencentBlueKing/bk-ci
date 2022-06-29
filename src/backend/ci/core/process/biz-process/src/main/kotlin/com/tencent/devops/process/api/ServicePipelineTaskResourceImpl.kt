@@ -29,11 +29,12 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
-import com.tencent.devops.process.pojo.PipelineProjectRel
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.pojo.PipelineProjectRel
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -64,5 +65,13 @@ class ServicePipelineTaskResourceImpl @Autowired constructor(
 
     override fun listPipelineNumByAtomCodes(projectId: String?, atomCodes: List<String>): Result<Map<String, Int>> {
         return Result(pipelineTaskService.listPipelineNumByAtomCodes(projectId, atomCodes))
+    }
+
+    override fun getTaskStatus(projectId: String, buildId: String, taskId: String): Result<BuildStatus?> {
+        return Result(pipelineTaskService.getTaskStatus(
+            projectId = projectId,
+            buildId = buildId,
+            taskId = taskId
+        ))
     }
 }

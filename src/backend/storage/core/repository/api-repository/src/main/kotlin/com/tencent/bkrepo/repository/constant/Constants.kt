@@ -35,3 +35,5 @@ const val SYSTEM_USER = "system"
 const val SHARDING_COUNT = 256
 const val METADATA_PREFIX = "metadata."
 const val DEFAULT_STORAGE_CREDENTIALS_KEY="default"
+
+const val NODE_DETAIL_LIST_KEY = "nodeDetailList"

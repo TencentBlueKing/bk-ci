@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.AESUtil
@@ -36,6 +37,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
+import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
@@ -43,8 +45,10 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.github.IGithubService
 import com.tencent.devops.repository.service.scm.IGitService
+import com.tencent.devops.repository.service.scm.Ip4Service
 import com.tencent.devops.repository.utils.Credential
 import com.tencent.devops.repository.utils.CredentialUtils
+import com.tencent.devops.repository.utils.RepositoryUtils
 import com.tencent.devops.scm.code.svn.ISvnService
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -65,7 +69,8 @@ class RepoFileService @Autowired constructor(
     private val client: Client,
     private val githubService: IGithubService,
     private val gitService: IGitService,
-    private val svnService: ISvnService
+    private val svnService: ISvnService,
+    private val p4Service: Ip4Service
 ) {
 
     companion object {
@@ -84,7 +89,54 @@ class RepoFileService @Autowired constructor(
         svnFullPath: Boolean = false
     ): String {
         val repo = repositoryService.serviceGet("", repositoryConfig)
-        logger.info("get repo($repositoryConfig) file content in: $filePath (reversion:$reversion, branch:$branch)")
+        return getFileContent(
+            repo = repo,
+            filePath = filePath,
+            reversion = reversion,
+            branch = branch,
+            subModule = subModule,
+            svnFullPath = svnFullPath
+        )
+    }
+
+    fun getFileContentByUrl(
+        projectId: String,
+        repoUrl: String,
+        scmType: ScmType,
+        filePath: String,
+        reversion: String?,
+        branch: String?,
+        subModule: String? = null,
+        svnFullPath: Boolean = false,
+        credentialId: String
+    ): String {
+        logger.info("get repo($repoUrl) file content in: $filePath (reversion:$reversion, branch:$branch)")
+        val repo = RepositoryUtils.buildRepository(
+            projectId = projectId,
+            userName = "",
+            scmType = scmType,
+            repositoryUrl = repoUrl,
+            credentialId = credentialId
+        )
+        return getFileContent(
+            repo = repo,
+            filePath = filePath,
+            reversion = reversion,
+            branch = branch,
+            subModule = subModule,
+            svnFullPath = svnFullPath
+        )
+    }
+
+    private fun getFileContent(
+        repo: Repository,
+        filePath: String,
+        reversion: String?,
+        branch: String?,
+        subModule: String? = null,
+        svnFullPath: Boolean = false
+    ): String {
+        logger.info("get repo(${repo.url}) file content in: $filePath (reversion:$reversion, branch:$branch)")
         return when (repo) {
             is CodeSvnRepository -> {
                 logger.info("get file content of svn repo:\n$repo")
@@ -104,7 +156,7 @@ class RepoFileService @Autowired constructor(
                 }
             }
             is CodeGitRepository -> {
-                logger.info("get file content of git repo:\n$repo")
+                logger.info("get file content of git repo:$repo")
                 if (!reversion.isNullOrBlank()) {
                     getGitSingleFile(
                         repo = repo,
@@ -122,7 +174,7 @@ class RepoFileService @Autowired constructor(
                 }
             }
             is CodeGitlabRepository -> {
-                logger.info("get file content of gitlab repo:\n$repo")
+                logger.info("get file content of gitlab repo: $repo")
                 if (!reversion.isNullOrBlank()) {
                     getGitlabSingleFile(
                         repo = repo,
@@ -140,7 +192,7 @@ class RepoFileService @Autowired constructor(
                 }
             }
             is GithubRepository -> {
-                logger.info("get file content of github repo:\n$repo")
+                logger.info("get file content of github repo: $repo")
                 if (!reversion.isNullOrBlank()) {
                     getGithubFile(
                         repo = repo,
@@ -158,7 +210,7 @@ class RepoFileService @Autowired constructor(
                 }
             }
             is CodeTGitRepository -> {
-                logger.info("get file content of tGit repo:\n$repo")
+                logger.info("get file content of tGit repo: $repo")
                 if (!reversion.isNullOrBlank()) {
                     getTGitSingleFile(
                         repo = repo,
@@ -174,6 +226,10 @@ class RepoFileService @Autowired constructor(
                         subModule = subModule
                     )
                 }
+            }
+            is CodeP4Repository -> {
+                logger.info("get file content of tGit repo: $repo")
+                getP4SingleFile(repo = repo, filePath = filePath, reversion = reversion!!)
             }
             else -> {
                 "unsupported repo"
@@ -299,6 +355,21 @@ class RepoFileService @Autowired constructor(
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
         logger.info("getGithubFile for projectName: $projectName")
         return githubService.getFileContent(projectName!!, ref, filePath)
+    }
+
+    private fun getP4SingleFile(
+        repo: CodeP4Repository,
+        filePath: String,
+        reversion: String
+    ): String {
+        val credInfo = getCredential(repo.projectId ?: "", repo)
+        return p4Service.getFileContent(
+            p4Port = repo.url,
+            filePath = filePath,
+            reversion = reversion.toInt(),
+            username = credInfo.privateKey,
+            password = credInfo.passPhrase!!
+        )
     }
 
     private fun getCredential(projectId: String, repository: Repository): Credential {

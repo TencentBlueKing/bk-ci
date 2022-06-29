@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v2
         with:
-          go-version: 1.18.1
+          go-version: 1.17.11
       - uses: actions/checkout@v2
       - run: make clean all
         working-directory: src/agent/
@@ -81,6 +81,7 @@ jobs:
       - name: Gradle Build Turbo Service
         working-directory: src/backend/turbo
         run: |
+          ./gradlew clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
           # copy jar to ci release dir
           cp -vf release/boot-turbo.jar ${{ github.workspace }}/src/backend/ci/release/
           # copy turbo service config template to ci templates dir

@@ -45,7 +45,7 @@
                 true
             );
             ajax.send();
-            ajax.onload = function(e) {
+            ajax.onload = function (e) {
                 var div = document.createElement("div");
                 div.setAttribute(
                     "style",
@@ -58,11 +58,11 @@
     </head>
     <body>
         <div id="app"></div>
-        <script src="<%= htmlWebpackPlugin.options.VENDOR_LIBS%>"></script>
         <script src="/console/static/vue.min.js"></script>
         <script src="/console/static/vuex.min.js"></script>
         <script src="/console/static/vue-router.min.js"></script>
         <script src="/console/static/devops-utils.js?t="></script>
+        <script src="<%= htmlWebpackPlugin.options.VENDOR_LIBS%>"></script>
         <script>
             var X_DEVOPS_PROJECT_ID = "X-DEVOPS-PROJECT-ID";
             var API_URL_PREFIX = "/ms";

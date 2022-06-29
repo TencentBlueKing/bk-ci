@@ -401,7 +401,9 @@ class PipelineContainerService @Autowired constructor(
             // #4245 直接将启动时跳过的插件置为不可用，减少存储变量
             atomElement.disableBySkipVar(variables = startParamMap)
 
-            val status = atomElement.initStatus(rerun = context.needRerun(stage))
+            val status = atomElement.initStatus(
+                rerun = context.needRerunTask(stage = stage, container = container)
+            )
             if (status.isFinish()) {
                 logger.info("[$buildId|${atomElement.id}] status=$status")
                 atomElement.status = status.name
@@ -430,7 +432,7 @@ class PipelineContainerService @Autowired constructor(
                 needUpdateContainer = true
             } else {
                 // 如果是失败的插件重试，并且当前插件不是要重试或跳过的插件，则检查其之前的状态，如果已经执行过，则跳过
-                if (context.needSkipTaskWhenRetry(stage, atomElement.id)) {
+                if (context.needSkipTaskWhenRetry(stage, container, atomElement.id)) {
                     val target = findTaskRecord(
                         lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                         container = container,

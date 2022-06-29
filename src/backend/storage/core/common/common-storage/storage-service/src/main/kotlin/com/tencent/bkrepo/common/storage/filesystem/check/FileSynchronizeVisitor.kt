@@ -32,14 +32,16 @@ import com.tencent.bkrepo.common.storage.core.FileStorage
 import com.tencent.bkrepo.common.storage.core.locator.FileLocator
 import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
 import com.tencent.bkrepo.common.storage.filesystem.ArtifactFileVisitor
+import com.tencent.bkrepo.common.storage.util.delete
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.file.FileVisitResult
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
 class FileSynchronizeVisitor(
-    private val tempPath: Path,
+    private val rootPath: Path,
     private val fileLocator: FileLocator,
     private val fileStorage: FileStorage,
     private val credential: StorageCredentials
@@ -66,17 +68,17 @@ class FileSynchronizeVisitor(
         return FileVisitResult.CONTINUE
     }
 
-    override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes?): FileVisitResult {
-        // 跳过temp目录的内容
-        return if (dir == tempPath) {
-            FileVisitResult.SKIP_SUBTREE
-        } else {
-            FileVisitResult.CONTINUE
-        }
-    }
-
     @Throws(IOException::class)
     override fun postVisitDirectory(dirPath: Path, exc: IOException?): FileVisitResult {
+        if (dirPath == rootPath) {
+            return FileVisitResult.CONTINUE
+        }
+        val deleted = dirPath.delete()
+        if (deleted) {
+            logger.info("Clean up folder[$dirPath].")
+            result.cleanupFolder++
+        }
+        result.totalFolder++
         return FileVisitResult.CONTINUE
     }
 
@@ -102,6 +104,8 @@ class FileSynchronizeVisitor(
         val file = filePath.toFile()
         fileStorage.store(path, filename, file, credential)
         logger.info("Synchronize file[$filename] success.")
+        Files.deleteIfExists(file.toPath())
+        logger.info("Delete staging file[$filename] success.")
         return file.length()
     }
 

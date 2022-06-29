@@ -34,6 +34,5 @@ dependencies {
     api(project(":common:common-job"))
     api(project(":common:common-artifact:artifact-service"))
     implementation("org.springframework.retry:spring-retry")
-    implementation("org.apache.commons:commons-compress")
     implementation("com.github.zafarkhaja:java-semver")
 }

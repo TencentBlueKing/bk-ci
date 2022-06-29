@@ -32,14 +32,9 @@ allprojects {
                 entry("swagger-jersey2-jaxrs")
                 entry("swagger-models")
             }
-			dependencySet("org.springframework.cloud:${Versions.springFeign}") {
-				entry("spring-cloud-openfeign-core")
-                entry("spring-cloud-starter-openfeign")
-			}
-		}
-
-		configurations.forEach {
-            it.exclude("io.springfox", "springfox-boot-starter")
+            dependencySet("io.micrometer:${Versions.micrometerVersion}") {
+                entry("micrometer-registry-prometheus")
+            }
 		}
 	}
 }

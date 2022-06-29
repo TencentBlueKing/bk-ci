@@ -44,7 +44,6 @@ enum class StreamObjectKind(val value: String) {
 
 enum class StreamPushActionType(val value: String) {
     NEW_BRANCH("new-branch"),
-    NEW_BRANCH_AND_PUSH_FILE("new-branch-and-push-file"),
     PUSH_FILE("push-file");
 }
 

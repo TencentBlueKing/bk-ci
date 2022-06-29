@@ -49,8 +49,8 @@ class MetricsInfoProcessor(
     private val instanceRegistry: InstanceRegistry
 ) {
 
-    @Value("\${service.prefix:repo-}")
-    private val servicePrefix: String = "repo-"
+    @Value("\${service.prefix:}")
+    private val servicePrefix: String = ""
 
     @Value("\${service.suffix:}")
     private val serviceSuffix: String = ""

@@ -84,7 +84,8 @@ class ModelElement @Autowired(required = false) constructor(
                         RunCondition.PRE_TASK_FAILED_ONLY
                     else -> RunCondition.CUSTOM_CONDITION_MATCH
                 },
-                customCondition = step.ifFiled
+                customCondition = step.ifFiled,
+                manualRetry = false
             )
 
             additionalOptions.enable = jobEnable && PathMatchUtils.isIncludePathMatch(step.ifModify, changeSet)
@@ -102,6 +103,8 @@ class ModelElement @Autowired(required = false) constructor(
             }
 
             if (element != null) {
+                // 统一禁用插件的retry属性
+                element.canRetry = false
                 elementList.add(element)
 
                 if (element is MarketBuildAtomElement) {
@@ -121,7 +124,10 @@ class ModelElement @Autowired(required = false) constructor(
     ): Element {
         return if (inner!!.marketRunTask) {
             val data = mutableMapOf<String, Any>()
-            data["input"] = mapOf("script" to step.run)
+            data["input"] = mapOf(
+                "script" to step.run,
+                "shell" to (step.runAdditionalOptions?.get("shell") ?: "")
+            )
             MarketBuildAtomElement(
                 id = step.taskId,
                 name = step.name ?: "run",
