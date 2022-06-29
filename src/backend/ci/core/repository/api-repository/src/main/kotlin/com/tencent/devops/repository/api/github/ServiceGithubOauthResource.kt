@@ -36,5 +36,9 @@ interface ServiceGithubOauthResource {
     @ApiOperation("github授权url")
     @GET
     @Path("/oauthUrl")
-    fun oauthUrl(redirectUrl: String): Result<String>
+    fun oauthUrl(
+        @ApiParam(value = "redirectUrl")
+        @QueryParam("redirectUrl")
+        redirectUrl: String
+    ): Result<String>
 }
