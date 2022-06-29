@@ -516,6 +516,7 @@ class InitializeMatrixGroupStageCmd(
                 id = e.id,
                 stepId = e.stepId,
                 executeCount = executeCount,
+                originClassType = e.getClassType(),
                 originAtomCode = e.getAtomCode(),
                 originTaskAtom = e.getTaskAtom(),
                 interceptTask = interceptTask,

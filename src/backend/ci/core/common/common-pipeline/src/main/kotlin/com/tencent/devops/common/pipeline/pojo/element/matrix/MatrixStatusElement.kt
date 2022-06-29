@@ -47,6 +47,8 @@ data class MatrixStatusElement(
     override var startEpoch: Long? = null,
     @ApiModelProperty("上下文标识", required = false)
     override var stepId: String?,
+    @ApiModelProperty("原插件的类型标识")
+    val originClassType: String,
     @ApiModelProperty("原插件的市场标识")
     private val originAtomCode: String,
     @ApiModelProperty("原插件的内置标识")
