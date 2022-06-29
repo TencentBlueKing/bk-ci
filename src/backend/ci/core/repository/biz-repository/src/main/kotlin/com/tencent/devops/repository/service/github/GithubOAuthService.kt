@@ -78,7 +78,7 @@ class GithubOAuthService @Autowired constructor(
         )
         val state = URLEncoder.encode(JsonUtil.toJson(stateParams), "UTF-8")
         return "$GITHUB_URL/login/oauth/authorize" +
-            "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubWebhookUrl}&state=$state"
+            "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubCallbackUrl}&state=$state"
     }
 
     fun githubCallback(code: String, state: String?, channelCode: String? = null): GithubOauthCallback {
