@@ -80,7 +80,7 @@ data class PipelineSetting(
     @ApiModelProperty("构建号生成规则", required = false)
     val buildNumRule: String? = null, // 构建号生成规则
     @ApiModelProperty("重试时清理引擎变量表", required = false)
-    val cleanVariablesWhenRetry: Boolean? = false,
+    val cleanVariablesWhenRetry: Boolean? = false
 ) {
 
     @Suppress("ALL")

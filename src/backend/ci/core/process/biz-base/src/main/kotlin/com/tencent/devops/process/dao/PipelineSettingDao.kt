@@ -140,7 +140,7 @@ class PipelineSettingDao {
                     BUILD_NUM_RULE,
                     CONCURRENCY_GROUP,
                     CONCURRENCY_CANCEL_IN_PROGRESS,
-                    CLEAN_VARIABLES_WHEN_RETEY
+                    CLEAN_VARIABLES_WHEN_RETRY
                 ).values(
                     setting.projectId,
                     setting.pipelineName,
@@ -201,7 +201,7 @@ class PipelineSettingDao {
                     .set(BUILD_NUM_RULE, setting.buildNumRule)
                     .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
                     .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
-                    .set(CLEAN_VARIABLES_WHEN_RETEY, setting.cleanVariablesWhenRetry)
+                    .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
                     .where(PIPELINE_ID.eq(setting.pipelineId).and(PROJECT_ID.eq(setting.projectId)))
                     .execute()
             }
