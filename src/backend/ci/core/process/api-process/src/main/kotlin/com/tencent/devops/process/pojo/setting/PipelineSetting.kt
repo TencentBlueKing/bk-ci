@@ -78,7 +78,9 @@ data class PipelineSetting(
     var version: Int = 0,
     @field:BkField(patternStyle = BkStyleEnum.BUILD_NUM_RULE_STYLE, required = false)
     @ApiModelProperty("构建号生成规则", required = false)
-    val buildNumRule: String? = null // 构建号生成规则
+    val buildNumRule: String? = null, // 构建号生成规则
+    @ApiModelProperty("重试时清理引擎变量表", required = false)
+    val cleanVariablesWhenRetry: Boolean? = false,
 ) {
 
     @Suppress("ALL")
@@ -87,18 +89,22 @@ data class PipelineSetting(
             throw InvalidParamException(message = "流水线编排数量非法", params = arrayOf("maxPipelineResNum"))
         }
         if (runLockType == PipelineRunLockType.SINGLE ||
-            runLockType == PipelineRunLockType.SINGLE_LOCK) {
+            runLockType == PipelineRunLockType.SINGLE_LOCK
+        ) {
             if (waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
-                waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX) {
+                waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
+            ) {
                 throw InvalidParamException("最大排队时长非法", params = arrayOf("waitQueueTimeMinute"))
             }
             if (maxQueueSize < PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
-                maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX) {
+                maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
+            ) {
                 throw InvalidParamException("最大排队数量非法", params = arrayOf("maxQueueSize"))
             }
         }
         if (maxConRunningQueueSize <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
-            maxConRunningQueueSize > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX) {
+            maxConRunningQueueSize > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+        ) {
             throw InvalidParamException("最大并发数量非法", params = arrayOf("maxConRunningQueueSize"))
         }
     }

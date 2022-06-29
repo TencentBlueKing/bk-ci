@@ -106,39 +106,42 @@ class PipelineSettingDao {
 
     fun saveSetting(dslContext: DSLContext, setting: PipelineSetting, isTemplate: Boolean = false): Int {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
-            return dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                NAME,
-                DESC,
-                RUN_LOCK_TYPE,
-                PIPELINE_ID,
-                SUCCESS_RECEIVER,
-                FAIL_RECEIVER,
-                SUCCESS_GROUP,
-                FAIL_GROUP,
-                SUCCESS_TYPE,
-                FAIL_TYPE,
-                FAIL_WECHAT_GROUP_FLAG,
-                FAIL_WECHAT_GROUP,
-                FAIL_WECHAT_GROUP_MARKDOWN_FLAG,
-                SUCCESS_WECHAT_GROUP_FLAG,
-                SUCCESS_WECHAT_GROUP,
-                SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG,
-                SUCCESS_DETAIL_FLAG,
-                FAIL_DETAIL_FLAG,
-                SUCCESS_CONTENT,
-                FAIL_CONTENT,
-                WAIT_QUEUE_TIME_SECOND,
-                MAX_QUEUE_SIZE,
-                IS_TEMPLATE,
-                MAX_PIPELINE_RES_NUM,
-                MAX_CON_RUNNING_QUEUE_SIZE,
-                BUILD_NUM_RULE,
-                CONCURRENCY_GROUP,
-                CONCURRENCY_CANCEL_IN_PROGRESS
-            )
-                .values(
+            // #6090 先查询存在情况再做刷新或插入
+            val origin = getSetting(dslContext, setting.projectId, setting.pipelineId)
+            return if (origin == null) {
+                dslContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    NAME,
+                    DESC,
+                    RUN_LOCK_TYPE,
+                    PIPELINE_ID,
+                    SUCCESS_RECEIVER,
+                    FAIL_RECEIVER,
+                    SUCCESS_GROUP,
+                    FAIL_GROUP,
+                    SUCCESS_TYPE,
+                    FAIL_TYPE,
+                    FAIL_WECHAT_GROUP_FLAG,
+                    FAIL_WECHAT_GROUP,
+                    FAIL_WECHAT_GROUP_MARKDOWN_FLAG,
+                    SUCCESS_WECHAT_GROUP_FLAG,
+                    SUCCESS_WECHAT_GROUP,
+                    SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG,
+                    SUCCESS_DETAIL_FLAG,
+                    FAIL_DETAIL_FLAG,
+                    SUCCESS_CONTENT,
+                    FAIL_CONTENT,
+                    WAIT_QUEUE_TIME_SECOND,
+                    MAX_QUEUE_SIZE,
+                    IS_TEMPLATE,
+                    MAX_PIPELINE_RES_NUM,
+                    MAX_CON_RUNNING_QUEUE_SIZE,
+                    BUILD_NUM_RULE,
+                    CONCURRENCY_GROUP,
+                    CONCURRENCY_CANCEL_IN_PROGRESS,
+                    CLEAN_VARIABLES_WHEN_RETEY
+                ).values(
                     setting.projectId,
                     setting.pipelineName,
                     setting.desc,
@@ -167,36 +170,41 @@ class PipelineSettingDao {
                     setting.maxConRunningQueueSize,
                     setting.buildNumRule,
                     setting.concurrencyGroup,
-                    setting.concurrencyCancelInProgress
-                ).onDuplicateKeyUpdate()
-                .set(NAME, setting.pipelineName)
-                .set(DESC, setting.desc)
-                .set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(setting.runLockType))
-                .set(SUCCESS_RECEIVER, setting.successSubscription.users)
-                .set(FAIL_RECEIVER, setting.failSubscription.users)
-                .set(SUCCESS_GROUP, setting.successSubscription.groups.joinToString(","))
-                .set(FAIL_GROUP, setting.failSubscription.groups.joinToString(","))
-                .set(SUCCESS_TYPE, setting.successSubscription.types.joinToString(",") { it.name })
-                .set(FAIL_TYPE, setting.failSubscription.types.joinToString(",") { it.name })
-                .set(FAIL_WECHAT_GROUP_FLAG, setting.failSubscription.wechatGroupFlag)
-                .set(FAIL_WECHAT_GROUP, setting.failSubscription.wechatGroup)
-                .set(FAIL_WECHAT_GROUP_MARKDOWN_FLAG, setting.failSubscription.wechatGroupMarkdownFlag)
-                .set(SUCCESS_WECHAT_GROUP_FLAG, setting.successSubscription.wechatGroupFlag)
-                .set(SUCCESS_WECHAT_GROUP, setting.successSubscription.wechatGroup)
-                .set(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG, setting.successSubscription.wechatGroupMarkdownFlag)
-                .set(SUCCESS_DETAIL_FLAG, setting.successSubscription.detailFlag)
-                .set(FAIL_DETAIL_FLAG, setting.failSubscription.detailFlag)
-                .set(SUCCESS_CONTENT, setting.successSubscription.content)
-                .set(FAIL_CONTENT, setting.failSubscription.content)
-                .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute))
-                .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
-                .set(IS_TEMPLATE, isTemplate)
-                .set(MAX_PIPELINE_RES_NUM, setting.maxPipelineResNum)
-                .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
-                .set(BUILD_NUM_RULE, setting.buildNumRule)
-                .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
-                .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
-                .execute()
+                    setting.concurrencyCancelInProgress,
+                    setting.cleanVariablesWhenRetry
+                ).execute()
+            } else {
+                dslContext.update(this)
+                    .set(NAME, setting.pipelineName)
+                    .set(DESC, setting.desc)
+                    .set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(setting.runLockType))
+                    .set(SUCCESS_RECEIVER, setting.successSubscription.users)
+                    .set(FAIL_RECEIVER, setting.failSubscription.users)
+                    .set(SUCCESS_GROUP, setting.successSubscription.groups.joinToString(","))
+                    .set(FAIL_GROUP, setting.failSubscription.groups.joinToString(","))
+                    .set(SUCCESS_TYPE, setting.successSubscription.types.joinToString(",") { it.name })
+                    .set(FAIL_TYPE, setting.failSubscription.types.joinToString(",") { it.name })
+                    .set(FAIL_WECHAT_GROUP_FLAG, setting.failSubscription.wechatGroupFlag)
+                    .set(FAIL_WECHAT_GROUP, setting.failSubscription.wechatGroup)
+                    .set(FAIL_WECHAT_GROUP_MARKDOWN_FLAG, setting.failSubscription.wechatGroupMarkdownFlag)
+                    .set(SUCCESS_WECHAT_GROUP_FLAG, setting.successSubscription.wechatGroupFlag)
+                    .set(SUCCESS_WECHAT_GROUP, setting.successSubscription.wechatGroup)
+                    .set(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG, setting.successSubscription.wechatGroupMarkdownFlag)
+                    .set(SUCCESS_DETAIL_FLAG, setting.successSubscription.detailFlag)
+                    .set(FAIL_DETAIL_FLAG, setting.failSubscription.detailFlag)
+                    .set(SUCCESS_CONTENT, setting.successSubscription.content)
+                    .set(FAIL_CONTENT, setting.failSubscription.content)
+                    .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute))
+                    .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
+                    .set(MAX_PIPELINE_RES_NUM, setting.maxPipelineResNum)
+                    .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
+                    .set(BUILD_NUM_RULE, setting.buildNumRule)
+                    .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
+                    .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
+                    .set(CLEAN_VARIABLES_WHEN_RETEY, setting.cleanVariablesWhenRetry)
+                    .where(PIPELINE_ID.eq(setting.pipelineId).and(PROJECT_ID.eq(setting.projectId)))
+                    .execute()
+            }
         }
     }
 

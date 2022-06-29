@@ -403,7 +403,7 @@ class StreamPipelineService @Autowired constructor(
                 )
             )
         ),
-        setting = PipelineSetting()
+        setting = PipelineSetting(cleanVariablesWhenRetry = true)
     )
 
     private fun getPipelineLastBuildBranch(

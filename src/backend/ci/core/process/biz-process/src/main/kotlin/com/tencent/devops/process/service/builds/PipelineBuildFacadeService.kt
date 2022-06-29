@@ -342,7 +342,8 @@ class PipelineBuildFacadeService(
                         buildId = buildId,
                         taskId = taskId,
                         skipFailedTask = skipFailedTask
-                    )) {
+                    )
+                ) {
                     return buildId
                 }
             }
@@ -428,11 +429,14 @@ class PipelineBuildFacadeService(
             } else {
                 // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数，并清理VAR表内容
                 try {
+                    val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
                     buildInfo.buildParameters?.forEach { param -> paramMap[param.key] = param }
                     webhookBuildParameterService.getBuildParameters(buildId)?.forEach { param ->
                         paramMap[param.key] = param
                     }
-                    buildVariableService.deleteBuildVars(projectId, pipelineId, buildId)
+                    if (setting?.cleanVariablesWhenRetry == true) {
+                        buildVariableService.deleteBuildVars(projectId, pipelineId, buildId)
+                    }
                 } catch (ignored: Exception) {
                     logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
                 }
@@ -1023,15 +1027,15 @@ class PipelineBuildFacadeService(
                             )
                         }
                         val reviewParam = ReviewParam(
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                buildId = buildId,
-                                reviewUsers = reviewUser,
-                                status = null,
-                                desc = el.desc,
-                                suggest = "",
-                                params = el.params
-                            )
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            reviewUsers = reviewUser,
+                            status = null,
+                            desc = el.desc,
+                            suggest = "",
+                            params = el.params
+                        )
                         logger.info("reviewParam : $reviewParam")
                         return reviewParam
                     }
@@ -1817,10 +1821,10 @@ class PipelineBuildFacadeService(
 
         if (!nodeHashId.isNullOrBlank()) {
             msg = "${
-                MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
-                    params = arrayOf(projectCode, nodeHashId)
-                )
+            MessageCodeUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
+                params = arrayOf(projectCode, nodeHashId)
+            )
             } $msg"
         }
         // #5046 worker-agent.jar进程意外退出，经由devopsAgent转达
