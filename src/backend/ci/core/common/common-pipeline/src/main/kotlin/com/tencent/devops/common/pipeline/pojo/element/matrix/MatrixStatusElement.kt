@@ -50,9 +50,9 @@ data class MatrixStatusElement(
     @ApiModelProperty("原插件的类型标识")
     val originClassType: String,
     @ApiModelProperty("原插件的市场标识")
-    private val originAtomCode: String,
+    val originAtomCode: String,
     @ApiModelProperty("原插件的内置标识")
-    private val originTaskAtom: String,
+    val originTaskAtom: String,
     // 当状态插件为质量红线插件是需要专门保存
     @ApiModelProperty("审核人", required = true)
     var reviewUsers: MutableList<String>? = null,
