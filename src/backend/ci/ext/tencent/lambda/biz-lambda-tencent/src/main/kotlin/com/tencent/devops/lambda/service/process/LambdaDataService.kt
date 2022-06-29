@@ -297,8 +297,8 @@ class LambdaDataService @Autowired constructor(
                     }
 
                     val dataMap = mutableMapOf("input" to inputMap)
-                    val taskParamMap1 = mutableMapOf("data" to dataMap)
-                    JSONObject(taskParamMap1)
+                    taskParamMap.toMutableMap()["data"] = dataMap
+                    JSONObject(taskParamMap)
                 } else {
                     JSONObject(JsonUtil.toMap(task.taskParams))
                 }
