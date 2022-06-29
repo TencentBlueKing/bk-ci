@@ -48,6 +48,12 @@
     "createTime": "创建时间",
     "updateTime": "更新时间",
     "time": "时间",
+    "header": {
+        "pipelines": "流水线",
+        "metrics": "数据分析",
+        "settings": "项目设置",
+        "notifications": "通知"
+    },
     "pipeline": {
         "pipeline": "流水线",
         "allPipelines": "所有流水线",
@@ -67,7 +73,7 @@
         "actor": "触发人",
         "event": "事件",
         "consume": "耗时",
-        "cacelBuild": "取消构建",
+        "cancelBuild": "取消构建",
         "rebuild": "重新构建",
         "triggerTitle": "触发自定义构建",
         "branchSelectPlaceholder": "选择一个分支",

@@ -11,7 +11,7 @@
                     :class="{ 'nav-item': true, active: curNav.name === nav.name }"
                 >
                     <icon :name="nav.icon" size="18"></icon>
-                    <bk-badge :val="unreadNum" theme="danger" position="right" :visible="unreadNum">
+                    <bk-badge :val="unreadNum" theme="danger" position="right" :visible="!!unreadNum">
                         <span class="mr10">{{ nav.label }}</span>
                     </bk-badge>
                 </li>

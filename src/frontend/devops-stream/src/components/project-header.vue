@@ -13,7 +13,7 @@
                         size="18"
                         class="link-icon"
                     ></icon>
-                    Pipelines
+                    {{$t('header.pipelines')}}
                 </router-link>
                 <router-link
                     class="stream-link"
@@ -24,7 +24,7 @@
                         size="18"
                         class="link-icon"
                     ></icon>
-                    Metrics
+                    {{$t('header.metrics')}}
                 </router-link>
                 <router-link
                     class="stream-link"
@@ -37,7 +37,7 @@
                         class="link-icon"
                         v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }"
                     ></icon>
-                    Settings
+                    {{$t('header.settings')}}
                 </router-link>
             </template>
         </span>
@@ -60,11 +60,18 @@
                     :name="option.name">
                 </bk-option>
             </bk-select>
+            <span class="user-notifications" @click.stop="goToNotifications">
+                <icon
+                    size="18"
+                    name="notify"
+                ></icon>
+                {{$t('header.notifications')}}
+                <span class="user-hint" v-if="messageNum > 0"></span>
+            </span>
             <toggle-language></toggle-language>
             <user
                 class="user-info"
                 :user="user"
-                :message-num="messageNum"
             />
         </section>
     </header>
@@ -140,6 +147,10 @@
                 this.$router.push({
                     name: 'dashboard'
                 })
+            },
+
+            goToNotifications () {
+                this.$router.push({ name: 'notifications' })
             }
         }
     })
@@ -219,7 +230,29 @@
             color: #fff;
         }
     }
-    
+
+    .user-notifications {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        color: #c3cdd7;
+        margin-right: 25px;
+        &:hover {
+            color: #fff;
+        }
+        svg {
+            margin-right: 4px;
+        }
+    }
+    .user-hint {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: red;
+        position: relative;
+        left: 4px;
+    }
     .choose-project {
         width: 250px;
         margin-right: 25px;
