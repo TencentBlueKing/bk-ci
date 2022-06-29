@@ -220,7 +220,7 @@ open class MarketAtomTask : ITask() {
                 OUTPUT_ENV to outputFile,
                 JAVA_PATH_ENV to getJavaFile().absolutePath
             )
-        )
+        ).toMutableMap()
 
         var error: Throwable? = null
         try {
@@ -246,6 +246,10 @@ open class MarketAtomTask : ITask() {
             atomDevLanguageEnvVars?.forEach {
                 systemEnvVariables[it.envKey] = it.envValue
             }
+
+            // #7023 找回重构导致的逻辑丢失： runtime 覆盖 system 环境变量
+            systemEnvVariables.forEach { runtimeVariables.putIfAbsent(it.key, it.value) }
+
             val preCmd = atomData.preCmd
             val buildEnvs = buildVariables.buildEnvs
             if (!preCmd.isNullOrBlank()) {
