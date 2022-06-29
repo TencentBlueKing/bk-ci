@@ -46,7 +46,7 @@ val moduleName = if (moduleNameList.size >= 3 && moduleNameList[1] == "dispatch"
     moduleNameList[1]
 }
 
-val moduleNames = when (moduleName) {
+var moduleNames = when (moduleName) {
     "misc" -> {
         listOf("process", "project", "repository", "dispatch", "plugin", "quality", "artifactory", "environment")
     }
