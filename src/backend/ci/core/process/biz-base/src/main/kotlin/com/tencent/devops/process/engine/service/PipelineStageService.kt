@@ -326,6 +326,49 @@ class PipelineStageService @Autowired constructor(
         }
     }
 
+    fun cancelStageBySystem(
+        userId: String,
+        buildStage: PipelineBuildStage,
+        timeout: Boolean? = false
+    ) {
+
+        val checkMap: Map<Boolean, StagePauseCheck?> = mapOf(
+            true to buildStage.checkIn,
+            false to buildStage.checkOut
+        )
+
+        checkMap.forEach { (inOrOut, pauseCheck) ->
+            // #5654 如果是红线待审核状态则取消红线审核
+            if (pauseCheck?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
+                qualityTriggerStage(
+                    userId = userId,
+                    buildStage = buildStage,
+                    qualityRequest = StageQualityRequest(
+                        position = ControlPointPosition.BEFORE_POSITION,
+                        pass = false,
+                        checkTimes = buildStage.executeCount
+                    ),
+                    inOrOut = inOrOut,
+                    check = pauseCheck,
+                    timeout = timeout
+                )
+            }
+            // #5654 如果是待人工审核则取消人工审核
+            else if (pauseCheck?.groupToReview() != null) {
+                cancelStage(
+                    userId = userId,
+                    buildStage = buildStage,
+                    reviewRequest = StageReviewRequest(
+                        reviewParams = listOf(),
+                        id = pauseCheck.groupToReview()?.id,
+                        suggest = null
+                    ),
+                    timeout = timeout
+                )
+            }
+        }
+    }
+
     fun cancelStage(
         userId: String,
         buildStage: PipelineBuildStage,
@@ -442,6 +485,9 @@ class PipelineStageService @Autowired constructor(
 
     fun getPendingStage(projectId: String, buildId: String): PipelineBuildStage? {
         var pendingStage = pipelineBuildStageDao.getByStatus(dslContext, projectId, buildId, BuildStatus.RUNNING)
+        if (pendingStage == null) {
+            pendingStage = pipelineBuildStageDao.getByStatus(dslContext, projectId, buildId, BuildStatus.PAUSE)
+        }
         if (pendingStage == null) {
             pendingStage = pipelineBuildStageDao.getByStatus(dslContext, projectId, buildId, BuildStatus.QUEUE)
         }
