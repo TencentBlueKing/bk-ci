@@ -25,50 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.jmx
+package com.tencent.devops.log.resources
 
-import org.springframework.jmx.export.annotation.ManagedAttribute
-import org.springframework.jmx.export.annotation.ManagedResource
-import org.springframework.stereotype.Component
-import java.util.concurrent.atomic.AtomicLong
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.log.api.OpLogResource
+import com.tencent.devops.log.cron.impl.IndexCleanJobESImpl
+import org.springframework.beans.factory.annotation.Autowired
 
-@Component
-@ManagedResource(
-    objectName = "com.tencent.devops.log.v2:type=index,operation=create",
-    description = "log create index performance"
-)
-class CreateIndexBean {
+@RestResource
+class OpLogResourceImpl @Autowired constructor(
+    val indexCleanJobES: IndexCleanJobESImpl
+) : OpLogResource {
 
-    private val executeCount = AtomicLong(0)
-    private val executeElapse = AtomicLong(0)
-    private val calculateCount = AtomicLong(0)
-    private val failureCount = AtomicLong(0)
-
-    @Synchronized
-    fun execute(elapse: Long, success: Boolean) {
-        executeCount.incrementAndGet()
-        calculateCount.incrementAndGet()
-        executeElapse.addAndGet(elapse)
-        if (!success) {
-            failureCount.incrementAndGet()
-        }
+    override fun makeIndexCold(): Result<Boolean> {
+        indexCleanJobES.cleanIndex()
+        return Result(true)
     }
-
-    @Synchronized
-    @ManagedAttribute
-    fun getCreateIndexPerformance(): Double {
-        val elapse = executeElapse.getAndSet(0)
-        val count = calculateCount.getAndSet(0)
-        return if (count == 0L) {
-            0.0
-        } else {
-            elapse.toDouble() / count
-        }
-    }
-
-    @ManagedAttribute
-    fun getExecuteCount() = executeCount.get()
-
-    @ManagedAttribute
-    fun getFailureCount() = failureCount.get()
 }
