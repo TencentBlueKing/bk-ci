@@ -72,10 +72,10 @@ class BkMetricsDailyJob @Autowired constructor(
      * 计算节省时间及推送数据
      */
     private fun processAndSend(statisticsDate: String, overviewModel: TurboDaySummaryOverviewModel) {
-        val estimateTime = overviewModel.estimateTime?.toLong() ?: 0L
-        val executeTime = overviewModel.executeTime?.toLong() ?: 0L
+        val estimateTime = overviewModel.estimateTime ?: 0.0
+        val executeTime = overviewModel.executeTime ?: 0.0
         // 单位：秒
-        val saveTime = MathUtil.roundToTwoDigits(((estimateTime - executeTime) * 3600).toDouble()).toDouble()
+        val saveTime = MathUtil.roundToTwoDigits(((estimateTime - executeTime) * 3600)).toDouble()
 
         val bkMetricsMessage = BkMetricsMessage(
             statisticsTime = statisticsDate,
