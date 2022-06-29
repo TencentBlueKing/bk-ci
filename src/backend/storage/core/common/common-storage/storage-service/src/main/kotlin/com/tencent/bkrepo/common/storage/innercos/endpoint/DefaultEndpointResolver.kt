@@ -31,6 +31,9 @@
 
 package com.tencent.bkrepo.common.storage.innercos.endpoint
 
+/**
+ * 默认解析器实现，直接访问域名
+ */
 class DefaultEndpointResolver : EndpointResolver {
 
     override fun resolveEndpoint(endpoint: String): String {

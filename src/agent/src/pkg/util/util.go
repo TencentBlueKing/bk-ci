@@ -28,46 +28,46 @@
 package util
 
 import (
-    "encoding/json"
-    "strings"
-    "time"
+	"encoding/json"
+	"strings"
+	"time"
 )
 
 func ParseJsonToData(jsonData interface{}, targetData interface{}) error {
-    dataStr, err := json.Marshal(jsonData)
-    if err != nil {
-        return err
-    }
+	dataStr, err := json.Marshal(jsonData)
+	if err != nil {
+		return err
+	}
 
-    err = json.Unmarshal([]byte(dataStr), targetData)
-    if err != nil {
-        return err
-    } else {
-        return nil
-    }
+	err = json.Unmarshal([]byte(dataStr), targetData)
+	if err != nil {
+		return err
+	} else {
+		return nil
+	}
 }
 
 func FormatTime(t time.Time) string {
-    return t.Format("2006-01-02 15:04:05")
+	return t.Format("2006-01-02 15:04:05")
 }
 
 func SplitAndTrimSpace(s string, sep string) []string {
-    split := strings.Split(s, sep)
-    result := make([]string, len(split))
-    for i, sub := range split {
-        result[i] = strings.TrimSpace(sub)
-    }
-    return result
+	split := strings.Split(s, sep)
+	result := make([]string, len(split))
+	for i, sub := range split {
+		result[i] = strings.TrimSpace(sub)
+	}
+	return result
 }
 func Contains(s []string, subs string) bool {
-    if len(s) <= 0 {
-        return false
-    }
+	if len(s) <= 0 {
+		return false
+	}
 
-    for _, a := range s {
-        if a == subs {
-            return true
-        }
-    }
-    return false
+	for _, a := range s {
+		if a == subs {
+			return true
+		}
+	}
+	return false
 }

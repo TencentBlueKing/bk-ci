@@ -124,6 +124,11 @@ func (cc *TaskCC) LocalExecute(command []string) (int, error) {
 	return 0, nil
 }
 
+// NeedRemoteResource check whether this command need remote resource
+func (cc *TaskCC) NeedRemoteResource(command []string) bool {
+	return true
+}
+
 // RemoteRetryTimes will return the remote retry times
 func (cc *TaskCC) RemoteRetryTimes() int {
 	return 0
@@ -141,7 +146,7 @@ func (cc *TaskCC) PostExecute(r *dcSDK.BKDistResult) error {
 
 // FinalExecute 清理临时文件
 func (cc *TaskCC) FinalExecute(args []string) {
-	cc.finalExecute(args)
+	cc.finalExecute(args, cc.sandbox)
 }
 
 // GetFilterRules add file send filter
@@ -214,12 +219,13 @@ func (cc *TaskCC) preExecute(command []string) (*dcSDK.BKDistCommand, error) {
 	return &dcSDK.BKDistCommand{
 		Commands: []dcSDK.BKCommand{
 			{
-				WorkDir:     cc.sandbox.Dir,
-				ExePath:     "",
-				ExeName:     cc.serverSideArgs[0],
-				Params:      cc.serverSideArgs[1:],
-				Inputfiles:  cc.sendFiles,
-				ResultFiles: cc.outputFile,
+				WorkDir:         cc.sandbox.Dir,
+				ExePath:         "",
+				ExeName:         cc.serverSideArgs[0],
+				ExeToolChainKey: dcSDK.GetJsonToolChainKey(command[0]),
+				Params:          cc.serverSideArgs[1:],
+				Inputfiles:      cc.sendFiles,
+				ResultFiles:     cc.outputFile,
 			},
 		},
 	}, nil
@@ -294,8 +300,8 @@ func (cc *TaskCC) ensureOwner(fdl []string) {
 	}
 }
 
-func (cc *TaskCC) finalExecute(args []string) {
-	cc.ensureOwner(getOutputFile(args))
+func (cc *TaskCC) finalExecute(args []string, sandbox *dcSyscall.Sandbox) {
+	cc.ensureOwner(getOutputFile(args, sandbox))
 
 	if !cc.saveTemp() {
 		cc.cleanTmpFile()
@@ -348,7 +354,7 @@ func (cc *TaskCC) preBuild(args []string) error {
 
 	// scan the args, check if it can be compiled remotely, wrap some un-used options,
 	// and get the real input&output file.
-	scannedData, err := scanArgs(cc.expandArgs)
+	scannedData, err := scanArgs(cc.expandArgs, cc.sandbox)
 	if err != nil {
 		// blog.Warnf("cc: [%s] pre-build not support, scan args %v: %v", cc.tag, cc.expandArgs, err)
 		return err

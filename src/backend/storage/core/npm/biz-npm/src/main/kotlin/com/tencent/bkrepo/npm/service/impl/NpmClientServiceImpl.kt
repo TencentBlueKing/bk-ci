@@ -41,6 +41,7 @@ import com.tencent.bkrepo.common.artifact.repository.context.ArtifactRemoveConte
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactSearchContext
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactUploadContext
 import com.tencent.bkrepo.common.artifact.resolve.file.ArtifactFileFactory
+import com.tencent.bkrepo.common.artifact.util.PackageKeys
 import com.tencent.bkrepo.common.security.permission.Permission
 import com.tencent.bkrepo.common.service.util.HttpContextHolder
 import com.tencent.bkrepo.npm.artifact.NpmArtifactInfo
@@ -67,7 +68,6 @@ import com.tencent.bkrepo.npm.model.properties.PackageProperties
 import com.tencent.bkrepo.npm.pojo.enums.NpmOperationAction
 import com.tencent.bkrepo.npm.pojo.metadata.MetadataSearchRequest
 import com.tencent.bkrepo.npm.pojo.metadata.disttags.DistTags
-import com.tencent.bkrepo.npm.properties.NpmProperties
 import com.tencent.bkrepo.npm.service.NpmClientService
 import com.tencent.bkrepo.npm.utils.BeanUtils
 import com.tencent.bkrepo.npm.utils.NpmUtils
@@ -75,7 +75,7 @@ import com.tencent.bkrepo.npm.utils.TimeUtil
 import com.tencent.bkrepo.repository.api.MetadataClient
 import com.tencent.bkrepo.repository.pojo.metadata.MetadataSaveRequest
 import org.apache.commons.codec.binary.Base64
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -88,8 +88,7 @@ import kotlin.system.measureTimeMillis
 class NpmClientServiceImpl(
     private val npmDependentHandler: NpmDependentHandler,
     private val metadataClient: MetadataClient,
-    private val npmPackageHandler: NpmPackageHandler,
-    private val npmProperties: NpmProperties
+    private val npmPackageHandler: NpmPackageHandler
 ) : NpmClientService, AbstractNpmService() {
 
     @Permission(ResourceType.REPO, PermissionAction.WRITE)
@@ -142,39 +141,6 @@ class NpmClientServiceImpl(
             logger.info("handling query package metadata request for package [$name] in repo [$projectId/$repoName]")
             return queryPackageInfo(artifactInfo, name)
         }
-    }
-
-    private fun queryPackageInfo(
-        artifactInfo: NpmArtifactInfo,
-        name: String,
-        showCustomTarball: Boolean = true
-    ): NpmPackageMetaData {
-        val packageFullPath = NpmUtils.getPackageMetadataPath(name)
-        val context = ArtifactQueryContext()
-        context.putAttribute(NPM_FILE_FULL_PATH, packageFullPath)
-        val inputStream =
-            ArtifactContextHolder.getRepository().query(context) as? InputStream
-                ?: throw NpmArtifactNotFoundException("document not found")
-        val packageMetaData = inputStream.use { objectMapper.readValue(it, NpmPackageMetaData::class.java) }
-        if (showCustomTarball) {
-            val versionsMap = packageMetaData.versions.map
-            val iterator = versionsMap.entries.iterator()
-            while (iterator.hasNext()) {
-                val entry = iterator.next()
-                modifyVersionMetadataTarball(artifactInfo, name, entry.value)
-            }
-        }
-        return packageMetaData
-    }
-
-    private fun modifyVersionMetadataTarball(
-        artifactInfo: NpmArtifactInfo,
-        name: String,
-        versionMetadata: NpmVersionMetadata
-    ) {
-        val oldTarball = versionMetadata.dist?.tarball!!
-        versionMetadata.dist?.tarball =
-            NpmUtils.buildPackageTgzTarball(oldTarball, npmProperties.tarball.prefix, name, artifactInfo)
     }
 
     @Permission(ResourceType.REPO, PermissionAction.READ)
@@ -261,26 +227,27 @@ class NpmClientServiceImpl(
 
     @Permission(ResourceType.REPO, PermissionAction.WRITE)
     override fun deleteVersion(
-        userId: String,
         artifactInfo: NpmArtifactInfo,
         name: String,
         version: String,
         tgzPath: String
     ) {
-        logger.info("handling delete version [$version] request for package [$name]")
+        logger.info("handling delete version [$version] request for package [$name].")
         val fullPathList = mutableListOf<String>()
+        val packageKey = PackageKeys.ofNpm(name)
         with(artifactInfo) {
-            if (tgzPath.isEmpty() || !exist(projectId, repoName, tgzPath)) {
-                throw NpmArtifactNotFoundException("can not find version [$version] for package [$name]")
+            // 判断package_version是否存在
+            if (tgzPath.isEmpty() || !packageVersionExist(projectId, repoName, packageKey, version)) {
+                throw NpmArtifactNotFoundException("package [$name] with version [$version] not exists.")
             }
             fullPathList.add(tgzPath)
             fullPathList.add(NpmUtils.getVersionPackageMetadataPath(name, version))
             val context = ArtifactRemoveContext()
+            // 删除包管理中对应的version
+            npmPackageHandler.deleteVersion(context.userId, name, version, artifactInfo)
             context.putAttribute(NPM_FILE_FULL_PATH, fullPathList)
             ArtifactContextHolder.getRepository().remove(context)
-            logger.info("userId [$userId] delete version [$version] for package [$name] success.")
-            // 删除包管理中对应的version
-            npmPackageHandler.deleteVersion(userId, name, version, artifactInfo)
+            logger.info("userId [${context.userId}] delete version [$version] for package [$name] success.")
         }
     }
 
@@ -293,11 +260,12 @@ class NpmClientServiceImpl(
         fullPathList.add(name)
         val context = ArtifactRemoveContext()
         context.putAttribute(NPM_FILE_FULL_PATH, fullPathList)
+        // 删除包
+        npmPackageHandler.deletePackage(userId, name, artifactInfo)
         ArtifactContextHolder.getRepository().remove(context).also {
             logger.info("userId [$userId] delete package [$name] success.")
         }
         npmDependentHandler.updatePackageDependents(userId, artifactInfo, packageMetaData, NpmOperationAction.UNPUBLISH)
-        npmPackageHandler.deletePackage(userId, name, artifactInfo)
     }
 
     private fun searchLatestVersionMetadata(artifactInfo: NpmArtifactInfo, name: String): NpmVersionMetadata {
@@ -388,14 +356,14 @@ class NpmClientServiceImpl(
         size: Long
     ) {
         with(artifactInfo) {
-            val packageFullPath = NpmUtils.getPackageMetadataPath(npmPackageMetaData.name!!)
+            val packageKey = PackageKeys.ofNpm(npmPackageMetaData.name.orEmpty())
             val gmtTime = TimeUtil.getGMTTime()
             val npmMetadata = npmPackageMetaData.versions.map.values.iterator().next()
             if (!npmMetadata.dist!!.any().containsKey(SIZE)) {
                 npmMetadata.dist!!.set(SIZE, size)
             }
             // 第一次上传
-            if (!exist(projectId, repoName, packageFullPath)) {
+            if (!packageExist(projectId, repoName, packageKey)) {
                 npmPackageMetaData.time.add(CREATED, gmtTime)
                 npmPackageMetaData.time.add(MODIFIED, gmtTime)
                 npmPackageMetaData.time.add(npmMetadata.version!!, gmtTime)
@@ -466,11 +434,13 @@ class NpmClientServiceImpl(
     ) {
         val attachmentEntry = npmPackageMetaData.attachments!!.getMap().entries.iterator().next()
         val versionMetadata = npmPackageMetaData.versions.map.values.iterator().next()
-        val filename = attachmentEntry.key
-        val fullPath = "${versionMetadata.name}/-/$filename"
-        val withDownloadFullPath = "${versionMetadata.name}/download/$filename"
+        val fullPath = "${versionMetadata.name}/-/${attachmentEntry.key}"
+        val packageKey = PackageKeys.ofNpm(versionMetadata.name.orEmpty())
+        val version = versionMetadata.version.orEmpty()
         with(artifactInfo) {
-            if (exist(projectId, repoName, fullPath) || exist(projectId, repoName, withDownloadFullPath)) {
+            // 判断包版本是否存在 如果该版本先前发布过，也不让再次发布该版本
+            if (packageVersionExist(projectId, repoName, packageKey, version) ||
+                packageHistoryVersionExist(projectId, repoName, packageKey, version)) {
                 throw NpmArtifactExistException(
                     "You cannot publish over the previously published versions: ${versionMetadata.version}."
                 )

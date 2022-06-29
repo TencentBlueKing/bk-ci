@@ -44,6 +44,7 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
@@ -57,6 +58,7 @@ import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
+import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -69,7 +71,8 @@ class StreamYamlTrigger @Autowired constructor(
     private val yamlTemplateService: YamlTemplateService,
     private val streamBasicSettingService: StreamBasicSettingService,
     private val yamlBuild: StreamYamlBuild,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val streamYamlBaseBuild: StreamYamlBaseBuild
 ) {
 
     companion object {
@@ -86,9 +89,31 @@ class StreamYamlTrigger @Autowired constructor(
         action: BaseAction
     ): Boolean {
         logger.info("|${action.data.context.requestEventId}|triggerBuild|action|${action.format()}")
-
-        val pipeline = action.data.context.pipeline!!
-
+        var pipeline = action.data.context.pipeline!!
+        // 提前创建新流水线，保证git提交后 stream上能看到
+        if (pipeline.pipelineId.isBlank()) {
+            pipeline = StreamTriggerPipeline(
+                gitProjectId = action.data.getGitProjectId(),
+                pipelineId = "",
+                filePath = pipeline.filePath,
+                displayName = pipeline.filePath,
+                enabled = true,
+                creator = action.data.getUserId(),
+                lastUpdateBranch = action.data.eventCommon.branch
+            )
+            streamYamlBaseBuild.createNewPipeLine(
+                pipeline = pipeline,
+                projectCode = action.getProjectCode(),
+                action = action
+            )
+            // 新建流水线放
+            action.data.context.pipeline = pipeline
+        } else if (needUpdateLastBuildBranch(action)) {
+            action.updateLastBranch(
+                pipelineId = pipeline.pipelineId,
+                branch = action.data.eventCommon.branch
+            )
+        }
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
         val gitProjectInfo = action.api.getGitProjectInfo(
             action.getGitCred(),
@@ -131,7 +156,7 @@ class StreamYamlTrigger @Autowired constructor(
         }
 
         streamBasicSettingService.updateProjectInfo(
-            action.data.eventCommon.userId,
+            action.data.getUserId(),
             gitProjectInfo.toStreamGitProjectInfoWithProject()
         )
 
@@ -184,6 +209,16 @@ class StreamYamlTrigger @Autowired constructor(
             )
         }
         return true
+    }
+
+    private fun needUpdateLastBuildBranch(action: BaseAction): Boolean {
+        return action.data.context.pipeline!!.pipelineId.isBlank() ||
+            (
+                action is GitBaseAction &&
+                        !action.getChangeSet().isNullOrEmpty() &&
+                    action.getChangeSet()!!.toSet()
+                        .contains(action.data.context.pipeline!!.filePath)
+                )
     }
 
     @Throws(StreamTriggerBaseException::class, ErrorCodeException::class)
@@ -274,12 +309,6 @@ class StreamYamlTrigger @Autowired constructor(
     private fun needChangePipelineDisplayName(
         action: BaseAction
     ): Boolean {
-        return action.data.context.pipeline!!.pipelineId.isBlank() ||
-            (
-                !action.data.context.changeSet.isNullOrEmpty() &&
-                    action.data.context.changeSet!!.toSet()
-                        .contains(action.data.context.pipeline!!.filePath) &&
-                    action.data.context.repoTrigger == null
-                )
+        return action.data.context.pipeline!!.pipelineId.isBlank() || action is GitBaseAction
     }
 }

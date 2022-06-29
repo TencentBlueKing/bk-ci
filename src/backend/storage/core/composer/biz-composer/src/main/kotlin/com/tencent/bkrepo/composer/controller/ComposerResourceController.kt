@@ -36,8 +36,8 @@ import com.tencent.bkrepo.common.service.util.HttpContextHolder
 import com.tencent.bkrepo.composer.api.ComposerResource
 import com.tencent.bkrepo.composer.artifact.ComposerArtifactInfo
 import com.tencent.bkrepo.composer.service.ComposerService
-import org.apache.http.HttpStatus
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -61,7 +61,7 @@ class ComposerResourceController(
         if (composerService.getJson(composerArtifactInfo) != null) {
             response.writer.print(composerService.getJson(composerArtifactInfo))
         } else {
-            response.status = HttpStatus.SC_NOT_FOUND
+            response.status = HttpStatus.NOT_FOUND.value()
         }
     }
 

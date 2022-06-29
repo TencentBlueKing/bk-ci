@@ -92,6 +92,24 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(
         )
     }
 
+    override fun updateTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        versionName: String,
+        useTemplateSettings: Boolean,
+        instances: List<TemplateInstanceUpdate>
+    ): TemplateOperationRet {
+        return templateFacadeService.updateTemplateInstances(
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            versionName = versionName,
+            useTemplateSettings = useTemplateSettings,
+            instances = instances
+        )
+    }
+
     override fun listTemplate(
         userId: String,
         projectId: String,

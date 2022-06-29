@@ -54,11 +54,11 @@ import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
-import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.exception.CommitCheck
@@ -89,7 +89,6 @@ class StreamYamlBuild @Autowired constructor(
     private val deleteEventService: DeleteEventService,
     private val streamTriggerCache: StreamTriggerCache,
     private val repoTriggerEventService: RepoTriggerEventService,
-    private val streamGitConfig: StreamGitConfig,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val modelCreate: ModelCreate
 ) {
@@ -134,7 +133,7 @@ class StreamYamlBuild @Autowired constructor(
                 if (realPipeline.pipelineId.isBlank()) {
                     streamYamlBaseBuild.savePipeline(
                         pipeline = realPipeline,
-                        userId = action.data.eventCommon.userId,
+                        userId = action.data.getUserId(),
                         gitProjectId = action.data.eventCommon.gitProjectId.toLong(),
                         projectCode = action.getProjectCode(),
                         modelAndSetting = createTriggerModel(action.getProjectCode()),
@@ -174,7 +173,7 @@ class StreamYamlBuild @Autowired constructor(
                 null
             }
         } catch (e: Throwable) {
-            logger.warn("Fail to start the git ci build(${action.format()})", e)
+            logger.warn("Fail to start the stream build(${action.format()})", e)
             val (block, message, reason) = when (e) {
                 is JsonProcessingException, is ParamBlankException, is CustomException -> {
                     Triple(
@@ -223,7 +222,7 @@ class StreamYamlBuild @Autowired constructor(
                 StreamTimer(
                     projectId = action.getProjectCode(),
                     pipelineId = pipeline.pipelineId,
-                    userId = action.data.eventCommon.userId,
+                    userId = action.data.getUserId(),
                     crontabExpressions = listOf(yaml.triggerOn?.schedules?.cron.toString()),
                     gitProjectId = action.data.getGitProjectId().toLong(),
                     // 未填写则在每次触发拉默认分支
@@ -243,7 +242,7 @@ class StreamYamlBuild @Autowired constructor(
                 StreamDeleteEvent(
                     gitProjectId = action.data.getGitProjectId().toLong(),
                     pipelineId = pipeline.pipelineId,
-                    userId = action.data.eventCommon.userId,
+                    userId = action.data.getUserId(),
                     eventId = action.data.context.requestEventId!!,
                     originYaml = action.data.context.originYaml!!
                 )
@@ -318,7 +317,7 @@ class StreamYamlBuild @Autowired constructor(
         logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, modelAndSetting: $modelAndSetting")
 
         // 判断是否更新最后修改人
-        val changeSet = action.data.context.changeSet?.toSet()
+        val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
         val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
 
         return streamYamlBaseBuild.startBuild(
@@ -354,12 +353,12 @@ class StreamYamlBuild @Autowired constructor(
 
         // 判断是否更新最后修改人
         val pipeline = action.data.context.pipeline!!
-        val changeSet = action.data.context.changeSet?.toSet()
+        val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
         val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
 
         streamYamlBaseBuild.savePipeline(
             pipeline = pipeline,
-            userId = action.data.eventCommon.userId,
+            userId = action.data.getUserId(),
             gitProjectId = action.data.getGitProjectId().toLong(),
             projectCode = action.getProjectCode(),
             modelAndSetting = modelAndSetting,
@@ -384,12 +383,11 @@ class StreamYamlBuild @Autowired constructor(
             yaml = yaml,
             streamGitProjectInfo = streamGitProjectInfo,
             webhookParams = webhookParams,
-            yamlTransferData = yamlTransferData,
-            streamUrl = streamGitConfig.streamUrl
+            yamlTransferData = yamlTransferData
         )
 
         val modelCreateEvent = ModelCreateEvent(
-            userId = action.data.eventCommon.userId,
+            userId = action.data.getUserId(),
             projectCode = action.data.setting.projectCode!!,
             pipelineInfo = PipelineInfo(action.data.context.pipeline!!.pipelineId),
             gitData = GitData(
@@ -404,7 +402,7 @@ class StreamYamlBuild @Autowired constructor(
                 requestEventId = action.data.context.requestEventId!!,
                 objectKind = action.metaData.streamObjectKind
             ),
-            changeSet = action.data.context.changeSet?.toSet(),
+            changeSet = action.getChangeSet(),
             jobTemplateAcrossInfo = getJobTemplateAcrossInfo(yamlTransferData, action)
         )
 

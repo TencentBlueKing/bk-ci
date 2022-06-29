@@ -658,7 +658,8 @@ class QualityRuleCheckService @Autowired constructor(
 
     private fun getDetailMsg(record: QualityRuleInterceptRecord, params: Map<String, String>): String {
         // codecc跳到独立入口页面
-        return if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
+        return if (CodeccUtils.isCodeccAtom(record.indicatorType) ||
+            CodeccUtils.isCodeccCommunityAtom(record.indicatorType)) {
             val projectId = params["projectId"] ?: ""
             val pipelineId = params["pipelineId"] ?: ""
             val buildId = params["buildId"] ?: ""
@@ -711,12 +712,17 @@ class QualityRuleCheckService @Autowired constructor(
                         updateTime = time
                     )
                 } else {
+                    val result = if (rule.operation == RuleOperation.AUDIT && null != rule.auditUserList) {
+                        RuleInterceptResult.WAIT.name
+                    } else {
+                        RuleInterceptResult.FAIL.name
+                    }
                     historyService.serviceCreate(
                         projectId = projectId,
                         ruleId = ruleId,
                         pipelineId = pipelineId,
                         buildId = buildId,
-                        result = RuleInterceptResult.FAIL.name,
+                        result = result,
                         interceptList = interceptList,
                         createTime = time,
                         updateTime = time
@@ -865,7 +871,7 @@ class QualityRuleCheckService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            result = RuleInterceptResult.FAIL.name
+            result = RuleInterceptResult.WAIT.name
         )
         val ruleIdList = interceptList.map { it.ruleId }
 

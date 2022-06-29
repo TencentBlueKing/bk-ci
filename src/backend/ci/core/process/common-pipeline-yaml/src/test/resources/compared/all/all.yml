@@ -24,7 +24,7 @@ stages:
   jobs:
   - id: "job_1"
     name: null
-    resource-exclusive-declaration: null
+    mutex: null
     runs-on:
       self-hosted: false
       pool-name: "docker"
@@ -50,6 +50,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"hello 1\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: "腾讯代码分析(官方-代码分析工作组)"
       id: "check"
@@ -100,6 +102,8 @@ stages:
       retry-times: null
       env: null
       run: null
+      runAdditionalOptions:
+        shell: null
       checkout: null
     if-modify: null
     timeout-minutes: null

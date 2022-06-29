@@ -67,7 +67,6 @@ import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.GitCheckService
 import com.tencent.devops.stream.trigger.service.StreamTriggerTokenService
-import com.tencent.devops.stream.util.QualityUtils
 import com.tencent.devops.stream.util.StreamCommonUtils
 import org.slf4j.LoggerFactory
 import java.util.Base64
@@ -97,7 +96,7 @@ class TGitMrActionGit(
             cred = getGitCred(),
             gitProjectId = data.eventCommon.gitProjectId,
             mrId = event().object_attributes.id,
-            mrBody = QualityUtils.getQualityReport(body.reportData.first, body.reportData.second)
+            mrBody = body
         )
     }
 
@@ -202,26 +201,6 @@ class TGitMrActionGit(
             ref = TGitActionCommon.getTriggerBranch(event.object_attributes.target_branch)
         ).toSet()
 
-        // 获取mr请求的变更文件列表，用来给后面判断
-        val changeSet = mutableSetOf<String>()
-        apiService.getMrChangeInfo(
-            cred = getGitCred(),
-            gitProjectId = data.getGitProjectId(),
-            mrId = event.object_attributes.id.toString(),
-            retry = ApiRequestRetryInfo(true)
-        )?.files?.forEach {
-            if (it.deletedFile) {
-                changeSet.add(it.oldPath)
-            } else if (it.renameFile) {
-                changeSet.add(it.oldPath)
-                changeSet.add(it.newPath)
-            } else {
-                changeSet.add(it.newPath)
-            }
-        }
-
-        data.context.changeSet = changeSet.toList()
-
         // 已经merged的直接返回目标分支的文件列表即可
         if (event.isMrMergeEvent()) {
             return targetBranchYamlPathList.map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
@@ -239,7 +218,7 @@ class TGitMrActionGit(
             }
         ).toSet()
 
-        return checkMrYamlPathList(sourceBranchYamlPathList, targetBranchYamlPathList, changeSet)
+        return checkMrYamlPathList(sourceBranchYamlPathList, targetBranchYamlPathList, getChangeSet()!!)
             .map { YamlPathListEntry(it.key, it.value) }
     }
 
@@ -253,15 +232,17 @@ class TGitMrActionGit(
      *      - 如果不同，报错提示用户yml文件版本落后需要更新
      * 注：注意存在fork库不同projectID的提交
      */
-    override fun getYamlContent(fileName: String): String {
+    override fun getYamlContent(fileName: String): Pair<String, String> {
         val event = event()
         if (event.isMrMergeEvent()) {
-            return api.getFileContent(
-                cred = this.getGitCred(),
-                gitProjectId = data.getGitProjectId(),
-                fileName = fileName,
-                ref = data.eventCommon.branch,
-                retry = ApiRequestRetryInfo(true)
+            return Pair(
+                data.eventCommon.branch, api.getFileContent(
+                    cred = this.getGitCred(),
+                    gitProjectId = data.getGitProjectId(),
+                    fileName = fileName,
+                    ref = data.eventCommon.branch,
+                    retry = ApiRequestRetryInfo(true)
+                )
             )
         }
 
@@ -273,11 +254,27 @@ class TGitMrActionGit(
             retry = ApiRequestRetryInfo(true)
         )
 
-        if (!data.context.changeSet!!.contains(fileName)) {
+        if (!getChangeSet()!!.contains(fileName)) {
             return if (targetFile?.content.isNullOrBlank()) {
-                ""
+                logger.warn(
+                    "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
+                        "get file $fileName content from ${event.object_attributes.target_project_id} " +
+                        "branch ${event.object_attributes.target_branch} is blank because no file"
+                )
+                Pair(
+                    event.object_attributes.target_branch, ""
+                )
             } else {
-                String(Base64.getDecoder().decode(targetFile!!.content))
+                val c = String(Base64.getDecoder().decode(targetFile!!.content))
+                if (c.isBlank()) {
+                    logger.warn(
+                        "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
+                            "get file $fileName content from ${event.object_attributes.target_project_id} " +
+                            "target branch ${event.object_attributes.target_branch} is blank " +
+                            "because git content blank"
+                    )
+                }
+                Pair(event.object_attributes.target_branch, c)
             }
         }
 
@@ -293,9 +290,23 @@ class TGitMrActionGit(
             retry = ApiRequestRetryInfo(true)
         )
         val sourceContent = if (sourceFile?.content.isNullOrBlank()) {
-            ""
+            logger.warn(
+                "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
+                    "get file $fileName content from ${event.object_attributes.source_project_id} " +
+                    "source commit ${event.object_attributes.last_commit.id} is blank because no file"
+            )
+            Pair(event.object_attributes.last_commit.id, "")
         } else {
-            String(Base64.getDecoder().decode(sourceFile!!.content))
+            val c = String(Base64.getDecoder().decode(sourceFile!!.content))
+            if (c.isBlank()) {
+                logger.warn(
+                    "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
+                        "get file $fileName content from ${event.object_attributes.source_project_id} " +
+                        "source commit ${event.object_attributes.last_commit.id} is blank " +
+                        "because git content blank"
+                )
+            }
+            Pair(event.object_attributes.last_commit.id, c)
         }
 
         if (targetFile?.blobId.isNullOrBlank()) {
@@ -331,6 +342,36 @@ class TGitMrActionGit(
                 state = StreamCommitCheckState.FAILURE
             )
         )
+    }
+
+    override fun getChangeSet(): Set<String>? {
+        // 使用null和empty的区别来判断是否调用过获取函数
+        if (this.data.context.changeSet != null) {
+            return this.data.context.changeSet
+        }
+
+        // 获取mr请求的变更文件列表，用来给后面判断
+        val changeSet = mutableSetOf<String>()
+        apiService.getMrChangeInfo(
+            cred = (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as TGitCred,
+            // 获取mr信息的project Id和事件强关联，不一定是流水线所处库
+            gitProjectId = data.eventCommon.gitProjectId,
+            mrId = event().object_attributes.id.toString(),
+            retry = ApiRequestRetryInfo(true)
+        )?.files?.forEach {
+            if (it.deletedFile) {
+                changeSet.add(it.oldPath)
+            } else if (it.renameFile) {
+                changeSet.add(it.oldPath)
+                changeSet.add(it.newPath)
+            } else {
+                changeSet.add(it.newPath)
+            }
+        }
+
+        this.data.context.changeSet = changeSet
+
+        return this.data.context.changeSet
     }
 
     private fun getFileInfo(
@@ -408,8 +449,8 @@ class TGitMrActionGit(
             triggerOn = triggerOn,
             sourceBranch = TGitActionCommon.getTriggerBranch(event.object_attributes.source_branch),
             targetBranch = TGitActionCommon.getTriggerBranch(event.object_attributes.target_branch),
-            changeSet = data.context.changeSet?.toSet(),
-            userId = data.eventCommon.userId,
+            changeSet = getChangeSet(),
+            userId = data.getUserId(),
             mrAction = mrAction
         )
         val params = TGitActionCommon.getStartParams(
@@ -432,6 +473,17 @@ class TGitMrActionGit(
     }
 
     override fun needSaveOrUpdateBranch() = !event().isMrForkEvent()
+
+    override fun sendUnlockWebhook() {
+        if (event().manual_unlock == true) {
+            gitCheckService.sendUnlockWebhook(
+                gitProjectId = data.getGitProjectId(),
+                mrId = event().object_attributes.id,
+                // 解锁延迟5s，确保在commit check发送后再发送webhook锁解锁
+                delayMills = 5000
+            )
+        }
+    }
 }
 
 private fun GitMergeRequestEvent.getActionValue(): String? {

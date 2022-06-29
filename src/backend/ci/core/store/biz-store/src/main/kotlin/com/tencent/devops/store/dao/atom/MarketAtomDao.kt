@@ -445,7 +445,7 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(ATOM_STATUS, atomStatus.status.toByte())
                 .set(PUBLISHER, marketAtomUpdateRequest.publisher)
                 .set(CLASS_TYPE, classType)
-                .set(PROPS, props)
+                .set(PROPS, JsonUtil.toJson(props, formatted = false))
                 .set(LOGO_URL, marketAtomUpdateRequest.logoUrl)
                 .set(HTML_TEMPLATE_VERSION, marketAtomUpdateRequest.frontendType.typeVersion)
                 .set(UPDATE_TIME, LocalDateTime.now())
@@ -527,7 +527,7 @@ class MarketAtomDao : AtomBaseDao() {
                     atomRequest.branch ?: atomRecord.branch,
                     atomRecord.codeSrc,
                     atomRecord.payFlag,
-                    props,
+                    JsonUtil.toJson(props, formatted = false),
                     atomRecord.data,
                     atomRequest.logoUrl,
                     classType,

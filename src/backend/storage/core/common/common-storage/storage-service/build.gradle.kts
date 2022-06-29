@@ -33,6 +33,7 @@ dependencies {
     api(fileTree(mapOf("dir" to "lib", "include" to listOf("*.jar"))))
 
     api(project(":common:common-api"))
+    api(project(":common:common-bksync"))
     api(project(":common:common-storage:storage-api"))
     api(project(":common:common-artifact:artifact-api"))
 
@@ -42,8 +43,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-aop")
     implementation("com.google.guava:guava")
     implementation("com.amazonaws:aws-java-sdk-s3")
-    implementation("org.apache.hadoop:hadoop-hdfs")
-    implementation("org.apache.hadoop:hadoop-common")
     implementation("com.squareup.okhttp3:okhttp")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
+    implementation("com.tencent.polaris:polaris-discovery-factory")
 }

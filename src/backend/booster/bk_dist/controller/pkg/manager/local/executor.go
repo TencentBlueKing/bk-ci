@@ -161,6 +161,14 @@ func (e *executor) executePreTask() (*dcSDK.BKDistCommand, error) {
 	return r, nil
 }
 
+func (e *executor) needRemoteResource() bool {
+	if e.handler != nil {
+		return e.handler.NeedRemoteResource(e.req.Commands)
+	}
+
+	return false
+}
+
 func (e *executor) remoteTryTimes() int {
 	if e.handler != nil {
 		return e.handler.RemoteRetryTimes() + 1

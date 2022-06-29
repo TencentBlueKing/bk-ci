@@ -54,10 +54,13 @@ import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitUserInfo
+import com.tencent.devops.stream.trigger.pojo.MrCommentBody
+import com.tencent.devops.stream.util.QualityUtils
 import com.tencent.devops.stream.util.RetryUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class TGitApiService @Autowired constructor(
@@ -224,7 +227,7 @@ class TGitApiService @Autowired constructor(
         cred as TGitCred
         return doRetryFun(
             retry = retry,
-            log = "$gitProjectId get yaml $fileName fail",
+            log = "$gitProjectId get yaml $fileName from $ref fail",
             apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR
         ) {
             client.get(ServiceGitResource::class).getGitFileContent(
@@ -235,9 +238,17 @@ class TGitApiService @Autowired constructor(
                     RepoAuthType.SSH
                 },
                 repoName = gitProjectId,
-                ref = ref,
+                ref = getTriggerBranch(ref),
                 filePath = fileName
             ).data!!
+        }
+    }
+
+    private fun getTriggerBranch(branch: String): String {
+        return when {
+            branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
+            branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
+            else -> branch
         }
     }
 
@@ -365,13 +376,14 @@ class TGitApiService @Autowired constructor(
         cred: TGitCred,
         gitProjectId: String,
         mrId: Long,
-        mrBody: String
+        mrBody: MrCommentBody
     ) {
+        // 暂时无法兼容，服务间调用 mrBody 字符串转义存在问题
         return client.get(ServiceGitResource::class).addMrComment(
             token = cred.toToken(),
             gitProjectId = gitProjectId,
             mrId = mrId,
-            mrBody = mrBody,
+            mrBody = QualityUtils.getQualityReport(mrBody.reportData.first, mrBody.reportData.second),
             tokenType = cred.toTokenType()
         )
     }
@@ -381,7 +393,11 @@ class TGitApiService @Autowired constructor(
         if (this.accessToken != null) {
             return this.accessToken
         }
-        return client.get(ServiceOauthResource::class).gitGet(this.userId!!).data!!.accessToken
+        return client.get(ServiceOauthResource::class).gitGet(this.userId!!).data?.accessToken
+            ?: throw CustomException(
+                Response.Status.FORBIDDEN,
+                "STEAM PROJECT ENABLE USER NO OAUTH PERMISSION"
+            )
     }
 
     protected fun StreamGitCred.toTokenType(): TokenTypeEnum {
@@ -426,27 +442,27 @@ class TGitApiService @Autowired constructor(
                 action()
             }
         } catch (e: ClientException) {
-            logger.warn("retry 5 times $log: ${e.message} ")
+            logger.warn("retry 5 times $log", e)
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
                 defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
             )
         } catch (e: RemoteServiceException) {
-            logger.warn("GIT_API_ERROR $log: ${e.message} ")
+            logger.warn("GIT_API_ERROR $log", e)
             throw ErrorCodeException(
                 statusCode = e.httpStatus,
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = "$log: ${e.errorMessage}"
             )
         } catch (e: CustomException) {
-            logger.warn("GIT_SCM_ERROR $log: ${e.message} ")
+            logger.warn("GIT_SCM_ERROR $log", e)
             throw ErrorCodeException(
                 statusCode = e.status.statusCode,
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = "$log: ${e.message}"
             )
         } catch (e: Throwable) {
-            logger.error("retryFun error $log: ${e.message} ")
+            logger.error("retryFun error $log", e)
             throw ErrorCodeException(
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = if (e.message.isNullOrBlank()) {

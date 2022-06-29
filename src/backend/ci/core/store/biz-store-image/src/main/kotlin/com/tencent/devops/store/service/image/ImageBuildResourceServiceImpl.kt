@@ -61,7 +61,9 @@ class ImageBuildResourceServiceImpl @Autowired constructor(
         logger.info("Input(${buildType.name})")
         if (buildType.name == BuildType.DOCKER.name ||
             buildType.name == BuildType.IDC.name ||
-            buildType.name == BuildType.PUBLIC_DEVCLOUD.name) {
+            buildType.name == BuildType.PUBLIC_DEVCLOUD.name ||
+            buildType.name == BuildType.KUBERNETES.name ||
+            buildType.name == BuildType.PUBLIC_BCS.name) {
             val record = businessConfigDao.get(
                 dslContext = dslContext,
                 business = BusinessEnum.BUILD_TYPE.name,

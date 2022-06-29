@@ -80,7 +80,7 @@ class DependOnControl @Autowired constructor(
                 foundSkip = true
             } else if (dependOnJobStatus == null || dependOnJobStatus.isSuccess()) {
                 successCnt++
-            } else if (dependOnJobStatus.isFailure()) { // 发现非正常构建结束，则表示失败
+            } else if (dependOnJobStatus.isFailure() || dependOnJobStatus.isCancel()) { // 发现非正常构建结束，则表示失败
                 foundFailure = true
             }
 

@@ -94,6 +94,7 @@ class CheckConditionalSkipContainerCmd constructor(
             } else {
                 val contextMap = pipelineContextService.buildContext(
                     projectId = container.projectId,
+                    pipelineId = container.pipelineId,
                     buildId = container.buildId,
                     stageId = container.stageId,
                     containerId = container.containerId,

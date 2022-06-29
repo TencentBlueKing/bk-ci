@@ -61,9 +61,9 @@ class ChartRepositoryServiceTest {
     fun getIndexYamlTest() {
         val perform =
             mockMvc.perform(
-                MockMvcRequestBuilders.get("/test/helm-local/index.yaml").header(
+                MockMvcRequestBuilders.get("/test/test/index.yaml").header(
                     "Authorization",
-                    "Basic eHdoeToxMjM0NTY="
+                    "Basic XXXXXX="
                 ).contentType(MediaType.APPLICATION_JSON)
             )
         perform.andExpect { MockMvcResultMatchers.status().is4xxClientError }

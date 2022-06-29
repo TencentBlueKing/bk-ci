@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,23 +10,19 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 package com.tencent.bkrepo.common.mongo.dao.util
@@ -56,7 +52,38 @@ object Pages {
     }
 
     /**
+     * 将查询到的所有数据通过内存分页构造结果
+     *
+     * @param total 所有数据
+     * @param page 页码，从1开始，如果传入值小于1则置为1
+     * @param size 分页大小，如果小于0则置为默认分页大小20
+     */
+    inline fun <reified T> buildPage(total: List<T>, page: Int, size: Int): Page<T> {
+        val pageNumber = if (page <= 0) DEFAULT_PAGE_NUMBER else page
+        val pageSize = if (page < 0) DEFAULT_PAGE_SIZE else size
+        val totalRecords = total.size
+        val offset = (pageNumber - 1) * pageSize
+        val records = if (offset > totalRecords) {
+            emptyList()
+        } else if (offset + pageSize > totalRecords) {
+            total.subList(offset, totalRecords)
+        } else {
+            total.subList(offset, offset + pageSize)
+        }
+        return Page(
+            pageNumber = pageNumber,
+            pageSize = pageSize,
+            totalRecords = totalRecords.toLong(),
+            records = records
+        )
+    }
+
+    /**
      * 创建分页响应结果
+     *
+     * @param pageRequest 分页请求
+     * @param totalRecords 数据总数
+     * @param records 数据列表
      */
     inline fun <reified T> ofResponse(pageRequest: PageRequest, totalRecords: Long, records: List<T>): Page<T> {
         return Page(

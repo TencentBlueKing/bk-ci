@@ -26,22 +26,19 @@ object TGitActionCommon {
 
     fun getStartParams(
         action: BaseAction,
-        triggerOn: TriggerOn?,
-        userId: String? = null
+        triggerOn: TriggerOn?
     ): Map<String, String> {
         return matchAndStartParams(
             action = action,
             triggerOn = triggerOn,
-            needMatch = false,
-            userId = userId
+            needMatch = false
         ).second
     }
 
     fun matchAndStartParams(
         action: BaseAction,
         triggerOn: TriggerOn?,
-        needMatch: Boolean = true,
-        userId: String? = null
+        needMatch: Boolean = true
     ): Pair<Boolean, Map<String, String>> {
         logger.info("match and start params|triggerOn:$triggerOn")
 
@@ -59,13 +56,14 @@ object TGitActionCommon {
 
         val matcher = TriggerBuilder.buildGitWebHookMatcher(gitEvent)
         val repository = if (action.data.context.repoTrigger != null) {
-            val projectName = GitUtils.getProjectName(action.data.setting.gitHttpUrl)
+            val projectName = action.data.eventCommon.gitProjectName
+                ?: GitUtils.getProjectName(action.data.setting.gitHttpUrl)
             CodeGitRepository(
                 aliasName = projectName,
                 url = action.data.setting.gitHttpUrl,
                 credentialId = "",
                 projectName = projectName,
-                userName = userId ?: action.data.eventCommon.userId,
+                userName = action.data.getUserId(),
                 authType = RepoAuthType.OAUTH,
                 projectId = action.getProjectCode(action.data.eventCommon.gitProjectId),
                 repoHashId = null
@@ -86,7 +84,7 @@ object TGitActionCommon {
         }
         val startParam = if (isMatch) {
             WebhookStartParamsRegistrar.getService(element = element).getStartParams(
-                projectId = action.data.setting.projectCode ?: "",
+                projectId = action.data.eventCommon.gitProjectId,
                 element = element,
                 repo = repository,
                 matcher = matcher,

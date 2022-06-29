@@ -22,9 +22,9 @@ stages:
   if: null
   fast-kill: false
   jobs:
-  - id: "job-0aOKjQV"
+  - id: "job-bpo2ELM"
     name: "job1"
-    resource-exclusive-declaration: null
+    mutex: null
     runs-on:
       self-hosted: false
       pool-name: "docker"
@@ -59,6 +59,8 @@ stages:
       retry-times: null
       env: null
       run: null
+      runAdditionalOptions:
+        shell: null
       checkout: ""
     - name: "CCK-腾讯代码分析(最新)"
       id: "2"
@@ -116,6 +118,8 @@ stages:
       retry-times: null
       env: null
       run: null
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: "CCK-腾讯代码分析(最新)"
       id: "3"
@@ -173,6 +177,8 @@ stages:
       retry-times: null
       env: null
       run: null
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: "CCK-腾讯代码分析(最新)"
       id: "4"
@@ -230,6 +236,8 @@ stages:
       retry-times: null
       env: null
       run: null
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: "CCK-腾讯代码分析(最新)"
       id: "5"
@@ -287,6 +295,8 @@ stages:
       retry-times: null
       env: null
       run: null
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: "CCK-腾讯代码分析(最新)"
       id: "6"
@@ -344,6 +354,8 @@ stages:
       retry-times: null
       env: null
       run: null
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: "CCK-腾讯代码分析(最新)"
       id: "7"
@@ -401,6 +413,8 @@ stages:
       retry-times: null
       env: null
       run: null
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: "CCK-腾讯代码分析(最新)"
       id: "9"
@@ -458,6 +472,8 @@ stages:
       retry-times: null
       env: null
       run: null
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: null
       id: null
@@ -470,6 +486,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"template_step_id_1 username world!\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: null
       id: null
@@ -482,6 +500,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"cyc_step_id_1 username CYC_STEP1!\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: null
       id: null
@@ -494,6 +514,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"cyc_step_id_3 username STEP6!\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: null
       id: null
@@ -506,6 +528,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"cyc_step_id_2 username CYC_STEP4!\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: null
       id: null
@@ -518,6 +542,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"cyc_step_id_6 username STEP6!\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     - name: null
       id: null
@@ -530,6 +556,8 @@ stages:
       retry-times: null
       env: null
       run: "echo \"cyc_step_id_5 username CYC_STEP5!\"\n"
+      runAdditionalOptions:
+        shell: null
       checkout: null
     if-modify: null
     timeout-minutes: 480

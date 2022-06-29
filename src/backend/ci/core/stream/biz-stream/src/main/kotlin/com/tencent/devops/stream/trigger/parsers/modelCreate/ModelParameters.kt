@@ -49,7 +49,6 @@ import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.CommonVariables
 import com.tencent.devops.stream.trigger.actions.BaseAction
-import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.pojo.StreamGitProjectCache
 
 @Suppress("ComplexMethod")
@@ -61,8 +60,7 @@ object ModelParameters {
         yaml: ScriptBuildYaml,
         streamGitProjectInfo: StreamGitProjectCache,
         webhookParams: Map<String, String> = mapOf(),
-        yamlTransferData: YamlTransferData? = null,
-        streamUrl: String?
+        yamlTransferData: YamlTransferData? = null
     ): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
 
@@ -72,7 +70,6 @@ object ModelParameters {
 
         // 通用参数
         startParams[CommonVariables.CI_PIPELINE_NAME] = yaml.name ?: ""
-        startParams[CommonVariables.CI_BUILD_URL] = streamUrl ?: ""
         startParams[BK_CI_RUN] = "true"
         startParams[CommonVariables.CI_ACTOR] = if (action.metaData.streamObjectKind == StreamObjectKind.SCHEDULE) {
             "system"
@@ -95,7 +92,7 @@ object ModelParameters {
         startParams[PIPELINE_BUILD_MSG] = parsedCommitMsg
 
         // git事件触发的action直接使用webhook参数即可
-        if (action is GitBaseAction) {
+        if (action.needAddWebhookParams()) {
             startParams.putAll(webhookParams)
         } else {
             // stream独有事件的单独判断

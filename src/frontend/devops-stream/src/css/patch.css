@@ -1,0 +1,10 @@
+.bk-breadcrumb-separator[class*=icon] {
+    font-size: 18px;
+}
+
+.tippy-tooltip {
+    .tippy-arrow {
+        width: unset;
+        height: unset;
+    }
+}

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,21 +32,34 @@
 package com.tencent.bkrepo.repository.controller.service
 
 import com.tencent.bkrepo.common.api.pojo.Response
+import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import com.tencent.bkrepo.common.service.util.ResponseBuilder
 import com.tencent.bkrepo.repository.api.ProxyChannelClient
 import com.tencent.bkrepo.repository.pojo.proxy.ProxyChannelInfo
 import com.tencent.bkrepo.repository.service.repo.ProxyChannelService
 import org.springframework.web.bind.annotation.RestController
 
-/**
- * 代理源服务接口实现类
- */
 @RestController
 class ProxyChannelController(
     private val proxyChannelService: ProxyChannelService
 ) : ProxyChannelClient {
-
-    override fun getById(id: String): Response<ProxyChannelInfo?> {
-        return ResponseBuilder.success(proxyChannelService.findById(id))
+    override fun getByUniqueId(
+        projectId: String,
+        repoName: String,
+        repoType: String,
+        name: String
+    ): Response<ProxyChannelInfo?> {
+        val type = try {
+            RepositoryType.ofValueOrDefault(repoType)
+        } catch (ignored: IllegalArgumentException) {
+            return ResponseBuilder.success()
+        }
+        val proxy = proxyChannelService.queryProxyChannel(
+            projectId = projectId,
+            repoName = repoName,
+            repoType = type,
+            name = name
+        )
+        return ResponseBuilder.success(proxy)
     }
 }

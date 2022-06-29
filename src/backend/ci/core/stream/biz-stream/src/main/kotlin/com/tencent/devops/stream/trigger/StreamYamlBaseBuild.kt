@@ -30,17 +30,23 @@ package com.tencent.devops.stream.trigger
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServiceTemplateAcrossResource
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
@@ -56,6 +62,7 @@ import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.expand.StreamYamlBuildExpand
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.pojo.StreamBuildLock
+import com.tencent.devops.stream.trigger.pojo.StreamTriggerLock
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import com.tencent.devops.stream.util.StreamPipelineUtils
@@ -150,6 +157,88 @@ class StreamYamlBaseBuild @Autowired constructor(
         )
     }
 
+    fun createNewPipeLine(pipeline: StreamTriggerPipeline, projectCode: String, action: BaseAction) {
+        // pipelineId可能为blank所以使用filePath为key
+        val gitProjectId = pipeline.gitProjectId
+        val triggerLock = StreamTriggerLock(
+            redisOperation = redisOperation,
+            gitProjectId = gitProjectId,
+            filePath = pipeline.filePath
+        )
+        val realPipeline: StreamTriggerPipeline
+        // 避免出现多个触发拿到空的pipelineId后依次进来创建，所以需要在锁后重新获取pipeline
+        triggerLock.use {
+            triggerLock.lock()
+            realPipeline = getRealPipeLine(gitProjectId, pipeline)
+            // 优先创建流水线为了前台显示
+            if (realPipeline.pipelineId.isBlank()) {
+                // 在蓝盾那边创建流水线
+                savePipeline(
+                    pipeline = realPipeline,
+                    userId = pipeline.creator ?: "",
+                    gitProjectId = gitProjectId.toLong(),
+                    projectCode = projectCode,
+                    modelAndSetting = createTriggerModel(projectCode),
+                    updateLastModifyUser = true
+                )
+                streamPipelineBranchService.saveOrUpdate(
+                    gitProjectId = action.data.getGitProjectId().toLong(),
+                    pipelineId = realPipeline.pipelineId,
+                    branch = action.data.eventCommon.branch
+                )
+            }
+        }
+    }
+
+    fun getPipelineByFile(
+        gitProjectId: Long,
+        filePath: String
+    ): TGitPipelineResourceRecord? {
+        return gitPipelineResourceDao.getPipelineByFile(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            filePath = filePath
+        )
+    }
+
+    private fun getRealPipeLine(gitProjectId: String, pipeline: StreamTriggerPipeline) =
+        getPipelineByFile(
+            gitProjectId = gitProjectId.toLong(),
+            filePath = pipeline.filePath
+        )?.let {
+            StreamTriggerPipeline(it)
+        } ?: pipeline
+
+    private fun getProjectCode(gitProjectId: String): String {
+        return "git_$gitProjectId"
+    }
+
+    private fun createTriggerModel(projectCode: String) = PipelineModelAndSetting(
+        model = Model(
+            name = StreamPipelineUtils.genBKPipelineName(projectCode),
+            desc = "",
+            stages = listOf(
+                Stage(
+                    id = VMUtils.genStageId(1),
+                    name = VMUtils.genStageId(1),
+                    containers = listOf(
+                        TriggerContainer(
+                            id = "0",
+                            name = "构建触发",
+                            elements = listOf(
+                                ManualTriggerElement(
+                                    name = "手动触发",
+                                    id = "T-1-1-1"
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        ),
+        setting = PipelineSetting()
+    )
+
     protected fun preStartBuild(
         action: BaseAction,
         pipeline: StreamTriggerPipeline,
@@ -158,7 +247,7 @@ class StreamYamlBaseBuild @Autowired constructor(
     ) {
         // 【ID92537607】 stream 流水线标签不生效
         client.get(UserPipelineGroupResource::class).updatePipelineLabel(
-            userId = action.data.eventCommon.userId,
+            userId = action.data.getUserId(),
             projectId = action.getProjectCode(),
             pipelineId = pipeline.pipelineId,
             labelIds = model.labels
@@ -167,7 +256,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         // 添加模板跨项目信息
         if (yamlTransferData != null && yamlTransferData.templateData.transferDataMap.isNotEmpty()) {
             client.get(ServiceTemplateAcrossResource::class).batchCreate(
-                userId = action.data.eventCommon.userId,
+                userId = action.data.getUserId(),
                 projectId = action.getProjectCode(),
                 pipelineId = pipeline.pipelineId,
                 templateAcrossInfos = yamlTransferData.getTemplateAcrossInfo(action)
@@ -208,14 +297,14 @@ class StreamYamlBaseBuild @Autowired constructor(
             )
             savePipeline(
                 pipeline = pipeline,
-                userId = action.data.eventCommon.userId,
+                userId = action.data.getUserId(),
                 gitProjectId = action.data.getGitProjectId().toLong(),
                 projectCode = action.getProjectCode(),
                 modelAndSetting = modelAndSetting,
                 updateLastModifyUser = updateLastModifyUser
             )
             buildId = client.get(ServiceBuildResource::class).manualStartupNew(
-                userId = action.data.eventCommon.userId,
+                userId = action.data.getUserId(),
                 projectId = action.getProjectCode(),
                 pipelineId = pipeline.pipelineId,
                 values = mapOf(PIPELINE_NAME to pipeline.displayName),

@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class PathRegexFilterTest {
 
@@ -43,7 +43,7 @@ class PathRegexFilterTest {
             includedPaths = emptyList(),
             excludedPaths = emptyList()
         )
-        Assert.assertTrue(pathRegexFilter.doFilter(response))
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -51,7 +51,7 @@ class PathRegexFilterTest {
             includedPaths = listOf("aa*", "bb"),
             excludedPaths = emptyList()
         )
-        Assert.assertTrue(pathRegexFilter.doFilter(response))
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -59,7 +59,7 @@ class PathRegexFilterTest {
             includedPaths = listOf("aa*", "bb*"),
             excludedPaths = emptyList()
         )
-        Assert.assertTrue(pathRegexFilter.doFilter(response))
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -67,7 +67,7 @@ class PathRegexFilterTest {
             includedPaths = listOf("aa*", "bb*"),
             excludedPaths = emptyList()
         )
-        Assert.assertTrue(pathRegexFilter.doFilter(response))
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -75,7 +75,7 @@ class PathRegexFilterTest {
             includedPaths = listOf("aa*", "bb*"),
             excludedPaths = emptyList()
         )
-        Assert.assertFalse(pathRegexFilter.doFilter(response))
+        Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
         // 路径匹配
         pathRegexFilter = PathRegexFilter(
@@ -84,7 +84,7 @@ class PathRegexFilterTest {
             includedPaths = listOf("aa/", "bb/"),
             excludedPaths = emptyList()
         )
-        Assert.assertFalse(pathRegexFilter.doFilter(response))
+        Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -92,7 +92,7 @@ class PathRegexFilterTest {
             includedPaths = listOf("aa/*", "bb/*"),
             excludedPaths = emptyList()
         )
-        Assert.assertTrue(pathRegexFilter.doFilter(response))
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -100,7 +100,7 @@ class PathRegexFilterTest {
             includedPaths = listOf("aa/*", "bb/*"),
             excludedPaths = emptyList()
         )
-        Assert.assertTrue(pathRegexFilter.doFilter(response))
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -108,7 +108,7 @@ class PathRegexFilterTest {
             includedPaths = listOf("aa/*", "bb/*"),
             excludedPaths = emptyList()
         )
-        Assert.assertFalse(pathRegexFilter.doFilter(response))
+        Assertions.assertFalse(pathRegexFilter.doFilter(response))
     }
 
     @Test
@@ -119,7 +119,7 @@ class PathRegexFilterTest {
             includedPaths = emptyList(),
             excludedPaths = emptyList()
         )
-        Assert.assertTrue(pathRegexFilter.doFilter(response))
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -127,7 +127,7 @@ class PathRegexFilterTest {
             includedPaths = emptyList(),
             excludedPaths = listOf("aa*", "bb*")
         )
-        Assert.assertFalse(pathRegexFilter.doFilter(response))
+        Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -135,7 +135,7 @@ class PathRegexFilterTest {
             includedPaths = emptyList(),
             excludedPaths = listOf("aa*", "bb*")
         )
-        Assert.assertFalse(pathRegexFilter.doFilter(response))
+        Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -143,7 +143,7 @@ class PathRegexFilterTest {
             includedPaths = emptyList(),
             excludedPaths = listOf("aa*", "bb*")
         )
-        Assert.assertTrue(pathRegexFilter.doFilter(response))
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
         // 路径匹配
         pathRegexFilter = PathRegexFilter(
@@ -152,7 +152,7 @@ class PathRegexFilterTest {
             includedPaths = emptyList(),
             excludedPaths = listOf("aa/*", "bb/*")
         )
-        Assert.assertTrue(pathRegexFilter.doFilter(response))
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -160,7 +160,7 @@ class PathRegexFilterTest {
             includedPaths = emptyList(),
             excludedPaths = listOf("aa/*", "bb/*")
         )
-        Assert.assertFalse(pathRegexFilter.doFilter(response))
+        Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -168,7 +168,7 @@ class PathRegexFilterTest {
             includedPaths = emptyList(),
             excludedPaths = listOf("aa/*", "bb/*")
         )
-        Assert.assertFalse(pathRegexFilter.doFilter(response))
+        Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -176,7 +176,7 @@ class PathRegexFilterTest {
             includedPaths = emptyList(),
             excludedPaths = listOf("aa/*", "bb/*")
         )
-        Assert.assertTrue(pathRegexFilter.doFilter(response))
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
     }
 
     @Test
@@ -188,7 +188,7 @@ class PathRegexFilterTest {
             includedPaths = emptyList(),
             excludedPaths = emptyList()
         )
-        Assert.assertTrue(pathRegexFilter.doFilter(response))
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -196,7 +196,7 @@ class PathRegexFilterTest {
             includedPaths = listOf("aa*", "bb*"),
             excludedPaths = listOf("cc")
         )
-        Assert.assertTrue(pathRegexFilter.doFilter(response))
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -204,7 +204,7 @@ class PathRegexFilterTest {
             includedPaths = listOf("aa*", "bb*"),
             excludedPaths = listOf("cc")
         )
-        Assert.assertTrue(pathRegexFilter.doFilter(response))
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -212,7 +212,7 @@ class PathRegexFilterTest {
             includedPaths = listOf("aa*", "bb*"),
             excludedPaths = listOf("cc*")
         )
-        Assert.assertTrue(pathRegexFilter.doFilter(response))
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -220,7 +220,7 @@ class PathRegexFilterTest {
             includedPaths = listOf("aa*", "bb*"),
             excludedPaths = listOf("cc*")
         )
-        Assert.assertFalse(pathRegexFilter.doFilter(response))
+        Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
         // 路径匹配
         pathRegexFilter = PathRegexFilter(
@@ -229,7 +229,7 @@ class PathRegexFilterTest {
             includedPaths = listOf("aa/*", "bb/*"),
             excludedPaths = listOf("cc/*")
         )
-        Assert.assertFalse(pathRegexFilter.doFilter(response))
+        Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -237,7 +237,7 @@ class PathRegexFilterTest {
             includedPaths = listOf("aa/*", "bb/*"),
             excludedPaths = listOf("cc/*")
         )
-        Assert.assertTrue(pathRegexFilter.doFilter(response))
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -245,7 +245,7 @@ class PathRegexFilterTest {
             includedPaths = listOf("aa/*", "bb/*"),
             excludedPaths = listOf("cc/*")
         )
-        Assert.assertTrue(pathRegexFilter.doFilter(response))
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -253,6 +253,6 @@ class PathRegexFilterTest {
             includedPaths = listOf("aa/*", "bb/*"),
             excludedPaths = listOf("aa/*", "bb/*", "cc/*")
         )
-        Assert.assertFalse(pathRegexFilter.doFilter(response))
+        Assertions.assertFalse(pathRegexFilter.doFilter(response))
     }
 }

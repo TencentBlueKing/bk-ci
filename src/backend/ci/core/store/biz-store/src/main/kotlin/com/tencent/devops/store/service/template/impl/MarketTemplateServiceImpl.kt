@@ -213,8 +213,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             val canInstallTemplates = mutableListOf<MarketItem>()
             val cannotInstallTemplates = mutableListOf<MarketItem>()
             // 获取模版
-            val categoryList = if (category.isNullOrEmpty()) listOf() else category?.split(",")
-            val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
+            val categoryList = if (category.isNullOrEmpty()) listOf() else category.split(",")
+            val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
             val count = marketTemplateDao.count(
                 dslContext = dslContext,
                 keyword = keyword,
@@ -244,7 +244,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             }.toList()
             val storeType = StoreTypeEnum.TEMPLATE
             // 获取可见范围
-            val templateVisibleData = generateTemplateVisibleData(templateCodeList, storeType).data
+            val templateVisibleData = storeCommonService.generateStoreVisibleData(templateCodeList, storeType)
 
             // 获取统计数据
             val templateStatisticData = storeTotalStatisticService.getStatisticByCodeList(
@@ -268,7 +268,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 val statistic = templateStatisticData[code]
                 val members = memberData?.get(code)
                 val publicFlag = it["PUBLIC_FLAG"] as Boolean
-                val canInstall = generateInstallFlag(
+                val canInstall = storeCommonService.generateInstallFlag(
                     defaultFlag = publicFlag,
                     members = members,
                     userId = userId,
@@ -315,19 +315,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             )
         })
     }
-
-    abstract fun generateInstallFlag(
-        defaultFlag: Boolean,
-        members: MutableList<String>?,
-        userId: String,
-        visibleList: MutableList<Int>?,
-        userDeptList: List<Int>
-    ): Boolean
-
-    abstract fun generateTemplateVisibleData(
-        storeCodeList: List<String?>,
-        storeType: StoreTypeEnum
-    ): Result<HashMap<String, MutableList<Int>>?>
 
     /**
      * 模版市场，首页
@@ -442,7 +429,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         run check@{
             if (!projectCode.isNullOrBlank()) {
                 val installedTemplatesResult =
-                    client.get(ServicePTemplateResource::class).getSrcTemplateCodes(projectCode!!)
+                    client.get(ServicePTemplateResource::class).getSrcTemplateCodes(projectCode)
                 if (installedTemplatesResult.isNotOk()) {
                     throw RemoteServiceException("Failed to get project($projectCode) installedTemplates")
                 }
@@ -671,12 +658,27 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val templateDetail = templateDetailResult.data
         val templateModel = templateDetail?.templateModel
             ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+        return verificationModelComponentVisibleDept(
+            userId = userId,
+            model = templateModel,
+            projectCodeList = projectCodeList,
+            templateCode = templateCode
+        )
+    }
+
+    override fun verificationModelComponentVisibleDept(
+        userId: String,
+        model: Model,
+        projectCodeList: ArrayList<String>,
+        templateCode: String?
+    ): Result<Boolean> {
+
         val invalidImageList = mutableListOf<String>()
         val invalidAtomList = mutableListOf<String>()
         val needInstallImageMap = mutableMapOf<String, StoreBaseInfo>()
         val needInstallAtomMap = mutableMapOf<String, StoreBaseInfo>()
         val userDeptIdList = storeUserService.getUserDeptList(userId) // 获取用户的机构ID信息
-        val stageList = templateModel.stages
+        val stageList = model.stages
         // 获取模板下镜像的机构信息
         val templateImageDeptMap = storeDeptService.getTemplateImageDeptMap(stageList)
         // 获取每个模板下插件的机构信息
@@ -738,15 +740,18 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     params = arrayOf(JsonUtil.toJson(invalidAtomList))
                 )
             }
-            val validateTempleAtomVisibleResult = validateTemplateVisibleDept(
-                templateCode = templateDetail.templateCode,
-                templateModel = templateModel,
-                validImageCodes = validImageCodes,
-                validAtomCodes = validAtomCodes
-            )
-            if (validateTempleAtomVisibleResult.isNotOk()) {
-                return validateTempleAtomVisibleResult
+            if (!templateCode.isNullOrBlank()) {
+                val validateTempleAtomVisibleResult = validateTemplateVisibleDept(
+                    templateCode = templateCode,
+                    templateModel = model,
+                    validImageCodes = validImageCodes,
+                    validAtomCodes = validAtomCodes
+                )
+                if (validateTempleAtomVisibleResult.isNotOk()) {
+                    return validateTempleAtomVisibleResult
+                }
             }
+
             // 安装镜像
             installStoreComponent(needInstallImageMap, userId, projectCode, StoreTypeEnum.IMAGE)
             // 安装插件
@@ -780,7 +785,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 if (storeCommonDao != null) {
                     val storeBaseInfo = storeCommonDao.getNewestStoreBaseInfoByCode(
                         dslContext = dslContext,
-                        storeCode = imageCode!!,
+                        storeCode = imageCode,
                         storeStatus = ImageStatusEnum.RELEASED.status.toByte()
                     )
                         ?: throw ErrorCodeException(
@@ -815,7 +820,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val totalStoreCodes = needInstallStoreMap.keys
         totalStoreCodes.forEach {
             val storeBaseInfo = needInstallStoreMap[it]
-            if (storeBaseInfo != null)
+            if (storeBaseInfo != null) {
                 storeProjectService.installStoreComponent(
                     userId = userId,
                     projectCodeList = arrayListOf(projectCode),
@@ -825,6 +830,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     publicFlag = storeBaseInfo.publicFlag,
                     channelCode = ChannelCode.BS
                 )
+            }
         }
     }
 

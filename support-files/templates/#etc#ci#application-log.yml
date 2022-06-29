@@ -67,7 +67,7 @@ server:
 log:
   storage:
     type: __BK_CI_LOG_STORAGE_TYPE__                # 日志存储方式 lucene/elasticsearch
-    closeInDay: __BK_CI_LOG_CLOSE_DAY__             # 索引自动关闭时间，留空则为永不关闭
+    coldInDay: __BK_CI_LOG_COLD_DAY__             # 索引转为冷索引，留空则为永不转冷
     deleteInDay: __BK_CI_LOG_DELETE_DAY__           # 索引自动删除时间，留空则为永不删除
   # 通过本地文件系统进行存储的必要配置
   lucene:
