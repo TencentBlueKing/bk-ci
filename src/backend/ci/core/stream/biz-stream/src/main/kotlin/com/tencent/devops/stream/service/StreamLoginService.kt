@@ -8,6 +8,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.repository.api.github.ServiceGithubOauthResource
 import com.tencent.devops.stream.config.StreamLoginConfig
 import com.tencent.devops.stream.pojo.enums.StreamLoginType
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -20,9 +21,11 @@ class StreamLoginService @Autowired constructor(
     companion object {
         private const val BK_LOGIN_CODE_KEY = "bk:login:third:%s:code:%s"
         private const val BK_LOGIN_CODE_KEY_EXPIRED = 60L
+        private val logger = LoggerFactory.getLogger(StreamLoginService::class.java)
     }
 
     fun githubCallback(code: String, state: String?): String {
+        logger.info("github callback|code:$code|state:$state")
         val githubCallback =
             client.get(ServiceGithubOauthResource::class)
                 .githubCallback(code = code, state = state, channelCode = ChannelCode.GIT.name).data!!

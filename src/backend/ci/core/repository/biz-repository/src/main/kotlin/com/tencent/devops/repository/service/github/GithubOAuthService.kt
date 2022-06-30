@@ -41,6 +41,8 @@ import com.tencent.devops.repository.pojo.github.GithubOauth
 import com.tencent.devops.repository.pojo.github.GithubOauthCallback
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.scm.config.GitConfig
+import java.net.URLEncoder
+import javax.ws.rs.core.Response
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -48,9 +50,6 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.net.URLDecoder
-import java.net.URLEncoder
-import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -118,8 +117,7 @@ class GithubOAuthService @Autowired constructor(
             githubToken.scope
         )
         val redirectUrl = if (!state.isNullOrBlank()) {
-            val authParamDecodeJsonStr = URLDecoder.decode(state, "UTF-8")
-            val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
+            val authParams = JsonUtil.toMap(state)
             authParams["redirectUrl"]?.toString() ?: ""
         } else {
             ""
