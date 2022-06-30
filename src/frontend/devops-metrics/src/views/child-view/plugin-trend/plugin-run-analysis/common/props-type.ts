@@ -11,4 +11,5 @@ interface IStatus {
 
 export const sharedProps = {
   status: Object as PropType<IStatus>,
+  resetBtnDisabled: Boolean,
 };

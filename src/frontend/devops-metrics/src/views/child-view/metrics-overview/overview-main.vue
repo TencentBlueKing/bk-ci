@@ -17,23 +17,34 @@ const status = ref({
 });
 
 const handleFilterChange = (newStatus) => {
+  resetBtnDisabled.value = true
   status.value = {
     ...status.value,
     ...newStatus,
   };
 };
+
+const resetBtnDisabled = ref(false)
+const handleChangeResetBtnDisabled = (val) => {
+  resetBtnDisabled.value = val
+}
 </script>
 
 <template>
   <metrics-header title="Overview" />
   <main class="g-content">
     <overview-filter
+      :reset-btn-disabled="resetBtnDisabled"
       :status="status"
       @change="handleFilterChange"
     />
-    <overview-num :status="status"></overview-num>
-    <run-trend :status="status"></run-trend>
-    <time-trend :status="status"></time-trend>
-    <stage-time :status="status"></stage-time>
+    <overview-num :status="status" />
+    <run-trend :status="status" />
+    <time-trend :status="status" />
+    <stage-time
+      :status="status"
+      :reset-btn-disabled="resetBtnDisabled"
+      @change="handleChangeResetBtnDisabled"
+    />
   </main>
 </template>

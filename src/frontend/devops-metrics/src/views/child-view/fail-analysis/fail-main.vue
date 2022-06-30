@@ -20,11 +20,17 @@ const status = ref({
 });
 
 const handleFilterChange = (newStatus) => {
+  resetBtnDisabled.value = true
   status.value = {
     ...status.value,
     ...newStatus,
   };
 };
+const resetBtnDisabled = ref(false)
+
+const handleChangeResetBtnDisabled = (val) => {
+  resetBtnDisabled.value = val
+}
 
 if (route.query.errorType) {
   handleFilterChange({
@@ -38,6 +44,7 @@ if (route.query.errorType) {
   <main class="g-content">
     <fail-filter
       :status="status"
+      :reset-btn-disabled="resetBtnDisabled"
       @change="handleFilterChange"
     />
     <error-doughnut
@@ -45,7 +52,9 @@ if (route.query.errorType) {
       @change="handleFilterChange"
     />
     <error-table
+      :reset-btn-disabled="resetBtnDisabled"
       :status="status"
+      @change="handleChangeResetBtnDisabled"
     />
   </main>
 </template>
