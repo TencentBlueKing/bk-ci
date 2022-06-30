@@ -104,7 +104,8 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         // 查询记录过多，提醒用户缩小查询范围
         if (queryAtomExecuteStatisticsCount > metricsConfig.queryCountMax) {
             throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
+                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND,
+                params = arrayOf("${metricsConfig.queryCountMax}")
             )
         }
         //  查询插件趋势信息
@@ -196,7 +197,8 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         // 查询记录过多，提醒用户缩小查询范围
         if (queryAtomExecuteStatisticsCount > metricsConfig.queryCountMax) {
             throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
+                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND,
+                params = arrayOf("${metricsConfig.queryCountMax}")
             )
         }
         logger.info("query atom executeStatisticsInfo Count: $queryAtomExecuteStatisticsCount")
