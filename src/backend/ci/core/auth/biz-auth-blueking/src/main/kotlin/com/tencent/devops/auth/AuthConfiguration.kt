@@ -178,4 +178,8 @@ class AuthConfiguration {
     @Bean
     @ConditionalOnMissingBean(LocalManagerService::class)
     fun simpleManagerService() = SimpleLocalManagerServiceImpl()
+
+    @Bean
+    @ConditionalOnMissingBean(GrantServiceImpl::class)
+    fun grantService() = GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 }
