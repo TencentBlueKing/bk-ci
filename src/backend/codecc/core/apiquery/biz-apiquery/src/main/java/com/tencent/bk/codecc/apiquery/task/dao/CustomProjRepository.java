@@ -30,5 +30,5 @@ public interface CustomProjRepository extends MongoRepository<CustomProjModel, S
      * @param taskId
      * @return
      */
-    CustomProjModel findByTaskId(Long taskId);
+    CustomProjModel findFirstByTaskId(Long taskId);
 }

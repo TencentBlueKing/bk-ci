@@ -178,7 +178,7 @@ public class CommonFastIncrementConsumer extends AbstractFastIncrementConsumer
         commonStatisticRepository.save(statisticEntity);
 
         // 保存本次构建遗留告警告警列表快照
-        BuildEntity buildEntity = buildRepository.findByBuildId(buildId);
+        BuildEntity buildEntity = buildRepository.findFirstByBuildId(buildId);
         buildDefectService.saveCommonBuildDefect(taskId, toolName, buildEntity, allNewDefectList);
 
         // 改由MQ汇总发送 {@link EmailNotifyServiceImpl#sendWeChatBotRemind(RtxNotifyModel, TaskInfoEntity)}

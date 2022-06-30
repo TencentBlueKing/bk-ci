@@ -93,6 +93,8 @@ class StartContainerStageCmd(
 
         if (stageStatus.isFinish() || stageStatus == BuildStatus.STAGE_SUCCESS) {
             commandContext.buildStatus = stageStatus // 已经是结束或者是STAGE_SUCCESS就直接返回
+        } else if (commandContext.containers.isEmpty()) {
+            commandContext.buildStatus = BuildStatus.SUCCEED
         } else {
             stageStatus = pickJob(commandContext, actionType = newActionType, userId = event.userId)
 
@@ -133,21 +135,8 @@ class StartContainerStageCmd(
         var fail: BuildStatus? = null
         var cancel: BuildStatus? = null
 
-        // 查找最后一个结束状态的Stage (排除Finally）
         val stage = commandContext.stage
-        if (stage.controlOption?.finally == true) {
-            val previousStage = pipelineStageService.listStages(stage.projectId, stage.buildId)
-                .lastOrNull {
-                    it.stageId != commandContext.stage.stageId &&
-                        (it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS || hasFailedCheck(it))
-                }
-            // #5246 前序中如果有准入准出失败的stage则直接作为前序stage并把构建状态设为红线失败
-            commandContext.previousStageStatus = if (hasFailedCheck(previousStage)) {
-                BuildStatus.QUALITY_CHECK_FAIL
-            } else {
-                previousStage?.status
-            }
-        }
+
         // 同一Stage下的多个Container是并行
         commandContext.containers.forEach { container ->
             val jobCount = container.controlOption?.matrixControlOption?.totalCount ?: 1 // MatrixGroup存在裂变计算
@@ -168,14 +157,18 @@ class StartContainerStageCmd(
                 commandContext.concurrency += jobCount
                 sendBuildContainerEvent(commandContext, container, actionType = actionType, userId = userId)
 
-                LOG.info("ENGINE|${container.buildId}|STAGE_CONTAINER_SEND|s(${container.stageId})|" +
-                    "j(${container.containerId})|status=${container.status}|newActonType=$actionType")
+                LOG.info(
+                    "ENGINE|${container.buildId}|STAGE_CONTAINER_SEND|s(${container.stageId})|" +
+                        "j(${container.containerId})|status=${container.status}|newActonType=$actionType"
+                )
             }
         }
 
         if (commandContext.concurrency > commandContext.maxConcurrency) { // #5109 增加日志埋点监控，以免影响Redis性能
-            LOG.warn("ENGINE|${stage.buildId}|JOB_BOMB_CK|${stage.projectId}|${stage.pipelineId}|s(${stage.stageId})" +
-                    "|concurrency=${commandContext.concurrency}")
+            LOG.warn(
+                "ENGINE|${stage.buildId}|JOB_BOMB_CK|${stage.projectId}|${stage.pipelineId}|s(${stage.stageId})" +
+                    "|concurrency=${commandContext.concurrency}"
+            )
         }
 
         // 如果有运行态,否则返回失败，如无失败，则返回取消，最后成功

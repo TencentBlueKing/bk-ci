@@ -31,16 +31,13 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
-import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
-import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.DeleteRule
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v2.models.on.check
-import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
@@ -53,7 +50,6 @@ import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
@@ -65,14 +61,11 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMat
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
-import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.DeleteEventService
 import com.tencent.devops.stream.trigger.service.GitCheckService
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
-import com.tencent.devops.stream.util.CommonCredentialUtils
 import com.tencent.devops.stream.util.StreamCommonUtils
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
@@ -223,24 +216,92 @@ class TGitPushActionGit(
         ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
     }
 
-    override fun getYamlContent(fileName: String): String {
-        return api.getFileContent(
-            cred = this.getGitCred(),
-            gitProjectId = data.getGitProjectId(),
-            fileName = fileName,
-            ref = data.eventCommon.branch,
-            retry = ApiRequestRetryInfo(true)
+    override fun getYamlContent(fileName: String): Pair<String, String> {
+        return Pair(
+            data.eventCommon.branch,
+            api.getFileContent(
+                cred = this.getGitCred(),
+                gitProjectId = data.getGitProjectId(),
+                fileName = fileName,
+                ref = data.eventCommon.branch,
+                retry = ApiRequestRetryInfo(true)
+            )
         )
+    }
+
+    override fun getChangeSet(): Set<String>? {
+        // 使用null和empty的区别来判断是否调用过获取函数
+        if (this.data.context.changeSet != null) {
+            return this.data.context.changeSet
+        }
+
+        val gitEvent = event()
+        if (gitEvent.create_and_update != null) {
+            return getSpecialChangeSet(gitEvent)
+        }
+        val changeSet = mutableSetOf<String>()
+
+        // git push -f 使用反向进行三点比较可以比较出rebase的真实提交
+        val from = if (gitEvent.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
+            gitEvent.after
+        } else {
+            gitEvent.before
+        }
+
+        val to = if (gitEvent.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
+            gitEvent.before
+        } else {
+            gitEvent.after
+        }
+
+        for (i in 1..10) {
+            val result = apiService.getCommitChangeList(
+                cred = (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as TGitCred,
+                gitProjectId = data.eventCommon.gitProjectId,
+                from = from,
+                to = to,
+                straight = false,
+                page = i,
+                pageSize = 100,
+                retry = ApiRequestRetryInfo(true)
+            )
+            changeSet.addAll(
+                result.map {
+                    if (it.deletedFile) {
+                        it.oldPath
+                    } else if (it.renameFile) {
+                        it.oldPath
+                        it.newPath
+                    } else {
+                        it.newPath
+                    }
+                }
+            )
+            if (result.size < 100) {
+                break
+            }
+        }
+
+        this.data.context.changeSet = changeSet
+        return this.data.context.changeSet
+    }
+
+    private fun getSpecialChangeSet(gitEvent: GitPushEvent): Set<String> {
+        // 为 false 时表示为纯创建分支
+        if (gitEvent.create_and_update == false) return mutableSetOf()
+        val changeSet = mutableSetOf<String>()
+        gitEvent.commits?.forEach {
+            changeSet.addAll(it.removed.orEmpty())
+            changeSet.addAll(it.modified.orEmpty())
+            changeSet.addAll(it.added.orEmpty())
+        }
+        return changeSet
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         val branch = TGitActionCommon.getTriggerBranch(data.eventCommon.branch)
 
         val isDefaultBranch = branch == data.context.defaultBranch
-        // 校验是否注册跨项目触发
-        if (isDefaultBranch) {
-            triggerCheckRepoTriggerCredentials(triggerOn)
-        }
 
         // 判断是否注册定时任务
         val isTime = if (isDefaultBranch) {
@@ -255,8 +316,7 @@ class TGitPushActionGit(
         }
 
         // 判断是否注册删除任务
-        val changeSet = getCommitChangeSet(event())
-        data.context.changeSet = changeSet.toList()
+        val changeSet = getChangeSet()
         val isDelete = if (isDefaultBranch) {
             // 只有更改了delete相关流水线才做更新
             PathMatchUtils.isIncludePathMatch(listOf(data.context.pipeline!!.filePath), changeSet) &&
@@ -270,7 +330,7 @@ class TGitPushActionGit(
             eventBranch = data.eventCommon.branch,
             changeSet = changeSet,
             userId = data.getUserId(),
-            isCreateBranch = event().isCreateBranch()
+            checkCreateAndUpdate = event().create_and_update
         )
         val params = TGitActionCommon.getStartParams(
             action = this,
@@ -284,126 +344,19 @@ class TGitPushActionGit(
         )
     }
 
-    /**
-     * 判断是否可以注册跨项目构建事件
-     * @return 用户名称
-     */
-    private fun triggerCheckRepoTriggerCredentials(triggerOn: TriggerOn): String? {
-        if (triggerOn.repoHook == null) {
-            return null
-        }
-        val (repoTriggerCredentialsCheck, repoTriggerUserId) = checkRepoTriggerCredentials(triggerOn.repoHook!!)
-        if (!repoTriggerCredentialsCheck) {
-            throw StreamTriggerException(
-                action = this,
-                triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
-                reasonParams = listOf(
-                    "Permissions denied, master and above permissions are required. " +
-                        "Repo: (${triggerOn.repoHook?.name})"
-                ),
-                commitCheck = CommitCheck(
-                    block = false,
-                    state = StreamCommitCheckState.FAILURE
-                )
-            )
-        }
-        // 增加远程仓库时所使用权限的userId
-        this.data.context.repoTrigger = this.data.context.repoTrigger?.copy(buildUserID = repoTriggerUserId)
-        return repoTriggerUserId
-    }
-
-    private fun checkRepoTriggerCredentials(repoHook: RepositoryHook): Pair<Boolean, String?> {
-        val token = when {
-            repoHook.credentialsForTicketId != null ->
-                try {
-                    CommonCredentialUtils.getCredential(
-                        client = client,
-                        projectId = "git_${this.data.getGitProjectId()}",
-                        credentialId = repoHook.credentialsForTicketId!!,
-                        type = CredentialType.ACCESSTOKEN
-                    )["v1"] ?: return Pair(false, null)
-                } catch (e: Throwable) {
-                    throw StreamTriggerException(
-                        action = this,
-                        triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
-                        reasonParams = listOf("Credential [${repoHook.credentialsForTicketId}] does not exist"),
-                        commitCheck = CommitCheck(
-                            block = false,
-                            state = StreamCommitCheckState.FAILURE
-                        )
-                    )
-                }
-            repoHook.credentialsForToken != null -> repoHook.credentialsForToken!!
-            else -> throw StreamTriggerException(
-                action = this,
-                triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
-                reasonParams = listOf("credentials cannot be null"),
-                commitCheck = CommitCheck(
-                    block = false,
-                    state = StreamCommitCheckState.FAILURE
-                )
-            )
-        }
-        // stream 侧需要的是user 数字id 而不是 rtx
-        val userInfo = try {
-            this.api.getUserInfoByToken(
-                TGitCred(
-                    userId = null,
-                    accessToken = token,
-                    useAccessToken = false
-                )
-            ) ?: return Pair(false, null)
-        } catch (e: Throwable) {
-            throw StreamTriggerException(
-                action = this,
-                triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
-                reasonParams = listOf("401 Unauthorized. Repo:(${repoHook.name})"),
-                commitCheck = CommitCheck(
-                    block = false,
-                    state = StreamCommitCheckState.FAILURE
-                )
-            )
-        }
-        val check = this.api.getProjectUserInfo(
-            cred = TGitCred(
-                userId = null,
-                accessToken = token,
-                useAccessToken = false
-            ),
-            userId = userInfo.id,
-            gitProjectId = this.data.eventCommon.gitProjectId
-        ).accessLevel >= 40
-        return Pair(check, userInfo.username)
-    }
-
-    override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) {
-        val (_, userName) = checkRepoTriggerCredentials(
-            repoHook = repoHook
-        )
-        // 表示路径至少为2级，不支持只填一级路径进行模糊匹配
-        if (repoHook.name!!.contains("/") && !repoHook.name!!.startsWith("/")) {
-            checkHaveGroupName(repoHook.name!!, userName)
-        }
-    }
-
-    private fun checkHaveGroupName(
-        name: String,
-        userName: String?
+    override fun updateLastBranch(
+        pipelineId: String,
+        branch: String
     ) {
-        val firstGroupName = name.split("/").firstOrNull()
-        apiService.getProjectList(
-            cred = TGitCred(userId = userName),
-            search = firstGroupName,
-            minAccessLevel = GitAccessLevelEnum.MASTER
-        )?.ifEmpty { null } ?: throw StreamTriggerException(
-            action = this,
-            triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
-            reasonParams = listOf("First level group[$firstGroupName] does not exist"),
-            commitCheck = CommitCheck(
-                block = false,
-                state = StreamCommitCheckState.FAILURE
+        try {
+            gitPipelineResourceDao.updatePipelineLastBranch(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                branch = branch
             )
-        )
+        } catch (e: Exception) {
+            logger.info("updateLastBranch fail,pipelineId:$pipelineId,branch:$branch,")
+        }
     }
 
     // 判断是否注册定时任务来看是修改还是删除
@@ -430,52 +383,6 @@ class TGitPushActionGit(
             }
         }
         return true
-    }
-
-    private fun getCommitChangeSet(gitEvent: GitPushEvent): Set<String> {
-        val changeSet = mutableSetOf<String>()
-
-        // git push -f 使用反向进行三点比较可以比较出rebase的真实提交
-        val from = if (gitEvent.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
-            gitEvent.after
-        } else {
-            gitEvent.before
-        }
-
-        val to = if (gitEvent.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
-            gitEvent.before
-        } else {
-            gitEvent.after
-        }
-
-        for (i in 1..10) {
-            val result = apiService.getCommitChangeList(
-                cred = getGitCred(),
-                gitProjectId = data.eventCommon.gitProjectId,
-                from = from,
-                to = to,
-                straight = false,
-                page = i,
-                pageSize = 100,
-                retry = ApiRequestRetryInfo(true)
-            )
-            changeSet.addAll(
-                result.map {
-                    if (it.deletedFile) {
-                        it.oldPath
-                    } else if (it.renameFile) {
-                        it.oldPath
-                        it.newPath
-                    } else {
-                        it.newPath
-                    }
-                }
-            )
-            if (result.size < 100) {
-                break
-            }
-        }
-        return changeSet
     }
 
     // 判断是否注册默认分支的删除任务

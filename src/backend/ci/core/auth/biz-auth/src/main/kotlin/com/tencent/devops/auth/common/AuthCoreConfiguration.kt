@@ -28,15 +28,15 @@
 package com.tencent.devops.auth.common
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.auth.filter.BlackListAspect
 import com.tencent.devops.auth.filter.TokenCheckFilter
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.refresh.listener.AuthRefreshEventListener
+import com.tencent.devops.auth.service.AuthUserBlackListService
 import com.tencent.devops.auth.service.DefaultDeptServiceImpl
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.EmptyPermissionExtServiceImpl
 import com.tencent.devops.auth.service.EmptyPermissionUrlServiceImpl
-import com.tencent.devops.auth.service.LocalManagerService
-import com.tencent.devops.auth.service.SimpleLocalManagerServiceImpl
 import com.tencent.devops.auth.utils.HostUtils
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
@@ -139,14 +139,13 @@ class AuthCoreConfiguration {
     fun tokenFilter(clientTokenService: ClientTokenService) = TokenCheckFilter(clientTokenService)
 
     @Bean
+    fun blackListAspect(authUserBlackListService: AuthUserBlackListService) = BlackListAspect(authUserBlackListService)
+
+    @Bean
     @ConditionalOnMissingBean(name = ["permissionExtService"])
     fun permissionExtService() = EmptyPermissionExtServiceImpl()
 
     @Bean
     @ConditionalOnMissingBean(name = ["permissionUrlService"])
     fun permissionUrlService() = EmptyPermissionUrlServiceImpl()
-
-    @Bean
-    @ConditionalOnMissingBean(LocalManagerService::class)
-    fun simpleManagerService() = SimpleLocalManagerServiceImpl()
 }

@@ -116,14 +116,14 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService {
         AnalyzeConfigInfoVO analyzeConfigInfoVO = new AnalyzeConfigInfoVO();
 
         // 任务详细信息
-        TaskInfoEntity taskInfoEntity = taskRepository.findByNameEn(streamName);
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByNameEn(streamName);
         if (null == taskInfoEntity) {
             throw new CodeCCException("empty task info found out! stream name: {}", new String[]{streamName});
         }
 
         // 工具详细信息
         ToolConfigInfoEntity toolConfigInfoEntity =
-                toolRepository.findByTaskIdAndToolName(taskInfoEntity.getTaskId(), toolName);
+                toolRepository.findFirstByTaskIdAndToolName(taskInfoEntity.getTaskId(), toolName);
         if (toolConfigInfoEntity == null) {
             throw new CodeCCException("empty tool info found out ! stream name: {}, toolName: {}, task: {} ",
                     new String[]{streamName, toolName, taskInfoEntity + ""});

@@ -103,6 +103,25 @@ interface StoreCommonService {
     ): Boolean
 
     /**
+     * 生成是否能安装标识
+     */
+    fun generateInstallFlag(
+        defaultFlag: Boolean,
+        members: MutableList<String>?,
+        userId: String,
+        visibleList: MutableList<Int>?,
+        userDeptList: List<Int>
+    ): Boolean
+
+    /**
+     * 获取组件可见范围
+     */
+    fun generateStoreVisibleData(
+        storeCodeList: List<String?>,
+        storeType: StoreTypeEnum
+    ): HashMap<String, MutableList<Int>>?
+
+    /**
      * 获取回显版本信息
      */
     fun getStoreShowVersionInfo(

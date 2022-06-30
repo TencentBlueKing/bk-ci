@@ -52,4 +52,9 @@ interface NpmFixToolService {
      * 历史数据增加package功能
      */
     fun fixPackageManager(): List<PackageManagerResponse>
+
+    /**
+     * 校正索引文件与包数据不一致
+     */
+    fun inconsistentCorrectionData(artifactInfo: NpmArtifactInfo, name: String)
 }

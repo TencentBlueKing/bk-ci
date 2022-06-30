@@ -36,6 +36,8 @@ data class BuildTaskResult(
     val taskId: String,
     @ApiModelProperty("插件ID", required = true)
     val elementId: String,
+    @ApiModelProperty("插件版本号", required = false)
+    val elementVersion: String? = null,
     @ApiModelProperty("容器Hash ID", required = true)
     val containerId: String?,
     @ApiModelProperty("是否执行成功", required = true)

@@ -75,7 +75,7 @@ public class UserLogInfoServiceImpl implements UserLogInfoService {
         }
         String userName = statEntity.getUserName();
 
-        UserLogInfoStatEntity entity = userLogInfoStatRepository.findByUserName(userName);
+        UserLogInfoStatEntity entity = userLogInfoStatRepository.findFirstByUserName(userName);
         if (entity == null) {
             TofOrganizationInfo organizationInfo = getTofOrgInfoByUserName(userName);
             // 异常账号查不到组织架构,则仅保存名字及时间
@@ -131,7 +131,7 @@ public class UserLogInfoServiceImpl implements UserLogInfoService {
             });
         });
 
-        userLogInfoStatRepository.save(dataList);
+        userLogInfoStatRepository.saveAll(dataList);
         return true;
     }
 }

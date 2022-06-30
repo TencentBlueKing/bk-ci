@@ -62,6 +62,9 @@ class V3AuthExAutoConfiguration {
         logger.info("use v3 auth config")
     }
 
+    @Value("\${auth.apigwUrl:}")
+    val apigwBaseUrl = ""
+
     @Value("\${auth.url:}")
     val iamBaseUrl = ""
 
@@ -109,7 +112,7 @@ class V3AuthExAutoConfiguration {
     fun authHelper() = AuthHelper(tokenService(), policyService(), iamConfiguration())
 
     @Bean
-    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl)
+    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, apigwBaseUrl)
 
     @Bean
     fun httpService() = DefaultHttpClientServiceImpl(iamConfiguration())

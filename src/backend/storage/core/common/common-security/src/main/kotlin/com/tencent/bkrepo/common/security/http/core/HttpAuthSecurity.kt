@@ -49,6 +49,7 @@ open class HttpAuthSecurity {
     var basicAuthEnabled: Boolean = true
     var platformAuthEnabled: Boolean = true
     var jwtAuthEnabled: Boolean = true
+    var oauthEnabled: Boolean = true
     var authenticationManager: AuthenticationManager? = null
     var jwtAuthProperties: JwtAuthProperties? = null
     val customizers: MutableList<HttpAuthSecurityCustomizer> = mutableListOf()
@@ -93,6 +94,14 @@ open class HttpAuthSecurity {
      */
     fun disableJwtAuth(): HttpAuthSecurity {
         jwtAuthEnabled = false
+        return this
+    }
+
+    /**
+     * 禁用Oauth认证，默认开启
+     */
+    fun disableOauthAuth(): HttpAuthSecurity {
+        oauthEnabled = false
         return this
     }
 

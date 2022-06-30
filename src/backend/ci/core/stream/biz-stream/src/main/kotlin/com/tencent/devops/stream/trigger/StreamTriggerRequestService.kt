@@ -42,7 +42,6 @@ import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
-import com.tencent.devops.stream.trigger.actions.data.context.RepoTrigger
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
@@ -99,7 +98,7 @@ class StreamTriggerRequestService @Autowired constructor(
         // 加载不同源的action
         val action = actionFactory.load(eventObject)
         if (action == null) {
-            logger.error("request event not support: $event")
+            logger.warn("request event not support: $event")
             return false
         }
 
@@ -114,7 +113,6 @@ class StreamTriggerRequestService @Autowired constructor(
 
         // 跨项目触发的逻辑不需要当前项目也可以使用
         if (repoTriggerPipelineList.isNotEmpty()) {
-            action.data.context.repoTrigger = RepoTrigger("", repoTriggerPipelineList)
             val requestEventId = gitRequestEventDao.saveGitRequest(dslContext, requestEvent)
             action.data.context.requestEventId = requestEventId
 
@@ -233,7 +231,7 @@ class StreamTriggerRequestService @Autowired constructor(
                 enabled = true,
                 creator = action.data.getUserId()
             )
-            // 远程仓库触发不需要新建流水线
+            // 远程仓库触发时，主库不需要新建流水线
             if (action.data.context.repoTrigger != null && buildPipeline.pipelineId.isBlank()) {
                 return@forEach
             }
@@ -254,6 +252,8 @@ class StreamTriggerRequestService @Autowired constructor(
                 checkAndTrigger(buildPipeline = buildPipeline, action = action)
             }
         }
+        // 流水线启动后，发送解锁webhook锁请求
+        action.sendUnlockWebhook()
         return true
     }
 
@@ -273,7 +273,7 @@ class StreamTriggerRequestService @Autowired constructor(
             throw StreamTriggerException(action, TriggerReason.PIPELINE_DISABLE)
         }
 
-        val originYaml = action.getYamlContent(filePath)
+        val (ref, originYaml) = action.getYamlContent(filePath)
         action.data.context.originYaml = originYaml
 
         // 如果当前文件没有内容直接不触发

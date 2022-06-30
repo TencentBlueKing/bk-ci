@@ -37,10 +37,10 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
-	"github.com/astaxie/beego/logs"
 )
 
 func Start() {

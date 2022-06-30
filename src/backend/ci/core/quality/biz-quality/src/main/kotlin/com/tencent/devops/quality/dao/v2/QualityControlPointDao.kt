@@ -60,7 +60,7 @@ class QualityControlPointDao {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             return dslContext.selectFrom(this)
-                .where(TAG.ne("IN_READY_TEST"))
+                .where((TAG.isNull).or(TAG.ne("IN_READY_TEST")))
                 .orderBy(CREATE_TIME.desc())
                 .limit(sqlLimit.offset, sqlLimit.limit)
                 .fetch()
@@ -79,7 +79,7 @@ class QualityControlPointDao {
     fun count(dslContext: DSLContext): Long {
         with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             return dslContext.selectCount().from(this)
-                .where(TAG.ne("IN_READY_TEST"))
+                .where((TAG.isNull).or(TAG.ne("IN_READY_TEST")))
                 .fetchOne(0, Long::class.java)!!
         }
     }

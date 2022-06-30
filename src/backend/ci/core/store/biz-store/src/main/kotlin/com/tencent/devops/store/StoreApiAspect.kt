@@ -27,13 +27,12 @@
 package com.tencent.devops.store.config
 
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
-import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.After
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before
-
 import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -41,7 +40,8 @@ import org.springframework.stereotype.Component
 @Aspect
 @Component
 class StoreApiAspect(
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val bkTag: BkTag
 ) {
 
     companion object {
@@ -55,10 +55,10 @@ class StoreApiAspect(
      */
     @Before(
         "execution(* com.tencent.devops.store.resources.*.*(..))" +
-        "||execution(* com.tencent.devops.store.resources.common.*.*(..))" +
-        "||execution(* com.tencent.devops.store.resources.atom.*.*(..))" +
-        "||execution(* com.tencent.devops.store.resources.container.*.*(..))" +
-        "||execution(* com.tencent.devops.store.resources.template.*.*(..))"
+                "||execution(* com.tencent.devops.store.resources.common.*.*(..))" +
+                "||execution(* com.tencent.devops.store.resources.atom.*.*(..))" +
+                "||execution(* com.tencent.devops.store.resources.container.*.*(..))" +
+                "||execution(* com.tencent.devops.store.resources.template.*.*(..))"
     ) // 所有controller包下面的所有方法的所有参数
     @Suppress("ComplexMethod")
     fun beforeMethod(jp: JoinPoint) {
@@ -80,7 +80,7 @@ class StoreApiAspect(
             // 网关无法判别项目信息, 切面捕获project信息。
             val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
             if (!projectConsulTag.isNullOrEmpty()) {
-                ConsulContent.setConsulContent(projectConsulTag!!)
+                bkTag.setGatewayTag(projectConsulTag)
             }
         }
     }
@@ -91,13 +91,13 @@ class StoreApiAspect(
      */
     @After(
         "execution(* com.tencent.devops.store.resources.*.*(..))" +
-            "||execution(* com.tencent.devops.store.resources.common.*.*(..))" +
-            "||execution(* com.tencent.devops.store.resources.atom.*.*(..))" +
-            "||execution(* com.tencent.devops.store.resources.container.*.*(..))" +
-            "||execution(* com.tencent.devops.store.resources.template.*.*(..))"
+                "||execution(* com.tencent.devops.store.resources.common.*.*(..))" +
+                "||execution(* com.tencent.devops.store.resources.atom.*.*(..))" +
+                "||execution(* com.tencent.devops.store.resources.container.*.*(..))" +
+                "||execution(* com.tencent.devops.store.resources.template.*.*(..))"
     ) // 所有controller包下面的所有方法的所有参数
     fun afterMethod() {
         // 删除线程ThreadLocal数据,防止线程池复用。导致流量指向被污染
-        ConsulContent.removeConsulContent()
+        bkTag.removeGatewayTag()
     }
 }

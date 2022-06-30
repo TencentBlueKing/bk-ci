@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -34,6 +35,8 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -58,6 +61,7 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.common.quality.pojo.RuleCheckResult
+import com.tencent.devops.process.pojo.ReviewParam
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -100,7 +104,8 @@ class PipelineBuildQualityService(
         buildId: String,
         elementId: String,
         action: ManualReviewAction,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        ruleIds: List<String>?
     ) {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
@@ -183,13 +188,33 @@ class PipelineBuildQualityService(
             )
         }
 
+        try {
+            if (!ruleIds.isNullOrEmpty()) {
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildQualityReviewBroadCastEvent(
+                        source = "pipeline_quality_review",
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        userId = userId,
+                        buildId = buildId,
+                        reviewType = if (action == ManualReviewAction.PROCESS)
+                            BuildReviewType.QUALITY_TASK_REVIEW_PASS else BuildReviewType.QUALITY_TASK_REVIEW_ABORT,
+                        ruleIds = ruleIds
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            logger.error("[$buildId]|qualityReview error|taskId=$elementId|userId=$userId|action=$action")
+        }
+
         logger.info("[$buildId]|buildManualReview|taskId=$elementId|userId=$userId|action=$action")
-        pipelineRuntimeService.manualDealBuildTask(
-            projectId = projectId,
-            buildId = buildId,
+        pipelineRuntimeService.manualDealReview(
             taskId = elementId,
             userId = userId,
-            manualAction = action
+            params = ReviewParam(
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                status = action, suggest = null, desc = null
+            )
         )
     }
 
@@ -359,7 +384,6 @@ class PipelineBuildQualityService(
                 // 产生MQ消息，等待5秒时间
                 logger.info("[$buildId]|QUALITY_$position|taskId=$elementId|quality check success wait end")
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 5000
-                task.taskParams[QUALITY_RESULT] = checkResult.success
             } else {
                 buildLogPrinter.addLine(
                     buildId = buildId,
@@ -424,8 +448,9 @@ class PipelineBuildQualityService(
                     executeCount = task.executeCount ?: 1
                 )
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = checkResult.auditTimeoutSeconds * 1000 // 15 min
-                task.taskParams[QUALITY_RESULT] = checkResult.success
             }
+
+            task.taskParams[QUALITY_RESULT] = checkResult.success
 
             pipelineEventDispatcher.dispatch(
                 PipelineBuildWebSocketPushEvent(
@@ -437,8 +462,8 @@ class PipelineBuildQualityService(
                     refreshTypes = RefreshType.DETAIL.binary
                 )
             )
+            return AtomResponse(BuildStatus.RUNNING)
         }
-        return AtomResponse(BuildStatus.RUNNING)
     }
 
     fun getCheckResult(
@@ -522,6 +547,20 @@ class PipelineBuildQualityService(
             if (success.toBoolean()) {
                 AtomResponse(BuildStatus.REVIEW_PROCESSED)
             } else {
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildReviewBroadCastEvent(
+                        source = "taskAtom",
+                        projectId = task.projectId,
+                        pipelineId = task.pipelineId,
+                        buildId = buildId,
+                        reviewType = BuildReviewType.QUALITY_TASK_REVIEW_ABORT,
+                        status = "",
+                        userId = "",
+                        taskId = null,
+                        stageId = "",
+                        timeout = true
+                    )
+                )
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "${taskName}审核超时",

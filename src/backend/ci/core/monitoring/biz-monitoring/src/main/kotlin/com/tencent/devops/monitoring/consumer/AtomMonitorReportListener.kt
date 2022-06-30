@@ -71,8 +71,6 @@ class AtomMonitorReportListener @Autowired constructor(
         // 暴露prometheus
         Counter.builder("atom_monitor")
             .tag("atomCode", data.atomCode)
-            .tag("projectId", data.projectId)
-            .tag("pipelineId", data.pipelineId)
             .tag("errorCode", data.errorCode.toString())
             .tag("errorType", data.errorType ?: "null")
             .register(meterRegistry)

@@ -42,5 +42,6 @@ data class TStorageCredentials(
     var lastModifiedBy: String,
     var lastModifiedDate: LocalDateTime,
 
-    var credentials: String
+    var credentials: String,
+    var region: String? = null
 )

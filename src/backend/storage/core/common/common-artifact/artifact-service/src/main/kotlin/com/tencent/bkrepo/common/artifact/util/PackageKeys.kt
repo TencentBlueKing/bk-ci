@@ -41,17 +41,20 @@ object PackageKeys {
     private const val DOCKER = "docker"
     private const val NPM = "npm"
     private const val HELM = "helm"
+    private const val RDS = "rds"
     private const val RPM = "rpm"
     private const val PYPI = "pypi"
     private const val COMPOSER = "composer"
     private const val NUGET = "nuget"
+    private const val MAVEN = "gav"
+    private const val OCI = "oci"
     private const val SEPARATOR = "://"
 
     /**
      * 生成gav格式key
      */
     fun ofGav(groupId: String, artifactId: String): String {
-        return StringBuilder("gav://").append(groupId)
+        return StringBuilder(MAVEN).append(SEPARATOR).append(groupId)
             .append(StringPool.COLON)
             .append(artifactId)
             .toString()
@@ -67,6 +70,15 @@ object PackageKeys {
     }
 
     /**
+     * 生成OCI格式key
+     *
+     * 例子: oci://test
+     */
+    fun ofOci(name: String): String {
+        return ofName(OCI, name)
+    }
+
+    /**
      * 生成npm格式key
      *
      * 例子: npm://test
@@ -76,12 +88,21 @@ object PackageKeys {
     }
 
     /**
-     * 生成npm格式key
+     * 生成helm格式key
      *
-     * 例子: npm://test
+     * 例子: helm://test
      */
     fun ofHelm(name: String): String {
         return ofName(HELM, name)
+    }
+
+    /**
+     * 生成rds格式key
+     *
+     * 例子: rds://test
+     */
+    fun ofRds(name: String): String {
+        return ofName(RDS, name)
     }
 
     /**
@@ -126,6 +147,13 @@ object PackageKeys {
     }
 
     /**
+     * 生成gav格式key
+     */
+    fun resolveGav(gavKey: String): String {
+        return resolveName(MAVEN, gavKey)
+    }
+
+    /**
      * 解析npm格式的key
      *
      * 例子: npm://test  ->  test
@@ -144,12 +172,30 @@ object PackageKeys {
     }
 
     /**
+     * 解析rds格式的key
+     *
+     * 例子: rds://test  ->  test
+     */
+    fun resolveRds(rdsKey: String): String {
+        return resolveName(RDS, rdsKey)
+    }
+
+    /**
      * 解析docker格式的key
      *
      * 例子: docker://test  ->  test
      */
     fun resolveDocker(dockerKey: String): String {
         return resolveName(DOCKER, dockerKey)
+    }
+
+    /**
+     * 解析oci格式的key
+     *
+     * 例子: oci://test  ->  test
+     */
+    fun resolveOci(ociKey: String): String {
+        return resolveName(OCI, ociKey)
     }
 
     /**
@@ -183,7 +229,7 @@ object PackageKeys {
      *
      * 例子: {schema}://test
      */
-    private fun ofName(schema: String, name: String): String {
+    fun ofName(schema: String, name: String): String {
         return StringBuilder(schema).append(SEPARATOR).append(name).toString()
     }
 
@@ -201,7 +247,7 @@ object PackageKeys {
      *
      * 例子: {schema}://test  ->  test
      */
-    private fun resolveName(schema: String, nameKey: String): String {
+    fun resolveName(schema: String, nameKey: String): String {
         val prefix = StringBuilder(schema).append(SEPARATOR).toString()
         return nameKey.substringAfter(prefix)
     }

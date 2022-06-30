@@ -69,7 +69,7 @@ object XStreamUtil {
             xStream.autodetectAnnotations(true)
             val clazz = when (indexType) {
                 IndexType.FILELISTS -> RpmPackageFileList::class.java
-                IndexType.OTHERS -> RpmPackageChangeLog::class.java
+                IndexType.OTHER -> RpmPackageChangeLog::class.java
                 IndexType.PRIMARY -> RpmPackage::class.java
             }
             xStream.alias("package", clazz)

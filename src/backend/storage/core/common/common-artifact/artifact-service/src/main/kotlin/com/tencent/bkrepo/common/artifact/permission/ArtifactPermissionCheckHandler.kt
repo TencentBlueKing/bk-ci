@@ -44,13 +44,26 @@ class ArtifactPermissionCheckHandler(
     override fun onPermissionCheck(userId: String, permission: Permission) {
         if (permission.type == ResourceType.REPO) {
             with(ArtifactContextHolder.getRepoDetail()!!) {
-                permissionManager.checkRepoPermission(permission.action, projectId, name, public)
+                permissionManager.checkRepoPermission(
+                    action = permission.action,
+                    projectId = projectId,
+                    repoName = name,
+                    public = public,
+                    anonymous = permission.anonymous
+                )
             }
         }
         if (permission.type == ResourceType.NODE) {
             val path = ArtifactContextHolder.getArtifactInfo()!!.getArtifactFullPath()
             with(ArtifactContextHolder.getRepoDetail()!!) {
-                permissionManager.checkNodePermission(permission.action, projectId, name, path, public)
+                permissionManager.checkNodePermission(
+                    permission.action,
+                    projectId,
+                    name,
+                    path,
+                    public = public,
+                    anonymous = permission.anonymous
+                )
             }
         }
     }

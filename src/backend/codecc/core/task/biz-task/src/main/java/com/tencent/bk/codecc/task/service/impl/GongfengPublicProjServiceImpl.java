@@ -56,7 +56,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
@@ -118,7 +118,7 @@ public class GongfengPublicProjServiceImpl implements GongfengPublicProjService 
 
     @Override
     public GongfengPublicProjEntity findProjectById(Integer id) {
-        return gongfengPublicProjRepository.findById(id);
+        return gongfengPublicProjRepository.findFirstById(id);
     }
 
     @Override
@@ -133,11 +133,11 @@ public class GongfengPublicProjServiceImpl implements GongfengPublicProjService 
 
     @Override
     public String getGongfengUrl(Long taskId) {
-        TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskInfoEntity = taskRepository.findFirstByTaskId(taskId);
         if (null == taskInfoEntity) {
             return null;
         }
-        GongfengPublicProjEntity gongfengPublicProjEntity = gongfengPublicProjRepository.findById(taskInfoEntity.getGongfengProjectId());
+        GongfengPublicProjEntity gongfengPublicProjEntity = gongfengPublicProjRepository.findFirstById(taskInfoEntity.getGongfengProjectId());
         if (null == gongfengPublicProjEntity) {
             return null;
         }
@@ -153,7 +153,7 @@ public class GongfengPublicProjServiceImpl implements GongfengPublicProjService 
     @Override
     public Boolean judgeActiveProjExists(Integer id)
     {
-        return null != gongfengActiveProjRepository.findById(id);
+        return null != gongfengActiveProjRepository.findFirstById(id);
     }
 
     @Override

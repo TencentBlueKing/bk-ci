@@ -17,7 +17,7 @@ import com.tencent.bk.codecc.defect.model.TransferAuthorEntity;
 import com.tencent.bk.codecc.defect.service.IQueryTransferAuthorBizService;
 import com.tencent.bk.codecc.defect.vo.common.AuthorTransferVO;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +37,7 @@ public class QueryTransferAuthorBizServiceImpl implements IQueryTransferAuthorBi
     @Override
     public AuthorTransferVO getAuthorTransfer(long taskId)
     {
-        TransferAuthorEntity transferAuthorEntity = transferAuthorRepository.findByTaskId(taskId);
+        TransferAuthorEntity transferAuthorEntity = transferAuthorRepository.findFirstByTaskId(taskId);
         AuthorTransferVO authorTransferVO = new AuthorTransferVO();
         if (transferAuthorEntity != null)
         {

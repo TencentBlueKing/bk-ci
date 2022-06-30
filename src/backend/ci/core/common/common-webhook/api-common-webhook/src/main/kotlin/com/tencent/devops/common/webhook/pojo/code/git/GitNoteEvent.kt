@@ -45,13 +45,16 @@ data class GitNoteEvent(
     @ApiParam("对合并请求评论时存在")
     val mergeRequest: GitMRAttributes?,
     @ApiParam("对缺陷进行评论时存在")
-    val issue: GitIssueAttributes?
+    val issue: GitIssueAttributes?,
+    @ApiParam("对评审进行评论时存在")
+    val review: GitReviewAttributes?
 ) : GitEvent() {
     companion object {
         const val classType = "note"
     }
 }
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class GitNoteAttributes(
     val id: Long,
     val note: String,

@@ -34,7 +34,6 @@ dependencies {
     implementation(project(":repository:biz-repository"))
     implementation(project(":generic:biz-generic"))
     implementation(project(":composer:biz-composer"))
-    implementation(project(":docker:biz-docker"))
     implementation(project(":helm:biz-helm"))
     implementation(project(":maven:biz-maven"))
     implementation(project(":npm:biz-npm"))

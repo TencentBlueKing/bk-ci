@@ -89,9 +89,12 @@ class SendNotify @Autowired constructor(
     private fun sendNotifyV2(action: BaseAction, build: BuildHistory) {
         // 获取需要进行替换的variables
         val finishData = action.data.context.finishData!!
-        val projectId = finishData.projectId
-        val variables = client.get(ServiceVarResource::class)
-            .getContextVar(projectId = projectId, buildId = build.id, contextName = null).data
+        val variables = client.get(ServiceVarResource::class).getContextVar(
+            projectId = finishData.projectId,
+            pipelineId = finishData.pipelineId,
+            buildId = build.id,
+            contextName = null
+        ).data
         val notices = YamlUtil.getObjectMapper().readValue(
             finishData.normalizedYaml, ScriptBuildYaml::class.java
         ).notices
@@ -125,7 +128,10 @@ class SendNotify @Autowired constructor(
         val chatIds = replaceVar(notice.chatId, noticeVariables)?.toMutableSet()
         val title = replaceVar(notice.title, noticeVariables)
         val content = replaceVar(notice.content, noticeVariables)
-        val projectName = GitCommonUtils.getRepoName(action.data.setting.gitHttpUrl, action.data.setting.name)
+        val projectName = action.data.eventCommon.gitProjectName ?: GitCommonUtils.getRepoName(
+            action.data.setting.gitHttpUrl,
+            action.data.setting.name
+        )
 
         val gitProjectInfoCache = action.data.eventCommon.sourceGitProjectId?.let {
             streamTriggerCache.getAndSaveRequestGitProjectInfo(

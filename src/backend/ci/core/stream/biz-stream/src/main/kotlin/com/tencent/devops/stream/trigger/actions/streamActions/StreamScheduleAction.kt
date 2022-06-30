@@ -126,14 +126,21 @@ class StreamScheduleAction(
         return emptyList()
     }
 
-    override fun getYamlContent(fileName: String): String {
-        return api.getFileContent(
-            cred = this.getGitCred(),
-            gitProjectId = data.getGitProjectId(),
-            fileName = fileName,
-            ref = data.eventCommon.branch,
-            retry = ApiRequestRetryInfo(true)
+    override fun getYamlContent(fileName: String): Pair<String, String> {
+        return Pair(
+            data.eventCommon.branch,
+            api.getFileContent(
+                cred = this.getGitCred(),
+                gitProjectId = data.getGitProjectId(),
+                fileName = fileName,
+                ref = data.eventCommon.branch,
+                retry = ApiRequestRetryInfo(true)
+            )
         )
+    }
+
+    override fun getChangeSet(): Set<String>? {
+        return null
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
@@ -183,4 +190,5 @@ class StreamScheduleAction(
     }
 
     override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) {}
+    override fun updateLastBranch(pipelineId: String, branch: String) {}
 }

@@ -122,7 +122,7 @@
                 isOverflow: false,
                 isDropdownShow: false,
                 timer: -1,
-                docsLink: `${DOCS_URL_PREFIX}/store/store-home`,
+                docsLink: `${DOCS_URL_PREFIX}/Services/Store/start-new-template.md`,
                 progressStatus: [{
                     name: this.$t('store.开始'),
                     step: 1,

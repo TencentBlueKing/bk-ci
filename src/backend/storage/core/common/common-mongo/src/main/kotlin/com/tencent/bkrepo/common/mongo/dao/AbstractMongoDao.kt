@@ -101,6 +101,13 @@ abstract class AbstractMongoDao<E> : MongoDao<E> {
         return determineMongoTemplate().insert(entity, determineCollectionName(entity))
     }
 
+    override fun insert(entityCollection: Collection<E>): Collection<E> {
+        if (logger.isDebugEnabled) {
+            logger.debug("Mongo Dao insert many: [$entityCollection]")
+        }
+        return determineMongoTemplate().insert(entityCollection, collectionName)
+    }
+
     override fun save(entity: E): E {
         if (logger.isDebugEnabled) {
             logger.debug("Mongo Dao save: [$entity]")

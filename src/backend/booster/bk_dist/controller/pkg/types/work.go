@@ -161,6 +161,11 @@ func (w *Work) GetRecorder(key string) (*recorder.Recorder, error) {
 	return r, nil
 }
 
+// Config return config
+func (w *Work) Config() *config.ServerConfig {
+	return w.conf
+}
+
 // NewInitWorkInfo get a new work info by id
 func NewInitWorkInfo(id string) *WorkInfo {
 	info := &WorkInfo{

@@ -123,12 +123,24 @@ class BuildCancelControl @Autowired constructor(
             pipelineBuildDetailService.buildCancel(
                 projectId = event.projectId,
                 buildId = event.buildId,
-                buildStatus = event.status
+                buildStatus = event.status,
+                cancelUser = event.userId
             )
 
-            val pendingStage = pipelineStageService.getPendingStage(event.projectId, buildId)
+            // 排队的则不再获取Pending Stage，防止Final Stage被执行
+            val pendingStage: PipelineBuildStage? =
+                if (buildInfo.status.isReadyToRun() || buildInfo.status.isNeverRun()) {
+                    null
+                } else {
+                    pipelineStageService.getPendingStage(event.projectId, buildId)
+                }
+
             if (pendingStage != null) {
-                pendingStage.dispatchEvent(event)
+                if (pendingStage.status.isPause()) { // 处于审核暂停的Stage需要走取消Stage逻辑
+                    pipelineStageService.cancelStageBySystem(event.userId, pendingStage, timeout = false)
+                } else {
+                    pendingStage.dispatchEvent(event)
+                }
             } else {
                 sendBuildFinishEvent(event)
             }
@@ -187,7 +199,11 @@ class BuildCancelControl @Autowired constructor(
         val variables: Map<String, String> by lazy { buildVariableService.getAllVariable(projectId, buildId) }
         val executeCount: Int by lazy { buildVariableService.getBuildExecuteCount(projectId, buildId) }
         val stages = model.stages
-        stages.forEachIndexed forEach@{ index, stage ->
+        stages.forEachIndexed nextStage@{ index, stage ->
+            if (stage.status == null || index == 0) { // Trigger 和 未启动的忽略
+                return@nextStage
+            }
+
             if (event.actionType != ActionType.TERMINATE && stage.finally && index > 1) {
                 // 当前stage为finallyStage且它前一个stage也已经运行过了或者还未运行业务逻辑，则finallyStage也能取消
                 val preStageStatus = BuildStatus.parse(stages[index - 1].status)
@@ -196,10 +212,14 @@ class BuildCancelControl @Autowired constructor(
                 if (getStageExecuteBusFlag(stages[0]) &&
                     (preStageNoExecuteBusFlag || !getStageExecuteBusFlag(stages[1]))
                 ) {
-                    return@forEach
+                    return@nextStage
                 }
             }
-            stage.containers.forEach C@{ container ->
+
+            stage.containers.forEach nextC@{ container ->
+                if (container.status == null) { // 未启动的忽略
+                    return@nextC
+                }
                 val stageId = stage.id ?: ""
                 cancelContainerPendingTask(
                     stageId = stageId,
@@ -270,7 +290,8 @@ class BuildCancelControl @Autowired constructor(
                     executeCount = executeCount
                 )
                 // 释放互斥锁
-                unlockMutexGroup(variables = variables, container = container,
+                unlockMutexGroup(
+                    variables = variables, container = container,
                     buildId = event.buildId, projectId = event.projectId, stageId = stageId
                 )
                 // 构建机关机

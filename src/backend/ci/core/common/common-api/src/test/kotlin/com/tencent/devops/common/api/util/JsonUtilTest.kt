@@ -30,8 +30,11 @@ package com.tencent.devops.common.api.util
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.annotation.SkipLogField
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 /**
  * @version 1.0
@@ -43,72 +46,72 @@ class JsonUtilTest {
         val bean = NameAndValue(key = "name", value = "this is password 123456", type = TestType.STRING)
         val toMap = JsonUtil.toMap(bean)
         val newBean = JsonUtil.mapTo(toMap, NameAndValue::class.java)
-        Assert.assertEquals(bean.key, newBean.key)
-        Assert.assertEquals(bean.value, newBean.value)
-        Assert.assertEquals(bean.type, newBean.type)
+        Assertions.assertEquals(bean.key, newBean.key)
+        Assertions.assertEquals(bean.value, newBean.value)
+        Assertions.assertEquals(bean.type, newBean.type)
     }
 
     @Test
     @Suppress("ALL")
     fun toOrNullTest() {
         val json = "      "
-        Assert.assertNull(JsonUtil.toOrNull(json, List::class.java))
+        Assertions.assertNull(JsonUtil.toOrNull(json, List::class.java))
 
         val emptyListJson = "[]"
         val list = JsonUtil.toOrNull(emptyListJson, List::class.java)
-        Assert.assertNotNull(list)
-        Assert.assertEquals(0, list!!.size)
+        Assertions.assertNotNull(list)
+        Assertions.assertEquals(0, list!!.size)
 
         val notEmptyListJson = "[\"hello\"]"
         val strList = JsonUtil.toOrNull(notEmptyListJson, List::class.java) as List<String>?
-        Assert.assertNotNull(strList)
-        Assert.assertEquals(1, strList!!.size)
+        Assertions.assertNotNull(strList)
+        Assertions.assertEquals(1, strList!!.size)
 
         val illegal = "\"hello\""
         val nullList = JsonUtil.toOrNull(illegal, List::class.java) as List<String>?
-        Assert.assertNull(nullList)
+        Assertions.assertNull(nullList)
 
         val nullObj = JsonUtil.toOrNull(json, object : TypeReference<List<String>>() {})
-        Assert.assertNull(nullObj)
+        Assertions.assertNull(nullObj)
 
         val listStr = JsonUtil.toOrNull(notEmptyListJson, object : TypeReference<List<String>>() {})
-        Assert.assertNotNull(listStr)
-        Assert.assertEquals(1, listStr?.size)
+        Assertions.assertNotNull(listStr)
+        Assertions.assertEquals(1, listStr?.size)
 
         val illegalNull = JsonUtil.toOrNull(illegal, object : TypeReference<List<String>>() {})
-        Assert.assertNull(illegalNull)
+        Assertions.assertNull(illegalNull)
     }
 
     @Test
     fun toMutableMapSkipEmpty() {
         val json = "{\"a\": \"1\" , \"emptyKey\": \"\"}"
         val map = JsonUtil.toMutableMapSkipEmpty(json)
-        Assert.assertNotNull(map)
-        Assert.assertEquals(map.size, 2)
-        Assert.assertEquals(map["emptyKey"], "")
+        Assertions.assertNotNull(map)
+        Assertions.assertEquals(map.size, 2)
+        Assertions.assertEquals(map["emptyKey"], "")
 
         map["str_array"] = ArrayList<String>()
 
         val mt = JsonUtil.toMutableMapSkipEmpty(map)
-        Assert.assertNotNull(mt["a"])
-        Assert.assertNull(mt["emptyKey"])
-        Assert.assertNull(mt["str_array"])
+        Assertions.assertNotNull(mt["a"])
+        Assertions.assertNull(mt["emptyKey"])
+        Assertions.assertNull(mt["str_array"])
     }
 
     @Test
     fun toMutableMap() {
         val json = "{\"a\": \"1\" , \"emptyKey\": \"\"}"
         val map = JsonUtil.toMap(json)
-        Assert.assertNotNull(map)
-        Assert.assertNotNull(map["emptyKey"])
-        Assert.assertEquals(map["a"], "1")
-        Assert.assertEquals(map["emptyKey"], "")
+        Assertions.assertNotNull(map)
+        Assertions.assertNotNull(map["emptyKey"])
+        Assertions.assertEquals(map["a"], "1")
+        Assertions.assertEquals(map["emptyKey"], "")
 
         val map2 = JsonUtil.toMap(map)
-        Assert.assertNotNull(map2)
-        Assert.assertNotNull(map2["emptyKey"])
-        Assert.assertEquals(map2["a"], "1")
-        Assert.assertEquals(map2["emptyKey"], "")
+        Assertions.assertNotNull(map2)
+        Assertions.assertNotNull(map2["emptyKey"])
+        Assertions.assertEquals(map2["a"], "1")
+        Assertions.assertEquals(map2["emptyKey"], "")
 
         val mt = JsonUtil.toMutableMap(map)
         mt["str_array"] = ArrayList<String>()
@@ -116,13 +119,13 @@ class JsonUtilTest {
         println(mt)
 
         val mutableMap = JsonUtil.toMutableMap(mt)
-        Assert.assertNotNull(mutableMap)
-        Assert.assertNotNull(mutableMap["emptyKey"])
-        Assert.assertNotNull(mutableMap["str_array"])
-        Assert.assertEquals(mutableMap["a"], "1")
-        Assert.assertEquals(mutableMap["emptyKey"], "")
+        Assertions.assertNotNull(mutableMap)
+        Assertions.assertNotNull(mutableMap["emptyKey"])
+        Assertions.assertNotNull(mutableMap["str_array"])
+        Assertions.assertEquals(mutableMap["a"], "1")
+        Assertions.assertEquals(mutableMap["emptyKey"], "")
         mutableMap["a"] = "2"
-        Assert.assertEquals(mutableMap["a"], "2")
+        Assertions.assertEquals(mutableMap["a"], "2")
         println(mutableMap)
     }
 
@@ -131,11 +134,11 @@ class JsonUtilTest {
         val expect: List<NameAndValue> = listOf(NameAndValue(key = "ai", value = "1", type = TestType.INT))
         val toJson = JsonUtil.toJson(expect)
         val actual = JsonUtil.to(toJson, object : TypeReference<List<NameAndValue>>() {})
-        Assert.assertEquals(expect.size, actual.size)
+        Assertions.assertEquals(expect.size, actual.size)
         expect.forEachIndexed { index, nameAndValue ->
-            Assert.assertEquals(nameAndValue.javaClass, actual[index].javaClass)
-            Assert.assertEquals(nameAndValue.key, actual[index].key)
-            Assert.assertEquals(nameAndValue.value, actual[index].value)
+            Assertions.assertEquals(nameAndValue.javaClass, actual[index].javaClass)
+            Assertions.assertEquals(nameAndValue.key, actual[index].key)
+            Assertions.assertEquals(nameAndValue.value, actual[index].value)
         }
     }
 
@@ -156,21 +159,40 @@ class JsonUtilTest {
 
         val allFieldsMap = JsonUtil.to<Map<String, Any>>(allJsonData)
         // 所有字段都存在，否则就是有问题
-        Assert.assertNotNull(allFieldsMap["key"])
-        Assert.assertNotNull(allFieldsMap["value"])
-        Assert.assertNotNull(allFieldsMap["valueType"])
+        Assertions.assertNotNull(allFieldsMap["key"])
+        Assertions.assertNotNull(allFieldsMap["value"])
+        Assertions.assertNotNull(allFieldsMap["valueType"])
 
         val logJsonString = JsonUtil.skipLogFields(bean)
 
-        Assert.assertNotNull(logJsonString)
+        Assertions.assertNotNull(logJsonString)
         println("脱密后的Json不会有skipLogField的敏感log信息: $logJsonString")
 
         val haveNoSkipLogFieldsMap = JsonUtil.to<Map<String, Any>>(logJsonString!!)
         // 以下字段受SkipLogField注解影响，是不会出现的，如果有则说明有问题
-        Assert.assertNull(haveNoSkipLogFieldsMap["value"])
-        Assert.assertNull(haveNoSkipLogFieldsMap["valueType"])
+        Assertions.assertNull(haveNoSkipLogFieldsMap["value"])
+        Assertions.assertNull(haveNoSkipLogFieldsMap["valueType"])
         // 未受SkipLogField注解影响的字段是存在的
-        Assert.assertNotNull(haveNoSkipLogFieldsMap["key"])
+        Assertions.assertNotNull(haveNoSkipLogFieldsMap["key"])
+    }
+
+    @Test
+    fun dataTime() {
+        val localDate = LocalDate.now()
+        val localTime = LocalTime.now()
+        val localDateTime = LocalDateTime.now()
+        val dateAndTime = DateAndTime(localDate, localTime, localDateTime, emptyList())
+
+        val jsonStr = JsonUtil.toJson(dateAndTime)
+        val deserializeObj = JsonUtil.to(jsonStr, DateAndTime::class.java)
+        Assertions.assertEquals(dateAndTime, deserializeObj)
+
+        val map = JsonUtil.toMap(dateAndTime)
+        val mapToObj = JsonUtil.mapTo(map, DateAndTime::class.java)
+        Assertions.assertEquals(dateAndTime, mapToObj)
+
+        val skipEmptyMap = JsonUtil.toMutableMapSkipEmpty(dateAndTime)
+        Assertions.assertNull(skipEmptyMap["emptyList"])
     }
 
     data class NameAndValue(
@@ -192,5 +214,12 @@ class JsonUtilTest {
         val isSecrecy: Boolean?, // 错误的字段示例命名，会导致反序列化的空值
         @get:JsonProperty("is_exact_resource")
         val exactResource: Int = 1
+    )
+
+    data class DateAndTime(
+        val localDate: LocalDate,
+        val localTime: LocalTime,
+        val localDateTime: LocalDateTime,
+        val emptyList: List<String>
     )
 }

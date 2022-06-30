@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamRepoHookEvent
@@ -36,6 +37,7 @@ import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
+import com.tencent.devops.stream.trigger.actions.data.context.RepoTrigger
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamRepoTriggerAction
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
@@ -49,6 +51,7 @@ import org.springframework.stereotype.Service
 @Suppress("ComplexCondition")
 @Service
 class StreamTriggerRequestRepoService @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val streamSettingDao: StreamBasicSettingDao,
@@ -78,6 +81,8 @@ class StreamTriggerRequestRepoService @Autowired constructor(
             actionSetting = null
         )!!
 
+        action.data.context.repoTrigger = RepoTrigger("", triggerPipelineList)
+
         logger.info("|${action.data.context.requestEventId}|repoTriggerBuild|")
 
         if (triggerPipelineList.isEmpty()) {
@@ -103,7 +108,7 @@ class StreamTriggerRequestRepoService @Autowired constructor(
             action.data.context.pipeline = gitProjectPipeline
             exHandler.handle(action) {
                 // 使用跨项目触发的action
-                triggerPerPipeline(StreamRepoTriggerAction(action))
+                triggerPerPipeline(StreamRepoTriggerAction(action, client))
             }
         }
 

@@ -163,6 +163,7 @@ class StartActionTaskContainerCmd(
         val contextMap: Map<String, String> by lazy {
             pipelineContextService.buildContext(
                 projectId = containerContext.container.projectId,
+                pipelineId = containerContext.container.pipelineId,
                 buildId = containerContext.container.buildId,
                 stageId = containerContext.container.stageId,
                 containerId = containerContext.container.containerId,

@@ -53,11 +53,11 @@ open class GrayTaskConfig {
         container.setQueueNames(grayTaskPoolCreateQueue.name)
         container.setConcurrentConsumers(1)
         container.setMaxConcurrentConsumers(1)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         // 确保只有一个消费者消费，保证负载不超时
         val adapter = MessageListenerAdapter(grayToolCreateTaskListener, grayToolCreateTaskListener::handleWithGrayToolProject.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -87,11 +87,11 @@ open class GrayTaskConfig {
         container.setMaxConcurrentConsumers(1)
         container.setStartConsumerMinInterval(1)
         container.setConsecutiveActiveTrigger(1)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         // 确保只有一个消费者消费，保证负载不超时
         val adapter = MessageListenerAdapter(grayToolCreateTaskListener, grayToolCreateTaskListener::executeTriggerGrayTask.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 }
