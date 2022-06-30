@@ -71,7 +71,7 @@ const clearStatus = () => {
       @change="handleTimeChange"
       :key="setKey"
     />
-    <bk-button @click="clearStatus">Reset</bk-button>
+    <bk-button :disabled="resetBtnDisabled" @click="clearStatus">Reset</bk-button>
   </section>
 </template>
 

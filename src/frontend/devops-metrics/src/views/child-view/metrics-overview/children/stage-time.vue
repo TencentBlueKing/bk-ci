@@ -9,6 +9,7 @@ import {
   sharedProps,
 } from '../common/props-type';
 import http from '@/http/api';
+import useFilter from '@/composables/use-filter';
 
 interface IStage {
   name: string,
@@ -17,6 +18,10 @@ interface IStage {
 }
 
 const props = defineProps(sharedProps);
+const emit = defineEmits(['change']);
+const {
+  handleChange
+} = useFilter(emit);
 const isLoading = ref(false);
 const stageList = ref<Array<IStage>>([]);
 const barColorList = [
@@ -50,6 +55,7 @@ const getDataFromApi = () => {
     })
     .finally(() => {
       isLoading.value = false;
+      handleChange(false)
     });
 };
 

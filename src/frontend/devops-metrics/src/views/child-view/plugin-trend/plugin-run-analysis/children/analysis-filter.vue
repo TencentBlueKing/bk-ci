@@ -72,7 +72,7 @@ const clearStatus = () => {
       :model-value="[status.startTime, status.endTime]"
       @change="handleTimeChange"
     />
-    <bk-button @click="clearStatus">Reset</bk-button>
+    <bk-button :disabled="resetBtnDisabled" @click="clearStatus">Reset</bk-button>
   </section>
 </template>
 

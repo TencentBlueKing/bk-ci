@@ -66,7 +66,6 @@ watch(
     getData();
   }
 );
-onMounted(getData);
 </script>
 
 <template>

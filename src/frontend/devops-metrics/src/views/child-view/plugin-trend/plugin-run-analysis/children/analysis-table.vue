@@ -11,7 +11,13 @@ import {
 import {
   useRouter,
 } from 'vue-router';
+import useFilter from '@/composables/use-filter';
 
+const emit = defineEmits(['change']);
+
+const {
+  handleChange
+} = useFilter(emit);
 const props = defineProps(sharedProps);
 const isLoading = ref(false);
 const columns = ref([]);
@@ -19,7 +25,7 @@ const tableData = ref([]);
 const pagination = ref({
   current: 1,
   count: 0,
-  limit: 20,
+  limit: 10,
 });
 const router = useRouter()
 
@@ -73,6 +79,7 @@ const getData = () => {
     })
     .finally(() => {
       isLoading.value = false;
+      handleChange(false)
     });
 };
 
@@ -84,7 +91,6 @@ watch(
   }
   ,
 );
-onMounted(getData);
 </script>
 
 <template>
@@ -97,6 +103,7 @@ onMounted(getData);
       class="analysis-table"
       :columns="columns"
       :data="tableData"
+      remote-pagination
       :pagination="pagination"
       @page-value-change="handlePageChange"
       @page-limit-change="handlePageLimitChange"

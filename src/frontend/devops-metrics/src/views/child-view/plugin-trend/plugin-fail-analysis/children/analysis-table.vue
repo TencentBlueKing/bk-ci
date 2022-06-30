@@ -12,7 +12,14 @@ import {
 import {
   useRouter,
 } from 'vue-router';
+import useFilter from '@/composables/use-filter';
 const router = useRouter()
+
+const emit = defineEmits(['change']);
+
+const {
+  handleChange
+} = useFilter(emit);
 
 const props = defineProps(sharedProps);
 const isLoading = ref(false);
@@ -49,8 +56,8 @@ const columns = [
 const tableData = ref([]);
 const pagination = ref({
   current: 1,
-  count: 500,
-  limit: 20,
+  count: 0,
+  limit: 10,
 });
 
 const handlePageChange = (current) => {
@@ -77,6 +84,7 @@ const getData = () => {
     })
     .finally(() => {
       isLoading.value = false;
+      handleChange(false);
     });
 };
 
@@ -131,6 +139,7 @@ onMounted(getData);
       class="analysis-table"
       :columns="columns"
       :data="tableData"
+      remote-pagination
       :pagination="pagination"
       @page-value-change="handlePageChange"
       @page-limit-change="handlePageLimitChange"
