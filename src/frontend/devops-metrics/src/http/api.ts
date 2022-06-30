@@ -12,6 +12,8 @@ export default {
     return fetch.get(`${METRICS_API}/project/info/pipeline/label/list`, params);
   },
   getThirdpartySummaryData(params) {
+    if (!params.pipelineLabelIds && params.pipelineLabelIds.length) delete params.pipelineLabelIds
+    if (!params.pipelineIds && params.pipelineIds.length) delete params.pipelineIds
     return fetch.get(`${METRICS_API}/thirdparty/overview/datas/summary/data/get`, params);
   },
   getPipelineSummaryData(params) {

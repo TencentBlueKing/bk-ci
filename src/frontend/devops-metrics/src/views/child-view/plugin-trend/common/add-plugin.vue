@@ -197,7 +197,7 @@ watch(
           <bk-button theme="primary" class="mr8" :loading="isSubmitting" @click="submit">Submit</bk-button>
           <bk-button @click="handleToggleShow">Cancel</bk-button>
         </section>
-        <bk-button @click="restore">Restore default</bk-button>
+        <!-- <bk-button @click="restore">Restore default</bk-button> -->
       </section>
     </bk-loading>
   </bk-sideslider>

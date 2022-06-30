@@ -13,6 +13,13 @@ import {
   useRouter
 } from 'vue-router';
 
+import useFilter from '@/composables/use-filter';
+const emit = defineEmits(['change']);
+
+const {
+  handleChange
+} = useFilter(emit);
+
 const props = defineProps(sharedProps);
 const isLoading = ref(false);
 const router = useRouter()
@@ -20,36 +27,6 @@ const columns = [
   {
     label: 'Pipeline',
     field: 'pipelineName',
-    render ({ cell, row }) {
-      return h(
-        'span',
-        {
-          style: {
-            cursor: 'pointer',
-            color: '#3a84ff',
-          },
-          onClick () {
-            const projectId = row.projectId
-            const pipelineId = row.pipelineId
-            const buildId = row.buildId
-            http.getPipelineType({
-              projectId,
-              pipelineId
-            }).then(res => {
-              if (res.channelCode === 'BS') {
-                window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}`, '_blank')
-              }
-              window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#/${projectId.split('_')[1]}`, '_blank')
-            })
-          },
-        },
-        [
-          cell,
-          ' #',
-          row.buildNum
-        ]
-      );
-    },
   },
   {
     label: 'Branch',
@@ -80,7 +57,7 @@ const tableData = ref([]);
 const pagination = ref({
   current: 1,
   count: 0,
-  limit: 20,
+  limit: 10,
 });
 
 const goToPipelineDetail = (row) => {
@@ -92,11 +69,25 @@ const handlePageChange = (current) => {
   getData();
 };
 
+const handleRowClick = (e, row) => {
+  const projectId = row.projectId
+  const pipelineId = row.pipelineId
+  const buildId = row.buildId
+  http.getPipelineType({
+    projectId,
+    pipelineId
+  }).then(res => {
+    if (res.channelCode === 'BS') {
+      window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}`, '_blank')
+    }
+    window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#/${projectId.split('_')[1]}`, '_blank')
+  })
+}
+
 const handlePageLimitChange = (limit) => {
   pagination.value.limit = limit;
   getData();
 };
-
 const getData = () => {
   isLoading.value = true;
   http
@@ -115,6 +106,7 @@ const getData = () => {
     })
     .finally(() => {
       isLoading.value = false;
+      handleChange(false)
     });
 };
 
@@ -135,9 +127,11 @@ onMounted(getData);
       class="error-table"
       :columns="columns"
       :data="tableData"
+      remote-pagination
       :pagination="pagination"
       @page-value-change="handlePageChange"
       @page-limit-change="handlePageLimitChange"
+      @row-click="handleRowClick"
     >
     </bk-table>
   </bk-loading>
@@ -147,5 +141,8 @@ onMounted(getData);
 .error-table {
   margin-top: .15rem;
   margin-bottom: .08rem;
+  ::v-deep .bk-table-body {
+    cursor: pointer;
+  }
 }
 </style>
