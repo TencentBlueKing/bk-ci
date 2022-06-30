@@ -48,6 +48,6 @@ object MetricsMessageCode {
     // metrics服务模块业务错误
 
     // metrics服务模块业务错误
-    const val QUERY_DETAILS_COUNT_BEYOND = "2123001" // 查询记录数量一次不能超过{}条，请缩小查询范围
+    const val QUERY_DETAILS_COUNT_BEYOND = "2123001" // 查询记录数量一次不能超过{0}条，请缩小查询范围
     const val QUERY_DATE_BEYOND = "2123002" // 查询时间超出，请把查询时间范围缩小为前一天到往前六个月
 }

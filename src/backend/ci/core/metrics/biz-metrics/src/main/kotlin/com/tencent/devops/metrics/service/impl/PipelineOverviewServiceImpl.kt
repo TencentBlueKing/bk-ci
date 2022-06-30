@@ -63,15 +63,18 @@ class PipelineOverviewServiceImpl @Autowired constructor(
         )
         val totalExecuteCountSum = result?.get(BK_TOTAL_EXECUTE_COUNT_SUM, BigDecimal::class.java)?.toLong()
         val successExecuteCountSum = result?.get(BK_SUCCESS_EXECUTE_COUNT_SUM, BigDecimal::class.java)?.toLong()
-        val totalAvgCostTimeSum = result?.get(BK_TOTAL_AVG_COST_TIME_SUM, BigDecimal::class.java)?.toDouble()
+        val totalAvgCostTimeSum = result?.get(BK_TOTAL_AVG_COST_TIME_SUM, BigDecimal::class.java)?.toLong()
         if (totalExecuteCountSum != null && totalAvgCostTimeSum != null) {
             return PipelineSumInfoDO(
                 totalSuccessRate = if (successExecuteCountSum == null || successExecuteCountSum == 0L) 0.0
-                else String.format("%.2f", successExecuteCountSum.toDouble() * 100 / totalExecuteCountSum).toDouble(),
-                totalAvgCostTime = String.format("%.2f", totalAvgCostTimeSum / totalExecuteCountSum).toDouble(),
+                else String.format("%.2f", successExecuteCountSum.toDouble() / totalExecuteCountSum).toDouble() * 100,
+                totalAvgCostTime = String.format(
+                    "%.2f",
+                    totalAvgCostTimeSum.toDouble() / totalExecuteCountSum
+                ).toDouble(),
                 successExecuteCount = successExecuteCountSum ?: 0,
                 totalExecuteCount = totalExecuteCountSum,
-                totalCostTime = String.format("%.2f", totalAvgCostTimeSum).toDouble()
+                totalCostTime = totalAvgCostTimeSum
             )
         }
         return null
