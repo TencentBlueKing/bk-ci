@@ -34,6 +34,7 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
 import com.tencent.devops.auth.service.AuthGroupService
@@ -178,6 +179,7 @@ class AuthConfiguration {
     @Bean
     @ConditionalOnMissingBean(LocalManagerService::class)
     fun simpleManagerService() = SimpleLocalManagerServiceImpl()
+
 
     @Bean
     @ConditionalOnMissingBean(GrantServiceImpl::class)
