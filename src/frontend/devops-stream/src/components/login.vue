@@ -8,7 +8,7 @@
             <ul class="login-buttons">
                 <li class="login-button" @click="signIn('github')">
                     <icon
-                        name="setting"
+                        name="github-logo"
                         size="25"
                     ></icon>
                     SIGN IN WITH GITHUB
