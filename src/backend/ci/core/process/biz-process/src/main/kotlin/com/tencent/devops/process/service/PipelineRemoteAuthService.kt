@@ -40,6 +40,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineRemoteAuthRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.dao.PipelineRemoteAuthDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
@@ -84,7 +85,7 @@ class PipelineRemoteAuthService @Autowired constructor(
         return pipelineRemoteAuthDao.getByAuth(dslContext, auth)
     }
 
-    fun startPipeline(auth: String, values: Map<String, String>): BuildId {
+    fun startPipeline(auth: String, values: Map<String, String>, realIp: String? = null): BuildBasicInfo {
         val pipeline = getPipeline(auth)
         if (pipeline == null) {
             logger.warn("The pipeline of auth $auth is not exist")
@@ -104,15 +105,22 @@ class PipelineRemoteAuthService @Autowired constructor(
         val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, pipeline.projectId)
         return bkTag.invokeByTag(projectConsulTag) {
             logger.info("start call service api ${pipeline.projectId} ${pipeline.pipelineId}, $projectConsulTag ${bkTag.getFinalTag()}")
-            client.getGateway(ServiceBuildResource::class).manualStartupNew(
+            val buildId = client.getGateway(ServiceBuildResource::class).manualStartupNew(
                 userId = userId!!,
                 projectId = pipeline.projectId,
                 pipelineId = pipeline.pipelineId,
                 values = values,
                 channelCode = ChannelCode.BS,
                 startType = StartType.REMOTE,
-                buildNo = null
+                buildNo = null,
+                sourceIp = realIp
             ).data!!
+            BuildBasicInfo(
+                pipelineId = pipeline.projectId,
+                projectId = pipeline.projectId,
+                buildId = buildId.id,
+                pipelineVersion = 0
+            )
         }
     }
 

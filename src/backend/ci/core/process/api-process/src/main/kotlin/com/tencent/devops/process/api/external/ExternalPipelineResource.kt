@@ -28,12 +28,14 @@
 package com.tencent.devops.process.api.external
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildId
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -55,7 +57,7 @@ interface ExternalPipelineResource {
         token: String,
         @ApiParam("启动参数", required = true)
         values: Map<String, String>
-    ): Result<BuildId>
+    ): Result<BuildBasicInfo>
 
     @ApiOperation("获取流水线徽章")
     @Produces("image/svg+xml") // 只显示，不下载
@@ -69,4 +71,24 @@ interface ExternalPipelineResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): String
+
+    @ApiOperation("远程触发构建")
+    @POST
+    @Path("/{projectId}/{pipelineId}/remote/build")
+    fun remoteBuild(
+        @ApiParam("projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("pipelineId", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("远程认证信息", required = true)
+        @HeaderParam("X-TOKEN")
+        token: String,
+        @ApiParam("请求Ip", required = true)
+        @HeaderParam("realip")
+        realIp: String?,
+        @ApiParam("启动参数", required = true)
+        values: Map<String, String>
+    ): Result<BuildBasicInfo>
 }

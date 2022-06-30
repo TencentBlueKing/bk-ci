@@ -72,7 +72,8 @@ data class StartBuildContext(
     var needUpdateStage: Boolean,
     val skipFailedTask: Boolean, // 跳过失败的插件 配合 stageRetry 可判断是否跳过所有失败插件
     var buildNoType: BuildNoType? = null,
-    var currentBuildNo: Int? = null
+    var currentBuildNo: Int? = null,
+    val sourceIp: String? = null
 ) {
 
     /**
@@ -158,7 +159,13 @@ data class StartBuildContext(
 
     companion object {
 
-        fun init(projectId: String, pipelineId: String, buildId: String, params: Map<String, Any>): StartBuildContext {
+        fun init(
+            projectId: String,
+            pipelineId: String,
+            buildId: String,
+            params: Map<String, Any>,
+            sourceIp: String? = null
+        ): StartBuildContext {
 
             val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]?.toString()
 
@@ -194,7 +201,8 @@ data class StartBuildContext(
                 },
                 retryFailedContainer = params[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toString()?.toBoolean() ?: false,
                 skipFailedTask = params[PIPELINE_SKIP_FAILED_TASK]?.toString()?.toBoolean() ?: false,
-                needUpdateStage = false
+                needUpdateStage = false,
+                sourceIp = sourceIp
             )
         }
     }

@@ -695,7 +695,8 @@ class PipelineRuntimeService @Autowired constructor(
         setting: PipelineSetting?,
         buildNo: Int? = null,
         buildNumRule: String? = null,
-        acquire: Boolean? = false
+        acquire: Boolean? = false,
+        sourceIp: String? = null
     ): String {
         val now = LocalDateTime.now()
         val startParamMap = pipelineParamMap.values.associate { it.key to it.value.toString() }
@@ -708,7 +709,7 @@ class PipelineRuntimeService @Autowired constructor(
             projectId, pipelineId, buildId, null, null, false
         )
         val projectName = projectCacheService.getProjectName(projectId) ?: ""
-        val context = StartBuildContext.init(projectId, pipelineId, buildId, startParamMap)
+        val context = StartBuildContext.init(projectId, pipelineId, buildId, startParamMap, sourceIp)
 
         val updateTaskExistsRecord: MutableList<TPipelineBuildTaskRecord> = mutableListOf()
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
@@ -1548,11 +1549,13 @@ class PipelineRuntimeService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
-            stageStatus = listOf(BuildStageStatus(
-                stageId = STATUS_STAGE,
-                name = STATUS_STAGE,
-                status = MessageCodeUtil.getCodeLanMessage(BUILD_QUEUE)
-            )),
+            stageStatus = listOf(
+                BuildStageStatus(
+                    stageId = STATUS_STAGE,
+                    name = STATUS_STAGE,
+                    status = MessageCodeUtil.getCodeLanMessage(BUILD_QUEUE)
+                )
+            ),
             oldBuildStatus = oldStatus,
             newBuildStatus = BuildStatus.QUEUE
         )
