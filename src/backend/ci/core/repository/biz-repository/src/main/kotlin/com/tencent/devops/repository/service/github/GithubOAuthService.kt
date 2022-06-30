@@ -108,6 +108,7 @@ class GithubOAuthService @Autowired constructor(
     }
 
     fun githubCallbackForGIT(code: String, state: String?): GithubOauthCallback {
+        logger.info("github callback for git|code:$code|state:$state")
         val githubToken = getAccessTokenImpl(code)
         val userResponse = githubUserService.getUser(githubToken.accessToken)
         githubTokenService.createAccessToken(
