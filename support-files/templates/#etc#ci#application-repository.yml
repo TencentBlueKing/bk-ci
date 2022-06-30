@@ -46,6 +46,7 @@ scm:
       redirectUrl: __BK_CI_PUBLIC_URL__/console/codelib
       appUrl: https://github.com/apps/__BK_CI_REPOSITORY_GITHUB_APP__
       signSecret: __BK_CI_REPOSITORY_GITHUB_SIGN_SECRET__
+      apiUrl: https://api.github.com
     tGit:
       apiUrl: https://git.tencent.com/api/v3
       tGitHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/codetgit/commit
