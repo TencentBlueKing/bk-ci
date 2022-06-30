@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 abstract class AbsPermissionGrantServiceImpl @Autowired constructor(
+    @Autowired(required = false)
     open val grantServiceImpl: GrantServiceImpl,
     open val iamConfiguration: IamConfiguration,
     open val client: Client

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class BkAuthGrantPermissionServiceImpl @Autowired constructor(
+    @Autowired(required = false)
     override val grantServiceImpl: GrantServiceImpl,
     override val iamConfiguration: IamConfiguration,
     override val client: Client
