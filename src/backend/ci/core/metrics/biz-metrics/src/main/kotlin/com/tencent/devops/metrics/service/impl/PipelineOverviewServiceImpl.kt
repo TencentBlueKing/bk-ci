@@ -71,7 +71,7 @@ class PipelineOverviewServiceImpl @Autowired constructor(
                 totalAvgCostTime = String.format("%.2f", totalAvgCostTimeSum / totalExecuteCountSum).toDouble(),
                 successExecuteCount = successExecuteCountSum ?: 0,
                 totalExecuteCount = totalExecuteCountSum,
-                totalCostTime = totalAvgCostTimeSum.toDouble()
+                totalCostTime = String.format("%.2f", totalAvgCostTimeSum).toDouble()
             )
         }
         return null

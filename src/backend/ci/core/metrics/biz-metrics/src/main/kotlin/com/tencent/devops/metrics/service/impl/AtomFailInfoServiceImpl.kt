@@ -78,7 +78,8 @@ class AtomFailInfoServiceImpl @Autowired constructor(
         // 查询记录过多，提醒用户缩小查询范围
         if (atomErrorCodeCount > metricsConfig.queryCountMax) {
             throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
+                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND,
+                params = arrayOf("${metricsConfig.queryCountMax}")
             )
         }
         // 查询插件统计信息
@@ -140,7 +141,8 @@ class AtomFailInfoServiceImpl @Autowired constructor(
         // 查询记录过多，提醒用户缩小查询范围
         if (pipelineFailDetailCount > metricsConfig.queryCountMax) {
             throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
+                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND,
+                params = arrayOf("${metricsConfig.queryCountMax}")
             )
         }
         val errorDict = mutableMapOf<Int, String>()

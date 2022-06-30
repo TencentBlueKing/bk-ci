@@ -166,7 +166,8 @@ class PipelineFailServiceImpl @Autowired constructor(
         // 查询记录过多，提醒用户缩小查询范围
         if (queryPipelineFailDetailCount > metricsConfig.queryCountMax) {
             throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
+                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND,
+                params = arrayOf("${metricsConfig.queryCountMax}")
             )
         }
         val result = pipelineFailDao.queryPipelineFailDetailInfo(
