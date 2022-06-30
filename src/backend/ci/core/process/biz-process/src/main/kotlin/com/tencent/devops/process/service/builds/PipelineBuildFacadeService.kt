@@ -334,7 +334,7 @@ class PipelineBuildFacadeService(
             }
 
             // 运行中的task重试走全新的处理逻辑
-            if (!buildInfo.status.isFinish() && buildInfo.status != BuildStatus.STAGE_SUCCESS) {
+            if (!buildInfo.isFinish()) {
                 if (pipelineRetryFacadeService.runningBuildTaskRetry(
                         userId = userId,
                         projectId = projectId,
@@ -347,7 +347,7 @@ class PipelineBuildFacadeService(
                 }
             }
 
-            if (!buildInfo.status.isFinish() && buildInfo.status != BuildStatus.STAGE_SUCCESS) {
+            if (!buildInfo.isFinish()) { // 拦截运行中的重试，防止重复提交
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
                     defaultMessage = "重试已经启动，忽略重复的请求"
