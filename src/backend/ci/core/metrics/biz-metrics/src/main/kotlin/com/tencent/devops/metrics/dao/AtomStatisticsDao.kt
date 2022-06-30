@@ -204,7 +204,7 @@ class AtomStatisticsDao {
                 step.leftJoin(tProjectPipelineLabelInfo)
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
             }
-            return step.where(conditions).groupBy(ATOM_CODE).fetchOne(0, Long::class.java) ?: 0L
+            return step.where(conditions).groupBy(ATOM_CODE).execute().toLong()
         }
     }
 }
