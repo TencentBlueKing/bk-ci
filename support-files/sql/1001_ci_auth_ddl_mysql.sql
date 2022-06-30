@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_USER_INFO`  (
    `email` varchar(255) NULL COMMENT '邮箱',
    `phone` varchar(32) NULL COMMENT '手机号',
    `create_time` datetime NOT NULL COMMENT '注册时间',
-   `user_type` tinyint NOT NULL COMMENT '用户类型 0.页面注册 1.GitHub 2.Gitlab',
+   `user_type` int NOT NULL COMMENT '用户类型 0.页面注册 1.GitHub 2.Gitlab',
    `last_login_time` datetime NULL COMMENT '最后登陆时间',
    PRIMARY KEY (`ID`),
    UNIQUE INDEX `bk_user`(`userId`, `user_type`)
