@@ -533,7 +533,10 @@
         "fileUnit": "{0} files",
         "completedLog": "full-log",
         "artifactList": "Artifacts",
-        "showAll": "Show all"
+        "showAll": "Show all",
+        "copyToCustomArtifactory": "Copy to custom artifactory",
+        "downloading": "Downloading ",
+        "copySuc": " Copy {0} to custom artifactory successfully"
     },
     "preview": {
         "build": "Build",
