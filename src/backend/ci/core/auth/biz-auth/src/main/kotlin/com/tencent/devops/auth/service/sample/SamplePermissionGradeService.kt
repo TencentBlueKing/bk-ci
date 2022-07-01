@@ -25,18 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.service.sample
 
-import com.tencent.devops.auth.pojo.PermissionUrlDTO
-import com.tencent.devops.auth.service.iam.PermissionUrlService
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.auth.service.iam.PermissionGradeService
 
-class EmptyPermissionUrlServiceImpl : PermissionUrlService {
-    override fun getPermissionUrl(permissionUrlDTO: List<PermissionUrlDTO>): Result<String?> {
-        return Result("")
-    }
-
-    override fun getRolePermissionUrl(projectId: String, groupId: String?): String? {
-        return null
+class SamplePermissionGradeService : PermissionGradeService {
+    override fun checkGradeManagerUser(userId: String, projectId: Int) {
+        TODO("Not yet implemented")
     }
 }

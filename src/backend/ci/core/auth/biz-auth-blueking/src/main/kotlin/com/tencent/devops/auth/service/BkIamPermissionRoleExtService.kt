@@ -39,9 +39,7 @@ import com.tencent.devops.auth.service.iam.impl.IamPermissionRoleExtService
 import com.tencent.devops.common.client.Client
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
 class BkIamPermissionRoleExtService @Autowired constructor(
     override val iamManagerService: ManagerService,
     private val permissionGradeService: PermissionGradeService,

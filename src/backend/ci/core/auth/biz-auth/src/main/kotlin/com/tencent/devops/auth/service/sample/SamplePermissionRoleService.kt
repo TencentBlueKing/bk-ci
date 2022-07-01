@@ -23,19 +23,33 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.service.sample
 
-import com.tencent.bk.sdk.iam.service.ManagerService
-import com.tencent.devops.auth.service.iam.impl.AbsPermissionGradeServiceImpl
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.auth.pojo.DefaultGroup
+import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
+import com.tencent.devops.auth.pojo.vo.GroupInfoVo
+import com.tencent.devops.auth.service.iam.PermissionRoleService
 
-class BkPermissionGraderServiceImpl @Autowired constructor(
-    override val iamManagerService: ManagerService
-) : AbsPermissionGradeServiceImpl(iamManagerService) {
-    override fun checkGradeManagerUser(userId: String, projectId: Int) {
-        super.checkGradeManagerUser(userId, projectId)
+class SamplePermissionRoleService : PermissionRoleService {
+    override fun createPermissionRole(userId: String, projectId: Int, projectCode: String, groupInfo: ProjectRoleDTO): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun renamePermissionRole(userId: String, projectId: Int, roleId: Int, groupInfo: ProjectRoleDTO) {
+        TODO("Not yet implemented")
+    }
+
+    override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
+        TODO("Not yet implemented")
+    }
+
+    override fun deletePermissionRole(userId: String, projectId: Int, roleId: Int) {
+        TODO("Not yet implemented")
+    }
+
+    override fun getDefaultRole(): List<DefaultGroup> {
+        TODO("Not yet implemented")
     }
 }

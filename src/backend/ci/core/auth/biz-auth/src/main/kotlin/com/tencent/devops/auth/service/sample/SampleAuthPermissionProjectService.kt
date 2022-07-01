@@ -1,4 +1,4 @@
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.service.sample
 
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources

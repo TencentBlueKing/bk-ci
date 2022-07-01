@@ -24,18 +24,48 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.auth.service
 
-import com.tencent.devops.auth.service.iam.PermissionExtService
+package com.tencent.devops.auth.service.sample
 
-class EmptyPermissionExtServiceImpl : PermissionExtService {
-    override fun resourceCreateRelation(
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
+import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
+import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
+import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
+
+class SamplePermissionRoleMemberService : PermissionRoleMemberService {
+    override fun createRoleMember(
         userId: String,
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ): Boolean {
-        return true
+        projectId: Int,
+        roleId: Int,
+        members: List<RoleMemberDTO>,
+        managerGroup: Boolean,
+        checkAGradeManager: Boolean?,
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteRoleMember(
+        userId: String,
+        projectId: Int,
+        roleId: Int,
+        id: String,
+        type: ManagerScopesEnum,
+        managerGroup: Boolean,
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun getRoleMember(projectId: Int, roleId: Int, page: Int?, pageSize: Int?): ManagerGroupMemberVo {
+        TODO("Not yet implemented")
+    }
+
+    override fun getProjectAllMember(projectId: Int, page: Int?, pageSize: Int?): ProjectMembersVO? {
+        TODO("Not yet implemented")
+    }
+
+    override fun getUserGroups(projectId: Int, userId: String): List<ManagerRoleGroupInfo>? {
+        TODO("Not yet implemented")
     }
 }

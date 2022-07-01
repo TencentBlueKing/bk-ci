@@ -28,6 +28,8 @@
 package com.tencent.devops.auth.common
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.devops.auth.filter.BlackListAspect
 import com.tencent.devops.auth.filter.TokenCheckFilter
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
@@ -35,9 +37,17 @@ import com.tencent.devops.auth.refresh.listener.AuthRefreshEventListener
 import com.tencent.devops.auth.service.AuthUserBlackListService
 import com.tencent.devops.auth.service.DefaultDeptServiceImpl
 import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.auth.service.EmptyPermissionExtServiceImpl
-import com.tencent.devops.auth.service.EmptyPermissionUrlServiceImpl
+import com.tencent.devops.auth.service.sample.SampleAuthPermissionProjectService
+import com.tencent.devops.auth.service.sample.SampleAuthPermissionService
+import com.tencent.devops.auth.service.sample.SampleGrantPermissionServiceImpl
+import com.tencent.devops.auth.service.sample.SampleLocalManagerServiceImpl
+import com.tencent.devops.auth.service.sample.SamplePermissionExtService
+import com.tencent.devops.auth.service.sample.SamplePermissionGradeService
+import com.tencent.devops.auth.service.sample.SamplePermissionRoleMemberService
+import com.tencent.devops.auth.service.sample.SamplePermissionRoleService
+import com.tencent.devops.auth.service.sample.SamplePermissionUrlServiceImpl
 import com.tencent.devops.auth.utils.HostUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import org.springframework.amqp.core.Binding
@@ -142,10 +152,43 @@ class AuthCoreConfiguration {
     fun blackListAspect(authUserBlackListService: AuthUserBlackListService) = BlackListAspect(authUserBlackListService)
 
     @Bean
-    @ConditionalOnMissingBean(name = ["permissionExtService"])
-    fun permissionExtService() = EmptyPermissionExtServiceImpl()
+    @ConditionalOnMissingBean
+    fun permissionExtService() = SamplePermissionExtService()
 
     @Bean
-    @ConditionalOnMissingBean(name = ["permissionUrlService"])
-    fun permissionUrlService() = EmptyPermissionUrlServiceImpl()
+    @ConditionalOnMissingBean
+    fun permissionUrlService() = SamplePermissionUrlServiceImpl()
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun sampleAuthPermissionProjectService() = SampleAuthPermissionProjectService()
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun sampleAuthPermissionService() = SampleAuthPermissionService()
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun sampleGrantPermissionServiceImpl(
+        grantServiceImpl: GrantServiceImpl,
+        iamConfiguration: IamConfiguration,
+        client: Client
+    ) = SampleGrantPermissionServiceImpl(grantServiceImpl, iamConfiguration, client)
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun sampleLocalManagerServiceImpl() = SampleLocalManagerServiceImpl()
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun samplePermissionGradeService() = SamplePermissionGradeService()
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun samplePermissionRoleMemberService() = SamplePermissionRoleMemberService()
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun samplePermissionRoleService() = SamplePermissionRoleService()
+
 }

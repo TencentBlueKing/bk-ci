@@ -23,19 +23,19 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.service.sample
 
-import com.tencent.bk.sdk.iam.service.ManagerService
-import com.tencent.devops.auth.service.iam.impl.AbsPermissionGradeServiceImpl
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.auth.service.LocalManagerService
 
-class BkPermissionGraderServiceImpl @Autowired constructor(
-    override val iamManagerService: ManagerService
-) : AbsPermissionGradeServiceImpl(iamManagerService) {
-    override fun checkGradeManagerUser(userId: String, projectId: Int) {
-        super.checkGradeManagerUser(userId, projectId)
+class SampleLocalManagerServiceImpl : LocalManagerService {
+    override fun projectManagerCheck(
+        userId: String,
+        projectCode: String,
+        action: String,
+        resourceType: String
+    ): Boolean {
+        return false
     }
 }

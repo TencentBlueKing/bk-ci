@@ -1,4 +1,4 @@
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.service.sample
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
@@ -7,7 +7,7 @@ import com.tencent.devops.auth.service.iam.impl.AbsPermissionGrantServiceImpl
 import com.tencent.devops.common.client.Client
 import org.springframework.beans.factory.annotation.Autowired
 
-class BkAuthGrantPermissionServiceImpl @Autowired constructor(
+class SampleGrantPermissionServiceImpl @Autowired constructor(
     override val grantServiceImpl: GrantServiceImpl,
     override val iamConfiguration: IamConfiguration,
     override val client: Client
