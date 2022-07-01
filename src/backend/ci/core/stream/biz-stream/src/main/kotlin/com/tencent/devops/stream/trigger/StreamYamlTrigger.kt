@@ -160,10 +160,10 @@ class StreamYamlTrigger @Autowired constructor(
             gitProjectInfo.toStreamGitProjectInfoWithProject()
         )
 
-        if (isTiming || isDelete || !repoHookName.isNullOrEmpty()) {
-            // 有特殊任务的注册事件
+        if (isTiming) {
+            // 定时注册事件
             logger.warn(
-                "special job register timer: $isTiming delete: $isDelete" +
+                "special job register timer: $isTiming " +
                     "gitProjectId: ${action.data.getGitProjectId()}, eventId: ${action.data.context.requestEventId!!}"
             )
             yamlBuild.gitStartBuild(
@@ -173,6 +173,23 @@ class StreamYamlTrigger @Autowired constructor(
                 gitBuildId = null,
                 // 没有触发只有特殊任务的需要保存一下蓝盾流水线
                 onlySavePipeline = !isTrigger,
+                yamlTransferData = yamlReplaceResult.yamlTransferData
+            )
+        }
+
+        if (isDelete || !repoHookName.isNullOrEmpty()) {
+            // 有特殊任务的注册事件
+            logger.warn(
+                "special job register delete: $isDelete，repoHookName：$repoHookName" +
+                        "gitProjectId: ${action.data.getGitProjectId()}, eventId: ${action.data.context.requestEventId!!}"
+            )
+            yamlBuild.gitStartBuild(
+                action = action,
+                triggerResult = triggerResult,
+                yaml = yamlObject,
+                gitBuildId = null,
+                // 没有触发只有特殊任务的不需要保存蓝盾流水线
+                onlySavePipeline = false,
                 yamlTransferData = yamlReplaceResult.yamlTransferData
             )
         }
