@@ -67,6 +67,7 @@ import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -156,20 +157,24 @@ class AuthConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "github")
+    @Primary
     fun githubStreamPermissionService(client: Client) = GithubStreamPermissionServiceImpl(client)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "github")
+    @Primary
     fun githubStreamProjectPermissionService(
         streamPermissionService: StreamPermissionServiceImpl
     ) = StreamPermissionProjectServiceImpl(streamPermissionService)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitlab")
+    @Primary
     fun gitlabStreamPermissionService() = GitlabStreamPermissionServiceImpl()
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitlab")
+    @Primary
     fun gitlabStreamProjectPermissionService(
         streamPermissionService: StreamPermissionServiceImpl
     ) = StreamPermissionProjectServiceImpl(streamPermissionService)

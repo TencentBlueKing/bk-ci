@@ -29,7 +29,6 @@ package com.tencent.devops.auth.common
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.service.GrantService
 import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.devops.auth.filter.BlackListAspect
 import com.tencent.devops.auth.filter.TokenCheckFilter
