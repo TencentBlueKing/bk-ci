@@ -8,7 +8,6 @@ import VueRouter from 'vue-router'
 import websocket from '@/utils/websocket'
 Vue.use(VueRouter)
 
-const homePage = () => import(/* webpackChunkName: 'home' */'@/views/home')
 const dashboard = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard')
 const main = () => import(/* webpackChunkName: 'entry' */'@/views/index')
 const projectIndex = () => import(/* webpackChunkName: 'entry' */'@/views/project-index')
@@ -18,7 +17,6 @@ const pipeline = () => import(/* webpackChunkName: 'pipelines' */'@/views/pipeli
 const buildList = () => import(/* webpackChunkName: 'pipelines' */'@/views/pipeline/build-list')
 const pipelineDetail = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/index')
 const buildDetail = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/detail')
-const buildArtifacts = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/artifacts')
 const buildReports = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/reports')
 const buildConfig = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/config')
 const webConsole = () => import(/* webpackChunkName: "webConsole" */'@/views/pipeline/web-console.vue')
@@ -32,22 +30,16 @@ const poolSettings = () => import(/* webpackChunkName: 'pool' */'@/views/setting
 const addAgent = () => import(/* webpackChunkName: 'agent' */'@/views/setting/agent-pools/add-agent')
 const agentList = () => import(/* webpackChunkName: 'agent' */'@/views/setting/agent-pools/agent-list')
 const agentDetail = () => import(/* webpackChunkName: 'agent' */'@/views/setting/agent-pools/agent-detail')
+const metric = () => import(/* webpackChunkName: 'metric' */'@/views/metric.vue')
 
 const routes = [
     {
         path: '',
         components: {
             default: main,
-            // home: homePage,
-            // dashboard: dashboard,
             exception: exception
         },
         children: [
-            {
-                path: 'home',
-                name: 'home',
-                component: homePage
-            },
             {
                 path: 'dashboard',
                 name: 'dashboard',
@@ -87,11 +79,6 @@ const routes = [
                                         meta: {
                                             websocket: true
                                         }
-                                    },
-                                    {
-                                        path: 'artifacts',
-                                        name: 'buildArtifacts',
-                                        component: buildArtifacts
                                     },
                                     {
                                         path: 'reports',
@@ -163,6 +150,11 @@ const routes = [
                         path: 'notifications',
                         name: 'notifications',
                         component: notifications
+                    },
+                    {
+                        path: 'metric',
+                        name: 'metric',
+                        component: metric
                     }
                 ]
             },

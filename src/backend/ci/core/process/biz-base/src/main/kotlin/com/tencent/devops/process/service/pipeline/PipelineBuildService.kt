@@ -76,7 +76,6 @@ import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -94,7 +93,7 @@ class PipelineBuildService(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
-        private val CONTEXT_PREFIX = "variables."
+        private const val CONTEXT_PREFIX = "variables."
     }
 
     fun startPipeline(
@@ -225,7 +224,6 @@ class PipelineBuildService(
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
                 throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = interceptResult.status.toString(),
                     defaultMessage = "Pipeline start failed: [${interceptResult.message}]"
                 )

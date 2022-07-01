@@ -18,11 +18,31 @@ import VueCompositionAPI from '@vue/composition-api'
 import { bkMessage } from 'bk-magic-vue'
 import bkPipeline from 'bkui-pipeline'
 
+import {
+    getCookie
+} from '@/utils'
+import VueI18n from 'vue-i18n'
+Vue.use(VueI18n)
+const DEFAULT_LANG = 'en-US'
+const COOKIE_KEY = 'stream_language'
+
+const lang = getCookie(COOKIE_KEY) || DEFAULT_LANG
+const i18n = new VueI18n({
+    locale: lang,
+    messages: {
+        'zh-CN': require('../../locale/stream/zh-CN.json'),
+        'en-US': require('../../locale/stream/en-US.json')
+    }
+})
+
 Vue.component('Icon', icon)
 Vue.use(log)
 Vue.use(VeeValidate)
 Vue.use(VueCompositionAPI)
-Vue.use(bkPipeline)
+
+Vue.use(bkPipeline, {
+    i18n
+})
 
 Vue.prototype.$bkMessage = function (config) {
     config.ellipsisLine = config.ellipsisLine || 3
@@ -33,6 +53,7 @@ window.mainComponent = new Vue({
     el: '#app',
     router,
     store,
+    i18n,
     components: { App },
     template: '<App/>'
 })

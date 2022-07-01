@@ -44,6 +44,8 @@ class BuildLogListenerService @Autowired constructor(
     fun handleEvent(event: LogOriginEvent) {
         var result = false
         try {
+            // 通过一次获取创建记录以及缓存
+            indexService.getIndexName(event.buildId)
             logService.addLogEvent(event)
             result = true
         } catch (ignored: Throwable) {
@@ -52,12 +54,14 @@ class BuildLogListenerService @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the log event [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    buildLogPrintService.dispatchEvent(LogOriginEvent(
-                        buildId = buildId,
-                        logs = logs,
-                        retryTime = retryTime - 1,
-                        delayMills = getNextDelayMills(retryTime)
-                    ))
+                    buildLogPrintService.dispatchEvent(
+                        LogOriginEvent(
+                            buildId = buildId,
+                            logs = logs,
+                            retryTime = retryTime - 1,
+                            delayMills = getNextDelayMills(retryTime)
+                        )
+                    )
                 }
             }
         }
@@ -74,12 +78,14 @@ class BuildLogListenerService @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    buildLogPrintService.dispatchEvent(LogStorageEvent(
-                        buildId = buildId,
-                        logs = logs,
-                        retryTime = retryTime - 1,
-                        delayMills = getNextDelayMills(retryTime)
-                    ))
+                    buildLogPrintService.dispatchEvent(
+                        LogStorageEvent(
+                            buildId = buildId,
+                            logs = logs,
+                            retryTime = retryTime - 1,
+                            delayMills = getNextDelayMills(retryTime)
+                        )
+                    )
                 }
             }
         }
@@ -100,17 +106,19 @@ class BuildLogListenerService @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the multi lines [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    buildLogPrintService.dispatchEvent(LogStatusEvent(
-                        buildId = buildId,
-                        finished = finished,
-                        tag = tag,
-                        subTag = subTag,
-                        jobId = jobId,
-                        logStorageMode = logStorageMode,
-                        executeCount = executeCount,
-                        retryTime = retryTime - 1,
-                        delayMills = getNextDelayMills(retryTime)
-                    ))
+                    buildLogPrintService.dispatchEvent(
+                        LogStatusEvent(
+                            buildId = buildId,
+                            finished = finished,
+                            tag = tag,
+                            subTag = subTag,
+                            jobId = jobId,
+                            logStorageMode = logStorageMode,
+                            executeCount = executeCount,
+                            retryTime = retryTime - 1,
+                            delayMills = getNextDelayMills(retryTime)
+                        )
+                    )
                 }
             }
         }
