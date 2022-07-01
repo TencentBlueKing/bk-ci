@@ -1,5 +1,5 @@
 <template>
-    <iframe :src="metricUrl"></iframe>
+    <iframe :src="metricUrl" class="iframe"></iframe>
 </template>
 
 <script>
@@ -21,3 +21,10 @@
         }
     })
 </script>
+
+<style lang="postcss" scoped>
+    .iframe {
+        position: absolute;
+        border: none;
+    }
+</style>

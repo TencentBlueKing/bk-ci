@@ -48,6 +48,8 @@
     "createTime": "创建时间",
     "updateTime": "更新时间",
     "time": "时间",
+    "signIn": "登录",
+    "signInGithub": "使用 GITHUB 登录",
     "header": {
         "pipelines": "流水线",
         "metrics": "数据分析",

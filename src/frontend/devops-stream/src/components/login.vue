@@ -3,18 +3,22 @@
         class="login-home"
         v-if="isShowDialog"
     >
+        <dashboard-header></dashboard-header>
+        <img src="/static/images/login-top.png" class="image-top">
         <section class="login-main">
-            <h3 class="login-title">Sign in for Stream CI</h3>
+            <h3 class="login-title">{{ $t('signIn') }}</h3>
             <ul class="login-buttons">
                 <li class="login-button" @click="signIn('github')">
                     <icon
                         name="github-logo"
-                        size="25"
+                        size="30"
                     ></icon>
-                    SIGN IN WITH GITHUB
+                    {{ $t('signInGithub') }}
                 </li>
             </ul>
         </section>
+        <icon name="login-bottom" class="login-bottom"></icon>
+        <span class="bottom-info">Copyright © 2012-2022 Tencent BlueKing. All Rights Reserved. 腾讯蓝鲸 版权所有</span>
     </section>
 </template>
 
@@ -30,8 +34,12 @@
     import {
         messageError
     } from '@/common/bkmagic'
+    import dashboardHeader from '@/components/dashboard-header.vue'
 
     export default defineComponent({
+        components: {
+            dashboardHeader
+        },
         setup () {
             const isShowDialog = computed(() => {
                 return store.state.showLoginDialog
@@ -64,53 +72,77 @@
         left: 0;
         bottom: 0;
         right: 0;
-        background-color: rgba(0,0,0,.2);
+        background-color: #fff;
     }
     .login-main {
         position: absolute;
-        top: calc(50% - 350px);
-        left: calc(50% - 350px);
-        height: 500px;
-        width: 700px;
-        background: linear-gradient(135deg, #5c73d9 10%, #dd7d7d 100%);
-        color: #fff;
-        border-radius: 4px;
+        top: calc(50% - 200px);
+        left: calc(50% - 335px);
+        height: 370px;
+        width: 670px;
+        background: #FFFFFF;
+        box-shadow: 1px 1px 6px 0 rgba(0,0,0,0.50);
+        border-radius: 10px;
     }
     .login-title {
-        font-size: 30px;
-        line-height: 34px;
         text-align: center;
         margin-top: 50px;
+        height: 59px;
+        line-height: 59px;
+        font-weight: 600;
+        font-size: 42px;
+        color: #000000;
     }
     .login-buttons {
         display: flex;
         align-items: center;
         flex-direction: column;
-        margin-top: 50px;
+        margin-top: 77px;
     }
     .login-button {
+        position: relative;
         display: flex;
         align-items: center;
-        background-image: linear-gradient(135deg, #FAB2FF 10%, #1904E5 100%);
-        border: none;
+        background: #182132;
+        border-radius: 5px;
         color: white;
-        line-height: 50px;
-        width: 60%;
+        line-height: 72px;
+        width: 370px;
         text-align: center;
-        text-decoration: none;
-        font-size: 16px;
-        border-radius: 8px;
+        font-size: 19px;
+        border-radius: 5px;
         cursor: pointer;
-        background-size: 200%;
-        transition: 0.6s;
-        outline: none;
         padding-left: 30px;
         svg {
             margin-right: 70px;
         }
-        &:hover {
-            box-shadow: 0 10px 20px 0 rgba(47,55,213,0.3);
-            background-position: right;
+        &:before {
+            content: '';
+            background: #fff;
+            width: 1px;
+            height: 30px;
+            position: absolute;
+            left: 95px;
+            top: 21px;
         }
+    }
+    .image-top {
+        position: absolute;
+        width: 440px;
+        top: calc(50% - 330px);
+        left: calc(50% - 220px);
+    }
+    .image-bottom {
+        position: absolute;
+        bottom: 100px;
+    }
+    .bottom-info {
+        position: absolute;
+        width: 100%;
+        bottom: 30px;
+        font-weight: 400;
+        font-size: 14px;
+        color: #000000;
+        text-align: center;
     }
 </style>

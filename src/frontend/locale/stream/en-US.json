@@ -48,6 +48,8 @@
     "createTime": "Create time",
     "updateTime": "Update time",
     "time": "Time",
+    "signIn": "Sign in",
+    "signInGithub": "SIGN IN WITH GITHUB",
     "header": {
         "pipelines": "Pipelines",
         "metrics": "Metrics",

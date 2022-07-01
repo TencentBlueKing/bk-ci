@@ -281,3 +281,6 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .stream-locale:before {
 	content: "\e167";
 }
+.stream-login-bottom:before {
+	content: "\e16e";
+}
