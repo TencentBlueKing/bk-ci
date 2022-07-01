@@ -45,5 +45,11 @@ data class DataPlatTaskDetail(
     val endTime: String?,
     val costTime: Long,
     val starter: String?,
-    val washTime: String
+    val washTime: String,
+    val bgId: String,
+    val deptId: String,
+    val centerId: String,
+    val bgName: String,
+    val deptName: String,
+    val centerName: String
 )

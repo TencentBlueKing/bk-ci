@@ -2,9 +2,9 @@
     <article class="pipelines-home">
         <aside class="aside-nav section-box" v-bkloading="{ isLoading }">
             <h3 class="nav-title">
-                Pipelines
+                {{$t('pipelines')}}
                 <div
-                    v-bk-tooltips="{ content: 'Permission denied', disabled: permission }"
+                    v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }"
                     class="nav-button"
                 >
                     <bk-button
@@ -12,7 +12,7 @@
                         theme="primary"
                         :disabled="!permission"
                         @click="showAddYml"
-                    >New</bk-button>
+                    >{{$t('new')}}</bk-button>
                 </div>
             </h3>
 
@@ -25,7 +25,7 @@
                     @click="choosePipeline(allPipeline)"
                 >
                     <icon name="all" size="24"></icon>
-                    <span class="text-ellipsis item-text">All pipelines</span>
+                    <span class="text-ellipsis item-text">{{$t('pipeline.allPipelines')}}</span>
                 </li>
                 <li
                     v-for="(dir, index) in dirList"
@@ -68,16 +68,16 @@
 
         <router-view class="pipelines-main" v-if="!isLoading"></router-view>
 
-        <bk-sideslider @hidden="hidden" :is-show.sync="isShowAddYml" :quick-close="true" :width="622" title="New pipeline">
+        <bk-sideslider @hidden="hidden" :is-show.sync="isShowAddYml" :quick-close="true" :width="622" :title="$t('pipeline.newPipeline')">
             <bk-form :model="yamlData" ref="yamlForm" slot="content" class="yaml-form" form-type="vertical">
-                <bk-form-item label="Name" :rules="[requireRule('Name'), nameRule]" :required="true" property="file_name" error-display-type="normal">
+                <bk-form-item :label="$t('pipeline.yamlName')" :rules="[requireRule('Name'), nameRule]" :required="true" property="file_name" error-display-type="normal">
                     <bk-compose-form-item class="yaml-name-container">
                         <bk-input value=".ci / " disabled class="yaml-path"></bk-input>
-                        <bk-input v-model="yamlData.file_name" class="yaml-name" placeholder="Please enter yml name，such as build.yml"></bk-input>
+                        <bk-input v-model="yamlData.file_name" class="yaml-name" :placeholder="$t('pipeline.ymlNamePlaceholder')"></bk-input>
                     </bk-compose-form-item>
                 </bk-form-item>
                 <bk-form-item label="YAML" :rules="[requireRule('Yaml'), checkYaml]" ref="codeSection" :required="true" property="content" error-display-type="normal">
-                    <bk-link theme="primary" :href="LINK_CONFIG.YAML_EXAMPLE" target="_blank" class="yaml-examples">YAML Examples</bk-link>
+                    <bk-link theme="primary" :href="LINK_CONFIG.YAML_EXAMPLE" target="_blank" class="yaml-examples">{{$t('pipeline.yamlExample')}}</bk-link>
                     <code-section @blur="$refs.codeSection.validate('blur')"
                         @focus="$refs.codeSection.clearValidator()"
                         :code.sync="yamlData.content"
@@ -85,14 +85,14 @@
                         :cursor-blink-rate="530"
                     ></code-section>
                 </bk-form-item>
-                <bk-form-item label="Branch" :rules="[requireRule('Branch')]" :required="true" property="branch_name" error-display-type="normal">
+                <bk-form-item :label="$t('pipeline.branch')" :rules="[requireRule($t('pipeline.branch'))]" :required="true" property="branch_name" error-display-type="normal">
                     <bk-select v-model="yamlData.branch_name"
                         :remote-method="remoteGetBranchList"
                         :loading="isLoadingBranches"
                         :clearable="false"
                         searchable
                         @toggle="toggleFilterBranch"
-                        placeholder="Please select branch"
+                        :placeholder="$t('pipeline.branchPlaceholder')"
                     >
                         <bk-option v-for="option in branchList"
                             :key="option"
@@ -101,12 +101,12 @@
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item label="Commit Message" :rules="[requireRule('commit message')]" :required="true" property="commit_message" error-display-type="normal">
-                    <bk-input v-model="yamlData.commit_message" placeholder="Please input commit message"></bk-input>
+                <bk-form-item :label="$t('pipeline.commitMsg')" :rules="[requireRule($t('pipeline.commitMsg'))]" :required="true" property="commit_message" error-display-type="normal">
+                    <bk-input v-model="yamlData.commit_message" :placeholder="$t('pipeline.commitMsgPlaceholder')"></bk-input>
                 </bk-form-item>
                 <bk-form-item>
-                    <bk-button ext-cls="mr5" theme="primary" title="Submit" @click.stop.prevent="submitData" :loading="isSaving">Submit</bk-button>
-                    <bk-button ext-cls="mr5" title="Cancel" @click="hidden" :disabled="isSaving">Cancel</bk-button>
+                    <bk-button ext-cls="mr5" theme="primary" title="Submit" @click.stop.prevent="submitData" :loading="isSaving">{{$t('submit')}}</bk-button>
+                    <bk-button ext-cls="mr5" title="Cancel" @click="hidden" :disabled="isSaving">{{$t('cancel')}}</bk-button>
                 </bk-form-item>
             </bk-form>
         </bk-sideslider>
@@ -140,7 +140,7 @@
 
         data () {
             return {
-                allPipeline: { displayName: 'All pipelines', enabled: true },
+                allPipeline: { displayName: this.$t('pipeline.allPipelines'), enabled: true },
                 dirList: [],
                 branchList: [],
                 yamlData: {
@@ -157,7 +157,7 @@
                     validator (val) {
                         return /^[a-zA-Z0-9_\-\.]+$/.test(val)
                     },
-                    message: 'Consists of uppercase and lowercase English letters, numbers, underscores, underscores and dots',
+                    message: this.$t('pipeline.nameRule'),
                     trigger: 'blur'
                 },
                 checkYaml: validateRule.checkYaml,
@@ -396,7 +396,7 @@
             requireRule (name) {
                 return {
                     required: true,
-                    message: name + ' is required',
+                    message: name + this.$t('isRequired'),
                     trigger: 'blur'
                 }
             }
@@ -408,7 +408,6 @@
     .pipelines-home {
         display: flex;
         padding: 25px;
-        height: calc(100vh - 60px);
     }
     .nav-title {
         justify-content: space-between;
