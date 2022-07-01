@@ -41,6 +41,7 @@ import com.tencent.devops.auth.service.sample.SampleAuthPermissionProjectService
 import com.tencent.devops.auth.service.sample.SampleAuthPermissionService
 import com.tencent.devops.auth.service.sample.SampleGrantPermissionServiceImpl
 import com.tencent.devops.auth.service.sample.SampleLocalManagerServiceImpl
+import com.tencent.devops.auth.service.sample.SampleOrganizationService
 import com.tencent.devops.auth.service.sample.SamplePermissionExtService
 import com.tencent.devops.auth.service.sample.SamplePermissionGradeService
 import com.tencent.devops.auth.service.sample.SamplePermissionRoleMemberService
@@ -190,5 +191,9 @@ class AuthCoreConfiguration {
     @Bean
     @ConditionalOnMissingBean
     fun samplePermissionRoleService() = SamplePermissionRoleService()
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun sampleOrganizationService() = SampleOrganizationService()
 
 }
