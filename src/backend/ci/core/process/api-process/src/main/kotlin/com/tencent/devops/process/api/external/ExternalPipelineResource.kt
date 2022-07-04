@@ -29,7 +29,6 @@ package com.tencent.devops.process.api.external
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildBasicInfo
-import com.tencent.devops.process.pojo.BuildId
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
