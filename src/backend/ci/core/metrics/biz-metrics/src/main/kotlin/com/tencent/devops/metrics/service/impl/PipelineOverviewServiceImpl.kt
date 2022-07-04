@@ -67,7 +67,7 @@ class PipelineOverviewServiceImpl @Autowired constructor(
         if (totalExecuteCountSum != null && totalAvgCostTimeSum != null) {
             return PipelineSumInfoDO(
                 totalSuccessRate = if (successExecuteCountSum == null || successExecuteCountSum == 0L) 0.0
-                else String.format("%.2f", successExecuteCountSum.toDouble() / totalExecuteCountSum).toDouble() * 100,
+                else String.format("%.2f", successExecuteCountSum.toDouble() / totalExecuteCountSum * 100).toDouble(),
                 totalAvgCostTime = String.format(
                     "%.2f",
                     totalAvgCostTimeSum.toDouble() / totalExecuteCountSum
