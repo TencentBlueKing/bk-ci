@@ -783,17 +783,15 @@ class GitRequestEventBuildDao {
         endTime: Long
     ): Int {
         //1、先查询主库TARGET_GIT_PROJECT_ID
-        val repoProjrct = TGitPipelineRepoResource.T_GIT_PIPELINE_REPO_RESOURCE
-        val eventBuildTable = TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD.`as`("b")
-        val eventTable = TGitRequestEvent.T_GIT_REQUEST_EVENT.`as`("d")
-        val targetProjectResult = dslContext.selectDistinct(repoProjrct.TARGET_GIT_PROJECT_ID)
-            .from(repoProjrct)
-            .asTable("a")
+        val repoProjectTable = TGitPipelineRepoResource.T_GIT_PIPELINE_REPO_RESOURCE
+        val eventBuildTable = TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD
+        val eventTable = TGitRequestEvent.T_GIT_REQUEST_EVENT
+        val targetProjectResult = dslContext.selectDistinct(repoProjectTable.TARGET_GIT_PROJECT_ID)
+            .from(repoProjectTable)
 
         val eventResult = dslContext.select(targetProjectResult.field("TARGET_GIT_PROJECT_ID", String::class.java), eventBuildTable.EVENT_ID)
             .from(targetProjectResult)
             .leftJoin(eventBuildTable).on(eventBuildTable.GIT_PROJECT_ID.eq(targetProjectResult.field("TARGET_GIT_PROJECT_ID", Long::class.java)))
-            .asTable("c")
 
         val countResult = dslContext.select(DSL.countDistinct(eventTable.GIT_PROJECT_ID))
             .from(eventResult)
