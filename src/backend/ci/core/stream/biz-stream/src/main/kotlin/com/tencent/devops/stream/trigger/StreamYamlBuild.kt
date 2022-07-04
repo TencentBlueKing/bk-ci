@@ -67,6 +67,7 @@ import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelParameters
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
+import com.tencent.devops.stream.trigger.pojo.StreamBuildLock
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerLock
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.DeleteEventService
@@ -355,15 +356,21 @@ class StreamYamlBuild @Autowired constructor(
         val pipeline = action.data.context.pipeline!!
         val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
         val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
-
-        streamYamlBaseBuild.savePipeline(
-            pipeline = pipeline,
-            userId = action.data.getUserId(),
+        StreamBuildLock(
+            redisOperation = redisOperation,
             gitProjectId = action.data.getGitProjectId().toLong(),
-            projectCode = action.getProjectCode(),
-            modelAndSetting = modelAndSetting,
-            updateLastModifyUser = updateLastModifyUser
-        )
+            pipelineId = pipeline.pipelineId
+        ).use {
+            it.lock()
+            streamYamlBaseBuild.savePipeline(
+                pipeline = pipeline,
+                userId = action.data.getUserId(),
+                gitProjectId = action.data.getGitProjectId().toLong(),
+                projectCode = action.getProjectCode(),
+                modelAndSetting = modelAndSetting,
+                updateLastModifyUser = updateLastModifyUser
+            )
+        }
     }
 
     private fun getModelCreateEventAndParams(
