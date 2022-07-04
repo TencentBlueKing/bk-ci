@@ -115,6 +115,9 @@ interface ServiceGithubRepositoryResource {
         request: ListRepositoryCollaboratorsRequest
     ): Result<List<GithubUser>>
 
+    @ApiOperation("查下有权限的仓库列表")
+    @POST
+    @Path("/searchRepositories")
     fun searchRepositories(
         @ApiParam("用户id", required = true)
         @QueryParam("userId")
