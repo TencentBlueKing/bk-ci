@@ -17,7 +17,11 @@
                 </li>
             </ul>
         </section>
-        <icon name="login-bottom" class="login-bottom"></icon>
+        <span class="svg-bottom">
+            <span></span>
+            <span></span>
+            <span></span>
+        </span>
         <span class="bottom-info">Copyright © 2012-2022 Tencent BlueKing. All Rights Reserved. 腾讯蓝鲸 版权所有</span>
     </section>
 </template>
@@ -132,9 +136,21 @@
         top: calc(50% - 330px);
         left: calc(50% - 220px);
     }
-    .image-bottom {
+    .svg-bottom {
         position: absolute;
-        bottom: 100px;
+        top: calc(50% + 250px);
+        width: 100%;
+        height: 20px;
+        background: #D7E6FA;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        span {
+            border-radius: 100%;
+            width: 71px;
+            height: 71px;
+            background: #D7E6FA;
+        }
     }
     .bottom-info {
         position: absolute;
