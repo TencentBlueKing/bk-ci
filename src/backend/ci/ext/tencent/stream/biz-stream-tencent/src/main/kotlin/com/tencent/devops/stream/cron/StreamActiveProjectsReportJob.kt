@@ -90,9 +90,17 @@ class StreamActiveProjectsReportJob @Autowired constructor(
         val startTime = startDay.withHour(0).withMinute(0).withSecond(0).timestampmilli()
         val endTime = endDay.withHour(23).withMinute(59).withSecond(59).timestampmilli()
         val projectCount = gitRequestEventBuildDao.getBuildActiveProjectCount(dslContext, startTime, endTime)
-        val repoHookProjectCount = gitRequestEventBuildDao.getBuildRepoHookActiveProjectCount(dslContext, startTime, endTime)
+        val repoHookProjectCount = gitRequestEventBuildDao.getBuildRepoHookActiveProjectCount(
+            dslContext = dslContext,
+            startTime = startTime,
+            endTime = endTime
+        )
         // 上报数据
-        oteamStatus(projectCount.toDouble() + repoHookProjectCount.toDouble(), streamSlaConfig.oteamActiveProjectTarget, endTime)
+        oteamStatus(
+            data = projectCount.toDouble() + repoHookProjectCount.toDouble(),
+            targetId = streamSlaConfig.oteamActiveProjectTarget,
+            startTime = endTime
+        )
     }
     private fun illegalConfig() =
         null == streamSlaConfig.oteamUrl || null == streamSlaConfig.oteamToken ||
