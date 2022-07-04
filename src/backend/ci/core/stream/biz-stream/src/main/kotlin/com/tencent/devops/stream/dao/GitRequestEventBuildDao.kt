@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.dao
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.model.stream.tables.TGitPipelineRepoResource
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEventBuild
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
