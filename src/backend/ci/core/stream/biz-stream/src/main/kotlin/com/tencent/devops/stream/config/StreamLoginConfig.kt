@@ -5,6 +5,6 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class StreamLoginConfig {
-    @Value("\${login.github.redirectUrl:}")
+    @Value("\${github.redirectUrl:}")
     val githubRedirectUrl: String = ""
 }

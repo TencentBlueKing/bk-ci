@@ -71,6 +71,7 @@ import com.tencent.devops.stream.util.QualityUtils
 import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -81,6 +82,10 @@ class GithubApiService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(GithubApiService::class.java)
     }
+
+    // github 组织白名单列表
+    @Value("\${github.orgWhite:}")
+    private var githubOrgWhite: String = ""
 
     /**
      * 通过凭据获取可以直接使用的token
@@ -312,8 +317,7 @@ class GithubApiService @Autowired constructor(
         if (!search.isNullOrBlank()) {
             request.name(search)
         }
-        // todo 先只查tencent组织下项目
-        request.org("Tencent")
+        request.org(githubOrgWhite)
         return client.get(ServiceGithubRepositoryResource::class).searchRepositories(
             userId = cred.getUserId(),
             request = request

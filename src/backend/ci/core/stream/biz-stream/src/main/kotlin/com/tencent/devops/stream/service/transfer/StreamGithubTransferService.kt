@@ -61,6 +61,7 @@ import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.service.StreamGitTransferService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -69,6 +70,11 @@ class StreamGithubTransferService @Autowired constructor(
     private val client: Client,
     private val streamBasicSettingDao: StreamBasicSettingDao
 ) : StreamGitTransferService {
+
+    // github 组织白名单列表
+    @Value("\${github.orgWhite:}")
+    private var githubOrgWhite: String = ""
+
     // gitProjectId在github中必须为项目名字
     override fun getGitProjectCache(
         gitProjectId: String,
@@ -164,8 +170,7 @@ class StreamGithubTransferService @Autowired constructor(
         if (!search.isNullOrBlank()) {
             request.name(search)
         }
-        // todo 先只查tencent组织下项目
-        request.org("Tencent")
+        request.org(githubOrgWhite)
 
         return client.get(ServiceGithubRepositoryResource::class).searchRepositories(
             request = request,
