@@ -27,20 +27,13 @@
 
 package com.tencent.devops.stream.trigger.pojo
 
-data class YamlPathListEntry(
-    val yamlPath: String,
-    val checkType: CheckType,
-    val ref: String?,
-    val blobId: String?
+open class YamlContent(
+    open val ref: String,
+    open val content: String
 )
 
-enum class CheckType {
-    // 需要校验
-    NEED_CHECK,
-
-    // 无需校验
-    NO_NEED_CHECK,
-
-    // 校验有问题，改流水线不触发
-    NO_TRIGGER
-}
+data class MrYamlInfo(
+    override val ref: String,
+    override val content: String,
+    val blobId: String?
+) : YamlContent(ref, content)

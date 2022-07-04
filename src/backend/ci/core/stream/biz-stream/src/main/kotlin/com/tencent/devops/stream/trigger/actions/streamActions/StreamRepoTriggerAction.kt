@@ -19,6 +19,7 @@ import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.pojo.CheckType
+import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.util.CommonCredentialUtils
@@ -70,13 +71,15 @@ class StreamRepoTriggerAction(
             action = baseAction,
             gitProjectId = data.getGitProjectId(),
             ref = data.context.repoTrigger!!.branch
-        ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
+        ).map { (name, blobId) ->
+            YamlPathListEntry(name, CheckType.NO_NEED_CHECK, data.context.repoTrigger!!.branch, blobId)
+        }
     }
 
-    override fun getYamlContent(fileName: String): Pair<String, String> {
-        return Pair(
-            data.context.repoTrigger!!.branch,
-            api.getFileContent(
+    override fun getYamlContent(fileName: String): YamlContent {
+        return YamlContent(
+            ref = data.context.repoTrigger!!.branch,
+            content = api.getFileContent(
                 cred = baseAction.getGitCred(),
                 gitProjectId = data.getGitProjectId(),
                 fileName = fileName,

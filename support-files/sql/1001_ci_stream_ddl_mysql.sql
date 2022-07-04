@@ -274,3 +274,17 @@ CREATE TABLE IF NOT EXISTS `T_GIT_PIPELINE_REPO_RESOURCE` (
     KEY `idx_source_project_path` (`SOURCE_GIT_PROJECT_PATH`),
     KEY `idx_target_project_id` (`TARGET_GIT_PROJECT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='GIT流水线资源表-存储远程仓库流水线相关信息';
+
+-- ----------------------------
+-- Table structure for T_STREAM_PIPELINE_TRIGGER
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_STREAM_PIPELINE_TRIGGER`  (
+  `PROJECT_ID` varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+  `PIPELINE_ID` varchar(128) NOT NULL COMMENT '蓝盾流水线ID',
+  `BRANCH` varchar(255) NOT NULL COMMENT 'GIT分支',
+  `CI_FILE_BLOB_ID` varchar(64) NOT NULL COMMENT '当前流水线ci文件的blobid',
+  `TRIGGER` text NULL COMMENT '缓存的触发器',
+  `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `BRANCH`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='STREAM缓存流水线触发器表';

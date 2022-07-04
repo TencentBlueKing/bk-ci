@@ -60,6 +60,7 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.CheckType
+import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.service.DeleteEventService
 import com.tencent.devops.stream.trigger.service.GitCheckService
@@ -209,17 +210,28 @@ class TGitPushActionGit(
     }
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
+        val changeSet = getChangeSet()
         return TGitActionCommon.getYamlPathList(
             action = this,
             gitProjectId = this.data.getGitProjectId(),
             ref = this.data.eventCommon.branch
-        ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
+        ).map { (name, blobId) ->
+            YamlPathListEntry(
+                yamlPath = name,
+                checkType = if (changeSet?.contains(name) == true) {
+                    CheckType.NEED_CHECK
+                } else {
+                    CheckType.NO_NEED_CHECK
+                },
+                ref = this.data.eventCommon.branch, blobId = blobId
+            )
+        }
     }
 
-    override fun getYamlContent(fileName: String): Pair<String, String> {
-        return Pair(
-            data.eventCommon.branch,
-            api.getFileContent(
+    override fun getYamlContent(fileName: String): YamlContent {
+        return YamlContent(
+            ref = data.eventCommon.branch,
+            content = api.getFileContent(
                 cred = this.getGitCred(),
                 gitProjectId = data.getGitProjectId(),
                 fileName = fileName,

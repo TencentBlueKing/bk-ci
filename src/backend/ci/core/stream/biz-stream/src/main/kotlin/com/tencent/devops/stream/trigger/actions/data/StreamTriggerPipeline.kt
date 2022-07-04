@@ -37,6 +37,7 @@ import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
  * @param filePath 流水线对应的yaml路径
  * @param displayName 流水线别名
  * @param enabled 流水线是否开启
+ * @param lastUpdateBranch 最后一次触发的分支
  */
 data class StreamTriggerPipeline(
     val gitProjectId: String,

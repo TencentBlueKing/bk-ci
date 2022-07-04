@@ -11,6 +11,7 @@ import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
+import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 
@@ -90,9 +91,8 @@ interface BaseAction {
     /**
      * 获取yaml文件具体内容
      * @param fileName 文件名称
-     * @return <ref,yaml>
      */
-    fun getYamlContent(fileName: String): Pair<String, String>
+    fun getYamlContent(fileName: String): YamlContent
 
     /**
      * 获取本次触发变更的文件列表
