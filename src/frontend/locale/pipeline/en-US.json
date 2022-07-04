@@ -884,6 +884,7 @@
     "storeMap": {
         "textarea": "Textarea",
         "pauseAtom": "Pause before execution",
+        "pauseConfLabel": "Pause configuration",
         "runManual": "You can manually decide to continue running or stop, and you can modify the parameters when you continue",
         "string": "String",
         "bool": "Boolean",

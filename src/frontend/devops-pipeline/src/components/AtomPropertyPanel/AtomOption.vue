@@ -133,6 +133,11 @@
             display: block;
             margin: 12px 0 12px 10px;
         }
+        .pause-conf-options .bk-form-checkbox,
+        .pause-conf-user {
+            margin-left: 10px;
+        }
+
         .form-field.bk-form-item {
             &.manual-skip-options,
             &.retry-count-input {

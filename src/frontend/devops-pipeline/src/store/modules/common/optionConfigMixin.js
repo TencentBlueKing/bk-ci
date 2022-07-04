@@ -98,12 +98,14 @@ const optionConfigMixin = {
                 pauseBeforeExec: {
                     rule: {},
                     type: 'boolean',
+                    label: this.$t('storeMap.pauseConfLabel'),
                     desc: this.$t('storeMap.runManual'),
                     component: 'atom-checkbox',
                     text: this.$t('storeMap.pauseAtom'),
                     default: false,
+                    extCls: 'pause-conf-options',
                     isHidden: (element) => {
-                        return !(element.data && element.data.config && (element.data.config.canPauseBeforeRun === true))
+                        return false
                     }
                 },
                 subscriptionPauseUser: {
@@ -112,8 +114,9 @@ const optionConfigMixin = {
                     label: this.$t('storeMap.pauseNotify'),
                     desc: this.$t('storeMap.pauseNotifyTip'),
                     default: this.$userInfo.username,
+                    extCls: 'pause-conf-user',
                     isHidden: (element) => {
-                        return !(element.additionalOptions && (element.additionalOptions.pauseBeforeExec === true))
+                        return false
                     }
                 },
                 timeout: {

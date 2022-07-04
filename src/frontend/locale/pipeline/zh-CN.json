@@ -888,6 +888,7 @@
     "storeMap": {
         "textarea": "文本框",
         "pauseAtom": "执行前暂停",
+        "pauseConfLabel": "执行前暂停配置",
         "runManual": "可手动决定继续运行或停止，继续时可修改入参",
         "string": "字符串",
         "bool": "布尔值",
