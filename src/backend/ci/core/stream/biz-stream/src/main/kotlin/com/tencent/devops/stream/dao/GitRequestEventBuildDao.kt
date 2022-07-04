@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.dao
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.model.stream.tables.TGitPipelineRepoResource
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEventBuild
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
@@ -38,7 +39,9 @@ import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.SelectConditionStep
+import org.jooq.conf.ParamType
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -46,7 +49,7 @@ import java.time.LocalDateTime
 @Suppress("ComplexCondition")
 @Repository
 class GitRequestEventBuildDao {
-
+    private val logger = LoggerFactory.getLogger(GitRequestEventBuildDao::class.java)
     fun save(
         dslContext: DSLContext,
         eventId: Long,
@@ -764,12 +767,42 @@ class GitRequestEventBuildDao {
         endTime: Long
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            val dsl = dslContext.selectDistinct(GIT_PROJECT_ID).from(this)
+            val dsl = dslContext.select(DSL.countDistinct(GIT_PROJECT_ID)).from(this)
                 .where(CREATE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
                 .and(CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
                 .and(BUILD_ID.isNotNull)
                 .and(PARSED_YAML.like("%v2.0%"))
-            return dsl.fetch().size
+            return dsl.fetchOne(0, Int::class.java)!!
         }
     }
+
+
+    //获取指定日期返回内的repo-hook监听库活跃
+    fun getBuildRepoHookActiveProjectCount(
+        dslContext: DSLContext,
+        startTime: Long,
+        endTime: Long
+    ): Int {
+        //1、先查询主库TARGET_GIT_PROJECT_ID
+        val repoProjectTable = TGitPipelineRepoResource.T_GIT_PIPELINE_REPO_RESOURCE
+        val eventBuildTable = TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD
+        val eventTable = TGitRequestEvent.T_GIT_REQUEST_EVENT
+        val targetProjectResult = dslContext.selectDistinct(repoProjectTable.TARGET_GIT_PROJECT_ID)
+            .from(repoProjectTable)
+
+        val eventResult = dslContext.select(targetProjectResult.field("TARGET_GIT_PROJECT_ID", String::class.java), eventBuildTable.EVENT_ID)
+            .from(targetProjectResult)
+            .leftJoin(eventBuildTable).on(eventBuildTable.GIT_PROJECT_ID.eq(targetProjectResult.field("TARGET_GIT_PROJECT_ID", Long::class.java)))
+
+        val countResult = dslContext.select(DSL.countDistinct(eventTable.GIT_PROJECT_ID))
+            .from(eventResult)
+            .leftJoin(eventTable).on(eventTable.ID.eq(eventResult.field("EVENT_ID", Long::class.java)))
+            .where(eventTable.GIT_PROJECT_ID.ne(eventResult.field("TARGET_GIT_PROJECT_ID", Long::class.java)))
+            .and(eventTable.CREATE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
+            .and(eventTable.CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
+
+        logger.info("getBuildRepoHookActiveProjectCount|sql|${countResult.getSQL(ParamType.INLINED)}")
+
+        return countResult.fetchOne(0, Int::class.java)!!
+        }
 }
