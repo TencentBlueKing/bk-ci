@@ -183,6 +183,33 @@ CREATE TABLE IF NOT EXISTS `T_GIT_USER_MESSAGE` (
     KEY `USER_ID` (`USER_ID`) USING BTREE COMMENT '通过user_id检索'
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 -- ----------------------------
 -- Table structure for T_GIT_WEB_STARTER_YAML
 -- ----------------------------
@@ -274,3 +301,13 @@ CREATE TABLE IF NOT EXISTS `T_GIT_PIPELINE_REPO_RESOURCE` (
     KEY `idx_source_project_path` (`SOURCE_GIT_PROJECT_PATH`),
     KEY `idx_target_project_id` (`TARGET_GIT_PROJECT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='GIT流水线资源表-存储远程仓库流水线相关信息';
+
+-- ----------------------------
+-- Table structure for T_STREAM_PIPELINE_SETTING
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_STREAM_PIPELINE_SETTING`(
+    `PIPELINE_ID` varchar(34)  NOT NULL,
+    `PROJECT_ID` varchar(64)  NOT NULL,
+    `MAX_CON_RUNNING_QUEUE_SIZE` int(11) NULL DEFAULT 50 comment '最大运行队列大小',
+    PRIMARY KEY (`PROJECT_ID`,`PIPELINE_ID`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='stream对应蓝盾测流水线配置';

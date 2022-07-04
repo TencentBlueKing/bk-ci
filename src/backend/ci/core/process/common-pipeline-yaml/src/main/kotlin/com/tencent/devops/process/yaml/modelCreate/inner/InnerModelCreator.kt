@@ -36,6 +36,7 @@ import com.tencent.devops.process.yaml.v2.models.step.Step
 /**
  * ModelCreate的内部类，用来放一些不同使用者的不同方法和参数
  */
+// TODO: 2022/7/1  添加方法
 interface InnerModelCreator {
     // 控制run插件是否是研发商店插件
     val marketRunTask: Boolean
@@ -78,4 +79,9 @@ interface InnerModelCreator {
         client: Client,
         event: ModelCreateEvent
     )
+
+    fun getMaxConRunningQueueSize(
+        projectId: String,
+        pipelineId: String
+    ): Int?
 }

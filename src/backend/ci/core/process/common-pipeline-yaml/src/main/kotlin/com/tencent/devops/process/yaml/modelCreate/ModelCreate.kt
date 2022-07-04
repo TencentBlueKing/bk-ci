@@ -42,6 +42,8 @@ import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
+import com.tencent.devops.process.yaml.modelCreate.inner.InnerModelCreator
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.pojo.QualityElementInfo
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
@@ -54,13 +56,15 @@ import com.tencent.devops.process.yaml.v2.models.stage.Stage as StreamV2Stage
 @Component
 class ModelCreate @Autowired constructor(
     val client: Client,
-    val modelStage: ModelStage
+    val modelStage: ModelStage,
+    val innerModelCreator: InnerModelCreator
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ModelCreate::class.java)
     }
 
+    // TODO: 2022/7/1 获取inner
     fun createPipelineModel(
         modelName: String,
         event: ModelCreateEvent,
@@ -144,6 +148,7 @@ class ModelCreate @Autowired constructor(
                 instanceFromTemplate = false,
                 pipelineCreator = event.userId
             ),
+            // 添加最大排队数量
             setting = PipelineSetting(
                 concurrencyGroup = yaml.concurrency?.group,
                 // Cancel-In-Progress 配置group后默认为true
@@ -156,7 +161,11 @@ class ModelCreate @Autowired constructor(
                 },
                 waitQueueTimeMinute = TimeUnit.HOURS.toMinutes(8).toInt(),
                 // #6090 stream重试时均需要清理变量表
-                cleanVariablesWhenRetry = true
+                cleanVariablesWhenRetry = true,
+                // #7147 stream特殊用户专门配置
+                maxConRunningQueueSize = innerModelCreator.getMaxConRunningQueueSize(
+                    projectId = event.projectCode, pipelineId = event.pipelineInfo?.pipelineId ?: ""
+                ) ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
             )
         )
     }

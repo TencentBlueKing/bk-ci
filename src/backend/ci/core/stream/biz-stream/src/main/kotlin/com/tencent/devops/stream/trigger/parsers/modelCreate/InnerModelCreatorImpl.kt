@@ -31,12 +31,14 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.yaml.modelCreate.inner.InnerModelCreator
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.step.Step
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.dao.StreamPipelineSetting
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -46,7 +48,8 @@ import javax.ws.rs.core.Response
 @Component
 class InnerModelCreatorImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val streamBasicSettingDao: StreamBasicSettingDao
+    private val streamBasicSettingDao: StreamBasicSettingDao,
+    private val streamPipelineSetting: StreamPipelineSetting
 ) : InnerModelCreator {
 
     @Value("\${stream.marketRun.enable:#{false}}")
@@ -149,6 +152,17 @@ class InnerModelCreatorImpl @Autowired constructor(
 
     override fun preInstallMarketAtom(client: Client, event: ModelCreateEvent) {
         // not need pre install
+    }
+
+    override fun getMaxConRunningQueueSize(
+        projectId: String,
+        pipelineId: String
+    ): Int {
+        return streamPipelineSetting.getPipeLineSetting(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
     }
 
     private fun makeCheckoutSelf(inputMap: MutableMap<String, Any?>, event: ModelCreateEvent) {
