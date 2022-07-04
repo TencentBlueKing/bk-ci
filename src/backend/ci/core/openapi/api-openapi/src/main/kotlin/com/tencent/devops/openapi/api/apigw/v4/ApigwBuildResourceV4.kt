@@ -34,6 +34,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildHistory
@@ -199,7 +201,67 @@ interface ApigwBuildResourceV4 {
             required = false, defaultValue = "null"
         )
         @QueryParam("updateTimeDesc")
-        updateTimeDesc: Boolean? = null
+        updateTimeDesc: Boolean? = null,
+        @ApiParam("代码库别名", required = false)
+        @QueryParam("materialAlias")
+        materialAlias: List<String>?,
+        @ApiParam("代码库URL", required = false)
+        @QueryParam("materialUrl")
+        materialUrl: String?,
+        @ApiParam("分支", required = false)
+        @QueryParam("materialBranch")
+        materialBranch: List<String>?,
+        @ApiParam("commitId", required = false)
+        @QueryParam("materialCommitId")
+        materialCommitId: String?,
+        @ApiParam("commitMessage", required = false)
+        @QueryParam("materialCommitMessage")
+        materialCommitMessage: String?,
+        @ApiParam("状态", required = false)
+        @QueryParam("status")
+        status: List<BuildStatus>?,
+        @ApiParam("触发方式", required = false)
+        @QueryParam("trigger")
+        trigger: List<StartType>?,
+        @ApiParam("排队于-开始时间(时间戳形式)", required = false)
+        @QueryParam("queueTimeStartTime")
+        queueTimeStartTime: Long?,
+        @ApiParam("排队于-结束时间(时间戳形式)", required = false)
+        @QueryParam("queueTimeEndTime")
+        queueTimeEndTime: Long?,
+        @ApiParam("开始于-开始时间(时间戳形式)", required = false)
+        @QueryParam("startTimeStartTime")
+        startTimeStartTime: Long?,
+        @ApiParam("开始于-结束时间(时间戳形式)", required = false)
+        @QueryParam("startTimeEndTime")
+        startTimeEndTime: Long?,
+        @ApiParam("结束于-开始时间(时间戳形式)", required = false)
+        @QueryParam("endTimeStartTime")
+        endTimeStartTime: Long?,
+        @ApiParam("结束于-结束时间(时间戳形式)", required = false)
+        @QueryParam("endTimeEndTime")
+        endTimeEndTime: Long?,
+        @ApiParam("耗时最小值", required = false)
+        @QueryParam("totalTimeMin")
+        totalTimeMin: Long?,
+        @ApiParam("耗时最大值", required = false)
+        @QueryParam("totalTimeMax")
+        totalTimeMax: Long?,
+        @ApiParam("备注", required = false)
+        @QueryParam("remark")
+        remark: String?,
+        @ApiParam("构件号起始", required = false)
+        @QueryParam("buildNoStart")
+        buildNoStart: Int?,
+        @ApiParam("构件号结束", required = false)
+        @QueryParam("buildNoEnd")
+        buildNoEnd: Int?,
+        @ApiParam("构建信息", required = false)
+        @QueryParam("buildMsg")
+        buildMsg: String?,
+        @ApiParam("触发人", required = false)
+        @QueryParam("startUser")
+        startUser: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @ApiOperation("获取流水线手动启动参数", tags = ["v4_app_build_startInfo", "v4_user_build_startInfo"])

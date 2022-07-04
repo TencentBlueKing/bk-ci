@@ -37,6 +37,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -511,4 +512,19 @@ interface ServicePipelineResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
+
+    @ApiOperation("根据流水线名称搜索")
+    @GET
+    @Path("/projects/{projectId}/search_by_name")
+    fun searchByName(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("搜索名称")
+        @QueryParam("pipelineName")
+        pipelineName: String?
+    ): Result<List<PipelineIdAndName>>
 }

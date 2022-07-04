@@ -37,6 +37,7 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
@@ -270,6 +271,21 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             setting = setting
+        )
+    }
+
+    override fun searchByName(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineName: String?
+    ): Result<List<PipelineIdAndName>> {
+        logger.info("searchByName: userId[$userId] projectId[$projectId] pipelineName[$pipelineName]")
+        return client.get(ServicePipelineResource::class).searchByName(
+            userId = userId,
+            projectId = projectId,
+            pipelineName = pipelineName
         )
     }
 
