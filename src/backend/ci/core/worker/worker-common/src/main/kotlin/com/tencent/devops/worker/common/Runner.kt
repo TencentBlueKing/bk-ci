@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildTask
@@ -56,6 +55,8 @@ import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.io.FileNotFoundException
+import java.io.IOException
 import kotlin.system.exitProcess
 
 object Runner {
@@ -73,14 +74,13 @@ object Runner {
         val buildVariables = EngineService.setStarted()
         var failed = false
         try {
-            // 上报agent启动给quota
-            QuotaService.addRunningAgent(buildVariables)
-
             BuildEnv.setBuildId(buildVariables.buildId)
 
             workspacePathFile = prepareWorkspace(buildVariables, workspaceInterface)
 
             try {
+                // 上报agent启动给quota
+                QuotaService.addRunningAgent(buildVariables)
                 // 开始轮询
                 failed = loopPickup(workspacePathFile, buildVariables)
             } catch (ignore: Throwable) {
@@ -97,15 +97,22 @@ object Runner {
         } catch (ignore: Exception) {
             failed = true
             logger.warn("Catch unknown exceptions", ignore)
+            val errMsg = when (ignore) {
+                is java.lang.IllegalArgumentException -> "参数错误：${ignore.message}"
+                is FileNotFoundException, is IOException -> {
+                    "运行Agent需要构建机临时目录的写权限，请检查Agent运行帐号相关权限: ${ignore.message}" +
+                        "\n 可以检查devopsAgent进程的启动帐号和{agent_dir}/.agent.properties文件中的" +
+                        "devops.slave.user配置的指定构建帐号（此选项非必须，是由用户设置),如果有可删除或者修改为正确的帐号"
+                }
+                else -> "未知错误: ${ignore.message}"
+            }
             // #1613 worker-agent.jar 增强在启动之前的异常情况上报（本机故障）
             EngineService.submitError(
                 ErrorInfo(
                     taskId = "",
                     taskName = "",
                     atomCode = "",
-                    errorMsg = "运行Agent需要构建机临时目录的写权限，请检查Agent运行帐号相关权限: ${ignore.message}" +
-                        "\n 可以检查devopsAgent进程的启动帐号和{agent_dir}/.agent.properties文件中的" +
-                        "devops.slave.user配置的指定构建帐号（此选项非必须，是由用户设置),如果有可删除或者修改为正确的帐号",
+                    errorMsg = errMsg,
                     errorType = ErrorType.USER.num,
                     errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR
                 )
@@ -131,8 +138,8 @@ object Runner {
 
         // 启动日志服务
         LoggerService.start()
-        val variables = buildVariables.variablesWithType
-        val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
+        val variables = buildVariables.variables
+        val retryCount = variables[PIPELINE_RETRY_COUNT] ?: "0"
         val executeCount = retryCount.toInt() + 1
         LoggerService.executeCount = executeCount
         LoggerService.jobId = buildVariables.containerHashId
@@ -147,7 +154,7 @@ object Runner {
         Heartbeat.start(buildVariables.timeoutMills, executeCount) // #2043 添加Job超时监控
 
         val workspaceAndLogPath = workspaceInterface.getWorkspaceAndLogDir(
-            variables = buildVariables.variablesWithType.associate { it.key to it.value.toString() },
+            variables = variables,
             pipelineId = buildVariables.pipelineId
         )
         LoggerService.pipelineLogDir = workspaceAndLogPath.second

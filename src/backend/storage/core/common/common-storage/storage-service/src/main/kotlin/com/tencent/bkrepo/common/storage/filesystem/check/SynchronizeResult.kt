@@ -36,5 +36,7 @@ data class SynchronizeResult(
     var synchronizedCount: Long = 0,
     var ignoredCount: Long = 0,
     var errorCount: Long = 0,
-    var totalSize: Long = 0
+    var totalSize: Long = 0,
+    var cleanupFolder: Long = 0,
+    var totalFolder: Long = 0
 )

@@ -44,7 +44,7 @@ import com.tencent.bkrepo.rpm.util.xStream.pojo.RpmPackage
 import com.tencent.bkrepo.rpm.util.xStream.pojo.RpmSize
 import com.tencent.bkrepo.rpm.util.xStream.pojo.RpmTime
 import com.tencent.bkrepo.rpm.util.xStream.pojo.RpmVersion
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.redline_rpm.header.AbstractHeader
 import org.redline_rpm.header.Flags
 import org.redline_rpm.header.Header
@@ -80,9 +80,9 @@ object RpmMetadataUtils {
                     com.tencent.bkrepo.rpm.util.xStream.pojo.RpmFormat(
                         getLicense(header),
                         getVendor(header),
-                        getGroup(header)!!,
-                        getBuildHost(header)!!,
-                        getSourceRpm(header)!!,
+                        getGroup(header),
+                        getBuildHost(header),
+                        getSourceRpm(header),
                         RpmHeaderRange(rawFormat.headerStart, rawFormat.headerEnd),
                         resolveEntriesEntries(
                             header,

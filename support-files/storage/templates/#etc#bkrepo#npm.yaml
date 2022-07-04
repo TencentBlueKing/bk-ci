@@ -1,0 +1,6 @@
+server:
+  port: __BK_REPO_NPM_PORT__
+
+npm:
+  tarball:
+    prefix: http://__BK_REPO_HOST__/npm/

@@ -30,27 +30,14 @@ jobs:
 
   agent:
     name: Build agent on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
-      fail-fast: true
-      max-parallel: 3
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v2
         with:
-          go-version: 1.13.15
+          go-version: 1.17.11
       - uses: actions/checkout@v2
-      - run: make clean build_linux
+      - run: make clean all
         working-directory: src/agent/
-        if: matrix.os == 'ubuntu-latest'
-      - run: make clean build_macos
-        working-directory: src/agent/
-        if: matrix.os == 'macos-latest'
-      - run: build_windows.bat
-        shell: cmd
-        working-directory: src/agent/
-        if: matrix.os == 'windows-latest'
       - uses: actions/upload-artifact@v1
         with:
           name: agent
@@ -89,7 +76,6 @@ jobs:
         working-directory: src/backend/ci
         run: |
           ./gradlew clean test build :core:worker:worker-agent:shadowJar \
-          -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/" \
           -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root
 
       - name: Gradle Build Turbo Service
@@ -160,6 +146,21 @@ jobs:
           asset_path: ./bkcodecc-slim.tar.gz
           asset_name: bkcodecc-slim.tar.gz
           asset_content_type: application/gzip
+      - name: download bkrepo
+        uses: actions/download-artifact@v1
+        with:
+          name: bkrepo
+          path: ./
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bkrepo-slim.tar.gz
+          asset_name: bkrepo-slim.tar.gz
+          asset_content_type: application/gzip
 
   codecc:
     name: Build CodeCC
@@ -179,11 +180,10 @@ jobs:
             ${{ runner.os }}-codecc-gradle-
       - name: Gradle Build
         id: codecc-backend
-        uses: eskatos/gradle-command-action@v1
-        with:
-          gradle-version: 4.6
-          build-root-directory: src/backend/codecc
-          arguments: clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
+        working-directory: src/backend/codecc
+        run: |
+          chmod +x gradlew
+          ./gradlew clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
 
       - name: frontend
         id: codecc-frontend
@@ -207,3 +207,24 @@ jobs:
         with:
           name: codecc
           path: bkcodecc-slim.tar.gz
+  bkrepo:
+    name: Build BkRepo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+          cache: 'gradle'
+      - name: Create artifact - make package
+        id: create-artifact
+        run: |
+          cd scripts/deploy-storage
+          ./build.sh
+
+      - uses: actions/upload-artifact@v1
+        with:
+          name: bkrepo
+          path: bin/bkrepo-slim.tar.gz

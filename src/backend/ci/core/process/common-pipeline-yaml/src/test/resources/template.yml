@@ -1,0 +1,18 @@
+version: v2.0
+
+on:
+  push: [ master ]
+
+jobs:
+  job_1:
+    name: job2
+    runs-on: docker
+    steps:
+      - with:
+          sss: ddd
+        uses: ssss
+      - template: steps.yml
+  template:
+    - name: jobs.yml
+      parameters:
+        username: lilei

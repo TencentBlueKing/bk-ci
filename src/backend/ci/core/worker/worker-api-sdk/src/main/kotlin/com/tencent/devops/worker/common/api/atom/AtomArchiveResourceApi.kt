@@ -232,4 +232,18 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val responseContent = request(request, "获取插件开发语言相关的环境变量信息失败")
         return objectMapper.readValue(responseContent)
     }
+
+    override fun addAtomDockingPlatforms(
+        atomCode: String,
+        platformCodes: Set<String>
+    ): Result<Boolean> {
+        val path = "/ms/store/api/build/store/docking/platforms/types/ATOM/codes/$atomCode/add"
+        val body = RequestBody.create(
+            MediaType.parse("application/json; charset=utf-8"),
+            objectMapper.writeValueAsString(platformCodes)
+        )
+        val request = buildPost(path, body)
+        val responseContent = request(request, "添加插件对接平台信息失败")
+        return objectMapper.readValue(responseContent)
+    }
 }

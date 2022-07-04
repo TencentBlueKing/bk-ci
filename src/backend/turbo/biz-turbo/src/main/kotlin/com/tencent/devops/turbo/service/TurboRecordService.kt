@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.exception.TurboException
 import com.tencent.devops.common.api.exception.code.TURBO_NO_DATA_FOUND
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.db.PageUtils
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.util.IOUtil
 import com.tencent.devops.common.util.JsonUtil
 import com.tencent.devops.common.util.MathUtil
@@ -38,7 +39,7 @@ import java.time.ZoneOffset
 import java.util.Base64
 import kotlin.reflect.full.memberProperties
 
-@Suppress("MaxLineLength","ComplexMethod")
+@Suppress("MaxLineLength")
 @Service
 class TurboRecordService @Autowired constructor(
     private val turboRecordRepository: TurboRecordRepository,
@@ -236,9 +237,15 @@ class TurboRecordService @Autowired constructor(
     /**
      * 获取加速历史列表
      */
-    fun getTurboRecordHistoryList(pageNum: Int?, pageSize: Int?, sortField: String?, sortType: String?, turboRecordModel: TurboRecordModel): Page<TurboRecordHistoryVO> {
+    @BkTimed("api_get_turbo_record_history_page")
+    fun getTurboRecordHistoryList(pageNum: Int?,
+                                  pageSize: Int?,
+                                  sortField: String?,
+                                  sortType: String?,
+                                  turboRecordModel: TurboRecordModel
+    ): Page<TurboRecordHistoryVO> {
 
-        val sortFieldInDb = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, sortField ?: "executeNum")
+        val sortFieldInDb = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, sortField ?: "execute_num")
 
         val turboRecordHistoryList = turboRecordDao.getTurboRecordHistoryList(
             pageable = PageUtils.convertPageSizeToPageable(pageNum, pageSize, sortFieldInDb, sortType ?: "DESC"),
@@ -297,6 +304,8 @@ class TurboRecordService @Autowired constructor(
     /**
      * 获取编译加速记录显示信息
      */
+    @BkTimed("get_turbo_record_detail")
+    @Suppress("ComplexMethod")
     fun getTurboRecordDisplayInfo(turboRecordEntity: TTurboRecordEntity, turboPlanEntity: TTurboPlanEntity): TurboRecordDisplayVO {
         val displayFields = mutableListOf(
             TurboDisplayFieldVO(

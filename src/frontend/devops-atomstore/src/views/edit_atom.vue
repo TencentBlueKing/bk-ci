@@ -286,7 +286,7 @@
                 initJobType: '',
                 initReleaseType: '',
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/store/plugins/create-plugin`,
+                docsLink: `${DOCS_URL_PREFIX}/Services/Store/start-new-task.md`,
                 showContent: false,
                 isUploading: false,
                 initOs: [],

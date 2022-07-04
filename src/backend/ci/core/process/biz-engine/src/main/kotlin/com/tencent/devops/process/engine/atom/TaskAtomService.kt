@@ -42,6 +42,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
@@ -183,11 +184,12 @@ class TaskAtomService @Autowired(required = false) constructor(
                 )
                 updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
                     pipelineTaskService.updateTaskStatusInfo(
-                        transactionContext = null,
-                        projectId = task.projectId,
-                        buildId = task.buildId,
-                        taskId = updateTaskStatusInfo.taskId,
-                        taskStatus = updateTaskStatusInfo.buildStatus
+                        updateTaskInfo = UpdateTaskInfo(
+                            projectId = task.projectId,
+                            buildId = task.buildId,
+                            taskId = updateTaskStatusInfo.taskId,
+                            taskStatus = updateTaskStatusInfo.buildStatus
+                        )
                     )
                     if (!updateTaskStatusInfo.message.isNullOrBlank()) {
                         buildLogPrinter.addLine(

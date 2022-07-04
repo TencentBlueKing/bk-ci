@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.api.dispatch
 
+import com.tencent.devops.common.api.constant.HttpStatus
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -34,7 +35,6 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import okhttp3.Protocol
 import okhttp3.Response
-import org.springframework.http.HttpStatus
 
 class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi {
 
@@ -43,11 +43,11 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
         val request = buildGet(path)
 
         val response = requestForResponse(request)
-        if (response.code() == HttpStatus.NOT_MODIFIED.value()) {
+        if (response.code() == HttpStatus.NOT_MODIFIED.value) {
             return Response.Builder().request(request)
                 .protocol(Protocol.HTTP_1_1)
                 .message("")
-                .code(HttpStatus.NOT_MODIFIED.value()).build()
+                .code(HttpStatus.NOT_MODIFIED.value).build()
         }
         if (!response.isSuccessful) {
             throw TaskExecuteException(
@@ -63,11 +63,11 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
         val path = "/dispatch/api/build/codecc/coverity/script?osType=${osType.name}&fileMd5=$fileMd5"
         val request = buildGet(path)
         val response = requestForResponse(request)
-        if (response.code() == HttpStatus.NOT_MODIFIED.value()) {
+        if (response.code() == HttpStatus.NOT_MODIFIED.value) {
             return Response.Builder().request(request)
                 .protocol(Protocol.HTTP_1_1)
                 .message("")
-                .code(HttpStatus.NOT_MODIFIED.value()).build()
+                .code(HttpStatus.NOT_MODIFIED.value).build()
         }
         if (!response.isSuccessful) {
             throw TaskExecuteException(
@@ -83,11 +83,11 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
         val path = "/dispatch/api/build/codecc/tools/script?osType=${osType.name}&fileMd5=$fileMd5"
         val request = buildGet(path)
         val response = requestForResponse(request)
-        if (response.code() == HttpStatus.NOT_MODIFIED.value()) {
+        if (response.code() == HttpStatus.NOT_MODIFIED.value) {
             return Response.Builder().request(request)
                 .protocol(Protocol.HTTP_1_1)
                 .message("")
-                .code(HttpStatus.NOT_MODIFIED.value()).build()
+                .code(HttpStatus.NOT_MODIFIED.value).build()
         }
 
         if (!response.isSuccessful) {

@@ -1,0 +1,6 @@
+version: v2.0
+
+extends:
+  template: parameters/extends.yml
+  parameters:
+    VAR3: intput-VAR3

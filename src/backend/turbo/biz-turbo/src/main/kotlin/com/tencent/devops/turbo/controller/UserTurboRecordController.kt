@@ -2,11 +2,14 @@ package com.tencent.devops.turbo.controller
 
 import com.tencent.devops.api.pojo.Response
 import com.tencent.devops.common.api.exception.TurboException
+import com.tencent.devops.common.api.exception.code.IS_NOT_ADMIN_MEMBER
 import com.tencent.devops.common.api.exception.code.TURBO_PARAM_INVALID
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.util.constants.NO_ADMIN_MEMBER_MESSAGE
 import com.tencent.devops.turbo.api.IUserTurboRecordController
 import com.tencent.devops.turbo.enums.EnumDistccTaskStatus
 import com.tencent.devops.turbo.pojo.TurboRecordModel
+import com.tencent.devops.turbo.service.TurboAuthService
 import com.tencent.devops.turbo.service.TurboPlanInstanceService
 import com.tencent.devops.turbo.service.TurboPlanService
 import com.tencent.devops.turbo.service.TurboRecordService
@@ -22,7 +25,8 @@ import org.springframework.web.bind.annotation.RestController
 class UserTurboRecordController @Autowired constructor(
     private val turboPlanService: TurboPlanService,
     private val turboRecordService: TurboRecordService,
-    private val turboPlanInstanceService: TurboPlanInstanceService
+    private val turboPlanInstanceService: TurboPlanInstanceService,
+    private val turboAuthService: TurboAuthService
 ) : IUserTurboRecordController {
 
     companion object {
@@ -34,8 +38,14 @@ class UserTurboRecordController @Autowired constructor(
         pageSize: Int?,
         sortField: String?,
         sortType: String?,
-        turboRecordModel: TurboRecordModel
+        turboRecordModel: TurboRecordModel,
+        projectId: String,
+        user: String
     ): Response<Page<TurboRecordHistoryVO>> {
+        // 判断是否是管理员
+        if (!turboAuthService.getAuthResult(projectId, user)) {
+            throw TurboException(errorCode = IS_NOT_ADMIN_MEMBER, errorMessage = NO_ADMIN_MEMBER_MESSAGE)
+        }
         return Response.success(turboRecordService.getTurboRecordHistoryList(pageNum, pageSize, sortField, sortType, turboRecordModel))
     }
 
@@ -57,7 +67,12 @@ class UserTurboRecordController @Autowired constructor(
         )
     }
 
-    override fun getTurboDisplayInfoById(turboRecordId: String): Response<TurboRecordDisplayVO> {
+    override fun getTurboDisplayInfoById(turboRecordId: String, projectId: String, user: String): Response<TurboRecordDisplayVO> {
+        // 判断是否是管理员
+        if (!turboAuthService.getAuthResult(projectId, user)) {
+            throw TurboException(errorCode = IS_NOT_ADMIN_MEMBER, errorMessage = NO_ADMIN_MEMBER_MESSAGE)
+        }
+
         val turboRecordEntity = turboRecordService.findByRecordId(turboRecordId)
         if (null == turboRecordEntity || turboRecordEntity.turboPlanId.isNullOrBlank()) {
             logger.info("no turbo record found with id: $turboRecordId")

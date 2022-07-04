@@ -34,8 +34,10 @@ import com.perforce.p4java.core.file.IFileSpec
 import com.perforce.p4java.core.file.IObliterateResult
 import com.perforce.p4java.impl.generic.admin.TriggerEntry
 import com.perforce.p4java.impl.generic.core.Depot
+import com.perforce.p4java.impl.generic.core.file.FileSpec
 import com.perforce.p4java.option.server.GetDepotFilesOptions
 import com.perforce.p4java.option.server.ObliterateFilesOptions
+import com.perforce.p4java.option.server.TrustOptions
 import com.perforce.p4java.server.IOptionsServer
 import com.perforce.p4java.server.ServerFactory.getOptionsServer
 import com.tencent.devops.common.service.utils.RetryUtils
@@ -44,18 +46,26 @@ import com.tencent.devops.scm.pojo.p4.TriggerInfo
 import java.time.ZoneId
 import java.util.Date
 
-@SuppressWarnings("TooManyFunctions")
+@SuppressWarnings("TooManyFunctions", "MagicNumber")
 class P4Server(
     // p4java://localhost:1666"
     val p4port: String,
     val userName: String,
     val password: String
 ) : AutoCloseable {
-    private val server = getOptionsServer("p4java://$p4port", null)
+
+    private val server = if (p4port.startsWith("ssl:")) {
+        getOptionsServer("p4javassl://${p4port.substring(4)}", null)
+    } else {
+        getOptionsServer("p4java://$p4port", null)
+    }
 
     fun connectionRetry() {
         return RetryUtils.execute(action = object : RetryUtils.Action<Unit> {
             override fun execute() {
+                if (p4port.startsWith("ssl:")) {
+                    server.addTrust(TrustOptions().setAutoAccept(true))
+                }
                 server.connect()
                 server.userName = userName
                 server.login(password)
@@ -131,6 +141,14 @@ class P4Server(
 
     fun getShelvedFiles(change: Int): List<IFileSpec> {
         return server.getShelvedFiles(change)
+    }
+
+    fun getFileContent(filePath: String, reversion: Int): String {
+        val fileSpec = FileSpec(filePath)
+        fileSpec.startRevision = reversion
+        fileSpec.endRevision = reversion
+        return server.getFileContents(listOf(fileSpec), false, true)
+            .bufferedReader().use { it.readText() }
     }
 
     override fun close() {

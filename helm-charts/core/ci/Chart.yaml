@@ -1,0 +1,40 @@
+apiVersion: v2
+name: bk-ci
+description: A Helm chart for BlueKing CI
+type: application
+version: 1.16.1-beta2
+appVersion: "1.16.0"
+home: "https://github.com/Tencent/bk-ci"
+
+dependencies:
+- name: common
+  version: 1.10.0
+  repository: https://charts.bitnami.com/bitnami
+- name: mysql
+  version: 8.8.3
+  repository: https://charts.bitnami.com/bitnami
+  condition: mysql.enabled
+- name: redis
+  version: 14.8.8
+  repository: https://charts.bitnami.com/bitnami
+  condition: redis.enabled
+- name: elasticsearch
+  version: 17.5.2
+  repository: https://charts.bitnami.com/bitnami
+  condition: elasticsearch.enabled
+- name: rabbitmq
+  version: 8.20.1
+  repository: https://charts.bitnami.com/bitnami
+  condition: rabbitmq.enabled
+- name: influxdb
+  version: 2.3.7
+  repository: https://charts.bitnami.com/bitnami
+  condition: influxdb.enabled
+- name: nginx-ingress-controller
+  version: 7.6.21
+  repository: https://charts.bitnami.com/bitnami
+  condition: nginx-ingress-controller.enabled
+- name: mongodb
+  version: 10.10.2
+  repository: https://charts.bitnami.com/bitnami
+  condition: mongodb.enabled

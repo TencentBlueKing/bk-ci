@@ -29,25 +29,24 @@ package com.tencent.devops.log.service.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
-import com.tencent.devops.common.log.pojo.LogBatchEvent
-import com.tencent.devops.common.log.pojo.LogEvent
-import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
+import com.tencent.devops.log.event.LogOriginEvent
+import com.tencent.devops.log.event.LogStatusEvent
+import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.log.jmx.LogStorageBean
 import com.tencent.devops.log.lucene.LuceneClient
+import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.Constants
-import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.util.LuceneIndexUtils
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -55,6 +54,7 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import kotlin.math.ceil
 
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions", "ReturnCount")
 class LogServiceLuceneImpl constructor(
     private val indexMaxSize: Int,
     private val luceneClient: LuceneClient,
@@ -67,28 +67,24 @@ class LogServiceLuceneImpl constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(LogServiceLuceneImpl::class.java)
+        private const val INDEX_CACHE_MAX_SIZE = 100000L
+        private const val INDEX_CACHE_EXPIRE_MINUTES = 30L
+        private const val INDEX_STORAGE_WARN_MILLIS = 1000
     }
 
     private val indexCache = Caffeine.newBuilder()
-        .maximumSize(100000)
-        .expireAfterAccess(30, TimeUnit.MINUTES)
-        .build<String/*BuildId*/, Boolean/*Has create the index*/>()
+        .maximumSize(INDEX_CACHE_MAX_SIZE)
+        .expireAfterAccess(INDEX_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
+        .build<String/*BuildId*/, Boolean/*Has created the index*/>()
 
-    override fun pipelineFinish(event: PipelineBuildFinishBroadCastEvent) {
-        with(event) {
-            logger.info("[$projectId|$pipelineId|$buildId] build finish")
-            indexService.flushLineNum2DB(buildId)
-        }
-    }
-
-    override fun addLogEvent(event: LogEvent) {
+    override fun addLogEvent(event: LogOriginEvent) {
         val logMessage = addLineNo(event.buildId, event.logs)
         if (logMessage.isNotEmpty()) {
-            buildLogPrintService.dispatchEvent(LogBatchEvent(event.buildId, logMessage))
+            buildLogPrintService.dispatchEvent(LogStorageEvent(event.buildId, logMessage))
         }
     }
 
-    override fun addBatchLogEvent(event: LogBatchEvent) {
+    override fun addBatchLogEvent(event: LogStorageEvent) {
         val currentEpoch = System.currentTimeMillis()
         var success = false
         try {
@@ -109,7 +105,7 @@ class LogServiceLuceneImpl constructor(
             logStorageBean.batchWrite(elapse, success)
 
             // #4265 当日志消息处理时间过长时打印消息内容
-            if (elapse >= 1000 && event.logs.isNotEmpty()) logger.warn(
+            if (elapse >= INDEX_STORAGE_WARN_MILLIS && event.logs.isNotEmpty()) logger.warn(
                 "[${event.buildId}] addBatchLogEvent spent too much time($elapse) with tag=${event.logs.first().tag}"
             )
         }
@@ -139,25 +135,17 @@ class LogServiceLuceneImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        val currentEpoch = System.currentTimeMillis()
-        var success = false
-        try {
-            val index = indexService.getIndexName(buildId)
-            val result = doQueryInitLogs(
-                buildId = buildId,
-                index = index,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-            success = logStatusSuccess(result.status)
-            return result
-        } finally {
-            logStorageBean.query(System.currentTimeMillis() - currentEpoch, success)
-        }
+        val index = indexService.getIndexName(buildId)
+        return doQueryInitLogs(
+            buildId = buildId,
+            index = index,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
     }
 
     override fun queryLogsBetweenLines(
@@ -173,42 +161,28 @@ class LogServiceLuceneImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        val startEpoch = System.currentTimeMillis()
-        var success = false
+        val queryLogs = QueryLogs(buildId, getLogStatus(buildId, tag, subTag, jobId, executeCount))
         try {
-            val queryLogs = QueryLogs(buildId, getLogStatus(
+            val logs = luceneClient.fetchLogs(
                 buildId = buildId,
+                debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
-                executeCount = executeCount
-            ))
-
-            try {
-                val logs = luceneClient.fetchLogs(
-                    buildId = buildId,
-                    debug = debug,
-                    logType = logType,
-                    tag = tag,
-                    subTag = subTag,
-                    jobId = jobId,
-                    executeCount = executeCount,
-                    before = end,
-                    start = start,
-                    size = null
-                )
-                if (!fromStart) {
-                    logs.reverse()
-                }
-                queryLogs.logs.addAll(logs)
-                success = true
-            } catch (ex: Exception) {
-                logger.error("Query more logs between lines failed, buildId: $buildId", ex)
+                executeCount = executeCount,
+                before = end,
+                start = start,
+                size = null
+            )
+            if (!fromStart) {
+                logs.reverse()
             }
-            return queryLogs
-        } finally {
-            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
+            queryLogs.logs.addAll(logs)
+        } catch (ignore: Exception) {
+            logger.error("Query more logs between lines failed, buildId: $buildId", ignore)
         }
+        return queryLogs
     }
 
     override fun queryLogsAfterLine(
@@ -221,26 +195,17 @@ class LogServiceLuceneImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        val startEpoch = System.currentTimeMillis()
-        var success = false
-        try {
-            val index = indexService.getIndexName(buildId)
-            val result = doQueryLogsAfterLine(
-                buildId = buildId,
-                index = index,
-                start = start,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-            success = logStatusSuccess(result.status)
-            return result
-        } finally {
-            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
-        }
+        return doQueryLogsAfterLine(
+            buildId = buildId,
+            index = indexService.getIndexName(buildId),
+            start = start,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
     }
 
     override fun queryLogsBeforeLine(
@@ -254,27 +219,18 @@ class LogServiceLuceneImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        val startEpoch = System.currentTimeMillis()
-        var success = false
-        try {
-            val index = indexService.getIndexName(buildId)
-            val result = doQueryLogsBeforeLine(
-                buildId = buildId,
-                index = index,
-                before = end,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount,
-                size = size ?: Constants.NORMAL_MAX_LINES
-            )
-            success = logStatusSuccess(result.status)
-            return result
-        } finally {
-            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
-        }
+        return doQueryLogsBeforeLine(
+            buildId = buildId,
+            index = indexService.getIndexName(buildId),
+            before = end,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount,
+            size = size ?: Constants.NORMAL_MAX_LINES
+        )
     }
 
     override fun downloadLogs(
@@ -314,9 +270,7 @@ class LogServiceLuceneImpl constructor(
         executeCount: Int?,
         size: Int
     ): EndPageQueryLogs {
-        val startEpoch = System.currentTimeMillis()
         val queryLogs = EndPageQueryLogs(buildId)
-        var success = false
         try {
             val result = doGetEndLogs(
                 buildId = buildId,
@@ -328,16 +282,12 @@ class LogServiceLuceneImpl constructor(
                 executeCount = executeCount,
                 size = size
             )
-            success = logStatusSuccess(result.status)
             queryLogs.startLineNo = result.logs.lastOrNull()?.lineNo ?: 0
             queryLogs.endLineNo = result.logs.firstOrNull()?.lineNo ?: 0
             queryLogs.logs = result.logs
-            queryLogs.timeUsed = System.currentTimeMillis() - startEpoch
-        } catch (e: Exception) {
-            logger.error("Query end logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query end logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
-        } finally {
-            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
         return queryLogs
     }
@@ -353,9 +303,7 @@ class LogServiceLuceneImpl constructor(
         executeCount: Int?,
         size: Int?
     ): QueryLogs {
-        val startEpoch = System.currentTimeMillis()
         val queryLogs = QueryLogs(buildId, true)
-        var success = false
         try {
             val result = doGetEndLogs(
                 buildId = buildId,
@@ -367,14 +315,10 @@ class LogServiceLuceneImpl constructor(
                 executeCount = executeCount,
                 size = size ?: Constants.NORMAL_MAX_LINES
             )
-            success = logStatusSuccess(result.status)
             queryLogs.logs = result.logs
-            queryLogs.timeUsed = System.currentTimeMillis() - startEpoch
-        } catch (e: Exception) {
-            logger.error("Query bottom logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query bottom logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
-        } finally {
-            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
         return queryLogs
     }
@@ -390,56 +334,46 @@ class LogServiceLuceneImpl constructor(
         page: Int,
         pageSize: Int
     ): PageQueryLogs {
-        val startEpoch = System.currentTimeMillis()
-        var success = false
-        try {
-            val pageResult = doQueryInitLogsPage(
-                buildId = buildId,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount,
-                page = page,
-                pageSize = pageSize
-            )
-            val logSize = luceneClient.fetchLogsCount(
-                buildId = buildId,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-            val totalPage = ceil((logSize + 0.0) / pageSize).toInt()
-            val pageLog = Page(
-                count = logSize.toLong(),
-                page = page,
-                pageSize = pageSize,
-                totalPages = totalPage,
-                records = pageResult.logs
-            )
-            success = logStatusSuccess(pageResult.status)
-            return PageQueryLogs(
-                buildId = pageResult.buildId,
-                finished = pageResult.finished,
-                logs = pageLog,
-                timeUsed = pageResult.timeUsed,
-                status = pageResult.status
-            )
-        } finally {
-            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
-        }
+        val pageResult = doQueryInitLogsPage(
+            buildId = buildId,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount,
+            page = page,
+            pageSize = pageSize
+        )
+        val logSize = luceneClient.fetchLogsCount(
+            buildId = buildId,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
+        val totalPage = ceil((logSize + 0.0) / pageSize).toInt()
+        val pageLog = Page(
+            count = logSize.toLong(),
+            page = page,
+            pageSize = pageSize,
+            totalPages = totalPage,
+            records = pageResult.logs
+        )
+        return PageQueryLogs(
+            buildId = pageResult.buildId,
+            finished = pageResult.finished,
+            logs = pageLog,
+            timeUsed = pageResult.timeUsed,
+            status = pageResult.status
+        )
     }
 
     override fun reopenIndex(buildId: String): Boolean {
         return true
     }
-
-    private fun logStatusSuccess(logStatus: Int) =
-        (LogStatus.parse(logStatus) == LogStatus.EMPTY || LogStatus.parse(logStatus) == LogStatus.SUCCEED)
 
     private fun doQueryInitLogsPage(
         buildId: String,
@@ -452,13 +386,7 @@ class LogServiceLuceneImpl constructor(
         page: Int,
         pageSize: Int
     ): QueryLogs {
-        val queryLogs = QueryLogs(buildId, getLogStatus(
-            buildId = buildId,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        ))
+        val queryLogs = QueryLogs(buildId, getLogStatus(buildId, tag, subTag, jobId, executeCount))
 
         try {
             val logs = luceneClient.fetchAllLogsInPage(
@@ -474,8 +402,8 @@ class LogServiceLuceneImpl constructor(
             )
             queryLogs.logs.addAll(logs)
             if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
-        } catch (e: Exception) {
-            logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
         }
@@ -557,7 +485,7 @@ class LogServiceLuceneImpl constructor(
             executeCount = executeCount
         )
 
-        val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag!!)
+        val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag)
         val queryLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
 
         try {
@@ -583,8 +511,8 @@ class LogServiceLuceneImpl constructor(
             queryLogs.logs.addAll(logs)
             if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
             queryLogs.hasMore = size > logs.size
-        } catch (e: Exception) {
-            logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
             queryLogs.hasMore = false
@@ -622,7 +550,7 @@ class LogServiceLuceneImpl constructor(
             )
         }
 
-        val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag!!)
+        val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag)
         val moreLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
 
         try {
@@ -642,8 +570,8 @@ class LogServiceLuceneImpl constructor(
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
             moreLogs.logs.addAll(logs)
             moreLogs.hasMore = moreLogs.logs.size >= Constants.SCROLL_MAX_LINES * Constants.SCROLL_MAX_TIMES
-        } catch (e: Exception) {
-            logger.error("Query after logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query after logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             moreLogs.status = LogStatus.FAIL.status
             moreLogs.finished = true
             moreLogs.hasMore = false
@@ -711,8 +639,8 @@ class LogServiceLuceneImpl constructor(
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
             queryLogs.logs.addAll(logs)
             queryLogs.hasMore = queryLogs.logs.size >= logSize
-        } catch (e: Exception) {
-            logger.error("Query before logs failed because of ${e.javaClass}. buildId: $buildId", e)
+        } catch (ignore: Exception) {
+            logger.error("Query before logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
             queryLogs.hasMore = false

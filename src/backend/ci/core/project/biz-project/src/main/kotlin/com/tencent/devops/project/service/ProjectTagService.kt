@@ -36,11 +36,12 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
+import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.enums.SystemEnums
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -57,7 +58,7 @@ class ProjectTagService @Autowired constructor(
     val redisOperation: RedisOperation,
     val projectDao: ProjectDao,
     val objectMapper: ObjectMapper,
-    val projectService: ProjectService
+    val bkTag: BkTag
 ) {
 
     private val executePool = Executors.newFixedThreadPool(1)
@@ -65,11 +66,11 @@ class ProjectTagService @Autowired constructor(
     @Value("\${system.router:#{null}}")
     val routerTagList: String? = ""
 
+    @Value("\${system.enabled:false}")
+    val routerCheckEnabled: Boolean = true
+
     @Value("\${tag.auto:#{null}}")
     private val autoTag: String? = null
-
-    @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
-    private val tag: String? = null
 
     @Value("\${tag.prod:#{null}}")
     private val prodTag: String? = null
@@ -215,7 +216,8 @@ class ProjectTagService @Autowired constructor(
             throw ParamBlankException("Invalid projectIds")
         }
 
-        val projectInfos = projectDao.listByEnglishName(dslContext,
+        val projectInfos = projectDao.listByEnglishName(
+            dslContext,
             projectIds,
             null,
             null,
@@ -302,7 +304,7 @@ class ProjectTagService @Autowired constructor(
             return redisCheck
         }
         // 直接从db获取
-        val projectInfo = projectService.getByEnglishName(projectId) ?: return false
+        val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: return false
         logger.info("refresh router cache $projectId|${projectInfo.routerTag}| by checkProjectTag")
         // 刷新内存缓存。 网关根据redis的值做判断依据。 此处不额外更新redis. 减少redis自动操作。
         projectRouterCache.put(projectId, projectInfo.routerTag ?: "")
@@ -311,6 +313,7 @@ class ProjectTagService @Autowired constructor(
     }
 
     private fun projectClusterCheck(routerTag: String?): Boolean {
+        val tag = bkTag.getLocalTag()
         // 默认集群是不会有routerTag的信息
         if (routerTag.isNullOrBlank()) {
             // 只有默认集群在routerTag为空的时候才返回true
@@ -320,7 +323,12 @@ class ProjectTagService @Autowired constructor(
     }
 
     private fun checkRouteTag(routerTag: String) {
-        if (routerTag.isNullOrBlank()) {
+        if (!routerCheckEnabled) {
+            logger.info("router check disabled")
+            return
+        }
+
+        if (routerTag.isBlank()) {
             throw ParamBlankException("routerTag error:empty routerTag")
         }
 
@@ -329,12 +337,12 @@ class ProjectTagService @Autowired constructor(
         }
 
         if (!routerTagList!!.contains(routerTag)) {
-            throw ParamBlankException("routerTag error:system unkown routerTag")
+            throw ParamBlankException("routerTag error:system unknown routerTag")
         }
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(ProjectTagService::class.java)
+        private val logger = LoggerFactory.getLogger(ProjectTagService::class.java)
         const val PROJECT_TAG_CODECC_REDIS_KEY = "project:setting:tag:codecc:v2"
         const val PROJECT_TAG_REPO_REDIS_KEY = "project:setting:tag:repo:v2"
     }

@@ -29,14 +29,15 @@ package cron
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"io/ioutil"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
-	"github.com/astaxie/beego/logs"
 )
 
 func CleanJob() {
@@ -60,8 +61,8 @@ func TryCleanFile() {
 		}
 	}()
 
-	cleanDumpFile(36)
-	cleanLogFile(96)
+	cleanDumpFile(config.GAgentConfig.LogsKeepHours)
+	cleanLogFile(config.GAgentConfig.LogsKeepHours)
 }
 
 func cleanDumpFile(timeBeforeInHours int) {

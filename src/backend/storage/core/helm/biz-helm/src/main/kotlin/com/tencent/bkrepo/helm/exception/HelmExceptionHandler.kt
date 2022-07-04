@@ -32,8 +32,10 @@
 package com.tencent.bkrepo.helm.exception
 
 import com.tencent.bkrepo.common.api.constant.ANONYMOUS_USER
+import com.tencent.bkrepo.common.api.constant.HttpHeaders
 import com.tencent.bkrepo.common.api.constant.USER_KEY
 import com.tencent.bkrepo.common.api.util.JsonUtils
+import com.tencent.bkrepo.common.security.constant.BASIC_AUTH_PROMPT
 import com.tencent.bkrepo.common.security.exception.AuthenticationException
 import com.tencent.bkrepo.common.service.util.HttpContextHolder
 import com.tencent.bkrepo.helm.pojo.HelmErrorResponse
@@ -49,7 +51,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
  * 统一异常处理
  */
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@RestControllerAdvice
+@RestControllerAdvice("com.tencent.bkrepo.helm")
 class HelmExceptionHandler {
 
     @ExceptionHandler(HelmRepoNotFoundException::class)
@@ -59,9 +61,24 @@ class HelmExceptionHandler {
         helmResponse(responseObject, exception)
     }
 
+    @ExceptionHandler(HelmBadRequestException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    fun handlerBadRequestException(exception: HelmBadRequestException) {
+        val responseObject = HelmErrorResponse(exception.message)
+        helmResponse(responseObject, exception)
+    }
+
+    @ExceptionHandler(HelmForbiddenRequestException::class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    fun handlerBadRequestException(exception: HelmForbiddenRequestException) {
+        val responseObject = HelmErrorResponse(exception.message)
+        helmResponse(responseObject, exception)
+    }
+
     @ExceptionHandler(AuthenticationException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun handlerClientAuthException(exception: AuthenticationException) {
+        HttpContextHolder.getResponse().setHeader(HttpHeaders.WWW_AUTHENTICATE, BASIC_AUTH_PROMPT)
         val responseObject = HelmErrorResponse(HttpStatus.UNAUTHORIZED.reasonPhrase)
         helmResponse(responseObject, exception)
     }
@@ -106,7 +123,7 @@ class HelmExceptionHandler {
         val userId = HttpContextHolder.getRequest().getAttribute(USER_KEY) ?: ANONYMOUS_USER
         val uri = HttpContextHolder.getRequest().requestURI
         logger.warn(
-            "User[$userId] access resource[$uri] failed[${exception.javaClass.simpleName}]: ${exception.message}"
+            "User[$userId] access helm resource[$uri] failed[${exception.javaClass.simpleName}]: ${exception.message}"
         )
     }
 

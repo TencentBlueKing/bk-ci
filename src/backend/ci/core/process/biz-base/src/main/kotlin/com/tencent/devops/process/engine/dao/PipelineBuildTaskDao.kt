@@ -39,6 +39,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.DSLContext
+import org.jooq.Record1
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -212,6 +213,24 @@ class PipelineBuildTaskDao {
         }
     }
 
+    fun getTaskStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        taskId: String?
+    ): Record1<Int>? {
+
+        return with(T_PIPELINE_BUILD_TASK) {
+            val where = dslContext.select(STATUS)
+                .from(this)
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
+            if (taskId != null) {
+                where.and(TASK_ID.eq(taskId))
+            }
+            where.fetchAny()
+        }
+    }
+
     fun listByStatus(
         dslContext: DSLContext,
         projectId: String,
@@ -327,39 +346,26 @@ class PipelineBuildTaskDao {
         }
     }
 
-    fun updateTaskInfo(
-        dslContext: DSLContext,
-        projectId: String,
-        buildId: String,
-        taskId: String,
-        updateTaskInfo: UpdateTaskInfo
-    ) {
+    fun updateTaskInfo(dslContext: DSLContext, updateTaskInfo: UpdateTaskInfo) {
         with(T_PIPELINE_BUILD_TASK) {
-            val baseStep = dslContext.update(this).set(BUILD_ID, buildId)
-            val taskStatus = updateTaskInfo.taskStatus
-            if (null != taskStatus) {
-                baseStep.set(STATUS, taskStatus.ordinal)
+            val projectId = updateTaskInfo.projectId
+            val buildId = updateTaskInfo.buildId
+            val taskId = updateTaskInfo.taskId
+            val baseStep = dslContext.update(this)
+                .set(STATUS, updateTaskInfo.taskStatus.ordinal)
+            updateTaskInfo.starter?.let { baseStep.set(STARTER, it) }
+            updateTaskInfo.approver?.let { baseStep.set(APPROVER, it) }
+            updateTaskInfo.startTime?.let { baseStep.set(START_TIME, it) }
+            updateTaskInfo.endTime?.let { baseStep.set(END_TIME, it) }
+            updateTaskInfo.totalTime?.let { baseStep.set(TOTAL_TIME, it) }
+            updateTaskInfo.errorType?.let { baseStep.set(ERROR_TYPE, it.num) }
+            updateTaskInfo.errorCode?.let { baseStep.set(ERROR_CODE, it) }
+            updateTaskInfo.errorMsg?.let {
+                val key = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+                baseStep.set(ERROR_MSG, CommonUtils.interceptStringInLength(it, key))
             }
-            val starter = updateTaskInfo.starter
-            if (null != starter) {
-                baseStep.set(STARTER, starter)
-            }
-            val approver = updateTaskInfo.approver
-            if (null != approver) {
-                baseStep.set(APPROVER, approver)
-            }
-            val startTime = updateTaskInfo.startTime
-            if (null != startTime) {
-                baseStep.set(START_TIME, startTime)
-            }
-            val endTime = updateTaskInfo.endTime
-            if (null != endTime) {
-                baseStep.set(END_TIME, endTime)
-            }
-            val totalTime = updateTaskInfo.totalTime
-            if (null != totalTime) {
-                baseStep.set(TOTAL_TIME, totalTime)
-            }
+            updateTaskInfo.platformCode?.let { baseStep.set(PLATFORM_CODE, it) }
+            updateTaskInfo.platformErrorCode?.let { baseStep.set(PLATFORM_ERROR_CODE, it) }
             baseStep.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).and(PROJECT_ID.eq(projectId)).execute()
         }
     }

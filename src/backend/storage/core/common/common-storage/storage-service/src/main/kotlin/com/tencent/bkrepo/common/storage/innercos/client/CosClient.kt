@@ -34,6 +34,7 @@ package com.tencent.bkrepo.common.storage.innercos.client
 import com.tencent.bkrepo.common.storage.credentials.InnerCosCredentials
 import com.tencent.bkrepo.common.storage.innercos.exception.InnerCosException
 import com.tencent.bkrepo.common.storage.innercos.http.CosHttpClient
+import com.tencent.bkrepo.common.storage.innercos.http.HttpResponseHandler
 import com.tencent.bkrepo.common.storage.innercos.request.AbortMultipartUploadRequest
 import com.tencent.bkrepo.common.storage.innercos.request.CheckObjectExistRequest
 import com.tencent.bkrepo.common.storage.innercos.request.CompleteMultipartUploadRequest
@@ -56,6 +57,7 @@ import com.tencent.bkrepo.common.storage.innercos.response.handler.GetObjectResp
 import com.tencent.bkrepo.common.storage.innercos.response.handler.InitiateMultipartUploadResponseHandler
 import com.tencent.bkrepo.common.storage.innercos.response.handler.PutObjectResponseHandler
 import com.tencent.bkrepo.common.storage.innercos.response.handler.UploadPartResponseHandler
+import com.tencent.bkrepo.common.storage.innercos.response.handler.SlowLogHandler
 import com.tencent.bkrepo.common.storage.innercos.response.handler.VoidResponseHandler
 import com.tencent.bkrepo.common.storage.innercos.retry
 import okhttp3.Request
@@ -109,7 +111,7 @@ class CosClient(val credentials: InnerCosCredentials) {
      */
     private fun putObject(cosRequest: PutObjectRequest): PutObjectResponse {
         val httpRequest = buildHttpRequest(cosRequest)
-        return CosHttpClient.execute(httpRequest, PutObjectResponseHandler())
+        return CosHttpClient.execute(httpRequest, PutObjectResponseHandler().enableSpeedSlowLog())
     }
 
     /**
@@ -153,8 +155,8 @@ class CosClient(val credentials: InnerCosCredentials) {
         }
         // 等待所有完成
         try {
-            val partEtagList = futureList.map { it.get() }
-            return completeMultipartUpload(key, uploadId, partEtagList)
+            val partETagList = futureList.map { it.get() }
+            return completeMultipartUpload(key, uploadId, partETagList)
         } catch (exception: IOException) {
             cancelFutureList(futureList)
             abortMultipartUpload(key, uploadId)
@@ -172,7 +174,8 @@ class CosClient(val credentials: InnerCosCredentials) {
         return Callable {
             retry(RETRY_COUNT) {
                 val httpRequest = buildHttpRequest(cosRequest)
-                val uploadPartResponse = CosHttpClient.execute(httpRequest, UploadPartResponseHandler())
+                val uploadPartResponse =
+                    CosHttpClient.execute(httpRequest, UploadPartResponseHandler().enableSpeedSlowLog())
                 PartETag(cosRequest.partNumber, uploadPartResponse.eTag)
             }
         }
@@ -181,12 +184,15 @@ class CosClient(val credentials: InnerCosCredentials) {
     private fun completeMultipartUpload(
         key: String,
         uploadId: String,
-        partEtagList: List<PartETag>
+        partETagList: List<PartETag>
     ): PutObjectResponse {
         retry(RETRY_COUNT) {
-            val cosRequest = CompleteMultipartUploadRequest(key, uploadId, partEtagList)
+            val cosRequest = CompleteMultipartUploadRequest(key, uploadId, partETagList)
             val httpRequest = buildHttpRequest(cosRequest)
-            return CosHttpClient.execute(httpRequest, CompleteMultipartUploadResponseHandler())
+            return CosHttpClient.execute(
+                httpRequest,
+                CompleteMultipartUploadResponseHandler().enableTimeSlowLog(config.slowLogTime)
+            )
         }
     }
 
@@ -225,8 +231,21 @@ class CosClient(val credentials: InnerCosCredentials) {
         return max(ceil(optimalPartSize).toLong(), config.minimumUploadPartSize)
     }
 
+    private fun <T> HttpResponseHandler<T>.enableSpeedSlowLog(): SlowLogHandler<T> {
+        val ignoreFileSize = config.slowLogSpeed * SLOW_LOG_SPEED_IGNORE_FILESIZE_FACTOR
+        return SlowLogHandler(this, config.slowLogSpeed, -1, ignoreFileSize)
+    }
+
+    /**
+     * @param time 慢日志时间，请求超过该时间，则记录慢日志
+     * */
+    private fun <T> HttpResponseHandler<T>.enableTimeSlowLog(time: Long): SlowLogHandler<T> {
+        return SlowLogHandler(this, -1, time)
+    }
+
     companion object {
         private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2)
         private const val RETRY_COUNT = 5
+        private const val SLOW_LOG_SPEED_IGNORE_FILESIZE_FACTOR = 5L
     }
 }

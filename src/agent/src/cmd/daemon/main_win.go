@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -30,38 +31,52 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"time"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
-	"github.com/astaxie/beego/logs"
 	"github.com/kardianos/service"
 )
 
 const daemonProcess = "daemon"
 
 func main() {
-	if len(os.Args) == 2 && os.Args[1] == "version" {
-		fmt.Println(config.AgentVersion)
-		systemutil.ExitProcess(0)
+	// 初始化日志
+	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsDaemon.log")
+	err := logs.Init(logFilePath)
+	if err != nil {
+		fmt.Printf("init daemon log error %v\n", err)
+		systemutil.ExitProcess(1)
+	}
+
+	if len(os.Args) == 2 {
+		if os.Args[1] == "version" {
+			fmt.Println(config.AgentVersion)
+			systemutil.ExitProcess(0)
+		} else if os.Args[1] == "fullVersion" {
+			fmt.Println(config.AgentVersion)
+			fmt.Println(config.GitCommit)
+			fmt.Println(config.BuildTime)
+			systemutil.ExitProcess(0)
+		}
 	}
 	logs.Info("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 	runtime.GOMAXPROCS(4)
 
 	workDir := systemutil.GetExecutableDir()
-	err := os.Chdir(workDir)
+	err = os.Chdir(workDir)
 	if err != nil {
 		logs.Info("change work dir failed, err: ", err.Error())
 		systemutil.ExitProcess(1)
 	}
 
-	initLog()
 	defer func() {
 		if err := recover(); err != nil {
 			logs.Error("panic: ", err)
@@ -101,13 +116,6 @@ func main() {
 }
 
 var GAgentProcess *os.Process = nil
-
-func initLog() {
-	logConfig := make(map[string]string)
-	logConfig["filename"] = systemutil.GetWorkDir() + "/logs/devopsDaemon.log"
-	jsonConfig, _ := json.Marshal(logConfig)
-	logs.SetLogger(logs.AdapterFile, string(jsonConfig))
-}
 
 func watch() {
 	workDir := systemutil.GetExecutableDir()

@@ -75,6 +75,12 @@ type AgentHeartbeatResponse struct {
 	Envs              map[string]string `json:"envs"`
 	Gateway           string            `json:"gateway"`
 	FileGateway       string            `json:"fileGateway"`
+	Props             AgentProps        `json:"props"`
+}
+
+type AgentProps struct {
+	IgnoreLocalIps string `json:"ignoreLocalIps"`
+	KeepLogsHours  int    `json:"keepLogsHours"`
 }
 
 func NewPipelineResponse(seqId string, status string, response string) *PipelineResponse {
