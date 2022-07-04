@@ -36,7 +36,8 @@ class CustomScheduleJobService @Autowired constructor(
         var trigger = TriggerBuilder.newTrigger().withIdentity(
             triggerName, triggerGroup
         ).withSchedule(
-            CronScheduleBuilder.cronSchedule(cronExpression).withMisfireHandlingInstructionDoNothing()
+            // 以当前时间为触发频率立刻触发一次执行, 然后按照cron频率依次执行
+            CronScheduleBuilder.cronSchedule(cronExpression).withMisfireHandlingInstructionFireAndProceed()
         ).build()
 
         val jobKey = JobKey.jobKey(customScheduleJobModel.jobName, jobGroup)
