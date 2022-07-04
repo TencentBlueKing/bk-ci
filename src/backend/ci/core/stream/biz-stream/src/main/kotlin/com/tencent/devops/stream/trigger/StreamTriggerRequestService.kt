@@ -231,7 +231,7 @@ class StreamTriggerRequestService @Autowired constructor(
         // 获取缓存的触发器, 使用空文本来区分是有缓存但是触发器没内容的情况
         val confirmProjectUseTriggerCache = triggerMatcher.confirmProjectUseTriggerCache(action.getProjectCode())
         val triggers = if (!confirmProjectUseTriggerCache) {
-            emptyMap()
+            emptyMap<String, String>()
         } else {
             streamPipelineTriggerDao.getTriggers(
                 dslContext = dslContext,
