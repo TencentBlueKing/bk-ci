@@ -10,7 +10,7 @@
                 title: loading.title
             }">
             <div class="node-list-header">
-                <div class="title">{{$t('select')}} {{selectType.toLowerCase()}}
+                <div class="title">{{$t('select')}}{{$t(selectType.toLowerCase())}}
                 </div>
                 <div class="search-input-row" v-if="selectType === 'PROJECT'">
                     <div class="biz-search-input">
