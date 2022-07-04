@@ -39,6 +39,7 @@ import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.dao.StreamPipelineTriggerDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
@@ -47,6 +48,8 @@ import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerDispatch
 import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerEvent
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.TXPreTrigger
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.trigger.service.RepoTriggerEventService
 import com.tencent.devops.stream.v1.components.V1YamlTrigger
@@ -69,11 +72,13 @@ class TXStreamTriggerRequestService @Autowired constructor(
     streamTriggerCache: StreamTriggerCache,
     yamlSchemaCheck: YamlSchemaCheck,
     exHandler: StreamTriggerExceptionHandler,
+    triggerMatcher: TriggerMatcher,
     repoTriggerEventService: RepoTriggerEventService,
     streamTriggerRequestRepoService: StreamTriggerRequestRepoService,
     streamSettingDao: StreamBasicSettingDao,
     gitRequestEventDao: GitRequestEventDao,
     gitPipelineResourceDao: GitPipelineResourceDao,
+    streamPipelineTriggerDao: StreamPipelineTriggerDao,
     val rabbitTemplate: RabbitTemplate,
     private val objectMapper: ObjectMapper,
     private val txPreTrigger: TXPreTrigger,
@@ -87,12 +92,14 @@ class TXStreamTriggerRequestService @Autowired constructor(
     streamTriggerCache = streamTriggerCache,
     yamlSchemaCheck = yamlSchemaCheck,
     exHandler = exHandler,
+    triggerMatcher = triggerMatcher,
     repoTriggerEventService = repoTriggerEventService,
     streamTriggerRequestRepoService = streamTriggerRequestRepoService,
     streamSettingDao = streamSettingDao,
     gitRequestEventDao = gitRequestEventDao,
     gitPipelineResourceDao = gitPipelineResourceDao,
-    streamGitConfig = streamGitConfig
+    streamGitConfig = streamGitConfig,
+    streamPipelineTriggerDao = streamPipelineTriggerDao
 ) {
 
     companion object {
@@ -116,7 +123,7 @@ class TXStreamTriggerRequestService @Autowired constructor(
         return start(eventObject, event)
     }
 
-    override fun trigger(action: BaseAction) {
+    override fun trigger(action: BaseAction, triggerResult: TriggerResult?) {
         // 检查yml版本，根据yml版本选择不同的实现
         val originYaml = action.data.context.originYaml!!
         val ymlVersion = ScriptYmlUtils.parseVersion(originYaml)
@@ -137,7 +144,8 @@ class TXStreamTriggerRequestService @Autowired constructor(
                         },
                         actionCommonData = action.data.eventCommon,
                         actionContext = action.data.context,
-                        actionSetting = action.data.setting
+                        actionSetting = action.data.setting,
+                        triggerResult = triggerResult
                     )
                 )
                 else -> TODO("对接其他Git平台时需要补充")
