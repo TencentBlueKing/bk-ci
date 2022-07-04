@@ -56,7 +56,7 @@ object SdkHttpUtil {
         return build(url, headers).get().build()
     }
 
-    fun buildGet(url: String, headers: Map<String, String>? = null, params: Map<String, String>? = null): Request {
+    fun buildGet(url: String, headers: Map<String, String>? = null, params: Map<String, Any>? = null): Request {
         val urlParams = params?.map { entry -> "${entry.key}=${entry.value}" }?.joinToString("&")
         val targetUrl = if (url.contains("?")) {
             "$url&$urlParams"
@@ -130,9 +130,9 @@ object SdkHttpUtil {
         headers.putAll(systemHeaders)
         headers.putAll(request.getHeaderMap())
 
-        val params = mutableMapOf<String, String>()
+        val params = mutableMapOf<String, Any>()
         val requestParams =
-            SdkJsonUtil.fromJson(SdkJsonUtil.toJson(request), object : TypeReference<Map<String, String>>() {})
+            SdkJsonUtil.fromJson(SdkJsonUtil.toJson(request), object : TypeReference<Map<String, Any>>() {})
         params.putAll(systemParams)
         params.putAll(requestParams)
         params.putAll(request.getUdfParams())

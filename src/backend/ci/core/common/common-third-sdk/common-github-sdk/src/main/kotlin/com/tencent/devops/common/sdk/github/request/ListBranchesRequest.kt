@@ -27,16 +27,13 @@
 
 package com.tencent.devops.common.sdk.github.request
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.response.BranchResponse
 
 data class ListBranchesRequest(
-    @JsonIgnore
     val owner: String,
-    @JsonIgnore
     val repo: String,
     val protected: Boolean? = null,
     @JsonProperty("per_page")

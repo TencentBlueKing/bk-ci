@@ -27,15 +27,12 @@
 
 package com.tencent.devops.common.sdk.github.request
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.pojo.GithubRepo
 
 class GetRepositoryRequest(
-    @JsonIgnore
     val owner: String,
-    @JsonIgnore
     val repo: String
 ) : GithubRequest<GithubRepo>() {
     override fun getHttpMethod(): HttpMethod {

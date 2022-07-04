@@ -28,21 +28,16 @@
 
 package com.tencent.devops.common.sdk.github.request
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.response.CompareTwoCommitsResponse
 
 data class CompareTwoCommitsRequest(
-    @JsonIgnore
     val owner: String,
-    @JsonIgnore
     val repo: String,
     // The base branch and head branch to compare. This parameter expects the format {base}...{head}
-    @JsonIgnore
     val base: String,
-    @JsonIgnore
     val head: String,
     @JsonProperty("per_page")
     var perPage: Int = 30,

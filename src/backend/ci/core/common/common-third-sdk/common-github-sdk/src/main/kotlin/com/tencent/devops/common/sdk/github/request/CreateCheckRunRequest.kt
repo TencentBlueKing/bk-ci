@@ -1,6 +1,5 @@
 package com.tencent.devops.common.sdk.github.request
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
@@ -9,9 +8,7 @@ import com.tencent.devops.common.sdk.github.pojo.GithubOutput
 import com.tencent.devops.common.sdk.github.response.CheckRunResponse
 
 data class CreateCheckRunRequest(
-    @JsonIgnore
     val owner: String,
-    @JsonIgnore
     val repo: String,
     val name: String,
     @JsonProperty("head_sha")
@@ -32,5 +29,4 @@ data class CreateCheckRunRequest(
     override fun getHttpMethod() = HttpMethod.POST
 
     override fun getApiPath() = "/repos/$owner/$repo/check-runs"
-
 }

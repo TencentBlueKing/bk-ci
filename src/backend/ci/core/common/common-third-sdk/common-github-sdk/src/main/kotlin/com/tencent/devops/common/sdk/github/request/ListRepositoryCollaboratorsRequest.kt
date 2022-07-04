@@ -35,7 +35,6 @@ import com.tencent.devops.common.sdk.github.pojo.GithubUser
 
 @Suppress("all")
 class ListRepositoryCollaboratorsRequest(
-    @JsonIgnore
     val owner: String,
     @JsonIgnore
     val repo: String,
