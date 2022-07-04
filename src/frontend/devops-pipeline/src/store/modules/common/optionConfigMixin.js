@@ -95,17 +95,6 @@ const optionConfigMixin = {
                     text: this.$t('storeMap.customEnv'),
                     default: false
                 },
-
-                subscriptionPauseUser: {
-                    rule: {},
-                    component: 'vuex-input',
-                    label: this.$t('storeMap.pauseNotify'),
-                    desc: this.$t('storeMap.pauseNotifyTip'),
-                    default: this.$userInfo.username,
-                    isHidden: (element) => {
-                        return !(element.additionalOptions && (element.additionalOptions.pauseBeforeExec === true))
-                    }
-                },
                 pauseBeforeExec: {
                     rule: {},
                     type: 'boolean',
@@ -117,7 +106,16 @@ const optionConfigMixin = {
                         return !(element.data && element.data.config && (element.data.config.canPauseBeforeRun === true))
                     }
                 },
-
+                subscriptionPauseUser: {
+                    rule: {},
+                    component: 'vuex-input',
+                    label: this.$t('storeMap.pauseNotify'),
+                    desc: this.$t('storeMap.pauseNotifyTip'),
+                    default: this.$userInfo.username,
+                    isHidden: (element) => {
+                        return !(element.additionalOptions && (element.additionalOptions.pauseBeforeExec === true))
+                    }
+                },
                 timeout: {
                     rule: { numeric: true, max_value: 10080 },
                     component: 'vuex-input',

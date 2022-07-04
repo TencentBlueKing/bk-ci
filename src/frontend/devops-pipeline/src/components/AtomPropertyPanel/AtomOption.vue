@@ -131,7 +131,7 @@
         position: relative;
         .atom-checkbox-list-item {
             display: block;
-            margin: 12px 0;
+            margin: 12px 0 12px 10px;
         }
         .form-field.bk-form-item {
             &.manual-skip-options,
