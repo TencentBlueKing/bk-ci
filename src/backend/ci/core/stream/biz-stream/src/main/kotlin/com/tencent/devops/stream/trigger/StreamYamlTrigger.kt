@@ -189,7 +189,7 @@ class StreamYamlTrigger @Autowired constructor(
             )
             yamlBuild.gitStartBuild(
                 action = action,
-                triggerResult = triggerResult,
+                triggerResult = tr,
                 yaml = yamlObject,
                 gitBuildId = null,
                 // 没有触发只有特殊任务的不需要保存蓝盾流水线
