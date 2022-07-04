@@ -20,7 +20,7 @@ data class GetUserResponse(
     @JsonProperty("disk_usage")
     val diskUsage: Int,
     @JsonProperty("email")
-    val email: String,
+    val email: String?,
     @JsonProperty("events_url")
     val eventsUrl: String,
     @JsonProperty("followers")

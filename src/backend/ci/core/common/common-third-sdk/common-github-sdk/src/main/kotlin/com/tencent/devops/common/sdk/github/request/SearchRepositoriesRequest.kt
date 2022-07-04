@@ -28,6 +28,7 @@
 
 package com.tencent.devops.common.sdk.github.request
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
@@ -45,9 +46,9 @@ data class SearchRepositoriesRequest(
     @JsonProperty("per_page")
     var perPage: Int = 30,
     var page: Int = 1,
+    @JsonIgnore
+    val terms: MutableList<String> = mutableListOf()
 ) : GithubRequest<SearchRepositoriesResponse>() {
-
-    private val terms = mutableListOf<String>()
 
     val q: String
         get() = terms.joinToString(" ")
