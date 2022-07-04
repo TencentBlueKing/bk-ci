@@ -266,7 +266,12 @@ class PipelineBuildDetailService @Autowired constructor(
         }, buildStatus = BuildStatus.RUNNING, cancelUser = cancelUser, operation = "buildCancel")
     }
 
-    fun buildEnd(projectId: String, buildId: String, buildStatus: BuildStatus): List<BuildStageStatus> {
+    fun buildEnd(
+        projectId: String,
+        buildId: String,
+        buildStatus: BuildStatus,
+        errorMsg: String?
+    ): List<BuildStageStatus> {
         logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
         var allStageStatus: List<BuildStageStatus> = emptyList()
         update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
@@ -288,7 +293,11 @@ class PipelineBuildDetailService @Autowired constructor(
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
                 if (allStageStatus.isEmpty()) {
-                    allStageStatus = fetchHistoryStageStatus(model, buildStatus)
+                    allStageStatus = fetchHistoryStageStatus(
+                        model = model,
+                        buildStatus = buildStatus,
+                        errorMsg = errorMsg
+                    )
                 }
                 if (BuildStatus.parse(stage.status).isRunning()) {
                     stage.status = buildStatus.name

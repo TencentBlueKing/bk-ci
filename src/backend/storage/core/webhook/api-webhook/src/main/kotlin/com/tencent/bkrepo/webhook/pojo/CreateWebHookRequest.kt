@@ -36,12 +36,14 @@ import io.swagger.annotations.ApiModelProperty
 data class CreateWebHookRequest(
     @ApiModelProperty("回调地址")
     val url: String,
-    @ApiModelProperty("请求令牌")
-    val token: String? = null,
+    @ApiModelProperty("自定义请求头")
+    val headers: Map<String, String> = emptyMap(),
     @ApiModelProperty("触发事件")
     val triggers: List<EventType>,
     @ApiModelProperty("关联对象类型")
     val associationType: AssociationType,
     @ApiModelProperty("关联对象id")
-    val associationId: String = ""
+    val associationId: String = "",
+    @ApiModelProperty("事件资源key正则模式")
+    val resourceKeyPattern: String? = null
 )

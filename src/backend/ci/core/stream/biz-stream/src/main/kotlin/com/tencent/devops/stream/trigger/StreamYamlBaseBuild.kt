@@ -236,7 +236,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 )
             )
         ),
-        setting = PipelineSetting()
+        setting = PipelineSetting(cleanVariablesWhenRetry = true)
     )
 
     protected fun preStartBuild(

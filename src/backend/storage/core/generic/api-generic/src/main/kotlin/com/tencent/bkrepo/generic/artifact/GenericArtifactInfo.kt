@@ -42,5 +42,6 @@ class GenericArtifactInfo(
         const val GENERIC_MAPPING_URI = "/{projectId}/{repoName}/**"
         const val BLOCK_MAPPING_URI = "/block/{projectId}/{repoName}/**"
         const val DELTA_MAPPING_URI = "/delta/{projectId}/{repoName}/**"
+        const val BATCH_MAPPING_URI = "/batch/{projectId}/{repoName}"
     }
 }

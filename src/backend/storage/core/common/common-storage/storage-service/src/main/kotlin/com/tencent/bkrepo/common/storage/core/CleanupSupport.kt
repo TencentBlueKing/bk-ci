@@ -39,7 +39,7 @@ abstract class CleanupSupport : HealthCheckSupport() {
     override fun cleanUp(storageCredentials: StorageCredentials?): CleanupResult {
         val credentials = getCredentialsOrDefault(storageCredentials)
         val tempPath = getTempPath(credentials)
-        val visitor = CleanupFileVisitor(tempPath, tempPath, fileStorage, fileLocator, credentials)
+        val visitor = CleanupFileVisitor(tempPath, tempPath, tempPath, fileStorage, fileLocator, credentials)
         getTempClient(credentials).walk(visitor)
         return visitor.result
     }

@@ -61,25 +61,28 @@ object HttpContextHolder {
     fun getClientAddress(): String {
         val requestAttributes = RequestContextHolder.getRequestAttributes()
         return if (requestAttributes is ServletRequestAttributes) {
-            val request = requestAttributes.request
-            var address = request.getHeader(HttpHeaders.X_FORWARDED_FOR)
-            address = if (address.isNullOrBlank()) {
-                request.getHeader(HttpHeaders.X_REAL_IP)
-            } else {
-                StringTokenizer(address, StringPool.COMMA).nextToken()
-            }
-            if (address.isNullOrBlank()) {
-                address = request.getHeader(HttpHeaders.PROXY_CLIENT_IP)
-            }
-            if (address.isNullOrBlank()) {
-                address = request.remoteAddr
-            }
-            if (address.isNullOrBlank()) {
-                address = StringPool.UNKNOWN
-            }
-            // 对于通过多个代理的情况，第一个IP为客户端真实IP，多个IP按照','分割
-            return address
+            return getClientAddress(requestAttributes.request)
         } else StringPool.UNKNOWN
+    }
+
+    fun getClientAddress(request: HttpServletRequest): String {
+        var address = request.getHeader(HttpHeaders.X_FORWARDED_FOR)
+        address = if (address.isNullOrBlank()) {
+            request.getHeader(HttpHeaders.X_REAL_IP)
+        } else {
+            StringTokenizer(address, StringPool.COMMA).nextToken()
+        }
+        if (address.isNullOrBlank()) {
+            address = request.getHeader(HttpHeaders.PROXY_CLIENT_IP)
+        }
+        if (address.isNullOrBlank()) {
+            address = request.remoteAddr
+        }
+        if (address.isNullOrBlank()) {
+            address = StringPool.UNKNOWN
+        }
+        // 对于通过多个代理的情况，第一个IP为客户端真实IP，多个IP按照','分割
+        return address
     }
 
     fun getXForwardedFor(): String {

@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger.actions.data.context
 
 import com.tencent.devops.stream.pojo.StreamRepoHookEvent
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 
 /**
  * Stream触发过程中需要用到的上下文数据
@@ -56,9 +57,13 @@ data class StreamTriggerContext(
 /**
  * 跨Git库触发相关数据
  * @param branch 跨库的触发分支，一般为默认分支
+ * @param repoTriggerPipelineList 存储所有配置了该远程仓库的触发流水线信息
+ * @param repoTriggerCred 存储访问远程仓库的凭证信息，来自于yaml文件中的配置
+ * @param buildUserID repoTriggerCred对应的userID
  */
 data class RepoTrigger(
     val branch: String,
     val repoTriggerPipelineList: List<StreamRepoHookEvent>,
-    val buildUserID: String? = null
+    var repoTriggerCred: StreamGitCred? = null,
+    var buildUserID: String? = null
 )

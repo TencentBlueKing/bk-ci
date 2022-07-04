@@ -36,10 +36,10 @@ import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.service.StreamGitTokenService
 import com.tencent.devops.stream.service.StreamScmService
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import javax.ws.rs.core.Response
 
@@ -50,7 +50,7 @@ class StreamScmServiceTest {
     private val streamGitTokenService: StreamGitTokenService = mock()
     private val serviceGitCiResource: ServiceGitCiResource = mock()
     private val streamScmService: StreamScmService = StreamScmService(client, mock(), mock(), mock(), streamGitTokenService)
-    @Before
+    @BeforeEach
     fun init() {
         Mockito.`when`(client.getScm(ServiceGitCiResource::class)).thenReturn(serviceGitCiResource)
         Mockito.`when`(streamGitTokenService.getToken(1, false)).thenReturn("1")

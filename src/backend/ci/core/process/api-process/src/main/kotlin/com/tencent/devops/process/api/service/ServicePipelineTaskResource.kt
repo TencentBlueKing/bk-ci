@@ -29,6 +29,7 @@ package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import io.swagger.annotations.Api
@@ -89,4 +90,19 @@ interface ServicePipelineTaskResource {
         @ApiParam("插件标识集合", required = true)
         atomCodes: List<String>
     ): Result<Map<String, Int>>
+
+    @ApiOperation("获取流水线指定任务的构建状态")
+    @GET
+    @Path("/projects/{projectId}/builds/{buildId}/tasks/{taskId}")
+    fun getTaskStatus(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("任务ID", required = true)
+        @PathParam("taskId")
+        taskId: String
+    ): Result<BuildStatus?>
 }

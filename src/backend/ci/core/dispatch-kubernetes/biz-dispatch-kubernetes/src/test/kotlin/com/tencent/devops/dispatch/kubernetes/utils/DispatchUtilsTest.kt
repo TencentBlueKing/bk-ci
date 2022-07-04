@@ -3,8 +3,8 @@ package com.tencent.devops.dispatch.kubernetes.utils
 import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class DispatchUtilsTest {
     private val dispatchUtils = DispatchUtils(
@@ -39,6 +39,6 @@ class DispatchUtilsTest {
             customBuildEnv = mapOf()
         )
 
-        Assert.assertNotNull(dispatchUtils.getPool(dispatchMessage))
+        Assertions.assertNotNull(dispatchUtils.getPool(dispatchMessage))
     }
 }

@@ -34,9 +34,11 @@ package com.tencent.bkrepo.oci.artifact.resolver
 import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.bkrepo.common.api.util.Preconditions
 import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
+import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContextHolder
 import com.tencent.bkrepo.common.artifact.resolve.path.ArtifactInfoResolver
 import com.tencent.bkrepo.common.artifact.resolve.path.Resolver
 import com.tencent.bkrepo.oci.pojo.artifact.OciBlobArtifactInfo
+import io.undertow.servlet.spec.HttpServletRequestImpl
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerMapping
 import javax.servlet.http.HttpServletRequest
@@ -44,16 +46,17 @@ import javax.servlet.http.HttpServletRequest
 @Component
 @Resolver(OciBlobArtifactInfo::class)
 class OciBlobArtifactInfoResolver : ArtifactInfoResolver {
+
     override fun resolve(
         projectId: String,
         repoName: String,
         artifactUri: String,
         request: HttpServletRequest
     ): ArtifactInfo {
-        val requestUrl = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString()
+        val requestUrl = ArtifactContextHolder.getUrlPath(this.javaClass.name)!!
         val packageName = requestUrl.replaceAfterLast("/blobs", StringPool.EMPTY).removeSuffix("/blobs")
             .removePrefix("/v2/$projectId/$repoName/")
-        Preconditions.checkNotBlank(packageName, "packageName")
+        validate(packageName)
         val attributes = request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE) as Map<*, *>
         // 解析digest
         val digest = attributes["digest"]?.toString()?.trim() ?: run {
@@ -61,9 +64,20 @@ class OciBlobArtifactInfoResolver : ArtifactInfoResolver {
         }
         // 解析UUID
         val uuid = attributes["uuid"]?.toString()?.trim()
+        val params = (request as HttpServletRequestImpl).queryParameters
         // 解析mount
-        val mount = request.getAttribute("mount") as? String
-        val from = request.getAttribute("from") as? String
+        val mount = params?.get("mount")?.first
+        val from = params?.get("from")?.first
         return OciBlobArtifactInfo(projectId, repoName, packageName, "", digest, uuid, mount, from)
+    }
+
+    private fun validate(packageName: String) {
+        // packageName格式校验
+        Preconditions.checkNotBlank(packageName, "packageName")
+        Preconditions.matchPattern(packageName, PACKAGE_NAME_PATTERN, "package name [$packageName] invalid")
+    }
+
+    companion object {
+        const val PACKAGE_NAME_PATTERN = "[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)*"
     }
 }

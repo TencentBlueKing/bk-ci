@@ -13,6 +13,7 @@ class BufferedSlidingWindowTest {
     private val tempFile = createTempFile()
     private val data = "ABCDEFGHIGKLMNOPQRSTUVWXYZ".toByteArray()
     private val ras = RandomAccessFile(tempFile, "r")
+    private val bufferSize = 16 * 1024
 
     @BeforeEach
     fun beforeEach() {
@@ -28,22 +29,16 @@ class BufferedSlidingWindowTest {
     @DisplayName("测试文件大小大于窗口的初始化情况")
     @Test
     fun initFileSizeBigThanWindowTest() {
-        val window = BufferedSlidingWindow(4, 2, ras)
+        val window = BufferedSlidingWindow(4, bufferSize, data.inputStream(), data.size.toLong())
         window.moveToNext()
         // window data ABCD
         Assertions.assertEquals("ABCD", String(window.content()))
-        // head buffer data AB
-        Assertions.assertEquals(0, window.headPos())
-        Assertions.assertEquals("AB", String(window.headBuffer.data))
-        // tail buffer data EF
-        Assertions.assertEquals(4, window.tailPos())
-        Assertions.assertEquals("EF", String(window.tailBuffer.data))
     }
 
     @DisplayName("测试文件大小小于窗口的初始化情况")
     @Test
     fun initFileSizeLessThanWindowTest() {
-        val window = BufferedSlidingWindow(26, 2, ras)
+        val window = BufferedSlidingWindow(26, bufferSize, data.inputStream(), data.size.toLong())
         window.moveToNext()
         // window data is ALL
         Assertions.assertEquals(String(data), String(window.content()))
@@ -52,7 +47,7 @@ class BufferedSlidingWindowTest {
     @DisplayName("测试移动一个字节")
     @Test
     fun moveByteTest() {
-        val window = BufferedSlidingWindow(4, 2, ras)
+        val window = BufferedSlidingWindow(4, bufferSize, data.inputStream(), data.size.toLong())
         window.moveToNext()
         val (nextHead, nextTail) = window.moveToNextByte()
         // window BCDE
@@ -80,12 +75,13 @@ class BufferedSlidingWindowTest {
     @DisplayName("测试移动窗口")
     @Test
     fun moveWindowTest() {
-        val window = BufferedSlidingWindow(4, 2, ras)
+        val window = BufferedSlidingWindow(4, bufferSize, data.inputStream(), data.size.toLong())
         // ABCD
         window.moveToNext()
         Assertions.assertEquals("ABCD", String(window.content()))
         // 总长度26，总共（6*4，1*2）7个窗口大小
         repeat(5) { window.moveToNext() }
+        Assertions.assertTrue(window.hasNext())
         window.moveToNext()
         // YZ
         Assertions.assertEquals("YZ", String(window.content()))
@@ -97,7 +93,7 @@ class BufferedSlidingWindowTest {
     @DisplayName("混合移动测试")
     @Test
     fun mixMoveTest() {
-        val window = BufferedSlidingWindow(4, 2, ras)
+        val window = BufferedSlidingWindow(4, bufferSize, data.inputStream(), data.size.toLong())
         window.moveToNext()
         // 总长度26，窗口大小为4，总窗口数为7，最后一个窗口大小为2，移动2个字节，剩余5个窗口
         repeat(2) { window.moveToNextByte() }

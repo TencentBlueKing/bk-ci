@@ -58,6 +58,7 @@ import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.exception.CommitCheck
@@ -280,7 +281,7 @@ class StreamYamlBuild @Autowired constructor(
                 )
             )
         ),
-        setting = PipelineSetting()
+        setting = PipelineSetting(cleanVariablesWhenRetry = true)
     )
 
     @SuppressWarnings("LongParameterList")
@@ -316,7 +317,7 @@ class StreamYamlBuild @Autowired constructor(
         logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, modelAndSetting: $modelAndSetting")
 
         // 判断是否更新最后修改人
-        val changeSet = action.getChangeSet()
+        val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
         val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
 
         return streamYamlBaseBuild.startBuild(
@@ -352,7 +353,7 @@ class StreamYamlBuild @Autowired constructor(
 
         // 判断是否更新最后修改人
         val pipeline = action.data.context.pipeline!!
-        val changeSet = action.getChangeSet()
+        val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
         val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
 
         streamYamlBaseBuild.savePipeline(

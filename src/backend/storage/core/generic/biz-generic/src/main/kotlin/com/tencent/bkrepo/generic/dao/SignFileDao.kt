@@ -36,8 +36,10 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class SignFileDao : SimpleMongoDao<TSignFile>() {
-    fun findByDetail(srcSha256: String, blockSize: Int): TSignFile? {
-        val criteria = where(TSignFile::srcSha256).isEqualTo(srcSha256).apply {
+    fun findByDetail(srcProjectId: String, srcRepoName: String, srcSha256: String, blockSize: Int): TSignFile? {
+        val criteria = where(TSignFile::srcMd5).isEqualTo(srcSha256).apply {
+            and(TSignFile::srcProjectId.name).isEqualTo(srcProjectId)
+            and(TSignFile::srcRepoName.name).isEqualTo(srcRepoName)
             and(TSignFile::blockSize.name).isEqualTo(blockSize)
         }
         val query = Query(criteria)

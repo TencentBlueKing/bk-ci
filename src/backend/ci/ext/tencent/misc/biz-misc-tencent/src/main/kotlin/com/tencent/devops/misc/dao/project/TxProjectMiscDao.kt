@@ -27,6 +27,9 @@
 
 package com.tencent.devops.misc.dao.project
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.TShardingRoutingRule
 import org.jooq.Condition
@@ -64,6 +67,10 @@ class TxProjectMiscDao {
         if (!dsName.isNullOrBlank()) {
             conditions.add(tsrr.ROUTING_RULE.eq(dsName))
         }
+        val clusterName = CommonUtils.getDbClusterName()
+        conditions.add(tsrr.CLUSTER_NAME.eq(clusterName))
+        conditions.add(tsrr.TYPE.eq(ShardingRuleTypeEnum.DB.name))
+        conditions.add(tsrr.MODULE_CODE.eq(SystemModuleEnum.PROCESS.name))
         return dslContext.select(
             tp.ID.`as`("ID"),
             tp.ENGLISH_NAME.`as`("ENGLISH_NAME"),

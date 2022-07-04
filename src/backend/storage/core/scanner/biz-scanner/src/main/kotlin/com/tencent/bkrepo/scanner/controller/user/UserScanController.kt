@@ -44,7 +44,6 @@ import com.tencent.bkrepo.scanner.pojo.request.ScanRequest
 import com.tencent.bkrepo.scanner.pojo.request.ScanTaskQuery
 import com.tencent.bkrepo.scanner.pojo.request.SingleScanRequest
 import com.tencent.bkrepo.scanner.service.ScanService
-import com.tencent.bkrepo.scanner.utils.Converter
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -88,7 +87,7 @@ class UserScanController @Autowired constructor(
     @PostMapping("/batch")
     fun batchScan(@RequestBody request: BatchScanRequest): Response<Boolean> {
         permissionCheckHandler.checkProjectPermission(request.projectId, PermissionAction.MANAGE)
-        scanService.scan(Converter.convert(request), Converter.convert(request.triggerType))
+        scanService.batchScan(request)
         return ResponseBuilder.success(true)
     }
 

@@ -1,0 +1,51 @@
+/* // 浏览器重置样式 */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+ul,
+li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+h3,
+h5 {
+    font-weight: normal;
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+}
+
+dl,
+dt,
+dd,
+p {
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    text-decoration: none;
+}
+
+button {
+    outline: none;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+td,
+th {
+    padding: 0;
+}

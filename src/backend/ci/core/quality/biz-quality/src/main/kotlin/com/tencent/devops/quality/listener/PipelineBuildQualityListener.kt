@@ -27,13 +27,18 @@
 
 package com.tencent.devops.quality.listener
 
+import com.tencent.devops.common.api.enums.BuildReviewType
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewBroadCastEvent
 import com.tencent.devops.quality.constant.MQ as QualityMQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
+import com.tencent.devops.quality.dao.HistoryDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
+import com.tencent.devops.quality.dao.v2.QualityRuleReviewerDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -45,9 +50,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("NestedBlockDepth")
 class PipelineBuildQualityListener @Autowired constructor(
     private val dslContext: DSLContext,
-    private val qualityRuleBuildHisDao: QualityRuleBuildHisDao
+    private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
+    private val qualityHistoryDao: HistoryDao,
+    private val qualityRuleReviewerDao: QualityRuleReviewerDao
 ) {
 
     companion object {
@@ -129,20 +137,110 @@ class PipelineBuildQualityListener @Autowired constructor(
     fun listenPipelineTimeoutBroadCastEvent(pipelineTimeoutEvent: PipelineBuildReviewBroadCastEvent) {
         try {
             logger.info("QUALITY|pipelineTimeoutListener timeoutEvent: $pipelineTimeoutEvent")
+            val projectId = pipelineTimeoutEvent.projectId
+            val pipelineId = pipelineTimeoutEvent.pipelineId
+            val buildId = pipelineTimeoutEvent.buildId
             if (pipelineTimeoutEvent.timeout == true) {
-                val ruleIdList = qualityRuleBuildHisDao.listBuildHisRules(
-                    dslContext = dslContext,
-                    projectId = pipelineTimeoutEvent.projectId,
-                    pipelineId = pipelineTimeoutEvent.pipelineId,
-                    ruleBuildId = pipelineTimeoutEvent.buildId
-                ).map { it.id }
-                logger.info("QUALITY|timeout_rule_size: ${ruleIdList.size}")
-                if (ruleIdList.isNotEmpty()) {
-                    qualityRuleBuildHisDao.batchUpdateStatus(ruleIdList, RuleInterceptResult.FAIL.name)
+                if (pipelineTimeoutEvent.source == "taskAtom") {
+                    logger.info("QUALITY_TIMEOUT|projectId=[$projectId]|pipelineId=[$pipelineId]|buildId=[$buildId]")
+                    qualityHistoryDao.batchUpdateHistoryResult(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        result = RuleInterceptResult.INTERCEPT_TIMEOUT,
+                        ruleIds = null
+                    )
+                } else {
+                    val ruleIdList = qualityRuleBuildHisDao.listBuildHisRules(
+                        dslContext = dslContext,
+                        projectId = pipelineTimeoutEvent.projectId,
+                        pipelineId = pipelineTimeoutEvent.pipelineId,
+                        ruleBuildId = pipelineTimeoutEvent.buildId
+                    ).map { it.id }
+                    logger.info("QUALITY|timeout_rule_size: ${ruleIdList.size}")
+                    if (ruleIdList.isNotEmpty()) {
+                        qualityRuleBuildHisDao.batchUpdateStatus(ruleIdList, RuleInterceptResult.INTERCEPT_TIMEOUT.name)
+                    }
                 }
             }
         } catch (e: Exception) {
             logger.warn("pipelineTimeoutListener error: ${e.message}")
         }
+    }
+
+    /**
+     * 蓝盾流水线质量红线人工审核广播事件
+     */
+    @RabbitListener(
+        bindings = [(QueueBinding(
+            value = Queue(value = QualityMQ.QUEUE_PIPELINE_BUILD_QUALITY_REVIEW, durable = "true"),
+            exchange = Exchange(
+                value = MQ.EXCHANGE_PIPELINE_BUILD_QUALITY_REVIEW_FANOUT,
+                durable = "true",
+                delayed = "true",
+                type = ExchangeTypes.FANOUT
+            )
+        ))]
+    )
+    fun listenPipelineQualityReviewBroadCastEvent(event: PipelineBuildQualityReviewBroadCastEvent) {
+        try {
+            logger.info("QUALITY|qualityReviewListener reviewEvent: $event")
+            val action = if (event.reviewType == BuildReviewType.QUALITY_TASK_REVIEW_PASS)
+                RuleInterceptResult.INTERCEPT_PASS else RuleInterceptResult.INTERCEPT
+            val projectId = event.projectId
+            val pipelineId = event.pipelineId
+            val buildId = event.buildId
+            val ruleIds = event.ruleIds.map { HashUtil.decodeIdToLong(it) }.toSet()
+            val count = qualityHistoryDao.batchUpdateHistoryResult(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                result = action,
+                ruleIds = ruleIds
+            )
+            logger.info("QUALITY|[${event.buildId}]history result update count: $count")
+
+            // 保存或更新蓝盾红线审核人信息
+            ruleIds.forEach { ruleId ->
+                if (checkReviewExist(projectId, pipelineId, buildId, ruleId)) {
+                    qualityRuleReviewerDao.update(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        ruleId = ruleId,
+                        reviewer = event.userId
+                    )
+                } else {
+                    qualityRuleReviewerDao.create(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        ruleId = ruleId,
+                        reviewer = event.userId
+                    )
+                }
+            }
+            logger.info("QUALITY|[${event.buildId}]save reviewer info done.")
+        } catch (e: Exception) {
+            logger.error("quality review error: ${e.message}")
+        }
+    }
+
+    private fun checkReviewExist(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        ruleId: Long
+    ): Boolean {
+        val result = qualityRuleReviewerDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            ruleId = ruleId
+        )
+        return result != null
     }
 }

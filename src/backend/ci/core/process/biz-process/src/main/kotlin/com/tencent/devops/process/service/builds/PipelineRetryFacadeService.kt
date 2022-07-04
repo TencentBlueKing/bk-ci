@@ -41,7 +41,6 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,7 +53,6 @@ class PipelineRetryFacadeService @Autowired constructor(
     val pipelineEventDispatcher: PipelineEventDispatcher,
     val pipelineTaskService: PipelineTaskService,
     val pipelineContainerService: PipelineContainerService,
-    val taskBuildDetailService: TaskBuildDetailService,
     private val buildLogPrinter: BuildLogPrinter
 ) {
     fun runningBuildTaskRetry(
