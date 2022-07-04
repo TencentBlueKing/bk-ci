@@ -12,7 +12,7 @@
                 </li>
             </ul>
         </div>
-        <p v-if="isEmtpyVal" class="bk-form-help is-danger">{{$t('cronWeekHint')}}</p>
+        <p v-if="isEmtpyVal" class="bk-form-help is-danger">{{$t('editPage.cronWeekHint')}}</p>
         <div class="cron-build-time">
             <span>触发于</span>
             <bk-input :disabled="disabled" :value="normalTime" @input="changeTimes" placeholder="多个触发时间可以用英文逗号分隔，比如09:00,15:30，为空的时候默认为00:00" />
