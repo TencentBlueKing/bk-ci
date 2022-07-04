@@ -258,7 +258,7 @@
         &.is-focus .angle-icon {
             transform: rotate(180deg);
         }
-        .bk-tooltip-content {
+        /deep/ .tippy-content, /deep/ .bk-tooltip-content {
             padding: 0;
         }
     }
