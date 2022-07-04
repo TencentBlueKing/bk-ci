@@ -49,7 +49,6 @@ import java.time.LocalDateTime
 @Suppress("ComplexCondition")
 @Repository
 class GitRequestEventBuildDao {
-    private val logger = LoggerFactory.getLogger(GitRequestEventBuildDao::class.java)
     fun save(
         dslContext: DSLContext,
         eventId: Long,
@@ -788,9 +787,11 @@ class GitRequestEventBuildDao {
         val targetProjectResult = dslContext.selectDistinct(repoProjectTable.TARGET_GIT_PROJECT_ID)
             .from(repoProjectTable)
 
-        val eventResult = dslContext.select(targetProjectResult.field("TARGET_GIT_PROJECT_ID", String::class.java), eventBuildTable.EVENT_ID)
+        val eventResult = dslContext
+            .select(targetProjectResult.field("TARGET_GIT_PROJECT_ID", String::class.java), eventBuildTable.EVENT_ID)
             .from(targetProjectResult)
-            .leftJoin(eventBuildTable).on(eventBuildTable.GIT_PROJECT_ID.eq(targetProjectResult.field("TARGET_GIT_PROJECT_ID", Long::class.java)))
+            .leftJoin(eventBuildTable)
+            .on(eventBuildTable.GIT_PROJECT_ID.eq(targetProjectResult.field("TARGET_GIT_PROJECT_ID", Long::class.java)))
 
         val countResult = dslContext.select(DSL.countDistinct(eventTable.GIT_PROJECT_ID))
             .from(eventResult)
@@ -798,8 +799,6 @@ class GitRequestEventBuildDao {
             .where(eventTable.GIT_PROJECT_ID.ne(eventResult.field("TARGET_GIT_PROJECT_ID", Long::class.java)))
             .and(eventTable.CREATE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
             .and(eventTable.CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
-
-        logger.info("getBuildRepoHookActiveProjectCount|sql|${countResult.getSQL(ParamType.INLINED)}")
 
         return countResult.fetchOne(0, Int::class.java)!!
         }
