@@ -20,7 +20,7 @@
             </p>
             <slot name="menu">
                 <ul>
-                    <li>
+                    <li v-if="!showLoginDialog">
                         <span class="user-menu-item" @click.stop="logout">
                             {{$t('logout')}}
                         </span>
@@ -32,6 +32,8 @@
 </template>
 
 <script>
+    import { mapState } from 'vuex'
+
     export default ({
         props: {
             user: {
@@ -44,6 +46,10 @@
             return {
                 show: false
             }
+        },
+
+        computed: {
+            ...mapState(['showLoginDialog'])
         },
 
         methods: {
