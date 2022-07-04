@@ -775,14 +775,12 @@ class GitRequestEventBuildDao {
         }
     }
 
-
-    //获取指定日期返回内的repo-hook监听库活跃
+    // 获取指定日期返回内的repo-hook监听库活跃
     fun getBuildRepoHookActiveProjectCount(
         dslContext: DSLContext,
         startTime: Long,
         endTime: Long
     ): Int {
-        //1、先查询主库TARGET_GIT_PROJECT_ID
         val repoProjectTable = TGitPipelineRepoResource.T_GIT_PIPELINE_REPO_RESOURCE
         val eventBuildTable = TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD
         val eventTable = TGitRequestEvent.T_GIT_REQUEST_EVENT
