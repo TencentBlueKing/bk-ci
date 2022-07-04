@@ -47,6 +47,7 @@
                 class="choose-project"
                 searchable
                 enable-scroll-load
+                :popover-options="{ appendTo: 'parent' }"
                 :clearable="false"
                 :scroll-loading="bottomLoadingOptions"
                 :value="projectInfo.id"
@@ -256,6 +257,9 @@
         border: none;
         &.is-focus .angle-icon {
             transform: rotate(180deg);
+        }
+        .bk-tooltip-content {
+            padding: 0;
         }
     }
     .choosen-project {
