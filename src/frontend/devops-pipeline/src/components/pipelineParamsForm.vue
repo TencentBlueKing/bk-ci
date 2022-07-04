@@ -91,14 +91,16 @@
                             list: this.getParamOpt(param)
                         }
                         
-                        // 接口返回的数据没有匹配的默认值,导致回显失效，兼容加上默认值
-                        const value = this.paramValues[param.id]
-                        const listItemIndex = restParam.list && restParam.list.findIndex(i => i.value === value)
-                        if (listItemIndex < 0 && value) {
-                            restParam.list.push({
-                                key: value,
-                                value: value
-                            })
+                        // codeLib 接口返回的数据没有匹配的默认值,导致回显失效，兼容加上默认值
+                        if (param.type === 'CODE_LIB') {
+                            const value = this.paramValues[param.id]
+                            const listItemIndex = restParam.list && restParam.list.findIndex(i => i.value === value)
+                            if (listItemIndex < 0 && value) {
+                                restParam.list.push({
+                                    key: value,
+                                    value: value
+                                })
+                            }
                         }
                     }
 
