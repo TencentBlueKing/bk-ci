@@ -9,7 +9,7 @@
                 :style="{ width: param.width }"
             >
                 <section class="component-row">
-                    <component :is="param.component" v-validate="{ required: param.required }" :click-unfold="true" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;" :placeholder="param.placeholder"></component>
+                    <component :is="param.component" v-validate="{ required: param.required }" :click-unfold="true" :show-select-all="true" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;" :placeholder="param.placeholder"></component>
                     <div class="file-upload" v-if="showFileUploader(param.type)">
                         <file-param-input :file-path="param.value"></file-param-input>
                     </div>

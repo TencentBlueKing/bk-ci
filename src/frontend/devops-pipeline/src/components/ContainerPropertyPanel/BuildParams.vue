@@ -67,6 +67,7 @@
                                                 :data-vv-scope="`param-${param.id}`"
                                                 :placeholder="$t('editPage.defaultValueTips')"
                                                 :disabled="disabled"
+                                                show-select-all
                                                 :key="param.type"
                                                 :value="getSelectorDefaultVal(param)"
                                             >
