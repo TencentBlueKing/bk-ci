@@ -1,19 +1,16 @@
 import dayjs from 'dayjs';
 // 获取 cookie object
-export function getCookies(strCookie = document.cookie): any {
-  if (!strCookie) {
-    return {};
-  }
-  const arrCookie = strCookie.split('; ');// 分割
-  const cookiesObj = {};
-  arrCookie.forEach((cookieStr) => {
-    const arr = cookieStr.split('=');
-    const [key, value] = arr;
-    if (key) {
-      cookiesObj[key] = value;
-    }
-  });
-  return cookiesObj;
+export function getCookie (key) {
+  const cookieStr = document.cookie || ''
+  const cookieArr = cookieStr.split(';').filter(v => v)
+  const cookieObj = cookieArr.reduce((res, cookieItem) => {
+      const [key, value] = cookieItem.split('=')
+      const cKey = (key || '').trim()
+      const cVal = (value || '').trim()
+      res[cKey] = cVal
+      return res
+  }, {})
+  return cookieObj[key] || ''
 }
 
 /**
