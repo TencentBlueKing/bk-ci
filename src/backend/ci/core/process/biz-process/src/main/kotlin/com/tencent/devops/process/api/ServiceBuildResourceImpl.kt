@@ -307,7 +307,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
             checkPermission = ChannelCode.isNeedAuth(channelCode),
-            startUser = startUser,
+            startUser = startUser?.filter { it.isNotBlank() },
             updateTimeDesc = updateTimeDesc
         )
         return Result(result)
