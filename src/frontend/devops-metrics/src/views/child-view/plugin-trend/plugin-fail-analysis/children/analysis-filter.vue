@@ -3,7 +3,8 @@ import ScrollLoadSelect from '@/components/scroll-load-select';
 import http from '@/http/api';
 import { sharedProps } from '../common/props-type';
 import useFilter from '@/composables/use-filter';
-
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 const emit = defineEmits(['change']);
 defineProps(sharedProps);
 
@@ -30,7 +31,7 @@ const clearStatus = () => {
       class="mr8 w240"
       id-key="pipelineId"
       name-key="pipelineName"
-      placeholder="Pipelines"
+      :placeholder="t('Pipelines')"
       :multiple="true"
       :api-method="http.getPipelineList"
       :select-value="status.pipelineIds"
@@ -40,7 +41,7 @@ const clearStatus = () => {
       class="mr8 w240"
       id-key="errorType"
       name-key="errorName"
-      placeholder="Error type"
+      :placeholder="t('Error type')"
       :multiple="true"
       :api-method="http.getErrorTypeList"
       :select-value="status.errorTypes"
@@ -50,7 +51,7 @@ const clearStatus = () => {
       class="mr8 w240"
       id-key="labelId"
       name-key="labelName"
-      placeholder="Pipeline lable"
+      :placeholder="t('Pipeline lable')"
       :multiple="true"
       :api-method="http.getPipelineLabels"
       :select-value="status.pipelineLabelIds"
@@ -60,7 +61,7 @@ const clearStatus = () => {
       class="mr8 w240"
       id-key="errorCode"
       name-key="errorCode"
-      placeholder="Error code"
+      :placeholder="t('Error code')"
       :multiple="true"
       :api-method="http.getErrorCodeList"
       :select-value="status.errorCodes"
@@ -72,7 +73,7 @@ const clearStatus = () => {
       :model-value="[status.startTime, status.endTime]"
       @change="handleTimeChange"
     />
-    <bk-button :disabled="resetBtnDisabled" @click="clearStatus">Reset</bk-button>
+    <bk-button :disabled="resetBtnDisabled" @click="clearStatus">{{ t('Reset') }}</bk-button>
   </section>
 </template>
 

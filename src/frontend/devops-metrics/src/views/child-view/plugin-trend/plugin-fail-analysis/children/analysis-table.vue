@@ -13,6 +13,8 @@ import {
   useRouter,
 } from 'vue-router';
 import useFilter from '@/composables/use-filter';
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 const router = useRouter()
 
 const emit = defineEmits(['change']);
@@ -134,7 +136,7 @@ onMounted(getData);
     class="overview-card mt20"
     :loading="isLoading"
   >
-    <h3 class="g-card-title">Details</h3>
+    <h3 class="g-card-title">{{ t('Details') }}</h3>
     <bk-table
       class="analysis-table"
       :columns="columns"
@@ -152,7 +154,7 @@ onMounted(getData);
 .analysis-table {
   margin-top: .15rem;
   margin-bottom: .08rem;
-  ::v-deep .bk-table-body {
+  ::v-deep .bk-table-body > .bk-table-body-content > table > tbody > tr {
     cursor: pointer;
   }
 }

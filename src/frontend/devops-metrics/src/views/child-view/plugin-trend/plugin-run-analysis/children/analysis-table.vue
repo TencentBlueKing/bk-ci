@@ -12,6 +12,8 @@ import {
   useRouter,
 } from 'vue-router';
 import useFilter from '@/composables/use-filter';
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
 const emit = defineEmits(['change']);
 
@@ -31,11 +33,13 @@ const router = useRouter()
 
 const handlePageChange = (current) => {
   pagination.value.current = current;
+  columns.value = []
   getData();
 };
 
 const handlePageLimitChange = (limit) => {
   pagination.value.limit = limit;
+  columns.value = []
   getData();
 };
 
@@ -98,7 +102,7 @@ watch(
     class="overview-card mt20"
     :loading="isLoading"
   >
-    <h3 class="g-card-title">Plugin stat</h3>
+    <h3 class="g-card-title">{{ t('Plugin stat') }}</h3>
     <bk-table
       class="analysis-table"
       :columns="columns"
@@ -116,7 +120,7 @@ watch(
 .analysis-table {
   margin-top: .15rem;
   margin-bottom: .08rem;
-  ::v-deep .bk-table-body {
+  ::v-deep .bk-table-body > .bk-table-body-content > table > tbody > tr {
     cursor: pointer;
   }
 }

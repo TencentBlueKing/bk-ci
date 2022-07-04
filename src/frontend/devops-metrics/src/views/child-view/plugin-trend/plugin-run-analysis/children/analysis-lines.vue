@@ -9,6 +9,8 @@ import http from '@/http/api';
 import {
   sharedProps,
 } from '../common/props-type';
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
 interface ITrend {
   data: Array<IData>,
@@ -74,20 +76,20 @@ watch(
     :loading="isLoading"
   >
     <section class="analysis-line overview-card mt20">
-      <h3 class="g-card-title">Success rate trend</h3>
+      <h3 class="g-card-title">{{ t('Success rate trend') }}</h3>
       <line-chart
         :data="analysisData.rateTrend.data"
         :labels="analysisData.rateTrend.labels"
-        title="Success rate (%)"
+        :title="t('Success rate (%)')"
         type="rate"
       />
     </section>
     <section class="analysis-line overview-card mt20">
-      <h3 class="g-card-title">Average time trend</h3>
+      <h3 class="g-card-title">{{ t('Average time trend') }}</h3>
       <line-chart
         :data="analysisData.timeTrend.data"
         :labels="analysisData.timeTrend.labels"
-        title="Average time (min)"
+        :title="t('Average time (min)')"
         type="time"
       />
     </section>

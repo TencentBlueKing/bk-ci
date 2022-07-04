@@ -10,6 +10,8 @@ import {
 } from '../common/props-type';
 import http from '@/http/api';
 import useFilter from '@/composables/use-filter';
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
 interface IStage {
   name: string,
@@ -73,17 +75,17 @@ onBeforeMount(getDataFromApi);
     class="mt20 stage-average-time"
     :loading="isLoading"
   >
-    <h3 class="stage-time-title">Stage average time trend</h3>
+    <h3 class="stage-time-title">{{ t('Stage average time trend') }}</h3>
     <section
       class="stage-card overview-card mt20"
       v-for="stage in stageList"
       :key="stage.name"
     >
-      <h3 class="g-card-title">{{ stage.name }}（Top 10）</h3>
+      <h3 class="g-card-title">{{ stage.name }}（{{ t('Top 10') }}）</h3>
       <area-line
         :data="stage.data"
         :labels="stage.labels"
-        title="Average time (min)"
+        :title="t('Average time (min)')"
       />
     </section>
   </bk-loading>

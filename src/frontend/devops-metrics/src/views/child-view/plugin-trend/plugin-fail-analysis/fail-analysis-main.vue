@@ -11,7 +11,8 @@ import {
   useRoute,
   useRouter,
 } from 'vue-router';
-
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const status = ref({
@@ -45,14 +46,14 @@ const handleToPluginTrend = () => {
 <template>
   <metrics-header>
     <div class="header">
-      <a class="plugin-trend-title" @click="handleToPluginTrend">Plugin trend</a>
+      <a class="plugin-trend-title" @click="handleToPluginTrend">{{ t('Plugin trend') }}</a>
       <span class="crumbs-icon"> > </span>
-      <span>Plugin fail analtysis: {{ route.query.atomCode }}</span>
+      <span>{{ t('Plugin fail analtysis') }}: {{ route.query.atomCode }}</span>
     </div>
     <!-- <add-plugin></add-plugin> -->
   </metrics-header>
   <main class="g-content">
-    <bk-alert theme="info" title="仅支持查询最近 6 个月内的统计数据!"></bk-alert>
+    <bk-alert theme="info" :title="t('You can only query the statistics in the last 6 months!')"></bk-alert>
     <analysis-filter
       :reset-btn-disabled="resetBtnDisabled"
       :status="status"

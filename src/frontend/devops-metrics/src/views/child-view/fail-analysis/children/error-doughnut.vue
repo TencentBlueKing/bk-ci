@@ -10,6 +10,8 @@ import {
   sharedProps,
 } from '../common/props-type';
 import useFilter from '@/composables/use-filter';
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
 const emit = defineEmits(['change']);
 const props = defineProps(sharedProps);
@@ -65,7 +67,7 @@ onMounted(getData);
     class="error-doughnut overview-card mt20"
     :loading="isLoading"
   >
-    <h3 class="g-card-title">Stat by error type</h3>
+    <h3 class="g-card-title">{{ t('Stat by error type') }}</h3>
     <doughnut :data="data" @doughnut-click="handleDoughnutClick"></doughnut>
   </bk-loading>
 </template>

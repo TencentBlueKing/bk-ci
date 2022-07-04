@@ -12,44 +12,45 @@ import {
 import {
   useRouter
 } from 'vue-router';
+import { useI18n } from "vue-i18n";
 
 import useFilter from '@/composables/use-filter';
 const emit = defineEmits(['change']);
+const { t } = useI18n();
 
 const {
   handleChange
 } = useFilter(emit);
-
 const props = defineProps(sharedProps);
 const isLoading = ref(false);
 const router = useRouter()
 const columns = [
   {
-    label: 'Pipeline',
+    label: t('Pipeline'),
     field: 'pipelineName',
   },
   {
-    label: 'Branch',
+    label: t('Branch'),
     field: 'branch',
   },
   {
-    label: 'Start Time',
+    label: t('startTime'),
     field: 'startTime',
   },
   {
-    label: 'Username',
+    label: t('username'),
     field: 'startUser',
   },
   {
-    label: 'Error Type',
+    label: t('errorType'),
     field: 'errorTypeName',
   },
   {
-    label: 'Error Code',
+    label: t('errorCode'),
     field: 'errorCode',
   },
   {
-    label: 'Error Message',
+    label: t('errorMessage'),
     field: 'errorMsg',
   },
 ];
@@ -122,7 +123,7 @@ onMounted(getData);
     class="overview-card mt20"
     :loading="isLoading"
   >
-    <h3 class="g-card-title">Details</h3>
+    <h3 class="g-card-title">{{ t('Details') }}</h3>
     <bk-table
       class="error-table"
       :columns="columns"
@@ -141,7 +142,7 @@ onMounted(getData);
 .error-table {
   margin-top: .15rem;
   margin-bottom: .08rem;
-  ::v-deep .bk-table-body {
+  ::v-deep .bk-table-body > .bk-table-body-content > table > tbody > tr {
     cursor: pointer;
   }
 }

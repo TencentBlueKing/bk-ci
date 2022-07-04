@@ -8,6 +8,8 @@ import StageTime from './children/stage-time.vue';
 import {
   ref,
 } from 'vue';
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
 const status = ref({
   pipelineIds: [],
@@ -31,7 +33,7 @@ const handleChangeResetBtnDisabled = (val) => {
 </script>
 
 <template>
-  <metrics-header title="Overview" />
+  <metrics-header :title="t('Overview')" />
   <main class="g-content">
     <overview-filter
       :reset-btn-disabled="resetBtnDisabled"

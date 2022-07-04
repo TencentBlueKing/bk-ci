@@ -6,7 +6,8 @@ import useFilter from '@/composables/use-filter';
 import {
   ref,
 } from 'vue';
-
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 const emit = defineEmits(['change']);
 defineProps(sharedProps);
 
@@ -15,9 +16,7 @@ const {
   handleTimeChange,
 } = useFilter(emit);
 
-const setKey = ref(0)
 const clearStatus = () => {
-  setKey.value += 1
   handleChange({
     pipelineIds: [],
     pipelineLabelIds: [],
@@ -33,32 +32,29 @@ const clearStatus = () => {
       class="mr8 w240"
       id-key="pipelineId"
       name-key="pipelineName"
-      placeholder="Pipelines"
+      :placeholder="t('Pipelines')"
       :multiple="true"
       :api-method="http.getPipelineList"
       :select-value="status.pipelineIds"
       @change="(pipelineIds) => handleChange({ pipelineIds })"
-      :key="setKey"
     />
     <scroll-load-select
       class="mr8 w240"
       id-key="labelId"
       name-key="labelName"
-      placeholder="Pipeline lable"
+      :placeholder="t('Pipeline Lable')"
       :multiple="true"
       :api-method="http.getPipelineLabels"
       :select-value="status.pipelineLabelIds"
       @change="(pipelineLabelIds) => handleChange({ pipelineLabelIds })"
-      :key="setKey"
     />
     <bk-date-picker
       class="mr16 w240"
       type="daterange"
       :model-value="[status.startTime, status.endTime]"
       @change="handleTimeChange"
-      :key="setKey"
     />
-    <bk-button :disabled="resetBtnDisabled" @click="clearStatus">Reset</bk-button>
+    <bk-button :disabled="resetBtnDisabled" @click="clearStatus">{{ t('Reset') }}</bk-button>
   </section>
 </template>
 
