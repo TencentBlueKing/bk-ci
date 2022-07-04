@@ -64,7 +64,6 @@ class ModelCreate @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ModelCreate::class.java)
     }
 
-    // TODO: 2022/7/1 获取inner
     fun createPipelineModel(
         modelName: String,
         event: ModelCreateEvent,
