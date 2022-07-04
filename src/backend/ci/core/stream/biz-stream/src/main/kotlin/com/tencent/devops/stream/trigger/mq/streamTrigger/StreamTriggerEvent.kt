@@ -33,13 +33,15 @@ import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.data.context.StreamTriggerContext
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import org.slf4j.MDC
 
 @Event(MQ.EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT, MQ.ROUTE_STREAM_TRIGGER_PIPELINE_EVENT)
 data class StreamTriggerEvent(
+    val traceId: String? = MDC.get(TraceTag.BIZID),
     val eventStr: String,
     val actionCommonData: EventCommonData,
     val actionContext: StreamTriggerContext,
     val actionSetting: StreamTriggerSetting,
-    val traceId: String? = MDC.get(TraceTag.BIZID)
+    val triggerResult: TriggerResult?
 )

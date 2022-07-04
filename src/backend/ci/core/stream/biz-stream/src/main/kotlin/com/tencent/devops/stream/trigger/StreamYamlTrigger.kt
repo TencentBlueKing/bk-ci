@@ -44,6 +44,7 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.exception.CommitCheck
@@ -54,11 +55,11 @@ import com.tencent.devops.stream.trigger.exception.YamlBlankException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
-import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -86,7 +87,8 @@ class StreamYamlTrigger @Autowired constructor(
     @Suppress("ComplexMethod")
     @BkTimed
     fun triggerBuild(
-        action: BaseAction
+        action: BaseAction,
+        triggerResult: TriggerResult?
     ): Boolean {
         logger.info("|${action.data.context.requestEventId}|triggerBuild|action|${action.format()}")
         var pipeline = action.data.context.pipeline!!
@@ -122,8 +124,9 @@ class StreamYamlTrigger @Autowired constructor(
         )!!
         action.data.setting = action.data.setting.copy(gitHttpUrl = gitProjectInfo.gitHttpUrl)
 
-        val triggerResult = triggerMatcher.isMatch(action)
-        val (isTrigger, _, isTiming, isDelete, repoHookName) = triggerResult
+        // 前面使用缓存触发器判断过得就不用再判断了
+        val tr = triggerResult ?: triggerMatcher.isMatch(action)
+        val (isTrigger, _, isTiming, isDelete, repoHookName) = tr
         logger.info(
             "${pipeline.pipelineId}|Match return|isTrigger=$isTrigger|" +
                 "isTiming=$isTiming|isDelete=$isDelete|repoHookName=$repoHookName"
@@ -168,7 +171,7 @@ class StreamYamlTrigger @Autowired constructor(
             )
             yamlBuild.gitStartBuild(
                 action = action,
-                triggerResult = triggerResult,
+                triggerResult = tr,
                 yaml = yamlObject,
                 gitBuildId = null,
                 // 没有触发只有特殊任务的需要保存一下蓝盾流水线
@@ -201,7 +204,7 @@ class StreamYamlTrigger @Autowired constructor(
             )
             yamlBuild.gitStartBuild(
                 action = action,
-                triggerResult = triggerResult,
+                triggerResult = tr,
                 yaml = yamlObject,
                 gitBuildId = gitBuildId,
                 onlySavePipeline = false,
@@ -212,13 +215,11 @@ class StreamYamlTrigger @Autowired constructor(
     }
 
     private fun needUpdateLastBuildBranch(action: BaseAction): Boolean {
-        return action.data.context.pipeline!!.pipelineId.isBlank() ||
-            (
-                action is GitBaseAction &&
-                        !action.getChangeSet().isNullOrEmpty() &&
-                    action.getChangeSet()!!.toSet()
-                        .contains(action.data.context.pipeline!!.filePath)
-                )
+        return action.data.context.pipeline!!.pipelineId.isBlank() || (
+            action is GitBaseAction &&
+                !action.getChangeSet().isNullOrEmpty() &&
+                action.getChangeSet()!!.toSet().contains(action.data.context.pipeline!!.filePath)
+            )
     }
 
     @Throws(StreamTriggerBaseException::class, ErrorCodeException::class)

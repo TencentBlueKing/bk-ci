@@ -86,7 +86,9 @@ class StreamTriggerListener @Autowired constructor(
         logger.info("|${action.data.context.requestEventId}|listenStreamTriggerEvent|action|${action.format()}")
 
         // 针对每个流水线处理异常
-        exceptionHandler.handle(action = action) { streamYamlTrigger.triggerBuild(action = action) }
+        exceptionHandler.handle(action = action) {
+            streamYamlTrigger.triggerBuild(action = action, triggerResult = event.triggerResult)
+        }
 
         logger.info(
             "stream pipeline: ${action.data.context.pipeline?.pipelineId} " +
