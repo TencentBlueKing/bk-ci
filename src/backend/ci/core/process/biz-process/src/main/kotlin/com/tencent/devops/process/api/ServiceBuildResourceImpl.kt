@@ -291,8 +291,9 @@ class ServiceBuildResourceImpl @Autowired constructor(
             materialBranch = materialBranch,
             materialCommitId = materialCommitId,
             materialCommitMessage = materialCommitMessage,
-            status = status,
-            trigger = trigger,
+            // 可能出现[SUCCEED, null] 的情况，其原因是由于服务间调用传空后，jersey底层将list元素置为null,编译期无法感知
+            status = status?.filterNotNull(),
+            trigger = trigger?.filterNotNull(),
             queueTimeStartTime = queueTimeStartTime,
             queueTimeEndTime = queueTimeEndTime,
             startTimeStartTime = startTimeStartTime,
