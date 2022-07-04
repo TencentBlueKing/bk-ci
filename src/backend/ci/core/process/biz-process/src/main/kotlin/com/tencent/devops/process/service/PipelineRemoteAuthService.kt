@@ -115,7 +115,7 @@ class PipelineRemoteAuthService @Autowired constructor(
                 sourceIp = realIp
             ).data!!
             BuildBasicInfo(
-                pipelineId = pipeline.projectId,
+                pipelineId = pipeline.pipelineId,
                 projectId = pipeline.projectId,
                 buildId = buildId.id,
                 pipelineVersion = 0
