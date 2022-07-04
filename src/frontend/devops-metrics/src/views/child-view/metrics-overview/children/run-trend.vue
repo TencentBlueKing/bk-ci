@@ -9,6 +9,8 @@ import {
 import {
   sharedProps,
 } from '../common/props-type';
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 import http from '@/http/api';
 import { useRouter } from 'vue-router';
 
@@ -26,13 +28,13 @@ const runTimeTrend = ref<{
   data: [
     {
       list: [],
-      label: 'Total',
+      label: t('Total'),
       backgroundColor: 'rgba(43, 124, 255,0.3)',
       borderColor: 'rgba(43, 124, 255,1)',
     },
     {
       list: [],
-      label: 'Failure',
+      label: t('Failure'),
       backgroundColor: 'rgba(255, 86, 86,0.3)',
       borderColor: 'rgba(255, 86, 86, 1)',
     },
@@ -122,20 +124,20 @@ onBeforeMount(init);
     :loading="isLoading"
   >
     <section class="run-trend-card overview-card">
-      <h3 class="g-card-title">Pipeline run times trend</h3>
+      <h3 class="g-card-title">{{ t('Pipeline run times trend') }}</h3>
       <double-y-area-line
         :data="runTimeTrend.data"
         :labels="runTimeTrend.labels"
-        :titles="['Total runs', 'Failed runs']"
+        :titles="[t('Total runs'), t('Failed runs')]"
         @point-click="handleRunTimePointClick"
       />
     </section>
     <section class="run-trend-card overview-card">
-      <h3 class="g-card-title">Pipeline run fails trend</h3>
+      <h3 class="g-card-title">{{ t('Pipeline run fails trend') }}</h3>
       <bar
         :data="runFailTrend.data"
         :labels="runFailTrend.labels"
-        title="Run times"
+        :title="t('Run times')"
         @point-click="handleRunFailPointClick"
       />
     </section>

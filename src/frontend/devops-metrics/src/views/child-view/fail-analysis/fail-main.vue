@@ -9,7 +9,8 @@ import {
 import {
   useRoute,
 } from 'vue-router';
-
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 const route = useRoute();
 const status = ref({
   pipelineIds: [],
@@ -40,7 +41,7 @@ if (route.query.errorType) {
 </script>
 
 <template>
-  <metrics-header title="Fail analysis" />
+  <metrics-header :title="t('Fail analysis')" />
   <main class="g-content">
     <fail-filter
       :status="status"

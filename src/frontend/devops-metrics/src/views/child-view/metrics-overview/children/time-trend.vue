@@ -9,7 +9,8 @@ import {
   sharedProps,
 } from '../common/props-type';
 import http from '@/http/api';
-
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 const props = defineProps(sharedProps);
 const isLoading = ref(false);
 const timeTrend = ref<{
@@ -66,11 +67,11 @@ onBeforeMount(getData);
     class="time-trend overview-card mt20"
     :loading="isLoading"
   >
-    <h3 class="g-card-title">Average time trend</h3>
+    <h3 class="g-card-title">{{ t('Average time trend') }}</h3>
     <area-line
       :data="timeTrend.data"
       :labels="timeTrend.labels"
-      title="Average time (min)"
+      :title="t('Average time (min)')"
     />
   </bk-loading>
 </template>

@@ -9,6 +9,8 @@ import {
   sharedProps,
 } from '../common/props-type';
 import http from '@/http/api';
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 import {
   InfoLine,
 } from 'bkui-vue/lib/icon';
@@ -129,7 +131,7 @@ onMounted(init);
     :loading="isLoading"
   >
     <section class="w2 gap-line">
-      <h3 class="g-card-title">Pipeline runs</h3>
+      <h3 class="g-card-title">{{ t('Pipeline runs') }}</h3>
       <section class="card-num-group">
         <section class="card-detail">
           <h5 class="card-num">
@@ -138,11 +140,11 @@ onMounted(init);
             </render-empty-node-if-none>
           </h5>
           <span class="card-desc">
-            Success rate
+            {{ t('Success rate') }}
             <bk-popover placement="top">
               <info-line />
               <template #content>
-                Success: {{ data.successExecuteCount || '--' }} /  No. of total runs: {{ data.totalExecuteCount || '--' }}
+                {{ t('Success') }}: {{ data.successExecuteCount || '--' }} /  {{ t('No. of total runs') }}: {{ data.totalExecuteCount || '--' }}
               </template>
             </bk-popover>
           </span>
@@ -159,16 +161,16 @@ onMounted(init);
             </render-empty-node-if-none>
           </h5>
           <span class="card-desc">
-            Average time
+            {{ t('Average time') }}
             <bk-popover placement="top">
               <info-line />
               <template #content>
-                Total time: {{ data.totalCostTime.h }}<!--
+                {{ t('Total time') }}: {{ data.totalCostTime.h }}<!--
                 --><span v-if="data.totalCostTime.h" class="card-num-sub">h</span><!--
                 -->{{ data.totalCostTime.m }}<!--
                 --><span v-if="data.totalCostTime.m" class="card-num-sub">m</span><!--
                 -->{{ data.totalCostTime.s || '--' }}<!--
-                --><span v-if="data.totalCostTime.s" class="card-num-sub">s</span> / No. of total runs : {{ data.totalExecuteCount || '--' }}
+                --><span v-if="data.totalCostTime.s" class="card-num-sub">s</span> / {{ t('No. of total runs') }} : {{ data.totalExecuteCount || '--' }}
               </template>
             </bk-popover>
           </span>
@@ -177,7 +179,7 @@ onMounted(init);
       </section>
     </section>
     <section class="w2 gap-line">
-      <h3 class="g-card-title">Code check</h3>
+      <h3 class="g-card-title">{{ t('Code check') }}</h3>
       <section class="card-num-group">
         <section class="card-detail">
           <render-empty-node-if-none :data="data.repoCodeccAvgScore">
@@ -189,11 +191,11 @@ onMounted(init);
             />
           </render-empty-node-if-none>
           <span class="card-desc">
-            Code Quality
+            {{ t('Code Quality') }}
             <bk-popover placement="top">
               <info-line />
               <template #content>
-                Code quality star based on Tencent Open Source Governance indicator system
+                {{ t('Code quality star based on Tencent Open Source Governance indicator system') }}
               </template>
             </bk-popover>
           </span>
@@ -205,11 +207,11 @@ onMounted(init);
             </render-empty-node-if-none>
           </h5>
           <span class="card-desc">
-            Reslved Code Defects
+            {{ t('Resolved Code Defects') }}
             <bk-popover placement="top">
               <info-line />
               <template #content>
-                Resolved Code Defects
+                {{ t('Resolved Code Defects') }}
               </template>
             </bk-popover>
           </span>
@@ -218,7 +220,7 @@ onMounted(init);
       </section>
     </section>
     <section class="w1 gap-line">
-      <h3 class="g-card-title">Quality Gate</h3>
+      <h3 class="g-card-title">{{ t('Quality Gate') }}</h3>
       <section class="card-num-group">
         <section class="card-detail">
           <h5 class="card-num">
@@ -227,11 +229,11 @@ onMounted(init);
             </render-empty-node-if-none>
           </h5>
           <span class="card-desc">
-            Interception rate
+            {{ t('Interception rate') }}
             <bk-popover placement="top">
               <info-line />
               <template #content>
-                Intercepted: {{ data.interceptionCount || '--' }} / No. of total runs: {{ data.totalQualityExecuteCount || '--' }}
+                {{ t('Intercepted') }}: {{ data.interceptionCount || '--' }} / {{ t('No. of total runs') }}: {{ data.totalQualityExecuteCount || '--' }}
               </template>
             </bk-popover>
           </span>
@@ -240,11 +242,11 @@ onMounted(init);
       </section>
     </section>
     <section class="w1">
-      <h3 class="g-card-title">Turbo</h3>
+      <h3 class="g-card-title">{{ t('Turbo') }}</h3>
       <section class="card-num-group">
         <section class="card-detail">
           <h5 class="card-num">
-            <render-empty-node-if-none :data="data.turboSaveTime.s">
+            <render-empty-node-if-none :data="data.turboSaveTime">
               {{ data.turboSaveTime.h }}<!--
               --><span v-if="data.turboSaveTime.h" class="card-num-sub">h</span><!--
               -->{{ data.turboSaveTime.m }}<!--
@@ -254,11 +256,11 @@ onMounted(init);
             </render-empty-node-if-none>
           </h5>
           <span class="card-desc">
-            Saving Time
+            {{ t('Saving Time') }}
             <bk-popover placement="top">
               <info-line />
               <template #content>
-                Time saved after using Turbo
+                {{ t('Time saved after using Turbo') }}
               </template>
             </bk-popover>
           </span>

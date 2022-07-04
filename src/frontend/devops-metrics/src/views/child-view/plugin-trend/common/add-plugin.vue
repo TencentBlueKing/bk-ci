@@ -13,6 +13,8 @@ import http from '@/http/api';
 
 import { sharedProps } from '../plugin-fail-analysis/common/props-type';
 import useFilter from '@/composables/use-filter';
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 const emit = defineEmits(['change']);
 defineProps(sharedProps);
 
@@ -173,7 +175,7 @@ watch(
           </ul>
         </section>
         <section class="use-list">
-          <span class="list-header use-header">已选插件（{{ projectPluginList.length }}）</span>
+          <span class="list-header use-header">{{ t('The selected plugin') }} （{{ projectPluginList.length }}）</span>
           <ul class="list-main">
             <li
               class="list-item"
@@ -194,8 +196,8 @@ watch(
       </section>
       <section class="add-plugin-footer">
         <section>
-          <bk-button theme="primary" class="mr8" :loading="isSubmitting" @click="submit">Submit</bk-button>
-          <bk-button @click="handleToggleShow">Cancel</bk-button>
+          <bk-button theme="primary" class="mr8" :loading="isSubmitting" @click="submit">{{ t('Submit') }}</bk-button>
+          <bk-button @click="handleToggleShow">{{ t('Cancel') }}</bk-button>
         </section>
         <!-- <bk-button @click="restore">Restore default</bk-button> -->
       </section>

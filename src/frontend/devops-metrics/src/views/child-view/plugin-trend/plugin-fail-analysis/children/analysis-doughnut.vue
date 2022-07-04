@@ -9,7 +9,8 @@ import {
   sharedProps,
 } from '../common/props-type';
 import http from '@/http/api';
-
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 const props = defineProps(sharedProps);
 const isLoading = ref(false);
 const errorData = ref<IData>({
@@ -47,7 +48,7 @@ onMounted(getData);
     class="analysis-doughnut overview-card mt20"
     :loading="isLoading"
   >
-    <h3 class="g-card-title">State by error code</h3>
+    <h3 class="g-card-title">{{ t('State by error code') }}</h3>
     <doughnut :data="errorData"></doughnut>
   </bk-loading>
 </template>
