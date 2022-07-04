@@ -105,7 +105,7 @@ const optionConfigMixin = {
                     default: false,
                     extCls: 'pause-conf-options',
                     isHidden: (element) => {
-                        return false
+                        return !(element.data && element.data.config && (element.data.config.canPauseBeforeRun === true))
                     }
                 },
                 subscriptionPauseUser: {
@@ -116,7 +116,7 @@ const optionConfigMixin = {
                     default: this.$userInfo.username,
                     extCls: 'pause-conf-user',
                     isHidden: (element) => {
-                        return false
+                        return !(element.additionalOptions && (element.additionalOptions.pauseBeforeExec === true))
                     }
                 },
                 timeout: {
