@@ -58,6 +58,17 @@ interface Container {
     val matrixGroupFlag: Boolean? // 是否为构建矩阵组
 
     /**
+     * 重置所有状态数据
+     */
+    fun resetBuildOption(executeCount: Int) {
+        this.status = null // 重置状态为空
+        this.startEpoch = null
+        this.elementElapsed = null
+        this.systemElapsed = null
+        this.startVMStatus = null
+        this.executeCount = executeCount
+    }
+    /**
      * 只存储Container相关的配置，elements不会存储。
      */
     fun genTaskParams(): MutableMap<String, Any> {
