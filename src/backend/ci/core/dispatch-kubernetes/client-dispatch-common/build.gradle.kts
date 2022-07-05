@@ -25,27 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.utils
+dependencies {
+    api(project(":core:dispatch-kubernetes:api-dispatch-kubernetes"))
+    api(project(":core:dispatch-kubernetes:model-dispatch-kubernetes"))
 
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
-
-@Component
-class JobRedisUtils @Autowired constructor(
-    private val redisOperation: RedisOperation
-) {
-    fun setJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.increment("${dispatchType.value}:$buildId-$builderName", 1)
-    }
-
-    fun getJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String): Int {
-        val jobCount = redisOperation.get("${dispatchType.value}:$buildId-$builderName")
-        return jobCount?.toInt() ?: 0
-    }
-
-    fun deleteJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.delete("${dispatchType.value}:$buildId-$builderName")
-    }
+    api(project(":core:common:common-dispatch-sdk"))
 }

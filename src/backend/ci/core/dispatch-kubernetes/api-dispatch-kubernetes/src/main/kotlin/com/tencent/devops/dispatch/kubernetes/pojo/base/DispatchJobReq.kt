@@ -25,27 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.utils
+package com.tencent.devops.dispatch.kubernetes.pojo.base
 
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.tencent.devops.dispatch.kubernetes.pojo.DockerRegistry
 
-@Component
-class JobRedisUtils @Autowired constructor(
-    private val redisOperation: RedisOperation
+/**
+ * 创建job参数
+ */
+data class DispatchJobReq(
+    val alias: String,
+    val activeDeadlineSeconds: Int? = null,
+    val image: String,
+    val registry: DockerRegistry,
+    val params: JobParam? = null,
+    val podNameSelector: String,
+    val mountPath: String? = null
+)
+
+data class JobParam(
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    var env: Map<String, String>? = null,
+    val command: List<String>? = null,
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    var nfsVolume: List<NfsVolume>? = null,
+    var workDir: String? = "/data/landun/workspace",
+    var labels: Map<String, String>? = emptyMap(),
+    var ipEnabled: Boolean? = true
 ) {
-    fun setJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.increment("${dispatchType.value}:$buildId-$builderName", 1)
-    }
-
-    fun getJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String): Int {
-        val jobCount = redisOperation.get("${dispatchType.value}:$buildId-$builderName")
-        return jobCount?.toInt() ?: 0
-    }
-
-    fun deleteJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.delete("${dispatchType.value}:$buildId-$builderName")
-    }
+    data class NfsVolume(
+        val server: String,
+        val path: String? = null,
+        val mountPath: String? = null
+    )
 }

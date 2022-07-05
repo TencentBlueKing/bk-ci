@@ -25,47 +25,55 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.utils
+package com.tencent.devops.dispatch.kubernetes.resource.service
 
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBaseDebugResource
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchDebugResponse
+import com.tencent.devops.dispatch.kubernetes.service.DispatchBaseDebugService
+import com.tencent.devops.dispatch.kubernetes.utils.BaseCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
-@Component
-class RedisUtils @Autowired constructor(
-    private val redisOperation: RedisOperation
-) {
-    fun setDebugBuilderName(
-        dispatchType: DispatchEnumType,
+@RestResource
+class ServiceBaseDebugResourceImpl @Autowired constructor(
+    private val dispatchBaseDebugService: DispatchBaseDebugService
+) : ServiceBaseDebugResource {
+    override fun startDebug(
         userId: String,
+        dispatchType: String,
+        projectId: String,
         pipelineId: String,
         vmSeqId: String,
-        builderName: String
-    ) {
-        redisOperation.set(
-            debugContainerNameKey(dispatchType, userId, pipelineId, vmSeqId),
-            builderName,
-            3600 * 6,
-            true
+        buildId: String?
+    ): Result<DispatchDebugResponse> {
+        return Result(
+            dispatchBaseDebugService.startDebug(
+                userId = userId,
+                dispatchType = BaseCommonUtils.checkDispatchType(dispatchType),
+                projectId = projectId,
+                pipelineId = pipelineId,
+                vmSeqId = vmSeqId,
+                buildId = buildId
+            )
         )
     }
 
-    fun getDebugBuilderName(
-        dispatchType: DispatchEnumType,
+    override fun stopDebug(
         userId: String,
+        dispatchType: String,
         pipelineId: String,
-        vmSeqId: String
-    ): String? {
-        return redisOperation.get(debugContainerNameKey(dispatchType, userId, pipelineId, vmSeqId))
-    }
-
-    private fun debugContainerNameKey(
-        dispatchType: DispatchEnumType,
-        userId: String,
-        pipelineId: String,
-        vmSeqId: String
-    ): String {
-        return "dispatch:${dispatchType.value}:debug:$userId-$pipelineId-$vmSeqId"
+        vmSeqId: String,
+        builderName: String
+    ): Result<Boolean> {
+        return Result(
+            dispatchBaseDebugService.stopDebug(
+                userId = userId,
+                dispatchType = BaseCommonUtils.checkDispatchType(dispatchType),
+                pipelineId = pipelineId,
+                vmSeqId = vmSeqId,
+                builderName = builderName
+            )
+        )
     }
 }

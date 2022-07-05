@@ -40,11 +40,7 @@ dependencies {
 }
 
 val moduleNameList = name.split("-")
-val moduleName = if (moduleNameList.size >= 3 && moduleNameList[1] == "dispatch" && moduleNameList[2] == "base") {
-    "dispatch_base"
-} else {
-    moduleNameList[1]
-}
+val moduleName = moduleNameList[1]
 
 var moduleNames = when (moduleName) {
     "misc" -> {
@@ -61,6 +57,10 @@ var moduleNames = when (moduleName) {
 
 if (name == "model-dispatch-bcs") {
     moduleNames = listOf("dispatch_bcs")
+}
+
+if (name == "model-dispatch-kubernetes") {
+    moduleNames = listOf("dispatch_kubernetes")
 }
 
 val mysqlPrefix: String? = System.getProperty("mysqlPrefix") ?: System.getenv("mysqlPrefix")

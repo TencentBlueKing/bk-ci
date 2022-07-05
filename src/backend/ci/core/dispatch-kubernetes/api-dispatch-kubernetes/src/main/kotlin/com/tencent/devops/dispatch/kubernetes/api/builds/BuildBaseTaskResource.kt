@@ -25,27 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.utils
+package com.tencent.devops.dispatch.kubernetes.api.builds
 
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@Component
-class JobRedisUtils @Autowired constructor(
-    private val redisOperation: RedisOperation
-) {
-    fun setJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.increment("${dispatchType.value}:$buildId-$builderName", 1)
-    }
+@Api(tags = ["BUILD_DISPATCH_BASE_TASK"], description = "构建-DISPATCH-BASE TASK资源操作")
+@Path("/build/base")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildBaseTaskResource {
 
-    fun getJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String): Int {
-        val jobCount = redisOperation.get("${dispatchType.value}:$buildId-$builderName")
-        return jobCount?.toInt() ?: 0
-    }
-
-    fun deleteJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.delete("${dispatchType.value}:$buildId-$builderName")
-    }
+    @ApiOperation("获取任务状态")
+    @GET
+    @Path("/{dispatchType}/task/status")
+    fun getTaskStatus(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("Dispatch类型", required = true)
+        @PathParam("dispatchType")
+        dispatchType: String,
+        @ApiParam("taskId", required = true)
+        @QueryParam("taskId")
+        taskId: String
+    ): Result<DispatchBuildStatusResp>
 }

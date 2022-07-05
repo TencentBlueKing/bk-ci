@@ -25,27 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.utils
+package com.tencent.devops.dispatch.kubernetes.builds.pojo
 
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
-@Component
-class JobRedisUtils @Autowired constructor(
-    private val redisOperation: RedisOperation
+class PipelineBuilderLock(
+    dispatchType: DispatchEnumType,
+    redisOperation: RedisOperation,
+    pipelieId: String,
+    vmSeqId: String
 ) {
-    fun setJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.increment("${dispatchType.value}:$buildId-$builderName", 1)
-    }
 
-    fun getJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String): Int {
-        val jobCount = redisOperation.get("${dispatchType.value}:$buildId-$builderName")
-        return jobCount?.toInt() ?: 0
-    }
+    private val redisLock = RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "DISPATCH_${dispatchType.value}_LOCK_BUILDER_${pipelieId}_$vmSeqId",
+        expiredTimeInSeconds = 60L
+    )
 
-    fun deleteJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.delete("${dispatchType.value}:$buildId-$builderName")
-    }
+    fun tryLock() = redisLock.tryLock()
+
+    fun lock() = redisLock.lock()
+
+    fun unlock() = redisLock.unlock()
 }

@@ -25,27 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.utils
+package com.tencent.devops.dispatch.kubernetes.pojo.builds
 
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+data class DispatchBuildOperateBuilderParams(
+    val type: DispatchBuildOperateBuilderType,
+    val env: Map<String, String>?
+)
 
-@Component
-class JobRedisUtils @Autowired constructor(
-    private val redisOperation: RedisOperation
-) {
-    fun setJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.increment("${dispatchType.value}:$buildId-$builderName", 1)
-    }
-
-    fun getJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String): Int {
-        val jobCount = redisOperation.get("${dispatchType.value}:$buildId-$builderName")
-        return jobCount?.toInt() ?: 0
-    }
-
-    fun deleteJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.delete("${dispatchType.value}:$buildId-$builderName")
-    }
+enum class DispatchBuildOperateBuilderType {
+    // 删除
+    DELETE,
+    // 停止
+    STOP
 }

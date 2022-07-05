@@ -25,27 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.utils
+package com.tencent.devops.dispatch.kubernetes.service
 
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
 
-@Component
-class JobRedisUtils @Autowired constructor(
-    private val redisOperation: RedisOperation
+@Service
+class DispatchBaseTaskService @Autowired constructor(
+    private val dispatchFactory: DispatchTypeServiceFactory
 ) {
-    fun setJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.increment("${dispatchType.value}:$buildId-$builderName", 1)
-    }
 
-    fun getJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String): Int {
-        val jobCount = redisOperation.get("${dispatchType.value}:$buildId-$builderName")
-        return jobCount?.toInt() ?: 0
-    }
-
-    fun deleteJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.delete("${dispatchType.value}:$buildId-$builderName")
+    fun getTaskStatus(userId: String, dispatchType: DispatchEnumType, taskId: String): DispatchBuildStatusResp {
+        return dispatchFactory.load(dispatchType).getTaskStatus(userId, taskId)
     }
 }

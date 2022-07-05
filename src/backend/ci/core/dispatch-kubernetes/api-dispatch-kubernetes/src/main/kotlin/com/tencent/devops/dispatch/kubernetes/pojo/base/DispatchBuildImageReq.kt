@@ -25,27 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.utils
+package com.tencent.devops.dispatch.kubernetes.pojo.base
 
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.fasterxml.jackson.annotation.JsonProperty
 
-@Component
-class JobRedisUtils @Autowired constructor(
-    private val redisOperation: RedisOperation
-) {
-    fun setJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.increment("${dispatchType.value}:$buildId-$builderName", 1)
-    }
+data class DispatchBuildImageReq(
+    @JsonProperty("image_name")
+    val imageName: String,
+    @JsonProperty("image_version")
+    val imageVersion: String,
+    val model: String = "commit",
+    val registry: Registry,
+    val auths: List<Auth>,
+    @JsonProperty("build_args")
+    val buildArgs: Map<String, Any>,
+    val labels: Map<String, String>,
+    @JsonProperty("work_path")
+    val workPath: String,
+    @JsonProperty("docker_file")
+    val dockerFile: String,
+    @JsonProperty("pod_name")
+    val podName: String,
+    @JsonProperty("container_name")
+    val containerName: String,
+    @JsonProperty("builder_name")
+    val builderName: String
+)
 
-    fun getJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String): Int {
-        val jobCount = redisOperation.get("${dispatchType.value}:$buildId-$builderName")
-        return jobCount?.toInt() ?: 0
-    }
+data class Registry(
+    val host: String,
+    val username: String,
+    val password: String
+)
 
-    fun deleteJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.delete("${dispatchType.value}:$buildId-$builderName")
-    }
-}
+data class Auth(
+    val host: String,
+    val token: String
+)

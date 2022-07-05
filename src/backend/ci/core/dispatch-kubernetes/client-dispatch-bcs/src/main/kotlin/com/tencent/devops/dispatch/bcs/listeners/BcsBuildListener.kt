@@ -25,27 +25,56 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.utils
+package com.tencent.devops.dispatch.bcs.listeners
 
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
+import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.dispatch.kubernetes.builds.services.DispatchBuildService
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
+import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class JobRedisUtils @Autowired constructor(
-    private val redisOperation: RedisOperation
-) {
-    fun setJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.increment("${dispatchType.value}:$buildId-$builderName", 1)
+class BcsBuildListener @Autowired constructor(
+    private val dispatchBuildService: DispatchBuildService
+) : BuildListener {
+
+    override fun getShutdownQueue(): String {
+        return ".bcs.public"
     }
 
-    fun getJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String): Int {
-        val jobCount = redisOperation.get("${dispatchType.value}:$buildId-$builderName")
-        return jobCount?.toInt() ?: 0
+    override fun getStartupDemoteQueue(): String {
+        return ".bcs.public.demote"
     }
 
-    fun deleteJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.delete("${dispatchType.value}:$buildId-$builderName")
+    override fun getStartupQueue(): String {
+        return ".bcs.public"
+    }
+
+    override fun getVmType(): JobQuotaVmType? {
+        return JobQuotaVmType.DOCKER_VM
+    }
+
+    override fun onStartup(dispatchMessage: DispatchMessage) {
+        startUp(dispatchMessage)
+    }
+
+    override fun onStartupDemote(dispatchMessage: DispatchMessage) {
+        startUp(dispatchMessage)
+    }
+
+    private fun startUp(dispatchMessage: DispatchMessage) {
+        val retry = dispatchBuildService.preStartUp(DispatchEnumType.BCS, dispatchMessage)
+        if (retry) {
+            retry()
+        } else {
+            dispatchBuildService.startUp(DispatchEnumType.BCS, dispatchMessage, 0)
+        }
+    }
+
+    override fun onShutdown(event: PipelineAgentShutdownEvent) {
+        dispatchBuildService.doShutdown(DispatchEnumType.BCS, event)
     }
 }

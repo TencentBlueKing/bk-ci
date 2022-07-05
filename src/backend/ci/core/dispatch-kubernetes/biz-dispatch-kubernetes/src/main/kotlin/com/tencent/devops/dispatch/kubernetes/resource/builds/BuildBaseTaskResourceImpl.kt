@@ -25,27 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.utils
+package com.tencent.devops.dispatch.kubernetes.resource.builds
 
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.api.builds.BuildBaseTaskResource
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
+import com.tencent.devops.dispatch.kubernetes.service.DispatchBaseTaskService
+import com.tencent.devops.dispatch.kubernetes.utils.BaseCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
-@Component
-class JobRedisUtils @Autowired constructor(
-    private val redisOperation: RedisOperation
-) {
-    fun setJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.increment("${dispatchType.value}:$buildId-$builderName", 1)
-    }
-
-    fun getJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String): Int {
-        val jobCount = redisOperation.get("${dispatchType.value}:$buildId-$builderName")
-        return jobCount?.toInt() ?: 0
-    }
-
-    fun deleteJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.delete("${dispatchType.value}:$buildId-$builderName")
+@RestResource
+class BuildBaseTaskResourceImpl @Autowired constructor(
+    private val dispatchBaseTaskService: DispatchBaseTaskService
+) : BuildBaseTaskResource {
+    override fun getTaskStatus(userId: String, dispatchType: String, taskId: String): Result<DispatchBuildStatusResp> {
+        return Result(
+            dispatchBaseTaskService.getTaskStatus(
+                userId = userId,
+                dispatchType = BaseCommonUtils.checkDispatchType(dispatchType),
+                taskId = taskId
+            )
+        )
     }
 }
