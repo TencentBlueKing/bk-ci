@@ -1,7 +1,7 @@
 <template>
     <article class="credential-home" v-bkloading="{ isLoading }">
         <header class="home-header">
-            <bk-button theme="primary" @click="addCredential">Create Credential</bk-button>
+            <bk-button theme="primary" @click="addCredential">{{$t('setting.createCredential')}}</bk-button>
         </header>
 
         <bk-table :data="credentialList"
@@ -11,18 +11,18 @@
             :header-cell-style="{ background: '#fafbfd' }"
             @page-change="pageChange"
             @page-limit-change="pageLimitChange"
-            empty-text="No credential yet"
+            :empty-text="$t('setting.ticket.emptyCredential')"
             class="credential-table"
         >
             <bk-table-column label="Key" prop="credentialId"></bk-table-column>
-            <bk-table-column label="Display Name" prop="credentialName"></bk-table-column>
-            <bk-table-column label="Type" prop="credentialType"></bk-table-column>
-            <bk-table-column label="Description" prop="credentialRemark"></bk-table-column>
-            <bk-table-column label="Operation" width="200" class-name="handler-btn">
+            <bk-table-column :label="$t('displayName')" prop="credentialName"></bk-table-column>
+            <bk-table-column :label="$t('type')" prop="credentialType"></bk-table-column>
+            <bk-table-column :label="$t('description')" prop="credentialRemark"></bk-table-column>
+            <bk-table-column :label="$t('operation')" width="200" class-name="handler-btn">
                 <template slot-scope="props">
-                    <span :class="{ 'update-btn': true, disabled: !props.row.permissions.edit }" @click="editCredential(props.row)">Edit</span>
-                    <span :class="{ 'update-btn': true, disabled: !props.row.permissions.edit }" @click="credentialSetting(props.row.credentialId)">Settings</span>
-                    <span :class="{ 'update-btn': true, disabled: !props.row.permissions.delete }" @click="deleteCredential(props.row)">Delete</span>
+                    <span :class="{ 'update-btn': true, disabled: !props.row.permissions.edit }" @click="editCredential(props.row)">{{$t('edit')}}</span>
+                    <span :class="{ 'update-btn': true, disabled: !props.row.permissions.edit }" @click="credentialSetting(props.row.credentialId)">{{$t('settings')}}</span>
+                    <span :class="{ 'update-btn': true, disabled: !props.row.permissions.delete }" @click="deleteCredential(props.row)">{{$t('delete')}}</span>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -34,9 +34,9 @@
             :loading="isDelLoading"
             theme="danger"
             header-position="left"
-            title="Delete"
+            :title="$t('delete')"
             @confirm="requestDelete">
-            Are you sure to delete【{{deleteObj.id}}】？
+            {{$t('deleteTips')}} 【{{deleteObj.id}}】？
         </bk-dialog>
     </article>
 </template>

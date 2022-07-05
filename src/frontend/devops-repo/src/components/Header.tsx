@@ -90,7 +90,8 @@ export default defineComponent({
         // @ts-ignore
         location.href = window.getLoginUrl();
       } else {
-        document.cookie = 'bkrepo_ticket= ; expires = Thu, 01 Jan 1970 00:00:00 GMT';
+        document.cookie = 'bkrepo_ticket=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
         router.replace({
           name: 'login',
         });
@@ -114,7 +115,7 @@ export default defineComponent({
                   <Option
                     key={project.id}
                     value={project.id}
-                    label={project.displayName}
+                    label={project.displayName as string}
                   />
                 ))
               }

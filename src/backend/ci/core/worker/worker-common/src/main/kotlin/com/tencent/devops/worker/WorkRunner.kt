@@ -72,13 +72,11 @@ object WorkRunner {
                     pipelineId: String
                 ): Pair<File, File> {
                     val replaceWorkspace = if (workspace.isNotBlank()) {
-                        ReplacementUtils.replace(workspace, object : ReplacementUtils.KeyReplacement {
+                        ReplacementUtils.replace(
+                            workspace, object : ReplacementUtils.KeyReplacement {
                             override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
-                                return if (doubleCurlyBraces) {
-                                    variables[key] ?: "\${{$key}}"
-                                } else {
-                                    variables[key] ?: "\${$key}"
-                                }
+                                return variables[key]
+                                    ?: throw IllegalArgumentException("工作空间未定义变量(undefined variable): $workspace")
                             }
                         }, mapOf(
                             WORKSPACE_CONTEXT to workspace,

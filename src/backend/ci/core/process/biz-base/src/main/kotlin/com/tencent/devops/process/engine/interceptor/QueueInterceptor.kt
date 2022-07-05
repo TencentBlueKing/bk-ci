@@ -132,7 +132,7 @@ class QueueInterceptor @Autowired constructor(
                     message = "流水线串行，排队数设置为0"
                 )
             queueCount >= setting.maxQueueSize -> {
-                // 排队数量超过最大限制,排队数量已满，将该流水线最靠前的排队记录，置为"取消构建"，取消人为本次新构建的触发人
+                // 排队数量超过最大限制,排队数量已满，将该流水线最靠前的排队记录，置为"取消构建"
                 val buildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(
                     projectId = projectId,
                     pipelineId = pipelineId,

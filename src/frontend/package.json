@@ -48,6 +48,7 @@
     "devops-vs",
     "devops-quality",
     "devops-nav",
+    "devops-stream",
     "bk-pipeline"
   ],
   "dependencies": {

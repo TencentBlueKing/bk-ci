@@ -51,7 +51,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
  * 统一异常处理
  */
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@RestControllerAdvice
+@RestControllerAdvice("com.tencent.bkrepo.helm")
 class HelmExceptionHandler {
 
     @ExceptionHandler(HelmRepoNotFoundException::class)

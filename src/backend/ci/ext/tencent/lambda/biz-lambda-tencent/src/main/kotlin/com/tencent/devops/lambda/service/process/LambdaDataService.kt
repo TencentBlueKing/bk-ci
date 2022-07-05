@@ -137,8 +137,8 @@ class LambdaDataService @Autowired constructor(
             )
             return
         }
-        pushTaskDetail(task)
-//        pushGitTaskInfo(event, task)
+        val projectInfo = projectCache.get(event.projectId)
+        pushTaskDetail(projectInfo, task)
     }
 
     fun makeUpBuildHistory(userId: String, makeUpBuildVOs: List<MakeUpBuildVO>): Boolean {
@@ -168,7 +168,8 @@ class LambdaDataService @Autowired constructor(
             with(it) {
                 val taskList = lambdaBuildTaskDao.getTaskByBuildId(dslContext, projectId, buildId)
                 taskList.forEach { it1 ->
-                    pushTaskDetail(it1)
+                    val projectInfo = projectCache.get(it1.projectId)
+                    pushTaskDetail(projectInfo, it1)
                 }
             }
         }
@@ -212,7 +213,7 @@ class LambdaDataService @Autowired constructor(
         }
     }
 
-    private fun pushTaskDetail(task: TPipelineBuildTaskRecord) {
+    private fun pushTaskDetail(projectInfo: ProjectOrganize, task: TPipelineBuildTaskRecord) {
         try {
             val startTime = task.startTime?.timestampmilli() ?: 0
             val endTime = task.endTime?.timestampmilli() ?: 0
@@ -296,8 +297,8 @@ class LambdaDataService @Autowired constructor(
                     }
 
                     val dataMap = mutableMapOf("input" to inputMap)
-                    val taskParamMap1 = mutableMapOf("data" to dataMap)
-                    JSONObject(taskParamMap1)
+                    taskParamMap.toMutableMap()["data"] = dataMap
+                    JSONObject(taskParamMap)
                 } else {
                     JSONObject(JsonUtil.toMap(task.taskParams))
                 }
@@ -319,7 +320,13 @@ class LambdaDataService @Autowired constructor(
                     endTime = task.endTime?.format(dateTimeFormatter),
                     costTime = if ((endTime - startTime) < 0) 0 else (endTime - startTime),
                     starter = task.starter,
-                    washTime = LocalDateTime.now().format(dateTimeFormatter)
+                    washTime = LocalDateTime.now().format(dateTimeFormatter),
+                    bgId = projectInfo.bgId,
+                    deptId = projectInfo.deptId,
+                    centerId = projectInfo.centerId,
+                    bgName = projectInfo.bgName,
+                    deptName = projectInfo.deptName,
+                    centerName = projectInfo.centerName
                 )
                 logger.info("pushTaskDetail buildId: ${dataPlatTaskDetail.buildId}| taskId: ${dataPlatTaskDetail.itemId}")
                 val taskDetailTopic = checkParamBlank(lambdaKafkaTopicConfig.taskDetailTopic, "taskDetailTopic")
@@ -481,7 +488,10 @@ class LambdaDataService @Autowired constructor(
                         projectId = projectId,
                         bgName = projectInfo.bgName ?: "",
                         deptName = projectInfo.deptName ?: "",
-                        centerName = projectInfo.centerName ?: ""
+                        centerName = projectInfo.centerName ?: "",
+                        bgId = projectInfo.bgId ?: "",
+                        deptId = projectInfo.deptId ?: "",
+                        centerId = projectInfo.centerId ?: ""
                     )
                 }
             }
@@ -523,7 +533,10 @@ class LambdaDataService @Autowired constructor(
                 startUser = startUser,
                 startTime = startTime?.format(dateTimeFormatter) ?: "",
                 endTime = endTime?.format(dateTimeFormatter) ?: "",
-                status = status
+                status = status,
+                bgId = projectInfo.bgId,
+                deptId = projectInfo.deptId,
+                centerId = projectInfo.centerId
             )
         }
     }
@@ -594,6 +607,7 @@ class LambdaDataService @Autowired constructor(
                 startTime = startTime?.format(dateTimeFormatter) ?: "",
                 endTime = endTime?.format(dateTimeFormatter) ?: "",
                 status = buildStatus[status].name,
+                statusOrdinal = buildStatus[status].ordinal,
                 stageStatus = stageStatus,
                 deleteReason = "",
                 currentTimestamp = currentTimestamp,
@@ -618,7 +632,10 @@ class LambdaDataService @Autowired constructor(
                 errorInfoList = errorInfo,
                 startUser = startUser,
                 channel = channel,
-                labels = labelList
+                labels = labelList,
+                bgId = projectInfo.bgId,
+                deptId = projectInfo.deptId,
+                centerId = projectInfo.centerId
             )
         }
     }

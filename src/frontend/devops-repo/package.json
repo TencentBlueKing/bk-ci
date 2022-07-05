@@ -1,5 +1,5 @@
 {
-  "name": "repository",
+  "name": "devops-repo",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,13 +7,13 @@
     "public": "vue-cli-service build",
     "public:dev": "cross-env NODE_ENV=dev npm run public",
     "public:test": "cross-env NODE_ENV=test npm run public",
-    "public:production": "cross-env NODE_ENV=production npm run public",
+    "public:master": "cross-env NODE_ENV=production npm run public",
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
     "axios": "^0.26.1",
-    "bkui-vue": "^0.0.1-beta.110",
+    "bkui-vue": "^0.0.1-beta.123",
     "core-js": "^3.6.5",
     "js-cookie": "^3.0.1",
     "jsencrypt": "^3.2.1",

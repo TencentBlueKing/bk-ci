@@ -35,6 +35,7 @@ import org.jooq.Result
 import org.jooq.UpdateConditionStep
 import org.springframework.stereotype.Repository
 
+@Suppress("LongParameterList")
 @Repository
 class LogStatusDao {
 
@@ -77,12 +78,12 @@ class LogStatusDao {
         dslContext: DSLContext,
         buildId: String,
         executeCount: Int,
-        modeList: Map<String, LogStorageMode>
+        modeMap: Map<String, LogStorageMode>
     ) {
         with(TLogStatus.T_LOG_STATUS) {
             val records =
                 mutableListOf<UpdateConditionStep<TLogStatusRecord>>()
-            modeList.forEach { (tag, mode) ->
+            modeMap.forEach { (tag, mode) ->
                 records.add(
                     dslContext.update(this)
                         .set(MODE, mode.name)
@@ -102,9 +103,9 @@ class LogStatusDao {
     ): Result<TLogStatusRecord>? {
         with(TLogStatus.T_LOG_STATUS) {
             return dslContext.selectFrom(this)
-                    .where(BUILD_ID.eq(buildId))
-                    .and(EXECUTE_COUNT.eq(executeCount ?: 1))
-                    .fetch()
+                .where(BUILD_ID.eq(buildId))
+                .and(EXECUTE_COUNT.eq(executeCount ?: 1))
+                .fetch()
         }
     }
 
