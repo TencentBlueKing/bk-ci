@@ -34,30 +34,10 @@ enum class ErrorCodeEnum(
     val errorCode: Int,
     val formatErrorMessage: String
 ) {
-    SYSTEM_ERROR(ErrorType.SYSTEM, 2129001, "Dispatcher-kubernetes系统错误"),
-    NO_IDLE_VM_ERROR(ErrorType.SYSTEM, 2129002, "Dispatcher-kubernetes 构建机启动失败，没有空闲的构建机"),
-    CREATE_VM_ERROR(ErrorType.THIRD_PARTY, 2129003, "Dispatcher-kubernetes 异常，异常信息 - 构建机创建失败"),
-    START_VM_ERROR(ErrorType.THIRD_PARTY, 2129004, "Dispatcher-kubernetes 异常，异常信息 - 构建机启动失败"),
-    CREATE_VM_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129005, "Dispatcher-kubernetes 异常，异常信息 - 创建容器接口异常"),
-    CREATE_VM_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2129006, "Dispatcher-kubernetes 异常，异常信息 - 创建容器接口返回失败"),
-    OPERATE_VM_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129007, "Dispatcher-kubernetes 异常，异常信息 - 操作容器接口异常"),
-    OPERATE_VM_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2129008, "Dispatcher-kubernetes 异常，异常信息 - 操作容器接口返回失败"),
-    VM_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129009, "Dispatcher-kubernetes 异常，异常信息 - 获取容器状态接口异常"),
-    CREATE_IMAGE_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129010, "Dispatcher-kubernetes 异常，异常信息 - 创建镜像接口异常"),
-    CREATE_IMAGE_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2129011, "Dispatcher-kubernetes 异常，异常信息 - 创建镜像接口返回失败"),
-    CREATE_IMAGE_VERSION_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129012, "Dispatcher-kubernetes 异常，异常信息 - 创建镜像新版本接口异常"),
-    CREATE_IMAGE_VERSION_INTERFACE_FAIL(
-        ErrorType.THIRD_PARTY,
-        2129013,
-        "Dispatcher-kubernetes 异常，异常信息 - 创建镜像新版本接口返回失败"
-    ),
-    TASK_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129014, "Dispatcher-kubernetes 异常，异常信息 - 获取TASK状态接口异常"),
-    WEBSOCKET_URL_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129015, "Dispatcher-kubernetes 异常，异常信息 - 获取websocket接口异常"),
-    WEBSOCKET_URL_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2129016, "Dispatcher-kubernetes 异常，异常信息 - 获取websocket接口返回失败"),
-    RETRY_STATUS_FAIL(ErrorType.USER, 2129017, "重试频率过快，请稍后重试"),
-    KUBERNETES_INTERFACE_TIMEOUT(ErrorType.THIRD_PARTY, 2129018, "Dispatcher-kubernetes 异常，异常信息 - 接口请求超时"),
-    CREATE_VM_USER_ERROR(ErrorType.USER, 2129003, "Dispatcher-kubernetes 异常，异常信息 - 用户操作异常"),
-    GET_CREDENTIAL_FAIL(ErrorType.USER, 2129020, "Get credential failed"),
-    CREATE_JOB_LIMIT_ERROR(ErrorType.USER, 2129050, "已超过 Dispatcher-kubernetes 创建Job容器上限."),
-    CREATE_JOB_ERROR(ErrorType.SYSTEM, 2129051, "Dispatcher-kubernetes 异常, 创建Job容器失败")
+    SYSTEM_ERROR(ErrorType.SYSTEM, 2123001, "Dispatcher-base系统错误"),
+    NO_IDLE_VM_ERROR(ErrorType.SYSTEM, 2123002, "构建机启动失败，没有空闲的构建机"),
+    CREATE_JOB_LIMIT_ERROR(ErrorType.USER, 2123050, "已超过dispatch base创建Job容器上限."),
+
+    INTERFACE_TIMEOUT(ErrorType.THIRD_PARTY, 2123018, "第三方服务异常，异常信息 - 接口请求超时"),
+    START_VM_ERROR(ErrorType.THIRD_PARTY, 2123004, "第三方服务异常，异常信息 - 构建机启动失败")
 }
