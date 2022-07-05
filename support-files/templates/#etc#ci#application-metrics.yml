@@ -63,5 +63,4 @@ sharding:
 
 queryParam:
   maximumQueryMonths: 6
-  minimumQueryDays: 1
   queryCountMax: 10000
