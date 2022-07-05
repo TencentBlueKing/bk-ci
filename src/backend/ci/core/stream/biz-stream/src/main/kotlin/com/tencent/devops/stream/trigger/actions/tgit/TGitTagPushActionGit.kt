@@ -97,8 +97,6 @@ class TGitTagPushActionGit(
     private fun getLatestCommit(
         event: GitTagPushEvent
     ): GitCommit? {
-
-
         var commit = if (event.commits.isNullOrEmpty()) {
             null
         } else {
