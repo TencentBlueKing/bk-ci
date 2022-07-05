@@ -286,12 +286,12 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             page = page,
             pageSize = pageSize,
-            materialAlias = materialAlias,
+            materialAlias = materialAlias?.filter { it.isNotBlank() },
             materialUrl = materialUrl,
-            materialBranch = materialBranch,
+            materialBranch = materialBranch?.filter { it.isNotBlank() },
             materialCommitId = materialCommitId,
             materialCommitMessage = materialCommitMessage,
-            // 可能出现[SUCCEED, null] 的情况，其原因是由于服务间调用传空后，jersey底层将list元素置为null,编译期无法感知
+            // 可能出现[null] 的情况
             status = status?.filterNotNull(),
             trigger = trigger?.filterNotNull(),
             queueTimeStartTime = queueTimeStartTime,
