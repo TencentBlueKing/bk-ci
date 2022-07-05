@@ -1553,11 +1553,13 @@ class PipelineRuntimeService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
-            stageStatus = listOf(BuildStageStatus(
-                stageId = STATUS_STAGE,
-                name = STATUS_STAGE,
-                status = MessageCodeUtil.getCodeLanMessage(BUILD_QUEUE)
-            )),
+            stageStatus = listOf(
+                BuildStageStatus(
+                    stageId = STATUS_STAGE,
+                    name = STATUS_STAGE,
+                    status = MessageCodeUtil.getCodeLanMessage(BUILD_QUEUE)
+                )
+            ),
             oldBuildStatus = oldStatus,
             newBuildStatus = BuildStatus.QUEUE
         )
