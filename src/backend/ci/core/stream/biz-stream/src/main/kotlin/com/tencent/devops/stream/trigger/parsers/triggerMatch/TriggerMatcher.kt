@@ -88,7 +88,7 @@ class TriggerMatcher @Autowired constructor(
             action.isMatch(ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn)).copy(
                 repoHookName = checkRepoHook(
                     action = action,
-                    preTriggerOn = newYaml.triggerOn
+                    repoHooks = newYaml.triggerOn?.repoHook
                 )
             )
         }
@@ -115,7 +115,7 @@ class TriggerMatcher @Autowired constructor(
     fun isMatch(
         action: BaseAction,
         triggerStr: String
-    ): TriggerResult {
+    ): Pair<List<Any>?, TriggerResult> {
         val trigger = if (triggerStr.isBlank()) {
             null
         } else {
@@ -141,6 +141,7 @@ class TriggerMatcher @Autowired constructor(
             }
         }
 
+        // 跨库触发这里跨库触发信息放回空，防止重复注册跨库触发信息
         return if (action.data.context.repoTrigger != null) {
             val repoTriggerPipelineList = action.data.context.repoTrigger!!.repoTriggerPipelineList
             val repoTriggerOn = ScriptYmlUtils.formatRepoHookTriggerOn(
@@ -151,36 +152,33 @@ class TriggerMatcher @Autowired constructor(
             )
             if (repoTriggerOn == null) {
                 repoTriggerEventService.deleteRepoTriggerEvent(action.data.context.pipeline!!.pipelineId)
-                return TriggerResult(
-                    trigger = false,
-                    timeTrigger = false,
-                    startParams = emptyMap(),
-                    deleteTrigger = false
+                return Pair(
+                    null,
+                    TriggerResult(
+                        trigger = false,
+                        timeTrigger = false,
+                        startParams = emptyMap(),
+                        deleteTrigger = false
+                    )
                 )
             }
-
-            action.isMatch(repoTriggerOn)
+            Pair(null, action.isMatch(repoTriggerOn))
         } else {
-            action.isMatch(ScriptYmlUtils.formatTriggerOn(trigger)).copy(
-                repoHookName = checkRepoHook(
-                    action = action,
-                    preTriggerOn = trigger
-                )
-            )
+            Pair(trigger?.repoHook, action.isMatch(ScriptYmlUtils.formatTriggerOn(trigger)))
         }
     }
 
-    private fun checkRepoHook(
+    fun checkRepoHook(
         action: BaseAction,
-        preTriggerOn: PreTriggerOn?
+        repoHooks: List<Any>? = null
     ): List<String> {
-        logger.info("checkRepoHook|preTriggerOn=$preTriggerOn")
-        if (preTriggerOn?.repoHook == null) {
+        logger.info("checkRepoHook|repoHook=$repoHooks")
+        if (repoHooks == null) {
             return emptyList()
         }
         val repositoryHookList = try {
             YamlUtil.getObjectMapper().readValue(
-                JsonUtil.toJson(preTriggerOn.repoHook!!),
+                JsonUtil.toJson(repoHooks),
                 object : TypeReference<List<PreRepositoryHook>>() {}
             )
         } catch (e: MismatchedInputException) {

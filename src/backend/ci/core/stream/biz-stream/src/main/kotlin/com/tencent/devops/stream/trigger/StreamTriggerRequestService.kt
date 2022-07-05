@@ -51,10 +51,10 @@ import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
 import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerDispatch
 import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerEvent
+import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerEventTrigger
 import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.MrYamlInfo
@@ -314,11 +314,12 @@ class StreamTriggerRequestService @Autowired constructor(
         val triggerResult = if (trigger == null) {
             null
         } else {
-            triggerMatcher.isMatch(action, trigger)
+            val (repoHook, result) = triggerMatcher.isMatch(action, trigger)
+            StreamTriggerEventTrigger(repoHook, result)
         }
 
         // 这里判断，各类注册事件如果修改blobId肯定不同，相同的肯定注册过了，所以只要不触发git就直接跳过
-        if (triggerResult != null && !triggerResult.trigger) {
+        if (triggerResult != null && !triggerResult.triggerResult.trigger) {
             logger.info(
                 "${buildPipeline.pipelineId}| use trigger cache" +
                     "Matcher is false, return, gitProjectId: ${action.data.getGitProjectId()}, " +
@@ -358,7 +359,10 @@ class StreamTriggerRequestService @Autowired constructor(
         trigger(action, triggerResult)
     }
 
-    protected fun trigger(action: BaseAction, triggerResult: TriggerResult?) = when (streamGitConfig.getScmType()) {
+    protected fun trigger(
+        action: BaseAction,
+        trigger: StreamTriggerEventTrigger?
+    ) = when (streamGitConfig.getScmType()) {
         ScmType.CODE_GIT -> StreamTriggerDispatch.dispatch(
             rabbitTemplate = rabbitTemplate,
             event = StreamTriggerEvent(
@@ -374,7 +378,7 @@ class StreamTriggerRequestService @Autowired constructor(
                 actionCommonData = action.data.eventCommon,
                 actionContext = action.data.context,
                 actionSetting = action.data.setting,
-                triggerResult = triggerResult
+                trigger = trigger
             )
         )
         else -> TODO("对接其他Git平台时需要补充")
