@@ -51,5 +51,6 @@
     "Plugin": "Plugin",
     "Success rate trend": "Success rate trend",
     "Success rate (%)": "Success rate (%)",
-    "Plugin stat": "Plugin stat"
+    "Plugin stat": "Plugin stat",
+    "Average time of failure runs (min)": "Average time of failure runs (min)"
 }

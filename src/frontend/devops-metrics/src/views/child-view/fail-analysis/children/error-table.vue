@@ -34,23 +34,23 @@ const columns = [
     field: 'branch',
   },
   {
-    label: t('startTime'),
+    label: t('Start Time'),
     field: 'startTime',
   },
   {
-    label: t('username'),
+    label: t('Username'),
     field: 'startUser',
   },
   {
-    label: t('errorType'),
+    label: t('Error Type'),
     field: 'errorTypeName',
   },
   {
-    label: t('errorCode'),
+    label: t('Error Code'),
     field: 'errorCode',
   },
   {
-    label: t('errorMessage'),
+    label: t('Error Message'),
     field: 'errorMsg',
   },
 ];

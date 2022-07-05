@@ -27,31 +27,31 @@ const props = defineProps(sharedProps);
 const isLoading = ref(false);
 const columns = [
   {
-    label: 'Pipeline',
+    label: t('Pipeline'),
     field: 'pipelineName',
   },
   {
-    label: 'Plugin',
+    label: t('Plugin'),
     field: 'atomName',
   },
   {
-    label: 'Start Time',
+    label: t('Start Time'),
     field: 'startTime',
   },
   {
-    label: 'Username',
+    label: t('Username'),
     field: 'startUser',
   },
   {
-    label: 'Error Type',
+    label: t('Error Type'),
     field: 'errorTypeName',
   },
   {
-    label: 'Error Code',
+    label: t('Error Code'),
     field: 'errorCode',
   },
   {
-    label: 'Error Message',
+    label: t('Error Message'),
     field: 'errorMsg',
   },
 ];
