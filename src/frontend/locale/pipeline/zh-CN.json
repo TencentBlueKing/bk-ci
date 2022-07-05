@@ -269,6 +269,7 @@
   "settings": {
     "baseInfo": "基本信息",
     "group": "分组",
+    "groupName": "分组名称",
     "buildNumberFormat": "构建号格式",
     "validatebuildNum": "只支持[a-z A-Z 0-9 . - _ : + ? $ {} ()]",
     "correctBuildNumber": "请输入正确的构建号格式",

@@ -267,6 +267,7 @@
   "settings": {
     "baseInfo": "Basic information",
     "group": "Group",
+    "groupName": "Group",
     "buildNumberFormat": "Build number format",
     "validatebuildNum": "Only supports [a-z A-Z 0-9 . - _ : + ? $ {} ()]",
     "correctBuildNumber": "Please enter the correct build number format",

@@ -30,7 +30,7 @@
                 property="concurrencyGroup"
                 desc-type="icon"
                 desc-icon="bk-icon icon-info-circle"
-                :label="$t('settings.group')"
+                :label="$t('settings.groupName')"
                 :desc="$t('settings.lockGroupDesc')"
             >
                 <bk-input
