@@ -43,5 +43,15 @@ data class StreamTriggerEvent(
     val actionCommonData: EventCommonData,
     val actionContext: StreamTriggerContext,
     val actionSetting: StreamTriggerSetting,
-    val triggerResult: TriggerResult?
+    val trigger: StreamTriggerEventTrigger?
+)
+
+/**
+ * 消息队列中传输的关于触发器相关
+ * @param repoHook 跨库触发信息，放到消息队列后解析，防止接口对象无法解析报错
+ * @param triggerResult 触发结果
+ */
+data class StreamTriggerEventTrigger(
+    val repoHook: List<Any>?,
+    val triggerResult: TriggerResult
 )

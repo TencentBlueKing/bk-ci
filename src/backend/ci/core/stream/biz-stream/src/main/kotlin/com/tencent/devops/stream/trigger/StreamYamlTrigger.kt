@@ -54,8 +54,8 @@ import com.tencent.devops.stream.trigger.exception.YamlBehindException
 import com.tencent.devops.stream.trigger.exception.YamlBlankException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
+import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerEventTrigger
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
@@ -88,7 +88,7 @@ class StreamYamlTrigger @Autowired constructor(
     @BkTimed
     fun triggerBuild(
         action: BaseAction,
-        triggerResult: TriggerResult?
+        triggerEvent: StreamTriggerEventTrigger?
     ): Boolean {
         logger.info("|${action.data.context.requestEventId}|triggerBuild|action|${action.format()}")
         var pipeline = action.data.context.pipeline!!
@@ -125,7 +125,17 @@ class StreamYamlTrigger @Autowired constructor(
         action.data.setting = action.data.setting.copy(gitHttpUrl = gitProjectInfo.gitHttpUrl)
 
         // 前面使用缓存触发器判断过得就不用再判断了
-        val tr = triggerResult ?: triggerMatcher.isMatch(action)
+        // 这里因为跨库触发放到上下文中的是个抽象对象，在前面解析会报错，所以放到这里解析
+        val tr = if (triggerEvent?.triggerResult != null) {
+            triggerEvent.triggerResult.copy(
+                repoHookName = triggerMatcher.checkRepoHook(
+                    action = action,
+                    repoHooks = triggerEvent.repoHook
+                )
+            )
+        } else {
+            triggerMatcher.isMatch(action)
+        }
         val (isTrigger, _, isTiming, isDelete, repoHookName) = tr
         logger.info(
             "${pipeline.pipelineId}|Match return|isTrigger=$isTrigger|" +
