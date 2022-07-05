@@ -62,8 +62,12 @@ class BkRepoReportService @Autowired constructor(
             ?: throw NotFoundException("文件($path)不存在")
 
         val host = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
-        val redirectUrl = "$host/bkrepo/api/user/generic/$projectId/${RepoUtils.REPORT_REPO}" +
-            "/${URLEncoder.encode(realPath, Charsets.UTF_8.name())}?preview=true"
+        val redirectUrl = "$host/bkrepo/api/user/generic/$projectId/${RepoUtils.REPORT_REPO}/${
+            URLEncoder.encode(
+                realPath,
+                Charsets.UTF_8.name()
+            ).replace("+", "%20")
+        }/?preview=true"
         val response = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).response!!
         response.sendRedirect(redirectUrl)
     }
