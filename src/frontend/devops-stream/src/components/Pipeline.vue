@@ -76,6 +76,7 @@
         },
         mounted () {
             this.autoOpenReview()
+            this.autoOpenLog()
         },
 
         methods: {
@@ -113,7 +114,6 @@
                 } else if (Number.isInteger(containerIndex)) {
                     this.editingElementPos.job = job
                 }
-                console.log(this.editingElementPos)
             },
             closeLog () {
                 this.editingElementPos = null
@@ -131,6 +131,12 @@
                     }
                     return true
                 })
+            },
+
+            autoOpenLog () {
+                if (this.$route.query.stageIndex) {
+                    this.handlePipelineClick(this.$route.query)
+                }
             },
 
             handleStageCheck ({ type, stageIndex }) {
