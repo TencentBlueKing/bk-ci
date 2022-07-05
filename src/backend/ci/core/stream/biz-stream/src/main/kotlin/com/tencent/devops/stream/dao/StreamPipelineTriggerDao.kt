@@ -71,7 +71,7 @@ class StreamPipelineTriggerDao {
         projectId: String,
         pipelineId: String?,
         branch: String?,
-        ciFileBlobIds: Set<String>,
+        ciFileBlobIds: Set<String>
     ): List<TStreamPipelineTriggerRecord> {
         with(TStreamPipelineTrigger.T_STREAM_PIPELINE_TRIGGER) {
             val dsl = dslContext.selectFrom(this)
