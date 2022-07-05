@@ -32,8 +32,8 @@
                 </template>
                 <template v-else-if="col.prop === 'material'" v-slot="props">
                     <template v-if="Array.isArray(props.row.material) && props.row.material.length > 0">
-                        <div v-for="material in props.row.material" :key="material.aliasName" class="material-item">
-                            <p :title="generateMaterial(material)" :class="{ 'show-commit-times': material.commitTimes > 1 }">{{ generateMaterial(material) }}</p>
+                        <div @click.stop="" v-for="material in props.row.material" :key="material.aliasName" class="material-item">
+                            <p v-bk-tooltips="{ content: generateMaterial(material) }" :class="{ 'show-commit-times': material.commitTimes > 1 }" @click="handleRowClick(props.row)">{{ generateMaterial(material) }}</p>
                             <span class="material-commit-id" v-if="material.newCommitId" :title="material.newCommitId" @click.stop="goCodeRecords(props.row, material.aliasName)">
                                 <span class="commit-nums">{{ material.newCommitId.slice(0, 8) }}</span>
                                 <span class="commit-times" v-if="material.commitTimes > 1">{{ material.commitTimes }} commit</span>
@@ -75,7 +75,7 @@
                 </template>
                 <template v-else-if="col.prop === 'remark'" v-slot="props">
                     <div class="remark-cell">
-                        <span :class="{ 'remark-span': true, active: props.row.active }" :title="props.row.remark">
+                        <span :class="{ 'remark-span': true, active: props.row.active }" v-bk-tooltips="{ content: props.row.remark, disabled: !props.row.remark }">
                             {{ props.row.remark || '--' }}
                         </span>
                         <bk-popover ref="remarkPopup" trigger="click" theme="light" placement="left">
@@ -99,8 +99,8 @@
                 <template v-else-if="col.prop === 'errorCode'" v-slot="props">
                     <template v-if="Array.isArray(props.row.errorInfoList) && props.row.errorInfoList.length > 0">
                         <div @click.stop="" class="error-code-item" :style="`max-width: ${col.width - 30}px`" v-for="item in props.row.errorInfoList" :key="item.taskId">
-                            <logo class="svg-error-icon" v-if="errorTypeMap[item.errorType]" :title="$t(errorTypeMap[item.errorType].title)" :name="errorTypeMap[item.errorType].icon" size="12"></logo>
-                            <span :title="item.errorMsg" v-if="item.errorMsg">{{ item.errorMsg }} </span>
+                            <logo class="svg-error-icon" v-if="errorTypeMap[item.errorType]" :title="$t(errorTypeMap[item.errorType].title)" size="12" :name="errorTypeMap[item.errorType].icon" />
+                            <span v-bk-tooltips="{ content: item.errorMsg }" v-if="item.errorMsg">{{ item.errorMsg }} </span>
                         </div>
                     </template>
                     <span v-else>--</span>
