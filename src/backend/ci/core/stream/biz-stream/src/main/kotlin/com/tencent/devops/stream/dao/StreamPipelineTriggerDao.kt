@@ -86,4 +86,24 @@ class StreamPipelineTriggerDao {
             return dsl.and(CI_FILE_BLOB_ID.`in`(ciFileBlobIds)).groupBy(CI_FILE_BLOB_ID).fetch()
         }
     }
+
+    fun deleteTrigger(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String?,
+        branch: String?,
+    ) {
+        with(TStreamPipelineTrigger.T_STREAM_PIPELINE_TRIGGER) {
+            val dsl = dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!branch.isNullOrBlank()) {
+                dsl.and(BRANCH.eq(branch))
+            }
+
+            dsl.execute()
+        }
+    }
 }
