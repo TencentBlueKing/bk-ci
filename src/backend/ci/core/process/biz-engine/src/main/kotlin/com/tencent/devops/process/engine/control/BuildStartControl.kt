@@ -130,6 +130,7 @@ class BuildStartControl @Autowired constructor(
 
     fun PipelineBuildStartEvent.execute(watcher: Watcher) {
         val executeCount = buildVariableService.getBuildExecuteCount(projectId, buildId)
+        buildLogPrinter.startLog(buildId, null, null, executeCount)
         buildLogPrinter.addDebugLine(
             buildId = buildId, message = "Enter BuildStartControl",
             tag = TAG, jobId = JOB_ID, executeCount = executeCount
