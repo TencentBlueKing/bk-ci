@@ -26,5 +26,5 @@
  */
 
 dependencies {
-    api(project(":core:dispatch-kubernetes:biz-dispatch-kubernetes"))
+    api(project(":core:dispatch-kubernetes:client-dispatch-bcs"))
 }
