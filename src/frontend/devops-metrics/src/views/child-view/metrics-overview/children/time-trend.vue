@@ -20,13 +20,13 @@ const timeTrend = ref<{
   data: [
     {
       list: [],
-      label: 'Average time (min)',
+      label: t('Average time (min)'),
       backgroundColor: 'rgba(43, 124, 255,0.3)',
       borderColor: 'rgba(43, 124, 255,1)',
     },
     {
       list: [],
-      label: 'Average time of failure runs (min)',
+      label: t('Average time of failure runs (min)'),
       backgroundColor: 'rgba(255, 86, 86,0.3)',
       borderColor: 'rgba(255, 86, 86, 1)',
     },
