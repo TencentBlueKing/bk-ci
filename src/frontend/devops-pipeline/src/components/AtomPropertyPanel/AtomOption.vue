@@ -87,7 +87,7 @@
                 'setPipelineEditing'
             ]),
             getBindObj (obj) {
-                const { isHidden, extCls, ...rest } = obj
+                const { isHidden, extCls, desc, ...rest } = obj
                 return rest
             },
             handleUpdateElementOption (name, value) {
