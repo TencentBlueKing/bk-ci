@@ -511,7 +511,12 @@ class PipelineRuntimeService @Autowired constructor(
                 recommendVersion = recommendVersion,
                 retry = isRetry ?: false,
                 errorInfoList = errorInfo?.let { self ->
-                    JsonUtil.to(self, object : TypeReference<List<ErrorInfo>?>() {})
+                    // 特殊兼容修改数据类型前的老数据，必须保留try catch
+                    try {
+                        JsonUtil.to(self, object : TypeReference<List<ErrorInfo>?>() {})
+                    } catch (ignore: Throwable) {
+                        null
+                    }
                 },
                 buildMsg = BuildMsgUtils.getBuildMsg(buildMsg, startType = startType, channelCode = channelCode),
                 buildNumAlias = buildNumAlias,
