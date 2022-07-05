@@ -5,6 +5,7 @@
         :model="pipelineSetting"
         :rules="formRule"
         form-type="vertical"
+        :label-width="300"
     >
         <bk-form-item :label="$t('settings.parallelSetting')">
             <bk-radio-group :value="pipelineSetting.runLockType" @change="handleLockTypeChange">
