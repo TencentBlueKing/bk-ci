@@ -106,7 +106,9 @@
                     stageIndex: stageIndex
                 }
                 const job = this.getJob(this.editingElementPos)
-                if (Number.isInteger(elementIndex)) {
+                if (Number.isInteger(containerGroupIndex)) {
+                    this.editingElementPos.logData = job
+                } else if (Number.isInteger(elementIndex)) {
                     this.editingElementPos.logData = job.elements[elementIndex]
                 } else if (Number.isInteger(containerIndex)) {
                     this.editingElementPos.job = job
