@@ -42,9 +42,6 @@ object QueryParamCheckUtil {
     @Value("\${queryParam.maximumQueryMonths:6}")
     private val maximumQueryMonths: Long = 6
 
-    @Value("\${queryParam.minimumQueryDays:1}")
-    private val minimumQueryDays: Long = 1
-
     fun getIntervalTime(
         fromDate: LocalDateTime,
         toDate: LocalDateTime
@@ -52,11 +49,11 @@ object QueryParamCheckUtil {
 
     val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     fun getStartDateTime(): String {
-        val startDateTime = LocalDate.now().minusDays(minimumQueryDays).minusMonths(1)
+        val startDateTime = LocalDate.now().minusMonths(1)
         return startDateTime.format(DATE_FORMATTER)
     }
     fun getEndDateTime(): String {
-        val endDateTime = LocalDate.now().minusDays(minimumQueryDays)
+        val endDateTime = LocalDate.now()
         return endDateTime.format(DATE_FORMATTER)
     }
 
@@ -87,7 +84,7 @@ object QueryParamCheckUtil {
         // 查询时间区间限制，当天的前一天至前六个月
         val startDate = DateTimeUtil.stringToLocalDate(startTime)
         val endDate = DateTimeUtil.stringToLocalDate(endTime)
-        val firstDate = LocalDate.now().minusDays(minimumQueryDays)
+        val firstDate = LocalDate.now()
         val secondDate = firstDate.minusMonths(maximumQueryMonths)
         if (startDate!!.isBefore(secondDate)) {
             throw ErrorCodeException(
