@@ -91,7 +91,7 @@ class StreamPipelineTriggerDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String?,
-        branch: String?,
+        branch: String?
     ) {
         with(TStreamPipelineTrigger.T_STREAM_PIPELINE_TRIGGER) {
             val dsl = dslContext.deleteFrom(this)
