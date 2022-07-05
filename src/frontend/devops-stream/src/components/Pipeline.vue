@@ -28,7 +28,7 @@
         </bk-dialog>
         <template v-if="editingElementPos != null">
             <plugin-log
-                v-if="Number.isInteger(editingElementPos.pluginIndex) || Number.isInteger(editingElementPos.matrixIndex)"
+                v-if="editingElementPos.logData"
                 v-bind="editingElementPos"
                 @close="closeLog"
             />
@@ -116,7 +116,7 @@
                     stageIndex: stageIndex
                 }
                 const job = this.getJob(this.editingElementPos)
-                if (Number.isInteger(containerGroupIndex)) {
+                if (!Reflect.has(args, 'containerGroupIndex')) {
                     this.editingElementPos.logData = job
                 } else if (Number.isInteger(elementIndex)) {
                     this.editingElementPos.logData = job.elements[elementIndex]
@@ -124,6 +124,7 @@
                     this.editingElementPos.job = job
                 }
             },
+
             closeLog () {
                 this.editingElementPos = null
             },

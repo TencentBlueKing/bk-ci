@@ -30,7 +30,7 @@
                 <li v-for="(notification, index) in notificationList" :key="index" class="notification-time">
                     <span class="notification-item-header">{{ notification.time }}</span>
                     <bk-collapse slot="content">
-                        <bk-collapse-item :name="request.id" v-for="request in notification.records" :key="request.messageTitle" @click.native="readMessage(request)">
+                        <bk-collapse-item :name="request.id" v-for="request in notification.records" :key="request.id" @click.native="readMessage(request)">
                             <span class="content-message">
                                 <span>
                                     <span :class="{ 'message-status': true, 'unread': !request.haveRead }"></span>

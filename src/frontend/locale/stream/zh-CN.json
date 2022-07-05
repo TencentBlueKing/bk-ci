@@ -57,7 +57,8 @@
         "pipelines": "流水线",
         "metrics": "数据分析",
         "settings": "项目设置",
-        "notifications": "通知"
+        "notifications": "通知",
+        "goToGit": "查看代码库"
     },
     "pipeline": {
         "pipeline": "流水线",

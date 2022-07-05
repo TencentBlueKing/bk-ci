@@ -57,7 +57,8 @@
         "pipelines": "Pipelines",
         "metrics": "Metrics",
         "settings": "Settings",
-        "notifications": "Notifications"
+        "notifications": "Notifications",
+        "goToGit": "go to git"
     },
     "pipeline": {
         "pipeline": "Pipeline",

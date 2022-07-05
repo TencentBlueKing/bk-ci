@@ -59,8 +59,18 @@
                     slot="trigger"
                 >
                     {{ projectInfo.name }}
-                    <icon name="cc-jump-link" size="16" class="jump-icon" @click.native="goToCode"></icon>
-                    <icon name="angle-down-line" size="12" class="angle-icon"></icon>
+                    <icon
+                        name="cc-jump-link"
+                        size="16"
+                        class="jump-icon"
+                        v-bk-tooltips="{ content: $t('header.goToGit') }"
+                        @click.native="goToCode"
+                    ></icon>
+                    <icon
+                        name="angle-down-line"
+                        size="12"
+                        class="angle-icon"
+                    ></icon>
                 </span>
                 <bk-option v-for="option in projectList"
                     :key="option.id"
