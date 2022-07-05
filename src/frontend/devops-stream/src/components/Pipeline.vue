@@ -54,29 +54,38 @@
             stageReviewPanel,
             pluginLog,
             jobLog
-
         },
+
         props: {
             pipeline: {
                 type: Object,
                 required: true
             }
         },
+
         data () {
             return {
                 showRetryStageDialog: false,
                 failedContainer: false,
                 isRetrying: false,
                 taskId: null,
-                editingElementPos: null
+                editingElementPos: null,
+                firstIn: true
             }
         },
+
         computed: {
             ...mapState(['projectId', 'permission', 'curPipeline'])
         },
-        mounted () {
-            this.autoOpenReview()
-            this.autoOpenLog()
+
+        watch: {
+            pipeline (val) {
+                if (val.stages?.length > 0 && this.firstIn) {
+                    this.firstIn = false
+                    this.autoOpenReview()
+                    this.autoOpenLog()
+                }
+            }
         },
 
         methods: {
