@@ -36,7 +36,7 @@ class CentralizedStramPermissionServiceImpl @Autowired constructor(
     val client: Client
 ) : StreamPermissionServiceImpl(){
 
-    override fun isPublicProject(projectCode: String): Boolean {
+    override fun isPublicProject(projectCode: String, userId: String?): Boolean {
         val gitType = GitTypeUtils.getType()
         // type: github, gitlab, svn, tgitd等
         // TODO: 根据不同的类型调用不同的代码源接口

@@ -57,7 +57,7 @@ abstract class StreamPermissionServiceImpl : PermissionService {
         if (extPermission) {
             return extPermission
         }
-        val projectType = isPublicProject(projectCode)
+        val projectType = isPublicProject(projectCode, userId)
         val projectMemberCheck = isProjectMember(projectCode, userId)
         val actionType = ActionTypeUtils.getActionType(action)
         logger.info("validete $userId|$projectCode|$action|$resourceType|$projectType|$projectMemberCheck")
@@ -119,7 +119,7 @@ abstract class StreamPermissionServiceImpl : PermissionService {
      * 是否是开源项目
      * projectCode: stream侧项目编码
      */
-    abstract fun isPublicProject(projectCode: String): Boolean
+    abstract fun isPublicProject(projectCode: String, userId: String?): Boolean
 
     /**
      * 是否是项目成员
