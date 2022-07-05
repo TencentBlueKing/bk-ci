@@ -46,10 +46,10 @@ import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
 import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerDispatch
 import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerEvent
+import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerEventTrigger
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.TXPreTrigger
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.trigger.service.RepoTriggerEventService
 import com.tencent.devops.stream.v1.components.V1YamlTrigger
@@ -123,7 +123,7 @@ class TXStreamTriggerRequestService @Autowired constructor(
         return start(eventObject, event)
     }
 
-    override fun trigger(action: BaseAction, triggerResult: TriggerResult?) {
+    override fun trigger(action: BaseAction, trigger: StreamTriggerEventTrigger?) {
         // 检查yml版本，根据yml版本选择不同的实现
         val originYaml = action.data.context.originYaml!!
         val ymlVersion = ScriptYmlUtils.parseVersion(originYaml)
@@ -145,7 +145,7 @@ class TXStreamTriggerRequestService @Autowired constructor(
                         actionCommonData = action.data.eventCommon,
                         actionContext = action.data.context,
                         actionSetting = action.data.setting,
-                        triggerResult = triggerResult
+                        trigger = trigger
                     )
                 )
                 else -> TODO("对接其他Git平台时需要补充")
@@ -176,7 +176,7 @@ class TXStreamTriggerRequestService @Autowired constructor(
             branch = gitRequestEvent.branch,
             userId = gitRequestEvent.userId,
             checkRepoTrigger = false,
-            gitRequestEvent = gitRequestEvent.let { V1GitRequestEvent(it) }
+            gitRequestEvent = V1GitRequestEvent(gitRequestEvent)
         )
     }
 }
