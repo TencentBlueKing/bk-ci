@@ -153,8 +153,8 @@ object TGitActionCommon {
             // 加以限制：最多仅限一级子目录
             (gitFileInfo.name.count { it == '/' } <= 1)
 
-    private fun getBlobId(f: StreamGitTreeFileInfo): String? {
-        return if (f.type == StreamGitTreeFileInfoType.BLOB.value && !f.id.isNullOrBlank()) {
+    private fun getBlobId(f: StreamGitTreeFileInfo?): String? {
+        return if (f != null && f.type == StreamGitTreeFileInfoType.BLOB.value && !f.id.isNullOrBlank()) {
             f.id
         } else {
             null
@@ -178,7 +178,7 @@ object TGitActionCommon {
             recursive = false,
             retry = ApiRequestRetryInfo(true)
         ).filter { it.name == Constansts.ciFileName }
-        return Pair(ciFileList.isNotEmpty(), getBlobId(ciFileList.first()))
+        return Pair(ciFileList.isNotEmpty(), getBlobId(ciFileList.ifEmpty { null }?.first()))
     }
 
     fun getTriggerBranch(branch: String): String {
