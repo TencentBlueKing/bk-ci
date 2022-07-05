@@ -38,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import java.net.URLEncoder
 import javax.ws.rs.NotFoundException
 
 @Service
@@ -61,7 +62,8 @@ class BkRepoReportService @Autowired constructor(
             ?: throw NotFoundException("文件($path)不存在")
 
         val host = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
-        val redirectUrl = "$host/bkrepo/api/user/generic/$projectId/${RepoUtils.REPORT_REPO}/$realPath?preview=true"
+        val redirectUrl = "$host/bkrepo/api/user/generic/$projectId/${RepoUtils.REPORT_REPO}" +
+            "/${URLEncoder.encode(realPath, Charsets.UTF_8.name())}?preview=true"
         val response = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).response!!
         response.sendRedirect(redirectUrl)
     }
