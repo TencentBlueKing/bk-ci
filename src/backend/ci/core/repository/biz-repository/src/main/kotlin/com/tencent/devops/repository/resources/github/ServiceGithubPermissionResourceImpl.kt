@@ -36,7 +36,6 @@ import com.tencent.devops.repository.api.github.ServiceGithubPermissionResource
 import com.tencent.devops.repository.github.service.GithubRepositoryService
 import com.tencent.devops.repository.pojo.enums.GithubAccessLevelEnum
 import com.tencent.devops.repository.service.github.GithubTokenService
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -51,11 +50,9 @@ class ServiceGithubPermissionResourceImpl @Autowired constructor(
     }
 
     override fun isPublicProject(authUserId: String, gitProjectId: String): Result<Boolean> {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         val repository = githubRepositoryService.getRepository(
             request = GetRepositoryRequest(
-                owner = owner,
-                repo = repo
+                id = gitProjectId.toLong()
             ),
             token = githubTokenService.getAccessTokenMustExist(authUserId).accessToken
         )
@@ -63,12 +60,10 @@ class ServiceGithubPermissionResourceImpl @Autowired constructor(
     }
 
     override fun isProjectMember(authUserId: String, userId: String, gitProjectId: String): Result<Boolean> {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return try {
             githubRepositoryService.getRepositoryPermissions(
                 request = GetRepositoryPermissionsRequest(
-                    owner = owner,
-                    repo = repo,
+                    id = gitProjectId.toLong(),
                     username = userId
                 ),
                 token = githubTokenService.getAccessTokenMustExist(authUserId).accessToken
@@ -90,12 +85,10 @@ class ServiceGithubPermissionResourceImpl @Autowired constructor(
         gitProjectId: String,
         accessLevel: Int
     ): Result<Boolean> {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return try {
             val repositoryPermissions = githubRepositoryService.getRepositoryPermissions(
                 request = GetRepositoryPermissionsRequest(
-                    owner = owner,
-                    repo = repo,
+                    id = gitProjectId.toLong(),
                     username = userId
                 ),
                 token = githubTokenService.getAccessTokenMustExist(authUserId).accessToken
