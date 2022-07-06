@@ -901,7 +901,10 @@
   "storeMap": {
     "textarea": "文本框",
     "pauseAtom": "执行前暂停",
+    "pauseConfLabel": "执行前暂停配置",
+    "pauseNotify": "暂停通知接收人",
     "pauseNotifyTip": "执行前暂停时，将发送企业微信消息到指定用户，通知用户尽快处理。默认为流水线执行人",
+    "runManual": "可手动决定继续运行或停止，继续时可修改入参",
     "string": "字符串",
     "bool": "布尔值",
     "enum": "单选框",
