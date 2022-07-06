@@ -32,14 +32,15 @@ import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.pojo.GithubRepo
 
 class GetRepositoryRequest(
-    val owner: String,
-    val repo: String
+    // val owner: String,
+    // val repo: String,
+    val id: Long,
 ) : GithubRequest<GithubRepo>() {
     override fun getHttpMethod(): HttpMethod {
         return HttpMethod.GET
     }
 
     override fun getApiPath(): String {
-        return "/repos/$owner/$repo"
+        return "repositories/$id"
     }
 }

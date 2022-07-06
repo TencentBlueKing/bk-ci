@@ -33,8 +33,9 @@ import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.response.BranchResponse
 
 data class ListBranchesRequest(
-    val owner: String,
-    val repo: String,
+    // val owner: String,
+    // val repo: String,
+    val id: Long,
     val protected: Boolean? = null,
     @JsonProperty("per_page")
     val perPage: Int = 30,
@@ -42,5 +43,5 @@ data class ListBranchesRequest(
 ) : GithubRequest<List<BranchResponse>>() {
     override fun getHttpMethod() = HttpMethod.GET
 
-    override fun getApiPath() = "repos/$owner/$repo/branches"
+    override fun getApiPath() = "repositories/$id/branches"
 }

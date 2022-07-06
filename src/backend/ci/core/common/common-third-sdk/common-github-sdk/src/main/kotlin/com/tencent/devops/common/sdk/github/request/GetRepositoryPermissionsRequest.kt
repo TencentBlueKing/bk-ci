@@ -32,8 +32,9 @@ import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.pojo.RepositoryPermissions
 
 class GetRepositoryPermissionsRequest(
-    val owner: String,
-    val repo: String,
+    // val owner: String,
+    // val repo: String,
+    val id: Long,
     val username: String
 ) : GithubRequest<RepositoryPermissions>() {
     override fun getHttpMethod(): HttpMethod {
@@ -41,6 +42,6 @@ class GetRepositoryPermissionsRequest(
     }
 
     override fun getApiPath(): String {
-        return "/repos/$owner/$repo/collaborators/$username/permission"
+        return "repositories/$id/collaborators/$username/permission"
     }
 }

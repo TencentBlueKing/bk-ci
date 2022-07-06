@@ -38,8 +38,7 @@ class GithubCommitApiTest : GithubApiTest() {
     @Test
     fun listCommit() {
         val request = ListCommitRequest(
-            owner = owner,
-            repo = repo,
+            id = repoId
         )
         val response = client.execute(
             oauthToken = token,
@@ -51,8 +50,7 @@ class GithubCommitApiTest : GithubApiTest() {
     @Test
     fun getCommit() {
         val request = GetCommitRequest(
-            owner = owner,
-            repo = repo,
+            id = repoId,
             ref = "master"
         )
         val response = client.execute(
@@ -65,8 +63,7 @@ class GithubCommitApiTest : GithubApiTest() {
     @Test
     fun compareTwoCommits() {
         val request = CompareTwoCommitsRequest(
-            owner = owner,
-            repo = repo,
+            id = repoId,
             base = "530e45d8163aeb04bb3af5d69ec1f1d24782f179",
             head = "1c166db7bcb0266e4b0f8e469890614ff0f2c33f"
         )

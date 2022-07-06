@@ -32,8 +32,9 @@ import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.pojo.RepositoryContent
 
 class GetRepositoryContentRequest(
-    val owner: String,
-    val repo: String,
+    // val owner: String,
+    // val repo: String,
+    val id: Long,
     val path: String,
     val ref: String
 ) : GithubRequest<RepositoryContent>() {
@@ -42,6 +43,6 @@ class GetRepositoryContentRequest(
     }
 
     override fun getApiPath(): String {
-        return "/repos/$owner/$repo/contents/$path"
+        return "repositories/$id/contents/$path"
     }
 }

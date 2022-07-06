@@ -35,6 +35,5 @@ open class GithubApiTest {
     )
 
     protected val token = "d501d306428d8d34656c726a0c8980c08f5caa55"
-    protected val repo = "bk-ci"
-    protected val owner = "Tencent"
+    protected val repoId = 189153491L
 }

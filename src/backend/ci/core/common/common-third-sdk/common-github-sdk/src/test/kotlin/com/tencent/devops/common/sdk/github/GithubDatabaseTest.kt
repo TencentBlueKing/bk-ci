@@ -36,8 +36,7 @@ class GithubDatabaseTest : GithubApiTest() {
     @Test
     fun getTree() {
         val request = GetTreeRequest(
-            owner = owner,
-            repo = repo,
+            id = repoId,
             treeSha = "882a08e85c342961e4db014a97124c40cf56c9b6"
         )
         val response = client.execute(

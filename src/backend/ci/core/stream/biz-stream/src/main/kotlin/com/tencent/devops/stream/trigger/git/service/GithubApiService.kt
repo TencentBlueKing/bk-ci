@@ -48,7 +48,6 @@ import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
 import com.tencent.devops.repository.api.github.ServiceGithubUserResource
 import com.tencent.devops.repository.pojo.enums.GithubAccessLevelEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
@@ -101,7 +100,6 @@ class GithubApiService @Autowired constructor(
         gitProjectId: String,
         retry: ApiRequestRetryInfo
     ): GithubProjectInfo? {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return doRetryFun(
             logger = logger,
             retry = retry,
@@ -110,8 +108,7 @@ class GithubApiService @Autowired constructor(
         ) {
             client.get(ServiceGithubRepositoryResource::class).getRepository(
                 request = GetRepositoryRequest(
-                    owner = owner,
-                    repo = repo
+                    id = gitProjectId.toLong()
                 ),
                 userId = cred.getUserId()
             ).data
@@ -126,7 +123,6 @@ class GithubApiService @Autowired constructor(
         sha: String,
         retry: ApiRequestRetryInfo
     ): GithubCommitInfo? {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return doRetryFun(
             logger = logger,
             retry = retry,
@@ -135,8 +131,7 @@ class GithubApiService @Autowired constructor(
         ) {
             client.get(ServiceGithubCommitsResource::class).getCommit(
                 request = GetCommitRequest(
-                    owner = owner,
-                    repo = repo,
+                    id = gitProjectId.toLong(),
                     ref = sha
                 ),
                 userId = cred.getUserId()
@@ -155,11 +150,9 @@ class GithubApiService @Autowired constructor(
         userId: String,
         gitProjectId: String
     ): GithubProjectUserInfo {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return client.get(ServiceGithubRepositoryResource::class).getRepositoryPermissions(
             request = GetRepositoryPermissionsRequest(
-                owner = owner,
-                repo = repo,
+                id = gitProjectId.toLong(),
                 username = userId
             ),
             userId = userId
@@ -174,7 +167,6 @@ class GithubApiService @Autowired constructor(
         mrId: String,
         retry: ApiRequestRetryInfo
     ): GithubMrInfo? {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return doRetryFun(
             logger = logger,
             retry = retry,
@@ -184,8 +176,7 @@ class GithubApiService @Autowired constructor(
             client.get(ServiceGithubPRResource::class).getPullRequest(
                 userId = cred.getUserId(),
                 request = GetPullRequestRequest(
-                    owner = owner,
-                    repo = repo,
+                    id = gitProjectId.toLong(),
                     pullNumber = mrId
                 )
             )
@@ -203,7 +194,6 @@ class GithubApiService @Autowired constructor(
         mrId: String,
         retry: ApiRequestRetryInfo
     ): GithubMrChangeInfo? {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return doRetryFun(
             logger = logger,
             retry = retry,
@@ -213,8 +203,7 @@ class GithubApiService @Autowired constructor(
             client.get(ServiceGithubPRResource::class).listPullRequestFiles(
                 userId = cred.getUserId(),
                 request = ListPullRequestFileRequest(
-                    owner = owner,
-                    repo = repo,
+                    id = gitProjectId.toLong(),
                     pullNumber = mrId
                 )
             )
@@ -235,7 +224,6 @@ class GithubApiService @Autowired constructor(
         recursive: Boolean,
         retry: ApiRequestRetryInfo
     ): List<GithubTreeFileInfo> {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return doRetryFun(
             logger = logger,
             retry = retry,
@@ -246,8 +234,7 @@ class GithubApiService @Autowired constructor(
             client.get(ServiceGithubDatabaseResource::class).getTree(
                 userId = cred.getUserId(),
                 request = GetTreeRequest(
-                    owner = owner,
-                    repo = repo,
+                    id = gitProjectId.toLong(),
                     treeSha = ref!!,
                     recursive = recursive.toString()
                 )
@@ -262,7 +249,6 @@ class GithubApiService @Autowired constructor(
         ref: String,
         retry: ApiRequestRetryInfo
     ): String {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         cred as GithubCred
         return doRetryFun(
             logger = logger,
@@ -272,8 +258,7 @@ class GithubApiService @Autowired constructor(
         ) {
             client.get(ServiceGithubRepositoryResource::class).getRepositoryContent(
                 request = GetRepositoryContentRequest(
-                    owner = owner,
-                    repo = repo,
+                    id = gitProjectId.toLong(),
                     path = fileName,
                     ref = ref
                 ),
@@ -289,7 +274,6 @@ class GithubApiService @Autowired constructor(
         ref: String?,
         retry: ApiRequestRetryInfo
     ): GithubFileInfo? {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return doRetryFun(
             logger = logger,
             retry = retry,
@@ -298,8 +282,7 @@ class GithubApiService @Autowired constructor(
         ) {
             client.get(ServiceGithubRepositoryResource::class).getRepositoryContent(
                 request = GetRepositoryContentRequest(
-                    owner = owner,
-                    repo = repo,
+                    id = gitProjectId.toLong(),
                     path = fileName,
                     ref = ref!!
                 ),
@@ -335,7 +318,6 @@ class GithubApiService @Autowired constructor(
         enableUserId: String,
         retry: ApiRequestRetryInfo
     ): GithubRevisionInfo? {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(projectName)
         return doRetryFun(
             logger = logger,
             retry = retry,
@@ -345,8 +327,7 @@ class GithubApiService @Autowired constructor(
             client.get(ServiceGithubCommitsResource::class).getCommit(
                 userId = userName,
                 request = GetCommitRequest(
-                    owner = owner,
-                    repo = repo,
+                    id = projectName.toLong(),
                     ref = branch
                 )
             )
@@ -369,12 +350,10 @@ class GithubApiService @Autowired constructor(
         mrId: Long,
         mrBody: MrCommentBody
     ) {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         client.get(ServiceGithubIssuesResource::class).createIssueComment(
             userId = cred.getUserId(),
             request = CreateIssueCommentRequest(
-                owner = owner,
-                repo = repo,
+                id = gitProjectId.toLong(),
                 issueNumber = mrId,
                 body = QualityUtils.getQualityReport(mrBody.reportData.first, mrBody.reportData.second)
             )
@@ -402,7 +381,6 @@ class GithubApiService @Autowired constructor(
         pageSize: Int,
         retry: ApiRequestRetryInfo
     ): List<GithubChangeFileInfo> {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
 
         return doRetryFun(
             logger = logger,
@@ -413,8 +391,7 @@ class GithubApiService @Autowired constructor(
             client.get(ServiceGithubCommitsResource::class).compareTwoCommits(
                 userId = cred.getUserId(),
                 request = CompareTwoCommitsRequest(
-                    owner = owner,
-                    repo = repo,
+                    id = gitProjectId.toLong(),
                     base = from,
                     head = to,
                     page = page,

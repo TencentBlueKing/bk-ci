@@ -34,8 +34,9 @@ import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.response.CompareTwoCommitsResponse
 
 data class CompareTwoCommitsRequest(
-    val owner: String,
-    val repo: String,
+    // val owner: String,
+    // val repo: String,
+    val id: Long,
     // The base branch and head branch to compare. This parameter expects the format {base}...{head}
     val base: String,
     val head: String,
@@ -45,5 +46,5 @@ data class CompareTwoCommitsRequest(
 ) : GithubRequest<CompareTwoCommitsResponse>() {
     override fun getHttpMethod() = HttpMethod.GET
 
-    override fun getApiPath() = "repos/$owner/$repo/compare/$base...$head"
+    override fun getApiPath() = "repositories/$id/compare/$base...$head"
 }

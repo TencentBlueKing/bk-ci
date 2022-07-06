@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.sdk.github.request
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
@@ -35,9 +34,9 @@ import com.tencent.devops.common.sdk.github.pojo.GithubUser
 
 @Suppress("all")
 class ListRepositoryCollaboratorsRequest(
-    val owner: String,
-    @JsonIgnore
-    val repo: String,
+    // val owner: String,
+    // val repo: String,
+    val id: Long,
     // Comma-separated list of values. Can include:
     // * owner: Repositories that are owned by the authenticated user.
     // * collaborator: Repositories that the user has been added to as a collaborator.
@@ -54,6 +53,6 @@ class ListRepositoryCollaboratorsRequest(
     }
 
     override fun getApiPath(): String {
-        return "/repos/$owner/$repo/collaborators"
+        return "repositories/$id/collaborators"
     }
 }

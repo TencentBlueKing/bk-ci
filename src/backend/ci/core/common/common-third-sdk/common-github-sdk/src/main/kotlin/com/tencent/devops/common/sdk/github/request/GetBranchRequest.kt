@@ -32,11 +32,12 @@ import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.response.BranchResponse
 
 data class GetBranchRequest(
-    val owner: String,
-    val repo: String,
+    // val owner: String,
+    // val repo: String,
+    val id: Long,
     val branch: String
 ) : GithubRequest<BranchResponse>() {
     override fun getHttpMethod() = HttpMethod.GET
 
-    override fun getApiPath() = "/repos/$owner/$repo/branches/$branch"
+    override fun getApiPath() = "repositories/$id/branches/$branch"
 }

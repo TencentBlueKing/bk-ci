@@ -8,8 +8,9 @@ import com.tencent.devops.common.sdk.github.pojo.GithubOutput
 import com.tencent.devops.common.sdk.github.response.CheckRunResponse
 
 data class UpdateCheckRunRequest(
-    val owner: String,
-    val repo: String,
+    // val owner: String,
+    // val repo: String,
+    val id: Long,
     val checkRunId: String,
     val name: String? = null,
     @JsonProperty("details_url")
@@ -27,5 +28,5 @@ data class UpdateCheckRunRequest(
 ) : GithubRequest<CheckRunResponse>() {
     override fun getHttpMethod() = HttpMethod.PUT
 
-    override fun getApiPath() = "/repos/$owner/$repo/pulls/check-runs/$checkRunId"
+    override fun getApiPath() = "repositories/$id/pulls/check-runs/$checkRunId"
 }

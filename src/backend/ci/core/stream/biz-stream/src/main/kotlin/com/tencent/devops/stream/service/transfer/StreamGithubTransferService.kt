@@ -46,7 +46,6 @@ import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
@@ -82,11 +81,9 @@ class StreamGithubTransferService @Autowired constructor(
         userId: String?,
         accessToken: String?
     ): StreamGitProjectBaseInfoCache {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return client.get(ServiceGithubRepositoryResource::class).getRepository(
             request = GetRepositoryRequest(
-                owner = owner,
-                repo = repo
+               id = gitProjectId.toLong()
             ),
             userId = userId!!
         ).data?.let {
@@ -108,11 +105,9 @@ class StreamGithubTransferService @Autowired constructor(
         } catch (e: NumberFormatException) {
             streamBasicSettingDao.getSettingByPathWithNameSpace(dslContext, gitProjectId)?.enableUserId ?: return null
         }
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return client.get(ServiceGithubRepositoryResource::class).getRepository(
             request = GetRepositoryRequest(
-                owner = owner,
-                repo = repo
+                id = gitProjectId.toLong()
             ),
             userId = realUserId
         ).data?.let {
@@ -139,11 +134,9 @@ class StreamGithubTransferService @Autowired constructor(
         fileName: String,
         ref: String
     ): String {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         return client.get(ServiceGithubRepositoryResource::class).getRepositoryContent(
             request = GetRepositoryContentRequest(
-                owner = owner,
-                repo = repo,
+                id = gitProjectId.toLong(),
                 path = fileName,
                 ref = ref
             ),
@@ -185,10 +178,8 @@ class StreamGithubTransferService @Autowired constructor(
         pageSize: Int?,
         search: String?
     ): List<StreamGitMember> {
-        val (owner, repo) = GitUtils.getRepoGroupAndName(gitProjectId)
         val request = ListRepositoryCollaboratorsRequest(
-            owner = owner,
-            repo = repo,
+            id = gitProjectId.toLong(),
             page = page ?: 1,
             perPage = pageSize ?: 30
         )
@@ -234,9 +225,7 @@ class StreamGithubTransferService @Autowired constructor(
     ): List<StreamCommitInfo>? {
         return client.get(ServiceGithubCommitsResource::class).listCommits(
             request = ListCommitRequest(
-                owner = userId,
-                // todo gitProjectId是 Long ，需要做兼容
-                repo = gitProjectId.toString(),
+                id = gitProjectId,
                 page = page ?: 1,
                 perPage = perPage ?: 30
             ),
@@ -253,8 +242,7 @@ class StreamGithubTransferService @Autowired constructor(
         client.get(ServiceGithubRepositoryResource::class).createOrUpdateFile(
             request = with(streamCreateFile) {
                 CreateOrUpdateFileContentsRequest(
-                    owner = userId,
-                    repo = gitProjectId,
+                    id = gitProjectId.toLong(),
                     message = commitMessage,
                     content = content,
                     path = filePath
@@ -276,8 +264,7 @@ class StreamGithubTransferService @Autowired constructor(
     ): List<String>? {
         return client.get(ServiceGithubBranchResource::class).listBranch(
             request = ListBranchesRequest(
-                owner = userId,
-                repo = gitProjectId,
+                id = gitProjectId.toLong(),
                 page = page ?: 1,
                 perPage = pageSize ?: 30
             ),

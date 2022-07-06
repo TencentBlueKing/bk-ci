@@ -6,8 +6,9 @@ import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.response.CommitResponse
 
 data class ListCommitRequest(
-    val owner: String,
-    val repo: String,
+    // val owner: String,
+    // val repo: String,
+    val id: Long,
     val sha: String? = null,
     val path: String? = null,
     val author: String? = null,
@@ -19,5 +20,5 @@ data class ListCommitRequest(
 ) : GithubRequest<List<CommitResponse>>() {
     override fun getHttpMethod() = HttpMethod.GET
 
-    override fun getApiPath() = "repos/$owner/$repo/commits"
+    override fun getApiPath() = "repositories/$id/commits"
 }
