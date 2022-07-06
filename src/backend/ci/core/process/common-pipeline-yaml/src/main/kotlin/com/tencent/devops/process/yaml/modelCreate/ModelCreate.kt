@@ -54,9 +54,10 @@ import java.util.concurrent.TimeUnit
 import com.tencent.devops.process.yaml.v2.models.stage.Stage as StreamV2Stage
 
 @Component
-class ModelCreate @Autowired constructor(
+class ModelCreate @Autowired(required = false) constructor(
     val client: Client,
     val modelStage: ModelStage,
+    @Autowired(required = false)
     val innerModelCreator: InnerModelCreator?
 ) {
 
