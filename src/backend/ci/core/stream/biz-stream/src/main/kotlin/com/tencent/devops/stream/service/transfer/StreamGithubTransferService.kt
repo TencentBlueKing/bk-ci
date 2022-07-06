@@ -62,6 +62,7 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.Base64
 
 @Service
 class StreamGithubTransferService @Autowired constructor(
@@ -244,8 +245,9 @@ class StreamGithubTransferService @Autowired constructor(
                 CreateOrUpdateFileContentsRequest(
                     id = gitProjectId.toLong(),
                     message = commitMessage,
-                    content = content,
-                    path = filePath
+                    content = Base64.getEncoder().encodeToString(content.toByteArray()),
+                    path = filePath,
+                    branch = branch
                 )
             },
             userId = userId
