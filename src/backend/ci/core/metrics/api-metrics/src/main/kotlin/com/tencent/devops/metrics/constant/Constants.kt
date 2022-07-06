@@ -66,10 +66,6 @@ object Constants {
     const val BK_SUCCESS_EXECUTE_COUNT_SUM = "successExecuteCountSum"
     const val BK_TOTAL_AVG_COST_TIME_SUM = "totalAvgCostTimeSum"
 
-    const val MAX_CREATE_COUNT = 100
-    const val DEFAULT_LIMIT_NUM = 10
-    const val METRICS_PIPELINE_ID_EXPIRED = 7200L
-
     // 常量标志对应code
     const val BK_ATOM_CODE_FIELD_NAME_ENGLISH = "METRICS_ATOM_STATISTICS_HEADER_PLUG" // 插件
     const val BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH = "METRICS_ATOM_STATISTICS_HEADER_TYPE" // 类型

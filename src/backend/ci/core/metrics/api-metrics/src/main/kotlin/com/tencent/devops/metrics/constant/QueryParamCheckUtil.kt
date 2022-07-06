@@ -39,7 +39,7 @@ import java.util.stream.Stream
 
 object QueryParamCheckUtil {
 
-    @Value("\${queryParam.maximumQueryMonths:6}")
+    @Value("\${metrics.maximumQueryMonths:6}")
     private val maximumQueryMonths: Long = 6
 
     fun getIntervalTime(

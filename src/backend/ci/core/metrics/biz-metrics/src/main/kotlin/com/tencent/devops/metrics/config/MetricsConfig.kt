@@ -33,7 +33,7 @@ import org.springframework.stereotype.Component
 @Component
 class MetricsConfig {
 
-    @Value("\${queryParam.queryCountMax:10000}")
+    @Value("\${metrics.queryCountMax:10000}")
     val queryCountMax: Int = 10000
 
     @Value("\${metrics.devopsUrl:}")
@@ -41,4 +41,7 @@ class MetricsConfig {
 
     @Value("\${metrics.streamUrl:}")
     val streamUrl: String = ""
+
+    @Value("\${metrics.defaultLimitNum:10}")
+    val defaultLimitNum = 10
 }

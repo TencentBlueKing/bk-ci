@@ -50,7 +50,6 @@ import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
-import com.tencent.devops.metrics.constant.Constants.DEFAULT_LIMIT_NUM
 import com.tencent.devops.metrics.constant.MetricsMessageCode
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getBetweenDate
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getIntervalTime
@@ -315,7 +314,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                     atomCodes = emptyList(),
                     keyword = null,
                     page = 1,
-                    pageSize = DEFAULT_LIMIT_NUM
+                    pageSize = metricsConfig.defaultLimitNum
                 ).map { it.atomCode }
             } else {
                 queryAtomStatisticsInfoDTO.atomCodes

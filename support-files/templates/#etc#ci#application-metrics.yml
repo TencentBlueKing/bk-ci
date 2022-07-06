@@ -52,7 +52,10 @@ server:
 
 metrics:
   devopsUrl: __BK_CI_PUBLIC_URL__
-  streamUrl: __BK_CI_STREAM_URL__  
+  streamUrl: __BK_CI_STREAM_URL__
+  maximumQueryMonths: 6
+  queryCountMax: 10000
+  defaultLimitNum: 10
 
 sharding:
   routing:
@@ -61,6 +64,3 @@ sharding:
     shardingField: PROJECT_ID
     algorithmClassName: "com.tencent.devops.metrics.sharding.BkMetricsDatabaseShardingAlgorithm"
 
-queryParam:
-  maximumQueryMonths: 6
-  queryCountMax: 10000
