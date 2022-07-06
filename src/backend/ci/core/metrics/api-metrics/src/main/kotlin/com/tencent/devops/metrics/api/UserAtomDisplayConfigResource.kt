@@ -111,10 +111,10 @@ interface UserAtomDisplayConfigResource {
         keyword: String?,
         @ApiParam("页码", required = true, defaultValue = "1")
         @QueryParam("page")
-        page: Int?,
+        page: Int,
         @ApiParam("每页大小", required = true, defaultValue = "10")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int
     ): Result<Page<AtomBaseInfoDO>>
 }

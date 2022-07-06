@@ -89,8 +89,8 @@ class UserAtomDisplayConfigResourceImpl @Autowired constructor(
         projectId: String,
         userId: String,
         keyword: String?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<Page<AtomBaseInfoDO>> {
         return Result(
             atomDisplayConfigManageService.getOptionalAtomDisplayConfig(

@@ -67,7 +67,7 @@ interface AtomDisplayConfigManageService {
         projectId: String,
         userId: String,
         keyword: String?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Page<AtomBaseInfoDO>
 }
