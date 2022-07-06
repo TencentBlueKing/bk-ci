@@ -127,7 +127,7 @@ class PipelineRemoteAuthService @Autowired constructor(
             if (taskId != null) {
                 buildLogPrinter.addLine(
                     buildId = buildId.id,
-                    message = "sourceIp : $sourceIp",
+                    message = "本次远程调用的来源IP是[$sourceIp]",
                     tag = taskId,
                     executeCount = 1
                 )
