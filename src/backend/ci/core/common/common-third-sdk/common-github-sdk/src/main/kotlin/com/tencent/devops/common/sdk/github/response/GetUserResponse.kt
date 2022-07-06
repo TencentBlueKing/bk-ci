@@ -46,7 +46,7 @@ data class GetUserResponse(
     @JsonProperty("login")
     val login: String,
     @JsonProperty("name")
-    val name: String,
+    val name: String?,
     @JsonProperty("node_id")
     val nodeId: String,
     @JsonProperty("organizations_url")
