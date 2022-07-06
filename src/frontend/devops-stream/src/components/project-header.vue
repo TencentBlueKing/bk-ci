@@ -58,7 +58,9 @@
                     class="choosen-project"
                     slot="trigger"
                 >
-                    {{ projectInfo.name }}
+                    <span class="project-name text-ellipsis" v-bk-overflow-tips>
+                        {{ projectInfo.name_with_namespace }}
+                    </span>
                     <icon
                         name="cc-jump-link"
                         size="16"
@@ -75,7 +77,7 @@
                 <bk-option v-for="option in projectList"
                     :key="option.id"
                     :id="option.id"
-                    :name="option.name">
+                    :name="option.nameWithNamespace">
                 </bk-option>
             </bk-select>
             <span class="user-notifications" @click.stop="goToNotifications">
@@ -273,22 +275,21 @@
         }
     }
     .choosen-project {
-        position: relative;
-        display: block;
+        display: flex;
+        align-items: center;
         background: #252F43;
         line-height: 32px;
         padding: 0 10px;
         color: #D3D9E4;
+        .project-name {
+            flex: 1;
+            max-width: calc(100% - 35px);
+        }
         .jump-icon {
-            position: absolute;
-            right: 33px;
-            top: 9px;
+            margin-right: 9px;
         }
         .angle-icon {
             transition: transform 200ms;
-            position: absolute;
-            right: 9px;
-            top: 11px;
         }
     }
 </style>

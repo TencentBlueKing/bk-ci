@@ -441,7 +441,7 @@
     }
     .yaml-form {
         padding: 20px 30px;
-        height: calc(100vh - 60px);
+        height: calc(100vh - 61px);
         .yaml-path {
             width: 50px;
         }
