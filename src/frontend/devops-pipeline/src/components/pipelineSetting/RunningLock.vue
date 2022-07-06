@@ -172,6 +172,9 @@
 
 <style lang="scss">
     .bkdevops-running-lock-setting-tab {
+        .bk-label {
+            font-weight: 900;
+        }
         .single-lock-sub-form {
             margin: 0 0 10px 20px;
         }
