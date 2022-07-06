@@ -27,4 +27,8 @@
 
 dependencies {
     api(project(":core:dispatch-kubernetes:client-dispatch-bcs"))
+
+    api(project(":core:common:common-auth:common-auth-mock"))
+    api(project(":core:common:common-auth:common-auth-blueking"))
+    api(project(":core:common:common-auth:common-auth-v3"))
 }
