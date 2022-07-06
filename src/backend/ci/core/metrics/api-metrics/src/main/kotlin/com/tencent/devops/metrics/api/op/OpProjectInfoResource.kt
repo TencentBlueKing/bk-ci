@@ -27,21 +27,13 @@
 
 package com.tencent.devops.metrics.api.op
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
-import com.tencent.devops.metrics.pojo.`do`.PipelineErrorTypeInfoDO
-import com.tencent.devops.metrics.pojo.`do`.PipelineLabelInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.QueryParam
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
