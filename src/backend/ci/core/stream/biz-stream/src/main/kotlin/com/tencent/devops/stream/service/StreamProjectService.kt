@@ -272,7 +272,7 @@ class StreamProjectService @Autowired constructor(
             } else {
                 size - 1
             }
-        )?.map { it.removePrefix("git_").toLong() }.let {
+        )?.map { GitCommonUtils.getGitProjectId(it) }.let {
             if (it.isNullOrEmpty()) {
                 return null
             }
