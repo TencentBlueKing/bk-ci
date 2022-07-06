@@ -15,6 +15,7 @@
                             name="pipelineName"
                             id="pipelineName"
                             v-model.trim="currentFilter.filterByPipelineName"
+                            @enter="filterCommit"
                             :placeholder="$t('newlist.filterByNameTips')"
                             :class="{
                                 'is-danger': errors.has('pipelineName'),
