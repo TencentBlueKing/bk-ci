@@ -10,8 +10,11 @@
                 <div>
                     <div class="form-group">
                         <label for="pipelineName" class="filter-label">{{ $t('pipelineName') }}：</label>
-                        <bk-input name="pipelineName" id="pipelineName" :placeholder="$t('newlist.filterByNameTips')"
+                        <bk-input
                             v-validate.initial="'max:40'"
+                            name="pipelineName"
+                            id="pipelineName"
+                            :placeholder="$t('newlist.filterByNameTips')"
                             :class="{
                                 'is-danger': errors.has('pipelineName'),
                                 'input-text': true

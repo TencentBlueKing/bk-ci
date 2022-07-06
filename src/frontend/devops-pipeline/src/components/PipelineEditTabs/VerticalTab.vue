@@ -105,20 +105,6 @@
             padding: 30px 25px;
             background-color: white;
             overflow: auto;
-
-            .bk-form-item{
-                margin: 0 0 30px 0;
-                .bk-label {
-                    width: 150px;
-                    text-align: right;
-                    float:left;
-                    padding-right: 20px;
-                }
-                .bk-form-content {
-                    display: block;
-                    margin-left: 150px;
-                }
-            }
         }
     }
 </style>
