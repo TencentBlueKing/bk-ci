@@ -229,7 +229,7 @@ export default {
             Object.assign(atomClassifyMap, {
                 all: {
                     classifyCode: 'all',
-                    classifyName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('all')) || 'all'
+                    classifyName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('All')) || 'All'
                 },
                 rdStore: {
                     classifyCode: 'rdStore',

@@ -83,7 +83,7 @@
     "buildTrigger": "触发构建",
     "manualTrigger": "触发构建",
     "store": "研发商店",
-    "all": "全部",
+    "All": "全部",
     "buildNum": "构建号",
     "propertyBar": "属性栏",
     "pipelineNameTips": "请输入流水线名称",
