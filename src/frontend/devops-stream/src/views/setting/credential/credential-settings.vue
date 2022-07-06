@@ -6,15 +6,15 @@
             </bk-breadcrumb>
         </header>
         <section class="setting-body">
-            <h3 class="setting-basic-head">General</h3>
+            <h3 class="setting-basic-head">{{$t('setting.general')}}</h3>
             <section class="setting-main">
                 <section>
                     <section class="main-checkbox">
-                        <bk-checkbox v-model="ticket.allowAcrossProject" class="basic-item">Allow cross-repository use</bk-checkbox>
+                        <bk-checkbox v-model="ticket.allowAcrossProject" class="basic-item">{{$t('setting.crossRepoUse')}}</bk-checkbox>
                     </section>
-                    <p class="main-desc">Credential can be referenced across repositories when it's used in template.</p>
+                    <p class="main-desc">{{$t('setting.crossRepoUseTips')}}</p>
                 </section>
-                <bk-button class="basic-btn" @click="saveSetting" :loading="isSaving">Save</bk-button>
+                <bk-button class="basic-btn" @click="saveSetting" :loading="isSaving">{{$t('save')}}</bk-button>
             </section>
         </section>
     </section>
@@ -31,9 +31,9 @@
                 isSaving: false,
                 ticket: {},
                 navList: [
-                    { link: { name: 'credentialList' }, title: 'Credential Settings' },
+                    { link: { name: 'credentialList' }, title: this.$t('setting.credentialSetting') },
                     { link: '', title: this.$route.params.credentialId },
-                    { link: '', title: 'Settings' }
+                    { link: '', title: this.$t('setting.settings') }
                 ]
             }
         },
