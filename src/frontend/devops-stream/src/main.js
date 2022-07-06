@@ -24,7 +24,7 @@ import {
 import VueI18n from 'vue-i18n'
 Vue.use(VueI18n)
 const DEFAULT_LANG = 'en-US'
-const COOKIE_KEY = 'stream_language'
+const COOKIE_KEY = 'blueking_language'
 
 const lang = getCookie(COOKIE_KEY) || DEFAULT_LANG
 const i18n = new VueI18n({
