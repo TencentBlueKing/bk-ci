@@ -15,7 +15,8 @@
                             :class="{
                                 'is-danger': errors.has('pipelineName')
                             }"
-                            v-model="currentFilter.filterByPipelineName">
+                            v-model="currentFilter.filterByPipelineName"
+                            @keyup.enter="filterCommit">
                         <p :class="errors.has('pipelineName') ? 'error-tips' : 'normal-tips'">{{errors.first("pipelineName")}}</p>
                     </div>
                     <div class="form-group">
