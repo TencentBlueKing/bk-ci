@@ -57,7 +57,7 @@ import com.tencent.devops.process.yaml.v2.models.stage.Stage as StreamV2Stage
 class ModelCreate @Autowired constructor(
     val client: Client,
     val modelStage: ModelStage,
-    val innerModelCreator: InnerModelCreator
+    val innerModelCreator: InnerModelCreator?
 ) {
 
     companion object {
@@ -162,7 +162,7 @@ class ModelCreate @Autowired constructor(
                 // #6090 stream重试时均需要清理变量表
                 cleanVariablesWhenRetry = true,
                 // #7147 stream特殊用户专门配置
-                maxConRunningQueueSize = innerModelCreator.getMaxConRunningQueueSize(
+                maxConRunningQueueSize = innerModelCreator?.getMaxConRunningQueueSize(
                     projectId = event.projectCode, pipelineId = event.pipelineInfo?.pipelineId ?: ""
                 ) ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
             )
