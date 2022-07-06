@@ -48,15 +48,14 @@ import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import com.tencent.devops.stream.trigger.actions.data.context.StreamMrInfo
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
-import com.tencent.devops.stream.trigger.git.pojo.StreamGitMrInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitFileInfo
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitMrInfo
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
@@ -331,13 +330,11 @@ class TGitMrActionGit(
             return sourceContent
         }
 
-        val mergeRequest = getMrInfo() as TGitMrInfo
-
         val baseTargetFile = getFileInfo(
             cred = getGitCred(),
             gitProjectId = event.object_attributes.target_project_id.toString(),
             fileName = fileName,
-            ref = mergeRequest.baseCommit,
+            ref = getMrInfo().baseCommit,
             retry = ApiRequestRetryInfo(true)
         )
         if (targetFile?.blobId == baseTargetFile?.blobId) {
@@ -354,7 +351,7 @@ class TGitMrActionGit(
         )
     }
 
-    private fun getMrInfo(): StreamGitMrInfo {
+    private fun getMrInfo(): StreamMrInfo {
         return if (data.context.mrInfo != null) {
             data.context.mrInfo!!
         } else {
@@ -364,8 +361,8 @@ class TGitMrActionGit(
                 mrId = event().object_attributes.id.toString(),
                 retry = ApiRequestRetryInfo(true)
             )!!
-            data.context.mrInfo = mergeRequest
-            mergeRequest
+            data.context.mrInfo = StreamMrInfo(mergeRequest.baseCommit)
+            data.context.mrInfo!!
         }
     }
 
