@@ -137,7 +137,7 @@ class PipelineStageServiceImpl @Autowired constructor(
                 endTime = endTime,
                 tag = tag
             )
-            stageDefaultPipelineIdsCache.put("MetricsOverviewStageDefaultPipelineIds:$projectId:$tag",pipelineIds)
+            stageDefaultPipelineIdsCache.put("MetricsOverviewStageDefaultPipelineIds:$projectId:$tag", pipelineIds)
             pipelineIds
         } else {
             value
