@@ -92,8 +92,4 @@ class UserProjectInfoResourceImpl @Autowired constructor(
     ): Result<Page<PipelineErrorTypeInfoDO>> {
         return Result(projectInfoManageService.queryPipelineErrorTypes(page, pageSize, keyword))
     }
-
-    override fun syncPipelineLabelData(userId: String): Result<Boolean> {
-        return Result(projectInfoManageService.syncPipelineLabelData(userId))
-    }
 }
