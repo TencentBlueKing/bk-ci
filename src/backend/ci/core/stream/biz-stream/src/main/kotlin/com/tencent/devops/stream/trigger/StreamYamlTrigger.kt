@@ -151,6 +151,14 @@ class StreamYamlTrigger @Autowired constructor(
         yamlSchemaCheck.check(action = action, templateType = null, isCiFile = true)
 
         // 进入触发流程
+        trigger(action, triggerEvent)
+    }
+
+    // 目前无多余扩展，方便后续多版本在这里进行逻辑处理
+    fun trigger(
+        action: BaseAction,
+        triggerEvent: Pair<List<Any>?, TriggerResult>?
+    ) {
         triggerBuild(action, triggerEvent)
     }
 
