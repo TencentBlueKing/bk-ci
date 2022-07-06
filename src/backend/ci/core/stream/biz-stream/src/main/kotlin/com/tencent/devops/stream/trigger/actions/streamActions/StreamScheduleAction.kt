@@ -102,11 +102,7 @@ class StreamScheduleAction(
         event().projectCode
     }
 
-    override fun getGitProjectIdOrName() = when (api) {
-        is TGitApiService -> data.eventCommon.gitProjectId
-        is GithubApiService -> data.eventCommon.gitProjectName!!
-        else -> data.eventCommon.gitProjectId
-    }
+    override fun getGitProjectIdOrName(gitProjectId: String?) = gitProjectId ?: data.eventCommon.gitProjectId
 
     override fun getGitCred(personToken: String?): StreamGitCred {
         return when (streamGitConfig.getScmType()) {

@@ -98,7 +98,7 @@ class YamlTemplateService @Autowired constructor(
                 )!!.defaultBranch!!
                 val content = extraParameters.api.getFileContent(
                     cred = extraParameters.getGitCred(),
-                    gitProjectId = targetRepo!!.repository,
+                    gitProjectId = extraParameters.getGitProjectIdOrName(targetRepo!!.repository),
                     fileName = templateDirectory + path,
                     ref = ref,
                     retry = ApiRequestRetryInfo(true)
@@ -133,7 +133,7 @@ class YamlTemplateService @Autowired constructor(
             )!!.defaultBranch!!
             val content = extraParameters.api.getFileContent(
                 cred = extraParameters.getGitCred(personToken = personToken),
-                gitProjectId = targetRepo?.repository!!,
+                gitProjectId = extraParameters.getGitProjectIdOrName() ,
                 fileName = templateDirectory + path,
                 ref = ref,
                 retry = ApiRequestRetryInfo(true)

@@ -33,7 +33,7 @@ class StreamDeleteAction(
     }
 
     override fun getProjectCode(gitProjectId: String?) = gitAction.getProjectCode(gitProjectId)
-    override fun getGitProjectIdOrName() = gitAction.getGitProjectIdOrName()
+    override fun getGitProjectIdOrName(gitProjectId: String?) = gitAction.getGitProjectIdOrName(gitProjectId)
 
     override fun getGitCred(personToken: String?) = gitAction.getGitCred(personToken)
 

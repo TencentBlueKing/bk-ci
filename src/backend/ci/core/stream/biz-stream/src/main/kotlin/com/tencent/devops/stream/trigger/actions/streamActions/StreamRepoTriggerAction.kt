@@ -48,7 +48,7 @@ class StreamRepoTriggerAction(
     override fun needAddWebhookParams() = true
 
     override fun getProjectCode(gitProjectId: String?) = baseAction.getProjectCode(gitProjectId)
-    override fun getGitProjectIdOrName() = baseAction.getGitProjectIdOrName()
+    override fun getGitProjectIdOrName(gitProjectId: String?) = baseAction.getGitProjectIdOrName(gitProjectId)
 
     override fun getGitCred(personToken: String?): StreamGitCred = baseAction.getGitCred(personToken)
 
@@ -235,7 +235,7 @@ class StreamRepoTriggerAction(
         val check = this.api.getProjectUserInfo(
             cred = this.data.context.repoTrigger?.repoTriggerCred as TGitCred,
             userId = userInfo.id,
-            gitProjectId = this.data.eventCommon.gitProjectId
+            gitProjectId = getGitProjectIdOrName(this.data.eventCommon.gitProjectId)
         ).accessLevel >= 40
         return Pair(check, userInfo.username)
     }

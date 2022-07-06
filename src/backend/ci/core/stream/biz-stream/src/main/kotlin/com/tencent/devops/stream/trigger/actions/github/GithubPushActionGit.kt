@@ -250,7 +250,7 @@ class GithubPushActionGit(
         for (i in 1..10) {
             val result = apiService.getCommitChangeList(
                 cred = (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as GithubCred,
-                gitProjectId = data.eventCommon.gitProjectId,
+                gitProjectId = getGitProjectIdOrName(data.eventCommon.gitProjectId),
                 from = from,
                 to = to,
                 straight = false,

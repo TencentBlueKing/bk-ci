@@ -91,7 +91,7 @@ class StreamTimerBuildListener @Autowired constructor(
                             listOf(
                                 githubApiService.getGitProjectInfo(
                                     cred = GithubCred(record.enableUserId),
-                                    gitProjectId = GitUtils.getProjectName(record.gitHttpUrl),
+                                    gitProjectId = event.gitProjectId.toString(),
                                     retry = ApiRequestRetryInfo(true)
                                 )!!.defaultBranch!!
                             )
@@ -135,7 +135,7 @@ class StreamTimerBuildListener @Autowired constructor(
                 )
                 ScmType.GITHUB -> githubApiService.getLatestRevision(
                     pipelineId = pipelineId,
-                    projectName = GitUtils.getProjectName(gitUrl),
+                    projectName = gitProjectId.toString(),
                     gitUrl = gitUrl,
                     branch = branch,
                     userName = userId,

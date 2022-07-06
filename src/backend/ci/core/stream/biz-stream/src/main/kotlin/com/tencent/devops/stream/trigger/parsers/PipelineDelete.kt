@@ -160,7 +160,7 @@ class PipelineDelete @Autowired constructor(
     ): Boolean {
         val fileList = action.api.getFileTree(
             cred = action.getGitCred(),
-            gitProjectId = gitProjectId,
+            gitProjectId = action.getGitProjectIdOrName(gitProjectId),
             path = if (filePath.contains("/")) {
                 filePath.substring(0, filePath.lastIndexOf("/"))
             } else {

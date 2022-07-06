@@ -59,18 +59,13 @@ abstract class GithubActionGit(
             "github_${data.getGitProjectId()}"
         }
     }
+
     /**
-     * 提供拿取gitProjectName的公共方法
-     * 因为会存在跨库触发导致的event的gitProjectId和触发的不一致的问题
-     * 所以会优先拿取pipeline的gitProjectId
+     * 发现github有两套repo接口，对应 [repositories/:id] 和 [repos/:user/:projectName]
+     * 目前先使用 repositories/:id 方案，有问题再切换
      */
-    override fun getGitProjectIdOrName() = data.context.pipeline?.gitProjectId?.let { gitProjectId ->
-        streamTriggerCache.getAndSaveRequestGitProjectInfo(
-            gitProjectKey = gitProjectId,
-            action = this,
-            getProjectInfo = api::getGitProjectInfo
-        )?.gitHttpUrl?.let { gitHttpUrl -> GitUtils.getProjectName(gitHttpUrl) }
-    } ?: data.eventCommon.gitProjectName!!
+    override fun getGitProjectIdOrName(gitProjectId: String?) =
+        gitProjectId ?: data.context.pipeline?.gitProjectId ?: data.eventCommon.gitProjectId
 
     override fun getGitCred(personToken: String?): GithubCred {
         if (personToken != null) {

@@ -101,7 +101,7 @@ class GithubPRActionGit(
     override fun addMrComment(body: MrCommentBody) {
         apiService.addMrComment(
             cred = getGitCred(),
-            gitProjectId = data.eventCommon.gitProjectId,
+            gitProjectId = getGitProjectIdOrName(data.eventCommon.gitProjectId),
             mrId = event().pullRequest.id.toLong(),
             mrBody = body
         )
@@ -132,7 +132,7 @@ class GithubPRActionGit(
                 getForkGitCred()
             } else {
                 getGitCred()
-            }, gitProjectId = event.pullRequest.head.repo.fullName,
+            }, gitProjectId = getGitProjectIdOrName(event.pullRequest.head.repo.id.toString()),
             sha = event.pullRequest.head.sha,
             retry = ApiRequestRetryInfo(retry = true)
         )
@@ -196,7 +196,7 @@ class GithubPRActionGit(
         val deleteList = mutableListOf<String>()
         val gitMrChangeInfo = apiService.getMrChangeInfo(
             cred = this.getGitCred(),
-            gitProjectId = data.eventCommon.gitProjectId,
+            gitProjectId = getGitProjectIdOrName(data.eventCommon.gitProjectId),
             mrId = event().pullRequest.id.toString(),
             retry = ApiRequestRetryInfo(retry = true)
         )
@@ -224,8 +224,8 @@ class GithubPRActionGit(
 
         // 获取源分支文件列表
         val sourceBranchYamlPathList = GitActionCommon.getYamlPathList(
-            this,
-            event.pullRequest.head.repo.id.toString(),
+            action = this,
+            gitProjectId = getGitProjectIdOrName(event.pullRequest.head.repo.id.toString()),
             ref = data.eventCommon.commit.commitId,
             cred = if (event.isPrForkEvent()) {
                 getForkGitCred()
@@ -264,7 +264,7 @@ class GithubPRActionGit(
 
         val targetFile = getFileInfo(
             cred = getGitCred(),
-            gitProjectId = event.pullRequest.base.repo.id.toString(),
+            gitProjectId = getGitProjectIdOrName(event.pullRequest.base.repo.id.toString()),
             fileName = fileName,
             ref = event.pullRequest.base.ref,
             retry = ApiRequestRetryInfo(true)
@@ -300,7 +300,7 @@ class GithubPRActionGit(
             } else {
                 getGitCred()
             },
-            gitProjectId = event.pullRequest.head.repo.id.toString(),
+            gitProjectId = getGitProjectIdOrName(event.pullRequest.head.repo.id.toString()),
             fileName = fileName,
             ref = event.pullRequest.head.sha,
             retry = ApiRequestRetryInfo(true)
@@ -335,13 +335,13 @@ class GithubPRActionGit(
 
         val mergeRequest = apiService.getMrInfo(
             cred = getGitCred(),
-            gitProjectId = event.pullRequest.base.repo.id.toString(),
+            gitProjectId = getGitProjectIdOrName(event.pullRequest.base.repo.id.toString()),
             mrId = event.pullRequest.id.toString(),
             retry = ApiRequestRetryInfo(true)
         )!!
         val baseTargetFile = getFileInfo(
             cred = getGitCred(),
-            gitProjectId = event.pullRequest.base.repo.id.toString(),
+            gitProjectId = getGitProjectIdOrName(event.pullRequest.base.repo.id.toString()),
             fileName = fileName,
             ref = mergeRequest.baseCommit,
             retry = ApiRequestRetryInfo(true)
@@ -371,7 +371,7 @@ class GithubPRActionGit(
         apiService.getMrChangeInfo(
             cred = (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as TGitCred,
             // 获取mr信息的project Id和事件强关联，不一定是流水线所处库
-            gitProjectId = data.eventCommon.gitProjectName!!,
+            gitProjectId = getGitProjectIdOrName(data.eventCommon.gitProjectId),
             mrId = event().pullRequest.id.toString(),
             retry = ApiRequestRetryInfo(true)
         )?.files?.forEach {

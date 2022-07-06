@@ -47,7 +47,7 @@ interface BaseAction {
      *  TGIT -> 接口需要 git project id
      *  Github -> 接口需要 git project name
      */
-    fun getGitProjectIdOrName(): String
+    fun getGitProjectIdOrName(gitProjectId: String? = null): String
 
     /**
      * 获取调用当前git平台信息的cred，可能会请求Git api,所以放到action

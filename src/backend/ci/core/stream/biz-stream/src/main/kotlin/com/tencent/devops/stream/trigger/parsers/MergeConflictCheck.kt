@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
@@ -74,12 +75,12 @@ class MergeConflictCheck @Autowired constructor(
         action: GitBaseAction,
         path2PipelineExists: Map<String, StreamTriggerPipeline>
     ): Boolean {
-        val projectId = action.data.getGitProjectId()
+        val projectId = action.data.eventCommon.gitProjectId
         val event = action.event() as GitMergeRequestEvent
         val mrRequestId = event.object_attributes.id.toString()
 
         val mrInfo = action.api.getMrInfo(
-            gitProjectId = action.getGitProjectIdOrName(),
+            gitProjectId = action.getGitProjectIdOrName(projectId),
             mrId = mrRequestId,
             cred = action.getGitCred(),
             retry = ApiRequestRetryInfo(retry = true)
@@ -100,6 +101,16 @@ class MergeConflictCheck @Autowired constructor(
                     ScmType.CODE_GIT -> dispatchMrConflictCheck(
                         event = StreamMrConflictCheckEvent(
                             eventStr = objectMapper.writeValueAsString(action.data.event as GitEvent),
+                            actionCommonData = action.data.eventCommon,
+                            actionContext = action.data.context,
+                            actionSetting = action.data.setting,
+                            path2PipelineExists = path2PipelineExists,
+                            notBuildRecordId = recordId
+                        )
+                    )
+                    ScmType.GITHUB -> dispatchMrConflictCheck(
+                        event = StreamMrConflictCheckEvent(
+                            eventStr = objectMapper.writeValueAsString(action.data.event as GithubEvent),
                             actionCommonData = action.data.eventCommon,
                             actionContext = action.data.context,
                             actionSetting = action.data.setting,
@@ -131,12 +142,12 @@ class MergeConflictCheck @Autowired constructor(
     ): Pair<Boolean, Boolean> {
         var isFinish: Boolean
         var isTrigger: Boolean
-        val projectId = action.data.getGitProjectId()
+        val projectId = action.data.eventCommon.gitProjectId
         val event = action.event() as GitMergeRequestEvent
         val mrRequestId = event.object_attributes.id.toString()
         val mrInfo = try {
             action.api.getMrInfo(
-                gitProjectId = action.getGitProjectIdOrName(),
+                gitProjectId = action.getGitProjectIdOrName(projectId),
                 mrId = mrRequestId,
                 cred = action.getGitCred(),
                 retry = ApiRequestRetryInfo(retry = true)

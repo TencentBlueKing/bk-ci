@@ -57,11 +57,7 @@ class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
     }
 
     override fun getProjectCode(gitProjectId: String?) = action.getProjectCode()
-    override fun getGitProjectIdOrName() = when (api) {
-        is TGitApiService -> data.eventCommon.gitProjectId
-        is GithubApiService -> data.eventCommon.gitProjectName!!
-        else -> data.eventCommon.gitProjectId
-    }
+    override fun getGitProjectIdOrName(gitProjectId: String?) = action.getGitProjectIdOrName(gitProjectId)
 
     override fun getGitCred(personToken: String?) = action.getGitCred()
 
