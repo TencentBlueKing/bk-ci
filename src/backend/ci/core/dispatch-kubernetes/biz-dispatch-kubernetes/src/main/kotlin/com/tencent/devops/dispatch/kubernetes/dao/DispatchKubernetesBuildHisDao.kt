@@ -53,8 +53,7 @@ class DispatchKubernetesBuildHisDao {
     ): Long {
         with(TDispatchKubernetesBuildHistory.T_DISPATCH_KUBERNETES_BUILD_HISTORY) {
             val preRecord = dslContext.selectFrom(this)
-                .where(DISPATCH_TYPE.eq(dispatchType))
-                .and(BUILD_ID.eq(buildId))
+                .where(BUILD_ID.eq(buildId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
                 .and(EXECUTE_COUNT.eq(executeCount))
                 .fetch()
@@ -78,7 +77,8 @@ class DispatchKubernetesBuildHisDao {
                 CPU,
                 MEMORY,
                 DISK,
-                EXECUTE_COUNT
+                EXECUTE_COUNT,
+                DISPATCH_TYPE
             ).values(
                 projectId,
                 pipelineId,
@@ -90,7 +90,8 @@ class DispatchKubernetesBuildHisDao {
                 cpu,
                 memory,
                 disk,
-                executeCount
+                executeCount,
+                dispatchType
             ).returning(ID).fetchOne()?.id ?: 1
         }
     }
