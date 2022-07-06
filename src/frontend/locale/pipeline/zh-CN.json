@@ -246,7 +246,8 @@
     "createTime": "创建时间",
     "restoreSuc": "恢复成功",
     "emptyTitle": "暂无可恢复的流水线",
-    "emptyDesc": "30天内被删除的流水线可在此页面恢复"
+    "emptyDesc": "30天内被删除的流水线可在此页面恢复",
+    "restoreSearchTips": "请输入流水线名称搜索"
   },
   "atomManage": {
     "installedAtom": "已安装插件",
