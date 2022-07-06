@@ -110,12 +110,12 @@ class IndexService @Autowired constructor(
     }
 
     fun getAndAddLineNum(buildId: String, size: Int): Long? {
-        RedisLock(redisOperation, "$LOG_LINE_NUM_LOCK:$buildId", 10).use { lock ->
-            // 获得并发锁时才能读取db或修改redis缓存
-            lock.lock()
-            var lineNum = redisOperation.get(getLineNumRedisKey(buildId))?.toLong()
-            // 缓存命中则直接进行自增，缓存未命中则从db中取值，自增后再刷新缓存
-            if (lineNum == null) {
+        var lineNum = redisOperation.get(getLineNumRedisKey(buildId))?.toLong()
+        // 缓存命中则直接进行自增，缓存未命中则从db中取值，自增后再刷新缓存
+        if (lineNum == null) {
+            RedisLock(redisOperation, "$LOG_LINE_NUM_LOCK:$buildId", 10).use { lock ->
+                // 获得并发锁时才能读取db或修改redis缓存
+                lock.lock()
                 logger.warn("[$buildId|$size] Fail to get and add the line num, get from db")
                 val lastLineNum = indexDao.getBuild(dslContext, buildId)?.lastLineNum ?: run {
                     logger.warn("[$buildId|$size] The build is not exist in db")
@@ -124,11 +124,11 @@ class IndexService @Autowired constructor(
                 logger.warn("[$buildId|$size] Got from db, lastLineNum: $lastLineNum")
                 lineNum = lastLineNum + size.toLong()
                 redisOperation.set(getLineNumRedisKey(buildId), lineNum.toString(), TimeUnit.DAYS.toSeconds(2))
-            } else {
-                lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
             }
-            return lineNum!! - size
+        } else {
+            lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
         }
+        return lineNum!! - size
     }
 
     fun getLastLineNum(buildId: String): Long {
