@@ -414,7 +414,7 @@
                             templateType: this.templateForm.templateType,
                             categoryIdList: this.templateForm.categoryIdList,
                             classifyCode: this.templateForm.classifyCode,
-                            labelIdList: this.templateForm.labelIdList.filter(i => i !== 'null'),
+                            labelIdList: this.templateForm.labelIdList.filter(i => i !== 'null' || i !== null),
                             publisher: this.templateForm.publisher,
                             logoUrl: this.templateForm.logoUrl || undefined,
                             iconData: this.templateForm.iconData || undefined,
