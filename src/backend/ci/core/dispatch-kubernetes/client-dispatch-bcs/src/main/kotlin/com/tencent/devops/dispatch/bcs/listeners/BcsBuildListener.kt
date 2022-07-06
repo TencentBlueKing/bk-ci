@@ -54,7 +54,7 @@ class BcsBuildListener @Autowired constructor(
     }
 
     override fun getVmType(): JobQuotaVmType? {
-        return JobQuotaVmType.DOCKER_VM
+        return JobQuotaVmType.DOCKER_BCS
     }
 
     override fun onStartup(dispatchMessage: DispatchMessage) {
