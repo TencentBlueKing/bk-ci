@@ -307,13 +307,23 @@ class BuildEndControl @Autowired constructor(
             pipelineRedisService.deleteRestartBuild(this.buildId)
         }
 
-        // 获取同流水线的下一个队首
-        startNextBuild(pipelineRuntimeExtService.popNextQueueBuildInfo(projectId = projectId, pipelineId = pipelineId))
-        // 获取同并发组的下一个队首
-        buildInfo.concurrencyGroup?.let { group ->
-            ConcurrencyGroupLock(redisOperation, group).use { groupLock ->
-                groupLock.lock()
-                startNextBuild(pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(projectId, group))
+        if (buildInfo.concurrencyGroup.isNullOrBlank()) {
+            // 获取同流水线的下一个队首
+            startNextBuild(
+                pipelineRuntimeExtService.popNextQueueBuildInfo(
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )
+            )
+        } else {
+            // 获取同并发组的下一个队首
+            buildInfo.concurrencyGroup?.let { group ->
+                ConcurrencyGroupLock(redisOperation, projectId, group).use { groupLock ->
+                    groupLock.lock()
+                    startNextBuild(
+                        pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(projectId, group)
+                    )
+                }
             }
         }
     }
