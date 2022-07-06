@@ -27,13 +27,11 @@
 
 package com.tencent.devops.metrics.service.impl
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
-import com.tencent.devops.metrics.constant.Constants.METRICS_PIPELINE_ID_EXPIRED
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.PipelineStageDao
@@ -47,12 +45,12 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 class PipelineStageServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineStageDao: PipelineStageDao,
-    private val redisOperation: RedisOperation
+    private val pipelineStageDao: PipelineStageDao
 ) : PipelineStageManageService {
 
     override fun queryPipelineStageTrendInfo(
@@ -123,9 +121,15 @@ class PipelineStageServiceImpl @Autowired constructor(
         }
     }
 
+    private val stageDefaultPipelineIdsCache = Caffeine.newBuilder()
+        .maximumSize(5000)
+        .expireAfterWrite(2, TimeUnit.HOURS)
+        .build<String, List<String>>()
+
     fun getStagePipelineIdByProject(projectId: String, startTime: String, endTime: String, tag: String): List<String> {
-        val value = redisOperation.get("MetricsOverviewStageDefaultPipelineIds:$projectId:$tag")
-        if (value.isNullOrEmpty()) {
+        val value =
+            stageDefaultPipelineIdsCache.getIfPresent("MetricsOverviewStageDefaultPipelineIds:$projectId:$tag")
+        return if (value.isNullOrEmpty()) {
             val pipelineIds = pipelineStageDao.getStagePipelineIdByProject(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -133,14 +137,10 @@ class PipelineStageServiceImpl @Autowired constructor(
                 endTime = endTime,
                 tag = tag
             )
-            redisOperation.set(
-                key = "MetricsOverviewStageDefaultPipelineIds:$projectId:$tag",
-                value = JsonUtil.toJson(pipelineIds),
-                expiredInSecond = METRICS_PIPELINE_ID_EXPIRED
-            )
-            return pipelineIds
+            stageDefaultPipelineIdsCache.put("MetricsOverviewStageDefaultPipelineIds:$projectId:$tag",pipelineIds)
+            pipelineIds
         } else {
-            return JsonUtil.to(value)
+            value
         }
     }
 }

@@ -29,13 +29,13 @@ package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.JooqUtils.sum
+import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.model.metrics.tables.TPipelineFailDetailData
 import com.tencent.devops.model.metrics.tables.TPipelineFailSummaryData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
-import com.tencent.devops.metrics.constant.Constants.DEFAULT_LIMIT_NUM
 import com.tencent.devops.metrics.pojo.po.PipelineFailDetailDataPO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineFailQO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
@@ -49,7 +49,7 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Repository
-class PipelineFailDao {
+class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
 
     fun getPipelineIdByTotalExecuteCount(
         dslContext: DSLContext,
@@ -72,7 +72,7 @@ class PipelineFailDao {
                 }
             return step.where(conditions)
                 .orderBy(ERROR_COUNT.desc())
-                .limit(DEFAULT_LIMIT_NUM)
+                .limit(metricsConfig.defaultLimitNum)
                 .fetchInto(String::class.java)
         }
     }

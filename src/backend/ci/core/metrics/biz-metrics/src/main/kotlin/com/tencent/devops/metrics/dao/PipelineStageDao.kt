@@ -29,11 +29,11 @@ package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.JooqUtils.sum
+import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.constant.Constants
 import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
-import com.tencent.devops.metrics.constant.Constants.DEFAULT_LIMIT_NUM
 import com.tencent.devops.model.metrics.tables.TPipelineStageOverviewData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineStageTrendInfoQO
@@ -45,7 +45,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class PipelineStageDao {
+class PipelineStageDao constructor(private val metricsConfig: MetricsConfig) {
 
     fun getStagePipelineIdByProject(
         dslContext: DSLContext,
@@ -68,7 +68,7 @@ class PipelineStageDao {
                 .and(STATISTICS_TIME.between(startDateTime, endDateTime))
                 .groupBy(PIPELINE_ID)
                 .orderBy(field.desc(), PIPELINE_ID)
-                .limit(DEFAULT_LIMIT_NUM)
+                .limit(metricsConfig.defaultLimitNum)
                 .fetch().map { it.value1() }
         }
     }
@@ -88,7 +88,7 @@ class PipelineStageDao {
             return step.where(conditions)
                 .groupBy(PIPELINE_ID)
                 .orderBy(AVG_COST_TIME.desc())
-                .limit(DEFAULT_LIMIT_NUM)
+                .limit(metricsConfig.defaultLimitNum)
                 .fetch()
                 .map {
                     it.value1()
