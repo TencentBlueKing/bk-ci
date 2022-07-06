@@ -1100,6 +1100,9 @@
   "storeMap": {
     "textarea": "Textarea",
     "pauseAtom": "Pause before execution",
+    "pauseConfLabel": "Pause configuration",
+    "pauseNotify": "Suspend notification recipient",
+    "pauseNotifyTip": "When suspended before execution, an enterprise WeChat message will be sent to the designated user to notify the user to process it as soon as possible. The default is the pipeline executor",
     "runManual": "You can manually decide to continue running or stop, and you can modify the parameters when you continue",
     "string": "String",
     "bool": "Boolean",
