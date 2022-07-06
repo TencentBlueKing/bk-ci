@@ -33,7 +33,6 @@ import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.data.context.StreamTriggerContext
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import org.slf4j.MDC
 
 @Event(MQ.EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT, MQ.ROUTE_STREAM_TRIGGER_PIPELINE_EVENT)
@@ -43,15 +42,5 @@ data class StreamTriggerEvent(
     val actionCommonData: EventCommonData,
     val actionContext: StreamTriggerContext,
     val actionSetting: StreamTriggerSetting,
-    val trigger: StreamTriggerEventTrigger?
-)
-
-/**
- * 消息队列中传输的关于触发器相关
- * @param repoHook 跨库触发信息，放到消息队列后解析，防止接口对象无法解析报错
- * @param triggerResult 触发结果
- */
-data class StreamTriggerEventTrigger(
-    val repoHook: List<Any>?,
-    val triggerResult: TriggerResult
+    val trigger: String?
 )

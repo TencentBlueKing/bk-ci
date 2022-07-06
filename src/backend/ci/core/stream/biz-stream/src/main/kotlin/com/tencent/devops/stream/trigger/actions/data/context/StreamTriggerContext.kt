@@ -30,10 +30,10 @@ package com.tencent.devops.stream.trigger.actions.data.context
 import com.tencent.devops.stream.pojo.StreamRepoHookEvent
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
-import com.tencent.devops.stream.trigger.git.pojo.StreamGitMrInfo
 
 /**
  * Stream触发过程中需要用到的上下文数据
+ * 注：上下文对象涉及消息传递时，需要确保不是确定对象
  * @param requestEventId 保存用来展示的gitRequestEvent的id方便关联一些展示项
  * @param pipeline stream当前触发的流水线信息
  * @param triggerCache 触发器缓存相关
@@ -51,7 +51,7 @@ data class StreamTriggerContext(
     var triggerCache: TriggerCache? = null,
     var repoTrigger: RepoTrigger? = null,
     var changeSet: Set<String>? = null,
-    var mrInfo: StreamGitMrInfo? = null,
+    var mrInfo: StreamMrInfo? = null,
     var defaultBranch: String? = null,
     var originYaml: String? = null,
     var parsedYaml: String? = null,
@@ -71,6 +71,13 @@ data class RepoTrigger(
     val repoTriggerPipelineList: List<StreamRepoHookEvent>,
     var repoTriggerCred: StreamGitCred? = null,
     var buildUserID: String? = null
+)
+
+/**
+ * Stream mr触发拉取文件时需要的mr信息
+ */
+data class StreamMrInfo(
+    val baseCommit: String?
 )
 
 /**

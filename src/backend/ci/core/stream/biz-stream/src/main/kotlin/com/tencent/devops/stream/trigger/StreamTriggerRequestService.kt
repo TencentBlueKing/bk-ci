@@ -44,21 +44,15 @@ import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.data.context.TriggerCache
-import com.tencent.devops.stream.trigger.actions.data.isStreamMr
-import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
-import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
 import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerDispatch
 import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerEvent
-import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerEventTrigger
 import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
-import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.trigger.pojo.CheckType
-import com.tencent.devops.stream.trigger.pojo.MrYamlInfo
-import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
+import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.service.RepoTriggerEventService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -74,7 +68,6 @@ class StreamTriggerRequestService @Autowired constructor(
     private val actionFactory: EventActionFactory,
     private val streamGitConfig: StreamGitConfig,
     private val streamTriggerCache: StreamTriggerCache,
-    private val yamlSchemaCheck: YamlSchemaCheck,
     private val exHandler: StreamTriggerExceptionHandler,
     private val triggerMatcher: TriggerMatcher,
     private val repoTriggerEventService: RepoTriggerEventService,
@@ -228,140 +221,91 @@ class StreamTriggerRequestService @Autowired constructor(
             throw StreamTriggerException(action, TriggerReason.CI_YAML_NOT_FOUND)
         }
 
-        // 获取缓存的触发器, 使用空文本来区分是有缓存但是触发器没内容的情况
         val confirmProjectUseTriggerCache = triggerMatcher.confirmProjectUseTriggerCache(action.getProjectCode())
-        val triggers = if (!confirmProjectUseTriggerCache) {
-            emptyMap<String, String>()
-        } else {
-            streamPipelineTriggerDao.getTriggers(
-                dslContext = dslContext,
-                projectId = action.getProjectCode(),
-                pipelineId = null,
-                branch = null,
-                ciFileBlobIds = yamlPathList.asSequence().filter { !it.blobId.isNullOrBlank() }.map { it.blobId!! }
-                    .toSet()
-            ).associate { it.pipelineId to it.trigger }
+
+        // 获取缓存的触发器, 使用空文本来区分是有缓存但是触发器没内容的情况
+        // 使用blobId 20个一组来取，减少内存占用
+        val blobIdMap = mutableMapOf<Int, MutableList<String>>()
+        val yamlMap = mutableMapOf<Int, MutableList<YamlPathListEntry>>()
+        var index = 1
+        yamlPathList.forEach { yamlPath ->
+            if (blobIdMap[index]?.size == 20) {
+                index++
+            }
+            if (!yamlPath.blobId.isNullOrBlank()) {
+                blobIdMap[index] = blobIdMap[index]?.also { it.add(yamlPath.blobId) } ?: mutableListOf(yamlPath.blobId)
+            }
+            yamlMap[index] = yamlMap[index]?.also { it.add(yamlPath) } ?: mutableListOf(yamlPath)
         }
 
-        yamlPathList.forEach { (filePath, checkType, ref, blobId) ->
-            // 保存触发器缓存信息
-            if (!ref.isNullOrBlank() && !blobId.isNullOrBlank()) {
-                action.data.context.triggerCache = TriggerCache(pipelineFileBranch = ref, blobId = blobId)
-            }
-            // 如果该流水线已保存过，则继续使用
-            // 对于来自fork库的mr新建的流水线，当前库不维护其状态
-            val buildPipeline = path2PipelineExists[filePath] ?: StreamTriggerPipeline(
-                gitProjectId = action.data.eventCommon.gitProjectId,
-                displayName = filePath,
-                pipelineId = "", // 留空用于是否创建判断
-                filePath = filePath,
-                enabled = true,
-                creator = action.data.getUserId()
-            )
-            // 远程仓库触发时，主库不需要新建流水线
-            if (action.data.context.repoTrigger != null && buildPipeline.pipelineId.isBlank()) {
-                return@forEach
-            }
-
-            action.data.context.pipeline = buildPipeline
-
-            // 新增流水线，需要校验的不使用缓存的触发器
-            val trigger = if (!confirmProjectUseTriggerCache ||
-                buildPipeline.pipelineId.isBlank() || checkType != CheckType.NO_NEED_CHECK
-            ) {
+        yamlMap.forEach { (i, yamlList) ->
+            val triggers = if (!confirmProjectUseTriggerCache) {
                 null
             } else {
-                triggers[buildPipeline.pipelineId]
+                streamPipelineTriggerDao.getTriggers(
+                    dslContext = dslContext,
+                    projectId = action.getProjectCode(),
+                    pipelineId = null,
+                    branch = null,
+                    ciFileBlobIds = blobIdMap[i]?.toSet() ?: emptySet()
+                ).associate { it.pipelineId to it.trigger }
             }
 
-            // 针对每个流水线处理异常
-            exHandler.handle(action) {
-                // 目前只针对mr情况下源分支有目标分支没有且变更列表没有
-                if (checkType == CheckType.NO_TRIGGER) {
-                    throw StreamTriggerException(
-                        action = action,
-                        triggerReason = TriggerReason.MR_BRANCH_FILE_ERROR,
-                        reasonParams = listOf(filePath)
-                    )
+            yamlList.forEach yamlEach@{ (filePath, checkType, ref, blobId) ->
+                // 保存触发器缓存信息
+                if (!ref.isNullOrBlank() && !blobId.isNullOrBlank()) {
+                    action.data.context.triggerCache = TriggerCache(pipelineFileBranch = ref, blobId = blobId)
+                }
+                // 如果该流水线已保存过，则继续使用
+                // 对于来自fork库的mr新建的流水线，当前库不维护其状态
+                val buildPipeline = path2PipelineExists[filePath] ?: StreamTriggerPipeline(
+                    gitProjectId = action.data.eventCommon.gitProjectId,
+                    displayName = filePath,
+                    pipelineId = "", // 留空用于是否创建判断
+                    filePath = filePath,
+                    enabled = true,
+                    creator = action.data.getUserId()
+                )
+                // 远程仓库触发时，主库不需要新建流水线
+                if (action.data.context.repoTrigger != null && buildPipeline.pipelineId.isBlank()) {
+                    return@yamlEach
                 }
 
-                checkAndTrigger(buildPipeline = buildPipeline, action = action, trigger = trigger)
+                action.data.context.pipeline = buildPipeline
+
+                // 新增流水线，需要校验的不使用缓存的触发器
+                val trigger = if (!confirmProjectUseTriggerCache ||
+                    buildPipeline.pipelineId.isBlank() || checkType != CheckType.NO_NEED_CHECK
+                ) {
+                    null
+                } else {
+                    triggers?.get(buildPipeline.pipelineId)
+                }
+
+                // 针对每个流水线处理异常
+                exHandler.handle(action) {
+                    // 目前只针对mr情况下源分支有目标分支没有且变更列表没有
+                    if (checkType == CheckType.NO_TRIGGER) {
+                        throw StreamTriggerException(
+                            action = action,
+                            triggerReason = TriggerReason.MR_BRANCH_FILE_ERROR,
+                            reasonParams = listOf(filePath)
+                        )
+                    }
+
+                    trigger(action = action, trigger = trigger)
+                }
             }
         }
+
         // 流水线启动后，发送解锁webhook锁请求
         action.sendUnlockWebhook()
         return true
     }
 
-    private fun checkAndTrigger(
-        buildPipeline: StreamTriggerPipeline,
-        action: BaseAction,
-        trigger: String?
-    ) {
-        logger.info("|${action.data.context.requestEventId}|checkAndTrigger|action|${action.format()}")
-
-        val filePath = buildPipeline.filePath
-        // 流水线未启用则跳过
-        if (!buildPipeline.enabled) {
-            logger.warn(
-                "Pipeline $filePath is not enabled, gitProjectId: ${action.data.eventCommon.gitProjectId}, " +
-                    "eventId: ${action.data.context.requestEventId}"
-            )
-            throw StreamTriggerException(action, TriggerReason.PIPELINE_DISABLE)
-        }
-
-        // 使用触发缓存
-        val triggerResult = if (trigger == null) {
-            null
-        } else {
-            val (repoHook, result) = triggerMatcher.isMatch(action, trigger)
-            StreamTriggerEventTrigger(repoHook, result)
-        }
-
-        // 这里判断，各类注册事件如果修改blobId肯定不同，相同的肯定注册过了，所以只要不触发git就直接跳过
-        if (triggerResult != null && !triggerResult.triggerResult.trigger) {
-            logger.info(
-                "${buildPipeline.pipelineId}| use trigger cache" +
-                    "Matcher is false, return, gitProjectId: ${action.data.getGitProjectId()}, " +
-                    "eventId: ${action.data.context.requestEventId}"
-            )
-            throw StreamTriggerException(action, TriggerReason.TRIGGER_NOT_MATCH)
-        }
-
-        val yamlContent = action.getYamlContent(filePath)
-        action.data.context.originYaml = yamlContent.content
-
-        // 如果当前文件没有内容直接不触发
-        if (yamlContent.content.isBlank()) {
-            throw StreamTriggerException(
-                action,
-                TriggerReason.CI_YAML_CONTENT_NULL,
-                commitCheck = CommitCheck(
-                    block = action.metaData.isStreamMr(),
-                    state = StreamCommitCheckState.FAILURE
-                )
-            )
-        }
-
-        // 因为mr获取文件后分支信息可能不同，这里单独重新更新触发器缓存信息
-        if (action is StreamMrAction) {
-            yamlContent as MrYamlInfo
-            if (yamlContent.ref.isNotBlank() && !yamlContent.blobId.isNullOrBlank())
-                action.data.context.triggerCache = TriggerCache(
-                    pipelineFileBranch = yamlContent.ref,
-                    blobId = yamlContent.blobId
-                )
-        }
-
-        yamlSchemaCheck.check(action = action, templateType = null, isCiFile = true)
-
-        // 进入触发流程
-        trigger(action, triggerResult)
-    }
-
     protected fun trigger(
         action: BaseAction,
-        trigger: StreamTriggerEventTrigger?
+        trigger: String?
     ) = when (streamGitConfig.getScmType()) {
         ScmType.CODE_GIT -> StreamTriggerDispatch.dispatch(
             rabbitTemplate = rabbitTemplate,

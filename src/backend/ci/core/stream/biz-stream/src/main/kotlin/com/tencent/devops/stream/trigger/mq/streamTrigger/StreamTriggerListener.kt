@@ -87,7 +87,7 @@ class StreamTriggerListener @Autowired constructor(
 
         // 针对每个流水线处理异常
         exceptionHandler.handle(action = action) {
-            streamYamlTrigger.triggerBuild(action = action, triggerEvent = event.trigger)
+            streamYamlTrigger.checkAndTrigger(action = action, trigger = event.trigger)
         }
 
         logger.info(
