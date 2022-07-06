@@ -805,6 +805,7 @@
     "archived": "自定义报告已归档",
     "baseRule": "基础规则",
     "crontabTitle": "高级（自定义crontab表达式）",
+    "cronWeekHint": "请勾选每周触发时间",
     "planRule": "计划任务规则",
     "crontabExpression": "请填写语法正确的crontab表达式，多条表达式请换行输入",
     "triggerEmptyTips": "基础规则和自定义表达式不能同时为空",

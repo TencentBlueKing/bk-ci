@@ -511,7 +511,12 @@ class PipelineRuntimeService @Autowired constructor(
                 recommendVersion = recommendVersion,
                 retry = isRetry ?: false,
                 errorInfoList = errorInfo?.let { self ->
-                    JsonUtil.to(self, object : TypeReference<List<ErrorInfo>?>() {})
+                    // 特殊兼容修改数据类型前的老数据，必须保留try catch
+                    try {
+                        JsonUtil.to(self, object : TypeReference<List<ErrorInfo>?>() {})
+                    } catch (ignore: Throwable) {
+                        null
+                    }
                 },
                 buildMsg = BuildMsgUtils.getBuildMsg(buildMsg, startType = startType, channelCode = channelCode),
                 buildNumAlias = buildNumAlias,
@@ -1548,11 +1553,13 @@ class PipelineRuntimeService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
-            stageStatus = listOf(BuildStageStatus(
-                stageId = STATUS_STAGE,
-                name = STATUS_STAGE,
-                status = MessageCodeUtil.getCodeLanMessage(BUILD_QUEUE)
-            )),
+            stageStatus = listOf(
+                BuildStageStatus(
+                    stageId = STATUS_STAGE,
+                    name = STATUS_STAGE,
+                    status = MessageCodeUtil.getCodeLanMessage(BUILD_QUEUE)
+                )
+            ),
             oldBuildStatus = oldStatus,
             newBuildStatus = BuildStatus.QUEUE
         )

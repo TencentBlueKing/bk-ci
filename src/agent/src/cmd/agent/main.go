@@ -53,9 +53,16 @@ func main() {
 		systemutil.ExitProcess(1)
 	}
 
-	if len(os.Args) == 2 && os.Args[1] == "version" {
-		fmt.Println(config.AgentVersion)
-		systemutil.ExitProcess(0)
+	if len(os.Args) == 2 {
+		if os.Args[1] == "version" {
+			fmt.Println(config.AgentVersion)
+			systemutil.ExitProcess(0)
+		} else if os.Args[1] == "fullVersion" {
+			fmt.Println(config.AgentVersion)
+			fmt.Println(config.GitCommit)
+			fmt.Println(config.BuildTime)
+			systemutil.ExitProcess(0)
+		}
 	}
 	logs.Info("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 
@@ -83,6 +90,8 @@ func main() {
 	logs.Info("agent start")
 	logs.Info("pid: ", os.Getpid())
 	logs.Info("agent version: ", config.AgentVersion)
+	logs.Info("git commit: ", config.GitCommit)
+	logs.Info("build time: ", config.BuildTime)
 	logs.Info("current user userName: ", systemutil.GetCurrentUser().Username)
 	logs.Info("work dir: ", systemutil.GetWorkDir())
 
