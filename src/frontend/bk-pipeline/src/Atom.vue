@@ -99,13 +99,13 @@
             </template>
             <span class="atom-operate-area">
                 <span
-                    v-if="atom.canRetry"
+                    v-if="atom.canRetry && !isBusy"
                     @click.stop="skipOrRetry(false)"
                 >
                     {{ t('retry') }}
                 </span>
                 <span
-                    v-if="atom.canSkip"
+                    v-if="atom.canSkip && !isBusy"
                     @click.stop="skipOrRetry(true)"
                 >
                     {{ t('SKIP') }}
@@ -230,7 +230,7 @@
             return {
                 isBusy: false,
                 timer: null,
-                execTime: this.atom.startEpoch ? convertMStoString(Date.now() - this.atom.startEpoch) : 0
+                execTime: this.atom.startEpoch ? convertMStoString(Date.now() - this.atom.startEpoch) : '--'
             }
         },
         computed: {
