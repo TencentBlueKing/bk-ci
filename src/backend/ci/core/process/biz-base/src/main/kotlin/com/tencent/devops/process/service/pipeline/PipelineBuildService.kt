@@ -109,8 +109,7 @@ class PipelineBuildService(
         frequencyLimit: Boolean = true,
         buildNo: Int? = null,
         startValues: Map<String, String>? = null,
-        handlePostFlag: Boolean = true,
-        sourceIp: String? = null
+        handlePostFlag: Boolean = true
     ): String {
 
         val pipelineId = pipeline.pipelineId
@@ -240,8 +239,7 @@ class PipelineBuildService(
                 pipelineParamMap = pipelineParamMap,
                 buildNo = buildNo,
                 buildNumRule = pipelineSetting.buildNumRule,
-                setting = setting,
-                sourceIp = sourceIp
+                setting = setting
             )
         } finally {
             if (acquire) {

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.consul.ConsulConstants
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisLock
@@ -43,6 +44,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
+import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,7 +59,9 @@ class PipelineRemoteAuthService @Autowired constructor(
     private val pipelineReportService: PipelineRepositoryService,
     private val redisOperation: RedisOperation,
     private val client: Client,
-    private val bkTag: BkTag
+    private val bkTag: BkTag,
+    private val buildLogPrinter: BuildLogPrinter,
+    private val buildVariableService: BuildVariableService
 ) {
 
     fun generateAuth(pipelineId: String, projectId: String, userId: String): PipelineRemoteToken {
@@ -84,7 +88,7 @@ class PipelineRemoteAuthService @Autowired constructor(
         return pipelineRemoteAuthDao.getByAuth(dslContext, auth)
     }
 
-    fun startPipeline(auth: String, values: Map<String, String>, realIp: String? = null): BuildBasicInfo {
+    fun startPipeline(auth: String, values: Map<String, String>, sourceIp: String? = null): BuildBasicInfo {
         val pipeline = getPipeline(auth)
         if (pipeline == null) {
             logger.warn("The pipeline of auth $auth is not exist")
@@ -111,9 +115,23 @@ class PipelineRemoteAuthService @Autowired constructor(
                 values = values,
                 channelCode = ChannelCode.BS,
                 startType = StartType.REMOTE,
-                buildNo = null,
-                sourceIp = realIp
+                buildNo = null
             ).data!!
+            // 在远程触发器job中打印sourcIp
+            val taskId = buildVariableService.getVariable(
+                projectId = pipeline.projectId,
+                buildId = buildId.id,
+                varName = PIPELINE_START_TASK_ID
+            )
+            logger.info("start task id is $taskId")
+            if (taskId != null) {
+                buildLogPrinter.addLine(
+                    buildId = buildId.id,
+                    message = "sourceIp : $sourceIp",
+                    tag = taskId,
+                    executeCount = 1
+                )
+            }
             BuildBasicInfo(
                 pipelineId = pipeline.pipelineId,
                 projectId = pipeline.projectId,

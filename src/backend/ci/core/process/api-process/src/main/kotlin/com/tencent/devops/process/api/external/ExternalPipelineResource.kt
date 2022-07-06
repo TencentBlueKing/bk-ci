@@ -54,6 +54,9 @@ interface ExternalPipelineResource {
         @ApiParam("远程认证信息", required = true)
         @PathParam("token")
         token: String,
+        @ApiParam("请求Ip", required = true)
+        @HeaderParam("realip")
+        realIp: String?,
         @ApiParam("启动参数", required = true)
         values: Map<String, String>
     ): Result<BuildBasicInfo>

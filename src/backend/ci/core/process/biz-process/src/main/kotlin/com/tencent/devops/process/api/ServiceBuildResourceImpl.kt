@@ -575,8 +575,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         values: Map<String, String>,
         channelCode: ChannelCode,
         buildNo: Int?,
-        startType: StartType,
-        sourceIp: String?
+        startType: StartType
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -591,8 +590,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                     channelCode = channelCode,
                     buildNo = buildNo,
                     checkPermission = ChannelCode.isNeedAuth(channelCode),
-                    frequencyLimit = true,
-                    sourceIp = sourceIp
+                    frequencyLimit = true
                 )
             )
         )
