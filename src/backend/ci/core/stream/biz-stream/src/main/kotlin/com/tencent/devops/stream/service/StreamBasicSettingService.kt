@@ -144,7 +144,7 @@ class StreamBasicSettingService @Autowired constructor(
         gitProjectId: Long,
         enabled: Boolean
     ): Boolean {
-        val projectInfo = requestGitProjectInfo(gitProjectId)
+        val projectInfo = requestGitProjectInfo(gitProjectId, userId)
 
         run back@{
             return saveStreamConf(
@@ -238,7 +238,7 @@ class StreamBasicSettingService @Autowired constructor(
 
     // 更新时同步更新蓝盾项目名称
     fun refreshSetting(userId: String, gitProjectId: Long): Boolean {
-        val projectInfo = requestGitProjectInfo(gitProjectId) ?: return false
+        val projectInfo = requestGitProjectInfo(gitProjectId, userId) ?: return false
         return updateProjectInfo(userId, projectInfo)
     }
 
@@ -311,9 +311,9 @@ class StreamBasicSettingService @Autowired constructor(
         }
     }
 
-    protected fun requestGitProjectInfo(gitProjectId: Long): StreamGitProjectInfoWithProject? {
+    protected fun requestGitProjectInfo(gitProjectId: Long, userId: String): StreamGitProjectInfoWithProject? {
         return try {
-            streamGitTransferService.getGitProjectInfo(gitProjectId.toString(), null)
+            streamGitTransferService.getGitProjectInfo(gitProjectId.toString(), userId)
         } catch (e: Throwable) {
             logger.error("requestGitProjectInfo, msg: ${e.message}")
             return null
@@ -336,7 +336,7 @@ class StreamBasicSettingService @Autowired constructor(
 
         // sp2:如果已有同名项目，则根据project_id 调用scm接口获取git上的项目信息
         val projectId = GitCommonUtils.getGitProjectId(bkProjectResult.projectId)
-        val gitProjectResult = requestGitProjectInfo(projectId)
+        val gitProjectResult = requestGitProjectInfo(projectId, userId)
         // 如果stream 存在该项目信息
         if (null != gitProjectResult) {
             // sp3:比对gitProjectinfo的project_name跟入参的gitProjectName对比是否同名，注意gitProjectName这里包含了group信息，拆解开。
