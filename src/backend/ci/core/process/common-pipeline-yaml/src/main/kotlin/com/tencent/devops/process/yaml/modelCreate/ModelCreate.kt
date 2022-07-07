@@ -165,7 +165,8 @@ class ModelCreate @Autowired(required = false) constructor(
                 // #7147 stream特殊用户专门配置
                 maxConRunningQueueSize = innerModelCreator?.getMaxConRunningQueueSize(
                     projectId = event.projectCode, pipelineId = event.pipelineInfo?.pipelineId ?: ""
-                ) ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
+                ) ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT,
+                maxQueueSize = 1
             )
         )
     }
