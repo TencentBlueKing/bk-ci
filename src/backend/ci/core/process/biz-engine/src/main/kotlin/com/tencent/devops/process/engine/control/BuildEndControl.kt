@@ -45,6 +45,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.enum.RefreshType
@@ -100,7 +101,7 @@ class BuildEndControl @Autowired constructor(
     companion object {
         private val LOG = LoggerFactory.getLogger(BuildEndControl::class.java)
     }
-
+    @BkTimed
     fun handle(event: PipelineBuildFinishEvent) {
         val watcher = Watcher(id = "ENGINE|BuildEnd|${event.traceId}|${event.buildId}|Job#${event.status}")
         try {
