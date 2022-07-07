@@ -232,6 +232,17 @@ export function getCookie (key) {
     return cookieObj[key] || ''
 }
 
+export function getLanguageMap (key = '') {
+    if (!key) return ''
+    let language = ''
+    if (key.toLowerCase() === 'en' || key.toLowerCase() === 'en-us' || key.toLowerCase() === 'en_us') {
+        language = 'en-US'
+    } else {
+        language = 'zh-CN'
+    }
+    return language
+}
+
 export function getDisplayName (displayName = '') {
     return displayName.replace(/^\.ci\//, '')
 }

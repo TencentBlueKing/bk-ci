@@ -130,6 +130,7 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
+import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
@@ -972,6 +973,11 @@ class PipelineRuntimeService @Autowired constructor(
                         key = PIPELINE_BUILD_NUM, value = buildNum.toString(), readOnly = true
                     )
 
+                    // 优化并发组逻辑，只在GROUP_LOCK时才保存进history表
+                    val concurrencyGroup = if (setting?.runLockType == PipelineRunLockType.GROUP_LOCK) {
+                        setting.concurrencyGroup
+                    } else null
+
                     pipelineBuildDao.create(
                         dslContext = transactionContext,
                         projectId = pipelineInfo.projectId,
@@ -993,7 +999,7 @@ class PipelineRuntimeService @Autowired constructor(
                         webhookInfo = getWebhookInfo(startParamMap),
                         buildMsg = getBuildMsg(startParamMap[PIPELINE_BUILD_MSG]),
                         buildNumAlias = buildNumAlias,
-                        concurrencyGroup = setting?.concurrencyGroup
+                        concurrencyGroup = concurrencyGroup
                     )
                     // detail记录,未正式启动，先排队状态
                     buildDetailDao.create(
