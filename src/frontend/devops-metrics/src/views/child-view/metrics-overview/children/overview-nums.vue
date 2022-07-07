@@ -119,9 +119,8 @@ const RenderEmptyNodeIfNone = ({ data }, { slots }) => {
 
 // 触发
 watch(
-  () => props.status, () => {
-    init()
-  }
+  () => props.status,
+  init,
 );
 onMounted(init);
 </script>
