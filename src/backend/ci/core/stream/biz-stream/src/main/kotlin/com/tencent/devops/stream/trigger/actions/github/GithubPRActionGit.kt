@@ -131,7 +131,7 @@ class GithubPRActionGit(
             cred = if (event.isPrForkEvent()) {
                 getForkGitCred()
             } else {
-                getGitCred()
+                getGitCred(event.sender.login)
             }, gitProjectId = getGitProjectIdOrName(event.pullRequest.head.repo.id.toString()),
             sha = event.pullRequest.head.sha,
             retry = ApiRequestRetryInfo(retry = true)
