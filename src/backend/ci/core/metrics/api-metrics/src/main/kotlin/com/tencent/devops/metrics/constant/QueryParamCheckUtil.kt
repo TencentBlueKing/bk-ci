@@ -29,6 +29,7 @@ package com.tencent.devops.metrics.constant
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -41,6 +42,9 @@ object QueryParamCheckUtil {
 
     @Value("\${metrics.maximumQueryMonths:6}")
     private val maximumQueryMonths: Long = 6
+
+    @Value("\${metrics.errorTypeNamePrefix:}")
+    private val errorTypeNamePrefix = ""
 
     fun getIntervalTime(
         fromDate: LocalDateTime,
@@ -96,5 +100,9 @@ object QueryParamCheckUtil {
                 errorCode = MetricsMessageCode.QUERY_DATE_BEYOND
             )
         }
+    }
+
+    fun getErrorTypeName(errorType: Int): String {
+       return MessageCodeUtil.getCodeLanMessage(errorTypeNamePrefix + "$errorType")
     }
 }

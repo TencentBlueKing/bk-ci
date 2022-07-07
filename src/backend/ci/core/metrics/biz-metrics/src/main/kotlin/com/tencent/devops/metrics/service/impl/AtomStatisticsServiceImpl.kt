@@ -52,11 +52,11 @@ import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_FIEL
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
 import com.tencent.devops.metrics.constant.MetricsMessageCode
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getBetweenDate
+import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getErrorTypeName
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getIntervalTime
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.AtomDisplayConfigDao
 import com.tencent.devops.metrics.dao.AtomStatisticsDao
-import com.tencent.devops.metrics.dao.ErrorCodeInfoDao
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseTrendInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomExecutionStatisticsInfoDO
@@ -79,7 +79,6 @@ class AtomStatisticsServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val atomStatisticsDao: AtomStatisticsDao,
     private val atomDisplayConfigDao: AtomDisplayConfigDao,
-    private val errorCodeInfoDao: ErrorCodeInfoDao,
     private val metricsConfig: MetricsConfig
 ) : AtomStatisticsManageService {
     override fun queryAtomTrendInfo(queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO): AtomTrendInfoVO {
@@ -231,8 +230,6 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 atomCodes = atomCodes ?: emptyList()
             )
         )
-        val errorDict = mutableMapOf<Int, String>()
-        errorCodeInfoDao.getErrorTypeDict(dslContext).map { errorDict.put(it.value1(), it.value2()) }
         //  获取表头固定字段
         val headerInfo = getHeaderInfo()
         val atomFailInfos = mutableMapOf<String, MutableMap<String, String>>()
@@ -242,7 +239,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
 
             //  动态扩展表头
             if (!headerInfo.containsKey(getHeaderFieldName(it[BK_ERROR_TYPE].toString()))) {
-                headerInfo[getHeaderFieldName("$errorType")] = errorDict[errorType] ?: ""
+                headerInfo[getHeaderFieldName("$errorType")] = getErrorTypeName(errorType)
             }
             if (!atomFailInfos.containsKey(atomCode)) {
                 atomFailInfos.put(

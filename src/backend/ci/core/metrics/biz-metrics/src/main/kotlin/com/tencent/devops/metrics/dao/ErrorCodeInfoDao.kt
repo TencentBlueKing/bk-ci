@@ -82,12 +82,4 @@ class ErrorCodeInfoDao {
                 .execute().toLong()
         }
     }
-
-    fun getErrorTypeDict(dslContext: DSLContext): Result<Record2<Int, String>> {
-        with(TErrorTypeDict.T_ERROR_TYPE_DICT) {
-            return dslContext.select(ERROR_TYPE, NAME)
-                .from(this)
-                .fetch()
-        }
-    }
 }
