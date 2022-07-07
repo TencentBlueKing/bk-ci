@@ -15,7 +15,7 @@
                 >
                 </mavon-editor>
             </p>
-            <span class="summary-all" @click="hasShowAll = true" v-if="isOverDes && !hasShowAll"> {{ $t('展开全部') }} </span>
+            <!-- <span class="summary-all" @click="hasShowAll = true" v-if="isOverDes && !hasShowAll"> {{ $t('展开全部') }} </span> -->
             <p class="g-empty summary-empty" v-if="!detail.description"> {{ $t('发布者很懒，什么都没留下！') }} </p>
         </section>
 
@@ -74,7 +74,7 @@
                 pageIndex: 1,
                 isLoading: true,
                 isOverDes: false,
-                hasShowAll: false,
+                hasShowAll: true,
                 methodsGenerator: {
                     comment: {
                         atom: (postData) => this.requestAtomComments(postData),
