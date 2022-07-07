@@ -116,7 +116,7 @@ class TxOpShardingRuleService @Autowired constructor(
                             clusterName = clusterName,
                             moduleCode = moduleCode,
                             type = ShardingRuleTypeEnum.DB,
-                            routingName = shardingRoutingRuleRecord.routingName,
+                            routingName = shardingRoutingRuleRecord.routingName
                         )
                         if (dbShardingRoutingRule != null) {
                             // 路由规则已经存在则无需再新增
