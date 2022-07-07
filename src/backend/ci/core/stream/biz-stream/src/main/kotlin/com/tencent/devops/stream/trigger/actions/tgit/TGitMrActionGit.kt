@@ -186,7 +186,7 @@ class TGitMrActionGit(
         val gitMrChangeInfo = apiService.getMrChangeInfo(
             cred = this.getGitCred(),
             gitProjectId = data.eventCommon.gitProjectId,
-            mrId = event().object_attributes.id.toString(),
+            mrId = getMrId().toString(),
             retry = ApiRequestRetryInfo(retry = true)
         )
         gitMrChangeInfo?.files?.forEach { file ->
@@ -362,7 +362,7 @@ class TGitMrActionGit(
             cred = (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as TGitCred,
             // 获取mr信息的project Id和事件强关联，不一定是流水线所处库
             gitProjectId = data.eventCommon.gitProjectId,
-            mrId = event().object_attributes.id.toString(),
+            mrId = getMrId().toString(),
             retry = ApiRequestRetryInfo(true)
         )?.files?.forEach {
             if (it.deletedFile) {

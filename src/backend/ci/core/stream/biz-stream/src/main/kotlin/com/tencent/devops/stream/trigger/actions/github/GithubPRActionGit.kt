@@ -210,7 +210,7 @@ class GithubPRActionGit(
         val gitMrChangeInfo = apiService.getMrChangeInfo(
             cred = this.getGitCred(),
             gitProjectId = getGitProjectIdOrName(data.eventCommon.gitProjectId),
-            mrId = event().pullRequest.id.toString(),
+            mrId = getMrId().toString(),
             retry = ApiRequestRetryInfo(retry = true)
         )
         gitMrChangeInfo?.files?.forEach { file ->
@@ -385,7 +385,7 @@ class GithubPRActionGit(
             cred = (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as TGitCred,
             // 获取mr信息的project Id和事件强关联，不一定是流水线所处库
             gitProjectId = getGitProjectIdOrName(data.eventCommon.gitProjectId),
-            mrId = event().pullRequest.id.toString(),
+            mrId = getMrId().toString(),
             retry = ApiRequestRetryInfo(true)
         )?.files?.forEach {
             if (it.deletedFile) {
