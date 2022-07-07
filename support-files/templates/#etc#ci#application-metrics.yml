@@ -56,7 +56,6 @@ metrics:
   maximumQueryMonths: 6
   queryCountMax: 10000
   defaultLimitNum: 10
-  errorTypeNamePrefix: METRICS_ERROR_TYPE_
 
 sharding:
   routing:
