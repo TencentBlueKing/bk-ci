@@ -493,6 +493,14 @@ class QualityRuleCheckService @Autowired constructor(
                     indicator.taskName = metadata.taskName
                     indicatorsCopy.add(indicator)
                 }
+            } else {
+                metadataList.filter { it.enName == indicator.enName &&
+                        it.taskName.startsWith(indicator.taskName ?: "")
+                }.forEach { metadata ->
+                    indicatorsCopy.remove(indicator)
+                    indicator.taskName = metadata.taskName
+                    indicatorsCopy.add(indicator)
+                }
             }
         }
 
