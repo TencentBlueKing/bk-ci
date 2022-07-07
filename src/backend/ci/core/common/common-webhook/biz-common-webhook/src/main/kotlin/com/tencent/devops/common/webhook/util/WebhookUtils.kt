@@ -246,7 +246,7 @@ object WebhookUtils {
         startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = pullRequest.number ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = pullRequest.body ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = pullRequest.title ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = pullRequest.assignee.login ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = pullRequest.assignee?.login ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_REVIEWERS] =
             pullRequest.requestedReviewers.joinToString(",") { it.login } ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = pullRequest.milestone?.title ?: ""

@@ -225,7 +225,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
             startParams[PIPELINE_GIT_MR_IID] = pullRequest.number.toString()
             startParams[PIPELINE_GIT_COMMIT_AUTHOR] = pullRequest.head.user.login
             startParams[PIPELINE_GIT_MR_TITLE] = pullRequest.title
-            startParams[PIPELINE_GIT_MR_DESC] = pullRequest.body
+            startParams[PIPELINE_GIT_MR_DESC] = pullRequest.body ?: ""
             startParams[PIPELINE_GIT_MR_PROPOSER] = pullRequest.user.login
             startParams[PIPELINE_GIT_EVENT_URL] = pullRequest.htmlUrl ?: ""
         }

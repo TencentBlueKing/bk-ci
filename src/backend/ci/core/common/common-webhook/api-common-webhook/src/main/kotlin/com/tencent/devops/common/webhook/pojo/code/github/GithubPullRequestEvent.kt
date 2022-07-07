@@ -64,7 +64,7 @@ data class GithubPullRequest(
     @JsonProperty("additions")
     val additions: Int, // 1
     @JsonProperty("assignee")
-    val assignee: GithubUser,
+    val assignee: GithubUser?,
     @JsonProperty("assignees")
     val assignees: List<GithubUser>,
     @JsonProperty("author_association")
@@ -74,7 +74,7 @@ data class GithubPullRequest(
     @JsonProperty("base")
     val base: GithubPullRequestBranch, // 目标分支
     @JsonProperty("body")
-    val body: String, // testestetsets
+    val body: String?, // testestetsets
     @JsonProperty("changed_files")
     val changedFiles: Int, // 1
     @JsonProperty("closed_at")
