@@ -490,9 +490,8 @@ class QualityRuleCheckService @Autowired constructor(
             if (indicator.taskName.isNullOrEmpty() && metadataList.count { it.enName == indicator.enName } > 1) {
                 indicatorsCopy.remove(indicator)
                 metadataList.filter { it.enName == indicator.enName }.forEach {
-                    val extraIndicator = indicator
-                    extraIndicator.taskName = it.taskName
-                    indicatorsCopy.add(extraIndicator)
+                    indicator.taskName = it.taskName
+                    indicatorsCopy.add(indicator)
                 }
             }
         }
