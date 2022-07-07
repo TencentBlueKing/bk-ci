@@ -485,6 +485,7 @@ class QualityRuleCheckService @Autowired constructor(
             }
         }
 
+        logger.info("QUALITY|metadataList is: $metadataList, indicators is:$indicators")
         val indicatorsCopy = indicators.toMutableList()
         indicators.forEach { indicator ->
             if (indicator.taskName.isNullOrEmpty() && metadataList.count { it.enName == indicator.enName } > 1) {
@@ -504,7 +505,7 @@ class QualityRuleCheckService @Autowired constructor(
             }
         }
 
-        logger.info("QUALITY|metadataList is: $metadataList, indicators is:$indicators")
+        logger.info("QUALITY|indicatorsCopy is:$indicatorsCopy")
         // 遍历每个指标
         indicatorsCopy.forEach { indicator ->
             val thresholdType = indicator.thresholdType
