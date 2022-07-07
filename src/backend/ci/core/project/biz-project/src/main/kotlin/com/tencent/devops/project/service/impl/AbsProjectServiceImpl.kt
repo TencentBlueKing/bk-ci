@@ -250,7 +250,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         needValidate: Boolean,
         channel: ProjectChannelCode
     ): ProjectVO? {
-        if (getByEnglishName(projectCode) == null) {
+        if (getByEnglishName(projectCode) != null) {
             logger.warn("createExtProject $projectCode exist")
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.PROJECT_NAME_EXIST,
