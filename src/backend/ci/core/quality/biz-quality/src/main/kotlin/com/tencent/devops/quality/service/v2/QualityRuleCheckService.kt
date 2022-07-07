@@ -490,14 +490,14 @@ class QualityRuleCheckService @Autowired constructor(
         indicators.forEach { indicator ->
             if (indicator.taskName.isNullOrEmpty() && metadataList.count { it.enName == indicator.enName } > 1) {
                 indicatorsCopy.remove(indicator)
-                metadataList.filter { it.enName == indicator.enName }.forEach { metadata ->
+                metadataList.filter { it.enName == indicator.enName }.map { metadata ->
                     indicator.taskName = metadata.taskName
                     indicatorsCopy.add(indicator)
                 }
             } else {
                 metadataList.filter { it.enName == indicator.enName &&
                         it.taskName.startsWith(indicator.taskName ?: "")
-                }.forEach { metadata ->
+                }.map { metadata ->
                     indicatorsCopy.remove(indicator)
                     indicator.taskName = metadata.taskName
                     indicatorsCopy.add(indicator)
