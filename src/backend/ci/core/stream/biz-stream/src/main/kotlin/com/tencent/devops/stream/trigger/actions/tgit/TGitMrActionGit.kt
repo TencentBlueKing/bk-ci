@@ -102,6 +102,8 @@ class TGitMrActionGit(
         )
     }
 
+    override fun getMrId() = event().object_attributes.id
+
     override val api: TGitApiService
         get() = apiService
 
@@ -239,7 +241,8 @@ class TGitMrActionGit(
         val event = event()
         if (event.isMrMergeEvent()) {
             return Pair(
-                data.eventCommon.branch, api.getFileContent(
+                data.eventCommon.branch,
+                    api.getFileContent(
                     cred = this.getGitCred(),
                     gitProjectId = getGitProjectIdOrName(),
                     fileName = fileName,

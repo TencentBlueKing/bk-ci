@@ -39,6 +39,7 @@ import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.actions.tgit.TGitMrActionGit
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
@@ -72,16 +73,14 @@ class MergeConflictCheck @Autowired constructor(
      * - 没有冲突，进行后续操作
      */
     fun checkMrConflict(
-        action: GitBaseAction,
+        action: StreamMrAction,
         path2PipelineExists: Map<String, StreamTriggerPipeline>
     ): Boolean {
         val projectId = action.data.eventCommon.gitProjectId
-        val event = action.event() as GitMergeRequestEvent
-        val mrRequestId = event.object_attributes.id.toString()
 
         val mrInfo = action.api.getMrInfo(
             gitProjectId = action.getGitProjectIdOrName(projectId),
-            mrId = mrRequestId,
+            mrId = action.getMrId().toString(),
             cred = action.getGitCred(),
             retry = ApiRequestRetryInfo(retry = true)
         )!!
@@ -124,7 +123,10 @@ class MergeConflictCheck @Autowired constructor(
                 return false
             }
             TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {
-                logger.warn("git ci mr request has conflict , git project id: $projectId, mr request id: $mrRequestId")
+                logger.warn(
+                    "git ci mr request has conflict , git project id: $projectId, " +
+                        "mr request id: ${action.getMrId()}"
+                )
                 throw StreamTriggerException(action, TriggerReason.CI_MERGE_CONFLICT)
             }
             // 没有冲突则触发流水线

@@ -43,4 +43,6 @@ interface StreamMrAction : BaseAction {
     fun addMrComment(
         body: MrCommentBody
     )
+
+    fun getMrId(): Long
 }

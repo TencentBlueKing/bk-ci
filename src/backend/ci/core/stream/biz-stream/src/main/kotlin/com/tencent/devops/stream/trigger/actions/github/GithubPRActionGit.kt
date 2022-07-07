@@ -106,6 +106,8 @@ class GithubPRActionGit(
         )
     }
 
+    override fun getMrId() = event().pullRequest.number.toLong()
+
     override val api: GithubApiService
         get() = apiService
 
