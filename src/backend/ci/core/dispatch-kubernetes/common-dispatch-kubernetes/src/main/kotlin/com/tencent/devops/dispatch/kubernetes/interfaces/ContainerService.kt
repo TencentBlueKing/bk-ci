@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.kubernetes.interfaces
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
@@ -39,10 +40,10 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatu
 import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchBuilderDebugStatus
 
 /**
- * 用来获取不同类型的dispatchType的service来调用相关实现
+ * 用来获取不同类型的dispatchType的container service来调用相关实现
  * 注：仅在构建相关接口使用使用此类
  */
-interface DispatchBuildTypeService {
+interface ContainerService {
     // 停止构建锁
     val shutdownLockBaseKey: String
 

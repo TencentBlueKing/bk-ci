@@ -25,51 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.bcs.service
+package com.tencent.devops.dispatch.kubernetes.service
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.dispatch.bcs.client.BcsBuilderClient
-import com.tencent.devops.dispatch.bcs.client.BcsJobClient
-import com.tencent.devops.dispatch.bcs.client.BcsTaskClient
-import com.tencent.devops.dispatch.bcs.pojo.BcsBuilderStatusEnum
-import com.tencent.devops.dispatch.bcs.pojo.BcsDeleteBuilderParams
-import com.tencent.devops.dispatch.bcs.pojo.BcsJob
-import com.tencent.devops.dispatch.bcs.pojo.BcsJobStatusEnum
-import com.tencent.devops.dispatch.bcs.pojo.BcsStartBuilderParams
-import com.tencent.devops.dispatch.bcs.pojo.BcsStopBuilderParams
-import com.tencent.devops.dispatch.bcs.pojo.BcsTaskStatusEnum
-import com.tencent.devops.dispatch.bcs.pojo.NfsConfig
-import com.tencent.devops.dispatch.bcs.pojo.getCodeMessage
-import com.tencent.devops.dispatch.bcs.pojo.isFailed
-import com.tencent.devops.dispatch.bcs.pojo.isRunning
-import com.tencent.devops.dispatch.bcs.pojo.isSuccess
-import com.tencent.devops.dispatch.kubernetes.interfaces.DispatchTypeService
+import com.tencent.devops.dispatch.kubernetes.client.KubernetesBuilderClient
+import com.tencent.devops.dispatch.kubernetes.client.KubernetesJobClient
+import com.tencent.devops.dispatch.kubernetes.client.KubernetesTaskClient
+import com.tencent.devops.dispatch.kubernetes.interfaces.JobService
 import com.tencent.devops.dispatch.kubernetes.pojo.DockerRegistry
-import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
+import com.tencent.devops.dispatch.kubernetes.pojo.Job
+import com.tencent.devops.dispatch.kubernetes.pojo.JobStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.NfsConfig
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchJobLogResp
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchJobReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchTaskResp
-import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchBuilderDebugStatus
-import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchDebugOperateBuilderParams
-import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchDebugOperateBuilderType
-import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchDebugTaskStatus
-import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchDebugTaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.isFailed
+import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
+import com.tencent.devops.dispatch.kubernetes.pojo.isSuccess
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
-@Service("bcsDispatchTypeService")
-class BcsDispatchTypeService @Autowired constructor(
-    private val bcsJobClient: BcsJobClient,
-    private val bcsTaskClient: BcsTaskClient,
-    private val bcsBuilderClient: BcsBuilderClient
-) : DispatchTypeService {
+@Service("kubernetesDispatchTypeService")
+class KubernetesJobService @Autowired constructor(
+    private val kubernetesTaskClient: KubernetesTaskClient,
+    private val kubernetesJobClient: KubernetesJobClient,
+    private val kubernetesBuilderClient: KubernetesBuilderClient
+) : JobService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BcsDispatchTypeService::class.java)
+        private val logger = LoggerFactory.getLogger(KubernetesJobService::class.java)
     }
 
     @Value("\${bcs.resources.job.cpu}")
@@ -88,11 +75,9 @@ class BcsDispatchTypeService @Autowired constructor(
 
     override fun createJob(userId: String, jobReq: DispatchJobReq): DispatchTaskResp {
         val job = with(jobReq) {
-            BcsJob(
+            Job(
                 name = alias,
-                builderName = podNameSelector,
-                shareDiskMountPath = mountPath,
-                deadline = activeDeadlineSeconds,
+                activeDeadlineSeconds = activeDeadlineSeconds,
                 image = image,
                 registry = DockerRegistry(
                     host = registry.host,
@@ -104,18 +89,18 @@ class BcsDispatchTypeService @Autowired constructor(
                 disk = disk,
                 env = params?.env,
                 command = params?.command,
-                workDir = params?.workDir,
                 nfs = params?.nfsVolume?.map { nfsVo ->
                     NfsConfig(
                         server = nfsVo.server,
                         path = nfsVo.path,
                         mountPath = nfsVo.mountPath
                     )
-                }
+                },
+                podNameSelector = podNameSelector
             )
         }
 
-        val result = bcsJobClient.createJob(userId, job)
+        val result = kubernetesJobClient.createJob(userId, job)
         if (result.isNotOk() || result.data == null) {
             return DispatchTaskResp(
                 result.data?.taskId,
@@ -126,14 +111,14 @@ class BcsDispatchTypeService @Autowired constructor(
     }
 
     override fun getJobStatus(userId: String, jobName: String): DispatchBuildStatusResp {
-        val result = bcsJobClient.getJobStatus(userId, jobName)
+        val result = kubernetesJobClient.getJobStatus(userId, jobName)
         if (result.isNotOk()) {
             return DispatchBuildStatusResp(
                 status = DispatchBuildStatusEnum.failed.name,
                 errorMsg = result.message
             )
         }
-        val status = BcsJobStatusEnum.realNameOf(result.data?.status)
+        val status = JobStatusEnum.realNameOf(result.data?.state)
         if (status == null || status.isFailed()) {
             return DispatchBuildStatusResp(DispatchBuildStatusEnum.failed.name, status?.message)
         }
@@ -145,7 +130,7 @@ class BcsDispatchTypeService @Autowired constructor(
     }
 
     override fun getJobLogs(userId: String, jobName: String, sinceTime: Int?): DispatchJobLogResp {
-        val result = bcsJobClient.getJobLogs(userId, jobName, sinceTime)
+        val result = kubernetesJobClient.getJobLogs(userId, jobName, sinceTime)
         if (result.isNotOk()) {
             return DispatchJobLogResp(
                 log = result.data,

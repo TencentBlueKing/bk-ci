@@ -29,12 +29,12 @@ package com.tencent.devops.dispatch.kubernetes.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchJobLogResp
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchJobReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchTaskResp
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
+import com.tencent.devops.dispatch.kubernetes.service.factory.JobServiceFactory
 import com.tencent.devops.dispatch.kubernetes.utils.JobRedisUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,7 +42,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class DispatchBaseJobService @Autowired constructor(
-    private val dispatchFactory: DispatchTypeServiceFactory,
+    private val jobServiceFactory: JobServiceFactory,
     private val jobRedisUtils: JobRedisUtils
 ) {
 
@@ -69,11 +69,11 @@ class DispatchBaseJobService @Autowired constructor(
         }
         jobRedisUtils.setJobCount(dispatchType, buildId, jobReq.podNameSelector)
 
-        return dispatchFactory.load(dispatchType).createJob(userId, jobReq)
+        return jobServiceFactory.load(dispatchType).createJob(userId, jobReq)
     }
 
     fun getJobStatus(userId: String, dispatchType: DispatchEnumType, jobName: String): DispatchBuildStatusResp {
-        return dispatchFactory.load(dispatchType).getJobStatus(userId, jobName)
+        return jobServiceFactory.load(dispatchType).getJobStatus(userId, jobName)
     }
 
     fun getJobLogs(
@@ -82,6 +82,6 @@ class DispatchBaseJobService @Autowired constructor(
         jobName: String,
         sinceTime: Int?
     ): DispatchJobLogResp {
-        return dispatchFactory.load(dispatchType).getJobLogs(userId, jobName, sinceTime)
+        return jobServiceFactory.load(dispatchType).getJobLogs(userId, jobName, sinceTime)
     }
 }

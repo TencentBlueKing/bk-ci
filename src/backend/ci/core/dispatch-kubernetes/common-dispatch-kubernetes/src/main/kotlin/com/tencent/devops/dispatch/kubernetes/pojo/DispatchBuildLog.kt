@@ -25,20 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.service
+package com.tencent.devops.dispatch.kubernetes.pojo
 
-import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
-import com.tencent.devops.dispatch.kubernetes.service.factory.ContainerServiceFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-
-@Service
-class DispatchBaseTaskService @Autowired constructor(
-    private val containerServiceFactory: ContainerServiceFactory
-) {
-
-    fun getTaskStatus(userId: String, dispatchType: DispatchEnumType, taskId: String): DispatchBuildStatusResp {
-        return containerServiceFactory.load(dispatchType).getTaskStatus(userId, taskId)
-    }
-}
+/**
+ * 构建过程中需要打印的日志
+ * @param readyStartLog 准备启动构建的日志
+ */
+data class DispatchBuildLog(
+    val readyStartLog: String?,
+    val startContainerError: String,
+    val troubleShooting: String
+)

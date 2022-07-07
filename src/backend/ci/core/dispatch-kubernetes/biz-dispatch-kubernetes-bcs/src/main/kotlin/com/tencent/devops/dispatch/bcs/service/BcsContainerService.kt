@@ -59,8 +59,8 @@ import com.tencent.devops.dispatch.common.common.ENV_KEY_GATEWAY
 import com.tencent.devops.dispatch.common.common.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.common.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
-import com.tencent.devops.dispatch.kubernetes.interfaces.DispatchBuildLog
-import com.tencent.devops.dispatch.kubernetes.interfaces.DispatchBuildTypeService
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
+import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
 import com.tencent.devops.dispatch.kubernetes.pojo.DockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
@@ -80,14 +80,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service("bcsDispatchBuildTypeService")
-class BcsDispatchBuildTypeService @Autowired constructor(
+class BcsContainerService @Autowired constructor(
     private val bcsBuilderClient: BcsBuilderClient,
     private val logsPrinter: LogsPrinter,
     private val bcsTaskClient: BcsTaskClient
-) : DispatchBuildTypeService {
+) : ContainerService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BcsDispatchBuildTypeService::class.java)
+        private val logger = LoggerFactory.getLogger(BcsContainerService::class.java)
     }
 
     override val shutdownLockBaseKey = "dispatch_bcs_shutdown_lock_"

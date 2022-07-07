@@ -45,9 +45,8 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBu
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderType
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchBuilderDebugStatus
-import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchDebugOperateBuilderParams
-import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchDebugOperateBuilderType
-import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchDebugTaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.service.factory.ContainerServiceFactory
+import com.tencent.devops.dispatch.kubernetes.service.factory.JobServiceFactory
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -57,8 +56,8 @@ import org.springframework.stereotype.Service
 @Service
 class DispatchBaseDebugService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val dispatchFactory: DispatchTypeServiceFactory,
-    private val dispatchBuildTypeFactory: DispatchBuildTypeFactory,
+    private val jobServiceFactory: JobServiceFactory,
+    private val containerServiceFactory: ContainerServiceFactory,
     private val dispatchKubernetesBuildDao: DispatchKubernetesBuildDao,
     private val dispatchKubernetesBuildHisDao: DispatchKubernetesBuildHisDao,
     private val bkAuthPermissionApi: AuthPermissionApi,
@@ -105,7 +104,7 @@ class DispatchBaseDebugService @Autowired constructor(
         }
 
         // 查看当前容器的状态
-        val statusResponse = dispatchBuildTypeFactory.load(dispatchType).getBuilderStatus(
+        val statusResponse = containerServiceFactory.load(dispatchType).getBuilderStatus(
             buildId = buildId ?: "",
             vmSeqId = vmSeqId,
             userId = userId,
@@ -148,7 +147,7 @@ class DispatchBaseDebugService @Autowired constructor(
                 }
                 DispatchBuildBuilderStatus.STARTING -> {
                     // 容器正在启动中，等待启动成功
-                    val buildStatus = dispatchBuildTypeFactory.load(dispatchType).waitDebugBuilderRunning(
+                    val buildStatus = containerServiceFactory.load(dispatchType).waitDebugBuilderRunning(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         buildId = buildId ?: "",
@@ -181,7 +180,7 @@ class DispatchBaseDebugService @Autowired constructor(
         redisUtils.setDebugBuilderName(dispatchType, userId, pipelineId, vmSeqId, builderName)
 
         return DispatchDebugResponse(
-            websocketUrl = dispatchBuildTypeFactory.load(dispatchType).getDebugWebsocketUrl(
+            websocketUrl = containerServiceFactory.load(dispatchType).getDebugWebsocketUrl(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 staffName = userId,
@@ -235,21 +234,21 @@ class DispatchBaseDebugService @Autowired constructor(
                 )
                 if (builder.status == 0 && builder.debugStatus) {
                     // 关闭容器
-                    val taskId = dispatchBuildTypeFactory.load(dispatchType).operateBuilder(
+                    val taskId = containerServiceFactory.load(dispatchType).operateBuilder(
                         buildId = "",
                         vmSeqId = vmSeqId,
                         userId = userId,
                         builderName = debugBuilderName,
                         param = DispatchBuildOperateBuilderParams(DispatchBuildOperateBuilderType.STOP, null)
                     )
-                    val opResult = dispatchBuildTypeFactory.load(dispatchType).waitTaskFinish(userId, taskId)
+                    val opResult = containerServiceFactory.load(dispatchType).waitTaskFinish(userId, taskId)
                     if (opResult.status == DispatchBuildTaskStatusEnum.SUCCEEDED) {
                         logger.info("stop debug $debugBuilderName success.")
                     } else {
                         // 停不掉，尝试删除
                         logger.info("stop debug $debugBuilderName failed, msg: ${opResult.errMsg}")
                         logger.info("stop debug $debugBuilderName failed, try to delete it.")
-                        dispatchBuildTypeFactory.load(dispatchType).operateBuilder(
+                        containerServiceFactory.load(dispatchType).operateBuilder(
                             buildId = "",
                             vmSeqId = vmSeqId,
                             userId = userId,
@@ -285,7 +284,7 @@ class DispatchBaseDebugService @Autowired constructor(
         vmSeqId: String,
         builderName: String
     ) {
-        val taskId = dispatchBuildTypeFactory.load(dispatchType).operateBuilder(
+        val taskId = containerServiceFactory.load(dispatchType).operateBuilder(
             buildId = buildId ?: "",
             vmSeqId = vmSeqId,
             userId = userId,
@@ -295,13 +294,13 @@ class DispatchBaseDebugService @Autowired constructor(
                 env = mapOf(
                     ENV_KEY_PROJECT_ID to projectId,
                     "TERM" to "xterm-256color",
-                    SLAVE_ENVIRONMENT to dispatchFactory.load(dispatchType).slaveEnv
+                    SLAVE_ENVIRONMENT to jobServiceFactory.load(dispatchType).slaveEnv
                 )
             )
         )
 
         logger.info("$userId start builder, taskId:($taskId)")
-        val startResult = dispatchBuildTypeFactory.load(dispatchType).waitTaskFinish(userId, taskId)
+        val startResult = containerServiceFactory.load(dispatchType).waitTaskFinish(userId, taskId)
         if (startResult.status == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             // 启动成功
             logger.info("$userId start ${dispatchType.value} builder success")

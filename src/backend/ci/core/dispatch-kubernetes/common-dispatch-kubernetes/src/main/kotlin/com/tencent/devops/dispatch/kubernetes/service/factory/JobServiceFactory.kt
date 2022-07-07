@@ -25,20 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.service
+package com.tencent.devops.dispatch.kubernetes.service.factory
 
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.dispatch.kubernetes.interfaces.DispatchBuildTypeService
+import com.tencent.devops.dispatch.kubernetes.interfaces.JobService
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
 import org.springframework.stereotype.Service
 
 @Service
-class DispatchBuildTypeFactory {
+class JobServiceFactory {
+    fun load(dispatchType: DispatchEnumType): JobService {
 
-    fun load(dispatchType: DispatchEnumType): DispatchBuildTypeService {
         return SpringContextUtil.getBean(
-            DispatchBuildTypeService::class.java,
-            dispatchType.value + "DispatchBuildTypeService"
+            JobService::class.java,
+            dispatchType.value + "JobService"
         )
     }
 }

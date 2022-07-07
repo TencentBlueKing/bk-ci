@@ -51,6 +51,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildBuilderSt
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderType
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.service.factory.ContainerServiceFactory
 import com.tencent.devops.dispatch.kubernetes.utils.JobRedisUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import org.jooq.DSLContext
@@ -63,7 +64,7 @@ import org.springframework.stereotype.Service
 class DispatchBuildService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
-    private val dispatchBuildFactory: DispatchBuildTypeFactory,
+    private val containerServiceFactory: ContainerServiceFactory,
     private val redisOperation: RedisOperation,
     private val logsPrinter: LogsPrinter,
     private val jobRedisUtils: JobRedisUtils,
@@ -95,7 +96,7 @@ class DispatchBuildService @Autowired constructor(
 
     fun preStartUp(dispatchType: DispatchEnumType, dispatchMessage: DispatchMessage): Boolean {
         logger.info("On start up - ($dispatchMessage)")
-        logsPrinter.printLogs(dispatchMessage, dispatchBuildFactory.load(dispatchType).log.readyStartLog)
+        logsPrinter.printLogs(dispatchMessage, containerServiceFactory.load(dispatchType).log.readyStartLog)
 
         val buildBuilderPoolNo = builderPoolNoDao.getBaseBuildLastPoolNo(
             dslContext = dslContext,
@@ -110,7 +111,7 @@ class DispatchBuildService @Autowired constructor(
     }
 
     fun startUp(dispatchType: DispatchEnumType, dispatchMessage: DispatchMessage, tryTime: Int) {
-        val dispatchBuild = dispatchBuildFactory.load(dispatchType)
+        val dispatchBuild = containerServiceFactory.load(dispatchType)
         threadLocalCpu.set(dispatchBuild.cpu)
         threadLocalMemory.set(dispatchBuild.memory)
         threadLocalDisk.set(dispatchBuild.disk)
@@ -255,7 +256,7 @@ class DispatchBuildService @Autowired constructor(
                     return Triple(null, i, true)
                 }
 
-                val detailResponse = dispatchBuildFactory.load(dispatchType).getBuilderStatus(
+                val detailResponse = containerServiceFactory.load(dispatchType).getBuilderStatus(
                     buildId = buildId,
                     vmSeqId = vmSeqId,
                     userId = userId,
@@ -329,7 +330,7 @@ class DispatchBuildService @Autowired constructor(
         containerPool: Pool,
         poolNo: Int
     ) {
-        val (taskId, builderName) = dispatchBuildFactory.load(dispatchType).createAndStartBuilder(
+        val (taskId, builderName) = containerServiceFactory.load(dispatchType).createAndStartBuilder(
             dispatchMessages = this,
             containerPool = containerPool,
             poolNo = poolNo,
@@ -346,7 +347,7 @@ class DispatchBuildService @Autowired constructor(
         builderName: String,
         poolNo: Int
     ) {
-        val taskId = dispatchBuildFactory.load(dispatchType).startBuilder(
+        val taskId = containerServiceFactory.load(dispatchType).startBuilder(
             dispatchMessages = this,
             builderName = builderName,
             poolNo = poolNo,
@@ -365,7 +366,7 @@ class DispatchBuildService @Autowired constructor(
         dispatchType: DispatchEnumType,
         dispatchBuildImageReq: DispatchBuildImageReq
     ): DispatchTaskResp {
-        return dispatchBuildFactory.load(dispatchType)
+        return containerServiceFactory.load(dispatchType)
             .buildAndPushImage(userId, projectId, buildId, dispatchBuildImageReq)
     }
 
@@ -376,7 +377,7 @@ class DispatchBuildService @Autowired constructor(
         dispatchType: DispatchEnumType,
         clearErrorBuilder: Boolean
     ) {
-        val dispatchBuild = dispatchBuildFactory.load(dispatchType)
+        val dispatchBuild = containerServiceFactory.load(dispatchType)
         logger.info(
             "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start builder, " +
                 "taskId:($taskId)"
@@ -461,7 +462,7 @@ class DispatchBuildService @Autowired constructor(
         try {
             // 下发删除，不管成功失败
             logger.info("[$buildId]|[$vmSeqId] Delete builder, userId: $userId, builderName: $builderName")
-            dispatchBuildFactory.load(dispatchType).operateBuilder(
+            containerServiceFactory.load(dispatchType).operateBuilder(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 userId = userId,
@@ -500,7 +501,7 @@ class DispatchBuildService @Autowired constructor(
             // 同一个buildId的多个shutdownAllVMTaskAtom事件一定在短时间内到达，300s足够
             val shutdownLock = RedisLock(
                 redisOperation = redisOperation,
-                lockKey = dispatchBuildFactory.load(dispatchType).shutdownLockBaseKey + event.buildId,
+                lockKey = containerServiceFactory.load(dispatchType).shutdownLockBaseKey + event.buildId,
                 expiredTimeInSeconds = 300L
             )
             try {
@@ -588,7 +589,7 @@ class DispatchBuildService @Autowired constructor(
         builderName: String?,
         event: PipelineAgentShutdownEvent
     ) {
-        val dispatchBuild = dispatchBuildFactory.load(dispatchType)
+        val dispatchBuild = containerServiceFactory.load(dispatchType)
         with(event) {
             try {
                 logger.info(

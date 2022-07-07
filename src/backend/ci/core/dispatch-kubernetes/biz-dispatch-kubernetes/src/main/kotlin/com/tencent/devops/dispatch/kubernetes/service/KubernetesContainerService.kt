@@ -44,8 +44,8 @@ import com.tencent.devops.dispatch.kubernetes.client.KubernetesTaskClient
 import com.tencent.devops.dispatch.kubernetes.common.ConstantsMessage
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
-import com.tencent.devops.dispatch.kubernetes.interfaces.DispatchBuildLog
-import com.tencent.devops.dispatch.kubernetes.interfaces.DispatchBuildTypeService
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
+import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
 import com.tencent.devops.dispatch.kubernetes.pojo.Builder
 import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.DockerRegistry
@@ -80,14 +80,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service("kubernetesDispatchBuildTypeService")
-class KubernetesDispatchBuildTypeService @Autowired constructor(
+class KubernetesContainerService @Autowired constructor(
     private val logsPrinter: LogsPrinter,
     private val kubernetesTaskClient: KubernetesTaskClient,
     private val kubernetesBuilderClient: KubernetesBuilderClient
-) : DispatchBuildTypeService {
+) : ContainerService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(KubernetesDispatchBuildTypeService::class.java)
+        private val logger = LoggerFactory.getLogger(KubernetesContainerService::class.java)
     }
 
     override val shutdownLockBaseKey = "dispatch_kubernetes_shutdown_lock_"
