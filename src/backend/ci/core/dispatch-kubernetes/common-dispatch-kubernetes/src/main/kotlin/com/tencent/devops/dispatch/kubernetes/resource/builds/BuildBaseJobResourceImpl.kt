@@ -37,7 +37,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchJobReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchTaskResp
 import com.tencent.devops.dispatch.kubernetes.service.DispatchBaseJobService
 import com.tencent.devops.dispatch.kubernetes.service.DispatchBuildService
-import com.tencent.devops.dispatch.kubernetes.utils.BaseCommonUtils
+import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -57,7 +57,7 @@ class BuildBaseJobResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 buildId = buildId,
-                dispatchType = BaseCommonUtils.checkDispatchType(dispatchType),
+                dispatchType = CommonUtils.checkDispatchType(dispatchType),
                 jobReq = jobReq
             )
         )
@@ -67,7 +67,7 @@ class BuildBaseJobResourceImpl @Autowired constructor(
         return Result(
             dispatchBaseJobService.getJobStatus(
                 userId = userId,
-                dispatchType = BaseCommonUtils.checkDispatchType(dispatchType),
+                dispatchType = CommonUtils.checkDispatchType(dispatchType),
                 jobName = jobName
             )
         )
@@ -82,7 +82,7 @@ class BuildBaseJobResourceImpl @Autowired constructor(
         return Result(
             dispatchBaseJobService.getJobLogs(
                 userId = userId,
-                dispatchType = BaseCommonUtils.checkDispatchType(dispatchType),
+                dispatchType = CommonUtils.checkDispatchType(dispatchType),
                 jobName = jobName,
                 sinceTime = sinceTime
             )
@@ -101,7 +101,7 @@ class BuildBaseJobResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 buildId = buildId,
-                dispatchType = BaseCommonUtils.checkDispatchType(dispatchType),
+                dispatchType = CommonUtils.checkDispatchType(dispatchType),
                 dispatchBuildImageReq = buildImageReq
             )
         )

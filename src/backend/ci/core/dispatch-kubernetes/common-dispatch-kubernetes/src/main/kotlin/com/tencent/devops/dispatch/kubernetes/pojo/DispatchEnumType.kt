@@ -32,12 +32,14 @@ package com.tencent.devops.dispatch.kubernetes.pojo
  * 注：谨慎修改字符串值, 修改后对现有的redis,mysql会有影响
  */
 enum class DispatchEnumType(val value: String) {
-    BCS("bcs");
+    BCS("bcs"),
+    KUBERNETES("kubernetes");
 
     companion object {
         fun getDispatchEnumType(value: String): DispatchEnumType? {
             return when (value) {
                 "bcs" -> BCS
+                "kubernetes" -> KUBERNETES
                 else -> null
             }
         }

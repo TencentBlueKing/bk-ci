@@ -32,7 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBaseDebugResource
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchDebugResponse
 import com.tencent.devops.dispatch.kubernetes.service.DispatchBaseDebugService
-import com.tencent.devops.dispatch.kubernetes.utils.BaseCommonUtils
+import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -50,7 +50,7 @@ class ServiceBaseDebugResourceImpl @Autowired constructor(
         return Result(
             dispatchBaseDebugService.startDebug(
                 userId = userId,
-                dispatchType = BaseCommonUtils.checkDispatchType(dispatchType),
+                dispatchType = CommonUtils.checkDispatchType(dispatchType),
                 projectId = projectId,
                 pipelineId = pipelineId,
                 vmSeqId = vmSeqId,
@@ -69,7 +69,7 @@ class ServiceBaseDebugResourceImpl @Autowired constructor(
         return Result(
             dispatchBaseDebugService.stopDebug(
                 userId = userId,
-                dispatchType = BaseCommonUtils.checkDispatchType(dispatchType),
+                dispatchType = CommonUtils.checkDispatchType(dispatchType),
                 pipelineId = pipelineId,
                 vmSeqId = vmSeqId,
                 builderName = builderName

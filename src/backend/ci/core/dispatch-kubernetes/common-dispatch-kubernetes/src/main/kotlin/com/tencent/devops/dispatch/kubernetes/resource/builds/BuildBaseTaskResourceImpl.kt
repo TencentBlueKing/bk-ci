@@ -32,7 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.builds.BuildBaseTaskResource
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
 import com.tencent.devops.dispatch.kubernetes.service.DispatchBaseTaskService
-import com.tencent.devops.dispatch.kubernetes.utils.BaseCommonUtils
+import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -43,7 +43,7 @@ class BuildBaseTaskResourceImpl @Autowired constructor(
         return Result(
             dispatchBaseTaskService.getTaskStatus(
                 userId = userId,
-                dispatchType = BaseCommonUtils.checkDispatchType(dispatchType),
+                dispatchType = CommonUtils.checkDispatchType(dispatchType),
                 taskId = taskId
             )
         )
