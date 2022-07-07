@@ -101,7 +101,7 @@ class ScheduleTriggerService @Autowired constructor(
                 homepage = it.homePage
             )
         }
-        if (streamTriggerSetting == null || streamTriggerSetting?.enableCi == false) {
+        if (streamTriggerSetting == null || streamTriggerSetting.enableCi == false) {
             logger.warn("project ${streamTimerEvent.projectId} not enable ci no trigger schedule")
             return null
         }
@@ -109,7 +109,7 @@ class ScheduleTriggerService @Autowired constructor(
         val action = eventActionFactory.loadScheduleAction(
             setting = streamTriggerSetting,
             event = StreamScheduleEvent(
-                userId = streamTimerEvent.userId,
+                userId = streamTriggerSetting.enableUser,
                 gitProjectId = streamTimerEvent.gitProjectId.toString(),
                 projectCode = streamTimerEvent.projectId,
                 branch = buildBranch,
