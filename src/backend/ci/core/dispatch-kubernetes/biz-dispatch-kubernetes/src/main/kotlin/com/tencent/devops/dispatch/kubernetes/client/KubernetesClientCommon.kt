@@ -25,10 +25,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:dispatch-kubernetes:biz-dispatch-kubernetes-bcs"))
+package com.tencent.devops.dispatch.kubernetes.client
 
-    api(project(":core:common:common-auth:common-auth-mock"))
-    api(project(":core:common:common-auth:common-auth-blueking"))
-    api(project(":core:common:common-auth:common-auth-v3"))
+import com.tencent.devops.common.service.config.CommonConfig
+import okhttp3.Headers
+import okhttp3.Request
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+import java.net.URLEncoder
+
+@Component
+class KubernetesClientCommon @Autowired constructor(
+    private val commonConfig: CommonConfig
+) {
+
+    companion object {
+        private const val BCS_TOKEN_KEY = "BK-Devops-Token"
+    }
+
+    @Value("\${bcs.token}")
+    val bcsToken: String = ""
+
+    @Value("\${bcs.apiUrl}")
+    val bcsApiUrl: String = ""
+
+    fun baseRequest(userId: String, url: String, headers: Map<String, String>? = null): Request.Builder {
+        return Request.Builder().url(url(bcsApiUrl + url)).headers(headers(headers))
+    }
+
+    fun url(realUrl: String) = "${commonConfig.devopsIdcProxyGateway}/proxy-devnet?" +
+        "url=${URLEncoder.encode(realUrl, "UTF-8")}"
+
+    fun headers(otherHeaders: Map<String, String>? = null): Headers {
+        val result = mutableMapOf<String, String>()
+
+        val bcsHeaders = mapOf(BCS_TOKEN_KEY to bcsToken)
+        result.putAll(bcsHeaders)
+
+        if (!otherHeaders.isNullOrEmpty()) {
+            result.putAll(otherHeaders)
+        }
+
+        return Headers.of(result)
+    }
 }

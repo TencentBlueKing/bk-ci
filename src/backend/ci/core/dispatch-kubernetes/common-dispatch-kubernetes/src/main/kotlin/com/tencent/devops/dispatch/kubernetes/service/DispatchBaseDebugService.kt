@@ -143,7 +143,7 @@ class DispatchBaseDebugService @Autowired constructor(
                 }
                 DispatchBuilderDebugStatus.STARTING -> {
                     // 容器正在启动中，等待启动成功
-                    val status = dispatchFactory.load(dispatchType).waitDebugBuilderRunning(
+                    val buildStatus = dispatchFactory.load(dispatchType).waitDebugBuilderRunning(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         buildId = buildId ?: "",
@@ -151,8 +151,8 @@ class DispatchBaseDebugService @Autowired constructor(
                         userId = userId,
                         builderName = builderName
                     )
-                    if (status != DispatchBuilderDebugStatus.RUNNING) {
-                        logger.error("Status exception, builderName: $builderName, status: $status")
+                    if (buildStatus != DispatchBuilderDebugStatus.RUNNING) {
+                        logger.error("Status exception, builderName: $builderName, status: $buildStatus")
                         throw ErrorCodeException(
                             errorCode = "2103502",
                             defaultMessage = "Status exception, please try rebuild the pipeline",

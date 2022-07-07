@@ -120,7 +120,7 @@ class DispatchBuildService @Autowired constructor(
             // 读取并选择配置
             if (!containerPool.performanceConfigId.isNullOrBlank() && containerPool.performanceConfigId != "0") {
                 val performanceOption =
-                    performanceOptionsDao.get(dslContext, containerPool.performanceConfigId!!.toLong())
+                    performanceOptionsDao.get(dslContext, containerPool.performanceConfigId.toLong())
                 if (performanceOption != null) {
                     threadLocalCpu.set(performanceOption.cpu)
                     threadLocalMemory.set(performanceOption.memory)
@@ -183,7 +183,7 @@ class DispatchBuildService @Autowired constructor(
     private fun DispatchMessage.getContainerPool(): Pool {
         val containerPool = objectMapper.readValue<Pool>(dispatchMessage)
 
-        if (containerPool.third != null && !containerPool.third!!) {
+        if (containerPool.third != null && !containerPool.third) {
             val containerPoolFixed = if (containerPool.container!!.startsWith(registryHost!!)) {
                 Pool(
                     container = containerPool.container,

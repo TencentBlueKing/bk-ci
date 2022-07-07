@@ -25,9 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:dispatch-kubernetes:api-dispatch-kubernetes"))
-    api(project(":core:dispatch-kubernetes:model-dispatch-kubernetes"))
+package com.tencent.devops.dispatch.kubernetes.common
 
-    api(project(":core:common:common-dispatch-sdk"))
-}
+const val BUILD_NODE_ENVIRONMENT = "devops.build.node.environment"
+
+const val ENV_KEY_PROJECT_ID = "devops_project_id"
+const val ENV_KEY_AGENT_ID = "devops_agent_id"
+const val ENV_KEY_AGENT_SECRET_KEY = "devops_agent_secret_key"
+const val ENV_KEY_GATEWAY = "devops_gateway"
+
+const val ENV_JOB_BUILD_TYPE = "JOB_POOL"
+
+const val CONFIG_VOLUME_NAME = "config-volume"
+const val DATA_VOLUME_NAME = "data-volume"
+const val DATA_VOLUME_MOUNT_PATH = "/data"
+const val NFS_VOLUME_NAME_PREFIX = "nfs-volume"

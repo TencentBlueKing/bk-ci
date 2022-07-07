@@ -57,7 +57,7 @@ class DispatchKubernetesBuildHisDao {
                 .and(VM_SEQ_ID.eq(vmSeqId))
                 .and(EXECUTE_COUNT.eq(executeCount))
                 .fetch()
-            if (preRecord != null && preRecord.size > 0) {
+            if (preRecord.size > 0) {
                 dslContext.deleteFrom(this)
                     .where(BUILD_ID.eq(buildId))
                     .and(VM_SEQ_ID.eq(vmSeqId))

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,18 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:dispatch-kubernetes:api-dispatch-kubernetes"))
-    api(project(":core:dispatch-kubernetes:common-dispatch-kubernetes"))
+package com.tencent.devops.dispatch.kubernetes.pojo
 
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-redis"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-pipeline"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:log:api-log"))
+import com.fasterxml.jackson.annotation.JsonProperty
 
-    api("io.kubernetes:client-java")
-}
+/**
+ * 创建job需要的类型
+ * @param name job名称
+ * @param image 镜像（镜像名:版本)
+ * @param registry 镜像仓库信息
+ * @param cpu 构建机cpu核数
+ * @param memory 构建机内存大小， 256的倍数，比如512M， 1024M， 以M为单位
+ * @param disk 构建机磁盘大小，10的倍数，比如50G，60G，以G为单位
+ * @param env 构建机环境变量
+ * @param command 构建机启动命令
+ */
+data class Job(
+    val name: String,
+    val image: String,
+    val registry: DockerRegistry,
+    val cpu: Double,
+    val memory: Int,
+    val disk: Int,
+    val env: Map<String, String>?,
+    val command: List<String>?,
+    val podNameSelector: String,
+    val activeDeadlineSeconds: Int? = 4800,
+    val nfs: List<NfsConfig>? = null
+)

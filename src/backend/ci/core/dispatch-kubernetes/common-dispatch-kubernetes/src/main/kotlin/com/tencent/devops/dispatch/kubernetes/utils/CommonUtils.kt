@@ -27,6 +27,9 @@
 
 package com.tencent.devops.dispatch.kubernetes.utils
 
+import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import org.slf4j.LoggerFactory
 
 object CommonUtils {
@@ -88,5 +91,24 @@ object CommonUtils {
             logger.error("image name invalid: $imageNameStr")
             throw Exception("image name invalid.")
         }
+    }
+
+    /**
+     * 抛出异常
+     */
+    fun onFailure(errorType: ErrorType, errorCode: Int, formatErrorMessage: String, message: String) {
+        throw BuildFailureException(errorType, errorCode, formatErrorMessage, message)
+    }
+
+    /**
+     * 生成异常
+     */
+    fun buildFailureException(errorCodeEnum: ErrorCodeEnum, message: String): BuildFailureException {
+        return BuildFailureException(
+            errorCodeEnum.errorType,
+            errorCodeEnum.errorCode,
+            errorCodeEnum.formatErrorMessage,
+            message
+        )
     }
 }
