@@ -546,7 +546,10 @@
     "fileUnit": "{0}个文件",
     "completedLog": "完整日志",
     "artifactList": "构件列表",
-    "showAll": "显示全部"
+    "showAll": "显示全部",
+    "copyToCustomArtifactory": "复制至自定义仓库",
+    "downloading": "正在下载",
+    "copySuc": "复制{0}至自定义仓库成功"
   },
   "preview": {
     "build": "构建",
