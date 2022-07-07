@@ -484,9 +484,22 @@ class QualityRuleCheckService @Autowired constructor(
                 if (taskStep != null) ruleTaskStepsCopy.remove(taskStep)
             }
         }
+
+        val indicatorsCopy = indicators.toMutableList()
+        indicators.forEach { indicator ->
+            if (indicator.taskName.isNullOrEmpty() && metadataList.count { it.enName == indicator.enName } > 1) {
+                indicatorsCopy.remove(indicator)
+                metadataList.filter { it.enName == indicator.enName }.forEach {
+                    val extraIndicator = indicator
+                    extraIndicator.taskName = it.taskName
+                    indicatorsCopy.add(extraIndicator)
+                }
+            }
+        }
+
         logger.info("QUALITY|metadataList is: $metadataList, indicators is:$indicators")
         // 遍历每个指标
-        indicators.forEach { indicator ->
+        indicatorsCopy.forEach { indicator ->
             val thresholdType = indicator.thresholdType
             var checkResult = true
 
@@ -617,9 +630,16 @@ class QualityRuleCheckService @Autowired constructor(
             with(indicator) {
                 interceptList.add(
                     QualityRuleInterceptRecord(
-                        indicatorId = hashId, indicatorName = cnName, indicatorType = elementType,
-                        controlPoint = controlPointName, operation = operation, value = threshold, actualValue = result,
-                        pass = checkResult, detail = elementDetail, logPrompt = logPrompt
+                        indicatorId = hashId,
+                        indicatorName = if (indicator.taskName.isNullOrEmpty()) cnName else "[${indicator.taskName}]$cnName",
+                        indicatorType = elementType,
+                        controlPoint = controlPointName,
+                        operation = operation,
+                        value = threshold,
+                        actualValue = result,
+                        pass = checkResult,
+                        detail = elementDetail,
+                        logPrompt = logPrompt
                     )
                 )
             }
