@@ -81,7 +81,7 @@ const handleRowClick = (e, row) => {
     if (res.channelCode === 'BS') {
       window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}`, '_blank')
     }
-    window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#/${projectId.split('_')[1]}`, '_blank')
+    window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#${projectId.split('_')[1]}`, '_blank')
   })
 }
 
