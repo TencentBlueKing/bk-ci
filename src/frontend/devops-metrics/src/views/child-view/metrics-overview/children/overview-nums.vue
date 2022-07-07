@@ -92,17 +92,17 @@ const init = () => {
         turboInfo,
       },
     ]) => {
-      data.value.successExecuteCount = pipelineSumInfoDO.successExecuteCount;
-      data.value.totalExecuteCount = pipelineSumInfoDO.totalExecuteCount;
-      data.value.totalCostTime = timeFormatter(pipelineSumInfoDO.totalCostTime);
-      data.value.totalSuccessRate = pipelineSumInfoDO.totalSuccessRate;
-      data.value.totalAvgCostTime = timeFormatter(pipelineSumInfoDO.totalAvgCostTime);
-      data.value.resolvedDefectNum = codeCheckInfo.resolvedDefectNum;
-      data.value.repoCodeccAvgScore = codeCheckInfo.repoCodeccAvgScore;
-      data.value.qualityInterceptionRate = qualityInfo.qualityInterceptionRate;
-      data.value.turboSaveTime = timeFormatter(turboInfo.turboSaveTime * 1000);
-      data.value.interceptionCount = qualityInfo.interceptionCount
-      data.value.totalQualityExecuteCount = qualityInfo.totalExecuteCount
+      data.value.successExecuteCount = pipelineSumInfoDO?.successExecuteCount;
+      data.value.totalExecuteCount = pipelineSumInfoDO?.totalExecuteCount;
+      data.value.totalCostTime = timeFormatter(pipelineSumInfoDO?.totalCostTime);
+      data.value.totalSuccessRate = pipelineSumInfoDO?.totalSuccessRate;
+      data.value.totalAvgCostTime = timeFormatter(pipelineSumInfoDO?.totalAvgCostTime);
+      data.value.resolvedDefectNum = codeCheckInfo?.resolvedDefectNum;
+      data.value.repoCodeccAvgScore = codeCheckInfo?.repoCodeccAvgScore;
+      data.value.qualityInterceptionRate = qualityInfo?.qualityInterceptionRate;
+      data.value.turboSaveTime = timeFormatter(turboInfo?.turboSaveTime || 0 * 1000);
+      data.value.interceptionCount = qualityInfo?.interceptionCount
+      data.value.totalQualityExecuteCount = qualityInfo?.totalExecuteCount
     })
     .finally(() => {
       isLoading.value = false;
@@ -119,8 +119,9 @@ const RenderEmptyNodeIfNone = ({ data }, { slots }) => {
 
 // 触发
 watch(
-  () => props.status,
-  init,
+  () => props.status, () => {
+    init()
+  }
 );
 onMounted(init);
 </script>
