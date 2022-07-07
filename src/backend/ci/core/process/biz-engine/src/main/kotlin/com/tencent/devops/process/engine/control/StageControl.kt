@@ -156,7 +156,7 @@ class StageControl @Autowired constructor(
                         (it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS || hasFailedCheck(it))
                 }
             // #5246 前序中如果有准入准出失败的stage则直接作为前序stage并把构建状态设为红线失败
-                if (hasFailedCheck(previousStage)) {
+            if (hasFailedCheck(previousStage)) {
                 BuildStatus.QUALITY_CHECK_FAIL
             } else {
                 previousStage?.status

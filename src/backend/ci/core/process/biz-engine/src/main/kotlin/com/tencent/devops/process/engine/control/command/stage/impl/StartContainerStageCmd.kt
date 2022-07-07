@@ -49,7 +49,6 @@ import org.springframework.stereotype.Service
  */
 @Service
 class StartContainerStageCmd(
-    private val pipelineStageService: PipelineStageService,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : StageCmd {
 
@@ -210,10 +209,5 @@ class StartContainerStageCmd(
                 reason = commandContext.latestSummary
             )
         )
-    }
-
-    private fun hasFailedCheck(stage: PipelineBuildStage?): Boolean {
-        return stage?.checkIn?.status == BuildStatus.QUALITY_CHECK_FAIL.name ||
-            stage?.checkOut?.status == BuildStatus.QUALITY_CHECK_FAIL.name
     }
 }
