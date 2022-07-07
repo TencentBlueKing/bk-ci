@@ -25,25 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.config
+package com.tencent.devops.dispatch.utils
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-@Component
-@RefreshScope
-class MetricsConfig {
+class JobQuotaProjectLock(
+    redisOperation: RedisOperation,
+    projectId: String
+) {
 
-    @Value("\${metrics.queryCountMax:10000}")
-    val queryCountMax: Int = 10000
+    private val redisLock = RedisLock(redisOperation, "DISPATCH_JOB_QUOTA_$projectId", 60L)
 
-    @Value("\${metrics.devopsUrl:}")
-    val devopsUrl: String = ""
+    fun tryLock() = redisLock.tryLock()
 
-    @Value("\${metrics.streamUrl:}")
-    val streamUrl: String = ""
+    fun lock() = redisLock.lock()
 
-    @Value("\${metrics.defaultLimitNum:10}")
-    val defaultLimitNum = 10
+    fun unlock() =
+        redisLock.unlock()
 }

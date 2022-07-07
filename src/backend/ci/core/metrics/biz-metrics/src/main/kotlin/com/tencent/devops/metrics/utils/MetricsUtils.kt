@@ -25,25 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.config
+package com.tencent.devops.metrics.utils
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.metrics.config.MetricsConfig
 
-@Component
-@RefreshScope
-class MetricsConfig {
+object MetricsUtils {
 
-    @Value("\${metrics.queryCountMax:10000}")
-    val queryCountMax: Int = 10000
-
-    @Value("\${metrics.devopsUrl:}")
-    val devopsUrl: String = ""
-
-    @Value("\${metrics.streamUrl:}")
-    val streamUrl: String = ""
-
-    @Value("\${metrics.defaultLimitNum:10}")
-    val defaultLimitNum = 10
+    /**
+     * 根据渠道代码获取渠道对应的域名
+     * @param channelCode 渠道代码
+     * @return 域名
+     */
+    fun getDomain(channelCode: String): String {
+        val metricsConfig: MetricsConfig = SpringContextUtil.getBean(MetricsConfig::class.java)
+        val url = if (channelCode == ChannelCode.GIT.name) {
+            metricsConfig.streamUrl
+        } else {
+            metricsConfig.devopsUrl
+        }
+        val index = url.indexOf("://")
+        return if (index != -1) {
+            url.substring(index + 3)
+        } else {
+            url
+        }
+    }
 }
