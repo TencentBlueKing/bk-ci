@@ -249,12 +249,14 @@ class BuildStartControl @Autowired constructor(
     ): Boolean {
         var checkStart = true
         val concurrencyGroup = buildInfo.concurrencyGroup ?: return true
-        ConcurrencyGroupLock(redisOperation, concurrencyGroup).use { groupLock ->
+        ConcurrencyGroupLock(redisOperation, projectId, concurrencyGroup).use { groupLock ->
             groupLock.lock()
             if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
+                // 只有最新进来排队的构建才能QUEUE -> QUEUE_CACHE
                 checkStart = pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(
                     projectId = projectId,
-                    concurrencyGroup = concurrencyGroup
+                    concurrencyGroup = concurrencyGroup,
+                    buildId = buildId
                 )?.buildId == buildId
             }
             // #6521 并发组中需要等待其他流水线
