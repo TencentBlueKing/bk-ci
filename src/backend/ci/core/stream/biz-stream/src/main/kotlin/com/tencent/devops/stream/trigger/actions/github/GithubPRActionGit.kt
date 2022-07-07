@@ -30,17 +30,13 @@ package com.tencent.devops.stream.trigger.actions.github
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.webhook.enums.code.github.GithubPrEventAction
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeExtensionActionKind
-import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.common.webhook.pojo.code.git.isMrForkEvent
-import com.tencent.devops.common.webhook.pojo.code.git.isMrMergeEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.isPrForkEvent
 import com.tencent.devops.common.webhook.pojo.code.github.isPrForkNotMergeEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
@@ -51,8 +47,8 @@ import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
-import com.tencent.devops.stream.trigger.actions.tgit.TGitMrActionGit
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
@@ -74,6 +70,7 @@ import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.GitCheckService
 import com.tencent.devops.stream.trigger.service.StreamTriggerTokenService
 import com.tencent.devops.stream.util.StreamCommonUtils
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import java.util.Base64
 
@@ -83,7 +80,9 @@ class GithubPRActionGit(
     private val pipelineDelete: PipelineDelete,
     private val gitCheckService: GitCheckService,
     private val streamTriggerTokenService: StreamTriggerTokenService,
-    private val streamTriggerCache: StreamTriggerCache
+    private val streamTriggerCache: StreamTriggerCache,
+    private val basicSettingDao: StreamBasicSettingDao,
+    private val dslContext: DSLContext
 ) : GithubActionGit(apiService, gitCheckService, streamTriggerCache), StreamMrAction {
 
     companion object {
@@ -122,6 +121,18 @@ class GithubPRActionGit(
     }
 
     override fun init(): BaseAction? {
+        if (data.isSettingInitialized) {
+            return initCommonData()
+        }
+        val setting = basicSettingDao.getSetting(dslContext, event().pullRequest.base.repo.id.toLong())
+        if (null == setting || !setting.enableCi) {
+            logger.info(
+                "git ci is not enabled, but it has repo trigger , " +
+                    "git project id: ${event().pullRequest.base.repo.id.toLong()}"
+            )
+            return null
+        }
+        data.setting = StreamTriggerSetting(setting)
         return initCommonData()
     }
 
@@ -131,7 +142,7 @@ class GithubPRActionGit(
             cred = if (event.isPrForkEvent()) {
                 getForkGitCred()
             } else {
-                getGitCred(event.sender.login)
+                GithubCred(event.sender.login)
             }, gitProjectId = getGitProjectIdOrName(event.pullRequest.head.repo.id.toString()),
             sha = event.pullRequest.head.sha,
             retry = ApiRequestRetryInfo(retry = true)

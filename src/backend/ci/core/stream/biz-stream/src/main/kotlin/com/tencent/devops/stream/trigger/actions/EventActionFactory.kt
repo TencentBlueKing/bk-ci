@@ -127,7 +127,7 @@ class EventActionFactory @Autowired constructor(
                 }
             }
             ScmType.GITHUB -> {
-                 when (actionCommonData.eventType) {
+                when (actionCommonData.eventType) {
                     GithubPushEvent.classType -> objectMapper.readValue<GithubPushEvent>(eventStr)
                     GithubPullRequestEvent.classType -> objectMapper.readValue<GithubPullRequestEvent>(eventStr)
                     else -> {
@@ -257,7 +257,8 @@ class EventActionFactory @Autowired constructor(
                     pipelineDelete = pipelineDelete,
                     gitCheckService = gitCheckService,
                     streamTriggerTokenService = streamTriggerTokenService,
-                    streamTriggerCache = streamTriggerCache
+                    streamTriggerCache = streamTriggerCache,
+                    basicSettingDao = basicSettingDao, dslContext = dslContext
                 )
             }
             else -> {
