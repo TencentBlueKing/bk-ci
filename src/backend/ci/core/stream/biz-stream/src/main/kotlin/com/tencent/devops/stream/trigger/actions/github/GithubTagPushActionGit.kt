@@ -184,9 +184,9 @@ private fun GithubPushEvent.tagPushEventFilter(): Boolean {
     if (deleted) {
         return true
     }
-    if (commits.isEmpty()) {
-        GithubPushActionGit.logger.info("$after Github tag web hook no commit")
-        return false
-    }
+//    if (commits.isEmpty()) {
+//        GithubPushActionGit.logger.info("$after Github tag web hook no commit")
+//        return false
+//    }
     return true
 }
