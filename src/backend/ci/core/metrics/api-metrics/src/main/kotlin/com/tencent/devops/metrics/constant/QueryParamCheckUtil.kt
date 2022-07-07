@@ -101,6 +101,6 @@ object QueryParamCheckUtil {
     }
 
     fun getErrorTypeName(errorType: Int): String {
-       return MessageCodeUtil.getCodeLanMessage(ERROR_TYPE_NAME_PREFIX + "$errorType")
+        return MessageCodeUtil.getCodeLanMessage(ERROR_TYPE_NAME_PREFIX + "$errorType")
     }
 }

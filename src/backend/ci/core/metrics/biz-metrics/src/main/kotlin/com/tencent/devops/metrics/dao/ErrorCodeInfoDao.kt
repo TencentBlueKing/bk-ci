@@ -30,11 +30,8 @@ package com.tencent.devops.metrics.dao
 import com.tencent.devops.model.metrics.tables.TErrorCodeInfo
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.qo.QueryErrorCodeInfoQO
-import com.tencent.devops.model.metrics.tables.TErrorTypeDict
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record2
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
