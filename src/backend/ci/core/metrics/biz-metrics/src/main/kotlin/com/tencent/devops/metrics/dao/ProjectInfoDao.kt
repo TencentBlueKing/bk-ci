@@ -134,21 +134,20 @@ class ProjectInfoDao {
         page: Int,
         pageSize: Int,
         keyWord: String?
-    ): List<PipelineErrorTypeInfoDO> {
+    ): List<Int> {
         with(TErrorTypeDict.T_ERROR_TYPE_DICT) {
             val conditions = mutableListOf<Condition>()
             if (!keyWord.isNullOrBlank()) {
                 conditions.add(this.NAME.like("%$keyWord%"))
             }
             val step = dslContext.select(
-                ERROR_TYPE,
-                NAME.`as`(BK_ERROR_NAME)
+                ERROR_TYPE
             ).from(this)
                 .where(conditions)
                 .groupBy(ERROR_TYPE)
                 .orderBy(ERROR_TYPE)
                 .limit((page - 1) * pageSize, pageSize)
-            return step.fetchInto(PipelineErrorTypeInfoDO::class.java)
+            return step.fetchInto(Int::class.java)
         }
     }
 

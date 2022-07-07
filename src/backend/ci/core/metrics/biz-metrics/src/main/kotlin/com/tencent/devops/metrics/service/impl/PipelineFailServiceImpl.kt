@@ -37,7 +37,7 @@ import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
 import com.tencent.devops.metrics.constant.MetricsMessageCode
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.DATE_FORMATTER
 import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getBetweenDate
-import com.tencent.devops.metrics.dao.ErrorCodeInfoDao
+import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getErrorTypeName
 import com.tencent.devops.metrics.dao.PipelineFailDao
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineBuildInfoDO
@@ -62,7 +62,6 @@ import java.time.LocalDateTime
 class PipelineFailServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineFailDao: PipelineFailDao,
-    private val errorCodeInfoDao: ErrorCodeInfoDao,
     private val metricsConfig: MetricsConfig
 ) : PipelineFailManageService {
 
@@ -78,8 +77,6 @@ class PipelineFailServiceImpl @Autowired constructor(
                 baseQueryReq = queryPipelineFailTrendDTO.baseQueryReq
             )
         )
-        val errorDict = mutableMapOf<Int, String>()
-        errorCodeInfoDao.getErrorTypeDict(dslContext).map { errorDict.put(it.value1(), it.value2()) }
         return typeInfos.map { typeInfo ->
             val result = pipelineFailDao.queryPipelineFailTrendInfo(
                 dslContext = dslContext,
@@ -113,15 +110,13 @@ class PipelineFailServiceImpl @Autowired constructor(
             }
             PipelineFailTrendInfoVO(
                 errorType = typeInfo,
-                name = errorDict[typeInfo],
+                name = getErrorTypeName(typeInfo),
                 failInfos = failStatisticsInfos
             )
         }
     }
 
     override fun queryPipelineFailSumInfo(queryPipelineFailDTO: QueryPipelineFailDTO): List<PipelineFailInfoDO> {
-        val errorDict = mutableMapOf<Int, String>()
-        errorCodeInfoDao.getErrorTypeDict(dslContext).map { errorDict.put(it.value1(), it.value2()) }
         val result = pipelineFailDao.queryPipelineFailSumInfo(
             dslContext,
             QueryPipelineFailQO(
@@ -139,7 +134,7 @@ class PipelineFailServiceImpl @Autowired constructor(
             val errorType = it[BK_ERROR_TYPE] as Int
             PipelineFailInfoDO(
                 errorType = errorType,
-                name = errorDict[errorType],
+                name = getErrorTypeName(errorType),
                 errorCount = (it[BK_ERROR_COUNT_SUM] as BigDecimal).toLong()
             )
         }
@@ -185,8 +180,6 @@ class PipelineFailServiceImpl @Autowired constructor(
                     pageSize = queryPipelineFailDTO.pageSize
             )
         )
-        val errorDict = mutableMapOf<Int, String>()
-        errorCodeInfoDao.getErrorTypeDict(dslContext).map { errorDict.put(it.value1(), it.value2()) }
         val detailInfos = if (result.isNotEmpty()) {
             result.map {
                 val channelCode = it.channelCode
@@ -209,7 +202,7 @@ class PipelineFailServiceImpl @Autowired constructor(
                     errorInfo =
                     ErrorCodeInfoDO(
                         errorType = it.errorType,
-                        errorTypeName = errorDict[it.errorType],
+                        errorTypeName = getErrorTypeName(it.errorType!!),
                         errorCode = it.errorCode!!,
                         errorMsg = it.errorMsg
                     )

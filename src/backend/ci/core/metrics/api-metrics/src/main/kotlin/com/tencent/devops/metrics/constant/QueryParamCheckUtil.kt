@@ -29,6 +29,8 @@ package com.tencent.devops.metrics.constant
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.metrics.constant.Constants.ERROR_TYPE_NAME_PREFIX
 import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -96,5 +98,9 @@ object QueryParamCheckUtil {
                 errorCode = MetricsMessageCode.QUERY_DATE_BEYOND
             )
         }
+    }
+
+    fun getErrorTypeName(errorType: Int): String {
+       return MessageCodeUtil.getCodeLanMessage(ERROR_TYPE_NAME_PREFIX + "$errorType")
     }
 }
