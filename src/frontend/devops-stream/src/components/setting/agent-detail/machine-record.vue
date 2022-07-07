@@ -8,16 +8,16 @@
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
             :pagination="pagination"
-            :empty-text="$t('environment.noData')"
+            :empty-text="$t('noData')"
         >
-            <bk-table-column :label="$t('environment.time')" prop="actionTime" min-width="160">
+            <bk-table-column :label="$t('time')" prop="actionTime" min-width="160">
                 <template slot-scope="props">
                     {{ localConvertTime(props.row.actionTime) }}
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('environment.nodeInfo.status')" prop="action" min-width="160">
+            <bk-table-column :label="$t('status')" prop="action" min-width="160">
                 <template slot-scope="props">
-                    <span :title="props.row.action" :class="props.row.action === 'ONLINE' ? 'online' : 'offline'">{{ props.row.action === 'ONLINE' ? $t('environment.nodeInfo.online') : $t('environment.nodeInfo.offline') }}</span>
+                    <span :title="props.row.action" :class="props.row.action === 'ONLINE' ? 'online' : 'offline'">{{ props.row.action === 'ONLINE' ? $t('setting.nodeInfo.online') : $t('setting.nodeInfo.offline') }}</span>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -92,11 +92,6 @@
              */
             localConvertTime (timestamp) {
                 return convertTime(timestamp * 1000)
-            },
-            $t (message) {
-                const arr = message.split('.')
-                const str = arr[arr.length - 1] || message
-                return str.replace(/^\S/, s => s.toUpperCase())
             }
         }
     }

@@ -273,4 +273,7 @@ object MQ {
     const val EXCHANGE_QUALITY_DAILY_FANOUT = "e.metrics.quality.daily.exchange.fanout"
     const val ROUTE_QUALITY_DAILY_FANOUT = "r.quality.daily.exchange.fanout"
     const val QUEUE_QUALITY_DAILY_EVENT = "q.metrics.quality.daily.exchange.queue"
+
+    const val ROUTE_PIPELINE_STREAM_ENABLED = "r.engine.pipeline.stream.enabled"
+    const val QUEUE_PIPELINE_STREAM_ENABLED = "q.engine.pipeline.stream.enabled"
 }
