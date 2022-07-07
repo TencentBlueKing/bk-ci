@@ -279,7 +279,7 @@
 
       function fetchAllProjects() {
         return asyncGet(
-          API_URL_PREFIX + '/project/api/user/projects/?enabled=true'
+          API_URL_PREFIX + '/project/api/user/projects/?includeDisable=false'
         )
       }
 
