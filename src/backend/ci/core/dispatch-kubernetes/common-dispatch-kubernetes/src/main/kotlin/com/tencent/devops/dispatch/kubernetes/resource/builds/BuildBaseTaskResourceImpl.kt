@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,18 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:dispatch-kubernetes:api-dispatch-kubernetes"))
-    api(project(":core:dispatch-kubernetes:common-dispatch-kubernetes"))
+package com.tencent.devops.dispatch.kubernetes.resource.builds
 
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-redis"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-pipeline"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:log:api-log"))
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.api.builds.BuildBaseTaskResource
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
+import com.tencent.devops.dispatch.kubernetes.service.DispatchBaseTaskService
+import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
+import org.springframework.beans.factory.annotation.Autowired
 
-    api("io.kubernetes:client-java")
+@RestResource
+class BuildBaseTaskResourceImpl @Autowired constructor(
+    private val dispatchBaseTaskService: DispatchBaseTaskService
+) : BuildBaseTaskResource {
+    override fun getTaskStatus(userId: String, dispatchType: String, taskId: String): Result<DispatchBuildStatusResp> {
+        return Result(
+            dispatchBaseTaskService.getTaskStatus(
+                userId = userId,
+                dispatchType = CommonUtils.checkDispatchType(dispatchType),
+                taskId = taskId
+            )
+        )
+    }
 }

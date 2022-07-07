@@ -25,11 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:dispatch-kubernetes:biz-dispatch-kubernetes-bcs"))
-    api(project(":core:dispatch-kubernetes:biz-dispatch-kubernetes"))
+package com.tencent.devops.dispatch.kubernetes.interfaces
 
-    api(project(":core:common:common-auth:common-auth-mock"))
-    api(project(":core:common:common-auth:common-auth-blueking"))
-    api(project(":core:common:common-auth:common-auth-v3"))
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchJobLogResp
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchJobReq
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchTaskResp
+
+/**
+ * 用来获取不同类型的dispatchType的service来调用相关实现
+ * 注：仅在接口层相关接口使用此类，构建层使用
+ * @see com.tencent.devops.dispatch.common.interfaces.DispatchBuildTypeService
+ */
+interface JobService {
+
+    val slaveEnv: String
+
+    /**
+     * 创建一次执行的Job
+     * @param userId 用户ID
+     * @param jobReq 请求参数
+     */
+    fun createJob(
+        userId: String,
+        jobReq: DispatchJobReq
+    ): DispatchTaskResp
+
+    /**
+     * 获取Job执行状态
+     * @param jobName Job名称
+     */
+    fun getJobStatus(userId: String, jobName: String): DispatchBuildStatusResp
+
+    /**
+     * 获取Job日志
+     * @param sinceTime 开始时间
+     */
+    fun getJobLogs(userId: String, jobName: String, sinceTime: Int?): DispatchJobLogResp
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,18 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:dispatch-kubernetes:api-dispatch-kubernetes"))
-    api(project(":core:dispatch-kubernetes:common-dispatch-kubernetes"))
+package com.tencent.devops.dispatch.kubernetes.common
 
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-redis"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-pipeline"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:log:api-log"))
+import com.tencent.devops.common.api.pojo.ErrorType
 
-    api("io.kubernetes:client-java")
+enum class ErrorCodeEnum(
+    val errorType: ErrorType,
+    val errorCode: Int,
+    val formatErrorMessage: String
+) {
+    SYSTEM_ERROR(ErrorType.SYSTEM, 2123001, "Dispatcher-base系统错误"),
+    NO_IDLE_VM_ERROR(ErrorType.SYSTEM, 2123002, "构建机启动失败，没有空闲的构建机"),
+    CREATE_JOB_LIMIT_ERROR(ErrorType.USER, 2123050, "已超过dispatch base创建Job容器上限."),
+
+    INTERFACE_TIMEOUT(ErrorType.THIRD_PARTY, 2123018, "第三方服务异常，异常信息 - 接口请求超时"),
+    START_VM_ERROR(ErrorType.THIRD_PARTY, 2123004, "第三方服务异常，异常信息 - 构建机启动失败")
 }

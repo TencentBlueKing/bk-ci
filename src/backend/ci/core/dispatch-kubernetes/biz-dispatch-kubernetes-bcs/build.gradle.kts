@@ -37,6 +37,4 @@ dependencies {
     api(project(":core:common:common-pipeline"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:log:api-log"))
-
-    api("io.kubernetes:client-java")
 }
