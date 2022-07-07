@@ -294,7 +294,7 @@ class GithubPRActionGit(
                     event.pullRequest.base.ref, ""
                 )
             } else {
-                val c = String(Base64.getDecoder().decode(targetFile!!.content))
+                val c = targetFile!!.getDecodedContentAsString()
                 if (c.isBlank()) {
                     logger.warn(
                         "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
@@ -326,7 +326,7 @@ class GithubPRActionGit(
             )
             Pair(event.pullRequest.head.sha, "")
         } else {
-            val c = String(Base64.getDecoder().decode(sourceFile!!.content))
+            val c = sourceFile!!.getDecodedContentAsString()
             if (c.isBlank()) {
                 logger.warn(
                     "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +

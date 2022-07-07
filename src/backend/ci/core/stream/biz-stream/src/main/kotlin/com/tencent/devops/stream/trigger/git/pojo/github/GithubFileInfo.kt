@@ -28,9 +28,12 @@
 package com.tencent.devops.stream.trigger.git.pojo.github
 
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitFileInfo
+import java.util.Base64
 
 data class GithubFileInfo(
     // stream 的内容经过base64加码，需要解码
     override val content: String,
     override val blobId: String
-) : StreamGitFileInfo
+) : StreamGitFileInfo {
+    fun getDecodedContentAsString() = String(Base64.getMimeDecoder().decode(content))
+}
