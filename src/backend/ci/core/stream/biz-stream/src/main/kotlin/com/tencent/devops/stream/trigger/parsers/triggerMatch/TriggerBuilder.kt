@@ -15,9 +15,11 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.common.webhook.service.code.matcher.GitWebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.GithubWebHookMatcher
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.on.IssueRule
@@ -183,8 +185,10 @@ object TriggerBuilder {
         )
     }
 
-    fun buildGitWebHookMatcher(gitEvent: GitEvent): ScmWebhookMatcher {
-        return GitWebHookMatcher(gitEvent)
+    fun buildGitWebHookMatcher(gitEvent: CodeWebhookEvent) = when (gitEvent) {
+        is GithubEvent -> GithubWebHookMatcher(gitEvent)
+        is GitEvent -> GitWebHookMatcher(gitEvent)
+        else -> TODO("对接其他Git平台时需要补充")
     }
 
     private fun buildGitPushEventElement(

@@ -41,7 +41,7 @@ object GitActionCommon {
     ): Pair<Boolean, Map<String, String>> {
         logger.info("match and start params|triggerOn:$triggerOn")
 
-        val gitEvent = action.data.event as GitEvent
+        val gitEvent = action.data.event
 
         val element = TriggerBuilder.buildCodeGitWebHookTriggerElement(
             gitEvent = gitEvent,
