@@ -3,7 +3,7 @@
         <aside class="aside-nav">
             <h3 class="nav-title">
                 <i class="bk-icon icon-arrows-left" @click="backHome"></i>
-                Notifications
+                {{$t('notifications')}}
             </h3>
             <ul>
                 <li v-for="nav in navList"
@@ -21,10 +21,10 @@
         <main class="notifications-main">
             <section class="notifications-head">
                 <bk-radio-group v-model="onlyUnread" class="head-tab">
-                    <bk-radio-button :value="false">All</bk-radio-button>
-                    <bk-radio-button :value="true">Unread</bk-radio-button>
+                    <bk-radio-button :value="false">{{$t('all')}}</bk-radio-button>
+                    <bk-radio-button :value="true">{{$t('unread')}}</bk-radio-button>
                 </bk-radio-group>
-                <bk-button class="notifications-button" @click="readAll">Mark all as read</bk-button>
+                <bk-button class="notifications-button" @click="readAll">{{$t('markRead')}}</bk-button>
             </section>
             <ul v-bkloading="{ isLoading }" class="notification-list">
                 <li v-for="(notification, index) in notificationList" :key="index" class="notification-time">
@@ -57,7 +57,7 @@
                 </li>
             </ul>
 
-            <bk-exception class="exception-wrap-item exception-part" type="empty" v-if="notificationList.length <= 0">{{ onlyUnread ? 'No unread notifications' : 'No notifications' }}</bk-exception>
+            <bk-exception class="exception-wrap-item exception-part" type="empty" v-if="notificationList.length <= 0">{{ onlyUnread ? $t('readAll') : $t('noNotice') }}</bk-exception>
 
             <bk-pagination small
                 :current.sync="compactPaging.current"

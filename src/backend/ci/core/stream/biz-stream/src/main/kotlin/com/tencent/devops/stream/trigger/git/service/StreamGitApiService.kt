@@ -69,6 +69,7 @@ interface StreamGitApiService {
     /**
      * 获取stream需要的git commit相关信息
      * @param sha 获取commit的信息，例如：hash值、分支名或tag
+     * @param gitProjectId 使用关联event事件的 git project id
      */
     fun getGitCommitInfo(
         cred: StreamGitCred,
@@ -99,6 +100,7 @@ interface StreamGitApiService {
     /**
      * 获取合并请求信息
      * @param mrId 合并请求的唯一凭证
+     * @param gitProjectId 使用关联event事件的 git project id
      * TODO: 后续多源可以看是否放到具体Git平台的实现中
      */
     fun getMrInfo(
@@ -110,6 +112,7 @@ interface StreamGitApiService {
 
     /**
      * 获取合并请求信息包括变更文件
+     * @param gitProjectId 使用关联event事件的 git project id
      */
     fun getMrChangeInfo(
         cred: StreamGitCred,

@@ -31,9 +31,9 @@
                 currentType: 'card',
                 activeName: 'base',
                 menuList: [
-                    { name: 'base', label: this.$t('environment.basicInfo') },
-                    { name: 'pipeline', label: this.$t('environment.nodeInfo.buildTask') },
-                    { name: 'activity', label: this.$t('environment.nodeInfo.machineActivityRecord') }
+                    { name: 'base', label: this.$t('setting.nodeInfo.basicInfo') },
+                    { name: 'pipeline', label: this.$t('setting.nodeInfo.buildTask') },
+                    { name: 'activity', label: this.$t('setting.nodeInfo.machineActivityRecord') }
                 ]
             }
         },
@@ -42,12 +42,6 @@
         methods: {
             tabChanged (tab) {
                 this.activeName = tab
-            },
-
-            $t (message) {
-                const arr = message.split('.')
-                const str = arr[arr.length - 1] || message
-                return str.replace(/^\S/, s => s.toUpperCase())
             }
         }
     }

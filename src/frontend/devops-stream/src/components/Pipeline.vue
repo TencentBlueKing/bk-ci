@@ -22,8 +22,8 @@
             @confirm="confirmRetry"
         >
             <bk-radio-group v-model="failedContainer">
-                <bk-radio :value="false">Re-run all jobs</bk-radio>
-                <bk-radio :value="true">Re-run all failed jobs</bk-radio>
+                <bk-radio :value="false">{{$t('pipeline.allJobs')}}</bk-radio>
+                <bk-radio :value="true">{{$t('pipeline.allFailedJobs')}}</bk-radio>
             </bk-radio-group>
         </bk-dialog>
         <template v-if="editingElementPos != null">
