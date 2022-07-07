@@ -84,15 +84,4 @@ class DispatchBaseJobService @Autowired constructor(
     ): DispatchJobLogResp {
         return dispatchFactory.load(dispatchType).getJobLogs(userId, jobName, sinceTime)
     }
-
-    fun buildAndPushImage(
-        userId: String,
-        projectId: String,
-        buildId: String,
-        dispatchType: DispatchEnumType,
-        dispatchBuildImageReq: DispatchBuildImageReq
-    ): DispatchTaskResp {
-        return dispatchFactory.load(dispatchType)
-            .buildAndPushImage(userId, projectId, buildId, dispatchBuildImageReq)
-    }
 }

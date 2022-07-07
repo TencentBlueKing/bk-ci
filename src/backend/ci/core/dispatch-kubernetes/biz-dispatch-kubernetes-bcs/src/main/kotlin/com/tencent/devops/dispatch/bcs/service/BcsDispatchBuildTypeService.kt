@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.bcs.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.BuildType
@@ -36,11 +37,18 @@ import com.tencent.devops.dispatch.bcs.client.BcsTaskClient
 import com.tencent.devops.dispatch.bcs.common.ConstantsMessage
 import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilder
+import com.tencent.devops.dispatch.bcs.pojo.BcsBuilderStatusEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsDeleteBuilderParams
 import com.tencent.devops.dispatch.bcs.pojo.BcsStartBuilderParams
 import com.tencent.devops.dispatch.bcs.pojo.BcsStopBuilderParams
 import com.tencent.devops.dispatch.bcs.pojo.BcsTaskStatusEnum
+import com.tencent.devops.dispatch.bcs.pojo.canReStart
+import com.tencent.devops.dispatch.bcs.pojo.getCodeMessage
 import com.tencent.devops.dispatch.bcs.pojo.hasException
+import com.tencent.devops.dispatch.bcs.pojo.isFailed
+import com.tencent.devops.dispatch.bcs.pojo.isRunning
+import com.tencent.devops.dispatch.bcs.pojo.isStarting
+import com.tencent.devops.dispatch.bcs.pojo.isSuccess
 import com.tencent.devops.dispatch.bcs.pojo.readyToStart
 import com.tencent.devops.dispatch.bcs.utils.BcsCommonUtils
 import com.tencent.devops.dispatch.common.common.BUILDER_NAME
@@ -55,11 +63,16 @@ import com.tencent.devops.dispatch.kubernetes.interfaces.DispatchBuildLog
 import com.tencent.devops.dispatch.kubernetes.interfaces.DispatchBuildTypeService
 import com.tencent.devops.dispatch.kubernetes.pojo.DockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchTaskResp
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildBuilderStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderType
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchBuilderDebugStatus
 import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -120,7 +133,10 @@ class BcsDispatchBuildTypeService @Autowired constructor(
         val status = when {
             result.data!!.readyToStart() -> DispatchBuildBuilderStatus.READY_START
             result.data.hasException() -> DispatchBuildBuilderStatus.HAS_EXCEPTION
-            else -> DispatchBuildBuilderStatus.BUSY
+            result.data.canReStart() -> DispatchBuildBuilderStatus.CAN_RESTART
+            result.data.isRunning() -> DispatchBuildBuilderStatus.RUNNING
+            result.data.isStarting() -> DispatchBuildBuilderStatus.STARTING
+            else -> DispatchBuildBuilderStatus.UNKNOWN
         }
 
         return Result(status)
@@ -139,6 +155,10 @@ class BcsDispatchBuildTypeService @Autowired constructor(
             userId = userId,
             name = builderName,
             param = when (param.type) {
+                DispatchBuildOperateBuilderType.START_SLEEP -> BcsStartBuilderParams(
+                    env = param.env,
+                    command = listOf("/bin/sh", entrypoint)
+                )
                 DispatchBuildOperateBuilderType.DELETE -> BcsDeleteBuilderParams()
                 DispatchBuildOperateBuilderType.STOP -> BcsStopBuilderParams()
             }
@@ -225,7 +245,7 @@ class BcsDispatchBuildTypeService @Autowired constructor(
         disk: String
     ): String {
         with(dispatchMessages) {
-            val bcsTaskId = bcsBuilderClient.operateBuilder(
+            return bcsBuilderClient.operateBuilder(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 userId = userId,
@@ -244,8 +264,6 @@ class BcsDispatchBuildTypeService @Autowired constructor(
                     command = listOf("/bin/sh", entrypoint)
                 )
             )
-
-            return bcsTaskId
         }
     }
 
@@ -272,5 +290,75 @@ class BcsDispatchBuildTypeService @Autowired constructor(
         } else {
             return DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, startResult.second)
         }
+    }
+
+    override fun getTaskStatus(userId: String, taskId: String): DispatchBuildStatusResp {
+        val taskResponse = bcsTaskClient.getTasksStatus(userId, taskId)
+        val status = BcsTaskStatusEnum.realNameOf(taskResponse.data?.status)
+        if (taskResponse.isNotOk() || taskResponse.data == null) {
+            // 创建失败
+            val msg = "${taskResponse.message ?: taskResponse.getCodeMessage()}"
+            logger.error("Execute task: $taskId failed, actionCode is ${taskResponse.code}, msg: $msg")
+            return DispatchBuildStatusResp(DispatchBuildStatusEnum.failed.name, msg)
+        }
+        // 请求成功但是任务失败
+        if (status != null && status.isFailed()) {
+            return DispatchBuildStatusResp(DispatchBuildStatusEnum.failed.name, taskResponse.data.message)
+        }
+        return when {
+            status!!.isRunning() -> DispatchBuildStatusResp(DispatchBuildStatusEnum.running.name)
+            status.isSuccess() -> {
+                DispatchBuildStatusResp(DispatchBuildStatusEnum.succeeded.name)
+            }
+            else -> DispatchBuildStatusResp(DispatchBuildStatusEnum.failed.name, status.message)
+        }
+    }
+
+    override fun waitDebugBuilderRunning(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        userId: String,
+        builderName: String
+    ): DispatchBuilderDebugStatus {
+        val status = bcsBuilderClient.waitContainerRunning(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            userId = userId,
+            containerName = builderName
+        )
+        return when (status) {
+            BcsBuilderStatusEnum.READY_TO_RUN, BcsBuilderStatusEnum.STOP_FAILED ->
+                DispatchBuilderDebugStatus.CAN_RESTART
+            BcsBuilderStatusEnum.RUNNING -> DispatchBuilderDebugStatus.RUNNING
+            BcsBuilderStatusEnum.STARTING -> DispatchBuilderDebugStatus.STARTING
+            else -> DispatchBuilderDebugStatus.UNKNOWN
+        }
+    }
+
+    override fun getDebugWebsocketUrl(
+        projectId: String,
+        pipelineId: String,
+        staffName: String,
+        builderName: String
+    ): String {
+        return bcsBuilderClient.getWebsocketUrl(projectId, pipelineId, staffName, builderName).data!!
+    }
+
+    override fun buildAndPushImage(
+        userId: String,
+        projectId: String,
+        buildId: String,
+        dispatchBuildImageReq: DispatchBuildImageReq
+    ): DispatchTaskResp {
+        logger.info("projectId: $projectId, buildId: $buildId build and push image. " +
+                        JsonUtil.toJson(dispatchBuildImageReq)
+        )
+
+        return DispatchTaskResp(bcsBuilderClient.buildAndPushImage(
+            userId, dispatchBuildImageReq))
     }
 }

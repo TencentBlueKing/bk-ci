@@ -30,9 +30,13 @@ package com.tencent.devops.dispatch.kubernetes.interfaces
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchTaskResp
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildBuilderStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchBuilderDebugStatus
 
 /**
  * 用来获取不同类型的dispatchType的service来调用相关实现
@@ -111,4 +115,42 @@ interface DispatchBuildTypeService {
         userId: String,
         taskId: String
     ): DispatchBuildTaskStatus
+
+    /**
+     * 获取Task任务状态
+     * @param taskId 任务ID
+     */
+    fun getTaskStatus(userId: String, taskId: String): DispatchBuildStatusResp
+
+    /**
+     * 等待构建机启动
+     */
+    fun waitDebugBuilderRunning(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        userId: String,
+        builderName: String
+    ): DispatchBuilderDebugStatus
+
+    /**
+     * 获取Websocket链接
+     */
+    fun getDebugWebsocketUrl(
+        projectId: String,
+        pipelineId: String,
+        staffName: String,
+        builderName: String
+    ): String
+
+    /**
+     * 构建推送镜像接口
+     */
+    fun buildAndPushImage(
+        userId: String,
+        projectId: String,
+        buildId: String,
+        dispatchBuildImageReq: DispatchBuildImageReq
+    ): DispatchTaskResp
 }

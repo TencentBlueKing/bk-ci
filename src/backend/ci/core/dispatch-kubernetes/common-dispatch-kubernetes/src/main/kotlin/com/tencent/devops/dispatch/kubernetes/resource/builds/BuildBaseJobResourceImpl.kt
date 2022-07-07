@@ -36,12 +36,14 @@ import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchJobLogResp
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchJobReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchTaskResp
 import com.tencent.devops.dispatch.kubernetes.service.DispatchBaseJobService
+import com.tencent.devops.dispatch.kubernetes.service.DispatchBuildService
 import com.tencent.devops.dispatch.kubernetes.utils.BaseCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildBaseJobResourceImpl @Autowired constructor(
-    private val dispatchBaseJobService: DispatchBaseJobService
+    private val dispatchBaseJobService: DispatchBaseJobService,
+    private val dispatchBuildService: DispatchBuildService
 ) : BuildBaseJobResource {
     override fun createJob(
         userId: String,
@@ -95,7 +97,7 @@ class BuildBaseJobResourceImpl @Autowired constructor(
         buildImageReq: DispatchBuildImageReq
     ): Result<DispatchTaskResp> {
         return Result(
-            dispatchBaseJobService.buildAndPushImage(
+            dispatchBuildService.buildAndPushImage(
                 userId = userId,
                 projectId = projectId,
                 buildId = buildId,

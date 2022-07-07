@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.builds.services
+package com.tencent.devops.dispatch.kubernetes.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -34,8 +34,7 @@ import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.kubernetes.builds.components.DispatchBuildTypeFactory
-import com.tencent.devops.dispatch.kubernetes.builds.pojo.PipelineBuilderLock
+import com.tencent.devops.dispatch.kubernetes.utils.PipelineBuilderLock
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildDao
@@ -46,6 +45,8 @@ import com.tencent.devops.dispatch.kubernetes.pojo.Credential
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuilderStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchTaskResp
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildBuilderStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderType
@@ -355,6 +356,17 @@ class DispatchBuildService @Autowired constructor(
         )
 
         checkStartTask(poolNo, taskId, builderName, dispatchType, false)
+    }
+
+    fun buildAndPushImage(
+        userId: String,
+        projectId: String,
+        buildId: String,
+        dispatchType: DispatchEnumType,
+        dispatchBuildImageReq: DispatchBuildImageReq
+    ): DispatchTaskResp {
+        return dispatchBuildFactory.load(dispatchType)
+            .buildAndPushImage(userId, projectId, buildId, dispatchBuildImageReq)
     }
 
     private fun DispatchMessage.checkStartTask(

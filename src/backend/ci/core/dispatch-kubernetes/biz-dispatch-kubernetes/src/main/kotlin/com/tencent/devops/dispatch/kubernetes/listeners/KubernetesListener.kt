@@ -30,7 +30,7 @@ package com.tencent.devops.dispatch.kubernetes.listeners
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
-import com.tencent.devops.dispatch.kubernetes.builds.services.DispatchBuildService
+import com.tencent.devops.dispatch.kubernetes.service.DispatchBuildService
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent

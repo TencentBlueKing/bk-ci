@@ -36,5 +36,13 @@ enum class DispatchBuildBuilderStatus {
     // 已经占用了
     BUSY,
     // 状态有问题
-    HAS_EXCEPTION
+    HAS_EXCEPTION,
+    // 可以重启
+    CAN_RESTART,
+    // 正在运行
+    RUNNING,
+    // 正在启动
+    STARTING,
+    // 未知状态
+    UNKNOWN
 }

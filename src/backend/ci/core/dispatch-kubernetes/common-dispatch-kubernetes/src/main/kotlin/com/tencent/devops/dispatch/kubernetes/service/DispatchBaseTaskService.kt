@@ -34,10 +34,10 @@ import org.springframework.stereotype.Service
 
 @Service
 class DispatchBaseTaskService @Autowired constructor(
-    private val dispatchFactory: DispatchTypeServiceFactory
+    private val dispatchBuildTypeFactory: DispatchBuildTypeFactory
 ) {
 
     fun getTaskStatus(userId: String, dispatchType: DispatchEnumType, taskId: String): DispatchBuildStatusResp {
-        return dispatchFactory.load(dispatchType).getTaskStatus(userId, taskId)
+        return dispatchBuildTypeFactory.load(dispatchType).getTaskStatus(userId, taskId)
     }
 }

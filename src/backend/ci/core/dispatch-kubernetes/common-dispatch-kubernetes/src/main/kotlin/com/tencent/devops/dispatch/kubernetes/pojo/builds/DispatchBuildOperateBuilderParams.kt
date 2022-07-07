@@ -36,5 +36,7 @@ enum class DispatchBuildOperateBuilderType {
     // 删除
     DELETE,
     // 停止
-    STOP
+    STOP,
+    // 登录调试启动
+    START_SLEEP
 }
