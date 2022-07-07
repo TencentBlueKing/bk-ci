@@ -630,7 +630,11 @@ class QualityRuleCheckService @Autowired constructor(
                 interceptList.add(
                     QualityRuleInterceptRecord(
                         indicatorId = hashId,
-                        indicatorName = if (indicator.taskName.isNullOrEmpty()) cnName else "[${indicator.taskName}]$cnName",
+                        indicatorName = if (indicator.taskName.isNullOrEmpty()) {
+                            cnName
+                        } else {
+                            "[${indicator.taskName}]$cnName"
+                        },
                         indicatorType = elementType,
                         controlPoint = controlPointName,
                         operation = operation,
