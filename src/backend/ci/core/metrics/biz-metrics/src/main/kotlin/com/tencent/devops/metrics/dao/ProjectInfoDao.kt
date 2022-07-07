@@ -28,12 +28,10 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
-import com.tencent.devops.metrics.constant.Constants.BK_ERROR_NAME
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.model.metrics.tables.TErrorTypeDict
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
-import com.tencent.devops.metrics.pojo.`do`.PipelineErrorTypeInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineLabelInfo
 import com.tencent.devops.metrics.pojo.qo.QueryProjectInfoQO
 import com.tencent.devops.model.metrics.tables.records.TProjectPipelineLabelInfoRecord
