@@ -471,7 +471,7 @@
                         message: `${this.$t('history.downloading')}${name}`,
                         theme: 'success'
                     })
-                    window.open(res.url, '_self')
+                    window.open(url, '_self')
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
