@@ -26,6 +26,11 @@ BuildBooster_LDFLAG=-X github.com/Tencent/bk-ci/src/booster/bk_dist/booster/comm
  -X github.com/Tencent/bk-ci/src/booster/bk_dist/booster/command.TestBuildBoosterServerPort=${distcc_server_test_port} \
  -X github.com/Tencent/bk-ci/src/booster/bk_dist/booster/command.ServerNecessary=${booster_server_necessary}
 
+ BuildBoosterHelper_LDFLAG=-X github.com/Tencent/bk-ci/src/booster/bk_dist/booster-helper/command.ProdBuildBoosterGatewayDomain=${distcc_gateway_prod_domain} \
+ -X github.com/Tencent/bk-ci/src/booster/bk_dist/booster-helper/command.ProdBuildBoosterGatewayPort=${distcc_gateway_prod_port} \
+ -X github.com/Tencent/bk-ci/src/booster/bk_dist/booster-helper/command.TestdBuildBoosterGatewayDomain=${distcc_gateway_test_domain} \
+ -X github.com/Tencent/bk-ci/src/booster/bk_dist/booster-helper/command.TestBuildBoosterGatewayPort=${distcc_gateway_test_port}
+
 BIN_PATH=./build
 DISTCC_BIN_PATH=${BIN_PATH}/distcc
 
@@ -146,7 +151,10 @@ dist_shader_tool:dist_prepare
 dist_hook:dist_prepare
 	cd tools/hook_ld_preload && $(MAKE) all && cp bkhook.so ../../${DISTEXECUTOR_BIN_PATH}/
 
-dist:dist_executor dist_booster dist_controller dist_worker dist_idle_loop dist_help_tool dist_ubt_tool dist_shader_tool dist_hook
+dist_helper:
+	go build -ldflags "${LDFLAG} ${BuildBoosterHelper_LDFLAG}" -o ${DISTEXECUTOR_BIN_PATH}/bk-booster-helper ./bk_dist/booster-helper/main.go
+
+dist:dist_executor dist_booster dist_controller dist_worker dist_idle_loop dist_help_tool dist_ubt_tool dist_shader_tool dist_hook dist_helper
 
 clean_dist:
 	rm -rf ${DISTEXECUTOR_BIN_PATH}
