@@ -812,6 +812,7 @@
     "archived": " Custom reports are archived",
     "baseRule": " Basic rules",
     "crontabTitle": "Advanced custom crontab expression",
+    "cronWeekHint": "Please tick the weekly trigger time",
     "planRule": " Plan rule",
     "crontabExpression": " Please fill in the correct crontab expression and break them if there are many",
     "triggerEmptyTips": " Basic rule and custom expression can't be left empty at the same time",
