@@ -153,7 +153,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                 pipelineId = pipeline.pipelineId,
                 pipelineName = modelAndSetting.model.name
             ),
-            updateLastModifyUser = updateLastModifyUser
+            updateLastModifyUser = updateLastModifyUser,
+            channelCode = channelCode
         )
     }
 

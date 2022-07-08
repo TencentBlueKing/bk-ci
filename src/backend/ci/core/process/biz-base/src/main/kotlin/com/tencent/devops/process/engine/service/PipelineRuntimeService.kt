@@ -39,6 +39,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -146,7 +147,6 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM_ALIAS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import org.jooq.DSLContext
@@ -191,6 +191,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineRuleService: PipelineRuleService,
     private val projectCacheService: ProjectCacheService,
     private val pipelineUrlBean: PipelineUrlBean,
+    private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation
 ) {
     companion object {
@@ -715,7 +716,7 @@ class PipelineRuntimeService @Autowired constructor(
         )
         val projectName = projectCacheService.getProjectName(projectId) ?: ""
         val context = StartBuildContext.init(projectId, pipelineId, buildId, startParamMap)
-
+        buildLogPrinter.startLog(buildId, null, null, context.executeCount)
         val updateTaskExistsRecord: MutableList<TPipelineBuildTaskRecord> = mutableListOf()
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
         val lastTimeBuildTaskRecords = pipelineTaskService.listByBuildId(projectId, buildId)
@@ -929,21 +930,7 @@ class PipelineRuntimeService @Autowired constructor(
                     buildHistoryRecord.queueTime = now // for EPC
                     buildHistoryRecord.status = startBuildStatus.ordinal
                     // 重试时启动参数只需要刷新执行次数
-                    buildHistoryRecord.buildParameters = buildHistoryRecord.buildParameters?.let { self ->
-                        val retryCount = context.executeCount - 1
-                        val list = JsonUtil.getObjectMapper().readValue(self) as MutableList<BuildParameters>
-                        list.find { it.key == PIPELINE_RETRY_COUNT }?.let { param ->
-                            param.value = retryCount
-                        } ?: run {
-                            list.add(
-                                BuildParameters(
-                                    key = PIPELINE_RETRY_COUNT,
-                                    value = retryCount
-                                )
-                            )
-                        }
-                        JsonUtil.toJson(list)
-                    }
+                    buildHistoryRecord.buildParameters = JsonUtil.toJson(originStartParams, formatted = false)
                     transactionContext.batchStore(buildHistoryRecord).execute()
                     // 重置状态和人
                     buildDetailDao.update(
