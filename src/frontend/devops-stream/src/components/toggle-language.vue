@@ -34,7 +34,7 @@
                     // catch
                 }
                 instance.proxy.$i18n.locale = locale
-                setCookie('stream_language', locale, getSubdomain())
+                setCookie('blueking_language', locale, getSubdomain())
                 location.reload()
             }
 
