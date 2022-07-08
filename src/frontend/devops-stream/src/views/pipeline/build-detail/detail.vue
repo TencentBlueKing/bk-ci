@@ -16,11 +16,11 @@
                         ></icon>
                     </span>
                     <span class="title-item">
-                        <span v-if="buildDetail.objectKind === 'schedule'">System</span>
+                        <span v-if="buildDetail.objectKind === 'schedule'">{{$t('pipeline.system')}}</span>
                         <template v-else>
                             <i class="stream-icon stream-user"></i>
                             <template v-if="buildDetail.objectKind === 'openApi'">
-                                OPENAPI（{{ buildDetail.userId }}）
+                                {{$t('pipeline.openapi')}}（{{ buildDetail.userId }}）
                             </template>
                             <template v-else>
                                 {{ buildDetail.userId }}
@@ -43,10 +43,10 @@
                     <span class="info-item text-ellipsis">
                         <icon name="message" size="14"></icon>
                         {{ buildDetail.buildHistoryRemark || '--' }}
-                        <bk-popconfirm trigger="click" @confirm="confirmUpdateRemark" placement="bottom" confirm-text="confirm" cancel-text="cancel">
+                        <bk-popconfirm trigger="click" @confirm="confirmUpdateRemark" placement="bottom" :confirm-text="$t('confirm')" :cancel-text="$t('cancel')">
                             <div slot="content">
-                                <h3 class="mb10">Edit notes</h3>
-                                <bk-input type="textarea" v-model="remark" placeholder="Please enter a note" class="mb10 w200"></bk-input>
+                                <h3 class="mb10">{{$t('pipeline.editNote')}}</h3>
+                                <bk-input type="textarea" v-model="remark" :placeholder="$t('pipeline.notePlaceholder')" class="mb10 w200"></bk-input>
                             </div>
                             <bk-icon type="edit2" style="font-size: 18px;cursor:pointer" />
                         </bk-popconfirm>
@@ -63,10 +63,10 @@
             </p>
 
             <div v-bk-tooltips="computedOptToolTip" class="nav-button" v-if="buildDetail.status === 'RUNNING'">
-                <bk-button class="detail-button" @click="cancleBuild" :loading="isOperating" :disabled="!curPipeline.enabled || !permission">Cancel Build</bk-button>
+                <bk-button class="detail-button" @click="cancleBuild" :loading="isOperating" :disabled="!curPipeline.enabled || !permission">{{$t('pipeline.cancelBuild')}}</bk-button>
             </div>
             <div v-bk-tooltips="computedOptToolTip" class="nav-button" v-else>
-                <bk-button class="detail-button" @click="rebuild" :loading="isOperating" :disabled="!curPipeline.enabled || !permission">Re-build</bk-button>
+                <bk-button class="detail-button" @click="rebuild" :loading="isOperating" :disabled="!curPipeline.enabled || !permission">{{$t('pipeline.rebuild')}}</bk-button>
             </div>
         </section>
         <pipeline
@@ -119,7 +119,7 @@
 
             computedOptToolTip () {
                 return {
-                    content: !this.curPipeline.enabled ? 'Pipeline disabled' : 'Permission denied',
+                    content: !this.curPipeline.enabled ? this.$t('pipeline.pipelineDisabled') : this.$t('exception.permissionDeny'),
                     disabled: this.curPipeline.enabled && this.permission
                 }
             },

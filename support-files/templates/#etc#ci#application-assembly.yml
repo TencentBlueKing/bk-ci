@@ -182,7 +182,7 @@ image:
 log:
   storage:
     type: __BK_CI_LOG_STORAGE_TYPE__                # 日志存储方式 lucene/elasticsearch
-    closeInDay: __BK_CI_LOG_CLOSE_DAY__             # 索引自动关闭时间，留空则为永不关闭
+    closeInDay: __BK_CI_LOG_COLD_DAY__             # 索引自动关闭时间，留空则为永不关闭
     deleteInDay: __BK_CI_LOG_DELETE_DAY__           # 索引自动删除时间，留空则为永不删除
   # 通过本地文件系统进行存储的必要配置
   lucene:
@@ -349,11 +349,6 @@ thread:
   min: 8
 
 #### process
-
-# 流水线加密参数密钥
-parameter:
-  password:
-    pswKey: __BK_CI_PIPELINE_PARAMETER_ENCRYPT_PASSWORD__
 
 # 流水线引擎并发配置
 queueConcurrency:

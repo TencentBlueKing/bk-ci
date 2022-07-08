@@ -307,7 +307,7 @@ class BuildMonitorControl @Autowired constructor(
     @Suppress("LongMethod")
     private fun monitorQueueBuild(event: PipelineBuildMonitorEvent, buildInfo: BuildInfo): Boolean {
         // 判断是否超时
-        if (pipelineSettingService.isQueueTimeout(event.projectId, event.pipelineId, buildInfo.startTime!!)) {
+        if (pipelineSettingService.isQueueTimeout(event.projectId, event.pipelineId, buildInfo.queueTime)) {
             val exitQueue = pipelineRuntimeExtService.existQueue(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,

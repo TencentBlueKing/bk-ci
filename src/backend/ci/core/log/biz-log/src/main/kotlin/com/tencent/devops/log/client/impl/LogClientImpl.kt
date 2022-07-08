@@ -27,9 +27,8 @@
 
 package com.tencent.devops.log.client.impl
 
-import com.tencent.devops.log.es.ESClient
 import com.tencent.devops.log.client.LogClient
-import java.lang.RuntimeException
+import com.tencent.devops.log.es.ESClient
 
 class LogClientImpl constructor(private val client: ESClient) : LogClient {
 
@@ -38,10 +37,6 @@ class LogClientImpl constructor(private val client: ESClient) : LogClient {
     }
 
     override fun hashClient(buildId: String): ESClient {
-        val clients = getActiveClients()
-        if (clients.isEmpty()) {
-            throw RuntimeException("Fail to get the log client")
-        }
-        return clients.first()
+        return getActiveClients().first()
     }
 }

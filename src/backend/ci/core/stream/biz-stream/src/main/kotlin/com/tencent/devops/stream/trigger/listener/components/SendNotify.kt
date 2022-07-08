@@ -128,7 +128,10 @@ class SendNotify @Autowired constructor(
         val chatIds = replaceVar(notice.chatId, noticeVariables)?.toMutableSet()
         val title = replaceVar(notice.title, noticeVariables)
         val content = replaceVar(notice.content, noticeVariables)
-        val projectName = GitCommonUtils.getRepoName(action.data.setting.gitHttpUrl, action.data.setting.name)
+        val projectName = action.data.eventCommon.gitProjectName ?: GitCommonUtils.getRepoName(
+            action.data.setting.gitHttpUrl,
+            action.data.setting.name
+        )
 
         val gitProjectInfoCache = action.data.eventCommon.sourceGitProjectId?.let {
             streamTriggerCache.getAndSaveRequestGitProjectInfo(

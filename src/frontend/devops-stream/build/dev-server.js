@@ -17,9 +17,6 @@ import fs from 'fs'
 
 import devConf from './webpack.dev.conf'
 import config from './config'
-import checkVer from './check-versions'
-
-checkVer()
 
 const port = process.env.PORT || config.dev.port
 
