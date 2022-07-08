@@ -242,7 +242,7 @@ class DispatchService constructor(
             key = redisKey(hashId, secretKey),
             value = objectMapper.writeValueAsString(
                 RedisBuild(
-                    vmName = event.vmNames ?: "Dispatcher-sdk-${event.vmSeqId}",
+                    vmName = event.vmNames.ifBlank { "Dispatcher-sdk-${event.vmSeqId}" },
                     projectId = event.projectId,
                     pipelineId = event.pipelineId,
                     buildId = event.buildId,

@@ -46,8 +46,7 @@ data class PipelineAgentStartupEvent(
     val vmSeqId: String,
     val taskName: String,
     val os: String,
-    @Deprecated("废弃字段")
-    val vmNames: String? = null,
+    val vmNames: String,
     @Deprecated("废弃字段")
     val startTime: Long? = null,
     val channelCode: String,
