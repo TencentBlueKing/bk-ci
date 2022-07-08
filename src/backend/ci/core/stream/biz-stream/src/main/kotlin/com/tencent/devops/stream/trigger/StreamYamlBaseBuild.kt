@@ -178,7 +178,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     userId = pipeline.creator ?: "",
                     gitProjectId = gitProjectId.toLong(),
                     projectCode = projectCode,
-                    modelAndSetting = createTriggerModel(projectCode),
+                    modelAndSetting = createTriggerModel(pipeline.displayName),
                     updateLastModifyUser = true
                 )
                 streamPipelineBranchService.saveOrUpdate(
@@ -213,9 +213,9 @@ class StreamYamlBaseBuild @Autowired constructor(
         return "git_$gitProjectId"
     }
 
-    private fun createTriggerModel(projectCode: String) = PipelineModelAndSetting(
+    private fun createTriggerModel(displayName: String) = PipelineModelAndSetting(
         model = Model(
-            name = StreamPipelineUtils.genBKPipelineName(projectCode),
+            name = displayName,
             desc = "",
             stages = listOf(
                 Stage(

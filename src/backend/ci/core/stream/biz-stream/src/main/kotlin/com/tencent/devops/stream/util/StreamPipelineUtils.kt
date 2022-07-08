@@ -32,7 +32,8 @@ import com.tencent.devops.common.api.util.UUIDUtil
 object StreamPipelineUtils {
 
     fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
-    // 检查是否有问题
+
+    // TODO: 2022/7/7 去除随机数字逻辑
     fun genBKPipelineName(projectCode: String) = projectCode + "_" + UUIDUtil.generate()
 
     fun genStreamV2BuildUrl(
