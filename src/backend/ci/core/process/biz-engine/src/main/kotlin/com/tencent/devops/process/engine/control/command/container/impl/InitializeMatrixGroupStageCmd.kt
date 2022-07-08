@@ -431,7 +431,9 @@ class InitializeMatrixGroupStageCmd(
             )
         }
         // #7168 在表中增加所有分裂的Job和Task，此时需要避免同时有update操作，因此先获取所有Job的id锁
-        val containerLockList = stageContainers.map { c ->
+        val containerLockList = stageContainers.filter { c ->
+            c.matrixGroupFlag != true && !c.status.isFinish()
+        }.map { c ->
             ContainerIdLock(redisOperation, c.buildId, c.containerId)
         }
         try {
