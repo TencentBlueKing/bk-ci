@@ -192,7 +192,8 @@ class StreamYamlTrigger @Autowired constructor(
                 gitBuildId = null,
                 // 没有触发只有特殊任务的不需要保存蓝盾流水线
                 onlySavePipeline = false,
-                yamlTransferData = yamlReplaceResult.yamlTransferData
+                yamlTransferData = yamlReplaceResult.yamlTransferData,
+                manualInputs = null
             )
         }
 
