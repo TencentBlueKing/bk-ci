@@ -421,10 +421,10 @@ private fun GithubPushEvent.pushEventFilter(): Boolean {
     if (deleted) {
         return true
     }
-    if (commits.isEmpty()) {
-        GithubPushActionGit.logger.info("$after Github push web hook no commit")
-        return false
-    }
+//    if (commits.isEmpty()) {
+//        GithubPushActionGit.logger.info("$after Github push web hook no commit")
+//        return false
+//    }
     if (GitUtils.isPrePushBranch(ref)) {
         GithubPushActionGit.logger.info("Github web hook is pre-push event|branchName=$ref")
         return false
