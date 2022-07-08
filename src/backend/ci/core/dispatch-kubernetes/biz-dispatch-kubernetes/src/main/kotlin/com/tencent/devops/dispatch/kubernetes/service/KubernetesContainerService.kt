@@ -79,7 +79,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
-@Service("kubernetesDispatchBuildTypeService")
+@Service("kubernetesContainerService")
 class KubernetesContainerService @Autowired constructor(
     private val logsPrinter: LogsPrinter,
     private val kubernetesTaskClient: KubernetesTaskClient,

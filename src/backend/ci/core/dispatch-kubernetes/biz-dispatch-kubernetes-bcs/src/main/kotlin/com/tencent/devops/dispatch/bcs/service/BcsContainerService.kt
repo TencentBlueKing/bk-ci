@@ -79,7 +79,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
-@Service("bcsDispatchBuildTypeService")
+@Service("bcsContainerService")
 class BcsContainerService @Autowired constructor(
     private val bcsBuilderClient: BcsBuilderClient,
     private val logsPrinter: LogsPrinter,
