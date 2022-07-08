@@ -73,7 +73,7 @@ internal class ManualTriggerServiceTest {
                             type = VariablePropType.SELECTOR.value,
                             options = listOf(
                                 VariablePropOption(
-                                    id = "select类型-v",
+                                    id = "select类型-v"
                                 ),
                                 VariablePropOption(
                                     id = 123,
@@ -95,7 +95,7 @@ internal class ManualTriggerServiceTest {
                         type = VariablePropType.CHECKBOX.value,
                         options = listOf(
                             VariablePropOption(
-                                id = "checkBox类型-v",
+                                id = "checkBox类型-v"
                             ),
                             VariablePropOption(
                                 id = 123,

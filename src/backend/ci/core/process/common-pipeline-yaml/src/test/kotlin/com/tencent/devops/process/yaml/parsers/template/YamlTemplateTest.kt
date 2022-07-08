@@ -51,7 +51,6 @@ import java.io.InputStreamReader
 import java.io.StringReader
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.function.Executable
 
 @Suppress("LoopWithTooManyJumpStatements")
 class YamlTemplateTest {
