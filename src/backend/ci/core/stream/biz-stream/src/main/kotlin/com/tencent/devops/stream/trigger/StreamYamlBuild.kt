@@ -53,6 +53,7 @@ import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
+import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
@@ -286,7 +287,8 @@ class StreamYamlBuild @Autowired constructor(
 
         // 判断是否更新最后修改人
         val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
-        val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
+        val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath) &&
+            !(action is StreamMrAction && action.checkMrForkAction())
 
         return streamYamlBaseBuild.startBuild(
             action = action,
@@ -323,7 +325,8 @@ class StreamYamlBuild @Autowired constructor(
         // 判断是否更新最后修改人
         val pipeline = action.data.context.pipeline!!
         val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
-        val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
+        val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath) &&
+            !(action is StreamMrAction && action.checkMrForkAction())
         StreamBuildLock(
             redisOperation = redisOperation,
             gitProjectId = action.data.getGitProjectId().toLong(),

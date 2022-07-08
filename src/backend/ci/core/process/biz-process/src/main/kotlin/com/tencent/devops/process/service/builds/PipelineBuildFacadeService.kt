@@ -382,6 +382,9 @@ class PipelineBuildFacadeService(
             }
             val startType = StartType.toStartType(buildInfo.trigger)
             if (!taskId.isNullOrBlank()) {
+                buildInfo.buildParameters?.associateBy { it.key }?.get(PIPELINE_RETRY_COUNT)?.let { param ->
+                    paramMap[param.key] = param
+                }
                 // stage/job/task级重试
                 run {
                     model.stages.forEach { s ->
