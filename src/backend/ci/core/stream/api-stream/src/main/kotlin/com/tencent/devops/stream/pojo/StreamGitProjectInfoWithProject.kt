@@ -70,5 +70,8 @@ data class StreamGitProjectInfoWithProject(
     val avatarUrl: String?,
     @ApiModelProperty("环境路由", name = "routerTag")
     @JsonProperty("routerTag")
-    val routerTag: String?
+    val routerTag: String?,
+    @ApiModelProperty("带前缀项目ID", name = "projectCode")
+    @JsonProperty("projectCode")
+    val projectCode: String? = null
 )

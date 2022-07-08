@@ -74,21 +74,19 @@ class UserStreamGitResourceImpl @Autowired constructor(
             return Result(data = null)
         }
         val projectInfo = streamGitService.getProjectInfo(gitProjectId) ?: return Result(null)
+        val projectCode = GitCommonUtils.getCiProjectId(
+            gitProjectId = projectInfo.gitProjectId,
+            scmType = streamGitConfig.getScmType()
+        )
         // 增加用户访问记录
         streamProjectService.addUserProjectHistory(
             userId = userId,
-            projectId = GitCommonUtils.getCiProjectId(
-                gitProjectId = projectInfo.gitProjectId,
-                scmType = streamGitConfig.getScmType()
-            )
+            projectId = projectCode
         )
         val routerTag = client.get(ServiceProjectResource::class).get(
-            englishName = GitCommonUtils.getCiProjectId(
-                projectInfo.gitProjectId,
-                streamGitConfig.getScmType()
-            )
+            englishName = projectCode
         ).data?.routerTag
-        return Result(projectInfo.copy(routerTag = routerTag))
+        return Result(projectInfo.copy(routerTag = routerTag, projectCode = projectCode))
     }
 
     override fun getGitCodeProjectMembers(

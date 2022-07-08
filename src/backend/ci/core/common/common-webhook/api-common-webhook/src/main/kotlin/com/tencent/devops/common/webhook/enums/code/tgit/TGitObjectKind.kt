@@ -31,6 +31,7 @@ enum class TGitObjectKind(val value: String) {
     PUSH("push"),
     TAG_PUSH("tag_push"),
     MERGE_REQUEST("merge_request"),
+    PULL_REQUEST("pull_request"),
     MANUAL("manual"),
     SCHEDULE("schedule"),
     DELETE("delete"),
@@ -45,6 +46,7 @@ enum class TGitObjectKind(val value: String) {
         const val OBJECT_KIND_PUSH = "push"
         const val OBJECT_KIND_TAG_PUSH = "tag_push"
         const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
+        const val OBJECT_KIND_PULL_REQUEST = "pull_request"
         const val OBJECT_KIND_SCHEDULE = "schedule"
         const val OBJECT_KIND_DELETE = "delete"
         const val OBJECT_KIND_OPENAPI = "openApi"
