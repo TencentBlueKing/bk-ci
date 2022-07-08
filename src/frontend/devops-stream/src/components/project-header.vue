@@ -28,6 +28,7 @@
                 </router-link>
                 <router-link
                     class="stream-link"
+                    v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }"
                     :is="permission ? 'router-link' : 'span'"
                     :to="{ name: 'basicSetting' }"
                 >
@@ -35,7 +36,6 @@
                         name="setting-link"
                         size="18"
                         class="link-icon"
-                        v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }"
                     ></icon>
                     {{$t('header.settings')}}
                 </router-link>

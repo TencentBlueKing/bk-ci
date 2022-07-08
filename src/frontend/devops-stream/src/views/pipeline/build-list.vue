@@ -194,6 +194,12 @@
                         ref="codeEditor"
                     />
                 </bk-form-item>
+                <bk-ui-form
+                    v-bkloading="{ isLoading: isLoadingSchema }"
+                    v-model="formData.inputs"
+                    ref="bkUiForm"
+                    :schema="uiFormSchema"
+                />
                 <bk-form-item>
                     <bk-button ext-cls="mr5" theme="primary" @click.stop.prevent="submitData" :loading="isTriggering">{{$t('submit')}}</bk-button>
                     <bk-button ext-cls="mr5" @click="hidden" :disabled="isTriggering">{{$t('cancel')}}</bk-button>
@@ -218,11 +224,14 @@
     import { getPipelineStatusClass, getPipelineStatusCircleIconCls } from '@/components/status'
     import register from '@/utils/websocket-register'
     import validateRule from '@/utils/validate-rule'
+    import createForm from '@blueking/bkui-form'
+    const BkUiForm = createForm()
 
     export default {
         components: {
             optMenu,
-            codeSection
+            codeSection,
+            BkUiForm
         },
 
         filters: {
@@ -274,14 +283,17 @@
                     useCommitId: false,
                     commitId: [],
                     customCommitMsg: '',
-                    yaml: ''
+                    yaml: '',
+                    inputs: {}
                 },
                 triggerCommits: [],
                 checkYaml: validateRule.checkYaml,
                 pipelineList: [],
                 isLoadingPipeline: false,
                 isLoadingEvent: false,
-                eventList: []
+                eventList: [],
+                isLoadingSchema: false,
+                uiFormSchema: {}
             }
         },
 
@@ -513,6 +525,7 @@
             selectBranch () {
                 this.getBranchCommits()
                 this.getPipelineBranchYaml()
+                this.getPipelineParams()
             },
 
             getBranchCommits (value, options, query = {}) {
@@ -546,6 +559,21 @@
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {
                     this.isLoadingYaml = false
+                })
+            },
+
+            getPipelineParams () {
+                const branchName = this.formData.branch
+                const commitId = this.formData.useCommitId ? this.formData.commitId[0] : undefined
+                if (!branchName && !commitId) return
+
+                this.isLoadingSchema = true
+                return pipelines.getPipelineParamJson(this.projectId, this.curPipeline.pipelineId, { branchName, commitId }).then((res) => {
+                    this.uiFormSchema = res || ''
+                }).catch((err) => {
+                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                }).finally(() => {
+                    this.isLoadingSchema = false
                 })
             },
 
@@ -584,7 +612,10 @@
             },
 
             submitData () {
-                this.$refs.triggleForm.validate().then(() => {
+                Promise.all([
+                    this.$refs.triggleForm.validate(),
+                    this.$refs.bkUiForm?.validate(),
+                ]).then(() => {
                     const postData = {
                         ...this.formData,
                         projectId: this.projectId,

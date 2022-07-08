@@ -188,5 +188,9 @@ export default {
 
     getPipelineDirList (projectId, params) {
         return api.get(`${STREAM_PERFIX}/user/pipelines/${projectId}/dir_list`, { params })
+    },
+
+    getPipelineParamJson (projectId, pipelineId, params) {
+        return api.post(`${STREAM_PERFIX}/user/trigger/build/${projectId}/${pipelineId}/manual`, params)
     }
 }
