@@ -29,7 +29,6 @@ package com.tencent.devops.process.pojo.webhook
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import io.swagger.annotations.ApiParam
 
 @ApiModel("参数")
 data class WebhookTriggerParams(
