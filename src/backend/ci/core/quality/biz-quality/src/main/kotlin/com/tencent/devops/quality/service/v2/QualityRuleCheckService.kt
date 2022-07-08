@@ -491,16 +491,18 @@ class QualityRuleCheckService @Autowired constructor(
             if (indicator.taskName.isNullOrEmpty() && metadataList.count { it.enName == indicator.enName } > 1) {
                 indicatorsCopy.remove(indicator)
                 metadataList.filter { it.enName == indicator.enName }.map { metadata ->
-                    indicator.taskName = metadata.taskName
-                    indicatorsCopy.add(indicator)
+                    val extraIndicator = indicator.copy()
+                    extraIndicator.taskName = metadata.taskName
+                    indicatorsCopy.add(extraIndicator)
                 }
             } else {
                 metadataList.filter { it.enName == indicator.enName &&
                         it.taskName.startsWith(indicator.taskName ?: "")
                 }.map { metadata ->
                     indicatorsCopy.remove(indicator)
-                    indicator.taskName = metadata.taskName
-                    indicatorsCopy.add(indicator)
+                    val extraIndicator = indicator.copy()
+                    extraIndicator.taskName = metadata.taskName
+                    indicatorsCopy.add(extraIndicator)
                 }
             }
         }
