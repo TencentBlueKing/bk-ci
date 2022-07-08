@@ -119,7 +119,7 @@
 
             computedOptToolTip () {
                 return {
-                    content: !this.curPipeline.enabled ? this.$t('pipeline.pipelineDisabled') : this.$t('exception.pemissionDeny'),
+                    content: !this.curPipeline.enabled ? this.$t('pipeline.pipelineDisabled') : this.$t('exception.permissionDeny'),
                     disabled: this.curPipeline.enabled && this.permission
                 }
             },
