@@ -27,12 +27,12 @@
 
 package com.tencent.devops.dispatch.kubernetes.utils
 
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
 
 class PipelineBuilderLock(
-    dispatchType: DispatchEnumType,
+    dockerRoutingType: DockerRoutingType,
     redisOperation: RedisOperation,
     pipelineId: String,
     vmSeqId: String
@@ -40,7 +40,7 @@ class PipelineBuilderLock(
 
     private val redisLock = RedisLock(
         redisOperation = redisOperation,
-        lockKey = "DISPATCH_${dispatchType.value}_LOCK_BUILDER_${pipelineId}_$vmSeqId",
+        lockKey = "DISPATCH_${dockerRoutingType.name}_LOCK_BUILDER_${pipelineId}_$vmSeqId",
         expiredTimeInSeconds = 60L
     )
 

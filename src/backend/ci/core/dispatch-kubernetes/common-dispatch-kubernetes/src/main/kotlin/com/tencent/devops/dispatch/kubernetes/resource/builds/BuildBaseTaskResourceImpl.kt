@@ -43,7 +43,7 @@ class BuildBaseTaskResourceImpl @Autowired constructor(
         return Result(
             dispatchBaseTaskService.getTaskStatus(
                 userId = userId,
-                dispatchType = CommonUtils.checkDispatchType(dispatchType),
+                dockerRoutingType = CommonUtils.checkDispatchType(dispatchType),
                 taskId = taskId
             )
         )

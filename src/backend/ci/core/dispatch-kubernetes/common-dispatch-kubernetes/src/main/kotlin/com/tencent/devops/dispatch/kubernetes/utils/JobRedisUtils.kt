@@ -27,8 +27,8 @@
 
 package com.tencent.devops.dispatch.kubernetes.utils
 
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -36,16 +36,16 @@ import org.springframework.stereotype.Component
 class JobRedisUtils @Autowired constructor(
     private val redisOperation: RedisOperation
 ) {
-    fun setJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.increment("${dispatchType.value}:$buildId-$builderName", 1)
+    fun setJobCount(dispatchType: DockerRoutingType, buildId: String, builderName: String) {
+        redisOperation.increment("${dispatchType.name}:$buildId-$builderName", 1)
     }
 
-    fun getJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String): Int {
-        val jobCount = redisOperation.get("${dispatchType.value}:$buildId-$builderName")
+    fun getJobCount(dispatchType: DockerRoutingType, buildId: String, builderName: String): Int {
+        val jobCount = redisOperation.get("${dispatchType.name}:$buildId-$builderName")
         return jobCount?.toInt() ?: 0
     }
 
-    fun deleteJobCount(dispatchType: DispatchEnumType, buildId: String, builderName: String) {
-        redisOperation.delete("${dispatchType.value}:$buildId-$builderName")
+    fun deleteJobCount(dispatchType: DockerRoutingType, buildId: String, builderName: String) {
+        redisOperation.delete("${dispatchType.name}:$buildId-$builderName")
     }
 }

@@ -50,7 +50,7 @@ class ServiceBaseDebugResourceImpl @Autowired constructor(
         return Result(
             dispatchBaseDebugService.startDebug(
                 userId = userId,
-                dispatchType = CommonUtils.checkDispatchType(dispatchType),
+                dockerRoutingType = CommonUtils.checkDispatchType(dispatchType),
                 projectId = projectId,
                 pipelineId = pipelineId,
                 vmSeqId = vmSeqId,
@@ -69,7 +69,7 @@ class ServiceBaseDebugResourceImpl @Autowired constructor(
         return Result(
             dispatchBaseDebugService.stopDebug(
                 userId = userId,
-                dispatchType = CommonUtils.checkDispatchType(dispatchType),
+                dockerRoutingType = CommonUtils.checkDispatchType(dispatchType),
                 pipelineId = pipelineId,
                 vmSeqId = vmSeqId,
                 builderName = builderName

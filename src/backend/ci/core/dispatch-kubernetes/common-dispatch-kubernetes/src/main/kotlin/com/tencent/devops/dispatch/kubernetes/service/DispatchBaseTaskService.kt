@@ -27,8 +27,8 @@
 
 package com.tencent.devops.dispatch.kubernetes.service
 
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
 import com.tencent.devops.dispatch.kubernetes.service.factory.ContainerServiceFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -38,7 +38,7 @@ class DispatchBaseTaskService @Autowired constructor(
     private val containerServiceFactory: ContainerServiceFactory
 ) {
 
-    fun getTaskStatus(userId: String, dispatchType: DispatchEnumType, taskId: String): DispatchBuildStatusResp {
-        return containerServiceFactory.load(dispatchType).getTaskStatus(userId, taskId)
+    fun getTaskStatus(userId: String, dockerRoutingType: DockerRoutingType, taskId: String): DispatchBuildStatusResp {
+        return containerServiceFactory.load(dockerRoutingType).getTaskStatus(userId, taskId)
     }
 }

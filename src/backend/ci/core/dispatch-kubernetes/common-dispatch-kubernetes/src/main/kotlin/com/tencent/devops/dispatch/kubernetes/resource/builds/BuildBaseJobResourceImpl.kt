@@ -57,7 +57,7 @@ class BuildBaseJobResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 buildId = buildId,
-                dispatchType = CommonUtils.checkDispatchType(dispatchType),
+                dockerRoutingType = CommonUtils.checkDispatchType(dispatchType),
                 jobReq = jobReq
             )
         )
@@ -67,7 +67,7 @@ class BuildBaseJobResourceImpl @Autowired constructor(
         return Result(
             dispatchBaseJobService.getJobStatus(
                 userId = userId,
-                dispatchType = CommonUtils.checkDispatchType(dispatchType),
+                dockerRoutingType = CommonUtils.checkDispatchType(dispatchType),
                 jobName = jobName
             )
         )
@@ -82,7 +82,7 @@ class BuildBaseJobResourceImpl @Autowired constructor(
         return Result(
             dispatchBaseJobService.getJobLogs(
                 userId = userId,
-                dispatchType = CommonUtils.checkDispatchType(dispatchType),
+                dockerRoutingType = CommonUtils.checkDispatchType(dispatchType),
                 jobName = jobName,
                 sinceTime = sinceTime
             )
@@ -101,7 +101,7 @@ class BuildBaseJobResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 buildId = buildId,
-                dispatchType = CommonUtils.checkDispatchType(dispatchType),
+                dockerRoutingType = CommonUtils.checkDispatchType(dispatchType),
                 dispatchBuildImageReq = buildImageReq
             )
         )

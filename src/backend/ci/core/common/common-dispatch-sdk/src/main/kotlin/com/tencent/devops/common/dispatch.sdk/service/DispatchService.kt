@@ -108,7 +108,8 @@ class DispatchService constructor(
             containerType = event.containerType,
             stageId = event.stageId,
             dispatchType = event.dispatchType,
-            customBuildEnv = event.customBuildEnv
+            customBuildEnv = event.customBuildEnv,
+            dockerRoutingType = event.dockerRoutingType
         )
     }
 
@@ -241,7 +242,7 @@ class DispatchService constructor(
             key = redisKey(hashId, secretKey),
             value = objectMapper.writeValueAsString(
                 RedisBuild(
-                    vmName = event.vmNames.ifBlank { "Dispatcher-sdk-${event.vmSeqId}" },
+                    vmName = event.vmNames ?: "Dispatcher-sdk-${event.vmSeqId}",
                     projectId = event.projectId,
                     pipelineId = event.pipelineId,
                     buildId = event.buildId,

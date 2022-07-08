@@ -28,12 +28,12 @@
 package com.tencent.devops.dispatch.kubernetes.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchJobLogResp
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchJobReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchTaskResp
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
 import com.tencent.devops.dispatch.kubernetes.service.factory.JobServiceFactory
 import com.tencent.devops.dispatch.kubernetes.utils.JobRedisUtils
 import org.slf4j.LoggerFactory
@@ -54,34 +54,34 @@ class DispatchBaseJobService @Autowired constructor(
         userId: String,
         projectId: String,
         buildId: String,
-        dispatchType: DispatchEnumType,
+        dockerRoutingType: DockerRoutingType,
         jobReq: DispatchJobReq
     ): DispatchTaskResp {
-        logger.info("projectId: $projectId, buildId: $buildId create $dispatchType jobContainer. userId: $userId")
+        logger.info("projectId: $projectId, buildId: $buildId create $dockerRoutingType jobContainer. userId: $userId")
 
         // 检查job数量是否超出限制
-        if (jobRedisUtils.getJobCount(dispatchType, buildId, jobReq.podNameSelector) > 10) {
+        if (jobRedisUtils.getJobCount(dockerRoutingType, buildId, jobReq.podNameSelector) > 10) {
             throw ErrorCodeException(
                 statusCode = 500,
                 errorCode = ErrorCodeEnum.CREATE_JOB_LIMIT_ERROR.errorCode.toString(),
                 defaultMessage = ErrorCodeEnum.CREATE_JOB_LIMIT_ERROR.formatErrorMessage
             )
         }
-        jobRedisUtils.setJobCount(dispatchType, buildId, jobReq.podNameSelector)
+        jobRedisUtils.setJobCount(dockerRoutingType, buildId, jobReq.podNameSelector)
 
-        return jobServiceFactory.load(dispatchType).createJob(userId, jobReq)
+        return jobServiceFactory.load(dockerRoutingType).createJob(userId, jobReq)
     }
 
-    fun getJobStatus(userId: String, dispatchType: DispatchEnumType, jobName: String): DispatchBuildStatusResp {
-        return jobServiceFactory.load(dispatchType).getJobStatus(userId, jobName)
+    fun getJobStatus(userId: String, dockerRoutingType: DockerRoutingType, jobName: String): DispatchBuildStatusResp {
+        return jobServiceFactory.load(dockerRoutingType).getJobStatus(userId, jobName)
     }
 
     fun getJobLogs(
         userId: String,
-        dispatchType: DispatchEnumType,
+        dockerRoutingType: DockerRoutingType,
         jobName: String,
         sinceTime: Int?
     ): DispatchJobLogResp {
-        return jobServiceFactory.load(dispatchType).getJobLogs(userId, jobName, sinceTime)
+        return jobServiceFactory.load(dockerRoutingType).getJobLogs(userId, jobName, sinceTime)
     }
 }

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.DockerVersion
@@ -39,6 +40,7 @@ import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.bcs.PublicBcsDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
 import com.tencent.devops.dispatch.docker.client.DockerHostClient
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.config.DefaultImageConfig
@@ -49,7 +51,6 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.Credential
 import com.tencent.devops.dispatch.docker.pojo.Pool
-import com.tencent.devops.dispatch.docker.pojo.enums.DockerRoutingType
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerRoutingService
 import com.tencent.devops.dispatch.docker.utils.CommonUtils
@@ -116,10 +117,13 @@ class DockerVMListener @Autowired constructor(
         logger.info("On shutdown - ($event)")
 
         val dockerRoutingType = dockerRoutingService.getDockerRoutingType(event.projectId)
-        if (dockerRoutingType == DockerRoutingType.BCS) {
-            pipelineEventDispatcher.dispatch(event.copy(routeKeySuffix = DispatchRouteKeySuffix.BCS.routeKeySuffix))
-        } else {
+        if (dockerRoutingType == DockerRoutingType.VM) {
             dockerHostBuildService.finishDockerBuild(event)
+        } else {
+            pipelineEventDispatcher.dispatch(event.copy(
+                routeKeySuffix = DispatchRouteKeySuffix.KUBERNETES.routeKeySuffix,
+                dockerRoutingType = dockerRoutingType.name
+            ))
         }
     }
 
@@ -173,16 +177,17 @@ class DockerVMListener @Autowired constructor(
         )
 
         val dockerRoutingType = dockerRoutingService.getDockerRoutingType(dispatchMessage.projectId)
-        if (dockerRoutingType == DockerRoutingType.BCS) {
-            startBcsDocker(dispatchMessage, containerPool, demoteFlag)
-        } else {
+        if (dockerRoutingType == DockerRoutingType.VM) {
             startup(dispatchMessage, containerPool)
+        } else {
+            startKubernetesDocker(dispatchMessage, containerPool, dockerRoutingType, demoteFlag)
         }
     }
 
-    private fun startBcsDocker(
+    private fun startKubernetesDocker(
         dispatchMessage: DispatchMessage,
         containerPool: Pool,
+        dockerRoutingType: DockerRoutingType = DockerRoutingType.VM,
         demoteFlag: Boolean = false
     ) {
         with(dispatchMessage) {
@@ -201,21 +206,22 @@ class DockerVMListener @Autowired constructor(
                     vmNames = vmNames,
                     startTime = System.currentTimeMillis(),
                     channelCode = channelCode,
-                    dispatchType = PublicBcsDispatchType(
-                        image = JsonUtil.toJson(containerPool),
+                    dispatchType = KubernetesDispatchType(
+                        kubernetesBuildVersion = JsonUtil.toJson(containerPool),
                         imageType = ImageType.THIRD,
-                        performanceConfigId = "0"
+                        performanceConfigId = 0
                     ),
                     zone = zone,
                     atoms = atoms,
                     executeCount = executeCount,
-                    routeKeySuffix = if (!demoteFlag) DispatchRouteKeySuffix.BCS.routeKeySuffix
-                    else ".bcs.public.demote",
+                    routeKeySuffix = if (!demoteFlag) DispatchRouteKeySuffix.KUBERNETES.routeKeySuffix
+                    else DispatchRouteKeySuffix.KUBERNETES_DEMOTE.routeKeySuffix,
                     stageId = stageId,
                     containerId = containerId,
                     containerHashId = containerHashId,
                     containerType = containerType,
-                    customBuildEnv = customBuildEnv
+                    customBuildEnv = customBuildEnv,
+                    dockerRoutingType = dockerRoutingType.name
                 )
             )
         }
@@ -311,11 +317,7 @@ class DockerVMListener @Autowired constructor(
                     vmSeqId = dispatchMessage.vmSeqId.toInt(),
                     secretKey = "",
                     status = PipelineTaskStatus.FAILURE,
-                    zone = if (null == dispatchMessage.zone) {
-                        Zone.SHENZHEN.name
-                    } else {
-                        dispatchMessage.zone!!.name
-                    },
+                    zone = Zone.SHENZHEN.name,
                     dockerIp = "",
                     poolNo = poolNo
                 )
