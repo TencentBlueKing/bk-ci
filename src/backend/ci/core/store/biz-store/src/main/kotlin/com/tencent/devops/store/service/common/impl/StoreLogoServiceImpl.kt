@@ -91,6 +91,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
     override fun uploadStoreLogo(
         userId: String,
         contentLength: Long,
+        rangeFlag: Boolean?,
         compressFlag: Boolean?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
@@ -123,11 +124,13 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
             // 判断上传的logo是否为512x512规格
             val width = img.width
             val height = img.height
-            if (width != height || width < allowUploadLogoWidth.toInt()) {
-                return MessageCodeUtil.generateResponseDataObject(
-                    StoreMessageCode.USER_ATOM_LOGO_SIZE_IS_INVALID,
-                    arrayOf(allowUploadLogoWidth, allowUploadLogoHeight)
-                )
+            if (rangeFlag!!) {
+                if (width != height || width < allowUploadLogoWidth.toInt()) {
+                    return MessageCodeUtil.generateResponseDataObject(
+                        StoreMessageCode.USER_ATOM_LOGO_SIZE_IS_INVALID,
+                        arrayOf(allowUploadLogoWidth, allowUploadLogoHeight)
+                    )
+                }
             }
             ImageIO.write(img, fileType, output)
         } else {
