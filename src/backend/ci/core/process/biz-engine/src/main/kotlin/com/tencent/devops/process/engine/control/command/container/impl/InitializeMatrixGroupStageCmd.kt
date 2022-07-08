@@ -52,6 +52,7 @@ import com.tencent.devops.process.engine.context.MatrixBuildContext
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
+import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.control.lock.StageMatrixLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -410,33 +411,40 @@ class InitializeMatrixGroupStageCmd(
                 "${modelContainer.containerHashId}|context=$context|" +
                 "groupJobSize=${groupContainers.size}|taskSize=${buildTaskList.size}"
         )
-
-        // 在表中增加所有分裂的矩阵和插件
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            // #6440 进行已有总容器数量判断，如果大于单个stage下的job数量则分裂出错
-            val currentCount = pipelineContainerService.countStageContainers(
-                transactionContext = transactionContext,
-                projectId = parentContainer.projectId,
-                buildId = parentContainer.buildId,
-                stageId = parentContainer.stageId,
-                onlyMatrixGroup = false
+        // #6440 进行已有总容器数量判断，如果大于单个stage下的job数量则分裂出错
+        val stageContainers = pipelineContainerService.listContainers(
+            projectId = parentContainer.projectId,
+            buildId = parentContainer.buildId,
+            stageId = parentContainer.stageId
+        )
+        val count = stageContainers.size + groupContainers.size - commandContext.stageMatrixCount
+        LOG.info(
+            "ENGINE|${event.buildId}|${event.source}|CHECK_CONTAINER_COUNT" +
+                "|${event.stageId}|${modelContainer.id}|containerHashId=" +
+                "${modelContainer.containerHashId}|currentCount=${stageContainers.size}|" +
+                "countResult=$count"
+        )
+        if (count > PIPELINE_STAGE_CONTAINERS_COUNT_MAX) {
+            throw InvalidParamException(
+                "The number of containers($count) in stage(${parentContainer.stageId})" +
+                    " exceeds the limit[$PIPELINE_STAGE_CONTAINERS_COUNT_MAX]"
             )
-            val count = currentCount + groupContainers.size - commandContext.stageMatrixCount
-            LOG.info(
-                "ENGINE|${event.buildId}|${event.source}|CHECK_CONTAINER_COUNT" +
-                    "|${event.stageId}|${modelContainer.id}|containerHashId=" +
-                    "${modelContainer.containerHashId}|currentCount=$currentCount|" +
-                    "countResult=$count"
-            )
-            if (count > PIPELINE_STAGE_CONTAINERS_COUNT_MAX) {
-                throw InvalidParamException(
-                    "The number of containers($count) in stage(${parentContainer.stageId})" +
-                        " exceeds the limit[$PIPELINE_STAGE_CONTAINERS_COUNT_MAX]"
-                )
+        }
+        // #7168 在表中增加所有分裂的Job和Task，此时需要避免同时有update操作，因此先获取所有Job的id锁
+        val containerLockList = stageContainers.filter { c ->
+            c.matrixGroupFlag != true && !c.status.isFinish()
+        }.map { c ->
+            ContainerIdLock(redisOperation, c.buildId, c.containerId)
+        }
+        try {
+            containerLockList.forEach { it.lock() }
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                pipelineContainerService.batchSave(transactionContext, buildContainerList)
+                pipelineTaskService.batchSave(transactionContext, buildTaskList)
             }
-            pipelineContainerService.batchSave(transactionContext, buildContainerList)
-            pipelineTaskService.batchSave(transactionContext, buildTaskList)
+        } finally {
+            containerLockList.forEach { it.unlock() }
         }
 
         buildLogPrinter.addLine(
