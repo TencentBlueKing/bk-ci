@@ -44,10 +44,10 @@ class KubernetesClientCommon @Autowired constructor(
         private const val BCS_TOKEN_KEY = "BK-Devops-Token"
     }
 
-    @Value("\${bcs.token}")
+    @Value("\${kubernetes.token}")
     val bcsToken: String = ""
 
-    @Value("\${bcs.apiUrl}")
+    @Value("\${kubernetes.apiUrl}")
     val bcsApiUrl: String = ""
 
     fun baseRequest(userId: String, url: String, headers: Map<String, String>? = null): Request.Builder {

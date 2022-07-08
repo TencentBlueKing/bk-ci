@@ -98,17 +98,17 @@ class KubernetesContainerService @Autowired constructor(
         troubleShooting = "Kubernetes构建异常，请联系蓝盾助手排查，异常信息 - "
     )
 
-    @Value("\${bcs.resources.builder.cpu}")
+    @Value("\${kubernetes.resources.builder.cpu}")
     override var cpu: Double = 32.0
 
-    @Value("\${bcs.resources.builder.memory}")
+    @Value("\${kubernetes.resources.builder.memory}")
     override var memory: String = "65535"
 
-    @Value("\${bcs.resources.builder.disk}")
+    @Value("\${kubernetes.resources.builder.disk}")
     override var disk: String = "500"
 
-    @Value("\${bcs.entrypoint}")
-    override val entrypoint: String = "bcs_init.sh"
+    @Value("\${kubernetes.entrypoint}")
+    override val entrypoint: String = "kubernetes_init.sh"
 
     override val helpUrl: String? = ""
 
