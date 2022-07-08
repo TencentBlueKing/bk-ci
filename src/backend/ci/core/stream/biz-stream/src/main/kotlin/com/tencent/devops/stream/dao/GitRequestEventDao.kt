@@ -27,11 +27,15 @@
 
 package com.tencent.devops.stream.dao
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
+import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -93,6 +97,7 @@ class GitRequestEventDao {
     fun get(
         dslContext: DSLContext,
         id: Long,
+        scmType: ScmType? = ScmType.CODE_TGIT,
         commitMsg: String? = null
     ): GitRequestEvent? {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
@@ -128,7 +133,29 @@ class GitRequestEventDao {
                     },
                     mrTitle = record.mrTitle,
                     gitEvent = try {
-                        JsonUtil.to(record.event, GitEvent::class.java)
+                        when (scmType) {
+                            ScmType.CODE_TGIT -> JsonUtil.to(record.event, GitEvent::class.java)
+                            ScmType.GITHUB -> {
+                                when (record.objectKind) {
+                                    StreamObjectKind.PULL_REQUEST.value -> JsonUtil.to(
+                                        record.event,
+                                        GithubPullRequestEvent::class.java
+                                    )
+                                    StreamObjectKind.PUSH.value -> JsonUtil.to(
+                                        record.event,
+                                        GithubPushEvent::class.java
+                                    )
+                                    StreamObjectKind.TAG_PUSH.value -> JsonUtil.to(
+                                        record.event,
+                                        GithubPushEvent::class.java
+                                    )
+                                    else -> throw IllegalArgumentException(
+                                        "${record.objectKind} in github load action not support yet"
+                                    )
+                                }
+                            }
+                            else -> TODO("对接其他Git平台时需要补充")
+                        }
                     } catch (e: Exception) {
                         null
                     },

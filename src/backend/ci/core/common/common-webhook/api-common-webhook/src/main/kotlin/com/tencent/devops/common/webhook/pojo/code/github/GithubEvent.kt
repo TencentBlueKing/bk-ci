@@ -338,6 +338,6 @@ data class GithubHeadCommit(
     val timestamp: String, // 2022-06-21T15:57:41+08:00
     @JsonProperty("tree_id")
     val treeId: String, // 1472bcfdd03256946d61aabba06b8dc12c739007
-//    @JsonProperty("url")
-//    val url: String // https://github.com/yongyiduan/webhook-test/commit/5f76b8875980ba0fc13fce4fe0866ba7dae9c9f9
+    @JsonProperty("url")
+    val url: String // https://github.com/yongyiduan/webhook-test/commit/5f76b8875980ba0fc13fce4fe0866ba7dae9c9f9
 )

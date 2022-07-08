@@ -36,6 +36,8 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -165,6 +167,35 @@ data class StreamGitRequestEventReq(
                 jumpUrl = event.repository.homepage + "/reviews/" + gitRequestEvent.mergeRequestId
                 buildTitle = commitMsg
                 buildSource = "[$mergeRequestId]"
+            }
+            is GithubPullRequestEvent -> {
+                val event = gitRequestEvent.gitEvent as GithubPullRequestEvent
+                jumpUrl = event.pullRequest.htmlUrl
+                buildTitle = mrTitle
+                buildSource = "[!$mergeRequestId]"
+            }
+            is GithubPushEvent -> {
+                val event = gitRequestEvent.gitEvent as GithubPushEvent
+                when{
+                    event.ref.startsWith("refs/heads/") -> {
+                        if (deleteBranch) {
+                            buildTitle = "Branch $branch deleted by $userId"
+                        } else {
+                            jumpUrl = event.headCommit.url
+                            buildTitle = commitMsg
+                            buildSource = commitId.take(9)
+                        }
+                    }
+                    event.ref.startsWith("refs/tags/") -> {
+                        if (deleteTag) {
+                            buildTitle = "Tag $branch deleted by $userId"
+                        } else {
+                            jumpUrl = event.repository.url + "/releases/tag/" + branch
+                            buildTitle = commitMsg
+                            buildSource = branch
+                        }
+                    }
+                }
             }
             else -> {
                 when (objectKind) {
