@@ -41,14 +41,19 @@ data class DispatchMessage(
     val userId: String,
     val vmSeqId: String,
     val channelCode: String,
-    val vmNames: String,
+    @Deprecated("废弃字段")
+    val vmNames: String? = null,
     val atoms: Map<String, String> = mapOf(),
-    val zone: Zone?,
+    @Deprecated("废弃字段")
+    val zone: Zone? = null,
     val containerHashId: String?,
     val executeCount: Int?,
     val containerId: String,
-    val containerType: String,
-    val stageId: String,
+    @Deprecated("废弃字段")
+    val containerType: String? = null,
+    @Deprecated("废弃字段")
+    val stageId: String? = null,
     val dispatchType: DispatchType?,
-    val customBuildEnv: Map<String, String>? = null
+    val customBuildEnv: Map<String, String>? = null,
+    val dockerRoutingType: String? = "VM",
 )

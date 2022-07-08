@@ -25,56 +25,55 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.bcs.listeners
+package com.tencent.devops.dispatch.kubernetes.listeners
 
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
-import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
+import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.dispatch.kubernetes.service.DispatchBuildService
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
 
-@Component
-class BcsBuildListener @Autowired constructor(
+@Service
+class KubernetesListener @Autowired constructor(
     private val dispatchBuildService: DispatchBuildService
 ) : BuildListener {
 
-    override fun getShutdownQueue(): String {
-        return ".bcs.public"
+    companion object {
+        private val logger = LoggerFactory.getLogger(KubernetesListener::class.java)
     }
 
-    override fun getStartupDemoteQueue(): String {
-        return ".bcs.public.demote"
-    }
+    override fun getStartupQueue() = DispatchRouteKeySuffix.KUBERNETES.routeKeySuffix
 
-    override fun getStartupQueue(): String {
-        return ".bcs.public"
-    }
+    override fun getShutdownQueue() = DispatchRouteKeySuffix.KUBERNETES.routeKeySuffix
 
-    override fun getVmType(): JobQuotaVmType? {
-        return JobQuotaVmType.DOCKER_BCS
-    }
+    override fun getStartupDemoteQueue(): String = DispatchRouteKeySuffix.KUBERNETES.routeKeySuffix
+
+    override fun getVmType() = JobQuotaVmType.KUBERNETES
 
     override fun onStartup(dispatchMessage: DispatchMessage) {
-        startUp(dispatchMessage)
+        logger.info("On start up - ($dispatchMessage)")
+        startup(dispatchMessage)
     }
 
     override fun onStartupDemote(dispatchMessage: DispatchMessage) {
-        startUp(dispatchMessage)
+        logger.info("On startup demote - ($dispatchMessage)")
+        startup(dispatchMessage)
     }
 
-    private fun startUp(dispatchMessage: DispatchMessage) {
-        val retry = dispatchBuildService.preStartUp(DockerRoutingType.BCS, dispatchMessage)
+    private fun startup(dispatchMessage: DispatchMessage) {
+        val retry = dispatchBuildService.preStartUp(dispatchMessage)
         if (retry) {
             retry()
         } else {
-            dispatchBuildService.startUp(DockerRoutingType.BCS, dispatchMessage, 0)
+            dispatchBuildService.startUp(dispatchMessage)
         }
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
-        dispatchBuildService.doShutdown(DockerRoutingType.BCS, event)
+        dispatchBuildService.doShutdown(event)
     }
 }

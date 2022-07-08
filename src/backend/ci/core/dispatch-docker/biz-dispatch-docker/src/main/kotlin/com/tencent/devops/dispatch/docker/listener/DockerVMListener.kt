@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.bcs.PublicBcsDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
 import com.tencent.devops.dispatch.docker.client.DockerHostClient
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.config.DefaultImageConfig
@@ -119,7 +120,10 @@ class DockerVMListener @Autowired constructor(
         if (dockerRoutingType == DockerRoutingType.VM) {
             dockerHostBuildService.finishDockerBuild(event)
         } else {
-            pipelineEventDispatcher.dispatch(event.copy(routeKeySuffix = DispatchRouteKeySuffix.BCS.routeKeySuffix))
+            pipelineEventDispatcher.dispatch(event.copy(
+                routeKeySuffix = DispatchRouteKeySuffix.KUBERNETES.routeKeySuffix,
+                dockerRoutingType = dockerRoutingType.name
+            ))
         }
     }
 
@@ -176,13 +180,14 @@ class DockerVMListener @Autowired constructor(
         if (dockerRoutingType == DockerRoutingType.VM) {
             startup(dispatchMessage, containerPool)
         } else {
-            startBcsDocker(dispatchMessage, containerPool, demoteFlag)
+            startKubernetesDocker(dispatchMessage, containerPool, dockerRoutingType, demoteFlag)
         }
     }
 
-    private fun startBcsDocker(
+    private fun startKubernetesDocker(
         dispatchMessage: DispatchMessage,
         containerPool: Pool,
+        dockerRoutingType: DockerRoutingType = DockerRoutingType.VM,
         demoteFlag: Boolean = false
     ) {
         with(dispatchMessage) {
@@ -201,21 +206,22 @@ class DockerVMListener @Autowired constructor(
                     vmNames = vmNames,
                     startTime = System.currentTimeMillis(),
                     channelCode = channelCode,
-                    dispatchType = PublicBcsDispatchType(
-                        image = JsonUtil.toJson(containerPool),
+                    dispatchType = KubernetesDispatchType(
+                        kubernetesBuildVersion = JsonUtil.toJson(containerPool),
                         imageType = ImageType.THIRD,
-                        performanceConfigId = "0"
+                        performanceConfigId = 0
                     ),
                     zone = zone,
                     atoms = atoms,
                     executeCount = executeCount,
-                    routeKeySuffix = if (!demoteFlag) DispatchRouteKeySuffix.BCS.routeKeySuffix
-                    else ".bcs.public.demote",
+                    routeKeySuffix = if (!demoteFlag) DispatchRouteKeySuffix.KUBERNETES.routeKeySuffix
+                    else DispatchRouteKeySuffix.KUBERNETES_DEMOTE.routeKeySuffix,
                     stageId = stageId,
                     containerId = containerId,
                     containerHashId = containerHashId,
                     containerType = containerType,
-                    customBuildEnv = customBuildEnv
+                    customBuildEnv = customBuildEnv,
+                    dockerRoutingType = dockerRoutingType.name
                 )
             )
         }
@@ -311,11 +317,7 @@ class DockerVMListener @Autowired constructor(
                     vmSeqId = dispatchMessage.vmSeqId.toInt(),
                     secretKey = "",
                     status = PipelineTaskStatus.FAILURE,
-                    zone = if (null == dispatchMessage.zone) {
-                        Zone.SHENZHEN.name
-                    } else {
-                        dispatchMessage.zone!!.name
-                    },
+                    zone = Zone.SHENZHEN.name,
                     dockerIp = "",
                     poolNo = poolNo
                 )

@@ -94,8 +94,10 @@ class DispatchBuildService @Autowired constructor(
 
     private val buildPoolSize = 100000 // 单个流水线可同时执行的任务数量
 
-    fun preStartUp(dockerRoutingType: DockerRoutingType, dispatchMessage: DispatchMessage): Boolean {
+    fun preStartUp(dispatchMessage: DispatchMessage): Boolean {
         logger.info("On start up - ($dispatchMessage)")
+
+        val dockerRoutingType = DockerRoutingType.valueOf(dispatchMessage.dockerRoutingType!!)
         logsPrinter.printLogs(dispatchMessage, containerServiceFactory.load(dockerRoutingType).log.readyStartLog)
 
         val buildBuilderPoolNo = builderPoolNoDao.getBaseBuildLastPoolNo(
@@ -110,7 +112,8 @@ class DispatchBuildService @Autowired constructor(
         return buildBuilderPoolNo.isNotEmpty() && buildBuilderPoolNo[0].second != null
     }
 
-    fun startUp(dockerRoutingType: DockerRoutingType, dispatchMessage: DispatchMessage, tryTime: Int) {
+    fun startUp(dispatchMessage: DispatchMessage) {
+        val dockerRoutingType = DockerRoutingType.valueOf(dispatchMessage.dockerRoutingType!!)
         val dispatchBuild = containerServiceFactory.load(dockerRoutingType)
         threadLocalCpu.set(dispatchBuild.cpu)
         threadLocalMemory.set(dispatchBuild.memory)
@@ -496,7 +499,8 @@ class DispatchBuildService @Autowired constructor(
         )
     }
 
-    fun doShutdown(dockerRoutingType: DockerRoutingType, event: PipelineAgentShutdownEvent) {
+    fun doShutdown(event: PipelineAgentShutdownEvent) {
+        val dockerRoutingType = DockerRoutingType.valueOf(event.dockerRoutingType!!)
         if (event.source == "shutdownAllVMTaskAtom") {
             // 同一个buildId的多个shutdownAllVMTaskAtom事件一定在短时间内到达，300s足够
             val shutdownLock = RedisLock(
@@ -608,7 +612,8 @@ class DispatchBuildService @Autowired constructor(
                     logger.info("[$buildId]|[$vmSeqId]|[$executeCount] stop ${dockerRoutingType.name} builder success.")
                 } else {
                     logger.info(
-                        "[$buildId]|[$vmSeqId]|[$executeCount] stop ${dockerRoutingType.name} builder failed, msg: $failMsg"
+                        "[$buildId]|[$vmSeqId]|[$executeCount] stop ${dockerRoutingType.name} builder failed, " +
+                            "msg: $failMsg"
                     )
                 }
             } catch (e: Exception) {
