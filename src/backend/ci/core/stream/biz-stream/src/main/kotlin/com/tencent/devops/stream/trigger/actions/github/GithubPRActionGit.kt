@@ -181,7 +181,10 @@ class GithubPRActionGit(
             return null
         }
 
-        return GithubRequestEventHandle.createMergeEvent(event, eventStr)
+        return GithubRequestEventHandle.createMergeEvent(event, eventStr).copy(
+            commitMsg = data.eventCommon.commit.commitMsg,
+            commitTimeStamp = data.eventCommon.commit.commitTimeStamp
+        )
     }
 
     override fun skipStream(): Boolean {

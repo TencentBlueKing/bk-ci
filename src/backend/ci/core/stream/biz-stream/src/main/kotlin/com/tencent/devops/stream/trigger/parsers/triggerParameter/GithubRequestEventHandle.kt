@@ -99,7 +99,7 @@ object GithubRequestEventHandle {
             commitAuthorName = gitMrEvent.pullRequest.head.user.login,
             userId = gitMrEvent.sender.login,
             totalCommitCount = 0,
-            mergeRequestId = gitMrEvent.pullRequest.id.toLong(),
+            mergeRequestId = gitMrEvent.pullRequest.number.toLong(),
             event = e,
             description = "",
             mrTitle = gitMrEvent.pullRequest.title,
