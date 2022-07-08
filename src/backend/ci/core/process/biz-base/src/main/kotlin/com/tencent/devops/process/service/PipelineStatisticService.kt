@@ -49,7 +49,7 @@ class PipelineStatisticService @Autowired constructor(
         val atomCodeList = atomCodes.split(",")
         val ret = mutableMapOf<String, Int>()
         // 按批次去数据库查询插件所关联的流水线数量
-        ListUtils.partition(atomCodeList, 50).forEach { rids ->
+        ListUtils.partition(atomCodeList, 30).forEach { rids ->
             val records =
                 pipelineModelTaskDao.batchGetPipelineCountByAtomCode(dslContext, rids, projectCode)
             records.map {
