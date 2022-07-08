@@ -135,6 +135,7 @@ class StreamYamlBaseBuild @Autowired constructor(
 
             // md5不一致时不更新蓝盾的model
             if (oldMd5 != md5) {
+                logger.info("${pipeline.pipelineId} use md5 cache")
                 // 编辑流水线model
                 processClient.edit(
                     userId = userId,
