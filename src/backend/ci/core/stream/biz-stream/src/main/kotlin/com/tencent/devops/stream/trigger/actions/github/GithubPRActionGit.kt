@@ -89,7 +89,7 @@ class GithubPRActionGit(
         private val logger = LoggerFactory.getLogger(GithubPRActionGit::class.java)
     }
 
-    override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.MERGE_REQUEST)
+    override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.PULL_REQUEST)
 
     override lateinit var data: ActionData
     override fun event() = data.event as GithubPullRequestEvent
