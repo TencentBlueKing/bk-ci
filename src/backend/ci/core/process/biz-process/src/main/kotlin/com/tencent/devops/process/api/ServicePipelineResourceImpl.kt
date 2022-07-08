@@ -291,6 +291,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         updateLastModifyUser: Boolean?,
+        channelCode: ChannelCode,
         setting: PipelineSetting
     ): Result<Boolean> {
         checkProjectId(projectId)
@@ -298,7 +299,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         pipelineSettingFacadeService.saveSetting(
             userId = userId,
             setting = setting,
-            checkPermission = true,
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
             updateLastModifyUser = updateLastModifyUser
         )
         return Result(true)

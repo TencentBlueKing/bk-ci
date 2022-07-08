@@ -49,6 +49,7 @@ import io.swagger.annotations.ApiParam
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -108,6 +109,7 @@ interface ServicePipelineResource {
         channelCode: ChannelCode,
         @ApiParam("是否修改最后修改人", required = false)
         @QueryParam("updateLastModifyUser")
+        @DefaultValue("true")
         updateLastModifyUser: Boolean? = true
     ): Result<Boolean>
 
@@ -263,7 +265,11 @@ interface ServicePipelineResource {
         pipelineId: String,
         @ApiParam("是否修改最后修改人", required = false)
         @QueryParam("updateLastModifyUser")
+        @DefaultValue("true")
         updateLastModifyUser: Boolean? = true,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode,
         @ApiParam(value = "流水线设置", required = true)
         setting: PipelineSetting
     ): Result<Boolean>
