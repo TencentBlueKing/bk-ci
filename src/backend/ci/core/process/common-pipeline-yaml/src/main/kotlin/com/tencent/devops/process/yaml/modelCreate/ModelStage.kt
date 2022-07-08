@@ -203,11 +203,11 @@ class ModelStage @Autowired(required = false) constructor(
         check.timeout = stageCheck.timeoutHours
         if (stageCheck.reviews?.flows?.isNotEmpty() == true) {
             check.manualTrigger = true
-            check.reviewDesc = stageCheck.reviews?.description
-            check.reviewParams = createReviewParams(stageCheck.reviews?.variables)
-            check.reviewGroups = stageCheck.reviews?.flows?.map { it ->
+            check.reviewDesc = stageCheck.reviews.description
+            check.reviewParams = createReviewParams(stageCheck.reviews.variables)
+            check.reviewGroups = stageCheck.reviews.flows.map { it ->
                 StageReviewGroup(name = it.name, reviewers = it.reviewers)
-            }?.toMutableList()
+            }.toMutableList()
         }
         if (stageCheck.gates?.isNotEmpty() == true) {
             check.ruleIds = createRules(
@@ -318,7 +318,7 @@ class ModelStage @Autowired(required = false) constructor(
                         notifyUserList = if (notify.receivers.isNullOrEmpty()) {
                             listOf(event.userId)
                         } else {
-                            notify.receivers?.toList()
+                            notify.receivers.toList()
                         },
                         notifyGroupList = null,
                         auditUserList = null,
@@ -385,7 +385,7 @@ class ModelStage @Autowired(required = false) constructor(
         ) {
             1 -> {
                 val index = rule.indexOfFirst { it == '.' }
-                return Triple(
+                Triple(
                     rule.substring(0 until index),
                     null,
                     rule.substring((index + 1) until rule.length)
@@ -395,7 +395,7 @@ class ModelStage @Autowired(required = false) constructor(
                 val firstIndex = rule.indexOfFirst { it == '.' }
                 val first = rule.substring(0 until firstIndex)
                 val second = rule.removePrefix("$first.").indexOfFirst { it == '.' } + first.length + 1
-                return Triple(
+                Triple(
                     first,
                     rule.substring((firstIndex + 1) until second),
                     rule.substring((second + 1) until rule.length)

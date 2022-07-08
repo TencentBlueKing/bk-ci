@@ -74,7 +74,7 @@ object StreamDispatchUtils {
         if (job.runsOn.agentSelector.isNullOrEmpty()) {
             return VMBaseOS.ALL
         }
-        return when (EnvUtils.parseEnv(job.runsOn.agentSelector!![0], context ?: mapOf())) {
+        return when (EnvUtils.parseEnv(job.runsOn.agentSelector[0], context ?: mapOf())) {
             "linux" -> VMBaseOS.LINUX
             "macos" -> VMBaseOS.MACOS
             "windows" -> VMBaseOS.WINDOWS
@@ -139,7 +139,7 @@ object StreamDispatchUtils {
             if (job.runsOn.container != null) {
                 try {
                     val container = YamlUtil.getObjectMapper().readValue(
-                        JsonUtil.toJson(job.runsOn.container!!),
+                        JsonUtil.toJson(job.runsOn.container),
                         Container::class.java
                     )
 
@@ -155,7 +155,7 @@ object StreamDispatchUtils {
                     )
                 } catch (e: Exception) {
                     val container = YamlUtil.getObjectMapper().readValue(
-                        JsonUtil.toJson(job.runsOn.container!!),
+                        JsonUtil.toJson(job.runsOn.container),
                         Container2::class.java
                     )
 

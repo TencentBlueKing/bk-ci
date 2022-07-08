@@ -38,16 +38,6 @@ object ModelCommon {
 
     private val logger = LoggerFactory.getLogger(ModelCommon::class.java)
 
-    fun getBranchName(ref: String): String {
-        return when {
-            ref.startsWith("refs/heads/") ->
-                ref.removePrefix("refs/heads/")
-            ref.startsWith("refs/tags/") ->
-                ref.removePrefix("refs/tags/")
-            else -> ref
-        }
-    }
-
     fun formatVariablesValue(
         value: String?,
         startParams: MutableMap<String, String>

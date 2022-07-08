@@ -28,6 +28,13 @@
 package com.tencent.devops.stream.util
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 
 object StreamPipelineUtils {
 
@@ -54,4 +61,30 @@ object StreamPipelineUtils {
     }
 
     fun genStreamV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
+
+    fun createEmptyPipelineAndSetting(projectCode: String) = PipelineModelAndSetting(
+        model = Model(
+            name = genBKPipelineName(projectCode),
+            desc = "",
+            stages = listOf(
+                Stage(
+                    id = VMUtils.genStageId(1),
+                    name = VMUtils.genStageId(1),
+                    containers = listOf(
+                        TriggerContainer(
+                            id = "0",
+                            name = "构建触发",
+                            elements = listOf(
+                                ManualTriggerElement(
+                                    name = "手动触发",
+                                    id = "T-1-1-1"
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        ),
+        setting = PipelineSetting(cleanVariablesWhenRetry = true)
+    )
 }

@@ -47,7 +47,8 @@ class GitPipelineResourceDao {
         dslContext: DSLContext,
         gitProjectId: Long,
         pipeline: StreamGitProjectPipeline,
-        version: String?
+        version: String?,
+        md5: String?
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.insertInto(
@@ -63,7 +64,8 @@ class GitPipelineResourceDao {
                 CREATE_TIME,
                 UPDATE_TIME,
                 DIRECTORY,
-                LAST_UPDATE_BRANCH
+                LAST_UPDATE_BRANCH,
+                LAST_EDIT_MODEL_MD5
             ).values(
                 pipeline.pipelineId,
                 gitProjectId,
@@ -76,7 +78,8 @@ class GitPipelineResourceDao {
                 LocalDateTime.now(),
                 LocalDateTime.now(),
                 pipeline.filePath.let { it.substring(0, it.indexOfLast { c -> c == '/' } + 1) },
-                pipeline.lastUpdateBranch
+                pipeline.lastUpdateBranch,
+                md5
             ).execute()
         }
     }
@@ -86,12 +89,14 @@ class GitPipelineResourceDao {
         gitProjectId: Long,
         pipelineId: String,
         displayName: String,
-        version: String?
+        version: String?,
+        md5: String?
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.update(this)
                 .set(DISPLAY_NAME, displayName)
                 .set(VERSION, version)
+                .set(LAST_EDIT_MODEL_MD5, md5)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(PIPELINE_ID.eq(pipelineId))
                 .execute()
@@ -364,6 +369,24 @@ class GitPipelineResourceDao {
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .and(PIPELINE_ID.`in`(pipelineIds))
                 .fetch()
+        }
+    }
+
+    /**
+     * @return md5, displayName, ymlVersion
+     */
+    fun getLastEditMd5ById(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String
+    ): Triple<String?, String?, String?> {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            val res = dslContext.select(LAST_EDIT_MODEL_MD5, DISPLAY_NAME, VERSION).from(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .fetchAny()
+
+            return Triple(res?.value1(), res?.value2(), res?.value3())
         }
     }
 }

@@ -44,6 +44,7 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.exception.CommitCheck
@@ -58,7 +59,6 @@ import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
-import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -181,8 +181,8 @@ class StreamYamlTrigger @Autowired constructor(
             // 有特殊任务的注册事件
             logger.warn(
                 "special job register delete: $isDelete，repoHookName：$repoHookName" +
-                        "gitProjectId: ${action.data.getGitProjectId()}, " +
-                        "eventId: ${action.data.context.requestEventId!!}"
+                    "gitProjectId: ${action.data.getGitProjectId()}, " +
+                    "eventId: ${action.data.context.requestEventId!!}"
             )
             yamlBuild.gitStartBuild(
                 action = action,
@@ -233,7 +233,7 @@ class StreamYamlTrigger @Autowired constructor(
         return action.data.context.pipeline!!.pipelineId.isBlank() ||
             (
                 action is GitBaseAction &&
-                        !action.getChangeSet().isNullOrEmpty() &&
+                    !action.getChangeSet().isNullOrEmpty() &&
                     action.getChangeSet()!!.toSet()
                         .contains(action.data.context.pipeline!!.filePath)
                 )

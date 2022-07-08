@@ -132,7 +132,7 @@ class ModelContainer @Autowired(required = false) constructor(
                 } else {
                     null
                 }
-                val json = matrix as MutableMap<String, Any>
+                val json = matrix
                 json.remove("include")
                 json.remove("exclude")
 

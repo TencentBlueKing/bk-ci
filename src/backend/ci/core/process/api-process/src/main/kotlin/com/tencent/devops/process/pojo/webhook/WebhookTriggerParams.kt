@@ -25,39 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.util
+package com.tencent.devops.process.pojo.webhook
 
-import com.tencent.devops.stream.common.Constansts
-import org.apache.commons.codec.digest.DigestUtils
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import io.swagger.annotations.ApiParam
 
-object StreamCommonUtils {
-
-    fun isCiFile(name: String): Boolean {
-        if (name == Constansts.ciFileName) {
-            return true
-        }
-        if (name.startsWith(Constansts.ciFileDirectoryName) &&
-            (name.endsWith(Constansts.ciFileExtensionYml) || name.endsWith(Constansts.ciFileExtensionYaml))
-        ) {
-            return true
-        }
-        return false
-    }
-
-    /**
-     * 获取字符串MD5值
-     * @param content 字符串
-     * @return MD5值
-     */
-    fun getMD5(content: String?): String? {
-        if (content.isNullOrBlank()) {
-            return null
-        }
-
-        return try {
-            DigestUtils.md5Hex(content)
-        } catch (e: Throwable) {
-            null
-        }
-    }
-}
+@ApiModel("参数")
+data class WebhookTriggerParams(
+    @ApiModelProperty("启动参数", required = true)
+    val params: Map<String, String>,
+    @ApiModelProperty("手动触发参数", required = false)
+    val startValues: Map<String, String>? = null
+)

@@ -76,11 +76,11 @@ class ModelElement @Autowired(required = false) constructor(
                 customEnv = getElementEnv(step.env),
                 runCondition = when {
                     step.ifFiled.isNullOrBlank() -> RunCondition.PRE_TASK_SUCCESS
-                    IfType.ALWAYS_UNLESS_CANCELLED.name == (step.ifFiled ?: "") ->
+                    IfType.ALWAYS_UNLESS_CANCELLED.name == step.ifFiled ->
                         RunCondition.PRE_TASK_FAILED_BUT_CANCEL
-                    IfType.ALWAYS.name == (step.ifFiled ?: "") ->
+                    IfType.ALWAYS.name == step.ifFiled ->
                         RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
-                    IfType.FAILURE.name == (step.ifFiled ?: "") ->
+                    IfType.FAILURE.name == step.ifFiled ->
                         RunCondition.PRE_TASK_FAILED_ONLY
                     else -> RunCondition.CUSTOM_CONDITION_MATCH
                 },
@@ -150,7 +150,7 @@ class ModelElement @Autowired(required = false) constructor(
             if (job.runsOn.agentSelector.isNullOrEmpty()) {
                 linux
             } else {
-                when (job.runsOn.agentSelector!!.first()) {
+                when (job.runsOn.agentSelector.first()) {
                     "linux" -> linux
                     "macos" -> linux
                     "windows" -> WindowsScriptElement(
@@ -158,7 +158,7 @@ class ModelElement @Autowired(required = false) constructor(
                         name = step.name ?: "run",
                         stepId = step.id,
                         scriptType = BuildScriptType.BAT,
-                        script = step.run!!
+                        script = step.run
                     )
                     else -> linux
                 }

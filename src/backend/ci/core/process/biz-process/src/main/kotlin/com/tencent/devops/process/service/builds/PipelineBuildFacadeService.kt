@@ -622,7 +622,9 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         parameters: Map<String, Any> = emptyMap(),
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        startType: StartType = StartType.WEB_HOOK,
+        startValues: Map<String, String>? = null
     ): String? {
 
         if (checkPermission) {
@@ -659,13 +661,14 @@ class PipelineBuildFacadeService(
             val buildId = pipelineBuildService.startPipeline(
                 userId = userId,
                 pipeline = readyToBuildPipelineInfo,
-                startType = StartType.WEB_HOOK,
+                startType = startType,
                 pipelineParamMap = pipelineParamMap,
                 channelCode = readyToBuildPipelineInfo.channelCode,
                 isMobile = false,
                 model = model,
                 signPipelineVersion = null,
-                frequencyLimit = false
+                frequencyLimit = false,
+                startValues = startValues
             )
             if (buildId.isNotBlank()) {
                 webhookBuildParameterService.save(

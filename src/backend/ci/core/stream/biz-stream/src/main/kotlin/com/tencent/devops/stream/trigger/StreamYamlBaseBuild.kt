@@ -28,25 +28,22 @@
 package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
-import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServiceTemplateAcrossResource
+import com.tencent.devops.process.api.service.ServiceWebhookBuildResource
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.webhook.WebhookTriggerParams
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
@@ -61,10 +58,12 @@ import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.expand.StreamYamlBuildExpand
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
+import com.tencent.devops.stream.trigger.pojo.ModelParametersData
 import com.tencent.devops.stream.trigger.pojo.StreamBuildLock
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerLock
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.StreamEventService
+import com.tencent.devops.stream.util.StreamCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -102,6 +101,8 @@ class StreamYamlBaseBuild @Autowired constructor(
         modelAndSetting: PipelineModelAndSetting,
         updateLastModifyUser: Boolean
     ) {
+        // 计算model的md值，缓存逻辑使用
+        val md5 = StreamCommonUtils.getMD5(JsonUtil.toJson(modelAndSetting.model))
         val processClient = client.get(ServicePipelineResource::class)
         if (pipeline.pipelineId.isBlank()) {
             // 直接新建
@@ -117,7 +118,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                 dslContext = dslContext,
                 gitProjectId = gitProjectId,
                 pipeline = pipeline.toGitPipeline(),
-                version = ymlVersion
+                version = ymlVersion,
+                md5 = md5
             )
             websocketService.pushPipelineWebSocket(
                 projectId = projectCode,
@@ -125,25 +127,39 @@ class StreamYamlBaseBuild @Autowired constructor(
                 userId = userId
             )
         } else {
-            // 编辑流水线model
-            processClient.edit(
-                userId = userId,
-                projectId = projectCode,
-                pipelineId = pipeline.pipelineId,
-                pipeline = modelAndSetting.model,
-                channelCode = channelCode,
-                updateLastModifyUser = updateLastModifyUser
-            )
-            // 已有的流水线需要更新下Stream这里的状态
-            logger.info("update gitPipeline pipeline: $pipeline")
-            gitPipelineResourceDao.updatePipeline(
+            val (oldMd5, displayName, version) = gitPipelineResourceDao.getLastEditMd5ById(
                 dslContext = dslContext,
                 gitProjectId = gitProjectId,
-                pipelineId = pipeline.pipelineId,
-                displayName = pipeline.displayName,
-                version = ymlVersion
+                pipelineId = pipeline.pipelineId
             )
+
+            // md5不一致时不更新蓝盾的model
+            if (oldMd5 != md5) {
+                // 编辑流水线model
+                processClient.edit(
+                    userId = userId,
+                    projectId = projectCode,
+                    pipelineId = pipeline.pipelineId,
+                    pipeline = modelAndSetting.model,
+                    channelCode = channelCode,
+                    updateLastModifyUser = updateLastModifyUser
+                )
+            }
+
+            // 已有的流水线需要更新下Stream这里的状态
+            if (oldMd5 != md5 || displayName != pipeline.displayName || version != ymlVersion) {
+                logger.info("update gitPipeline pipeline: $pipeline")
+                gitPipelineResourceDao.updatePipeline(
+                    dslContext = dslContext,
+                    gitProjectId = gitProjectId,
+                    pipelineId = pipeline.pipelineId,
+                    displayName = pipeline.displayName,
+                    version = ymlVersion,
+                    md5 = md5
+                )
+            }
         }
+
         processClient.saveSetting(
             userId = userId,
             projectId = projectCode,
@@ -178,7 +194,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     userId = pipeline.creator ?: "",
                     gitProjectId = gitProjectId.toLong(),
                     projectCode = projectCode,
-                    modelAndSetting = createTriggerModel(projectCode),
+                    modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(projectCode),
                     updateLastModifyUser = true
                 )
                 streamPipelineBranchService.saveOrUpdate(
@@ -208,36 +224,6 @@ class StreamYamlBaseBuild @Autowired constructor(
         )?.let {
             StreamTriggerPipeline(it)
         } ?: pipeline
-
-    private fun getProjectCode(gitProjectId: String): String {
-        return "git_$gitProjectId"
-    }
-
-    private fun createTriggerModel(projectCode: String) = PipelineModelAndSetting(
-        model = Model(
-            name = StreamPipelineUtils.genBKPipelineName(projectCode),
-            desc = "",
-            stages = listOf(
-                Stage(
-                    id = VMUtils.genStageId(1),
-                    name = VMUtils.genStageId(1),
-                    containers = listOf(
-                        TriggerContainer(
-                            id = "0",
-                            name = "构建触发",
-                            elements = listOf(
-                                ManualTriggerElement(
-                                    name = "手动触发",
-                                    id = "T-1-1-1"
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        ),
-        setting = PipelineSetting(cleanVariablesWhenRetry = true)
-    )
 
     protected fun preStartBuild(
         action: BaseAction,
@@ -271,7 +257,8 @@ class StreamYamlBaseBuild @Autowired constructor(
         modelAndSetting: PipelineModelAndSetting,
         gitBuildId: Long,
         yamlTransferData: YamlTransferData? = null,
-        updateLastModifyUser: Boolean
+        updateLastModifyUser: Boolean,
+        modelParameters: ModelParametersData
     ): BuildId? {
         logger.info("|${action.data.context.requestEventId}|startBuild|action|${action.format()}")
 
@@ -303,14 +290,17 @@ class StreamYamlBaseBuild @Autowired constructor(
                 modelAndSetting = modelAndSetting,
                 updateLastModifyUser = updateLastModifyUser
             )
-            buildId = client.get(ServiceBuildResource::class).manualStartupNew(
+            buildId = client.get(ServiceWebhookBuildResource::class).webhookTrigger(
                 userId = action.data.getUserId(),
                 projectId = action.getProjectCode(),
                 pipelineId = pipeline.pipelineId,
-                values = mapOf(PIPELINE_NAME to pipeline.displayName),
+                params = WebhookTriggerParams(
+                    params = modelParameters.webHookParams,
+                    startValues = mapOf(PIPELINE_NAME to pipeline.displayName)
+                ),
                 channelCode = channelCode,
                 startType = StartType.SERVICE
-            ).data!!.id
+            ).data!!
             logger.info(
                 "Stream Build success, gitProjectId[${action.data.getGitProjectId()}], " +
                     "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]"
