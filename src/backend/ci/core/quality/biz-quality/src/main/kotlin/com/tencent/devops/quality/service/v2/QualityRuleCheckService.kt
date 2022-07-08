@@ -477,6 +477,7 @@ class QualityRuleCheckService @Autowired constructor(
         var allCheckResult = true
         val interceptList = mutableListOf<QualityRuleInterceptRecord>()
         var ruleTaskStepsCopy = ruleTaskSteps?.toMutableList()
+        // 借助临时list,把红线指标添加的控制点前缀塞进要判断的指标taskName
         if (!ruleTaskStepsCopy.isNullOrEmpty()) {
             indicators.forEach { indicator ->
                 val taskStep = ruleTaskStepsCopy.firstOrNull { it.indicatorEnName == indicator.enName }
@@ -488,12 +489,15 @@ class QualityRuleCheckService @Autowired constructor(
         logger.info("QUALITY|metadataList is: $metadataList, indicators is:$indicators")
         val indicatorsCopy = indicators.toMutableList()
         indicators.forEach { indicator ->
-            if (indicator.taskName.isNullOrEmpty() && metadataList.count { it.enName == indicator.enName } > 1) {
-                indicatorsCopy.remove(indicator)
-                metadataList.filter { it.enName == indicator.enName }.map { metadata ->
-                    val extraIndicator = indicator.copy()
-                    extraIndicator.taskName = metadata.taskName
-                    indicatorsCopy.add(extraIndicator)
+            // 没有设置taskName时，当输出多个相同指标值，每一个都要加入判断，否则把使用通配符的替换为taskName全名，用于后面加入到指标前缀
+            if (indicator.taskName.isNullOrEmpty()) {
+                if (metadataList.count { it.enName == indicator.enName } > 1) {
+                    indicatorsCopy.remove(indicator)
+                    metadataList.filter { it.enName == indicator.enName }.map { metadata ->
+                        val extraIndicator = indicator.copy()
+                        extraIndicator.taskName = metadata.taskName
+                        indicatorsCopy.add(extraIndicator)
+                    }
                 }
             } else {
                 metadataList.filter { it.enName == indicator.enName &&
