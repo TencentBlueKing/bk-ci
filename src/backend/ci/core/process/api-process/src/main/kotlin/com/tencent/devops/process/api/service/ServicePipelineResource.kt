@@ -269,7 +269,8 @@ interface ServicePipelineResource {
         updateLastModifyUser: Boolean? = true,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode,
+        @DefaultValue("BS")
+        channelCode: ChannelCode? = ChannelCode.BS,
         @ApiParam(value = "流水线设置", required = true)
         setting: PipelineSetting
     ): Result<Boolean>
