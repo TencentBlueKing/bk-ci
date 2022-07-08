@@ -27,18 +27,18 @@
 
 package com.tencent.devops.dispatch.kubernetes.service.factory
 
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
 import org.springframework.stereotype.Service
 
 @Service
 class ContainerServiceFactory {
 
-    fun load(dispatchType: DispatchEnumType): ContainerService {
+    fun load(dockerRoutingType: DockerRoutingType): ContainerService {
         return SpringContextUtil.getBean(
             ContainerService::class.java,
-            dispatchType.value + "ContainerService"
+            dockerRoutingType.name.toLowerCase() + "ContainerService"
         )
     }
 }

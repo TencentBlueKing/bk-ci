@@ -25,9 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.bcs.common
+package com.tencent.devops.common.dispatch.sdk.pojo.docker
 
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
-
-// 当前模块下肯定都是BCS
-val DISPATCH_BCS = DispatchEnumType.BCS.value
+/**
+ *  Docker构建路由类型
+ */
+enum class DockerRoutingType {
+    VM, // 自研构建机
+    DEVCLOUD, // devcloud公共构建机
+    BCS, // bcs公共构建机
+    KUBERNETES // 云原生公共构建机
+}

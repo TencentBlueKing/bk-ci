@@ -29,8 +29,8 @@ package com.tencent.devops.dispatch.kubernetes.utils
 
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
 import org.slf4j.LoggerFactory
 
 object CommonUtils {
@@ -113,8 +113,11 @@ object CommonUtils {
         )
     }
 
-    fun checkDispatchType(dispatchType: String): DispatchEnumType {
-        return DispatchEnumType.getDispatchEnumType(dispatchType)
-            ?: throw RuntimeException("not found dispatch type enum $dispatchType")
+    fun checkDispatchType(dispatchType: String): DockerRoutingType {
+        try {
+            return DockerRoutingType.valueOf(dispatchType)
+        } catch (e: IllegalArgumentException) {
+            throw RuntimeException("not found dispatch type enum $dispatchType")
+        }
     }
 }

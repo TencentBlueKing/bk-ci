@@ -29,9 +29,9 @@ package com.tencent.devops.dispatch.kubernetes.listeners
 
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.dispatch.kubernetes.service.DispatchBuildService
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import org.slf4j.LoggerFactory
@@ -66,15 +66,15 @@ class KubernetesListener @Autowired constructor(
     }
 
     private fun startup(dispatchMessage: DispatchMessage) {
-        val retry = dispatchBuildService.preStartUp(DispatchEnumType.BCS, dispatchMessage)
+        val retry = dispatchBuildService.preStartUp(DockerRoutingType.BCS, dispatchMessage)
         if (retry) {
             retry()
         } else {
-            dispatchBuildService.startUp(DispatchEnumType.BCS, dispatchMessage, 0)
+            dispatchBuildService.startUp(DockerRoutingType.BCS, dispatchMessage, 0)
         }
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
-        dispatchBuildService.doShutdown(DispatchEnumType.BCS, event)
+        dispatchBuildService.doShutdown(DockerRoutingType.BCS, event)
     }
 }

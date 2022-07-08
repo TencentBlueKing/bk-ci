@@ -33,13 +33,13 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchDebugResponse
 import com.tencent.devops.dispatch.kubernetes.utils.RedisUtils
 import com.tencent.devops.dispatch.common.common.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.common.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildHisDao
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchEnumType
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildBuilderStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderType
@@ -71,21 +71,21 @@ class DispatchBaseDebugService @Autowired constructor(
 
     fun startDebug(
         userId: String,
-        dispatchType: DispatchEnumType,
+        dockerRoutingType: DockerRoutingType,
         projectId: String,
         pipelineId: String,
         vmSeqId: String,
         buildId: String?,
         needCheckPermission: Boolean = true
     ): DispatchDebugResponse {
-        logger.info("$userId start debug $dispatchType pipelineId: $pipelineId buildId: $buildId vmSeqId: $vmSeqId")
+        logger.info("$userId start debug $dockerRoutingType pipelineId: $pipelineId buildId: $buildId vmSeqId: $vmSeqId")
         // 根据是否传入buildId 查找builderName
         val buildHistory = if (buildId == null) {
             // 查找当前pipeline下的最近一次构建
-            dispatchKubernetesBuildHisDao.getLatestBuildHistory(dslContext, dispatchType.value, pipelineId, vmSeqId)
+            dispatchKubernetesBuildHisDao.getLatestBuildHistory(dslContext, dockerRoutingType.name, pipelineId, vmSeqId)
         } else {
             // 精确查找
-            dispatchKubernetesBuildHisDao.get(dslContext, dispatchType.value, buildId, vmSeqId)[0]
+            dispatchKubernetesBuildHisDao.get(dslContext, dockerRoutingType.name, buildId, vmSeqId)[0]
         }
 
         val builderName = if (buildHistory != null) {
@@ -100,11 +100,11 @@ class DispatchBaseDebugService @Autowired constructor(
 
         // 检验权限
         if (needCheckPermission) {
-            checkPermission(dispatchType, userId, pipelineId, builderName, vmSeqId)
+            checkPermission(dockerRoutingType, userId, pipelineId, builderName, vmSeqId)
         }
 
         // 查看当前容器的状态
-        val statusResponse = containerServiceFactory.load(dispatchType).getBuilderStatus(
+        val statusResponse = containerServiceFactory.load(dockerRoutingType).getBuilderStatus(
             buildId = buildId ?: "",
             vmSeqId = vmSeqId,
             userId = userId,
@@ -118,7 +118,7 @@ class DispatchBaseDebugService @Autowired constructor(
                     // 出于关机状态，开机
                     logger.info("Update container status stop to running, builderName: $builderName")
                     startSleepContainer(
-                        dispatchType = dispatchType,
+                        dockerRoutingType = dockerRoutingType,
                         userId = userId,
                         projectId = buildHistory.projectId,
                         pipelineId = pipelineId,
@@ -128,7 +128,7 @@ class DispatchBaseDebugService @Autowired constructor(
                     )
                     dispatchKubernetesBuildDao.updateDebugStatus(
                         dslContext = dslContext,
-                        dispatchType = dispatchType.value,
+                        dispatchType = dockerRoutingType.name,
                         pipelineId = pipelineId,
                         vmSeqId = vmSeqId,
                         builderName = builderName,
@@ -138,7 +138,7 @@ class DispatchBaseDebugService @Autowired constructor(
                 DispatchBuildBuilderStatus.RUNNING -> {
                     dispatchKubernetesBuildDao.updateDebugStatus(
                         dslContext = dslContext,
-                        dispatchType = dispatchType.value,
+                        dispatchType = dockerRoutingType.name,
                         pipelineId = pipelineId,
                         vmSeqId = vmSeqId,
                         builderName = builderName,
@@ -147,7 +147,7 @@ class DispatchBaseDebugService @Autowired constructor(
                 }
                 DispatchBuildBuilderStatus.STARTING -> {
                     // 容器正在启动中，等待启动成功
-                    val buildStatus = containerServiceFactory.load(dispatchType).waitDebugBuilderRunning(
+                    val buildStatus = containerServiceFactory.load(dockerRoutingType).waitDebugBuilderRunning(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         buildId = buildId ?: "",
@@ -177,10 +177,10 @@ class DispatchBaseDebugService @Autowired constructor(
         }
 
         // 设置containerName缓存
-        redisUtils.setDebugBuilderName(dispatchType, userId, pipelineId, vmSeqId, builderName)
+        redisUtils.setDebugBuilderName(dockerRoutingType, userId, pipelineId, vmSeqId, builderName)
 
         return DispatchDebugResponse(
-            websocketUrl = containerServiceFactory.load(dispatchType).getDebugWebsocketUrl(
+            websocketUrl = containerServiceFactory.load(dockerRoutingType).getDebugWebsocketUrl(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 staffName = userId,
@@ -192,24 +192,24 @@ class DispatchBaseDebugService @Autowired constructor(
 
     fun stopDebug(
         userId: String,
-        dispatchType: DispatchEnumType,
+        dockerRoutingType: DockerRoutingType,
         pipelineId: String,
         vmSeqId: String,
         builderName: String,
         needCheckPermission: Boolean = true
     ): Boolean {
         val debugBuilderName = builderName.ifBlank {
-            redisUtils.getDebugBuilderName(dispatchType, userId, pipelineId, vmSeqId) ?: ""
+            redisUtils.getDebugBuilderName(dockerRoutingType, userId, pipelineId, vmSeqId) ?: ""
         }
 
         logger.info(
-            "$userId stop debug ${dispatchType.value} pipelineId: $pipelineId builderName: $debugBuilderName " +
+            "$userId stop debug ${dockerRoutingType.name} pipelineId: $pipelineId builderName: $debugBuilderName " +
                 "vmSeqId: $vmSeqId"
         )
 
         // 检验权限
         if (needCheckPermission) {
-            checkPermission(dispatchType, userId, pipelineId, debugBuilderName, vmSeqId)
+            checkPermission(dockerRoutingType, userId, pipelineId, debugBuilderName, vmSeqId)
         }
 
         dslContext.transaction { configuration ->
@@ -217,7 +217,7 @@ class DispatchBaseDebugService @Autowired constructor(
             val builder =
                 dispatchKubernetesBuildDao.getBuilderStatus(
                     dslContext = transactionContext,
-                    dispatchType = dispatchType.value,
+                    dispatchType = dockerRoutingType.name,
                     pipelineId = pipelineId,
                     vmSeqId = vmSeqId,
                     builderName = debugBuilderName
@@ -226,7 +226,7 @@ class DispatchBaseDebugService @Autowired constructor(
                 // 先更新debug状态
                 dispatchKubernetesBuildDao.updateDebugStatus(
                     dslContext = transactionContext,
-                    dispatchType = dispatchType.value,
+                    dispatchType = dockerRoutingType.name,
                     pipelineId = pipelineId,
                     vmSeqId = vmSeqId,
                     builderName = builder.containerName,
@@ -234,39 +234,39 @@ class DispatchBaseDebugService @Autowired constructor(
                 )
                 if (builder.status == 0 && builder.debugStatus) {
                     // 关闭容器
-                    val taskId = containerServiceFactory.load(dispatchType).operateBuilder(
+                    val taskId = containerServiceFactory.load(dockerRoutingType).operateBuilder(
                         buildId = "",
                         vmSeqId = vmSeqId,
                         userId = userId,
                         builderName = debugBuilderName,
                         param = DispatchBuildOperateBuilderParams(DispatchBuildOperateBuilderType.STOP, null)
                     )
-                    val opResult = containerServiceFactory.load(dispatchType).waitTaskFinish(userId, taskId)
+                    val opResult = containerServiceFactory.load(dockerRoutingType).waitTaskFinish(userId, taskId)
                     if (opResult.status == DispatchBuildTaskStatusEnum.SUCCEEDED) {
                         logger.info("stop debug $debugBuilderName success.")
                     } else {
                         // 停不掉，尝试删除
                         logger.info("stop debug $debugBuilderName failed, msg: ${opResult.errMsg}")
                         logger.info("stop debug $debugBuilderName failed, try to delete it.")
-                        containerServiceFactory.load(dispatchType).operateBuilder(
+                        containerServiceFactory.load(dockerRoutingType).operateBuilder(
                             buildId = "",
                             vmSeqId = vmSeqId,
                             userId = userId,
                             builderName = debugBuilderName,
                             param = DispatchBuildOperateBuilderParams(DispatchBuildOperateBuilderType.DELETE, null)
                         )
-                        dispatchKubernetesBuildDao.delete(dslContext, dispatchType.value, pipelineId,
+                        dispatchKubernetesBuildDao.delete(dslContext, dockerRoutingType.name, pipelineId,
                                                           vmSeqId, builder.poolNo)
                     }
                 } else {
                     logger.info(
-                        "stop ${dispatchType.value} debug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
+                        "stop ${dockerRoutingType.name} debug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
                             "debugBuilderName:$debugBuilderName 容器没有处于debug或正在占用中"
                     )
                 }
             } else {
                 logger.info(
-                    "stop ${dispatchType.value} debug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
+                    "stop ${dockerRoutingType.name} debug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
                         "debugBuilderName:$debugBuilderName 容器已不存在"
                 )
             }
@@ -276,7 +276,7 @@ class DispatchBaseDebugService @Autowired constructor(
     }
 
     private fun startSleepContainer(
-        dispatchType: DispatchEnumType,
+        dockerRoutingType: DockerRoutingType,
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -284,7 +284,7 @@ class DispatchBaseDebugService @Autowired constructor(
         vmSeqId: String,
         builderName: String
     ) {
-        val taskId = containerServiceFactory.load(dispatchType).operateBuilder(
+        val taskId = containerServiceFactory.load(dockerRoutingType).operateBuilder(
             buildId = buildId ?: "",
             vmSeqId = vmSeqId,
             userId = userId,
@@ -294,18 +294,18 @@ class DispatchBaseDebugService @Autowired constructor(
                 env = mapOf(
                     ENV_KEY_PROJECT_ID to projectId,
                     "TERM" to "xterm-256color",
-                    SLAVE_ENVIRONMENT to jobServiceFactory.load(dispatchType).slaveEnv
+                    SLAVE_ENVIRONMENT to jobServiceFactory.load(dockerRoutingType).slaveEnv
                 )
             )
         )
 
         logger.info("$userId start builder, taskId:($taskId)")
-        val startResult = containerServiceFactory.load(dispatchType).waitTaskFinish(userId, taskId)
+        val startResult = containerServiceFactory.load(dockerRoutingType).waitTaskFinish(userId, taskId)
         if (startResult.status == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             // 启动成功
-            logger.info("$userId start ${dispatchType.value} builder success")
+            logger.info("$userId start ${dockerRoutingType.name} builder success")
         } else {
-            logger.error("$userId start ${dispatchType.value} builder failed, msg: ${startResult.errMsg}")
+            logger.error("$userId start ${dockerRoutingType.name} builder failed, msg: ${startResult.errMsg}")
             throw ErrorCodeException(
                 errorCode = "2103503",
                 defaultMessage = "构建机启动失败，错误信息:${startResult.errMsg}"
@@ -314,7 +314,7 @@ class DispatchBaseDebugService @Autowired constructor(
     }
 
     private fun checkPermission(
-        dispatchType: DispatchEnumType,
+        dockerRoutingType: DockerRoutingType,
         userId: String,
         pipelineId: String,
         builderName: String,
@@ -322,7 +322,7 @@ class DispatchBaseDebugService @Autowired constructor(
     ) {
         val builderInfo = dispatchKubernetesBuildDao.getBuilderStatus(
             dslContext = dslContext,
-            dispatchType = dispatchType.value,
+            dispatchType = dockerRoutingType.name,
             pipelineId = pipelineId,
             vmSeqId = vmSeqId,
             builderName = builderName

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.DockerVersion
@@ -49,7 +50,6 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.Credential
 import com.tencent.devops.dispatch.docker.pojo.Pool
-import com.tencent.devops.dispatch.docker.pojo.enums.DockerRoutingType
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerRoutingService
 import com.tencent.devops.dispatch.docker.utils.CommonUtils
@@ -116,10 +116,10 @@ class DockerVMListener @Autowired constructor(
         logger.info("On shutdown - ($event)")
 
         val dockerRoutingType = dockerRoutingService.getDockerRoutingType(event.projectId)
-        if (dockerRoutingType == DockerRoutingType.BCS) {
-            pipelineEventDispatcher.dispatch(event.copy(routeKeySuffix = DispatchRouteKeySuffix.BCS.routeKeySuffix))
-        } else {
+        if (dockerRoutingType == DockerRoutingType.VM) {
             dockerHostBuildService.finishDockerBuild(event)
+        } else {
+            pipelineEventDispatcher.dispatch(event.copy(routeKeySuffix = DispatchRouteKeySuffix.BCS.routeKeySuffix))
         }
     }
 
@@ -173,10 +173,10 @@ class DockerVMListener @Autowired constructor(
         )
 
         val dockerRoutingType = dockerRoutingService.getDockerRoutingType(dispatchMessage.projectId)
-        if (dockerRoutingType == DockerRoutingType.BCS) {
-            startBcsDocker(dispatchMessage, containerPool, demoteFlag)
-        } else {
+        if (dockerRoutingType == DockerRoutingType.VM) {
             startup(dispatchMessage, containerPool)
+        } else {
+            startBcsDocker(dispatchMessage, containerPool, demoteFlag)
         }
     }
 
