@@ -29,12 +29,12 @@ package com.tencent.devops.dispatch.docker.controller
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.user.UserDockerDebugResource
 import com.tencent.devops.dispatch.docker.pojo.DebugResponse
 import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
-import com.tencent.devops.dispatch.docker.pojo.enums.DockerRoutingType
 import com.tencent.devops.dispatch.docker.service.DockerRoutingService
 import com.tencent.devops.dispatch.docker.service.debug.DebugServiceEnum
 import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
