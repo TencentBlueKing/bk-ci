@@ -140,7 +140,7 @@ class YamlTemplateTest {
         Assertions.assertEquals(
             mapOf<String, Any>(
                 "USERNAME" to Variable(
-                    value = "VARIABLES, xxxxx", readonly = null, allowModifyAtStartup = true,
+                    value = "1,2,3", readonly = null, allowModifyAtStartup = true,
                     props = VariableProps(
                         label = "我是预定义下拉可选值的字段",
                         type = VariablePropType.SELECTOR.value,

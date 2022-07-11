@@ -78,7 +78,7 @@ object YamlObjects {
             }
             val expectValues =
                 va.value?.split(",")?.asSequence()?.filter { it.isNotBlank() }?.map { it.trim() }?.toSet()
-            val resultValues = va.props.options?.map { it.id }?.toSet() ?: emptySet()
+            val resultValues = va.props.options?.map { it.id.toString() }?.toSet() ?: emptySet()
             // 说明默认值没有匹配到选项值，报错
             if (expectValues?.subtract(resultValues)?.isEmpty() == false) {
                 throw YamlFormatException(
