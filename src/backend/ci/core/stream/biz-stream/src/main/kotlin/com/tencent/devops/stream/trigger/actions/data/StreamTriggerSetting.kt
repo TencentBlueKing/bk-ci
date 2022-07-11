@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.trigger.actions.data
 
 import com.tencent.devops.stream.pojo.StreamBasicSetting
+import com.tencent.devops.stream.pojo.TriggerReviewSetting
 
 /**
  * Stream触发时需要的配置信息
@@ -41,6 +42,7 @@ import com.tencent.devops.stream.pojo.StreamBasicSetting
  * @param enableMrBlock 合并请求的commit check是否锁定不让合并
  * @param name 项目名称
  * @param homepage Git项目主页
+ * @param triggerReviewSetting pr、mr触发时的权限校验
  */
 data class StreamTriggerSetting(
     val enableCi: Boolean,
@@ -53,7 +55,8 @@ data class StreamTriggerSetting(
     val enableMrBlock: Boolean,
     val name: String,
     val enableMrComment: Boolean,
-    val homepage: String
+    val homepage: String,
+    val triggerReviewSetting: TriggerReviewSetting
 ) {
     constructor(projectSetting: StreamBasicSetting) : this(
         enableCi = projectSetting.enableCi,
@@ -66,6 +69,7 @@ data class StreamTriggerSetting(
         enableMrBlock = projectSetting.enableMrBlock,
         name = projectSetting.name,
         enableMrComment = projectSetting.enableMrComment,
-        homepage = projectSetting.homepage
+        homepage = projectSetting.homepage,
+        triggerReviewSetting = projectSetting.triggerReviewSetting
     )
 }

@@ -64,6 +64,7 @@ import com.tencent.devops.stream.trigger.git.pojo.github.GithubProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubUserInfo
+import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectUserInfo
 import com.tencent.devops.stream.trigger.git.service.StreamApiUtil.doRetryFun
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.util.QualityUtils
@@ -137,6 +138,16 @@ class GithubApiService @Autowired constructor(
                 userId = cred.getUserId()
             ).data
         }?.let { GithubCommitInfo(it) }
+    }
+
+    override fun getProjectMember(
+        cred: StreamGitCred,
+        gitProjectId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?
+    ): List<GithubProjectUserInfo> {
+        TODO("Not yet implemented")
     }
 
     override fun getUserInfoByToken(cred: StreamGitCred): GithubUserInfo? {

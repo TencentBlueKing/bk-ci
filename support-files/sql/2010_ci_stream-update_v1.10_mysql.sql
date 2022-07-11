@@ -25,32 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.actions.streamActions
+USE devops_ci_stream;
+SET NAMES utf8mb4;
 
-import com.tencent.devops.stream.trigger.actions.BaseAction
-import com.tencent.devops.stream.trigger.pojo.MrCommentBody
+DROP PROCEDURE IF EXISTS ci_stream_schema_update;
 
-/**
- * 需要各Git端统一提供的一些mr参数
- */
-interface StreamMrAction : BaseAction {
-    // 负责跳转的某个git下的mr的一个Id
-    val mrIId: String
+DELIMITER <CI_UBF>
+CREATE PROCEDURE ci_stream_schema_update()
+BEGIN
 
-    /**
-     * 为合并请求添加评论
-     */
-    fun addMrComment(
-        body: MrCommentBody
-    )
+    DECLARE db VARCHAR(100);
+    SET AUTOCOMMIT = 0;
+SELECT DATABASE() INTO db;
 
-    /**
-     * 检查mr触发时的权限校验(检查白名单)
-     */
-    fun checkMrForkReview(): Boolean
+IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_GIT_BASIC_SETTING'
+                    AND COLUMN_NAME = 'TRIGGER_REVIEW_SETTING') THEN
+ALTER TABLE `T_GIT_BASIC_SETTING`
+    ADD COLUMN `TRIGGER_REVIEW_SETTING` text not null COMMENT 'pr、mr触发时的权限校验(存储为json字符串)';
 
-    /**
-     * 获取 mr/pr 页面上的id
-     */
-    fun getMrId(): Long
-}
+END IF;
+
+COMMIT;
+END <CI_UBF>
+DELIMITER ;
+COMMIT;
+
+CALL ci_stream_schema_update();

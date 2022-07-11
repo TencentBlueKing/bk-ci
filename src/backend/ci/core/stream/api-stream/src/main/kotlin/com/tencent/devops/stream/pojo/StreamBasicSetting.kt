@@ -79,7 +79,9 @@ data class StreamBasicSetting(
     @ApiModelProperty("项目下构建是否发送commitCheck")
     val enableCommitCheck: Boolean = true,
     @ApiModelProperty("项目下构建是否发送mrComment")
-    val enableMrComment: Boolean = true
+    val enableMrComment: Boolean = true,
+    @ApiModelProperty("pr、mr触发时的权限校验")
+    val triggerReviewSetting: TriggerReviewSetting = TriggerReviewSetting()
 ) : StreamBaseRepository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
 
 @ApiModel("蓝盾stream 页面修改配置")
@@ -90,4 +92,12 @@ data class StreamUpdateSetting(
     val buildPushedPullRequest: Boolean,
     @ApiModelProperty("是否开启Mr锁定")
     val enableMrBlock: Boolean
+)
+
+@ApiModel("mr触发时的权限校验相关配置")
+data class TriggerReviewSetting(
+    @ApiModelProperty("主库开发者及以上的用户提交的pr、mr是否默认给触发")
+    val memberNoNeedApproving: Boolean = true,
+    @ApiModelProperty("白名单，可以是用户或者项目id")
+    val whitelist: List<String> = emptyList()
 )

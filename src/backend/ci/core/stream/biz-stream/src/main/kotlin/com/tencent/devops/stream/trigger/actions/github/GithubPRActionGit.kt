@@ -30,6 +30,7 @@ package com.tencent.devops.stream.trigger.actions.github
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.webhook.enums.code.github.GithubPrEventAction
+import com.tencent.devops.common.webhook.pojo.code.git.isMrForkEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.isPrForkEvent
 import com.tencent.devops.common.webhook.pojo.code.github.isPrForkNotMergeEvent
@@ -104,6 +105,29 @@ class GithubPRActionGit(
             mrId = event().pullRequest.id.toLong(),
             mrBody = body
         )
+    }
+
+    override fun checkMrForkReview(): Boolean {
+        if (!event().isPrForkEvent()) return true
+        val checkUserAccessLevel = try {
+            val accessLevel = this.api.getProjectUserInfo(
+                cred = (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as TGitCred,
+                gitProjectId = this.data.eventCommon.gitProjectId,
+                userId = this.data.eventCommon.userId
+            ).accessLevel
+
+            accessLevel >= 30
+        } catch (error: ErrorCodeException) {
+            false
+        }
+
+        val checkUserInWhiteList = this.data.eventCommon.userId in
+            this.data.setting.triggerReviewSetting.whitelist
+        val checkProjectInWhiteList = this.data.eventCommon.gitProjectId in
+            this.data.setting.triggerReviewSetting.whitelist
+        return (checkUserAccessLevel && this.data.setting.triggerReviewSetting.memberNoNeedApproving) ||
+            checkUserInWhiteList ||
+            checkProjectInWhiteList
     }
 
     override fun getMrId() = event().pullRequest.number.toLong()

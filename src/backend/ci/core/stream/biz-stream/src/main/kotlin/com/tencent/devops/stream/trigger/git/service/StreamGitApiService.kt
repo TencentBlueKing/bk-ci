@@ -79,6 +79,17 @@ interface StreamGitApiService {
     ): StreamGitCommitInfo?
 
     /**
+     * 获取gitProjectId项目的成员信息，携带了成员权限
+     */
+    fun getProjectMember(
+        cred: StreamGitCred,
+        gitProjectId: String,
+        page: Int? = null,
+        pageSize: Int? = null,
+        search: String? = null
+    ): List<StreamGitProjectUserInfo>
+
+    /**
      * 根据token获取用户信息
      * TODO: 后续多源可以看是否放到具体Git平台的实现中
      */

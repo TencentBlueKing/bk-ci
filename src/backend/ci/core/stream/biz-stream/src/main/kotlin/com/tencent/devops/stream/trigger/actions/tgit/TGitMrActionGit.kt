@@ -102,6 +102,29 @@ class TGitMrActionGit(
         )
     }
 
+    override fun checkMrForkReview(): Boolean {
+        if (!event().isMrForkEvent()) return true
+        val checkUserAccessLevel = try {
+            val accessLevel = this.api.getProjectMember(
+                cred = (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as TGitCred,
+                gitProjectId = this.data.eventCommon.gitProjectId,
+                search = this.data.eventCommon.userId
+            ).find { it.userId == this.data.eventCommon.userId }?.accessLevel
+
+            accessLevel != null && accessLevel >= 30
+        } catch (error: ErrorCodeException) {
+            false
+        }
+
+        val checkUserInWhiteList = this.data.eventCommon.userId in
+            this.data.setting.triggerReviewSetting.whitelist
+        val checkProjectInWhiteList = this.data.eventCommon.gitProjectId in
+            this.data.setting.triggerReviewSetting.whitelist
+        return (checkUserAccessLevel && this.data.setting.triggerReviewSetting.memberNoNeedApproving) ||
+            checkUserInWhiteList ||
+            checkProjectInWhiteList
+    }
+
     override fun getMrId() = event().object_attributes.id
 
     override val api: TGitApiService

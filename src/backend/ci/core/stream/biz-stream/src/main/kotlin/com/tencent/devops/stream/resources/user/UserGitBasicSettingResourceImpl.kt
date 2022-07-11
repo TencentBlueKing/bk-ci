@@ -43,6 +43,7 @@ import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.StreamUpdateSetting
+import com.tencent.devops.stream.pojo.TriggerReviewSetting
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.service.StreamGitTransferService
 import com.tencent.devops.stream.util.GitCommonUtils
@@ -101,14 +102,37 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        permissionService.checkStreamPermission(userId = userId, projectId = projectId)
-        permissionService.checkEnableStream(gitProjectId)
+        permissionService.checkStreamAndOAuthAndEnable(
+            userId = userId,
+            projectId = projectId,
+            gitProjectId = gitProjectId
+        )
         return Result(
             streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 buildPushedPullRequest = streamUpdateSetting.buildPushedPullRequest,
                 buildPushedBranches = streamUpdateSetting.buildPushedBranches,
                 enableMrBlock = streamUpdateSetting.enableMrBlock
+            )
+        )
+    }
+
+    override fun saveStreamReviewSetting(
+        userId: String,
+        projectId: String,
+        triggerReviewSetting: TriggerReviewSetting
+    ): Result<Boolean> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(userId)
+        permissionService.checkStreamAndOAuthAndEnable(
+            userId = userId,
+            projectId = projectId,
+            gitProjectId = gitProjectId
+        )
+        return Result(
+            streamBasicSettingService.updateProjectReviewSetting(
+                gitProjectId = gitProjectId,
+                triggerReviewSetting = triggerReviewSetting
             )
         )
     }
