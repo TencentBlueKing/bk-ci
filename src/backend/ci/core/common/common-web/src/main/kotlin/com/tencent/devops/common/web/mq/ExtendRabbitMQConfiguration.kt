@@ -29,6 +29,7 @@ package com.tencent.devops.common.web.mq
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.service.utils.KubernetesUtils
+import com.tencent.devops.common.web.mq.factory.CustomSimpleRabbitListenerContainerFactory
 import com.tencent.devops.common.web.mq.property.ExtendRabbitMQProperties
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
@@ -96,6 +97,7 @@ class ExtendRabbitMQConfiguration {
     ): RabbitTemplate {
         val rabbitTemplate = RabbitTemplate(connectionFactory)
         rabbitTemplate.messageConverter = messageConverter(objectMapper)
+        rabbitTemplate.addBeforePublishPostProcessors(CoreRabbitMQConfiguration.setTraceIdToMessageProcess)
         return rabbitTemplate
     }
 
@@ -113,7 +115,7 @@ class ExtendRabbitMQConfiguration {
         connectionFactory: ConnectionFactory,
         objectMapper: ObjectMapper
     ): SimpleRabbitListenerContainerFactory {
-        val factory = SimpleRabbitListenerContainerFactory()
+        val factory = CustomSimpleRabbitListenerContainerFactory(CoreRabbitMQConfiguration.traceMessagePostProcessor)
         factory.setMessageConverter(messageConverter(objectMapper))
         factory.setConnectionFactory(connectionFactory)
         if (concurrency != null) {

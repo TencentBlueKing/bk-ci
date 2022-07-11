@@ -13,7 +13,7 @@
             <bk-form-item label="Key" :required="true" :rules="[requireRule('Code'), idRule]" property="credentialId" error-display-type="normal">
                 <bk-input v-model="formData.credentialId" :placeholder="$t('setting.ticket.credentialIdPlaceholder')" :disabled="isEdit"></bk-input>
             </bk-form-item>
-            <bk-form-item :label="$t('displayName')" property="credentialName" :rules="[nameRule]" :desc="{ content: $t('setting.ticket.diaplayNameTips'), width: '400px' }" error-display-type="normal">
+            <bk-form-item :label="$t('displayName')" property="credentialName" :rules="[nameRule]" error-display-type="normal">
                 <bk-input v-model="formData.credentialName" :placeholder="$t('setting.ticket.credentialIdPlaceholder')"></bk-input>
             </bk-form-item>
             <bk-form-item :label="com.label" :required="com.required" :property="com.id" v-for="com in computedTicket.content" :key="com.id" error-display-type="normal" :rules="com.rules">

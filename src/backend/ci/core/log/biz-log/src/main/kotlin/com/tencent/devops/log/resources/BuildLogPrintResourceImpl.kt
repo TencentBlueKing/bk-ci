@@ -28,15 +28,16 @@
 package com.tencent.devops.log.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
-import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.BuildLogPrintResource
+import com.tencent.devops.log.event.LogOriginEvent
+import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.log.service.BuildLogPrintService
+import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogStatusService
 import io.micrometer.core.annotation.Timed
 import io.micrometer.core.instrument.Counter
@@ -53,6 +54,7 @@ import org.springframework.beans.factory.annotation.Value
 class BuildLogPrintResourceImpl @Autowired constructor(
     private val buildLogPrintService: BuildLogPrintService,
     private val logStatusService: LogStatusService,
+    private val indexService: IndexService,
     private val meterRegistry: MeterRegistry
 ) : BuildLogPrintResource {
 
@@ -127,6 +129,9 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
         }
+        // #7168 通过一次获取创建记录以及缓存
+        val index = indexService.getIndexName(buildId)
+        logger.info("Start to print log to index[$index]")
         buildLogPrintService.dispatchEvent(
             LogStatusEvent(
                 buildId = buildId,
