@@ -33,8 +33,10 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicLong
 
 @Component
-@ManagedResource(objectName = "com.tencent.devops.log.v2:type=index,operation=create",
-    description = "log create index performance")
+@ManagedResource(
+    objectName = "com.tencent.devops.log.v2:type=index,operation=create",
+    description = "log create index performance"
+)
 class CreateIndexBean {
 
     private val executeCount = AtomicLong(0)

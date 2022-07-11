@@ -334,7 +334,7 @@ class PipelineBuildFacadeService(
             }
 
             // 运行中的task重试走全新的处理逻辑
-            if (!buildInfo.status.isFinish() && buildInfo.status != BuildStatus.STAGE_SUCCESS) {
+            if (!buildInfo.isFinish()) {
                 if (pipelineRetryFacadeService.runningBuildTaskRetry(
                         userId = userId,
                         projectId = projectId,
@@ -348,7 +348,7 @@ class PipelineBuildFacadeService(
                 }
             }
 
-            if (!buildInfo.status.isFinish() && buildInfo.status != BuildStatus.STAGE_SUCCESS) {
+            if (!buildInfo.isFinish()) { // 拦截运行中的重试，防止重复提交
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
                     defaultMessage = "重试已经启动，忽略重复的请求"
@@ -382,6 +382,9 @@ class PipelineBuildFacadeService(
             }
             val startType = StartType.toStartType(buildInfo.trigger)
             if (!taskId.isNullOrBlank()) {
+                buildInfo.buildParameters?.associateBy { it.key }?.get(PIPELINE_RETRY_COUNT)?.let { param ->
+                    paramMap[param.key] = param
+                }
                 // stage/job/task级重试
                 run {
                     model.stages.forEach { s ->
@@ -429,11 +432,14 @@ class PipelineBuildFacadeService(
             } else {
                 // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数，并清理VAR表内容
                 try {
+                    val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
                     buildInfo.buildParameters?.forEach { param -> paramMap[param.key] = param }
                     webhookBuildParameterService.getBuildParameters(buildId)?.forEach { param ->
                         paramMap[param.key] = param
                     }
-                    buildVariableService.deleteBuildVars(projectId, pipelineId, buildId)
+                    if (setting?.cleanVariablesWhenRetry == true) {
+                        buildVariableService.deleteBuildVars(projectId, pipelineId, buildId)
+                    }
                 } catch (ignored: Exception) {
                     logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
                 }
@@ -1818,10 +1824,10 @@ class PipelineBuildFacadeService(
 
         if (!nodeHashId.isNullOrBlank()) {
             msg = "${
-                MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
-                    params = arrayOf(projectCode, nodeHashId)
-                )
+            MessageCodeUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
+                params = arrayOf(projectCode, nodeHashId)
+            )
             } $msg"
         }
         // #5046 worker-agent.jar进程意外退出，经由devopsAgent转达

@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
+@Suppress("ReturnCount")
 @Service
 class LogTagService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -49,8 +50,6 @@ class LogTagService @Autowired constructor(
         private const val LOG_SUBTAG = "log:build:tag:subTags:"
         private const val LOG_SUBTAG_LOCK = "log:build:tag:subTags:distribute:lock:"
         fun getSubTagsRedisKey(buildId: String, tagName: String) = LOG_SUBTAG + genBuildIdAndTagKey(buildId, tagName)
-        private fun getBuildId(buildIdAndTag: String) = buildIdAndTag.split(':').first()
-        private fun getTagName(buildIdAndTag: String) = buildIdAndTag.split(':').last()
         private fun genBuildIdAndTagKey(buildId: String, tag: String) = "$buildId:$tag"
     }
 

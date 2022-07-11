@@ -139,9 +139,10 @@ type EngineDistCCConfig struct {
 	MySQLDebug       bool   `json:"engine_distcc_mysql_debug" value:"false" usage:"if true, will output raw sql"`
 	MysqlTableOption string `json:"engine_distcc_mysql_table_option" value:"" usage:"mysql table option"`
 
-	LeastJobServer      int                        `json:"least_job_server" value:"144" usage:"least job server for remote compiles"`
-	JobServerTimesToCPU float64                    `json:"job_server_times_to_cpu" value:"1.5" usage:"job server times to cpu"`
-	BrokerConfig        []EngineDistCCBrokerConfig `json:"broker_config"`
+	QueueResourceAllocater map[string]ResourceAllocater `json:"queue_resource_allocater"`
+	LeastJobServer         int                          `json:"least_job_server" value:"144" usage:"least job server for remote compiles"`
+	JobServerTimesToCPU    float64                      `json:"job_server_times_to_cpu" value:"1.5" usage:"job server times to cpu"`
+	BrokerConfig           []EngineDistCCBrokerConfig   `json:"broker_config"`
 }
 
 // EngineDistCCBrokerConfig define the broker config used by engine distcc.
@@ -165,9 +166,16 @@ type EngineDisttaskConfig struct {
 	MySQLDebug       bool   `json:"engine_disttask_mysql_debug" value:"false" usage:"if true, will output raw sql"`
 	MysqlTableOption string `json:"engine_disttask_mysql_table_option" value:"" usage:"mysql table option"`
 
-	LeastJobServer      int                          `json:"disttask_least_job_server" value:"144" usage:"least job server for remote compiles"`
-	JobServerTimesToCPU float64                      `json:"disttask_job_server_times_to_cpu" value:"1.5" usage:"job server times to cpu"`
-	BrokerConfig        []EngineDisttaskBrokerConfig `json:"disttask_broker_config"`
+	QueueResourceAllocater map[string]ResourceAllocater `json:"queue_resource_allocater"`
+	LeastJobServer         int                          `json:"disttask_least_job_server" value:"144" usage:"least job server for remote compiles"`
+	JobServerTimesToCPU    float64                      `json:"disttask_job_server_times_to_cpu" value:"1.5" usage:"job server times to cpu"`
+	BrokerConfig           []EngineDisttaskBrokerConfig `json:"disttask_broker_config"`
+}
+
+// ResourceAllocater
+type ResourceAllocater struct {
+	AllocateByTimeMap map[string]float64 `json:"allocate_by_time_map"`
+	TimeSlot          []TimeSlot         `json:"time_slot"`
 }
 
 // EngineDisttaskBrokerConfig define the broker config used by engine disttask.
@@ -232,6 +240,8 @@ type EngineFastBuildConfig struct {
 type EngineApisJobConfig struct {
 	Enable bool `json:"engine_apisjob_enable" value:"false" usage:"enable engine apisjob"`
 
+	QueueResourceAllocater map[string]ResourceAllocater `json:"queue_resource_allocater"`
+
 	MySQLStorage     string `json:"engine_apisjob_mysql" value:"" usage:"mysql address for storage"`
 	MySQLDatabase    string `json:"engine_apisjob_mysql_db" value:"" usage:"mysql database for connecting."`
 	MySQLUser        string `json:"engine_apisjob_mysql_user" value:"root" usage:"mysql username"`
@@ -247,6 +257,13 @@ type CertConfig struct {
 	KeyFile  string
 	CertPwd  string
 	IsSSL    bool
+}
+
+// resource ratio Value from StartTime to EndTime
+type TimeSlot struct {
+	StartTime string
+	EndTime   string
+	Value     float64
 }
 
 // NewConfig get a default server configuration.
