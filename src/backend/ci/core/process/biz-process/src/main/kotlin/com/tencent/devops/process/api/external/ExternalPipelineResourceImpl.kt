@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBadgeService
 import com.tencent.devops.process.pojo.BuildBasicInfo
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.service.PipelineRemoteAuthService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -43,8 +44,16 @@ class ExternalPipelineResourceImpl @Autowired constructor(
         return pipelineBadgeService.get(projectId, pipelineId)
     }
 
-    override fun remoteBuild(token: String, realIp: String?, values: Map<String, String>): Result<BuildBasicInfo> {
-        return Result(pipelineRemoteAuthService.startPipeline(auth = token, values = values, sourceIp = realIp))
+    override fun remoteBuild(token: String, realIp: String?, values: Map<String, String>): Result<BuildId> {
+        return Result(
+            BuildId(
+                id = pipelineRemoteAuthService.startPipeline(
+                    auth = token,
+                    values = values,
+                    sourceIp = realIp
+                ).buildId
+            )
+        )
     }
 
     override fun remoteBuild(

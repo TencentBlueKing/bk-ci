@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.api.external
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildBasicInfo
+import com.tencent.devops.process.pojo.BuildId
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -55,11 +57,11 @@ interface ExternalPipelineResource {
         @PathParam("token")
         token: String,
         @ApiParam("请求Ip", required = true)
-        @HeaderParam("realip")
+        @HeaderParam(AUTH_HEADER_DEVOPS_REAL_IP)
         realIp: String?,
         @ApiParam("启动参数", required = true)
         values: Map<String, String>
-    ): Result<BuildBasicInfo>
+    ): Result<BuildId>
 
     @ApiOperation("获取流水线徽章")
     @Produces("image/svg+xml") // 只显示，不下载
@@ -88,7 +90,7 @@ interface ExternalPipelineResource {
         @HeaderParam("X-TOKEN")
         token: String,
         @ApiParam("请求Ip", required = true)
-        @HeaderParam("realip")
+        @HeaderParam(AUTH_HEADER_DEVOPS_REAL_IP)
         realIp: String?,
         @ApiParam("启动参数", required = true)
         values: Map<String, String>
