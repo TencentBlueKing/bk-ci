@@ -35,7 +35,7 @@ import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_MSG
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
 import com.tencent.devops.metrics.constant.MetricsMessageCode
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getErrorTypeName
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getErrorTypeName
 import com.tencent.devops.metrics.dao.AtomFailInfoDao
 import com.tencent.devops.metrics.service.AtomFailInfoManageService
 import com.tencent.devops.metrics.pojo.`do`.AtomErrorCodeStatisticsInfoDO

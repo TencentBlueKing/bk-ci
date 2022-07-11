@@ -32,8 +32,8 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.toMinutes
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.PipelineStageDao
 import com.tencent.devops.metrics.pojo.`do`.PipelineStageCostTimeInfoDO
 import com.tencent.devops.metrics.pojo.`do`.StageAvgCostTimeInfoDO
