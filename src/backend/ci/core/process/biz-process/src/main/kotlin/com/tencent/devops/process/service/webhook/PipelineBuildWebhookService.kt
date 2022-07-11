@@ -65,6 +65,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
 import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogContext
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.engine.service.WebhookBuildParameterService
 import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
 import com.tencent.devops.repository.utils.RepositoryUtils
@@ -94,6 +95,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         buildLogPrinter = applicationContext.getBean(BuildLogPrinter::class.java)
         pipelinebuildWebhookService = applicationContext.getBean(PipelineBuildWebhookService::class.java)
         pipelineBuildCommitService = applicationContext.getBean(PipelineBuildCommitService::class.java)
+        webhookBuildParameterService = applicationContext.getBean(WebhookBuildParameterService::class.java)
     }
 
     companion object {
@@ -108,6 +110,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         lateinit var buildLogPrinter: BuildLogPrinter
         lateinit var pipelinebuildWebhookService: PipelineBuildWebhookService // 给AOP调用
         lateinit var pipelineBuildCommitService: PipelineBuildCommitService
+        lateinit var webhookBuildParameterService: WebhookBuildParameterService
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
     }
 
@@ -483,16 +486,16 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
 
         // 兼容从旧v1版本下发过来的请求携带旧的变量命名
         val params = mutableMapOf<String, Any>()
-        val startParamsWithType = mutableListOf<BuildParameters>()
+        val pipelineParamMap = HashMap<String, BuildParameters>(startParams.size, 1F)
         startParams.forEach {
             // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
             val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
             if (newVarName == null) { // 为空表示该变量是新的，或者不需要兼容，直接加入，能会覆盖旧变量转换而来的新变量
                 params[it.key] = it.value
-                startParamsWithType.add(BuildParameters(it.key, it.value))
+                pipelineParamMap[it.key] = BuildParameters(key = it.key, value = it.value)
             } else if (!params.contains(newVarName)) { // 新变量还不存在，加入
                 params[newVarName] = it.value
-                startParamsWithType.add(BuildParameters(newVarName, it.value))
+                pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value)
             }
         }
 
@@ -500,9 +503,9 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         try {
             val buildId = pipelineBuildService.startPipeline(
                 userId = userId,
-                readyToBuildPipelineInfo = pipelineInfo,
+                pipeline = pipelineInfo,
                 startType = StartType.WEB_HOOK,
-                startParamsWithType = startParamsWithType,
+                pipelineParamMap = pipelineParamMap,
                 channelCode = pipelineInfo.channelCode,
                 isMobile = false,
                 model = model,
@@ -516,13 +519,21 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 variables = webhookCommit.params
             )
             // #2958 webhook触发在触发原子上输出变量
-            buildLogPrinter.addLines(buildId = buildId, logMessages = startParamsWithType.map {
+            buildLogPrinter.addLines(buildId = buildId, logMessages = pipelineParamMap.map {
                 LogMessage(
-                    message = "${it.key}=${it.value}",
+                    message = "${it.key}=${it.value.value}",
                     timestamp = System.currentTimeMillis(),
                     tag = startParams[PIPELINE_START_TASK_ID]?.toString() ?: ""
                 )
             })
+            if (buildId.isNotBlank()) {
+                webhookBuildParameterService.save(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    buildParameters = pipelineParamMap.values.toList()
+                )
+            }
             return buildId
         } catch (ignore: Exception) {
             logger.warn("[$pipelineId]| webhook trigger fail to start repo($repoName): ${ignore.message}", ignore)

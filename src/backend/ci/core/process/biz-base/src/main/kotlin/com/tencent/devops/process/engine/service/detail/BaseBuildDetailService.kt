@@ -123,7 +123,7 @@ open class BaseBuildDetailService constructor(
                 buildId = buildId,
                 model = modelStr,
                 buildStatus = finalStatus,
-                cancelUser = cancelUser
+                cancelUser = cancelUser ?: if (buildStatus.isCancel()) { "System" } else null // 系统行为导致的取消状态
             )
 
             watcher.start("dispatchEvent")

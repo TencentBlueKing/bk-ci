@@ -58,13 +58,16 @@ class StreamDeleteAction(
         ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
     }
 
-    override fun getYamlContent(fileName: String): String {
-        return api.getFileContent(
-            cred = gitAction.getGitCred(),
-            gitProjectId = data.getGitProjectId(),
-            fileName = fileName,
-            ref = data.context.defaultBranch!!,
-            retry = ApiRequestRetryInfo(true)
+    override fun getYamlContent(fileName: String): Pair<String, String> {
+        return Pair(
+            data.context.defaultBranch!!,
+            api.getFileContent(
+                cred = gitAction.getGitCred(),
+                gitProjectId = data.getGitProjectId(),
+                fileName = fileName,
+                ref = data.context.defaultBranch!!,
+                retry = ApiRequestRetryInfo(true)
+            )
         )
     }
 

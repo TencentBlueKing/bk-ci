@@ -109,36 +109,28 @@ class PipelineRuntimeExtService @Autowired constructor(
     fun popNextConcurrencyGroupQueueCanPend2Start(
         projectId: String,
         concurrencyGroup: String,
+        buildId: String? = null,
         buildStatus: BuildStatus = BuildStatus.QUEUE_CACHE
     ): BuildInfo? {
-        val redisLock = RedisLock(
-            redisOperation = redisOperation,
-            lockKey = "$nextBuildKey:$concurrencyGroup",
-            expiredTimeInSeconds = expiredTimeInSeconds
-        )
-        try {
-            redisLock.lock()
-            val buildInfo = pipelineBuildDao.convert(
-                pipelineBuildDao.getOneConcurrencyQueueBuild(
-                    dslContext,
-                    projectId = projectId,
-                    concurrencyGroup = concurrencyGroup
-                )
+        val buildInfo = pipelineBuildDao.convert(
+            pipelineBuildDao.getOneConcurrencyQueueBuild(
+                dslContext,
+                projectId = projectId,
+                concurrencyGroup = concurrencyGroup
             )
-            if (buildInfo != null) {
-                pipelineBuildDao.updateStatus(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    buildId = buildInfo.buildId,
-                    oldBuildStatus = buildInfo.status,
-                    newBuildStatus = buildStatus
-                )
-                return buildInfo
-            }
-            return null
-        } finally {
-            redisLock.unlock()
+        )
+        val updateBuildId = buildId ?: buildInfo?.buildId
+        if (buildInfo != null && updateBuildId == buildInfo.buildId) {
+            pipelineBuildDao.updateStatus(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildInfo.buildId,
+                oldBuildStatus = buildInfo.status,
+                newBuildStatus = buildStatus
+            )
+            return buildInfo
         }
+        return null
     }
 
     fun existQueue(projectId: String, pipelineId: String, buildId: String, buildStatus: BuildStatus): Boolean {

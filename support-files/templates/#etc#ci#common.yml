@@ -56,6 +56,145 @@ spring:
   metrics:
     servo:
       enabled: false
+  datasource:    
+    # 数据库表规则配置
+    tableRuleConfigs:
+      - index: 0
+        name: T_AUDIT_RESOURCE
+        databaseShardingStrategy: SHARDING
+      - index: 1
+        name: T_PIPELINE_BUILD_CONTAINER
+        databaseShardingStrategy: SHARDING
+      - index: 2
+        name: T_PIPELINE_BUILD_DETAIL
+        databaseShardingStrategy: SHARDING
+      - index: 3
+        name: T_PIPELINE_BUILD_HIS_DATA_CLEAR
+        databaseShardingStrategy: SHARDING
+      - index: 4
+        name: T_PIPELINE_BUILD_HISTORY
+        databaseShardingStrategy: SHARDING
+      - index: 5
+        name: T_PIPELINE_BUILD_STAGE
+        databaseShardingStrategy: SHARDING
+      - index: 6
+        name: T_PIPELINE_BUILD_SUMMARY
+        databaseShardingStrategy: SHARDING
+      - index: 7
+        name: T_PIPELINE_BUILD_TASK
+        databaseShardingStrategy: SHARDING
+      - index: 8
+        name: T_PIPELINE_BUILD_VAR
+        databaseShardingStrategy: SHARDING
+      - index: 9
+        name: T_PIPELINE_FAVOR
+        databaseShardingStrategy: SHARDING
+      - index: 10
+        name: T_PIPELINE_GROUP
+        databaseShardingStrategy: SHARDING
+      - index: 11
+        name: T_PIPELINE_INFO
+        databaseShardingStrategy: SHARDING
+      - index: 12
+        name: T_PIPELINE_JOB_MUTEX_GROUP
+        databaseShardingStrategy: SHARDING
+      - index: 13
+        name: T_PIPELINE_LABEL
+        databaseShardingStrategy: SHARDING
+      - index: 14
+        name: T_PIPELINE_LABEL_PIPELINE
+        databaseShardingStrategy: SHARDING
+      - index: 15
+        name: T_PIPELINE_MODEL_TASK
+        databaseShardingStrategy: SHARDING
+      - index: 16
+        name: T_PIPELINE_PAUSE_VALUE
+        databaseShardingStrategy: SHARDING
+      - index: 17
+        name: T_PIPELINE_RESOURCE
+        databaseShardingStrategy: SHARDING
+      - index: 18
+        name: T_PIPELINE_RESOURCE_VERSION
+        databaseShardingStrategy: SHARDING
+      - index: 19
+        name: T_PIPELINE_SETTING
+        databaseShardingStrategy: SHARDING
+      - index: 20
+        name: T_PIPELINE_SETTING_VERSION
+        databaseShardingStrategy: SHARDING
+      - index: 21
+        name: T_PIPELINE_VIEW
+        databaseShardingStrategy: SHARDING
+      - index: 22
+        name: T_PIPELINE_VIEW_USER_LAST_VIEW
+        databaseShardingStrategy: SHARDING
+      - index: 23
+        name: T_PIPELINE_VIEW_USER_SETTINGS
+        databaseShardingStrategy: SHARDING
+      - index: 24
+        name: T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL
+        databaseShardingStrategy: SHARDING
+      - index: 25
+        name: T_PIPELINE_WEBHOOK_QUEUE
+        databaseShardingStrategy: SHARDING
+      - index: 26
+        name: T_PROJECT_PIPELINE_CALLBACK
+        databaseShardingStrategy: SHARDING
+      - index: 27
+        name: T_PROJECT_PIPELINE_CALLBACK_HISTORY
+        databaseShardingStrategy: SHARDING
+      - index: 28
+        name: T_REPORT
+        databaseShardingStrategy: SHARDING
+      - index: 29
+        name: T_TEMPLATE
+        databaseShardingStrategy: SHARDING
+      - index: 30
+        name: T_TEMPLATE_PIPELINE
+        databaseShardingStrategy: SHARDING
+      - index: 31
+        name: T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO
+        databaseShardingStrategy: SHARDING
+      - index: 32
+        name: T_PIPELINE_BUILD_COMMITS
+        databaseShardingStrategy: SHARDING
+      - index: 33
+        name: T_PIPELINE_RULE
+        broadcastFlag: true
+      - index: 34
+        name: T_PIPELINE_STAGE_TAG
+        broadcastFlag: true
+      - index: 35
+        name: T_PIPELINE_TIMER
+        broadcastFlag: true
+      - index: 36
+        name: T_PIPELINE_REMOTE_AUTH
+        broadcastFlag: true
+      - index: 37
+        name: T_PIPELINE_WEBHOOK
+        broadcastFlag: true
+      - index: 38
+        name: T_TEMPLATE_INSTANCE_BASE
+        broadcastFlag: true
+      - index: 39
+        name: T_TEMPLATE_INSTANCE_ITEM
+        broadcastFlag: true
+      - index: 40
+        name: T_PIPELINE_GITCI_ATOM
+        broadcastFlag: true
+      - index: 41
+        name: T_PIPELINE_WEBHOOK_REVISION
+        broadcastFlag: true
+      - index: 42
+        name: T_PIPELINE_ATOM_REPLACE_BASE
+        databaseShardingStrategy: SPECIFY
+      - index: 43
+        name: T_PIPELINE_ATOM_REPLACE_ITEM
+        databaseShardingStrategy: SPECIFY
+      - index: 44
+        name: T_PIPELINE_ATOM_REPLACE_HISTORY
+        databaseShardingStrategy: SPECIFY          
+      
 
 endpoints:
   metrics:
@@ -170,9 +309,3 @@ net:
 sharding:
   routing:
     cacheSize: 100000  # 缓存分片规则最大数量
-  projectStrategy:
-    tableConfig: "T_AUDIT_RESOURCE,T_BUILD_STARTUP_PARAM,T_METADATA,T_PIPELINE_BUILD_CONTAINER,T_PIPELINE_BUILD_DETAIL,T_PIPELINE_BUILD_HIS_DATA_CLEAR,T_PIPELINE_BUILD_HISTORY,T_PIPELINE_BUILD_STAGE,T_PIPELINE_BUILD_SUMMARY,T_PIPELINE_BUILD_TASK,T_PIPELINE_BUILD_VAR,T_PIPELINE_DATA_CLEAR,T_PIPELINE_FAILURE_NOTIFY_USER,T_PIPELINE_FAVOR,T_PIPELINE_GROUP,T_PIPELINE_INFO,T_PIPELINE_JOB_MUTEX_GROUP,T_PIPELINE_LABEL,T_PIPELINE_LABEL_PIPELINE,T_PIPELINE_MODEL_TASK,T_PIPELINE_PAUSE_VALUE,T_PIPELINE_RESOURCE,T_PIPELINE_RESOURCE_VERSION,T_PIPELINE_SETTING,T_PIPELINE_SETTING_VERSION,T_PIPELINE_VIEW,T_PIPELINE_VIEW_PROJECT,T_PIPELINE_VIEW_USER_LAST_VIEW,T_PIPELINE_VIEW_USER_SETTINGS,T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL,T_PIPELINE_WEBHOOK_QUEUE,T_PROJECT_PIPELINE_CALLBACK,T_PROJECT_PIPELINE_CALLBACK_HISTORY,T_REPORT,T_TEMPLATE,T_TEMPLATE_PIPELINE"
-  broadcastStrategy:
-    tableConfig: "T_PIPELINE_RULE,T_PIPELINE_STAGE_TAG,T_PIPELINE_TIMER,T_PIPELINE_REMOTE_AUTH,T_PIPELINE_WEBHOOK,T_TEMPLATE_INSTANCE_BASE,T_TEMPLATE_INSTANCE_ITEM"
-  specifyDataSourceStrategy:
-    tableConfig: "T_PIPELINE_ATOM_REPLACE_BASE,T_PIPELINE_ATOM_REPLACE_ITEM,T_PIPELINE_ATOM_REPLACE_HISTORY"

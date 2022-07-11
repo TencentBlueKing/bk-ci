@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.util
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 @Suppress("ALL")
 class RegexUtilsTest {
@@ -37,23 +37,23 @@ class RegexUtilsTest {
     fun splitDomainContextPath() {
         var protocol = "http://"
         val noSubDomain = "donothavewww123.com"
-        Assert.assertNull(RegexUtils.splitDomainContextPath(protocol + noSubDomain)) // no context path
+        Assertions.assertNull(RegexUtils.splitDomainContextPath(protocol + noSubDomain)) // no context path
 
         var contextPath = "/a/b/c.txt"
-        Assert.assertEquals(contextPath,
+        Assertions.assertEquals(contextPath,
             RegexUtils.splitDomainContextPath(protocol + noSubDomain + contextPath)!!.second)
         protocol = "https://"
         val httpsDomain = "www.tencent-inc.com"
         contextPath = "/"
-        Assert.assertEquals(httpsDomain,
+        Assertions.assertEquals(httpsDomain,
             RegexUtils.splitDomainContextPath(protocol + httpsDomain + contextPath)!!.first)
-        Assert.assertEquals(contextPath,
+        Assertions.assertEquals(contextPath,
             RegexUtils.splitDomainContextPath(protocol + httpsDomain + contextPath)!!.second)
 
         val domainWithPort = "https://www.tencent.com:12345"
         contextPath = "/report.html"
-        Assert.assertEquals("www.tencent.com", RegexUtils.splitDomainContextPath(domainWithPort + contextPath)!!.first)
-        Assert.assertEquals(contextPath, RegexUtils.splitDomainContextPath(domainWithPort + contextPath)!!.second)
+        Assertions.assertEquals("www.tencent.com", RegexUtils.splitDomainContextPath(domainWithPort + contextPath)!!.first)
+        Assertions.assertEquals(contextPath, RegexUtils.splitDomainContextPath(domainWithPort + contextPath)!!.second)
     }
 
     @Test
@@ -61,11 +61,11 @@ class RegexUtilsTest {
         val contextPath = "/a/b/c.txt"
 
         val noSubDomain = "donothavewww.com"
-        Assert.assertEquals("//$noSubDomain$contextPath",
+        Assertions.assertEquals("//$noSubDomain$contextPath",
             RegexUtils.trimProtocol("http://$noSubDomain$contextPath"))
 
         val httpsDomain = "www.tencent-inc123.com:1234"
-        Assert.assertEquals("//$httpsDomain$contextPath",
+        Assertions.assertEquals("//$httpsDomain$contextPath",
             RegexUtils.trimProtocol("https://$httpsDomain$contextPath"))
     }
 }
