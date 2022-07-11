@@ -41,7 +41,7 @@ class KubernetesClientCommon @Autowired constructor(
 ) {
 
     companion object {
-        private const val BCS_TOKEN_KEY = "BK-Devops-Token"
+        private const val BCS_TOKEN_KEY = "Devops-Token"
     }
 
     @Value("\${kubernetes.token}")
