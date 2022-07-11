@@ -35,9 +35,9 @@ import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
 import com.tencent.devops.metrics.constant.MetricsMessageCode
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.DATE_FORMATTER
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getBetweenDate
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getErrorTypeName
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.DATE_FORMATTER
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getBetweenDate
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getErrorTypeName
 import com.tencent.devops.metrics.dao.PipelineFailDao
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineBuildInfoDO

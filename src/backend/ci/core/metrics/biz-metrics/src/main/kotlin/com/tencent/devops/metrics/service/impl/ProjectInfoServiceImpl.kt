@@ -30,7 +30,7 @@ package com.tencent.devops.metrics.service.impl
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getErrorTypeName
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getErrorTypeName
 import com.tencent.devops.metrics.dao.ProjectInfoDao
 import com.tencent.devops.metrics.service.ProjectInfoManageService
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO

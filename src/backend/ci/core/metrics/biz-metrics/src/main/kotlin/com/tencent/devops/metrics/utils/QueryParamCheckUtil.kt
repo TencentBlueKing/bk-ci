@@ -25,13 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.constant
+package com.tencent.devops.metrics.utils
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.constant.Constants.ERROR_TYPE_NAME_PREFIX
-import org.springframework.beans.factory.annotation.Value
+import com.tencent.devops.metrics.constant.MetricsMessageCode
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -40,9 +41,6 @@ import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 
 object QueryParamCheckUtil {
-
-    @Value("\${metrics.maximumQueryMonths:6}")
-    private val maximumQueryMonths: Long = 6
 
     fun getIntervalTime(
         fromDate: LocalDateTime,
@@ -83,11 +81,12 @@ object QueryParamCheckUtil {
     }
 
     fun checkDateInterval(startTime: String, endTime: String) {
+        val metricsConfig = MetricsConfig()
         // 查询时间区间限制，当天的前一天至前六个月
         val startDate = DateTimeUtil.stringToLocalDate(startTime)
         val endDate = DateTimeUtil.stringToLocalDate(endTime)
         val firstDate = LocalDate.now()
-        val secondDate = firstDate.minusMonths(maximumQueryMonths)
+        val secondDate = firstDate.minusMonths(metricsConfig.maximumQueryMonths)
         if (startDate!!.isBefore(secondDate)) {
             throw ErrorCodeException(
                 errorCode = MetricsMessageCode.QUERY_DATE_BEYOND

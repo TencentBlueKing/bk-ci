@@ -35,7 +35,7 @@ import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.toMinutes
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.PipelineOverviewDao
 import com.tencent.devops.metrics.pojo.`do`.PipelineSumInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineTrendInfoDO
