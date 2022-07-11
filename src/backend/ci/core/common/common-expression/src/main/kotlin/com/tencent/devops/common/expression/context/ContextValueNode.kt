@@ -25,45 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.pipeline.contextData
+package com.tencent.devops.common.expression.context
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.tencent.devops.common.expression.expression.sdk.IReadOnlyArray
-import com.tencent.devops.common.expression.utils.ExpJsonUtil
+import com.tencent.devops.common.expression.ExecutionContext
+import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
+import com.tencent.devops.common.expression.expression.sdk.NamedValue
+import com.tencent.devops.common.expression.expression.sdk.ResultMemory
 
-class ArrayContextData : PipelineContextData(PipelineContextDataType.ARRAY), IReadOnlyArray<PipelineContextData?> {
-
-    private var mItems = mutableListOf<PipelineContextData?>()
-
-    override fun iterator(): Iterator<PipelineContextData?> = mItems.iterator()
-
-    override val count: Int
-        get() = mItems.count()
-
-    fun add(item: PipelineContextData?) {
-        mItems.add(item)
+class ContextValueNode : NamedValue() {
+    override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
+        return Pair(null, (context.state as ExecutionContext).expressionValues[name])
     }
 
-    override fun get(index: Int): Any? = mItems[index]
-
-    override fun clone(): PipelineContextData {
-        val result = ArrayContextData()
-        if (mItems.isNotEmpty()) {
-            result.mItems = mutableListOf()
-            mItems.forEach {
-                result.mItems.add(it)
-            }
-        }
-        return result
-    }
-
-    override fun toJson(): JsonNode {
-        val json = ExpJsonUtil.createArrayNode()
-        if (mItems.isNotEmpty()) {
-            mItems.forEach {
-                json.add(it?.toJson())
-            }
-        }
-        return json
+    override fun createNode(): NamedValue {
+        return ContextValueNode()
     }
 }

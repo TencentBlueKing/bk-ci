@@ -25,13 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.pipeline.contextData
+package com.tencent.devops.common.expression.context
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.BooleanNode
+import com.tencent.devops.common.expression.expression.sdk.IBoolean
 
-abstract class PipelineContextData(val type: Int) {
+class BooleanContextData(val value: Boolean) : PipelineContextData(PipelineContextDataType.BOOLEAN), IBoolean {
+    override fun getBoolean(): Boolean = value
 
-    abstract fun clone(): PipelineContextData
+    override fun clone(): PipelineContextData = BooleanContextData(value)
 
-    abstract fun toJson(): JsonNode
+    override fun toJson(): JsonNode {
+        return if (value) {
+            BooleanNode.TRUE
+        } else {
+            BooleanNode.FALSE
+        }
+    }
 }

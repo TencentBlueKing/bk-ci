@@ -30,7 +30,7 @@ package com.tencent.devops.common.expression.expression.functions
 import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
 import com.tencent.devops.common.expression.expression.sdk.Function
 import com.tencent.devops.common.expression.expression.sdk.ResultMemory
-import com.tencent.devops.common.expression.pipeline.contextData.JsonExtensions.toPipelineContextData
+import com.tencent.devops.common.expression.context.JsonExtensions.toPipelineContextData
 import com.tencent.devops.common.expression.utils.ExpJsonUtil
 
 class FromJson : Function() {

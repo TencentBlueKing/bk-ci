@@ -25,19 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.pipeline.contextData
+package com.tencent.devops.common.expression.context
 
-import com.tencent.devops.common.expression.ExecutionContext
-import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
-import com.tencent.devops.common.expression.expression.sdk.NamedValue
-import com.tencent.devops.common.expression.expression.sdk.ResultMemory
+object PipelineContextDataType {
 
-class ContextValueNode : NamedValue() {
-    override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
-        return Pair(null, (context.state as ExecutionContext).expressionValues[name])
-    }
+    const val STRING = 0
 
-    override fun createNode(): NamedValue {
-        return ContextValueNode()
-    }
+    const val ARRAY = 1
+
+    const val DICTIONARY = 2
+
+    const val BOOLEAN = 3
+
+    const val NUMBER = 4
+
+    const val CASE_SENSITIVE_DICTIONARY = 5
 }

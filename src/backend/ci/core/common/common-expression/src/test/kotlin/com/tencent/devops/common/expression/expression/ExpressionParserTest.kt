@@ -28,12 +28,12 @@
 package com.tencent.devops.common.expression.expression
 
 import com.tencent.devops.common.expression.ExecutionContext
+import com.tencent.devops.common.expression.context.ArrayContextData
+import com.tencent.devops.common.expression.context.BooleanContextData
+import com.tencent.devops.common.expression.context.ContextValueNode
+import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
-import com.tencent.devops.common.expression.pipeline.contextData.ArrayContextData
-import com.tencent.devops.common.expression.pipeline.contextData.BooleanContextData
-import com.tencent.devops.common.expression.pipeline.contextData.ContextValueNode
-import com.tencent.devops.common.expression.pipeline.contextData.DictionaryContextData
-import com.tencent.devops.common.expression.pipeline.contextData.StringContextData
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName

@@ -25,19 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.pipeline.contextData
+package com.tencent.devops.common.expression.context
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.tencent.devops.common.expression.expression.sdk.IReadOnlyObject
 import com.tencent.devops.common.expression.utils.ExpJsonUtil
-import java.util.TreeMap
 
-class DictionaryContextData :
-    PipelineContextData(PipelineContextDataType.DICTIONARY),
+/**
+ * 区分大小写的字段类型
+ */
+class CaseSensitiveDictionaryContextData :
+    PipelineContextData(PipelineContextDataType.CASE_SENSITIVE_DICTIONARY),
     Iterable<Pair<String, PipelineContextData?>>,
     IReadOnlyObject {
 
-    private var mIndexLookup: TreeMap<String, Int>? = null
+    private var mIndexLookup: MutableMap<String, Int>? = null
     private var mList: MutableList<DictionaryContextDataPair> = mutableListOf()
 
     override val values: Iterable<Any?>
@@ -59,7 +61,7 @@ class DictionaryContextData :
     private val indexLookup: MutableMap<String, Int>
         get() {
             if (mIndexLookup == null) {
-                mIndexLookup = TreeMap<String, Int>(String.CASE_INSENSITIVE_ORDER)
+                mIndexLookup = mutableMapOf()
                 if (mList.isNotEmpty()) {
                     mList.forEachIndexed { index, pair ->
                         mIndexLookup!![pair.key] = index
@@ -75,7 +77,7 @@ class DictionaryContextData :
             return mList
         }
 
-    operator fun set(k: String, value: PipelineContextData?) {
+    operator fun set(k: String, value: PipelineContextData) {
         // Existing
         val index = indexLookup[k]
         if (index != null) {
@@ -119,7 +121,7 @@ class DictionaryContextData :
     }
 
     override fun clone(): PipelineContextData {
-        val result = DictionaryContextData()
+        val result = CaseSensitiveDictionaryContextData()
 
         if (mList.isNotEmpty()) {
             result.mList = mutableListOf()

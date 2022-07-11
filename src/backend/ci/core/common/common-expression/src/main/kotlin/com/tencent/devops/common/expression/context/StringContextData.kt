@@ -25,19 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.pipeline.contextData
+package com.tencent.devops.common.expression.context
 
-object PipelineContextDataType {
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.TextNode
+import com.tencent.devops.common.expression.expression.sdk.IString
 
-    const val STRING = 0
+class StringContextData(val value: String) : PipelineContextData(PipelineContextDataType.STRING), IString {
+    override fun getString(): String = value
 
-    const val ARRAY = 1
+    override fun clone(): PipelineContextData = StringContextData(value)
 
-    const val DICTIONARY = 2
+    override fun toJson(): JsonNode = TextNode(value)
 
-    const val BOOLEAN = 3
-
-    const val NUMBER = 4
-
-    const val CASE_SENSITIVE_DICTIONARY = 5
+    override fun toString(): String = value
 }

@@ -25,22 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.pipeline.contextData
+package com.tencent.devops.common.expression.context
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.BooleanNode
-import com.tencent.devops.common.expression.expression.sdk.IBoolean
+import com.tencent.devops.common.expression.expression.sdk.IReadOnlyArray
+import com.tencent.devops.common.expression.utils.ExpJsonUtil
 
-class BooleanContextData(val value: Boolean) : PipelineContextData(PipelineContextDataType.BOOLEAN), IBoolean {
-    override fun getBoolean(): Boolean = value
+class ArrayContextData : PipelineContextData(PipelineContextDataType.ARRAY), IReadOnlyArray<PipelineContextData?> {
 
-    override fun clone(): PipelineContextData = BooleanContextData(value)
+    private var mItems = mutableListOf<PipelineContextData?>()
+
+    override fun iterator(): Iterator<PipelineContextData?> = mItems.iterator()
+
+    override val count: Int
+        get() = mItems.count()
+
+    fun add(item: PipelineContextData?) {
+        mItems.add(item)
+    }
+
+    override fun get(index: Int): Any? = mItems[index]
+
+    override fun clone(): PipelineContextData {
+        val result = ArrayContextData()
+        if (mItems.isNotEmpty()) {
+            result.mItems = mutableListOf()
+            mItems.forEach {
+                result.mItems.add(it)
+            }
+        }
+        return result
+    }
 
     override fun toJson(): JsonNode {
-        return if (value) {
-            BooleanNode.TRUE
-        } else {
-            BooleanNode.FALSE
+        val json = ExpJsonUtil.createArrayNode()
+        if (mItems.isNotEmpty()) {
+            mItems.forEach {
+                json.add(it?.toJson())
+            }
         }
+        return json
     }
 }
