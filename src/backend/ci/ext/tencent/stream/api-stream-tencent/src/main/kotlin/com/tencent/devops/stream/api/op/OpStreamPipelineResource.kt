@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.api.op
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.ModelUpdate
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -70,4 +71,11 @@ interface OpStreamPipelineResource {
         @QueryParam("endTime")
         endTime: Long?
     ): Result<Int>
+
+    @ApiOperation("批量更新modelName")
+    @POST
+    @Path("/updateModelNames")
+    fun batchUpdateModelName(
+        modelUpdateList: List<ModelUpdate>
+    ): String
 }

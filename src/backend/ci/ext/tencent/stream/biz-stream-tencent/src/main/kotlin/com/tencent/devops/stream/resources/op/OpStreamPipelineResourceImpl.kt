@@ -30,12 +30,14 @@ package com.tencent.devops.stream.resources.op
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.stream.api.op.OpStreamPipelineResource
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
+import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import org.jooq.DSLContext
@@ -52,7 +54,8 @@ class OpStreamPipelineResourceImpl @Autowired constructor(
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val streamPipelineBranchService: StreamPipelineBranchService,
     private val streamEventService: StreamEventService,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val streamBasicSettingService: StreamBasicSettingService
 ) : OpStreamPipelineResource {
 
     private val logger = LoggerFactory.getLogger(OpStreamPipelineResourceImpl::class.java)
@@ -89,5 +92,46 @@ class OpStreamPipelineResourceImpl @Autowired constructor(
         )
         logger.info("listJobIdConflict: \n$pipelineId2Yaml")
         return Result(pipelineId2Yaml.size)
+    }
+
+    override fun batchUpdateModelName(modelUpdateList: List<ModelUpdate>): String {
+        var allPipeline = pipelineResourceDao.getAllPipeline(dslContext = dslContext).toMutableList()
+        val gitProjectIdToBasicSetting = streamBasicSettingService.getBasicSettingRecordList(
+            allPipeline.map { it.gitProjectId }).associateBy { it.id }
+        val failModelUpdates = mutableListOf<ModelUpdate>()
+        val modelUpdateList = mutableListOf<ModelUpdate>()
+        while (allPipeline.isNotEmpty()) {
+            while (modelUpdateList.size < 100) {
+                val first = allPipeline.removeFirst()
+                val tGitBasicSetting = gitProjectIdToBasicSetting[first.gitProjectId] ?: continue
+                modelUpdateList.add(
+                    ModelUpdate(
+                        name = first.displayName,
+                        pipelineId = first.pipelineId,
+                        projectId = tGitBasicSetting.projectCode,
+                        updateUserId = tGitBasicSetting.enableUserId
+                    )
+                )
+            }
+            val failList = client.get(ServicePipelineResource::class).batchUpdateModelName(modelUpdateList).data
+                ?: listOf()
+            // 添加更新失败请求
+            failModelUpdates.addAll(failList)
+            // 清空下一轮继续
+            modelUpdateList.clear()
+        }
+        return failModelFormat(failModelUpdates)
+    }
+
+    private fun failModelFormat(failModelUpdates: MutableList<ModelUpdate>): String {
+        val sb = StringBuilder("pipelineId,projectId,userId,displayName,wrongMessage\n")
+        failModelUpdates.forEach {
+            sb.append(
+                "${it.pipelineId},${it.projectId}," +
+                    "${it.updateUserId},${it.name}," +
+                    "${it.updateResultMessage}\n"
+            )
+        }
+        return sb.toString()
     }
 }
