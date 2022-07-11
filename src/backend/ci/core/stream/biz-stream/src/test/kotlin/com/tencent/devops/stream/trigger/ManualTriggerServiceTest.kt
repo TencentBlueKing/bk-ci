@@ -27,20 +27,126 @@
 
 package com.tencent.devops.stream.trigger
 
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.process.yaml.v2.models.Variable
+import com.tencent.devops.process.yaml.v2.models.VariablePropOption
+import com.tencent.devops.process.yaml.v2.models.VariablePropType
+import com.tencent.devops.process.yaml.v2.models.VariableProps
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.springframework.core.io.ClassPathResource
 
 @DisplayName("stream手动触发相关测试")
 internal class ManualTriggerServiceTest {
 
+    @DisplayName("测试创建stream variables的动态表单")
+    @Test
+    fun parseVariablesToFormTest() {
+        val variables = mutableMapOf(
+            "旧数据或不展示的" to Variable("旧数据或不展示的"),
+            "默认展示的，无特殊类型" to Variable("默认展示的，无特殊类型-v", allowModifyAtStartup = true)
+        )
+
+        VariablePropType.values().forEach { type ->
+            when (type) {
+                VariablePropType.VUEX_INPUT -> variables["input类型"] = Variable(
+                    "input类型-v",
+                    allowModifyAtStartup = true,
+                    props = VariableProps(
+                        label = "input类型",
+                        type = VariablePropType.VUEX_INPUT.value
+                    )
+                )
+                VariablePropType.VUEX_TEXTAREA -> variables["input类型-text"] = Variable(
+                    "input类型-text-v",
+                    allowModifyAtStartup = true,
+                    props = VariableProps(
+                        type = VariablePropType.VUEX_TEXTAREA.value
+                    )
+                )
+                VariablePropType.SELECTOR -> {
+                    variables["select类型"] = Variable(
+                        "select类型-v",
+                        allowModifyAtStartup = true,
+                        props = VariableProps(
+                            type = VariablePropType.SELECTOR.value,
+                            options = listOf(
+                                VariablePropOption(
+                                    id = "select类型-v"
+                                ),
+                                VariablePropOption(
+                                    id = 123,
+                                    label = "第二个"
+                                ),
+                                VariablePropOption(
+                                    id = true,
+                                    description = "第三个"
+                                )
+                            )
+                        )
+                    )
+                    // TODO: url的等待补充
+                }
+                VariablePropType.CHECKBOX -> variables["checkBox类型"] = Variable(
+                    "checkBox类型-v",
+                    allowModifyAtStartup = true,
+                    props = VariableProps(
+                        type = VariablePropType.CHECKBOX.value,
+                        options = listOf(
+                            VariablePropOption(
+                                id = "checkBox类型-v"
+                            ),
+                            VariablePropOption(
+                                id = 123,
+                                label = "第二个"
+                            ),
+                            VariablePropOption(
+                                id = true,
+                                description = "第三个"
+                            )
+                        )
+                    )
+                )
+                VariablePropType.BOOLEAN -> variables["boolean类型"] = Variable(
+                    "boolean类型-v",
+                    allowModifyAtStartup = true,
+                    props = VariableProps(
+                        type = VariablePropType.BOOLEAN.value
+                    )
+                )
+                VariablePropType.TIME_PICKER -> variables["time类型"] = Variable(
+                    "time类型-v",
+                    allowModifyAtStartup = true,
+                    props = VariableProps(
+                        type = VariablePropType.TIME_PICKER.value
+                    )
+                )
+                // TODO: 等待补充测试样例
+                VariablePropType.COMPANY_STAFF_INPUT -> return@forEach
+                VariablePropType.TIPS -> return@forEach
+            }
+        }
+
+        val form = ManualTriggerService.parseVariablesToForm(variables)
+
+        Assertions.assertEquals(
+            JsonUtil.getObjectMapper().readTree(
+                ClassPathResource("parseVariablesToFormTestResult.json").inputStream
+            ),
+            JsonUtil.getObjectMapper().readTree(JsonUtil.toJson(form))
+        )
+    }
+
+    @DisplayName("解析手动触发输入参数测试")
     @Test
     fun parseInputsTest() {
         val testData = mapOf(
             "string" to "string",
             "int" to 123,
             "double" to 4.5,
-            "array" to listOf(1, 2.2, "3"),
+            "array-single" to listOf("12"),
+            "array" to listOf(1, 2.2, "3", "xxx"),
             "bool" to true
         )
 
@@ -49,7 +155,8 @@ internal class ManualTriggerServiceTest {
                 "string" to "string",
                 "int" to "123",
                 "double" to "4.5",
-                "array" to "[ 1, 2.2, \"3\" ]",
+                "array-single" to "12",
+                "array" to "1,2.2,3,xxx",
                 "bool" to "true"
             ),
             ManualTriggerService.parseInputs(testData)

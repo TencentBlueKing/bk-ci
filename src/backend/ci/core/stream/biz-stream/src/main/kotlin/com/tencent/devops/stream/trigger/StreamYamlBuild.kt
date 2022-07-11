@@ -31,19 +31,11 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
-import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
-import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.yaml.modelCreate.ModelCreate
 import com.tencent.devops.process.yaml.modelCreate.QualityRulesException
 import com.tencent.devops.process.yaml.modelCreate.inner.GitData
@@ -53,6 +45,7 @@ import com.tencent.devops.process.yaml.modelCreate.inner.StreamData
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
@@ -68,6 +61,7 @@ import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelParameters
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
+import com.tencent.devops.stream.trigger.pojo.ModelParametersData
 import com.tencent.devops.stream.trigger.pojo.StreamBuildLock
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerLock
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
@@ -98,6 +92,32 @@ class StreamYamlBuild @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StreamYamlBuild::class.java)
         private val channelCode = ChannelCode.GIT
+
+        // 手动触发参数获取，用来修改用户参数变量
+        fun getInputParams(
+            userVariables: Map<String, Variable>?,
+            inputsData: Map<String, String>?
+        ): Map<String, String> {
+            if (userVariables.isNullOrEmpty() || inputsData.isNullOrEmpty()) {
+                return emptyMap()
+            }
+
+            val result = mutableMapOf<String, String>()
+            userVariables.forEach manualEach@{ (key, value) ->
+                if (!inputsData.containsKey(key)) {
+                    return@manualEach
+                }
+
+                // inputs包含，但是配置不允许改，直接报错
+                if (value.allowModifyAtStartup != true) {
+                    throw RuntimeException("variable $key not allow modify at startup")
+                }
+
+                result[key] = inputsData[key]!!
+            }
+
+            return result
+        }
     }
 
     @Throws(StreamTriggerBaseException::class, ErrorCodeException::class)
@@ -139,7 +159,7 @@ class StreamYamlBuild @Autowired constructor(
                         userId = action.data.getUserId(),
                         gitProjectId = action.data.eventCommon.gitProjectId.toLong(),
                         projectCode = action.getProjectCode(),
-                        modelAndSetting = createTriggerModel(action.getProjectCode()),
+                        modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(action.getProjectCode()),
                         updateLastModifyUser = true
                     )
                 }
@@ -262,32 +282,6 @@ class StreamYamlBuild @Autowired constructor(
         }
     }
 
-    private fun createTriggerModel(projectCode: String) = PipelineModelAndSetting(
-        model = Model(
-            name = StreamPipelineUtils.genBKPipelineName(projectCode),
-            desc = "",
-            stages = listOf(
-                Stage(
-                    id = VMUtils.genStageId(1),
-                    name = VMUtils.genStageId(1),
-                    containers = listOf(
-                        TriggerContainer(
-                            id = "0",
-                            name = "构建触发",
-                            elements = listOf(
-                                ManualTriggerElement(
-                                    name = "手动触发",
-                                    id = "T-1-1-1"
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        ),
-        setting = PipelineSetting(cleanVariablesWhenRetry = true)
-    )
-
     @SuppressWarnings("LongParameterList")
     private fun startBuildPipeline(
         action: BaseAction,
@@ -309,16 +303,18 @@ class StreamYamlBuild @Autowired constructor(
             action = action,
             yaml = yaml,
             webhookParams = params,
-            yamlTransferData = yamlTransferData,
-            manualInputs = manualInputs
+            yamlTransferData = yamlTransferData
         )
+
+        // 获取并校验手动触发参数
+        val manualValues = getInputParams(yaml.variables, manualInputs)
 
         // create or refresh pipeline
         val modelAndSetting = modelCreate.createPipelineModel(
             modelName = StreamPipelineUtils.genBKPipelineName(action.getProjectCode()),
             event = modelCreateEvent,
             yaml = replaceYamlPoolName(yaml, action),
-            pipelineParams = modelParams
+            pipelineParams = modelParams.userVariables
         )
         logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, modelAndSetting: $modelAndSetting")
 
@@ -333,7 +329,9 @@ class StreamYamlBuild @Autowired constructor(
             modelAndSetting = modelAndSetting,
             gitBuildId = gitBuildId,
             yamlTransferData = yamlTransferData,
-            updateLastModifyUser = updateLastModifyUser
+            updateLastModifyUser = updateLastModifyUser,
+            modelParameters = modelParams,
+            manualValues = manualValues
         )
     }
 
@@ -347,15 +345,14 @@ class StreamYamlBuild @Autowired constructor(
             action = action,
             yaml = yaml,
             webhookParams = mapOf(),
-            yamlTransferData = null,
-            manualInputs = null
+            yamlTransferData = null
         )
 
         val modelAndSetting = modelCreate.createPipelineModel(
             modelName = StreamPipelineUtils.genBKPipelineName(action.getProjectCode()),
             event = modelCreateEvent,
             yaml = replaceYamlPoolName(yaml, action),
-            pipelineParams = modelParams
+            pipelineParams = modelParams.userVariables
         )
         logger.info("savePipeline pipeline:${action.data.context.pipeline}, modelAndSetting: $modelAndSetting")
 
@@ -385,9 +382,8 @@ class StreamYamlBuild @Autowired constructor(
         action: BaseAction,
         yaml: ScriptBuildYaml,
         webhookParams: Map<String, String>,
-        yamlTransferData: YamlTransferData?,
-        manualInputs: Map<String, String>?
-    ): Pair<ModelCreateEvent, List<BuildFormProperty>> {
+        yamlTransferData: YamlTransferData?
+    ): Pair<ModelCreateEvent, ModelParametersData> {
         val streamGitProjectInfo = streamTriggerCache.getAndSaveRequestGitProjectInfo(
             gitProjectKey = action.data.eventCommon.gitProjectId,
             action = action,
@@ -399,8 +395,7 @@ class StreamYamlBuild @Autowired constructor(
             yaml = yaml,
             streamGitProjectInfo = streamGitProjectInfo,
             webhookParams = webhookParams,
-            yamlTransferData = yamlTransferData,
-            manualInputs = manualInputs
+            yamlTransferData = yamlTransferData
         )
 
         val modelCreateEvent = ModelCreateEvent(

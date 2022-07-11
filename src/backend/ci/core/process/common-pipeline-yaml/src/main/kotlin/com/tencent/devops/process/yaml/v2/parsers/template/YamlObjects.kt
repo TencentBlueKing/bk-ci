@@ -36,6 +36,7 @@ import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.TemplateInfo
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.VariableDatasource
+import com.tencent.devops.process.yaml.v2.models.VariablePropOption
 import com.tencent.devops.process.yaml.v2.models.VariableProps
 import com.tencent.devops.process.yaml.v2.models.job.Container
 import com.tencent.devops.process.yaml.v2.models.job.Credentials
@@ -52,8 +53,8 @@ import com.tencent.devops.process.yaml.v2.utils.StreamEnvUtils
 
 object YamlObjects {
 
-    fun getVariable(fromPath: String, variable: Map<String, Any>): Variable {
-        return Variable(
+    fun getVariable(fromPath: String, key: String, variable: Map<String, Any>): Variable {
+        val va = Variable(
             value = variable["value"]?.toString(),
             readonly = getNullValue("readonly", variable)?.toBoolean(),
             allowModifyAtStartup = getNullValue("allow-modify-at-startup", variable)?.toBoolean(),
@@ -63,25 +64,53 @@ object YamlObjects {
                 getVarProps(fromPath, variable["props"]!!)
             }
         )
+
+        if (!va.props?.options.isNullOrEmpty()) {
+            va.props?.options?.filter { it.id == va.value }?.ifEmpty {
+                // 说明默认值没有匹配到选项值，报错
+                throw throw YamlFormatException(
+                    "$fromPath variable $key format error: " +
+                            "value ${va.value} not in variable options"
+                )
+            }
+        }
+
+        return va
     }
 
     private fun getVarProps(fromPath: String, props: Any): VariableProps {
         val propsMap = transValue<Map<String, Any?>>(fromPath, "props", props)
-        val va = VariableProps(
+        val po = VariableProps(
             label = getNullValue("label", propsMap),
             type = getNotNullValue("type", "props", propsMap),
-            values = transNullValue(fromPath, "values", "values", propsMap),
+            options = getVarPropOptions(fromPath, propsMap["options"]),
             datasource = getVarPropDataSource(fromPath, propsMap["datasource"]),
             description = getNullValue("description", propsMap),
             multiple = getNullValue("multiple", propsMap)?.toBoolean(),
             required = getNullValue("required", propsMap)?.toBoolean()
         )
 
-        if (!va.values.isNullOrEmpty() && va.datasource != null) {
-            throw throw YamlFormatException("$fromPath variable format error: values and datasource cannot coexist")
+        if (!po.options.isNullOrEmpty() && po.datasource != null) {
+            throw throw YamlFormatException("$fromPath variable format error: options and datasource cannot coexist")
         }
 
-        return va
+        return po
+    }
+
+    private fun getVarPropOptions(fromPath: String, options: Any?): List<VariablePropOption>? {
+        if (options == null) {
+            return null
+        }
+
+        val optionsMap = transValue<List<Map<String, Any?>>>(fromPath, "options", options)
+
+        return optionsMap.map { option ->
+            VariablePropOption(
+                id = getNotNullValueAny("id", "option", option),
+                label = getNullValue("label", option),
+                description = getNullValue("description", option)
+            )
+        }
     }
 
     private fun getVarPropDataSource(fromPath: String, datasource: Any?): VariableDatasource? {
@@ -309,6 +338,14 @@ object YamlObjects {
             throw YamlFormatException(Constants.ATTR_MISSING_ERROR.format(key, mapName))
         } else {
             map[key].toString()
+        }
+    }
+
+    private fun getNotNullValueAny(key: String, mapName: String, map: Map<String, Any?>): Any {
+        return if (map[key] == null) {
+            throw YamlFormatException(Constants.ATTR_MISSING_ERROR.format(key, mapName))
+        } else {
+            map[key]!!
         }
     }
 }

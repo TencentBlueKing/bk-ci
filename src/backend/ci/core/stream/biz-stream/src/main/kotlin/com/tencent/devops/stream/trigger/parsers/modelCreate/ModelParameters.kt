@@ -49,22 +49,20 @@ import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.CommonVariables
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.pojo.ModelParametersData
 import com.tencent.devops.stream.trigger.pojo.StreamGitProjectCache
 
 @Suppress("ComplexMethod")
 object ModelParameters {
-    private const val VARIABLE_PREFIX = "variables."
+    const val VARIABLE_PREFIX = "variables."
 
     fun createPipelineParams(
         action: BaseAction,
         yaml: ScriptBuildYaml,
         streamGitProjectInfo: StreamGitProjectCache,
         webhookParams: Map<String, String> = mapOf(),
-        yamlTransferData: YamlTransferData? = null,
-        manualInputs: Map<String, String>?
-    ): MutableList<BuildFormProperty> {
-        val result = mutableListOf<BuildFormProperty>()
-
+        yamlTransferData: YamlTransferData? = null
+    ): ModelParametersData {
         val event = action.data.eventCommon
         val startParams = mutableMapOf<String, String>()
         val parsedCommitMsg = EmojiUtil.removeAllEmoji(event.commit.commitMsg ?: "")
@@ -113,67 +111,12 @@ object ModelParameters {
         }
 
         // 用户自定义变量
-        val userVariables = action.getUserVariables(yaml.variables) ?: yaml.variables
         val buildFormProperties = getBuildFormPropertyFromYmlVariable(
-            variables = userVariables,
+            variables = action.getUserVariables(yaml.variables) ?: yaml.variables,
             startParams = startParams
         )
 
-        startParams.forEach {
-            result.add(
-                BuildFormProperty(
-                    id = it.key,
-                    required = false,
-                    type = BuildFormPropertyType.STRING,
-                    defaultValue = it.value,
-                    options = null,
-                    desc = null,
-                    repoHashId = null,
-                    relativePath = null,
-                    scmType = null,
-                    containerType = null,
-                    glob = null,
-                    properties = null
-                )
-            )
-        }
-        result.addAll(buildFormProperties)
-
-        // 对于额外的手动输入参数在最后处理逻辑
-        if (manualInputs != null) {
-            result.addInputParams(userVariables, manualInputs)
-        }
-
-        return result
-    }
-
-    fun MutableList<BuildFormProperty>.addInputParams(
-        userVariables: Map<String, Variable>?,
-        inputsData: Map<String, String>
-    ): MutableList<BuildFormProperty> {
-        this.forEach manualEach@{ prop ->
-            val key = if (prop.id.startsWith(VARIABLE_PREFIX)) {
-                prop.id.removePrefix(VARIABLE_PREFIX)
-            } else {
-                prop.id
-            }
-
-            if (!inputsData.containsKey(key)) {
-                return@manualEach
-            }
-
-            // inputs包含，但是配置不允许改，直接报错
-            if (userVariables != null &&
-                userVariables.containsKey(key) &&
-                userVariables[key]?.allowModifyAtStartup != true
-            ) {
-                throw RuntimeException("variable $key not allow modify at startup")
-            }
-
-            prop.defaultValue = inputsData[key]!!
-        }
-
-        return this
+        return ModelParametersData(buildFormProperties, startParams)
     }
 
     private fun getBuildFormPropertyFromYmlVariable(

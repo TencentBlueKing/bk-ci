@@ -25,14 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.stream.trigger
 
-import com.tencent.devops.common.web.form.models.Form
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.process.yaml.v2.models.Variable
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
 
-@ApiModel("手动触发返回给前端的渲染信息")
-data class ManualTriggerInfo(
-    val enable: Boolean = true,
-    val yaml: String?,
-    val schema: Form?
-)
+@DisplayName("Stream Yaml 构建测试")
+internal class StreamYamlBuildTest {
+
+    @DisplayName("手动触发参数获取测试")
+    @Test
+    fun getInputParamsTest() {
+        val originData = mapOf(
+            "string" to Variable(value = "123", allowModifyAtStartup = true),
+            "test" to Variable(value = "123")
+        )
+        val testData = mapOf("string" to "456")
+        Assertions.assertEquals(testData, StreamYamlBuild.getInputParams(originData, testData))
+    }
+
+    @DisplayName("手动触发参数获取测试(异常报错)")
+    @Test
+    fun getInputParamsExTest() {
+        val originData = mapOf("string" to Variable(value = "123"), "test" to Variable(value = "123"))
+        val testData = mapOf("string" to "456")
+        Assertions.assertThrows(RuntimeException::class.java) { StreamYamlBuild.getInputParams(originData, testData) }
+    }
+}

@@ -25,14 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.stream.trigger.pojo
 
-import com.tencent.devops.common.web.form.models.Form
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 
-@ApiModel("手动触发返回给前端的渲染信息")
-data class ManualTriggerInfo(
-    val enable: Boolean = true,
-    val yaml: String?,
-    val schema: Form?
+data class ModelParametersData(
+    val userVariables: List<BuildFormProperty>,
+    val webHookParams: Map<String, String>
 )

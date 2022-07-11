@@ -29,11 +29,13 @@ package com.tencent.devops.process.yaml.parsers.template
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.VariableDatasource
+import com.tencent.devops.process.yaml.v2.models.VariablePropOption
 import com.tencent.devops.process.yaml.v2.models.VariablePropType
 import com.tencent.devops.process.yaml.v2.models.VariableProps
 import com.tencent.devops.process.yaml.v2.models.format
@@ -53,7 +55,7 @@ import org.junit.jupiter.api.DisplayName
 @Suppress("LoopWithTooManyJumpStatements")
 class YamlTemplateTest {
 
-    val sampleDir = "samples"
+    private val sampleDir = "samples"
 
     @Test
     fun testAllTemplate() {
@@ -94,7 +96,7 @@ class YamlTemplateTest {
 
         // resource
         val resourceExt = mutableMapOf<String, ResourcesPools>()
-        replace("$sampleDir/$dir/resource/resources.yml", resourceExt)
+        replace("$sampleDir/$dir/resource/resources.yml", resourceExt = resourceExt)
         Assertions.assertTrue(
             resourceExt.keys.equalss(
                 mutableListOf(
@@ -104,7 +106,7 @@ class YamlTemplateTest {
             )
         )
         resourceExt.clear()
-        replace("$sampleDir/$dir/resource/resource-remote.yml", resourceExt)
+        replace("$sampleDir/$dir/resource/resource-remote.yml", resourceExt = resourceExt)
         Assertions.assertTrue(
             resourceExt.keys.equalss(
                 mutableListOf(
@@ -113,7 +115,7 @@ class YamlTemplateTest {
             )
         )
         resourceExt.clear()
-        replace("$sampleDir/$dir/resource/resource-remote-mul.yml", resourceExt)
+        replace("$sampleDir/$dir/resource/resource-remote-mul.yml", resourceExt = resourceExt)
         Assertions.assertTrue(
             resourceExt.keys.equalss(
                 mutableListOf(
@@ -134,7 +136,7 @@ class YamlTemplateTest {
     @DisplayName("测试只替换variables模板(为手动输入参数)")
     @Test
     fun variablesSubTest() {
-        val vars = replace("$sampleDir/variablesSub/variablesSub.yml", null, false)
+        val vars = replace("$sampleDir/variablesSub/variablesSub.yml", null, null, false)
         Assertions.assertEquals(
             mapOf<String, Any>(
                 "USERNAME" to Variable(
@@ -142,7 +144,12 @@ class YamlTemplateTest {
                     props = VariableProps(
                         label = "我是预定义下拉可选值的字段",
                         type = VariablePropType.SELECTOR.value,
-                        values = listOf(1, 2, 3),
+                        options = listOf(
+                            VariablePropOption(1),
+                            VariablePropOption(2, "二"),
+                            VariablePropOption(3, description = "xxx"),
+                            VariablePropOption("VARIABLES")
+                        ),
                         multiple = true,
                         description = "这是个允许多选的下拉选择字段",
                         required = null
@@ -177,11 +184,42 @@ class YamlTemplateTest {
         )
     }
 
+    private val variableCoexist = """
+variables:
+  template:
+    - name: variables.yml
+      value: xxx
+      props:
+        type: selector
+        datasource:
+          url: xxx
+        options:
+        - id: xxx  
+    """.trimIndent()
+
+    private val variableNotInOptions = """
+variables:
+  template:
+    - name: variables.yml
+      value: xxx
+      props:
+        type: selector
+        options:
+        - id: xxxx 
+    """.trimIndent()
+
+    @DisplayName("测试模板替换异常")
+    @Test
+    fun templateReplaceExceptionTest() {
+        Assertions.assertThrows(YamlFormatException::class.java) { replace(null, variableCoexist, null, false) }
+        Assertions.assertThrows(YamlFormatException::class.java) { replace(null, variableNotInOptions, null, false) }
+    }
+
     private fun check(file: String) {
         var flag = true
         val sample = BufferedReader(
             StringReader(
-                replace(file, null, true).toString()
+                replace(file, null, null, true).toString()
             )
         )
         val compared = BufferedReader(
@@ -210,11 +248,13 @@ class YamlTemplateTest {
     }
 
     private fun replace(
-        testYaml: String,
+        testYaml: String?,
+        yamlContent: String? = null,
         resourceExt: MutableMap<String, ResourcesPools>? = null,
         normalized: Boolean = true
     ): Any {
-        val sb = getStrFromResource(testYaml)
+
+        val sb = yamlContent ?: getStrFromResource(testYaml!!)
 
         val yaml = ScriptYmlUtils.formatYaml(sb)
         val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
@@ -222,7 +262,7 @@ class YamlTemplateTest {
             resourceExt?.put(pool.format(), pool)
         }
         val preScriptBuildYaml = YamlTemplate(
-            filePath = testYaml,
+            filePath = "",
             yamlObject = preTemplateYamlObject,
             extraParameters = null,
             getTemplateMethod = ::getTestTemplate,
