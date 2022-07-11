@@ -364,6 +364,6 @@ class KubernetesContainerService @Autowired constructor(
             userId, dispatchBuildImageReq))
     }
 
-    private fun getOnlyName(userId: String) = "bcs-${userId}${System.currentTimeMillis()}-" +
-        RandomStringUtils.randomAlphabetic(16)
+    private fun getOnlyName(userId: String) = "kubernetes-${userId}${System.currentTimeMillis()}-" +
+        RandomStringUtils.randomAlphabetic(16).toLowerCase()
 }
