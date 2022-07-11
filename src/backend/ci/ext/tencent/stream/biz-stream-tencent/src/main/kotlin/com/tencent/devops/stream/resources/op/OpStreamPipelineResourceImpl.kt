@@ -94,7 +94,7 @@ class OpStreamPipelineResourceImpl @Autowired constructor(
         return Result(pipelineId2Yaml.size)
     }
 
-    override fun batchUpdateModelName(modelUpdateList: List<ModelUpdate>): String {
+    override fun batchUpdateModelName(): String {
         var allPipeline = pipelineResourceDao.getAllPipeline(dslContext = dslContext).toMutableList()
         val gitProjectIdToBasicSetting = streamBasicSettingService.getBasicSettingRecordList(
             allPipeline.map { it.gitProjectId }).associateBy { it.id }

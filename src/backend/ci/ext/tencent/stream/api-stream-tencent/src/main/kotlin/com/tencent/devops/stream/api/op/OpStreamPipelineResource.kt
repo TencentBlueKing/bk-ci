@@ -76,6 +76,5 @@ interface OpStreamPipelineResource {
     @POST
     @Path("/updateModelNames")
     fun batchUpdateModelName(
-        modelUpdateList: List<ModelUpdate>
     ): String
 }
