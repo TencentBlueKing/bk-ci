@@ -59,6 +59,7 @@ import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
+import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -128,6 +129,15 @@ class StreamYamlTrigger @Autowired constructor(
             "${pipeline.pipelineId}|Match return|isTrigger=$isTrigger|" +
                 "isTiming=$isTiming|isDelete=$isDelete|repoHookName=$repoHookName"
         )
+        // fork触发进行权限校验
+        if (action is StreamMrAction && !action.checkMrForkReview()) {
+            logger.warn(
+                "${pipeline.pipelineId}|" +
+                    "check mr fork review false, return, gitProjectId: ${action.data.getGitProjectId()}, " +
+                    "eventId: ${action.data.context.requestEventId}"
+            )
+            throw StreamTriggerException(action, TriggerReason.TRIGGER_NOT_MATCH)
+        }
 
         val noNeedTrigger = !isTrigger && !isTiming && !isDelete && repoHookName.isNullOrEmpty()
         if (noNeedTrigger) {

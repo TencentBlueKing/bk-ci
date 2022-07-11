@@ -39,6 +39,7 @@ import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamRevisionInfo
+import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectUserInfo
 
 /**
  * Stream 需要用到的各平台的标准接口
@@ -77,6 +78,17 @@ interface StreamGitApiService {
         sha: String,
         retry: ApiRequestRetryInfo
     ): StreamGitCommitInfo?
+
+    /**
+     * 获取gitProjectId项目的成员信息，携带了成员权限
+     */
+    fun getProjectMember(
+        cred: StreamGitCred,
+        gitProjectId: String,
+        page: Int? = null,
+        pageSize: Int? = null,
+        search: String? = null
+    ): List<TGitProjectUserInfo>
 
     /**
      * 根据token获取用户信息

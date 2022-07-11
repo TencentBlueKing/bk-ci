@@ -42,6 +42,7 @@ import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
+import com.tencent.devops.stream.pojo.TriggerReviewSetting
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -123,6 +124,24 @@ class StreamBasicSettingService @Autowired constructor(
             pathWithNamespace = setting.pathWithNamespace,
             nameWithNamespace = setting.nameWithNamespace,
             enableMrComment = enableMrComment
+        )
+        return true
+    }
+
+    fun updateProjectReviewSetting(
+        gitProjectId: Long,
+        userId: String? = null,
+        triggerReviewSetting: TriggerReviewSetting
+    ): Boolean {
+        val setting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
+        if (setting == null) {
+            logger.info("git repo not exists.")
+            return false
+        }
+        streamBasicSettingDao.updateProjectReviewSetting(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            triggerReviewSetting = triggerReviewSetting
         )
         return true
     }

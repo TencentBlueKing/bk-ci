@@ -37,6 +37,7 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.StreamUpdateSetting
+import com.tencent.devops.stream.pojo.TriggerReviewSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -94,6 +95,20 @@ interface UserGitBasicSettingResource {
         projectId: String,
         @ApiParam("stream 项目配置", required = true)
         streamUpdateSetting: StreamUpdateSetting
+    ): Result<Boolean>
+
+    @ApiOperation("保存Stream 权限校验配置")
+    @POST
+    @Path("/{projectId}/save_review_setting")
+    fun saveStreamReviewSetting(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("stream 权限校验配置", required = true)
+        triggerReviewSetting: TriggerReviewSetting
     ): Result<Boolean>
 
     @ApiOperation("修改项目启动人")

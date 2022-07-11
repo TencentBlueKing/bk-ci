@@ -41,6 +41,7 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
+import com.tencent.devops.stream.pojo.StreamGitMember
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitChangeFileInfo
@@ -120,11 +121,45 @@ class TGitApiService @Autowired constructor(
         }?.let { TGitCommitInfo(it) }
     }
 
+    override fun getProjectMember(
+        cred: StreamGitCred,
+        gitProjectId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?
+    ): List<TGitProjectUserInfo> {
+        return doRetryFun(
+            retry = ApiRequestRetryInfo(true, 1),
+            log = "$gitProjectId get project($gitProjectId) user($search) info fail",
+            apiErrorCode = ErrorCodeEnum.GET_USER_INFO_ERROR
+        ) {
+            client.get(ServiceGitResource::class).getMembers(
+                token = cred.toToken(),
+                gitProjectId = gitProjectId,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20,
+                search = search,
+                tokenType = cred.toTokenType()
+            ).data?.map {
+                TGitProjectUserInfo(
+                    accessLevel = it.accessLevel,
+                    userId = it.username
+                )
+            } ?: emptyList()
+        }
+    }
+
     override fun getUserInfoByToken(cred: StreamGitCred): TGitUserInfo? {
-        return client.get(ServiceGitResource::class).getUserInfoByToken(
-            cred.toToken(),
-            cred.toTokenType()
-        ).data?.let { TGitUserInfo(id = it.id.toString(), username = it.username!!) }
+        return return doRetryFun(
+            retry = ApiRequestRetryInfo(true, 1),
+            log = "get user info by token fail",
+            apiErrorCode = ErrorCodeEnum.GET_USER_INFO_ERROR
+        ) {
+            client.get(ServiceGitResource::class).getUserInfoByToken(
+                cred.toToken(),
+                cred.toTokenType()
+            ).data?.let { TGitUserInfo(id = it.id.toString(), username = it.username!!) }
+        }
     }
 
     override fun getProjectUserInfo(
@@ -132,13 +167,19 @@ class TGitApiService @Autowired constructor(
         userId: String,
         gitProjectId: String
     ): TGitProjectUserInfo {
-        return client.get(ServiceGitResource::class).getProjectUserInfo(
-            token = cred.toToken(),
-            tokenType = cred.toTokenType(),
-            gitProjectId = gitProjectId,
-            userId = userId
-        ).data!!.let {
-            TGitProjectUserInfo(it.accessLevel)
+        return doRetryFun(
+            retry = ApiRequestRetryInfo(true, 1),
+            log = "$gitProjectId get project($gitProjectId) user($userId) info fail",
+            apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR
+        ) {
+            client.get(ServiceGitResource::class).getProjectUserInfo(
+                token = cred.toToken(),
+                tokenType = cred.toTokenType(),
+                gitProjectId = gitProjectId,
+                userId = userId
+            ).data!!.let {
+                TGitProjectUserInfo(it.accessLevel, it.username)
+            }
         }
     }
 
