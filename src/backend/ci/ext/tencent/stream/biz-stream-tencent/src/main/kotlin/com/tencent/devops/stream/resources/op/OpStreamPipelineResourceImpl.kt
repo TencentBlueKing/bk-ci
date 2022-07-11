@@ -100,8 +100,10 @@ class OpStreamPipelineResourceImpl @Autowired constructor(
             allPipeline.map { it.gitProjectId }).associateBy { it.id }
         val failModelUpdates = mutableListOf<ModelUpdate>()
         val modelUpdateList = mutableListOf<ModelUpdate>()
+        logger.info("allPipelineCount:${allPipeline.size}," +
+                        "gitProjectIdToBasicSettingCount:${gitProjectIdToBasicSetting.size}")
         while (allPipeline.isNotEmpty()) {
-            while (modelUpdateList.size < 100) {
+            while (allPipeline.isNotEmpty()&&modelUpdateList.size < 100) {
                 val first = allPipeline.removeFirst()
                 val tGitBasicSetting = gitProjectIdToBasicSetting[first.gitProjectId] ?: continue
                 modelUpdateList.add(
