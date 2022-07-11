@@ -45,13 +45,13 @@ class KubernetesClientCommon @Autowired constructor(
     }
 
     @Value("\${kubernetes.token}")
-    val bcsToken: String = ""
+    val kubernetesToken: String = ""
 
     @Value("\${kubernetes.apiUrl}")
-    val bcsApiUrl: String = ""
+    val kubernetesApiUrl: String = ""
 
     fun baseRequest(userId: String, url: String, headers: Map<String, String>? = null): Request.Builder {
-        return Request.Builder().url(url(bcsApiUrl + url)).headers(headers(headers))
+        return Request.Builder().url(url(kubernetesApiUrl + url)).headers(headers(headers))
     }
 
     fun url(realUrl: String) = "${commonConfig.devopsIdcProxyGateway}/proxy-devnet?" +
@@ -60,7 +60,7 @@ class KubernetesClientCommon @Autowired constructor(
     fun headers(otherHeaders: Map<String, String>? = null): Headers {
         val result = mutableMapOf<String, String>()
 
-        val bcsHeaders = mapOf(BCS_TOKEN_KEY to bcsToken)
+        val bcsHeaders = mapOf(BCS_TOKEN_KEY to kubernetesToken)
         result.putAll(bcsHeaders)
 
         if (!otherHeaders.isNullOrEmpty()) {

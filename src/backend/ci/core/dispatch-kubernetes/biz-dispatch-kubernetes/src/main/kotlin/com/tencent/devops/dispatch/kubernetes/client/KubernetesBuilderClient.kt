@@ -190,7 +190,7 @@ class KubernetesBuilderClient @Autowired constructor(
         userId: String,
         bcsBuilder: Builder
     ): String {
-        val url = "/api/builders/${bcsBuilder.name}"
+        val url = "/api/builders"
         val body = ObjectMapper().writeValueAsString(bcsBuilder)
         logger.info("[$buildId]|[$vmSeqId] request url: $url")
         logger.info("[$buildId]|[$vmSeqId] request body: $body")
