@@ -270,12 +270,13 @@
   "settings": {
     "baseInfo": "基本信息",
     "group": "分组",
+    "groupName": "分组名称",
     "buildNumberFormat": "构建号格式",
     "validatebuildNum": "只支持[a-z A-Z 0-9 . - _ : + ? $ {} ()]",
     "correctBuildNumber": "请输入正确的构建号格式",
     "emptyPipelineName": "请输入流水线名称",
     "label": "标签",
-    "runLock": "运行锁定",
+    "runLock": "运行设置",
     "namePlaceholder": "请输入流水线名称，长度不超过40个字符",
     "descPlaceholder": "请输入100字符以内的描述内容",
     "largestNum": "最大排队数量",
@@ -286,10 +287,14 @@
     "minutes": "分钟",
     "itemPlaceholder": "请输入",
     "runningOption": {
-      "multiple": "可同时运行多个构建任务",
-      "lock": "锁定流水线，任何触发方式都无法运行",
-      "single": "同一时间最多只能运行一个构建任务"
+      "multiple": "可并发运行",
+      "lock": "禁用流水线，任何触发方式都无法运行",
+      "single": "分组，组内同一时间只能运行一个流水线"
     },
+    "disableSetting": "禁用设置",
+    "parallelSetting": "并发设置",
+    "stopWhenNewCome": "当新任务到达时，总是取消正在运行的构建",
+    "lockGroupDesc": "将根据此项配置进行分组，生效范围为当前项目下的流水线，请谨慎设置。支持的上下文变量：${{ci.pipeline_id}} | ${{ci.branch}}",
     "notify": "通知",
     "auth": "权限",
     "authType": "授权类型",
@@ -892,6 +897,9 @@
   "storeMap": {
     "textarea": "文本框",
     "pauseAtom": "执行前暂停",
+    "pauseConfLabel": "执行前暂停配置",
+    "pauseNotify": "暂停通知接收人",
+    "pauseNotifyTip": "执行前暂停时，将发送企业微信消息到指定用户，通知用户尽快处理。默认为流水线执行人",
     "runManual": "可手动决定继续运行或停止，继续时可修改入参",
     "string": "字符串",
     "bool": "布尔值",
@@ -979,5 +987,6 @@
   "permissionRefreshtitle": "权限申请单已提交",
   "permissionRefreshSubtitle": "请在权限中心填写权限申请单，提交完成后再刷新该页面",
   "permissionRefreshOkText": "刷新页面",
-  "searchForMore": "输入搜索更多流水线"
+  "searchForMore": "输入搜索更多流水线",
+  "numberRange": "大小范围在{0} 到 {1}之间"
 }

@@ -268,25 +268,30 @@
   "settings": {
     "baseInfo": "Basic information",
     "group": "Group",
+    "groupName": "Group",
     "buildNumberFormat": "Build number format",
     "validatebuildNum": "Only supports [a-z A-Z 0-9 . - _ : + ? $ {} ()]",
     "correctBuildNumber": "Please enter the correct build number format",
     "emptyPipelineName": "Please enter pipeline name",
-    "runLock": "Locking behavior",
+    "runLock": "Run settings",
     "namePlaceholder": "Please enter a name for this pipeline within 40 letters",
     "descPlaceholder": "Please add a description within 100 letters",
-    "largestNum": "Largest number of queues",
-    "lagestTime": "Longest time of queuing up",
+    "largestNum": "Maximum number of queues",
+    "lagestTime": "Maximum queue time",
     "whenSuc": "When build successful",
     "whenFail": "When build failed",
     "item": "Item",
     "minutes": "Minutes",
     "itemPlaceholder": "Please enter",
     "runningOption": {
-      "multiple": "Run multiple instances (default)",
-      "lock": "Disable pipeline",
-      "single": "Run single instance of pipeline at a time "
+      "multiple": "Can run concurrently",
+      "lock": "Disable the pipeline, any trigger method will not work",
+      "single": "Only a single pipeline using the same concurrency group will run at a time"
     },
+    "disableSetting": "Disable settings",
+    "parallelSetting": "Concurrency settings",
+    "stopWhenNewCome": "Also cancel any currently running pipeline build in the same concurrency group",
+    "lockGroupDesc": "A concurrency group can be any string or expression, and the effective scope is under the current project. The expression can only use the context such as ${{ci.pipeline_id}} or ${{ci.branch}}",
     "notify": "Notification",
     "auth": " Permission",
     "authType": "Authorization type",
@@ -888,6 +893,9 @@
   "storeMap": {
     "textarea": "Textarea",
     "pauseAtom": "Pause before execution",
+    "pauseConfLabel": "Pause configuration",
+    "pauseNotify": "Suspend notification recipient",
+    "pauseNotifyTip": "When suspended before execution, an enterprise WeChat message will be sent to the designated user to notify the user to process it as soon as possible. The default is the pipeline executor",
     "runManual": "You can manually decide to continue running or stop, and you can modify the parameters when you continue",
     "string": "String",
     "bool": "Boolean",
@@ -975,5 +983,6 @@
   "permissionRefreshtitle": "Permission Request form has been submitted",
   "permissionRefreshSubtitle": "Please fill in the permission request form in the permission center and refresh the page after submission",
   "permissionRefreshOkText": "Reload Page",
-  "searchForMore": "search for pipelines"
+  "searchForMore": "search for pipelines",
+  "numberRange": "Number ranges from {0} to {1}"
 }

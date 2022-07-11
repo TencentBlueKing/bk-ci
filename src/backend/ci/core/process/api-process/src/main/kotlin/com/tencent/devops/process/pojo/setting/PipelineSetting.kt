@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
+import com.tencent.devops.process.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
@@ -65,7 +66,7 @@ data class PipelineSetting(
     @ApiModelProperty("最大排队数量", required = false)
     val maxQueueSize: Int = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
     @ApiModelProperty("并发时,设定的group", required = false)
-    var concurrencyGroup: String? = null,
+    var concurrencyGroup: String? = PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT,
     @ApiModelProperty("并发时,是否相同group取消正在执行的流水线", required = false)
     val concurrencyCancelInProgress: Boolean = false,
     @ApiModelProperty("是否有操作权限", required = false)
