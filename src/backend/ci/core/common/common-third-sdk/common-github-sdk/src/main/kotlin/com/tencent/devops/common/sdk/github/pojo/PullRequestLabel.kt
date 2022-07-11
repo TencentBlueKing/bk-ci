@@ -3,7 +3,7 @@ package com.tencent.devops.common.sdk.github.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class PullRequestLabel(
-    val id: Int,
+    val id: Long,
     @JsonProperty("node_id")
     val nodeId: String,
     val url: String,
