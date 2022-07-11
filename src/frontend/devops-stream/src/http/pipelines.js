@@ -191,6 +191,6 @@ export default {
     },
 
     getPipelineParamJson (projectId, pipelineId, params) {
-        return api.post(`${STREAM_PERFIX}/user/trigger/build/${projectId}/${pipelineId}/manual`, params)
+        return api.get(`${STREAM_PERFIX}/user/trigger/build/${projectId}/${pipelineId}/manual`, { params })
     }
 }
