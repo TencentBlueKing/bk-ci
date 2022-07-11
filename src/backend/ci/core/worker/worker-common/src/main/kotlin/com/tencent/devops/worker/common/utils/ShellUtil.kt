@@ -114,7 +114,7 @@ object ShellUtil {
         )
     }
 
-    fun getCommandFile(
+    private fun getCommandFile(
         buildId: String,
         script: String,
         dir: File,

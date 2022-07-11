@@ -25,24 +25,51 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.bkrepo.job.batch
+package com.tencent.devops.auth.api.service
 
-import com.tencent.bkrepo.common.job.JobAutoConfiguration
-import com.tencent.bkrepo.job.config.JobConfig
-import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration
-import org.springframework.context.annotation.Import
-import org.springframework.test.context.TestPropertySource
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@Import(
-    JobAutoConfiguration::class,
-    TaskExecutionAutoConfiguration::class,
-    JobConfig::class
-)
-@TestPropertySource(
-    locations = [
-        "classpath:bootstrap-ut.properties",
-        "classpath:bootstrap.properties",
-        "classpath:job-ut.properties"
-    ]
-)
-open class JobBaseTest
+@Api(tags = ["AUTH_USER_BLACKLIST"], description = "黑名单用户")
+@Path("/service/user/blacklist")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceUserBlackListResource {
+
+    @POST
+    @Path("/")
+    @ApiOperation("添加黑名单用户")
+    fun createBlackListUser(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待拉黑用户Id")
+        userId: String,
+        @QueryParam("remark")
+        @ApiParam("拉黑原因")
+        remark: String?
+    ): Result<Boolean>
+
+    @GET
+    @Path("/")
+    fun blackList(): Result<Set<String>>
+
+    @DELETE
+    @Path("/")
+    @ApiOperation("移出黑名单用户")
+    fun removeBlackListUser(
+        @QueryParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待移出用户Id")
+        removeUserId: String
+    ): Result<Boolean>
+}

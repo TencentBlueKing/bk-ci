@@ -38,6 +38,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -50,6 +51,7 @@ import io.swagger.annotations.ApiParam
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -109,6 +111,7 @@ interface ServicePipelineResource {
         channelCode: ChannelCode,
         @ApiParam("是否修改最后修改人", required = false)
         @QueryParam("updateLastModifyUser")
+        @DefaultValue("true")
         updateLastModifyUser: Boolean? = true
     ): Result<Boolean>
 
@@ -264,7 +267,12 @@ interface ServicePipelineResource {
         pipelineId: String,
         @ApiParam("是否修改最后修改人", required = false)
         @QueryParam("updateLastModifyUser")
+        @DefaultValue("true")
         updateLastModifyUser: Boolean? = true,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        @DefaultValue("BS")
+        channelCode: ChannelCode? = ChannelCode.BS,
         @ApiParam(value = "流水线设置", required = true)
         setting: PipelineSetting
     ): Result<Boolean>
@@ -523,4 +531,19 @@ interface ServicePipelineResource {
         @ApiParam("项目ID", required = true)
         projectIds: List<String>
     ): Result<List<PipelineLabelRelateInfo>>
+
+    @ApiOperation("根据流水线名称搜索")
+    @GET
+    @Path("/projects/{projectId}/search_by_name")
+    fun searchByName(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("搜索名称")
+        @QueryParam("pipelineName")
+        pipelineName: String?
+    ): Result<List<PipelineIdAndName>>
 }

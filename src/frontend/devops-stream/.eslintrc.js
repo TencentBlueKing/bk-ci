@@ -31,7 +31,8 @@ module.exports = {
         WEBSOCKET_URL_PREFIX: false,
         X_DEVOPS_PROJECT_ID: false,
         ROUTER_TAG: false,
-        BKREPO_HOST: false
+        BKREPO_HOST: false,
+        DEVOPS_HOST: false
     },
     // add your custom rules hered
     rules: {
