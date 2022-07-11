@@ -4,7 +4,7 @@ variables:
   template:
     - name: variables.yml
       parameters:
-        username: VARIABLES
+        username: VARIABLES, xxxxx
     - name: variable1.yml@repoA
       parameters:
         username: RES_VARIABLE
