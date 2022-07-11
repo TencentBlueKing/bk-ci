@@ -45,7 +45,7 @@ data class Builder(
     val name: String,
     val image: String,
     val registry: DockerRegistry,
-    val cpu: Double,
+    val cpu: String,
     val mem: String,
     val disk: String,
     val env: Map<String, String>?,

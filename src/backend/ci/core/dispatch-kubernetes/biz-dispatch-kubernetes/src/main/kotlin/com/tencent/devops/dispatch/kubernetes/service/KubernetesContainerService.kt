@@ -187,7 +187,7 @@ class KubernetesContainerService @Autowired constructor(
                     name = builderName,
                     image = "$name:$tag",
                     registry = DockerRegistry(host, userName, password),
-                    cpu = cpu,
+                    cpu = cpu.toString(),
                     mem = mem,
                     disk = disk,
                     env = mapOf(
