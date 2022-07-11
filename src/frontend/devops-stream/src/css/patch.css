@@ -8,3 +8,9 @@
         height: unset;
     }
 }
+
+.g-tippy-empty-padding {
+    .tippy-content {
+        padding: 0;
+    }
+}

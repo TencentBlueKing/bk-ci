@@ -38,12 +38,10 @@
                     component: 'RunningLock',
                     componentProps: {
                         pipelineSetting: this.pipelineSetting,
-                        handleRunningLockChange: (name, value) => {
+                        handleRunningLockChange: (param) => {
                             this.updatePipelineSetting({
                                 container: this.pipelineSetting,
-                                param: {
-                                    [name]: value
-                                }
+                                param
                             })
                         }
                     }

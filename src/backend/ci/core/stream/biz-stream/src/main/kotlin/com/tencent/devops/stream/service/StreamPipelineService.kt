@@ -315,7 +315,8 @@ class StreamPipelineService @Autowired constructor(
                 pipelineId = pipeline.pipelineId,
                 pipelineName = modelAndSetting.model.name
             ),
-            updateLastModifyUser = updateLastModifyUser
+            updateLastModifyUser = updateLastModifyUser,
+            channelCode = channelCode
         )
     }
 
@@ -403,7 +404,7 @@ class StreamPipelineService @Autowired constructor(
                 )
             )
         ),
-        setting = PipelineSetting()
+        setting = PipelineSetting(cleanVariablesWhenRetry = true)
     )
 
     private fun getPipelineLastBuildBranch(

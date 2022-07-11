@@ -235,6 +235,12 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId)
             params[PIPELINE_START_PARENT_BUILD_TASK_ID] =
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_TASK_ID, value = parentTaskId)
+            // 兼容子流水线插件按照名称调用,传递的参数没有在子流水线变量中声明，仍然可以传递
+            parameters.forEach {
+                if (!params.containsKey(it.key)) {
+                    params[it.key] = BuildParameters(key = it.key, value = it.value)
+                }
+            }
 
             // 子流水线的调用不受频率限制
             val subBuildId = pipelineBuildService.startPipeline(
