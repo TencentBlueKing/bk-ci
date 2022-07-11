@@ -299,8 +299,7 @@ class TemplatePipelineDao {
                 else -> baseStep.orderBy(if (desc == false) UPDATED_TIME else UPDATED_TIME.desc())
             }
             val allCount = baseStep.count()
-            val records =  baseStep.limit((page - 1) * pageSize, pageSize).fetch()
-
+            val records = baseStep.limit((page - 1) * pageSize, pageSize).fetch()
             return SQLPage(allCount.toLong(), records)
         }
     }
