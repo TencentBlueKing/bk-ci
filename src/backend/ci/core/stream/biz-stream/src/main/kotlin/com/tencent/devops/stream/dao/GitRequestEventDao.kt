@@ -30,7 +30,7 @@ package com.tencent.devops.stream.dao
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.StreamGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
@@ -267,7 +267,7 @@ class GitRequestEventDao {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             val records = dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(OBJECT_KIND.eq(TGitObjectKind.MERGE_REQUEST.value))
+                .and(OBJECT_KIND.eq(StreamGitObjectKind.MERGE_REQUEST.value))
                 .orderBy(ID.desc())
                 .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()

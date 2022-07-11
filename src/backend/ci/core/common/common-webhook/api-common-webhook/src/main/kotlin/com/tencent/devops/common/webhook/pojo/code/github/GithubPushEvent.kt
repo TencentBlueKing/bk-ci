@@ -50,7 +50,7 @@ data class GithubPushEvent(
     @JsonProperty("forced")
     val forced: Boolean, // false
     @JsonProperty("head_commit")
-    val headCommit: GithubHeadCommit,
+    val headCommit: GithubHeadCommit?,
     @JsonProperty("pusher")
     val pusher: GithubPusher,
     @JsonProperty("ref")

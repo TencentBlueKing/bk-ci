@@ -31,10 +31,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.StreamGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.stream.config.StreamGitConfig
@@ -139,7 +138,7 @@ class OpenApiTriggerService @Autowired constructor(
         }
 
         val request =
-            action.buildRequestEvent(triggerBuildReq.payload!!)?.copy(objectKind = TGitObjectKind.OBJECT_KIND_OPENAPI)
+            action.buildRequestEvent(triggerBuildReq.payload!!)?.copy(objectKind = StreamGitObjectKind.OBJECT_KIND_OPENAPI)
                 ?: throw CustomException(
                     status = Response.Status.BAD_REQUEST,
                     message = "event invalid"
@@ -207,7 +206,7 @@ class OpenApiTriggerService @Autowired constructor(
                 )
             )
         )
-        val request = action.buildRequestEvent("")?.copy(objectKind = TGitObjectKind.OBJECT_KIND_OPENAPI)
+        val request = action.buildRequestEvent("")?.copy(objectKind = StreamGitObjectKind.OBJECT_KIND_OPENAPI)
             ?: throw CustomException(
                 status = Response.Status.BAD_REQUEST,
                 message = "event invalid"

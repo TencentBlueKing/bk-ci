@@ -92,9 +92,9 @@ class GithubTagPushActionGit(
             branch = event.ref.removePrefix("refs/tags/"),
             commit = EventCommonDataCommit(
                 commitId = event.after,
-                commitMsg = lastCommit.message,
-                commitTimeStamp = GitActionCommon.getCommitTimeStamp(lastCommit.timestamp),
-                commitAuthorName = lastCommit.author.name
+                commitMsg = lastCommit?.message,
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(lastCommit?.timestamp),
+                commitAuthorName = lastCommit?.author?.name
             ),
             userId = event.sender.login,
             gitProjectName = event.repository.fullName,

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.StreamGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
@@ -176,12 +176,12 @@ data class StreamGitRequestEventReq(
             }
             is GithubPushEvent -> {
                 val event = gitRequestEvent.gitEvent as GithubPushEvent
-                when{
+                when {
                     event.ref.startsWith("refs/heads/") -> {
                         if (deleteBranch) {
                             buildTitle = "Branch $branch deleted by $userId"
                         } else {
-                            jumpUrl = event.headCommit.url
+                            jumpUrl = event.headCommit?.url
                             buildTitle = commitMsg
                             buildSource = commitId.take(9)
                         }
@@ -199,7 +199,9 @@ data class StreamGitRequestEventReq(
             }
             else -> {
                 when (objectKind) {
-                    TGitObjectKind.SCHEDULE.value, TGitObjectKind.OPENAPI.value, TGitObjectKind.MANUAL.value -> {
+                    StreamGitObjectKind.SCHEDULE.value,
+                    StreamGitObjectKind.OPENAPI.value,
+                    StreamGitObjectKind.MANUAL.value -> {
                         buildSource = commitId.take(9)
                         jumpUrl = homepage + "/commit/" + gitRequestEvent.commitId
                     }
@@ -209,10 +211,10 @@ data class StreamGitRequestEventReq(
                 // 兼容给list接口有title数据。list接口并没有生成大对象，减少负担
                 when (operationKind) {
                     TGitPushOperationKind.DELETE.value -> {
-                        if (objectKind == TGitObjectKind.PUSH.value) {
+                        if (objectKind == StreamGitObjectKind.PUSH.value) {
                             buildTitle = "Branch $branch deleted by $userId"
                         }
-                        if (objectKind == TGitObjectKind.TAG_PUSH.value) {
+                        if (objectKind == StreamGitObjectKind.TAG_PUSH.value) {
                             buildTitle = "Tag $branch deleted by $userId"
                         }
                     }

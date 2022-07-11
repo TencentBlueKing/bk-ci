@@ -82,7 +82,7 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
     }
 
     override fun getRevision(event: GithubPushEvent): String {
-        return event.headCommit.id
+        return event.headCommit?.id ?: ""
     }
 
     override fun getRepoName(event: GithubPushEvent): String {
@@ -98,7 +98,7 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
     }
 
     override fun getMessage(event: GithubPushEvent): String? {
-        return event.headCommit.message
+        return event.headCommit?.message ?: ""
     }
 
     override fun preMatch(event: GithubPushEvent): ScmWebhookMatcher.MatchResult {

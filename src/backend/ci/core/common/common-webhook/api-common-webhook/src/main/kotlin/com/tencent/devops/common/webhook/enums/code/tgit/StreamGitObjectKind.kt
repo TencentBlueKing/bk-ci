@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.webhook.enums.code.tgit
 
-enum class TGitObjectKind(val value: String) {
+enum class StreamGitObjectKind(val value: String) {
     PUSH("push"),
     TAG_PUSH("tag_push"),
     MERGE_REQUEST("merge_request"),

@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.StreamGitObjectKind
 import com.tencent.devops.stream.api.user.UserStreamRequestResource
 import com.tencent.devops.stream.pojo.EventTypeConf
 import com.tencent.devops.stream.pojo.StreamGitRequestHistory
@@ -63,7 +63,7 @@ class UserStreamRequestResourceImpl @Autowired constructor(
     override fun getEventTypeConf(userId: String): Result<List<EventTypeConf>> {
         val eventTypeList = mutableListOf<EventTypeConf>()
         eventTypeList.let { e ->
-            TGitObjectKind.values().forEach {
+            StreamGitObjectKind.values().forEach {
                 e.add(
                     EventTypeConf(
                         id = it.name,
