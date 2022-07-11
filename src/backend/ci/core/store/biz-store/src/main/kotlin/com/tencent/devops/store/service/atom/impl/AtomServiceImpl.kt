@@ -213,7 +213,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 获取插件列表
      */
     @Suppress("UNCHECKED_CAST")
-    @BkTimed("store_get_pipeline_atom")
+    @BkTimed(extraTags = ["get", "getPipelineAtom"])
     override fun getPipelineAtoms(
         accessToken: String,
         userId: String,
@@ -432,7 +432,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     /**
      * 根据插件代码和版本号获取插件信息
      */
-    @BkTimed("store_get_pipeline_atom")
+    @BkTimed(extraTags = ["get", "getPipelineAtom"])
     override fun getPipelineAtom(
         projectCode: String,
         atomCode: String,
@@ -472,7 +472,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 根据项目代码、插件代码和版本号获取插件信息
      */
     @Suppress("UNCHECKED_CAST")
-    @BkTimed("store_get_pipeline_atom")
+    @BkTimed(extraTags = ["get", "getPipelineAtom"])
     override fun getPipelineAtomDetail(
         projectCode: String?,
         atomCode: String,
@@ -582,7 +582,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 根据项目代码、插件代码和版本号获取插件信息
      */
     @Suppress("UNCHECKED_CAST")
-    @BkTimed("store_get_pipeline_atom")
+    @BkTimed(extraTags = ["get", "getPipelineAtom"])
     override fun getPipelineAtomVersions(projectCode: String?, atomCode: String): Result<List<VersionInfo>> {
         logger.info("getPipelineAtomVersions projectCode is: $projectCode,atomCode is: $atomCode")
         val atomStatusList = if (projectCode != null) {

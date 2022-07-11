@@ -188,7 +188,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         return Result(true)
     }
 
-    @BkTimed("store_Publish_pipeline_atom")
+    @BkTimed(extraTags = ["publish", "addMarketAtom"])
     override fun addMarketAtom(
         userId: String,
         marketAtomCreateRequest: MarketAtomCreateRequest
@@ -284,7 +284,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     abstract fun getAtomPackageSourceType(atomCode: String): AtomPackageSourceTypeEnum
 
     @Suppress("UNCHECKED_CAST")
-    @BkTimed("store_Publish_pipeline_atom")
+    @BkTimed(extraTags = ["publish", "updateMarketAtom"])
     override fun updateMarketAtom(
         userId: String,
         projectCode: String,
@@ -933,7 +933,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     /**
      * 通过测试
      */
-    @BkTimed("store_Publish_pipeline_atom")
+    @BkTimed(extraTags = ["publish", "passTest"])
     override fun passTest(userId: String, atomId: String): Result<Boolean> {
         logger.info("passTest, userId=$userId, atomId=$atomId")
         val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
@@ -974,7 +974,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
     }
 
-    @BkTimed("store_Publish_pipeline_atom")
+    @BkTimed(extraTags = ["publish", "handleAtomRelease"])
     override fun handleAtomRelease(
         userId: String,
         releaseFlag: Boolean,
