@@ -65,16 +65,20 @@ class TxMarketAtomServiceImpl : TxMarketAtomService, MarketAtomServiceImpl() {
     ): Result<Boolean> {
         // 删除代码库信息
         if (!projectCode.isNullOrEmpty() && repositoryHashId.isNotBlank()) {
-            val delGitRepositoryResult =
-                client.get(ServiceGitRepositoryResource::class)
-                    .delete(
-                        userId = userId,
-                        projectId = projectCode!!,
-                        repositoryHashId = repositoryHashId,
-                        tokenType = tokenType
-                    )
-            logger.info("the delGitRepositoryResult is :$delGitRepositoryResult")
-            return delGitRepositoryResult
+            try {
+                val delGitRepositoryResult =
+                    client.get(ServiceGitRepositoryResource::class)
+                        .delete(
+                            userId = userId,
+                            projectId = projectCode!!,
+                            repositoryHashId = repositoryHashId,
+                            tokenType = tokenType
+                        )
+                logger.info("the delGitRepositoryResult is :$delGitRepositoryResult")
+                return delGitRepositoryResult
+            } catch (e: Exception) {
+                logger.error("delGitRepositoryError $e")
+            }
         }
         return Result(true)
     }
