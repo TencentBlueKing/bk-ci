@@ -63,18 +63,23 @@ class BkRepoReportService @Autowired constructor(
 
         val host = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
         val redirectUrlBuilder = StringBuilder()
-        redirectUrlBuilder.append("$host/bkrepo/api/user/generic/$projectId/${RepoUtils.REPORT_REPO}${
-            URLEncoder.encode(
-                realPath,
-                Charsets.UTF_8.name()
-            ).replace("+", "%20").replace("%2F", "/")
-        }?preview=true")
+        redirectUrlBuilder.append(
+            "$host/bkrepo/api/user/generic/$projectId/${RepoUtils.REPORT_REPO}${
+                urlEncode(realPath).replace("%2F", "/")
+            }?preview=true"
+        )
         val paramMap = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).request.parameterMap
         paramMap.forEach { (key, value) ->
-            value.forEach { redirectUrlBuilder.append("&$key=$it") }
+            value.forEach {
+                redirectUrlBuilder.append("&${urlEncode(key)}=${urlEncode(it)}")
+            }
         }
         val response = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).response!!
         response.sendRedirect(redirectUrlBuilder.toString())
+    }
+
+    private fun urlEncode(value: String): String {
+        return URLEncoder.encode(value, Charsets.UTF_8.name()).replace("+", "%20")
     }
 
     companion object {
