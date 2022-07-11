@@ -1178,6 +1178,53 @@ class PipelineRepositoryService constructor(
         )
     }
 
+    fun updateModelName(
+        pipelineId: String,
+        projectId: String,
+        modelName: String,
+        userId: String
+    ) {
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            // 1、update pipelineInf
+            pipelineInfoDao.update(
+                dslContext = transactionContext,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                pipelineName = modelName,
+                userId = null
+            )
+            // 2、update pipelineRes
+            val latestVersionModelString = pipelineResDao.getLatestVersionModelString(
+                dslContext = transactionContext,
+                pipelineId = pipelineId,
+                projectId = projectId
+            )
+            val pipelineResModel = JsonUtil.to(latestVersionModelString!!, Model::class.java)
+            pipelineResModel.name = modelName
+            pipelineResDao.updatePipelineModel(
+                dslContext = transactionContext,
+                userId = userId,
+                pipelineModelVersionList = listOf(
+                    PipelineModelVersion(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        creator = userId,
+                        model = JsonUtil.toJson(pipelineResModel, false)
+                    )
+                )
+            )
+            // 3、update settingName
+            pipelineSettingDao.updateSettingName(
+                dslContext = transactionContext,
+                pipelineIdList = listOf(pipelineId),
+                name = modelName
+            )
+        }
+    }
+
+    // TODO: 2022/7/8 add new update method
+
     companion object {
         private const val MAX_LEN_FOR_NAME = 255
         private val logger = LoggerFactory.getLogger(PipelineRepositoryService::class.java)
