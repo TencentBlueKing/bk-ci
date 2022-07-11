@@ -238,7 +238,7 @@ class ManualTriggerService @Autowired constructor(
                                     !value.props?.options.isNullOrEmpty() -> value.props?.options?.map { option ->
                                         DataSourceItem(
                                             label = option.label ?: option.id.toString(),
-                                            value = option
+                                            value = option.id.toString()
                                         )
                                     }
                                     // TODO: 确认下description用法
@@ -259,7 +259,7 @@ class ManualTriggerService @Autowired constructor(
                             dataSource = value.props?.options?.map { option ->
                                 DataSourceItem(
                                     label = option.label ?: option.id.toString(),
-                                    value = option.id
+                                    value = option.id.toString()
                                 )
                             }
                         )
