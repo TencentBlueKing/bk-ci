@@ -1194,26 +1194,27 @@ class PipelineRepositoryService constructor(
                 pipelineName = modelName,
                 userId = null
             )
-            // 2、update pipelineRes
-            val latestVersionModelString = pipelineResDao.getLatestVersionModelString(
-                dslContext = transactionContext,
-                pipelineId = pipelineId,
-                projectId = projectId
-            )
-            val pipelineResModel = JsonUtil.to(latestVersionModelString!!, Model::class.java)
-            pipelineResModel.name = modelName
-            pipelineResDao.updatePipelineModel(
-                dslContext = transactionContext,
-                userId = userId,
-                pipelineModelVersionList = listOf(
-                    PipelineModelVersion(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        creator = userId,
-                        model = JsonUtil.toJson(pipelineResModel, false)
-                    )
-                )
-            )
+            // 版本数据不用管
+//            // 2、update pipelineRes
+//            val latestVersionModelString = pipelineResDao.getLatestVersionModelString(
+//                dslContext = transactionContext,
+//                pipelineId = pipelineId,
+//                projectId = projectId
+//            )
+//            val pipelineResModel = JsonUtil.to(latestVersionModelString!!, Model::class.java)
+//            pipelineResModel.name = modelName
+//            pipelineResDao.updatePipelineModel(
+//                dslContext = transactionContext,
+//                userId = userId,
+//                pipelineModelVersionList = listOf(
+//                    PipelineModelVersion(
+//                        projectId = projectId,
+//                        pipelineId = pipelineId,
+//                        creator = userId,
+//                        model = JsonUtil.toJson(pipelineResModel, false)
+//                    )
+//                )
+//            )
             // 3、update settingName
             pipelineSettingDao.updateSettingName(
                 dslContext = transactionContext,
