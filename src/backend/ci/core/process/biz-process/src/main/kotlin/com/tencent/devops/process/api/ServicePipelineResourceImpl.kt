@@ -171,11 +171,13 @@ class ServicePipelineResourceImpl @Autowired constructor(
         channelCode: ChannelCode,
         useTemplateSettings: Boolean?
     ): Result<PipelineId> {
-        val pipelineId = PipelineId(id = pipelineInfoFacadeService.uploadPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineModelAndSetting = modelAndSetting
-        ))
+        val pipelineId = PipelineId(
+            id = pipelineInfoFacadeService.uploadPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineModelAndSetting = modelAndSetting
+            )
+        )
         auditService.createAudit(
             Audit(
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
@@ -232,13 +234,15 @@ class ServicePipelineResourceImpl @Autowired constructor(
         channelCode: ChannelCode
     ): Result<Model> {
         checkParams(userId, projectId)
-        return Result(pipelineInfoFacadeService.getPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            channelCode = channelCode,
-            checkPermission = false
-        ))
+        return Result(
+            pipelineInfoFacadeService.getPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode,
+                checkPermission = false
+            )
+        )
     }
 
     override fun getWithPermission(
@@ -249,13 +253,15 @@ class ServicePipelineResourceImpl @Autowired constructor(
         checkPermission: Boolean
     ): Result<Model> {
         checkParams(userId, projectId)
-        return Result(data = pipelineInfoFacadeService.getPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            channelCode = channelCode,
-            checkPermission = checkPermission
-        ))
+        return Result(
+            data = pipelineInfoFacadeService.getPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode,
+                checkPermission = checkPermission
+            )
+        )
     }
 
     override fun getSettingWithPermission(
@@ -266,13 +272,15 @@ class ServicePipelineResourceImpl @Autowired constructor(
         checkPermission: Boolean
     ): Result<PipelineSetting> {
         checkParams(userId, projectId)
-        return Result(data = pipelineSettingFacadeService.userGetSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            channelCode = channelCode,
-            checkPermission = checkPermission
-        ))
+        return Result(
+            data = pipelineSettingFacadeService.userGetSetting(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode,
+                checkPermission = checkPermission
+            )
+        )
     }
 
     override fun getBatch(
@@ -282,13 +290,15 @@ class ServicePipelineResourceImpl @Autowired constructor(
         channelCode: ChannelCode
     ): Result<List<Pipeline>> {
         checkParams(userId, projectId, pipelineIds)
-        return Result(data = pipelineListFacadeService.getBatchPipelinesWithModel(
-            userId = userId,
-            projectId = projectId,
-            pipelineIds = pipelineIds,
-            channelCode = channelCode,
-            checkPermission = false
-        ))
+        return Result(
+            data = pipelineListFacadeService.getBatchPipelinesWithModel(
+                userId = userId,
+                projectId = projectId,
+                pipelineIds = pipelineIds,
+                channelCode = channelCode,
+                checkPermission = false
+            )
+        )
     }
 
     override fun saveSetting(
@@ -296,6 +306,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         updateLastModifyUser: Boolean?,
+        channelCode: ChannelCode?,
         setting: PipelineSetting
     ): Result<Boolean> {
         checkProjectId(projectId)
@@ -303,7 +314,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         pipelineSettingFacadeService.saveSetting(
             userId = userId,
             setting = setting,
-            checkPermission = true,
+            checkPermission = ChannelCode.isNeedAuth(channelCode ?: ChannelCode.BS),
             updateLastModifyUser = updateLastModifyUser
         )
         return Result(true)
@@ -391,11 +402,13 @@ class ServicePipelineResourceImpl @Autowired constructor(
     }
 
     override fun getAllstatus(userId: String, projectId: String, pipelineId: String): Result<List<Pipeline>?> {
-        return Result(pipelineListFacadeService.getPipelineAllStatus(
-            userId = userId,
-            projectId = projectId,
-            pipeline = pipelineId
-        ))
+        return Result(
+            pipelineListFacadeService.getPipelineAllStatus(
+                userId = userId,
+                projectId = projectId,
+                pipeline = pipelineId
+            )
+        )
     }
 
     override fun rename(userId: String, projectId: String, pipelineId: String, name: PipelineName): Result<Boolean> {

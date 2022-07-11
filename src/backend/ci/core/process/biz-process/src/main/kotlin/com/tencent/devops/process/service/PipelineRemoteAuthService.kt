@@ -30,10 +30,12 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.model.process.tables.records.TPipelineRemoteAuthRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.dao.PipelineRemoteAuthDao
@@ -54,7 +56,8 @@ class PipelineRemoteAuthService @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelineReportService: PipelineRepositoryService,
     private val redisOperation: RedisOperation,
-    private val client: Client
+    private val client: Client,
+    private val bkTag: BkTag
 ) {
 
     fun generateAuth(pipelineId: String, projectId: String, userId: String): PipelineRemoteToken {
@@ -96,8 +99,12 @@ class PipelineRemoteAuthService @Autowired constructor(
 
         logger.info("Start the pipeline remotely of $userId ${pipeline.pipelineId} of project ${pipeline.projectId}")
         // #5779 为兼容多集群的场景。流水线的启动需要路由到项目对应的集群。此处携带X-DEVOPS-PROJECT-ID头重新请求网关,由网关路由到项目对应的集群
-        // 因原ServiceBuildResource内的manualStartup接口未满足ProjectId在HEAD内的标准。故重新定义一个标准的接口
-        return client.getGateway(ServiceBuildResource::class).manualStartupNew(
+        /* #7095 因Bktag设置了router_tag 默认为本集群，导致网关不会根据X-DEVOPS-PROJECT-ID路由。故直接根据项目获取router
+                 不使用client.get直接调用，因client内不支持同服务间的feign调用。故只能通过网关代理下 */
+        val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, pipeline.projectId)
+        return bkTag.invokeByTag(projectConsulTag) {
+            logger.info("start call service api ${pipeline.projectId} ${pipeline.pipelineId}, $projectConsulTag ${bkTag.getFinalTag()}")
+            client.getGateway(ServiceBuildResource::class).manualStartupNew(
                 userId = userId!!,
                 projectId = pipeline.projectId,
                 pipelineId = pipeline.pipelineId,
@@ -106,6 +113,7 @@ class PipelineRemoteAuthService @Autowired constructor(
                 startType = StartType.REMOTE,
                 buildNo = null
             ).data!!
+        }
     }
 
     companion object {

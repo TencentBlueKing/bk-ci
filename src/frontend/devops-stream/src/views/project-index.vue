@@ -112,6 +112,6 @@
 <style lang="postcss" scoped>
     .project-content {
         height: calc(100vh - 61px);
-        width: 100vw;
+        width: 100%;
     }
 </style>

@@ -95,29 +95,30 @@ const optionConfigMixin = {
                     text: this.$t('storeMap.customEnv'),
                     default: false
                 },
-
+                pauseBeforeExec: {
+                    rule: {},
+                    type: 'boolean',
+                    label: this.$t('storeMap.pauseConfLabel'),
+                    desc: this.$t('storeMap.runManual'),
+                    component: 'atom-checkbox',
+                    text: this.$t('storeMap.pauseAtom'),
+                    default: false,
+                    extCls: 'pause-conf-options',
+                    isHidden: (element) => {
+                        return !(element.data && element.data.config && (element.data.config.canPauseBeforeRun === true))
+                    }
+                },
                 subscriptionPauseUser: {
                     rule: {},
                     component: 'vuex-input',
                     label: this.$t('storeMap.pauseNotify'),
                     desc: this.$t('storeMap.pauseNotifyTip'),
                     default: this.$userInfo.username,
+                    extCls: 'pause-conf-user',
                     isHidden: (element) => {
                         return !(element.additionalOptions && (element.additionalOptions.pauseBeforeExec === true))
                     }
                 },
-                pauseBeforeExec: {
-                    rule: {},
-                    type: 'boolean',
-                    desc: this.$t('storeMap.runManual'),
-                    component: 'atom-checkbox',
-                    text: this.$t('storeMap.pauseAtom'),
-                    default: false,
-                    isHidden: (element) => {
-                        return !(element.data && element.data.config && (element.data.config.canPauseBeforeRun === true))
-                    }
-                },
-
                 timeout: {
                     rule: { numeric: true, max_value: 10080 },
                     component: 'vuex-input',

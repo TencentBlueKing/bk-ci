@@ -10,12 +10,18 @@
                 <div>
                     <div class="form-group">
                         <label for="pipelineName" class="filter-label">{{ $t('pipelineName') }}：</label>
-                        <input type="text" class="bk-form-input input-text" name="pipelineName" id="pipelineName" :placeholder="$t('newlist.filterByNameTips')"
+                        <bk-input
                             v-validate.initial="'max:40'"
+                            name="pipelineName"
+                            id="pipelineName"
+                            v-model.trim="currentFilter.filterByPipelineName"
+                            @enter="filterCommit"
+                            :placeholder="$t('newlist.filterByNameTips')"
                             :class="{
-                                'is-danger': errors.has('pipelineName')
+                                'is-danger': errors.has('pipelineName'),
+                                'input-text': true
                             }"
-                            v-model="currentFilter.filterByPipelineName">
+                        />
                         <p :class="errors.has('pipelineName') ? 'error-tips' : 'normal-tips'">{{errors.first("pipelineName")}}</p>
                     </div>
                     <div class="form-group">

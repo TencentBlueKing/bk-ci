@@ -47,6 +47,10 @@ class ServiceLogResourceImpl @Autowired constructor(
     private val buildLogQueryService: BuildLogQueryService
 ) : ServiceLogResource {
 
+    companion object {
+        private const val defaultNum = 100
+    }
+
     override fun getInitLogs(
         userId: String,
         projectId: String,
@@ -93,7 +97,7 @@ class ServiceLogResourceImpl @Autowired constructor(
             buildId = buildId,
             debug = debug,
             logType = logType,
-            num = num,
+            num = num ?: defaultNum,
             fromStart = fromStart,
             start = start,
             end = end,
