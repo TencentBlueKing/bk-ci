@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.kubernetes.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
@@ -65,15 +66,16 @@ class KubernetesTaskClient @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
                 if (response.isSuccessful) {
+                    logger.info("Get task: $taskId status response: ${JsonUtil.toJson(responseContent)}")
                     return objectMapper.readValue(responseContent)
                 }
 
-                logger.error("Get task status failed, responseCode: ${response.code()}")
+                logger.error("Get task: $taskId status failed, responseCode: ${response.code()}")
                 throw BuildFailureException(
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    "获取BCS TASK状态接口异常：http response code: ${response.code()}"
+                    "获取kubernetes task($taskId)状态接口异常：http response code: ${response.code()}"
                 )
             }
         } catch (e: SocketTimeoutException) {
@@ -87,7 +89,7 @@ class KubernetesTaskClient @Autowired constructor(
                     errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    errorMessage = "获取BCS TASK状态接口超时, url: $url"
+                    errorMessage = "获取kubernetes task状态接口超时, url: $url"
                 )
             }
         }
@@ -97,8 +99,8 @@ class KubernetesTaskClient @Autowired constructor(
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
-                logger.error("$taskId bcs task timeout")
-                return Pair(TaskStatusEnum.TIME_OUT, "获取BCS任务执行超时（10min）")
+                logger.error("$taskId kubernetes task timeout")
+                return Pair(TaskStatusEnum.TIME_OUT, "获取kubernetes任务执行超时（10min）")
             }
             Thread.sleep(1 * 1000)
             val (status, errorMsg) = getTaskResult(userId, taskId).apply {

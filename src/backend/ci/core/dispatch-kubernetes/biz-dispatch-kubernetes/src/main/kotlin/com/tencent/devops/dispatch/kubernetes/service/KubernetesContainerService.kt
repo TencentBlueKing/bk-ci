@@ -218,8 +218,8 @@ class KubernetesContainerService @Autowired constructor(
             if (taskStatus == TaskStatusEnum.SUCCEEDED) {
                 // 启动成功
                 logger.info(
-                    "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo create bcs " +
-                        "vm success, wait vm start..."
+                    "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
+                        "create kubernetes vm success, wait vm start..."
                 )
                 logsPrinter.printLogs(this, "构建机创建成功，等待机器启动...")
             } else {
