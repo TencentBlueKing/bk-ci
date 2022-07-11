@@ -55,6 +55,7 @@ export interface State {
   permission: Permission
   repoInfo: typeof repoInfo,
 };
+export type DomainKey = keyof typeof initDoamin;
 
 export const key: InjectionKey<Store<State>>  = Symbol();
 

@@ -38,9 +38,7 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
-import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
-import com.tencent.devops.process.engine.service.PipelineStageService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -49,7 +47,6 @@ import org.springframework.stereotype.Service
  */
 @Service
 class StartContainerStageCmd(
-    private val pipelineStageService: PipelineStageService,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : StageCmd {
 
@@ -135,21 +132,8 @@ class StartContainerStageCmd(
         var fail: BuildStatus? = null
         var cancel: BuildStatus? = null
 
-        // 查找最后一个结束状态的Stage (排除Finally）
         val stage = commandContext.stage
-        if (stage.controlOption?.finally == true) {
-            val previousStage = pipelineStageService.listStages(stage.projectId, stage.buildId)
-                .lastOrNull {
-                    it.stageId != commandContext.stage.stageId &&
-                        (it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS || hasFailedCheck(it))
-                }
-            // #5246 前序中如果有准入准出失败的stage则直接作为前序stage并把构建状态设为红线失败
-            commandContext.previousStageStatus = if (hasFailedCheck(previousStage)) {
-                BuildStatus.QUALITY_CHECK_FAIL
-            } else {
-                previousStage?.status
-            }
-        }
+
         // 同一Stage下的多个Container是并行
         commandContext.containers.forEach { container ->
             val jobCount = container.controlOption?.matrixControlOption?.totalCount ?: 1 // MatrixGroup存在裂变计算
@@ -223,10 +207,5 @@ class StartContainerStageCmd(
                 reason = commandContext.latestSummary
             )
         )
-    }
-
-    private fun hasFailedCheck(stage: PipelineBuildStage?): Boolean {
-        return stage?.checkIn?.status == BuildStatus.QUALITY_CHECK_FAIL.name ||
-            stage?.checkOut?.status == BuildStatus.QUALITY_CHECK_FAIL.name
     }
 }

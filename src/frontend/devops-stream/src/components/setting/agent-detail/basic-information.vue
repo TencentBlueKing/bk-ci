@@ -2,23 +2,23 @@
     <div class="basic-information-wrapper">
         <div class="base-item-list">
             <div class="item-content">
-                <div class="item-label">{{ $t('environment.nodeInfo.startUser') }}</div>
+                <div class="item-label">{{ $t('setting.nodeInfo.startUser') }}</div>
                 <div class="item-value">{{ nodeDetails.startedUser || '--' }}</div>
             </div>
             <div class="item-content">
-                <div class="item-label">{{ $t('environment.nodeInfo.installPath') }}</div>
+                <div class="item-label">{{ $t('setting.nodeInfo.installPath') }}</div>
                 <div class="item-value">{{ nodeDetails.agentInstallPath || '--' }}</div>
             </div>
             <div class="item-content">
-                <div class="item-label">{{ $t('environment.nodeInfo.agentVersion') }}</div>
+                <div class="item-label">{{ $t('setting.nodeInfo.agentVersion') }}</div>
                 <div class="item-value">{{ nodeDetails.agentVersion || '--' }}</div>
             </div>
             <div class="item-content">
-                <div class="item-label">{{ $t('environment.nodeInfo.workerVersion') }}</div>
+                <div class="item-label">{{ $t('setting.nodeInfo.workerVersion') }}</div>
                 <div class="item-value">{{ nodeDetails.slaveVersion || '--' }}</div>
             </div>
             <div class="item-content">
-                <div class="item-label">{{ $t('environment.nodeInfo.maxParallelTaskCount') }}</div>
+                <div class="item-label">{{ $t('setting.nodeInfo.maxParallelTaskCount') }}</div>
                 <div class="item-value">
                     <div class="display-item" v-if="isEditCount">
                         <input type="number" class="bk-form-input parallelTaskCount-input"
@@ -33,36 +33,36 @@
                 </div>
                 <div class="handle-btn">
                     <div v-if="isEditCount">
-                        <span @click="saveHandle('parallelTaskCount')">{{ $t('environment.save') }}</span>
-                        <span @click="editHandle('parallelTaskCount', false)">{{ $t('environment.cancel') }}</span>
+                        <span @click="saveHandle('parallelTaskCount')">{{ $t('setting.save') }}</span>
+                        <span @click="editHandle('parallelTaskCount', false)">{{ $t('setting.cancel') }}</span>
                     </div>
-                    <div :class="{ 'is-disabled': !nodeDetails.canEdit }" v-else><span @click="editHandle('parallelTaskCount', true)">{{ $t('environment.edit') }}</span></div>
+                    <div :class="{ 'is-disabled': !nodeDetails.canEdit }" v-else><span @click="editHandle('parallelTaskCount', true)">{{ $t('edit') }}</span></div>
                 </div>
             </div>
             <div class="item-content">
-                <div class="item-label">{{ $t('environment.status') }}</div>
+                <div class="item-label">{{ $t('status') }}</div>
                 <div class="item-value" :class="nodeDetails.status === 'NORMAL' ? 'normal' : 'abnormal'">
-                    {{ nodeDetails.status === 'NORMAL' ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}
+                    {{ nodeDetails.status === 'NORMAL' ? $t('setting.nodeInfo.normal') : $t('setting.nodeInfo.abnormal') }}
                 </div>
             </div>
             <div class="item-content">
-                <div class="item-label">{{ $t('environment.nodeInfo.importTime') }}</div>
+                <div class="item-label">{{ $t('setting.nodeInfo.importTime') }}</div>
                 <div class="item-value">{{ nodeDetails.createdTime || '--' }}</div>
             </div>
             <div class="item-content">
-                <div class="item-label">{{ $t('environment.nodeInfo.creator') }}</div>
+                <div class="item-label">{{ $t('creator') }}</div>
                 <div class="item-value">{{ nodeDetails.createdUser || '--' }}</div>
             </div>
             <div class="item-content">
-                <div class="item-label">{{ $t('environment.nodeInfo.lastActiveTime') }}</div>
+                <div class="item-label">{{ $t('setting.nodeInfo.lastActiveTime') }}</div>
                 <div class="item-value">{{ nodeDetails.lastHeartbeatTime || '--' }}</div>
             </div>
             <div class="item-content">
-                <div class="item-label">{{ nodeDetails.os === 'WINDOWS' ? $t('environment.nodeInfo.downloadLink') : $t('environment.nodeInfo.installCommand') }}</div>
+                <div class="item-label">{{ nodeDetails.os === 'WINDOWS' ? $t('setting.nodeInfo.downloadLink') : $t('setting.nodeInfo.installCommand') }}</div>
                 <div class="item-value" :title="agentLink">{{ agentLink }}</div>
                 <div class="handle-btn">
-                    <span class="agent-url" @click="copyHandle">{{ $t('environment.copy') }}</span>
-                    <span @click="downloadHandle" v-if="nodeDetails.os === 'WINDOWS'">{{ $t('environment.download') }}</span>
+                    <span class="agent-url" @click="copyHandle">{{ $t('copy') }}</span>
+                    <span @click="downloadHandle" v-if="nodeDetails.os === 'WINDOWS'">{{ $t('pipeline.download') }}</span>
                 </div>
             </div>
         </div>
@@ -124,7 +124,7 @@
                 let message, theme
                 try {
                     await setting.saveParallelTaskCount(this.projectId, this.nodeHashId, parallelTaskCount)
-                    message = this.$t('environment.successfullySaved')
+                    message = this.$t('setting.successfullySaved')
                     theme = 'success'
                     this.requestNodeDetail()
                 } catch (err) {
@@ -158,14 +158,9 @@
                 if (copyText(this.agentLink)) {
                     this.$bkMessage({
                         theme: 'success',
-                        message: this.$t('environment.successfullyCopyed')
+                        message: this.$t('setting.successfullyCopyed')
                     })
                 }
-            },
-            $t (message) {
-                const arr = message.split('.')
-                const str = arr[arr.length - 1] || message
-                return str.replace(/^\S/, s => s.toUpperCase())
             }
         }
     }

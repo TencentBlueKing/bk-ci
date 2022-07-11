@@ -174,7 +174,12 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineName = model.name
         )
         // setting pipeline需替换成新流水线的
-        pipelineSettingFacadeService.saveSetting(userId = userId, setting = newSetting, checkPermission = true)
+        pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            setting = newSetting,
+            checkPermission = true,
+            dispatchPipelineUpdateEvent = false
+        )
         return newPipelineId
     }
 
@@ -234,7 +239,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     pipelineId = fixPipelineId,
                     name = model.name,
                     channelCode = channelCode
-                )) {
+                )
+            ) {
                 logger.warn("The pipeline(${model.name}) is exist")
                 throw ErrorCodeException(
                     statusCode = Response.Status.CONFLICT.statusCode,
@@ -483,10 +489,11 @@ class PipelineInfoFacadeService @Autowired constructor(
 //                message = "用户($userId)无权限在工程($projectId)下创建流水线"
 //            )
             if (!pipelinePermissionService.checkPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                permission = AuthPermission.CREATE
-            )) {
+                    userId = userId,
+                    projectId = projectId,
+                    permission = AuthPermission.CREATE
+                )
+            ) {
                 throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下创建流水线")
             }
         }
@@ -522,7 +529,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 // 复制setting到新流水线
                 pipelineSettingFacadeService.saveSetting(
                     userId = userId,
-                    setting = newSetting
+                    setting = newSetting,
+                    dispatchPipelineUpdateEvent = false
                 )
             }
             return newPipelineId
@@ -586,7 +594,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     pipelineId = pipelineId,
                     name = model.name,
                     channelCode = channelCode
-                )) {
+                )
+            ) {
                 logger.warn("The pipeline(${model.name}) is exist")
                 throw ErrorCodeException(
                     statusCode = Response.Status.CONFLICT.statusCode,
@@ -655,7 +664,12 @@ class PipelineInfoFacadeService @Autowired constructor(
     ) {
         val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId, channelCode)
         setting.pipelineName = name
-        pipelineSettingFacadeService.saveSetting(userId = userId, setting = setting, checkPermission = true)
+        pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            setting = setting,
+            checkPermission = true,
+            dispatchPipelineUpdateEvent = true
+        )
     }
 
     fun saveAll(
@@ -681,7 +695,13 @@ class PipelineInfoFacadeService @Autowired constructor(
             setting.projectId = projectId
         }
         setting.pipelineId = pipelineResult.pipelineId // fix 用户端可能不传入pipelineId的问题，或者传错的问题
-        pipelineSettingFacadeService.saveSetting(userId, setting, false, pipelineResult.version)
+        pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            setting = setting,
+            checkPermission = false,
+            version = pipelineResult.version,
+            dispatchPipelineUpdateEvent = false
+        )
         return pipelineResult
     }
 
