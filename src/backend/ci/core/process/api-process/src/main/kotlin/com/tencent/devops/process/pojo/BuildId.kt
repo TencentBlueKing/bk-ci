@@ -37,5 +37,5 @@ data class BuildId(
     @ApiModelProperty("项目ID")
     val projectId: String? = null,
     @ApiModelProperty("流水线ID")
-    val pipelineId: String? = null,
+    val pipelineId: String? = null
 )

@@ -30,7 +30,6 @@ package com.tencent.devops.process.api.external
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBadgeService
-import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.service.PipelineRemoteAuthService
 import org.springframework.beans.factory.annotation.Autowired

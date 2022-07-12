@@ -41,7 +41,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineRemoteAuthRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.dao.PipelineRemoteAuthDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
