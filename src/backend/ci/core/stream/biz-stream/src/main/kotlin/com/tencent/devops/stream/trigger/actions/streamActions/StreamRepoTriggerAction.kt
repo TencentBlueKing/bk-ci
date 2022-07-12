@@ -140,11 +140,7 @@ class StreamRepoTriggerAction(
         )?.ifEmpty { null } ?: throw StreamTriggerException(
             action = this,
             triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
-            reasonParams = listOf("First level group[$firstGroupName] does not exist"),
-            commitCheck = CommitCheck(
-                block = false,
-                state = StreamCommitCheckState.FAILURE
-            )
+            reasonParams = listOf("First level group[$firstGroupName] does not exist")
         )
     }
 
@@ -164,10 +160,6 @@ class StreamRepoTriggerAction(
                 reasonParams = listOf(
                     "Permissions denied, master and above permissions are required. " +
                         "Repo: (${triggerOn.repoHook?.name})"
-                ),
-                commitCheck = CommitCheck(
-                    block = false,
-                    state = StreamCommitCheckState.FAILURE
                 )
             )
         }
@@ -191,22 +183,14 @@ class StreamRepoTriggerAction(
                     throw StreamTriggerException(
                         action = this,
                         triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
-                        reasonParams = listOf("Credential [${repoHook.credentialsForTicketId}] does not exist"),
-                        commitCheck = CommitCheck(
-                            block = false,
-                            state = StreamCommitCheckState.FAILURE
-                        )
+                        reasonParams = listOf("Credential [${repoHook.credentialsForTicketId}] does not exist")
                     )
                 }
             repoHook.credentialsForToken != null -> repoHook.credentialsForToken!!
             else -> throw StreamTriggerException(
                 action = this,
                 triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
-                reasonParams = listOf("credentials cannot be null"),
-                commitCheck = CommitCheck(
-                    block = false,
-                    state = StreamCommitCheckState.FAILURE
-                )
+                reasonParams = listOf("credentials cannot be null")
             )
         }
 
@@ -224,11 +208,7 @@ class StreamRepoTriggerAction(
             throw StreamTriggerException(
                 action = this,
                 triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
-                reasonParams = listOf("401 Unauthorized. Repo:(${repoHook.name})"),
-                commitCheck = CommitCheck(
-                    block = false,
-                    state = StreamCommitCheckState.FAILURE
-                )
+                reasonParams = listOf("401 Unauthorized. Repo:(${repoHook.name})")
             )
         }
         val check = this.api.getProjectUserInfo(
