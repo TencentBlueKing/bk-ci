@@ -413,7 +413,7 @@ class PipelineViewService @Autowired constructor(
     }
 
     fun getFilters(pipelineNewView: PipelineNewView):
-        Triple<List<PipelineViewFilterByName>, List<PipelineViewFilterByCreator>, List<PipelineViewFilterByLabel>> {
+            Triple<List<PipelineViewFilterByName>, List<PipelineViewFilterByCreator>, List<PipelineViewFilterByLabel>> {
         val filterByNames = mutableListOf<PipelineViewFilterByName>()
         val filterByCreators = mutableListOf<PipelineViewFilterByCreator>()
         val filterByLabels = mutableListOf<PipelineViewFilterByLabel>()
@@ -434,7 +434,7 @@ class PipelineViewService @Autowired constructor(
         return Triple(first = filterByNames, second = filterByCreators, third = filterByLabels)
     }
 
-    private fun getFilters(
+    fun getFilters(
         filterByName: String,
         filterByCreator: String,
         filters: String?
