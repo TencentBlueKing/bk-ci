@@ -50,7 +50,7 @@
     "axios": "^0.27.2",
     "babel-loader": "^8.0.2",
     "bk-magic-vue": "^2.4.4",
-    "bkui-pipeline": "^0.1.15",
+    "bkui-pipeline": "^0.1.23",
     "codemirror": "^5.61.0",
     "core-js": "^3.14.0",
     "core-js-compat": "^3.8.3",

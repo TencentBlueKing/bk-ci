@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.resources
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.TxOpShardingRoutingRuleResource
@@ -38,11 +39,10 @@ class TxOpShardingRoutingRuleResourceImpl @Autowired constructor(
     private val txOpShardingRuleService: TxOpShardingRuleService
 ) : TxOpShardingRoutingRuleResource {
 
-    override fun syncShardingRoutingRuleInfo(): Result<Boolean> {
-        return Result(txOpShardingRuleService.syncShardingRoutingRuleInfo())
-    }
-
-    override fun clearInvalidRuleRedisInfo(): Result<Boolean> {
-        return Result(txOpShardingRuleService.clearInvalidRuleRedisInfo())
+    override fun syncDBShardingRoutingRuleInfo(
+        moduleCode: SystemModuleEnum,
+        clusterName: String?
+    ): Result<Boolean> {
+        return Result(txOpShardingRuleService.syncDbShardingRoutingRuleInfo(moduleCode, clusterName))
     }
 }
