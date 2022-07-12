@@ -180,8 +180,8 @@ class StreamYamlTrigger @Autowired constructor(
             // 有特殊任务的注册事件
             logger.warn(
                 "special job register delete: $isDelete，repoHookName：$repoHookName" +
-                        "gitProjectId: ${action.data.getGitProjectId()}, " +
-                        "eventId: ${action.data.context.requestEventId!!}"
+                    "gitProjectId: ${action.data.getGitProjectId()}, " +
+                    "eventId: ${action.data.context.requestEventId!!}"
             )
             yamlBuild.gitStartBuild(
                 action = action,
@@ -232,7 +232,7 @@ class StreamYamlTrigger @Autowired constructor(
         return action.data.context.pipeline!!.pipelineId.isBlank() ||
             (
                 action is GitBaseAction &&
-                        !action.getChangeSet().isNullOrEmpty() &&
+                    !action.getChangeSet().isNullOrEmpty() &&
                     action.getChangeSet()!!.toSet()
                         .contains(action.data.context.pipeline!!.filePath)
                 )
