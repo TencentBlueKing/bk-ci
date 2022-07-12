@@ -43,6 +43,7 @@
     }
     .hover-textarea-styles {
         &:hover {
+            top: 0;
             height: 100px!important;
             z-index: 10;
         }
