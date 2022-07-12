@@ -33,7 +33,6 @@ object StreamPipelineUtils {
 
     fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
 
-    // TODO: 2022/7/7 去除随机数字逻辑
     fun genBKPipelineName(projectCode: String) = projectCode + "_" + UUIDUtil.generate()
 
     fun genStreamV2BuildUrl(
