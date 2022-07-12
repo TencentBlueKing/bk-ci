@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
@@ -521,12 +522,16 @@ interface ServicePipelineResource {
         userId: String
     ): Result<Boolean>
 
-    @ApiOperation("批量更新modelName")
+    @ApiOperation("根据项目ID获取流水线标签关系列表")
     @POST
-    @Path("/batch/pipeline/modelName")
-    fun batchUpdateModelName(
-        modelUpdateList: List<ModelUpdate>
-    ): Result<List<ModelUpdate>>
+    @Path("/labelinfos/list")
+    fun getPipelineLabelInfos(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        projectIds: List<String>
+    ): Result<List<PipelineLabelRelateInfo>>
 
     @ApiOperation("根据流水线名称搜索")
     @GET

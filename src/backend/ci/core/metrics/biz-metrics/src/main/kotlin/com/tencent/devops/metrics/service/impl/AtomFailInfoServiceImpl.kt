@@ -35,8 +35,8 @@ import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_MSG
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
 import com.tencent.devops.metrics.constant.MetricsMessageCode
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getErrorTypeName
 import com.tencent.devops.metrics.dao.AtomFailInfoDao
-import com.tencent.devops.metrics.dao.ErrorCodeInfoDao
 import com.tencent.devops.metrics.service.AtomFailInfoManageService
 import com.tencent.devops.metrics.pojo.`do`.AtomErrorCodeStatisticsInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomFailDetailInfoDO
@@ -44,6 +44,7 @@ import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryAtomFailInfoDTO
 import com.tencent.devops.metrics.pojo.qo.QueryAtomFailInfoQO
+import com.tencent.devops.metrics.utils.MetricsUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -52,7 +53,6 @@ import org.springframework.stereotype.Service
 class AtomFailInfoServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val atomFailInfoDao: AtomFailInfoDao,
-    private val errorCodeInfoDao: ErrorCodeInfoDao,
     private val metricsConfig: MetricsConfig
 ) : AtomFailInfoManageService {
 
@@ -78,7 +78,8 @@ class AtomFailInfoServiceImpl @Autowired constructor(
         // 查询记录过多，提醒用户缩小查询范围
         if (atomErrorCodeCount > metricsConfig.queryCountMax) {
             throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
+                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND,
+                params = arrayOf("${metricsConfig.queryCountMax}")
             )
         }
         // 查询插件统计信息
@@ -99,8 +100,6 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 pageSize = queryAtomFailInfoDTO.pageSize
             )
         )
-        val errorDict = mutableMapOf<Int, String>()
-        errorCodeInfoDao.getErrorTypeDict(dslContext).map { errorDict.put(it.value1(), it.value2()) }
         // 对查询结果处理封装
         val atomErrorCodeStatisticsInfos = result.map {
             val errorType = it[BK_ERROR_TYPE] as Int
@@ -108,7 +107,7 @@ class AtomFailInfoServiceImpl @Autowired constructor(
             AtomErrorCodeStatisticsInfoDO(
                 ErrorCodeInfoDO(
                     errorType = errorType,
-                    errorTypeName = errorDict[errorType],
+                    errorTypeName = getErrorTypeName(errorType),
                     errorCode = it[BK_ERROR_CODE] as Int,
                     errorMsg = if (errorMsg != null) errorMsg as String else ""
                 ),
@@ -140,11 +139,10 @@ class AtomFailInfoServiceImpl @Autowired constructor(
         // 查询记录过多，提醒用户缩小查询范围
         if (pipelineFailDetailCount > metricsConfig.queryCountMax) {
             throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND
+                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND,
+                params = arrayOf("${metricsConfig.queryCountMax}")
             )
         }
-        val errorDict = mutableMapOf<Int, String>()
-        errorCodeInfoDao.getErrorTypeDict(dslContext).map { errorDict.put(it.value1(), it.value2()) }
         //  查询插件失败详情数据
         val result = atomFailInfoDao.queryAtomFailDetailInfo(
             dslContext,
@@ -163,7 +161,10 @@ class AtomFailInfoServiceImpl @Autowired constructor(
                 pageSize = queryAtomFailInfoDTO.pageSize
             )
         )
-        result.forEach { it.errorTypeName = errorDict[it.errorType] }
+        result.forEach {
+            it.errorTypeName = getErrorTypeName(it.errorType!!)
+            it.domain = MetricsUtils.getDomain(it.channelCode)
+        }
         return Page(
             page = queryAtomFailInfoDTO.page,
             pageSize = queryAtomFailInfoDTO.pageSize,

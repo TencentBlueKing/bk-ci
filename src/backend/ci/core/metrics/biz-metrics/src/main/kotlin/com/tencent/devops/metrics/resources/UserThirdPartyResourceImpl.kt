@@ -30,9 +30,9 @@ package com.tencent.devops.metrics.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.metrics.api.UserThirdPartyResource
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.checkDateInterval
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getEndDateTime
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getStartDateTime
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.checkDateInterval
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getEndDateTime
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getStartDateTime
 import com.tencent.devops.metrics.service.ThirdPartyManageService
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineSummaryInfoDTO
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
@@ -61,10 +61,5 @@ class UserThirdPartyResourceImpl @Autowired constructor(
                 )
             )
         )
-    }
-
-    override fun addPipelineSummaryInfo(projectId: String, userId: String): Result<Boolean> {
-        thirdPartyManageService.addPipelineSummaryInfo(projectId)
-        return Result(true)
     }
 }

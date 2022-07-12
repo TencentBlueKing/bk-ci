@@ -95,8 +95,8 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
         projectId: String,
         userId: String,
         keyword: String?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Page<AtomBaseInfoDO> {
         val atomCodes = atomDisplayConfigDao.getAtomDisplayConfig(
             dslContext,
@@ -104,8 +104,8 @@ class AtomDisplayConfigServiceImpl @Autowired constructor(
             keyword
         ).map { it.atomCode }
         return Page(
-            page = page ?: 1,
-            pageSize = pageSize ?: 10,
+            page = page,
+            pageSize = pageSize,
             count = atomDisplayConfigDao.getOptionalAtomDisplayConfigCount(
                 dslContext = dslContext,
                 projectId = projectId,

@@ -25,39 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.listener
+package com.tencent.devops.metrics.utils
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.event.listener.Listener
-import com.tencent.devops.metrics.pojo.message.TurboReportEvent
-import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportService
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.metrics.config.MetricsConfig
 
-@Component
-class TurboDailyReportDailyMessageListener @Autowired constructor(
-    private val thirdPlatformDataReportService: MetricsThirdPlatformDataReportService
-) : Listener<String> {
+object MetricsUtils {
 
-    override fun execute(event: String) {
-        try {
-            thirdPlatformDataReportService.metricsTurboDataReport(
-                JsonUtil.to(event, object : TypeReference<TurboReportEvent>() {})
-            )
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to insert the metrics Turbo data", ignored)
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.SYSTEM_ERROR,
-                defaultMessage = "Fail to insert the metrics Turbo data"
-            )
+    /**
+     * 根据渠道代码获取渠道对应的域名
+     * @param channelCode 渠道代码
+     * @return 域名
+     */
+    fun getDomain(channelCode: String): String {
+        val metricsConfig: MetricsConfig = SpringContextUtil.getBean(MetricsConfig::class.java)
+        val url = if (channelCode == ChannelCode.GIT.name) {
+            metricsConfig.streamUrl
+        } else {
+            metricsConfig.devopsUrl
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(TurboDailyReportDailyMessageListener::class.java)
+        val index = url.indexOf("://")
+        return if (index != -1) {
+            url.substring(index + 3)
+        } else {
+            url
+        }
     }
 }

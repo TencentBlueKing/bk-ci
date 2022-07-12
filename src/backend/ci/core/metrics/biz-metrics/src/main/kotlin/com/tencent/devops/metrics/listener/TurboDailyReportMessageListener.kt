@@ -25,18 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.pojo.dto
+package com.tencent.devops.metrics.listener
 
-import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.metrics.pojo.message.TurboReportEvent
+import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-@ApiModel("保存项目下展示插件配置传输对象")
-data class SaveAtomDisplayConfigDTO(
-    @ApiModelProperty("项目ID")
-    val projectId: String,
-    @ApiModelProperty("userId")
-    val userId: String,
-    @ApiModelProperty("插件基本信息列表")
-    val atomBaseInfos: List<AtomBaseInfoDO>
-)
+@Component
+class TurboDailyReportMessageListener @Autowired constructor(
+    private val thirdPlatformDataReportService: MetricsThirdPlatformDataReportService
+) : Listener<String> {
+
+    override fun execute(event: String) {
+        try {
+            thirdPlatformDataReportService.metricsTurboDataReport(
+                JsonUtil.to(event, object : TypeReference<TurboReportEvent>() {})
+            )
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to insert the metrics Turbo data", ignored)
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.SYSTEM_ERROR,
+                defaultMessage = "Fail to insert the metrics Turbo data"
+            )
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TurboDailyReportMessageListener::class.java)
+    }
+}

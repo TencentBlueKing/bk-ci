@@ -50,6 +50,13 @@ spring:
 server:
   port: __BK_CI_METRICS_API_PORT__
 
+metrics:
+  devopsUrl: __BK_CI_PUBLIC_URL__
+  streamUrl: __BK_CI_STREAM_URL__
+  maximumQueryMonths: 6
+  queryCountMax: 10000
+  defaultLimitNum: 10
+
 sharding:
   routing:
     cacheSize: 100000
@@ -57,7 +64,3 @@ sharding:
     shardingField: PROJECT_ID
     algorithmClassName: "com.tencent.devops.metrics.sharding.BkMetricsDatabaseShardingAlgorithm"
 
-queryParam:
-  maximumQueryMonths: 6
-  minimumQueryDays: 1
-  queryCountMax: 10000

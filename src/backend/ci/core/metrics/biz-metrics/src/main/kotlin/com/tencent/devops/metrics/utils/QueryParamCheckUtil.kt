@@ -25,11 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.constant
+package com.tencent.devops.metrics.utils
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
-import org.springframework.beans.factory.annotation.Value
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.metrics.config.MetricsConfig
+import com.tencent.devops.metrics.constant.Constants.ERROR_TYPE_NAME_PREFIX
+import com.tencent.devops.metrics.constant.MetricsMessageCode
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -39,18 +42,14 @@ import java.util.stream.Stream
 
 object QueryParamCheckUtil {
 
-    // 查询时间区间限制，当天的前一天至前六个月
-    @Value("\${queryParam.maximumQueryMonths:6}")
-    private val maximumQueryMonths: Long = 6
-
     fun getIntervalTime(
         fromDate: LocalDateTime,
         toDate: LocalDateTime
-    ) = ChronoUnit.DAYS.between(fromDate, toDate)
+    ) = if (fromDate.isEqual(toDate)) 1 else ChronoUnit.DAYS.between(fromDate, toDate)
 
     val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     fun getStartDateTime(): String {
-        val startDateTime = LocalDate.now().minusDays(1).minusMonths(1)
+        val startDateTime = LocalDate.now().minusMonths(1)
         return startDateTime.format(DATE_FORMATTER)
     }
     fun getEndDateTime(): String {
@@ -65,6 +64,9 @@ object QueryParamCheckUtil {
     }
 
     fun getBetweenDate(start: String, end: String): List<String> {
+        if (start == end) {
+            return listOf(start)
+        }
         val list: MutableList<String> = ArrayList()
         // LocalDate默认的时间格式为2020-02-02
         val startDate: LocalDate = LocalDate.parse(start)
@@ -79,10 +81,12 @@ object QueryParamCheckUtil {
     }
 
     fun checkDateInterval(startTime: String, endTime: String) {
+        val metricsConfig = MetricsConfig()
+        // 查询时间区间限制，当天的前一天至前六个月
         val startDate = DateTimeUtil.stringToLocalDate(startTime)
         val endDate = DateTimeUtil.stringToLocalDate(endTime)
         val firstDate = LocalDate.now()
-        val secondDate = firstDate.minusMonths(maximumQueryMonths)
+        val secondDate = firstDate.minusMonths(metricsConfig.maximumQueryMonths)
         if (startDate!!.isBefore(secondDate)) {
             throw ErrorCodeException(
                 errorCode = MetricsMessageCode.QUERY_DATE_BEYOND
@@ -93,5 +97,9 @@ object QueryParamCheckUtil {
                 errorCode = MetricsMessageCode.QUERY_DATE_BEYOND
             )
         }
+    }
+
+    fun getErrorTypeName(errorType: Int): String {
+        return MessageCodeUtil.getCodeLanMessage(ERROR_TYPE_NAME_PREFIX + "$errorType")
     }
 }

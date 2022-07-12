@@ -28,12 +28,10 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
-import com.tencent.devops.metrics.constant.Constants.BK_ERROR_NAME
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.model.metrics.tables.TErrorTypeDict
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
-import com.tencent.devops.metrics.pojo.`do`.PipelineErrorTypeInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineLabelInfo
 import com.tencent.devops.metrics.pojo.qo.QueryProjectInfoQO
 import com.tencent.devops.model.metrics.tables.records.TProjectPipelineLabelInfoRecord
@@ -70,12 +68,18 @@ class ProjectInfoDao {
 
     fun queryProjectAtomCount(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        keyWord: String? = null
     ): Long {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            if (!keyWord.isNullOrBlank()) {
+                conditions.add(ATOM_NAME.like("%$keyWord%"))
+            }
             return dslContext.select(ATOM_CODE)
                 .from(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(conditions)
                 .groupBy(ATOM_CODE)
                 .execute().toLong()
         }
@@ -128,21 +132,20 @@ class ProjectInfoDao {
         page: Int,
         pageSize: Int,
         keyWord: String?
-    ): List<PipelineErrorTypeInfoDO> {
+    ): List<Int> {
         with(TErrorTypeDict.T_ERROR_TYPE_DICT) {
             val conditions = mutableListOf<Condition>()
             if (!keyWord.isNullOrBlank()) {
                 conditions.add(this.NAME.like("%$keyWord%"))
             }
             val step = dslContext.select(
-                ERROR_TYPE,
-                NAME.`as`(BK_ERROR_NAME)
+                ERROR_TYPE
             ).from(this)
                 .where(conditions)
                 .groupBy(ERROR_TYPE)
                 .orderBy(ERROR_TYPE)
                 .limit((page - 1) * pageSize, pageSize)
-            return step.fetchInto(PipelineErrorTypeInfoDO::class.java)
+            return step.fetchInto(Int::class.java)
         }
     }
 

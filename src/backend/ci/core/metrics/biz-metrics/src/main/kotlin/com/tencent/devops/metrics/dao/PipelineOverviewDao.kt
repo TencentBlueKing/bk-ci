@@ -37,7 +37,6 @@ import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
-import com.tencent.devops.metrics.constant.Constants.DEFAULT_LIMIT_NUM
 import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
@@ -52,38 +51,13 @@ import java.time.LocalDateTime
 
 @Repository
 class PipelineOverviewDao {
-
-    fun getPipelineIdByTotalExecuteCount(
-        dslContext: DSLContext,
-        queryPipelineOverview: QueryPipelineOverviewQO
-    ): List<String> {
-        with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
-            val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            val step = dslContext.select(PIPELINE_ID).from(this)
-            val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo, null)
-            val pipelineLabelIds = queryPipelineOverview.baseQueryReq.pipelineLabelIds
-            if (!pipelineLabelIds.isNullOrEmpty()) {
-                    step.join(tProjectPipelineLabelInfo)
-                        .on(PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-                }
-            return step.where(conditions)
-                .orderBy(TOTAL_EXECUTE_COUNT.desc())
-                .limit(DEFAULT_LIMIT_NUM)
-                .fetchInto(String::class.java)
-        }
-    }
-
     fun queryPipelineSumInfo(
         dslContext: DSLContext,
         queryPipelineOverview: QueryPipelineOverviewQO
     ): Record3<BigDecimal, BigDecimal, BigDecimal>? {
         with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            var pipelineIds = queryPipelineOverview.baseQueryReq.pipelineIds
-            if (pipelineIds.isNullOrEmpty()) {
-                pipelineIds =
-                    getPipelineIdByTotalExecuteCount(dslContext, queryPipelineOverview)
-            }
+            val pipelineIds = queryPipelineOverview.baseQueryReq.pipelineIds
             val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo, pipelineIds)
             val step = dslContext.select(
                 sum<Long>(TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_EXECUTE_COUNT_SUM),
@@ -102,10 +76,7 @@ class PipelineOverviewDao {
         queryPipelineOverview: QueryPipelineOverviewQO
     ): Result<Record5<LocalDateTime, BigDecimal, BigDecimal, BigDecimal, BigDecimal>>? {
         with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
-            var pipelineIds = queryPipelineOverview.baseQueryReq.pipelineIds
-            if (pipelineIds.isNullOrEmpty()) {
-                pipelineIds = getPipelineIdByTotalExecuteCount(dslContext, queryPipelineOverview)
-            }
+            val pipelineIds = queryPipelineOverview.baseQueryReq.pipelineIds
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo, pipelineIds)
             val step = dslContext.select(
@@ -137,11 +108,15 @@ class PipelineOverviewDao {
         if (!pipelineLabelIds.isNullOrEmpty()) {
             conditions.add(tProjectPipelineLabelInfo.LABEL_ID.`in`(pipelineLabelIds))
         }
-        val startTimeDateTime =
+        val startDateTime =
             DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.startTime!!)!!.atStartOfDay()
-        val endTimeDateTime =
+        val endDateTime =
             DateTimeUtil.stringToLocalDate(queryCondition.baseQueryReq.endTime!!)!!.atStartOfDay()
-        conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
+        if (startDateTime.isEqual(endDateTime)) {
+            conditions.add(this.STATISTICS_TIME.eq(startDateTime))
+        } else {
+            conditions.add(this.STATISTICS_TIME.between(startDateTime, endDateTime))
+        }
         return conditions
     }
 }

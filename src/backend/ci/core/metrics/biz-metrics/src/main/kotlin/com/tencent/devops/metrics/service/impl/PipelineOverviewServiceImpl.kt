@@ -35,7 +35,7 @@ import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.toMinutes
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.PipelineOverviewDao
 import com.tencent.devops.metrics.pojo.`do`.PipelineSumInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineTrendInfoDO
@@ -63,25 +63,29 @@ class PipelineOverviewServiceImpl @Autowired constructor(
         )
         val totalExecuteCountSum = result?.get(BK_TOTAL_EXECUTE_COUNT_SUM, BigDecimal::class.java)?.toLong()
         val successExecuteCountSum = result?.get(BK_SUCCESS_EXECUTE_COUNT_SUM, BigDecimal::class.java)?.toLong()
-        val totalAvgCostTimeSum = result?.get(BK_TOTAL_AVG_COST_TIME_SUM, BigDecimal::class.java)?.toDouble()
+        val totalAvgCostTimeSum = result?.get(BK_TOTAL_AVG_COST_TIME_SUM, BigDecimal::class.java)?.toLong()
         if (totalExecuteCountSum != null && totalAvgCostTimeSum != null) {
             return PipelineSumInfoDO(
                 totalSuccessRate = if (successExecuteCountSum == null || successExecuteCountSum == 0L) 0.0
-                else String.format("%.2f", successExecuteCountSum.toDouble() * 100 / totalExecuteCountSum).toDouble(),
-                totalAvgCostTime = String.format("%.2f", totalAvgCostTimeSum / totalExecuteCountSum).toDouble(),
+                else String.format("%.2f", successExecuteCountSum.toDouble() / totalExecuteCountSum * 100).toDouble(),
+                totalAvgCostTime = String.format(
+                    "%.2f",
+                    totalAvgCostTimeSum.toDouble() / totalExecuteCountSum
+                ).toDouble(),
                 successExecuteCount = successExecuteCountSum ?: 0,
                 totalExecuteCount = totalExecuteCountSum,
-                totalCostTime = totalAvgCostTimeSum.toDouble()
+                totalCostTime = totalAvgCostTimeSum
             )
         }
         return null
     }
 
     override fun queryPipelineTrendInfo(queryPipelineOverviewDTO: QueryPipelineOverviewDTO): List<PipelineTrendInfoDO> {
+        val projectId = queryPipelineOverviewDTO.projectId
         val result = pipelineOverviewDao.queryPipelineTrendInfo(
             dslContext,
             QueryPipelineOverviewQO(
-                queryPipelineOverviewDTO.projectId,
+                projectId,
                 queryPipelineOverviewDTO.baseQueryReq
             )
         )

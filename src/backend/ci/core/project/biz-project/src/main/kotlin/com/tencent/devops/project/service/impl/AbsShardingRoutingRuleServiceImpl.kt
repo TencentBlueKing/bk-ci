@@ -74,11 +74,8 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 tableName = shardingRoutingRule.tableName
             )
             if (nameCount > 0) {
-                // 抛出错误提示
-                throw ErrorCodeException(
-                    errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                    params = arrayOf(routingName)
-                )
+                // 已添加则无需重复添加
+                return true
             }
             // 规则入库
             shardingRoutingRuleDao.add(dslContext, userId, shardingRoutingRule)

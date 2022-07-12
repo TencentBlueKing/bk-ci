@@ -27,12 +27,13 @@
 
 package com.tencent.devops.metrics.service.impl
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.toMinutes
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.PipelineStageDao
 import com.tencent.devops.metrics.pojo.`do`.PipelineStageCostTimeInfoDO
 import com.tencent.devops.metrics.pojo.`do`.StageAvgCostTimeInfoDO
@@ -44,6 +45,7 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 class PipelineStageServiceImpl @Autowired constructor(
@@ -56,18 +58,28 @@ class PipelineStageServiceImpl @Autowired constructor(
     ): List<StageTrendSumInfoVO> {
         var stageTrendSumInfos: MutableMap<String, MutableMap<String, StageAvgCostTimeInfoDO>>
         val tags = pipelineStageDao.getStageTag(dslContext, queryPipelineOverviewDTO.projectId)
-        val startTime = queryPipelineOverviewDTO.baseQueryReq.startTime
-        val endTime = queryPipelineOverviewDTO.baseQueryReq.endTime
+        val baseQueryReq = queryPipelineOverviewDTO.baseQueryReq
+        val startTime = baseQueryReq.startTime
+        val endTime = baseQueryReq.endTime
         val betweenDate = QueryParamCheckUtil.getBetweenDate(startTime!!, endTime!!).toMutableList()
         var pipelineNames: MutableSet<String>
         return tags.map { tag -> // 根据stage标签分组获取数据
+            val pipelineIds =
+                if (baseQueryReq.pipelineIds.isNullOrEmpty() && baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+                    getStagePipelineIdByProject(
+                        projectId = queryPipelineOverviewDTO.projectId,
+                        startTime = startTime,
+                        endTime = endTime,
+                        tag = tag
+                    )
+            } else baseQueryReq.pipelineIds
             stageTrendSumInfos = mutableMapOf()
             pipelineNames = mutableSetOf()
             val result = pipelineStageDao.queryPipelineStageTrendInfo(
                 dslContext,
                 QueryPipelineStageTrendInfoQO(
                     projectId = queryPipelineOverviewDTO.projectId,
-                    pipelineIds = queryPipelineOverviewDTO.baseQueryReq.pipelineIds,
+                    pipelineIds = pipelineIds,
                     pipelineLabelIds = queryPipelineOverviewDTO.baseQueryReq.pipelineLabelIds,
                     startTime = startTime,
                     endTime = endTime,
@@ -106,6 +118,29 @@ class PipelineStageServiceImpl @Autowired constructor(
                 pipelineStageCostTimeInfoDOs.add(PipelineStageCostTimeInfoDO(pipelineName, pipelineStageInfos))
             }
             StageTrendSumInfoVO(tag, pipelineStageCostTimeInfoDOs)
+        }
+    }
+
+    private val stageDefaultPipelineIdsCache = Caffeine.newBuilder()
+        .maximumSize(5000)
+        .expireAfterWrite(2, TimeUnit.HOURS)
+        .build<String, List<String>>()
+
+    fun getStagePipelineIdByProject(projectId: String, startTime: String, endTime: String, tag: String): List<String> {
+        val value =
+            stageDefaultPipelineIdsCache.getIfPresent("MetricsOverviewStageDefaultPipelineIds:$projectId:$tag")
+        return if (value.isNullOrEmpty()) {
+            val pipelineIds = pipelineStageDao.getStagePipelineIdByProject(
+                dslContext = dslContext,
+                projectId = projectId,
+                startTime = startTime,
+                endTime = endTime,
+                tag = tag
+            )
+            stageDefaultPipelineIdsCache.put("MetricsOverviewStageDefaultPipelineIds:$projectId:$tag", pipelineIds)
+            pipelineIds
+        } else {
+            value
         }
     }
 }

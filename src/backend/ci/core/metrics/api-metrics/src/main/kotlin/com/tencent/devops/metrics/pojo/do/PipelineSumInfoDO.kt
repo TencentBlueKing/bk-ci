@@ -41,5 +41,5 @@ data class PipelineSumInfoDO(
     @ApiModelProperty("流水线总执行次数")
     val totalExecuteCount: Long,
     @ApiModelProperty("流水线总执行耗时")
-    val totalCostTime: Double
+    val totalCostTime: Long
 )

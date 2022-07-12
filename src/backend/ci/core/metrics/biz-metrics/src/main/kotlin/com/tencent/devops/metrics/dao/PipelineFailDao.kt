@@ -29,13 +29,13 @@ package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.JooqUtils.sum
+import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.model.metrics.tables.TPipelineFailDetailData
 import com.tencent.devops.model.metrics.tables.TPipelineFailSummaryData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
-import com.tencent.devops.metrics.constant.Constants.DEFAULT_LIMIT_NUM
 import com.tencent.devops.metrics.pojo.po.PipelineFailDetailDataPO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineFailQO
 import com.tencent.devops.metrics.pojo.qo.QueryPipelineOverviewQO
@@ -49,7 +49,7 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Repository
-class PipelineFailDao {
+class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
 
     fun getPipelineIdByTotalExecuteCount(
         dslContext: DSLContext,
@@ -72,7 +72,7 @@ class PipelineFailDao {
                 }
             return step.where(conditions)
                 .orderBy(ERROR_COUNT.desc())
-                .limit(DEFAULT_LIMIT_NUM)
+                .limit(metricsConfig.defaultLimitNum)
                 .fetchInto(String::class.java)
         }
     }
@@ -240,14 +240,18 @@ class PipelineFailDao {
         if (!baseQuery.pipelineIds.isNullOrEmpty()) {
             conditions.add(this.PIPELINE_ID.`in`(baseQuery.pipelineIds))
         }
-        val startTimeDateTime =
+        val startDateTime =
             DateTimeUtil.stringToLocalDate(baseQuery.startTime!!)!!.atStartOfDay()
-        val endTimeDateTime =
+        val endDateTime =
             DateTimeUtil.stringToLocalDate(baseQuery.endTime!!)!!.atStartOfDay()
         if (!baseQuery.pipelineLabelIds.isNullOrEmpty()) {
             conditions.add(tProjectPipelineLabelInfo.LABEL_ID.`in`(baseQuery.pipelineLabelIds))
         }
-        conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
+        if (startDateTime.isEqual(endDateTime)) {
+            conditions.add(this.STATISTICS_TIME.eq(startDateTime))
+        } else {
+            conditions.add(this.STATISTICS_TIME.between(startDateTime, endDateTime))
+        }
         return conditions
     }
 
@@ -265,9 +269,13 @@ class PipelineFailDao {
         if (!baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
             conditions.add(tProjectPipelineLabelInfo.LABEL_ID.`in`(baseQueryReq.pipelineLabelIds))
         }
-        val startTimeDateTime = DateTimeUtil.stringToLocalDate(baseQueryReq.startTime!!)!!.atStartOfDay()
-        val endTimeDateTime = DateTimeUtil.stringToLocalDate(baseQueryReq.endTime!!)!!.atStartOfDay()
-        conditions.add(this.STATISTICS_TIME.between(startTimeDateTime, endTimeDateTime))
+        val startDateTime = DateTimeUtil.stringToLocalDate(baseQueryReq.startTime!!)!!.atStartOfDay()
+        val endDateTime = DateTimeUtil.stringToLocalDate(baseQueryReq.endTime!!)!!.atStartOfDay()
+        if (startDateTime.isEqual(endDateTime)) {
+            conditions.add(this.STATISTICS_TIME.eq(startDateTime))
+        } else {
+            conditions.add(this.STATISTICS_TIME.between(startDateTime, endDateTime))
+        }
         return conditions
     }
 }
