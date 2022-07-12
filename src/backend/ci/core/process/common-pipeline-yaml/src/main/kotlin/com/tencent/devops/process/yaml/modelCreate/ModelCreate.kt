@@ -158,7 +158,7 @@ class ModelCreate @Autowired constructor(
                 // #6090 stream重试时均需要清理变量表
                 cleanVariablesWhenRetry = true,
                 maxQueueSize = 1,
-                labels = yaml.label ?: emptyList()
+                labels = labelList
             )
         )
     }
