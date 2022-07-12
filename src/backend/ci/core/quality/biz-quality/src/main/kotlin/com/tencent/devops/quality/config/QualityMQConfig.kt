@@ -25,27 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.actions.streamActions
+package com.tencent.devops.quality.config
 
-import com.tencent.devops.stream.trigger.actions.BaseAction
-import com.tencent.devops.stream.trigger.pojo.MrCommentBody
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import org.springframework.amqp.core.Binding
+import org.springframework.amqp.core.BindingBuilder
+import org.springframework.amqp.core.DirectExchange
+import org.springframework.amqp.core.Queue
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-/**
- * 需要各Git端统一提供的一些mr参数
- */
-interface StreamMrAction : BaseAction {
-    // 负责跳转的某个git下的mr的一个Id
-    val mrIId: String
+@Configuration
+class QualityMQConfig {
 
-    /**
-     * 判断是否是fork仓库触发的
-     */
-    fun checkMrForkAction(): Boolean
+    @Bean
+    fun qualityDailyQueue() = Queue(MQ.QUEUE_QUALITY_DAILY_EVENT)
 
-    /**
-     * 为合并请求添加评论
-     */
-    fun addMrComment(
-        body: MrCommentBody
-    )
+    @Bean
+    fun qualityDailyExchange(): DirectExchange {
+        val directExchange = DirectExchange(MQ.EXCHANGE_QUALITY_DAILY_FANOUT, true, false)
+        directExchange.isDelayed = true
+        return directExchange
+    }
+
+    @Bean
+    fun qualityQueueBind(
+        @Autowired qualityDailyQueue: Queue,
+        @Autowired qualityDailyExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(qualityDailyQueue).to(qualityDailyExchange).with(MQ.ROUTE_QUALITY_DAILY_FANOUT)
+    }
 }
