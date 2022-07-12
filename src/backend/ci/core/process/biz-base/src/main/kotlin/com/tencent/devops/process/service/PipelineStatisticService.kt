@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
+import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -45,11 +46,15 @@ class PipelineStatisticService @Autowired constructor(
     }
 
     fun batchGetPipelineCountByAtomCode(atomCodes: String, projectCode: String?): Map<String, Int> {
-        val records =
-            pipelineModelTaskDao.batchGetPipelineCountByAtomCode(dslContext, atomCodes.split(","), projectCode)
+        val atomCodeList = atomCodes.split(",")
         val ret = mutableMapOf<String, Int>()
-        records.map {
-            ret[it.value2()] = it.value1()
+        // 按批次去数据库查询插件所关联的流水线数量
+        ListUtils.partition(atomCodeList, 30).forEach { rids ->
+            val records =
+                pipelineModelTaskDao.batchGetPipelineCountByAtomCode(dslContext, rids, projectCode)
+            records.map {
+                ret[it.value2()] = it.value1()
+            }
         }
         return ret
     }
