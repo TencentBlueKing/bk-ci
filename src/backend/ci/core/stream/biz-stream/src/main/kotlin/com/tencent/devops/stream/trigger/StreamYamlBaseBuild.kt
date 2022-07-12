@@ -246,14 +246,6 @@ class StreamYamlBaseBuild @Autowired constructor(
         model: Model,
         yamlTransferData: YamlTransferData? = null
     ) {
-        // 【ID92537607】 stream 流水线标签不生效
-        client.get(UserPipelineGroupResource::class).updatePipelineLabel(
-            userId = action.data.getUserId(),
-            projectId = action.getProjectCode(),
-            pipelineId = pipeline.pipelineId,
-            labelIds = model.labels
-        )
-
         // 添加模板跨项目信息
         if (yamlTransferData != null && yamlTransferData.templateData.transferDataMap.isNotEmpty()) {
             client.get(ServiceTemplateAcrossResource::class).batchCreate(

@@ -157,7 +157,8 @@ class ModelCreate @Autowired constructor(
                 waitQueueTimeMinute = TimeUnit.HOURS.toMinutes(8).toInt(),
                 // #6090 stream重试时均需要清理变量表
                 cleanVariablesWhenRetry = true,
-                maxQueueSize = 1
+                maxQueueSize = 1,
+                labels = yaml.label ?: emptyList()
             )
         )
     }
