@@ -447,7 +447,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
             }
             // 更新标签信息
-            val labelIdList = marketAtomUpdateRequest.labelIdList
+            val labelIdList = marketAtomUpdateRequest.labelIdList?.filter { !it.isNullOrBlank() }
             if (null != labelIdList) {
                 atomLabelRelDao.deleteByAtomId(context, atomId)
                 if (labelIdList.isNotEmpty()) {
