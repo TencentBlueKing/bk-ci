@@ -912,7 +912,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     failUpdateModels.add(it)
                 }
             } catch (e: Exception) {
-                it.updateResultMessage = "some wrong happen in dao update"
+                it.updateResultMessage = "some wrong happen in dao update,error message:${e.message}"
                 failUpdateModels.add(it)
             }
         }
