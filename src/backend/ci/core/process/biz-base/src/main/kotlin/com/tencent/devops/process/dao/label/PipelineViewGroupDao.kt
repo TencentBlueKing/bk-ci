@@ -79,6 +79,13 @@ class PipelineViewGroupDao {
         }
     }
 
+    fun countByPipelineId(
+        dslContext: DSLContext,
+        pipelineId: String
+    ) = with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+        dslContext.selectCount().from(this).where(PIPELINE_ID.eq(pipelineId)).fetchOne()?.component1() ?: 0
+    }
+
     fun removeById(
         dslContext: DSLContext,
         id: Long

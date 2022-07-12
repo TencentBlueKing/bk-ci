@@ -52,6 +52,7 @@ class PipelineViewGroupService @Autowired constructor(
     private val dslContext: DSLContext
 ) {
     fun updateGroupAfterPipelineCreate(pipelineInfo: TPipelineInfoRecord) {
+        // TODO 加锁
 
     }
 
