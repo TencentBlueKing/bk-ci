@@ -140,8 +140,10 @@ class PipelineBuildContainerDao {
                     .set(COST, it.cost)
                     .set(EXECUTE_COUNT, it.executeCount)
                     .set(CONDITIONS, it.conditions)
-                    .where(BUILD_ID.eq(it.buildId)
-                        .and(STAGE_ID.eq(it.stageId)).and(SEQ.eq(it.seq)))
+                    .where(
+                        BUILD_ID.eq(it.buildId)
+                            .and(STAGE_ID.eq(it.stageId)).and(SEQ.eq(it.seq))
+                    )
                     .execute()
             }
         }
@@ -186,7 +188,8 @@ class PipelineBuildContainerDao {
                 update.set(END_TIME, endTime)
                 if (buildStatus.isFinish()) {
                     update.set(
-                        COST, COST + JooqUtils.timestampDiff(
+                        COST,
+                        COST + JooqUtils.timestampDiff(
                             DatePart.SECOND,
                             START_TIME.cast(java.sql.Timestamp::class.java),
                             END_TIME.cast(java.sql.Timestamp::class.java)
