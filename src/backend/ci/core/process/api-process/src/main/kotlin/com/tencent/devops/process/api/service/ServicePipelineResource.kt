@@ -542,4 +542,11 @@ interface ServicePipelineResource {
         @QueryParam("pipelineName")
         pipelineName: String?
     ): Result<List<PipelineIdAndName>>
+
+    @ApiOperation("批量更新modelName")
+    @POST
+    @Path("/batch/pipeline/modelName")
+    fun batchUpdateModelName(
+        modelUpdateList: List<ModelUpdate>
+    ): Result<List<ModelUpdate>>
 }
