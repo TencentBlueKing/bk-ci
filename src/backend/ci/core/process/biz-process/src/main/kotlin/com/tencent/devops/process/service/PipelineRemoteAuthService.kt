@@ -42,6 +42,7 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.dao.PipelineRemoteAuthDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildBasicInfo
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
@@ -88,7 +89,7 @@ class PipelineRemoteAuthService @Autowired constructor(
         return pipelineRemoteAuthDao.getByAuth(dslContext, auth)
     }
 
-    fun startPipeline(auth: String, values: Map<String, String>, sourceIp: String? = null): BuildBasicInfo {
+    fun startPipeline(auth: String, values: Map<String, String>, sourceIp: String? = null): BuildId {
         val pipeline = getPipeline(auth)
         if (pipeline == null) {
             logger.warn("The pipeline of auth $auth is not exist")
@@ -132,11 +133,10 @@ class PipelineRemoteAuthService @Autowired constructor(
                     executeCount = 1
                 )
             }
-            BuildBasicInfo(
+            BuildId(
+                id = buildId.id,
                 pipelineId = pipeline.pipelineId,
-                projectId = pipeline.projectId,
-                buildId = buildId.id,
-                pipelineVersion = 0
+                projectId = pipeline.projectId
             )
         }
     }

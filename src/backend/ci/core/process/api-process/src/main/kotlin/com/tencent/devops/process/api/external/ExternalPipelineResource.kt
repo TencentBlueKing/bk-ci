@@ -28,6 +28,7 @@
 package com.tencent.devops.process.api.external
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildId
@@ -59,6 +60,9 @@ interface ExternalPipelineResource {
         @ApiParam("请求Ip", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_REAL_IP)
         realIp: String?,
+        @ApiParam("启动用户",required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        startUser: String?,
         @ApiParam("启动参数", required = true)
         values: Map<String, String>
     ): Result<BuildId>
@@ -75,24 +79,4 @@ interface ExternalPipelineResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): String
-
-    @ApiOperation("远程触发构建")
-    @POST
-    @Path("/{projectId}/{pipelineId}/remote/build")
-    fun remoteBuild(
-        @ApiParam("projectId", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("pipelineId", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("远程认证信息", required = true)
-        @HeaderParam("X-TOKEN")
-        token: String,
-        @ApiParam("请求Ip", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_REAL_IP)
-        realIp: String?,
-        @ApiParam("启动参数", required = true)
-        values: Map<String, String>
-    ): Result<BuildBasicInfo>
 }
