@@ -25,37 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.service
+package com.tencent.devops.common.pipeline
 
-import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
-import org.apache.commons.collections4.ListUtils
-import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import io.swagger.annotations.ApiModelProperty
 
-@Service
-class PipelineStatisticService @Autowired constructor(
-    private val pipelineModelTaskDao: PipelineModelTaskDao,
-    private val dslContext: DSLContext
-) {
-    /**
-     * 根据原子标识，获取使用该原子的pipeline个数
-     */
-    fun getPipelineCountByAtomCode(atomCode: String, projectCode: String?): Int {
-        return pipelineModelTaskDao.getPipelineCountByAtomCode(dslContext, atomCode, projectCode)
-    }
-
-    fun batchGetPipelineCountByAtomCode(atomCodes: String, projectCode: String?): Map<String, Int> {
-        val atomCodeList = atomCodes.split(",")
-        val ret = mutableMapOf<String, Int>()
-        // 按批次去数据库查询插件所关联的流水线数量
-        ListUtils.partition(atomCodeList, 30).forEach { rids ->
-            val records =
-                pipelineModelTaskDao.batchGetPipelineCountByAtomCode(dslContext, rids, projectCode)
-            records.map {
-                ret[it.value2()] = it.value1()
-            }
-        }
-        return ret
-    }
-}
+data class ModelUpdate(
+    @ApiModelProperty("项目id", required = true)
+    var projectId: String = "",
+    @ApiModelProperty("流水线id", required = true)
+    var pipelineId: String = "",
+    @ApiModelProperty("名称", required = true)
+    val name: String,
+    @ApiModelProperty("更新人", required = true)
+    var updateUserId: String,
+    @ApiModelProperty("更新结果信息", required = false)
+    var updateResultMessage: String? = null,
+    @ApiModelProperty("更新结果信息", required = true)
+    var updateResult: Boolean = false
+)

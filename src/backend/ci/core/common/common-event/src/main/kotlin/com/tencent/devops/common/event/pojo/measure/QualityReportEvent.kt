@@ -25,37 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.service
+package com.tencent.devops.common.event.pojo.measure
 
-import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
-import org.apache.commons.collections4.ListUtils
-import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import io.swagger.annotations.ApiModelProperty
 
-@Service
-class PipelineStatisticService @Autowired constructor(
-    private val pipelineModelTaskDao: PipelineModelTaskDao,
-    private val dslContext: DSLContext
-) {
-    /**
-     * 根据原子标识，获取使用该原子的pipeline个数
-     */
-    fun getPipelineCountByAtomCode(atomCode: String, projectCode: String?): Int {
-        return pipelineModelTaskDao.getPipelineCountByAtomCode(dslContext, atomCode, projectCode)
-    }
-
-    fun batchGetPipelineCountByAtomCode(atomCodes: String, projectCode: String?): Map<String, Int> {
-        val atomCodeList = atomCodes.split(",")
-        val ret = mutableMapOf<String, Int>()
-        // 按批次去数据库查询插件所关联的流水线数量
-        ListUtils.partition(atomCodeList, 30).forEach { rids ->
-            val records =
-                pipelineModelTaskDao.batchGetPipelineCountByAtomCode(dslContext, rids, projectCode)
-            records.map {
-                ret[it.value2()] = it.value1()
-            }
-        }
-        return ret
-    }
-}
+@Event(exchange = MQ.EXCHANGE_QUALITY_DAILY_FANOUT, routeKey = MQ.ROUTE_QUALITY_DAILY_FANOUT)
+data class QualityReportEvent(
+    @ApiModelProperty("统计时间")
+    val statisticsTime: String,
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("红线拦截次数")
+    val interceptedCount: Int,
+    @ApiModelProperty("红线执行总次数")
+    val totalCount: Int
+)

@@ -730,6 +730,10 @@ class PipelineContainerService @Autowired constructor(
             atomElement.elapsed = null
             atomElement.startEpoch = null
             atomElement.canRetry = false
+            val originVersion = JsonUtil.toMutableMap(target.taskParams)["version"] as String
+            if (originVersion.contains("*")) {
+                atomElement.version = originVersion
+            }
             target.taskParams = JsonUtil.toJson(atomElement.genTaskParams(), formatted = false) // 更新参数
         }
     }
