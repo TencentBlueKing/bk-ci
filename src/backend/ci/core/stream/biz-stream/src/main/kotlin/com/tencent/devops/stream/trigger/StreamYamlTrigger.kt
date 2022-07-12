@@ -147,7 +147,6 @@ class StreamYamlTrigger @Autowired constructor(
         action.data.context.parsedYaml = parsedYaml
         action.data.context.normalizedYaml = normalizedYaml
         logger.info("${pipeline.pipelineId} parsedYaml: $parsedYaml normalize yaml: $normalizedYaml")
-
         // 除了新建的流水线，若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称，只在当前yml文件变更时进行
         if (needChangePipelineDisplayName(action)) {
             pipeline.displayName = yamlObject.name?.ifBlank {

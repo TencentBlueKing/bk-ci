@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -486,6 +487,10 @@ class ServicePipelineResourceImpl @Autowired constructor(
             pageSize = null
         )
         return Result(pipelineInfos)
+    }
+
+    override fun batchUpdateModelName(modelUpdateList: List<ModelUpdate>): Result<List<ModelUpdate>> {
+        return Result(pipelineInfoFacadeService.batchUpdateModelName(modelUpdateList))
     }
 
     private fun checkParams(userId: String, projectId: String) {
