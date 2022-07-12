@@ -55,7 +55,7 @@ import java.util.concurrent.ExecutionException
  * 统一异常处理
  */
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@RestControllerAdvice
+@RestControllerAdvice("com.tencent.bkrepo.npm")
 class NpmExceptionHandler {
 
     @ExceptionHandler(NpmBadRequestException::class)

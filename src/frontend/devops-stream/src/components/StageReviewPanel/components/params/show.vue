@@ -1,15 +1,15 @@
 <template>
     <section>
-        <span class="review-subtitle">Custom Variables</span>
+        <span class="review-subtitle">{{$t('pipeline.customVars')}}</span>
 
         <bk-table :data="params">
-            <bk-table-column label="ChineseName" show-overflow-tooltip>
+            <bk-table-column :label="$t('pipeline.chineseName')" show-overflow-tooltip>
                 <template slot-scope="props">
                     {{ props.row.chineseName || '--' }}<i v-bk-tooltips="{ content: props.row.desc }" v-if="props.row.desc" class="bk-icon icon-info ml5"></i>
                 </template>
             </bk-table-column>
-            <bk-table-column label="Name" prop="key" :formatter="nameFormatter" show-overflow-tooltip></bk-table-column>
-            <bk-table-column label="Value" prop="value" :formatter="valFormatter" show-overflow-tooltip></bk-table-column>
+            <bk-table-column :label="$t('name')" prop="key" :formatter="nameFormatter" show-overflow-tooltip></bk-table-column>
+            <bk-table-column :label="$t('value')" prop="value" :formatter="valFormatter" show-overflow-tooltip></bk-table-column>
         </bk-table>
     </section>
 </template>

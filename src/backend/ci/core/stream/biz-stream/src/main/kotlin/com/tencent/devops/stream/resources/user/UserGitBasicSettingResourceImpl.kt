@@ -32,9 +32,11 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
+import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.stream.api.user.UserGitBasicSettingResource
@@ -52,7 +54,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserGitBasicSettingResourceImpl @Autowired constructor(
     private val streamBasicSettingService: StreamBasicSettingService,
     private val permissionService: StreamPermissionService,
-    private val streamGitTransferService: StreamGitTransferService
+    private val streamGitTransferService: StreamGitTransferService,
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : UserGitBasicSettingResource {
 
     @BkTimed
@@ -84,6 +87,17 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
                 enableCi = enabled
             )
         }
+        pipelineEventDispatcher.dispatch(
+            PipelineStreamEnabledEvent(
+                source = "stream_enabled",
+                projectId = projectId,
+                pipelineId = "",
+                userId = userId,
+                gitProjectId = setting!!.gitProjectId,
+                gitProjectUrl = setting.url,
+                enable = enabled
+            )
+        )
         return Result(result)
     }
 

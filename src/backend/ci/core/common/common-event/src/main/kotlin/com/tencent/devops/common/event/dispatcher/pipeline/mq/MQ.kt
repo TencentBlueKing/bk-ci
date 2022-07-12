@@ -277,4 +277,12 @@ object MQ {
 
     // 流水线质量红线人工审核时间广播
     const val EXCHANGE_PIPELINE_BUILD_QUALITY_REVIEW_FANOUT = "e.quality.pipeline.build.review.fanout"
+
+    // 质量红线每日数据上报队列
+    const val EXCHANGE_QUALITY_DAILY_FANOUT = "e.metrics.quality.daily.exchange.fanout"
+    const val ROUTE_QUALITY_DAILY_FANOUT = "r.quality.daily.exchange.fanout"
+    const val QUEUE_QUALITY_DAILY_EVENT = "q.metrics.quality.daily.exchange.queue"
+
+    const val ROUTE_PIPELINE_STREAM_ENABLED = "r.engine.pipeline.stream.enabled"
+    const val QUEUE_PIPELINE_STREAM_ENABLED = "q.engine.pipeline.stream.enabled"
 }

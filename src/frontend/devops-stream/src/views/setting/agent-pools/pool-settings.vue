@@ -9,8 +9,8 @@
         <main class="pool-setting-main" v-if="!isLoading">
             <section v-if="shareList.length">
                 <div class="operate-agent">
-                    <bk-button @click="toLinkShare('PROJECT')">Link project</bk-button>
-                    <bk-button @click="toLinkShare('GROUP')">Link group</bk-button>
+                    <bk-button @click="toLinkShare('PROJECT')">{{$t('setting.agent.linkProject')}}</bk-button>
+                    <bk-button @click="toLinkShare('GROUP')">{{$t('setting.agent.linkGroup')}}</bk-button>
                 </div>
                 <bk-table class="agent-table"
                     :data="shareList"
@@ -26,22 +26,22 @@
                             {{ props.row.gitProjectId.replace('git_', '')}}
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="Name" prop="name" min-width="150"></bk-table-column>
-                    <bk-table-column label="Type" prop="type" width="150"></bk-table-column>
-                    <bk-table-column label="Creator" prop="creator" width="150"></bk-table-column>
-                    <bk-table-column label="Operation" width="200" class-name="handler-btn">
+                    <bk-table-column :label="$t('name')" prop="name" min-width="150"></bk-table-column>
+                    <bk-table-column :label="$t('type')" prop="type" width="150"></bk-table-column>
+                    <bk-table-column :label="$t('creator')" prop="creator" width="150"></bk-table-column>
+                    <bk-table-column :label="$t('opeartion')" width="200" class-name="handler-btn">
                         <template slot-scope="props">
-                            <span class="update-btn" @click="showDelete(props.row)">Remove</span>
+                            <span class="update-btn" @click="showDelete(props.row)">{{$t('remove')}}</span>
                         </template>
                     </bk-table-column>
                 </bk-table>
             </section>
             <section v-else class="table-empty">
-                <h3>Link your first project or group</h3>
-                <h5>select projects or groups to share your agents in this pool</h5>
+                <h3>{{$t('setting.agent.emptyLinkTitle')}}</h3>
+                <h5>{{$t('setting.agent.emptyLinkTips')}}</h5>
                 <div>
-                    <bk-button class="import-agent" @click="toLinkShare('PROJECT')">Link project</bk-button>
-                    <bk-button @click="toLinkShare('GROUP')">Link group</bk-button>
+                    <bk-button class="import-agent" @click="toLinkShare('PROJECT')">{{$t('setting.agent.linkProject')}}</bk-button>
+                    <bk-button @click="toLinkShare('GROUP')">{{$t('setting.agent.linkGroup')}}</bk-button>
                 </div>
             </section>
         </main>
@@ -66,8 +66,8 @@
             :mask-close="false"
             :loading="isDeleteing"
             @confirm="deleteShare"
-            title="Remove from the pool">
-            Are you sure to remove 【{{deleteRow.name}}】？
+            :title="$t('removeFromPool')">
+            {{$t('deleteTips')}}【{{deleteRow.name}}】？
         </bk-dialog>
     </article>
 </template>
@@ -88,9 +88,9 @@
         data () {
             return {
                 navList: [
-                    { link: { name: 'agentPools' }, title: 'Agent Pools' },
+                    { link: { name: 'agentPools' }, title: this.$t('setting.agent.agentPools') },
                     { link: { name: 'agentList' }, title: this.$route.params.poolName },
-                    { link: '', title: 'Settings' }
+                    { link: '', title: this.$t('settings') }
                 ],
                 shareList: [],
                 isLoading: false,

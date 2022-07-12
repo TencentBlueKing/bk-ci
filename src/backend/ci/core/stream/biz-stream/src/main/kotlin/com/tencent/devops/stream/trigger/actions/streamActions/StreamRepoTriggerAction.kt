@@ -11,7 +11,6 @@ import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
-import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
@@ -45,6 +44,8 @@ class StreamRepoTriggerAction(
         return this
     }
 
+    override fun needAddWebhookParams() = true
+
     override fun getProjectCode(gitProjectId: String?) = baseAction.getProjectCode(gitProjectId)
 
     override fun getGitCred(personToken: String?): StreamGitCred = baseAction.getGitCred(personToken)
@@ -71,13 +72,16 @@ class StreamRepoTriggerAction(
         ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
     }
 
-    override fun getYamlContent(fileName: String): String {
-        return api.getFileContent(
-            cred = baseAction.getGitCred(),
-            gitProjectId = data.getGitProjectId(),
-            fileName = fileName,
-            ref = data.context.repoTrigger!!.branch,
-            retry = ApiRequestRetryInfo(true)
+    override fun getYamlContent(fileName: String): Pair<String, String> {
+        return Pair(
+            data.context.repoTrigger!!.branch,
+            api.getFileContent(
+                cred = baseAction.getGitCred(),
+                gitProjectId = data.getGitProjectId(),
+                fileName = fileName,
+                ref = data.context.repoTrigger!!.branch,
+                retry = ApiRequestRetryInfo(true)
+            )
         )
     }
 
@@ -135,11 +139,7 @@ class StreamRepoTriggerAction(
         )?.ifEmpty { null } ?: throw StreamTriggerException(
             action = this,
             triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
-            reasonParams = listOf("First level group[$firstGroupName] does not exist"),
-            commitCheck = CommitCheck(
-                block = false,
-                state = StreamCommitCheckState.FAILURE
-            )
+            reasonParams = listOf("First level group[$firstGroupName] does not exist")
         )
     }
 
@@ -159,10 +159,6 @@ class StreamRepoTriggerAction(
                 reasonParams = listOf(
                     "Permissions denied, master and above permissions are required. " +
                         "Repo: (${triggerOn.repoHook?.name})"
-                ),
-                commitCheck = CommitCheck(
-                    block = false,
-                    state = StreamCommitCheckState.FAILURE
                 )
             )
         }
@@ -186,22 +182,14 @@ class StreamRepoTriggerAction(
                     throw StreamTriggerException(
                         action = this,
                         triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
-                        reasonParams = listOf("Credential [${repoHook.credentialsForTicketId}] does not exist"),
-                        commitCheck = CommitCheck(
-                            block = false,
-                            state = StreamCommitCheckState.FAILURE
-                        )
+                        reasonParams = listOf("Credential [${repoHook.credentialsForTicketId}] does not exist")
                     )
                 }
             repoHook.credentialsForToken != null -> repoHook.credentialsForToken!!
             else -> throw StreamTriggerException(
                 action = this,
                 triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
-                reasonParams = listOf("credentials cannot be null"),
-                commitCheck = CommitCheck(
-                    block = false,
-                    state = StreamCommitCheckState.FAILURE
-                )
+                reasonParams = listOf("credentials cannot be null")
             )
         }
 
@@ -219,11 +207,7 @@ class StreamRepoTriggerAction(
             throw StreamTriggerException(
                 action = this,
                 triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
-                reasonParams = listOf("401 Unauthorized. Repo:(${repoHook.name})"),
-                commitCheck = CommitCheck(
-                    block = false,
-                    state = StreamCommitCheckState.FAILURE
-                )
+                reasonParams = listOf("401 Unauthorized. Repo:(${repoHook.name})")
             )
         }
         val check = this.api.getProjectUserInfo(

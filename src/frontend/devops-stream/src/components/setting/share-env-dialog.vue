@@ -10,7 +10,7 @@
                 title: loading.title
             }">
             <div class="node-list-header">
-                <div class="title">Select {{selectType.toLowerCase()}} to link
+                <div class="title">{{$t('select')}}{{$t(selectType.toLowerCase())}}
                 </div>
                 <div class="search-input-row" v-if="selectType === 'PROJECT'">
                     <div class="biz-search-input">
@@ -34,7 +34,7 @@
                                 ></bk-checkbox>
                             </div>
                             <div class="table-node-item node-item-ip">{{ selectType === 'PROJECT' ? 'Id' : 'Group Id'}}</div>
-                            <div class="table-node-item node-item-name">{{ selectType === 'PROJECT' ? 'Project Name' : 'Group Name'}}</div>
+                            <div class="table-node-item node-item-name">{{ selectType === 'PROJECT' ? $t('projectName') : $t('groupName')}}</div>
                         </div>
                         <div class="table-node-body">
                             <template v-for="(col, index) of rowList">
@@ -83,8 +83,8 @@
         </div>
         <div slot="footer">
             <div class="footer-handler">
-                <bk-button theme="primary" @click="confirmFn" :disabled="shareSelectConf.unselected">Confirm</bk-button>
-                <bk-button theme="default" @click="cancelFn">Cancel</bk-button>
+                <bk-button theme="primary" @click="confirmFn" :disabled="shareSelectConf.unselected">{{$t('confirm')}}</bk-button>
+                <bk-button theme="default" @click="cancelFn">{{$t('cancel')}}</bk-button>
             </div>
         </div>
     </bk-dialog>

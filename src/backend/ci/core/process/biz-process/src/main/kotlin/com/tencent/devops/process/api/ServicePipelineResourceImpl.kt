@@ -29,11 +29,13 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -41,9 +43,11 @@ import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
@@ -66,7 +70,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
     private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService
+    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
+    private val pipelinePermissionService: PipelinePermissionService
 ) : ServicePipelineResource {
     override fun status(
         userId: String,
@@ -167,11 +172,13 @@ class ServicePipelineResourceImpl @Autowired constructor(
         channelCode: ChannelCode,
         useTemplateSettings: Boolean?
     ): Result<PipelineId> {
-        val pipelineId = PipelineId(id = pipelineInfoFacadeService.uploadPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineModelAndSetting = modelAndSetting
-        ))
+        val pipelineId = PipelineId(
+            id = pipelineInfoFacadeService.uploadPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineModelAndSetting = modelAndSetting
+            )
+        )
         auditService.createAudit(
             Audit(
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
@@ -228,13 +235,15 @@ class ServicePipelineResourceImpl @Autowired constructor(
         channelCode: ChannelCode
     ): Result<Model> {
         checkParams(userId, projectId)
-        return Result(pipelineInfoFacadeService.getPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            channelCode = channelCode,
-            checkPermission = false
-        ))
+        return Result(
+            pipelineInfoFacadeService.getPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode,
+                checkPermission = false
+            )
+        )
     }
 
     override fun getWithPermission(
@@ -245,13 +254,15 @@ class ServicePipelineResourceImpl @Autowired constructor(
         checkPermission: Boolean
     ): Result<Model> {
         checkParams(userId, projectId)
-        return Result(data = pipelineInfoFacadeService.getPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            channelCode = channelCode,
-            checkPermission = checkPermission
-        ))
+        return Result(
+            data = pipelineInfoFacadeService.getPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode,
+                checkPermission = checkPermission
+            )
+        )
     }
 
     override fun getSettingWithPermission(
@@ -262,13 +273,15 @@ class ServicePipelineResourceImpl @Autowired constructor(
         checkPermission: Boolean
     ): Result<PipelineSetting> {
         checkParams(userId, projectId)
-        return Result(data = pipelineSettingFacadeService.userGetSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            channelCode = channelCode,
-            checkPermission = checkPermission
-        ))
+        return Result(
+            data = pipelineSettingFacadeService.userGetSetting(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode,
+                checkPermission = checkPermission
+            )
+        )
     }
 
     override fun getBatch(
@@ -278,13 +291,15 @@ class ServicePipelineResourceImpl @Autowired constructor(
         channelCode: ChannelCode
     ): Result<List<Pipeline>> {
         checkParams(userId, projectId, pipelineIds)
-        return Result(data = pipelineListFacadeService.getBatchPipelinesWithModel(
-            userId = userId,
-            projectId = projectId,
-            pipelineIds = pipelineIds,
-            channelCode = channelCode,
-            checkPermission = false
-        ))
+        return Result(
+            data = pipelineListFacadeService.getBatchPipelinesWithModel(
+                userId = userId,
+                projectId = projectId,
+                pipelineIds = pipelineIds,
+                channelCode = channelCode,
+                checkPermission = false
+            )
+        )
     }
 
     override fun saveSetting(
@@ -292,6 +307,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         updateLastModifyUser: Boolean?,
+        channelCode: ChannelCode?,
         setting: PipelineSetting
     ): Result<Boolean> {
         checkProjectId(projectId)
@@ -299,7 +315,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         pipelineSettingFacadeService.saveSetting(
             userId = userId,
             setting = setting,
-            checkPermission = true,
+            checkPermission = ChannelCode.isNeedAuth(channelCode ?: ChannelCode.BS),
             updateLastModifyUser = updateLastModifyUser
         )
         return Result(true)
@@ -387,11 +403,13 @@ class ServicePipelineResourceImpl @Autowired constructor(
     }
 
     override fun getAllstatus(userId: String, projectId: String, pipelineId: String): Result<List<Pipeline>?> {
-        return Result(pipelineListFacadeService.getPipelineAllStatus(
-            userId = userId,
-            projectId = projectId,
-            pipeline = pipelineId
-        ))
+        return Result(
+            pipelineListFacadeService.getPipelineAllStatus(
+                userId = userId,
+                projectId = projectId,
+                pipeline = pipelineId
+            )
+        )
     }
 
     override fun rename(userId: String, projectId: String, pipelineId: String, name: PipelineName): Result<Boolean> {
@@ -438,13 +456,31 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getPipelineLabelInfos(
+    override fun searchByName(
         userId: String,
-        projectIds: List<String>
-    ): Result<List<PipelineLabelRelateInfo>> {
-        return Result(
-            pipelineListFacadeService.getProjectPipelineLabelInfos(projectIds)
+        projectId: String,
+        pipelineName: String?
+    ): Result<List<PipelineIdAndName>> {
+        checkParam(userId, projectId)
+        if (!pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw PermissionForbiddenException("$userId 无项目$projectId 查看权限")
+        }
+        val pipelineInfos = pipelineListFacadeService.searchIdAndName(
+            projectId = projectId,
+            pipelineName = pipelineName,
+            page = null,
+            pageSize = null
         )
+        return Result(pipelineInfos)
+    }
+
+    override fun batchUpdateModelName(modelUpdateList: List<ModelUpdate>): Result<List<ModelUpdate>> {
+        return Result(pipelineInfoFacadeService.batchUpdateModelName(modelUpdateList))
     }
 
     private fun checkParams(userId: String, projectId: String) {
