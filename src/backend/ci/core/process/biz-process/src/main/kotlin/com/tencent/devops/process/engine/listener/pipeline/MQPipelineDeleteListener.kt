@@ -38,6 +38,8 @@ import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.view.PipelineViewGroupService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -55,46 +57,79 @@ class MQPipelineDeleteListener @Autowired constructor(
     private val pipelineAtomStatisticsService: PipelineAtomStatisticsService,
     private val callBackControl: CallBackControl,
     private val agentPipelineRefService: AgentPipelineRefService,
+    private val pipelineViewGroupService: PipelineViewGroupService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineDeleteEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineDeleteEvent) {
         val watcher = Watcher(id = "${event.traceId}|DeletePipeline#${event.pipelineId}|${event.clearUpModel}")
-        try {
-            val projectId = event.projectId
-            val pipelineId = event.pipelineId
-            val userId = event.userId
+        val projectId = event.projectId
+        val pipelineId = event.pipelineId
+        val userId = event.userId
 
+        try {
             watcher.start("cancelPendingTask")
             pipelineRuntimeService.cancelPendingTask(projectId, pipelineId, userId)
+        } finally {
             watcher.stop()
+        }
 
-            if (event.clearUpModel) {
+        if (event.clearUpModel) {
+            try {
                 watcher.start("deleteExt")
                 pipelineGroupService.deleteAllUserFavorByPipeline(userId, projectId, pipelineId) // 删除收藏该流水线上所有记录
                 pipelineGroupService.deletePipelineLabel(userId, projectId, pipelineId)
                 pipelineRuntimeService.deletePipelineBuilds(projectId, pipelineId)
+            } finally {
+                watcher.stop()
             }
+        }
+
+        try {
             watcher.start("deleteWebhook")
             pipelineWebhookService.deleteWebhook(projectId, pipelineId, userId)
+        } finally {
             watcher.stop()
+        }
+
+        try {
             watcher.start("updateAgentPipelineRef")
-            with(event) {
-                agentPipelineRefService.updateAgentPipelineRef(userId, "delete_pipeline", projectId, pipelineId)
-            }
+            agentPipelineRefService.updateAgentPipelineRef(userId, "delete_pipeline", projectId, pipelineId)
+        } finally {
             watcher.stop()
+        }
+
+        try {
             watcher.start("updateAtomPipelineNum")
             pipelineAtomStatisticsService.updateAtomPipelineNum(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 deleteFlag = true
             )
+        } finally {
             watcher.stop()
+        }
+
+        try {
             watcher.start("callback")
             callBackControl.pipelineDeleteEvent(projectId = event.projectId, pipelineId = event.pipelineId)
         } finally {
             watcher.stop()
-            LogUtils.printCostTimeWE(watcher = watcher)
         }
+
+        try {
+            watcher.start("updateViewGroup")
+            pipelineViewGroupService.updateGroupAfterPipelineDelete(projectId, pipelineId)
+        } catch (e: Exception) {
+            logger.warn("update view group", e)
+        } finally {
+            watcher.stop()
+        }
+
+        LogUtils.printCostTimeWE(watcher = watcher)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(MQPipelineDeleteListener::class.java)
     }
 }

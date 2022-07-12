@@ -37,6 +37,8 @@ import com.tencent.devops.process.engine.service.AgentPipelineRefService
 import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.service.view.PipelineViewGroupService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -51,29 +53,42 @@ class MQPipelineUpdateListener @Autowired constructor(
     private val pipelineAtomStatisticsService: PipelineAtomStatisticsService,
     private val callBackControl: CallBackControl,
     private val agentPipelineRefService: AgentPipelineRefService,
-    pipelineEventDispatcher: PipelineEventDispatcher,
-    private val pipelineWebhookService: PipelineWebhookService
+    private val pipelineWebhookService: PipelineWebhookService,
+    private val pipelineViewGroupService: PipelineViewGroupService,
+    pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineUpdateEvent) {
         val watcher = Watcher(id = "${event.traceId}|UpdatePipeline#${event.pipelineId}|${event.userId}")
-        try {
-            if (event.buildNo != null) {
+        if (event.buildNo != null) {
+            try {
                 watcher.start("updateBuildNo")
                 pipelineRuntimeService.updateBuildNo(event.projectId, event.pipelineId, event.buildNo!!.buildNo)
+            } finally {
                 watcher.stop()
             }
+        }
+        try {
             watcher.start("callback")
             callBackControl.pipelineUpdateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
+        } finally {
             watcher.stop()
+        }
+        try {
             watcher.start("updateAgentPipelineRef")
             with(event) {
                 agentPipelineRefService.updateAgentPipelineRef(userId, "update_pipeline", projectId, pipelineId)
             }
+        } finally {
             watcher.stop()
+        }
+        try {
             watcher.start("updateAtomPipelineNum")
             pipelineAtomStatisticsService.updateAtomPipelineNum(event.projectId, event.pipelineId, event.version)
+        } finally {
             watcher.stop()
+        }
+        try {
             watcher.start("addWebhook")
             pipelineWebhookService.addWebhook(
                 projectId = event.projectId,
@@ -81,10 +96,24 @@ class MQPipelineUpdateListener @Autowired constructor(
                 version = event.version,
                 userId = event.userId
             )
-            watcher.stop()
         } finally {
             watcher.stop()
-            LogUtils.printCostTimeWE(watcher)
         }
+        try {
+            watcher.start("updateViewGroup")
+            with(event) {
+                pipelineViewGroupService.updateGroupAfterPipelineUpdate(projectId, pipelineId, userId)
+            }
+        } catch (e: Exception) {
+            logger.warn("update view group", e)
+        } finally {
+            watcher.stop()
+        }
+
+        LogUtils.printCostTimeWE(watcher)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(MQPipelineUpdateListener::class.java)
     }
 }

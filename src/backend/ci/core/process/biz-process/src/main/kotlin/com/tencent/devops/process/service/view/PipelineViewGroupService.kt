@@ -27,18 +27,16 @@
 
 package com.tencent.devops.process.service.view
 
-import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
-import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
-import com.tencent.devops.process.pojo.classify.PipelineViewFilterByCreator
-import com.tencent.devops.process.pojo.classify.PipelineViewFilterByLabel
-import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
-import com.tencent.devops.process.pojo.classify.enums.Logic
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -49,86 +47,94 @@ class PipelineViewGroupService @Autowired constructor(
     private val pipelineViewDao: PipelineViewDao,
     private val pipelineViewGroupDao: PipelineViewGroupDao,
     private val pipelineViewTopDao: PipelineViewTopDao,
-    private val dslContext: DSLContext
+    private val pipelineInfoDao: PipelineInfoDao,
+    private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation
 ) {
-    fun updateGroupAfterPipelineCreate(pipelineInfo: TPipelineInfoRecord) {
-        // TODO 加锁
 
-    }
-
-    fun updateGroupAfterPipelineDelete(pipelineId: String) {
-        // TODO 加锁
-        pipelineViewGroupDao.listByPipelineId(dslContext, pipelineId).forEach {
-            pipelineViewGroupDao.removeById(dslContext, it.id)
-        }
-    }
-
-    fun updateGroupAfterPipelineUpdate(pipelineInfo: TPipelineInfoRecord, userId: String) {
-        // TODO 加锁
-        // 所有的动态项目组
-        val dynamicProjectViews = pipelineViewDao.list(dslContext, pipelineInfo.projectId)
-            .filter { it.viewType == PipelineViewType.DYNAMIC }
-        val dynamicProjectViewIds = dynamicProjectViews.asSequence()
-            .map { it.id }
-            .toSet()
-        // 命中的动态项目组
-        val matchViewIds = dynamicProjectViews.asSequence()
-            .filter { matchView(it, pipelineInfo) }
-            .map { it.id }
-            .toSet()
-        // 已有的动态项目组
-        val baseViewGroups = pipelineViewGroupDao.listByPipelineId(dslContext, pipelineInfo.pipelineId)
-            .filter { dynamicProjectViewIds.contains(it.viewId) }
-            .toSet()
-        val baseViewIds = baseViewGroups.map { it.viewId }.toSet()
-        // 新增新命中的项目组
-        val addViewIds = matchViewIds.filterNot { baseViewIds.contains(it) }.toSet()
-        addViewIds.forEach {
-            pipelineViewGroupDao.create(
-                dslContext = dslContext,
-                viewId = it,
-                pipelineId = pipelineInfo.pipelineId,
-                creator = userId
-            )
-        }
-        // 删除未命中的老项目组
-        val deleteIds = baseViewGroups.filterNot { matchViewIds.contains(it.viewId) }.map { it.id }.toSet()
-        deleteIds.forEach {
-            pipelineViewGroupDao.removeById(dslContext, it)
+    fun updateGroupAfterPipelineCreate(projectId: String, pipelineId: String, userId: String) {
+        val viewGroupLock = PipelineViewGroupLock(redisOperation, projectId)
+        try {
+            viewGroupLock.lock()
+            logger.info("updateGroupAfterPipelineCreate, projectId:$projectId, pipelineId:$pipelineId , userId:$userId")
+            val pipelineInfo = pipelineInfoDao.getPipelineId(dslContext, projectId, pipelineId)!!
+            val viewGroupCount = pipelineViewGroupDao.countByPipelineId(dslContext, pipelineInfo.pipelineId)
+            if (viewGroupCount == 0) {
+                val dynamicProjectViews =
+                    pipelineViewDao.list(dslContext, pipelineInfo.projectId, PipelineViewType.DYNAMIC)
+                val matchViewIds = dynamicProjectViews.asSequence()
+                    .filter { pipelineViewService.matchView(it, pipelineInfo) }
+                    .map { it.id }
+                    .toSet()
+                matchViewIds.forEach {
+                    pipelineViewGroupDao.create(
+                        dslContext = dslContext,
+                        viewId = it,
+                        pipelineId = pipelineInfo.pipelineId,
+                        creator = userId
+                    )
+                }
+            }
+        } finally {
+            viewGroupLock.unlock()
         }
     }
 
-    @SuppressWarnings("LoopWithTooManyJumpStatements")
-    private fun matchView(
-        pipelineView: TPipelineViewRecord,
-        pipelineInfo: TPipelineInfoRecord
-    ): Boolean {
-        val filters = pipelineViewService.getFilters(
-            filterByName = pipelineView.filterByPipeineName,
-            filterByCreator = pipelineView.filterByCreator,
-            filters = pipelineView.filters
-        )
-        for (filter in filters) {
-            val match = if (filter is PipelineViewFilterByName) {
-                pipelineInfo.pipelineName.contains(filter.pipelineName)
-            } else if (filter is PipelineViewFilterByCreator) {
-                filter.userIds.contains(pipelineInfo.creator)
-            } else if (filter is PipelineViewFilterByLabel) {
-                pipelineGroupService.getViewLabelToPipelinesMap(
-                    pipelineInfo.projectId,
-                    filter.labelIds
-                ).values.asSequence().flatten().contains(pipelineInfo.pipelineId)
-            } else {
-                continue
+    fun updateGroupAfterPipelineDelete(projectId: String, pipelineId: String) {
+        val viewGroupLock = PipelineViewGroupLock(redisOperation, projectId)
+        try {
+            viewGroupLock.lock()
+            logger.info("updateGroupAfterPipelineDelete, projectId:$projectId, pipelineId:$pipelineId")
+            pipelineViewGroupDao.listByPipelineId(dslContext, pipelineId).forEach {
+                pipelineViewGroupDao.removeById(dslContext, it.id)
             }
-
-            if (pipelineView.logic == Logic.OR.name && match) {
-                return true
-            }
-            if (pipelineView.logic == Logic.AND.name && !match) {
-                return false
-            }
+        } finally {
+            viewGroupLock.unlock()
         }
-        return pipelineView.logic == Logic.AND.name
+    }
+
+    fun updateGroupAfterPipelineUpdate(projectId: String, pipelineId: String, userId: String) {
+        val viewGroupLock = PipelineViewGroupLock(redisOperation, projectId)
+        try {
+            viewGroupLock.lock()
+            logger.info("updateGroupAfterPipelineUpdate, projectId:$projectId, pipelineId:$pipelineId , userId:$userId")
+            val pipelineInfo = pipelineInfoDao.getPipelineId(dslContext, projectId, pipelineId)!!
+            // 所有的动态项目组
+            val dynamicProjectViews = pipelineViewDao.list(dslContext, pipelineInfo.projectId, PipelineViewType.DYNAMIC)
+            val dynamicProjectViewIds = dynamicProjectViews.asSequence()
+                .map { it.id }
+                .toSet()
+            // 命中的动态项目组
+            val matchViewIds = dynamicProjectViews.asSequence()
+                .filter { pipelineViewService.matchView(it, pipelineInfo) }
+                .map { it.id }
+                .toSet()
+            // 已有的动态项目组
+            val baseViewGroups = pipelineViewGroupDao.listByPipelineId(dslContext, pipelineInfo.pipelineId)
+                .filter { dynamicProjectViewIds.contains(it.viewId) }
+                .toSet()
+            val baseViewIds = baseViewGroups.map { it.viewId }.toSet()
+            // 新增新命中的项目组
+            val addViewIds = matchViewIds.filterNot { baseViewIds.contains(it) }.toSet()
+            addViewIds.forEach {
+                pipelineViewGroupDao.create(
+                    dslContext = dslContext,
+                    viewId = it,
+                    pipelineId = pipelineInfo.pipelineId,
+                    creator = userId
+                )
+            }
+            // 删除未命中的老项目组
+            val deleteIds = baseViewGroups.filterNot { matchViewIds.contains(it.viewId) }.map { it.id }.toSet()
+            deleteIds.forEach {
+                pipelineViewGroupDao.removeById(dslContext, it)
+            }
+        } finally {
+            viewGroupLock.unlock()
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineViewGroupService::class.java)
     }
 }

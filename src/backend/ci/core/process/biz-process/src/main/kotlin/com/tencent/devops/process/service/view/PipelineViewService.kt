@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineViewUserLastViewDao
@@ -55,6 +56,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewIdAndName
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import com.tencent.devops.process.pojo.classify.enums.Condition
 import com.tencent.devops.process.pojo.classify.enums.Logic
+import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
@@ -75,6 +77,7 @@ class PipelineViewService @Autowired constructor(
     private val pipelineViewUserSettingDao: PipelineViewUserSettingsDao,
     private val pipelineViewLastViewDao: PipelineViewUserLastViewDao,
     private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineGroupService: PipelineGroupService,
     private val client: Client
 ) {
 
@@ -434,7 +437,41 @@ class PipelineViewService @Autowired constructor(
         return Triple(first = filterByNames, second = filterByCreators, third = filterByLabels)
     }
 
-    fun getFilters(
+    @SuppressWarnings("LoopWithTooManyJumpStatements")
+    fun matchView(
+        pipelineView: TPipelineViewRecord,
+        pipelineInfo: TPipelineInfoRecord
+    ): Boolean {
+        val filters = getFilters(
+            filterByName = pipelineView.filterByPipeineName,
+            filterByCreator = pipelineView.filterByCreator,
+            filters = pipelineView.filters
+        )
+        for (filter in filters) {
+            val match = if (filter is PipelineViewFilterByName) {
+                pipelineInfo.pipelineName.contains(filter.pipelineName)
+            } else if (filter is PipelineViewFilterByCreator) {
+                filter.userIds.contains(pipelineInfo.creator)
+            } else if (filter is PipelineViewFilterByLabel) {
+                pipelineGroupService.getViewLabelToPipelinesMap(
+                    pipelineInfo.projectId,
+                    filter.labelIds
+                ).values.asSequence().flatten().contains(pipelineInfo.pipelineId)
+            } else {
+                continue
+            }
+
+            if (pipelineView.logic == Logic.OR.name && match) {
+                return true
+            }
+            if (pipelineView.logic == Logic.AND.name && !match) {
+                return false
+            }
+        }
+        return pipelineView.logic == Logic.AND.name
+    }
+
+    private fun getFilters(
         filterByName: String,
         filterByCreator: String,
         filters: String?

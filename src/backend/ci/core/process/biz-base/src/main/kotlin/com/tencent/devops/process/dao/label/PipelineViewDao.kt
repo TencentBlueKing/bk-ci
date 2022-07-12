@@ -189,6 +189,15 @@ class PipelineViewDao {
         }
     }
 
+    fun list(dslContext: DSLContext, projectId: String, viewType: Int): Result<TPipelineViewRecord> {
+        with(TPipelineView.T_PIPELINE_VIEW) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(VIEW_TYPE.eq(viewType))
+                .fetch()
+        }
+    }
+
     fun list(dslContext: DSLContext, projectId: String, isProject: Boolean): Result<TPipelineViewRecord> {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
