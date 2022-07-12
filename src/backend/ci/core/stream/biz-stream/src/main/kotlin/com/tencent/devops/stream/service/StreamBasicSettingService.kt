@@ -305,11 +305,11 @@ class StreamBasicSettingService @Autowired constructor(
     }
 
     fun getBasicSettingRecordList(
-        gitProjectIdList: List<Long>? = null,
+        gitProjectIdList: List<Long>? = null
     ): List<TGitBasicSettingRecord> {
         return streamBasicSettingDao.getBasicSettingList(
             dslContext = dslContext,
-            gitProjectIdList = gitProjectIdList,
+            gitProjectIdList = gitProjectIdList
         )
     }
 
