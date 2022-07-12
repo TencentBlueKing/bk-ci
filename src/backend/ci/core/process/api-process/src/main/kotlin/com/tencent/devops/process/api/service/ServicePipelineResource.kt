@@ -521,13 +521,6 @@ interface ServicePipelineResource {
         userId: String
     ): Result<Boolean>
 
-    @ApiOperation("批量更新modelName")
-    @POST
-    @Path("/batch/pipeline/modelName")
-    fun batchUpdateModelName(
-        modelUpdateList: List<ModelUpdate>
-    ): Result<List<ModelUpdate>>
-
     @ApiOperation("根据流水线名称搜索")
     @GET
     @Path("/projects/{projectId}/search_by_name")
