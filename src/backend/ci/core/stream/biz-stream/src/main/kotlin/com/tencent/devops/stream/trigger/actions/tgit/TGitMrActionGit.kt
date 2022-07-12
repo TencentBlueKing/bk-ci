@@ -238,7 +238,8 @@ class TGitMrActionGit(
         val event = event()
         if (event.isMrMergeEvent()) {
             return Pair(
-                data.eventCommon.branch, api.getFileContent(
+                data.eventCommon.branch,
+                api.getFileContent(
                     cred = this.getGitCred(),
                     gitProjectId = data.getGitProjectId(),
                     fileName = fileName,
