@@ -67,69 +67,42 @@ class MQPipelineDeleteListener @Autowired constructor(
         val pipelineId = event.pipelineId
         val userId = event.userId
 
-        try {
-            watcher.start("cancelPendingTask")
+        watcher.safeAround("cancelPendingTask") {
             pipelineRuntimeService.cancelPendingTask(projectId, pipelineId, userId)
-        } finally {
-            watcher.stop()
         }
 
         if (event.clearUpModel) {
-            try {
-                watcher.start("deleteExt")
+            watcher.safeAround("deleteExt") {
                 pipelineGroupService.deleteAllUserFavorByPipeline(userId, projectId, pipelineId) // 删除收藏该流水线上所有记录
                 pipelineGroupService.deletePipelineLabel(userId, projectId, pipelineId)
                 pipelineRuntimeService.deletePipelineBuilds(projectId, pipelineId)
-            } finally {
-                watcher.stop()
             }
         }
 
-        try {
-            watcher.start("deleteWebhook")
+        watcher.safeAround("deleteWebhook") {
             pipelineWebhookService.deleteWebhook(projectId, pipelineId, userId)
-        } finally {
-            watcher.stop()
         }
 
-        try {
-            watcher.start("updateAgentPipelineRef")
+        watcher.safeAround("updateAgentPipelineRef") {
             agentPipelineRefService.updateAgentPipelineRef(userId, "delete_pipeline", projectId, pipelineId)
-        } finally {
-            watcher.stop()
         }
 
-        try {
-            watcher.start("updateAtomPipelineNum")
+        watcher.safeAround("updateAtomPipelineNum") {
             pipelineAtomStatisticsService.updateAtomPipelineNum(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 deleteFlag = true
             )
-        } finally {
-            watcher.stop()
         }
 
-        try {
-            watcher.start("callback")
+        watcher.safeAround("callback") {
             callBackControl.pipelineDeleteEvent(projectId = event.projectId, pipelineId = event.pipelineId)
-        } finally {
-            watcher.stop()
         }
 
-        try {
-            watcher.start("updateViewGroup")
+        watcher.safeAround("updateViewGroup") {
             pipelineViewGroupService.updateGroupAfterPipelineDelete(projectId, pipelineId)
-        } catch (e: Exception) {
-            logger.warn("update view group", e)
-        } finally {
-            watcher.stop()
         }
 
         LogUtils.printCostTimeWE(watcher = watcher)
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(MQPipelineDeleteListener::class.java)
     }
 }

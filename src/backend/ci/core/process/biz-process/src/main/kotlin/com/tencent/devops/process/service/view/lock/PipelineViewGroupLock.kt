@@ -34,5 +34,5 @@ class PipelineViewGroupLock(redisOperation: RedisOperation, projectId: String) :
     RedisLock(
         redisOperation = redisOperation,
         lockKey = "p:view:group:$projectId",
-        expiredTimeInSeconds = 30L
+        expiredTimeInSeconds = 10L
     )

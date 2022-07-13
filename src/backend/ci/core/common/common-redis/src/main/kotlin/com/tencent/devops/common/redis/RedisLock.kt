@@ -189,6 +189,15 @@ open class RedisLock(
         return true
     }
 
+    fun <T> lockAround(action: () -> T): T {
+        try {
+            this.lock()
+            return action()
+        } finally {
+            this.unlock()
+        }
+    }
+
     override fun close() {
         unlock()
     }

@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.view
 
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
@@ -52,10 +53,40 @@ class PipelineViewGroupService @Autowired constructor(
     private val redisOperation: RedisOperation
 ) {
 
+    fun listPipelineIdsByViewId(projectId: String, viewId: Long): List<String> {
+        val view = pipelineViewDao.get(dslContext, projectId, viewId)
+        if (view == null) {
+            logger.warn("null view , project:$projectId , view:$viewId")
+            return emptyList()
+        }
+        val isStatic = view.viewType == PipelineViewType.STATIC
+        val viewGroups = pipelineViewGroupDao.listByViewId(dslContext, viewId)
+        if (viewGroups.isEmpty()) {
+            return if (isStatic) emptyList() else initDynamicViewGroup(projectId, view)
+        }
+        return viewGroups.map { it.pipelineId }.toList()
+    }
+
+    fun initDynamicViewGroup(projectId: String, view: TPipelineViewRecord): List<String> {
+        val firstInit = redisOperation.setIfAbsent("initDynamicViewGroup:$projectId:${view.id}", "1")
+        if (!firstInit) {
+            return emptyList()
+        }
+
+        return PipelineViewGroupLock(redisOperation, projectId).lockAround {
+            val pipelineInfos = pipelineInfoDao.listInfoByPipelineIds(
+                dslContext = dslContext,
+                pipelineIds = setOf(projectId)
+            )
+            pipelineInfos.asSequence()
+                .filter { pipelineViewService.matchView(view, it) }
+                .map { it.pipelineId }
+                .toList()
+        }
+    }
+
     fun updateGroupAfterPipelineCreate(projectId: String, pipelineId: String, userId: String) {
-        val viewGroupLock = PipelineViewGroupLock(redisOperation, projectId)
-        try {
-            viewGroupLock.lock()
+        PipelineViewGroupLock(redisOperation, projectId).lockAround {
             logger.info("updateGroupAfterPipelineCreate, projectId:$projectId, pipelineId:$pipelineId , userId:$userId")
             val pipelineInfo = pipelineInfoDao.getPipelineId(dslContext, projectId, pipelineId)!!
             val viewGroupCount = pipelineViewGroupDao.countByPipelineId(dslContext, pipelineInfo.pipelineId)
@@ -75,28 +106,20 @@ class PipelineViewGroupService @Autowired constructor(
                     )
                 }
             }
-        } finally {
-            viewGroupLock.unlock()
         }
     }
 
     fun updateGroupAfterPipelineDelete(projectId: String, pipelineId: String) {
-        val viewGroupLock = PipelineViewGroupLock(redisOperation, projectId)
-        try {
-            viewGroupLock.lock()
+        PipelineViewGroupLock(redisOperation, projectId).lockAround {
             logger.info("updateGroupAfterPipelineDelete, projectId:$projectId, pipelineId:$pipelineId")
             pipelineViewGroupDao.listByPipelineId(dslContext, pipelineId).forEach {
                 pipelineViewGroupDao.removeById(dslContext, it.id)
             }
-        } finally {
-            viewGroupLock.unlock()
         }
     }
 
     fun updateGroupAfterPipelineUpdate(projectId: String, pipelineId: String, userId: String) {
-        val viewGroupLock = PipelineViewGroupLock(redisOperation, projectId)
-        try {
-            viewGroupLock.lock()
+        PipelineViewGroupLock(redisOperation, projectId).lockAround {
             logger.info("updateGroupAfterPipelineUpdate, projectId:$projectId, pipelineId:$pipelineId , userId:$userId")
             val pipelineInfo = pipelineInfoDao.getPipelineId(dslContext, projectId, pipelineId)!!
             // 所有的动态项目组
@@ -129,8 +152,6 @@ class PipelineViewGroupService @Autowired constructor(
             deleteIds.forEach {
                 pipelineViewGroupDao.removeById(dslContext, it)
             }
-        } finally {
-            viewGroupLock.unlock()
         }
     }
 

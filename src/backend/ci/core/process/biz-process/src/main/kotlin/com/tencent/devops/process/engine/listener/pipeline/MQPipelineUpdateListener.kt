@@ -60,60 +60,42 @@ class MQPipelineUpdateListener @Autowired constructor(
 
     override fun run(event: PipelineUpdateEvent) {
         val watcher = Watcher(id = "${event.traceId}|UpdatePipeline#${event.pipelineId}|${event.userId}")
+
         if (event.buildNo != null) {
-            try {
-                watcher.start("updateBuildNo")
+            watcher.safeAround("updateBuildNo") {
                 pipelineRuntimeService.updateBuildNo(event.projectId, event.pipelineId, event.buildNo!!.buildNo)
-            } finally {
-                watcher.stop()
             }
         }
-        try {
-            watcher.start("callback")
+
+        watcher.safeAround("callback") {
             callBackControl.pipelineUpdateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
-        } finally {
-            watcher.stop()
         }
-        try {
-            watcher.start("updateAgentPipelineRef")
+
+        watcher.safeAround("updateAgentPipelineRef") {
             with(event) {
                 agentPipelineRefService.updateAgentPipelineRef(userId, "update_pipeline", projectId, pipelineId)
             }
-        } finally {
-            watcher.stop()
         }
-        try {
-            watcher.start("updateAtomPipelineNum")
+
+        watcher.safeAround("updateAtomPipelineNum") {
             pipelineAtomStatisticsService.updateAtomPipelineNum(event.projectId, event.pipelineId, event.version)
-        } finally {
-            watcher.stop()
         }
-        try {
-            watcher.start("addWebhook")
+
+        watcher.safeAround("addWebhook") {
             pipelineWebhookService.addWebhook(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 version = event.version,
                 userId = event.userId
             )
-        } finally {
-            watcher.stop()
         }
-        try {
-            watcher.start("updateViewGroup")
+
+        watcher.safeAround("updateViewGroup") {
             with(event) {
                 pipelineViewGroupService.updateGroupAfterPipelineUpdate(projectId, pipelineId, userId)
             }
-        } catch (e: Exception) {
-            logger.warn("update view group", e)
-        } finally {
-            watcher.stop()
         }
 
         LogUtils.printCostTimeWE(watcher)
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(MQPipelineUpdateListener::class.java)
     }
 }

@@ -60,62 +60,41 @@ class MQPipelineCreateListener @Autowired constructor(
     override fun run(event: PipelineCreateEvent) {
         val watcher = Watcher(id = "${event.traceId}|CreatePipeline#${event.pipelineId}|${event.userId}")
 
-        try {
-            watcher.start("callback")
+        watcher.safeAround("callback") {
             callBackControl.pipelineCreateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
-        } finally {
-            watcher.stop()
         }
 
-        try {
-            watcher.start("updateAtomPipelineNum")
+        watcher.safeAround("updateAtomPipelineNum") {
             pipelineAtomStatisticsService.updateAtomPipelineNum(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 version = event.version ?: 1
             )
-        } finally {
-            watcher.stop()
         }
 
-        try {
-            watcher.start("updateAgentPipelineRef")
+        watcher.safeAround("updateAgentPipelineRef") {
             with(event) {
                 agentPipelineRefService.updateAgentPipelineRef(userId, "create_pipeline", projectId, pipelineId)
             }
-        } finally {
-            watcher.stop()
         }
 
-        try {
-            watcher.start("addWebhook")
+        watcher.safeAround("addWebhook") {
             pipelineWebhookService.addWebhook(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 version = event.version,
                 userId = event.userId
             )
-        } finally {
-            watcher.stop()
         }
 
-        try {
-            watcher.start("updateViewGroup")
+        watcher.safeAround("updateViewGroup") {
             pipelineViewGroupService.updateGroupAfterPipelineCreate(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 userId = event.userId
             )
-        } catch (e: Exception) {
-            logger.warn("update view group failed", e)
-        } finally {
-            watcher.stop()
         }
 
         LogUtils.printCostTimeWE(watcher = watcher)
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(MQPipelineCreateListener::class.java)
     }
 }

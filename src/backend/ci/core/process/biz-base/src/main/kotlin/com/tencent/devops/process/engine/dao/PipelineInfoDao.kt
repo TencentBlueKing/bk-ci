@@ -554,10 +554,10 @@ class PipelineInfoDao {
         }
     }
 
-    fun listByProject(dslContext: DSLContext, projectCode: String): Result<Record2<String, Long>> {
+    fun listByProject(dslContext: DSLContext, projectId: String): Result<Record2<String, Long>> {
         return with(T_PIPELINE_INFO) {
             dslContext.select(PIPELINE_ID.`as`("pipelineId"), ID.`as`("id")).from(this)
-                .where(PROJECT_ID.eq(projectCode).and(DELETE.eq(false))).fetch()
+                .where(PROJECT_ID.eq(projectId).and(DELETE.eq(false))).fetch()
         }
     }
 
