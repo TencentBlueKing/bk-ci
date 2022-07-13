@@ -98,6 +98,8 @@ class GithubPRActionGit(
     override val mrIId: String
         get() = event().pullRequest.id.toString()
 
+    override fun checkMrForkAction() = event().isPrForkEvent()
+
     override fun addMrComment(body: MrCommentBody) {
         apiService.addMrComment(
             cred = getGitCred(),
