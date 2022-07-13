@@ -215,6 +215,9 @@ func (h *UBTTool) selectActionsToExecute() error {
 
 		h.readyactions[index].Running = true
 		h.runningnumber++
+		_, _ = fmt.Fprintf(os.Stdout, "[bk_ubt_tool] finished:%d,running:%d,total:%d, current action: %s %s\n",
+			h.finishednumber, h.runningnumber, len(h.allactions),
+			h.readyactions[index].Cmd, h.readyactions[index].Arg)
 		go h.executeOneAction(h.readyactions[index], h.actionchan)
 	}
 
