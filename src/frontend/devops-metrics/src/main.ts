@@ -15,9 +15,10 @@ import { createI18n } from 'vue-i18n'
 import ZhCN from '../../locale/metrics/zh-CN.json'
 import EnUS from '../../locale/metrics/en-US.json'
 
+const i18nLocale = getCookie('blueking_language') || ''
 const i18n = createI18n({
-  locale: getCookie('stream_language') || getCookie('blueking_language'),
-  fallbackLocale: 'en-US',
+  locale: ['en', 'en-us', 'en_us'].includes(i18nLocale.toLowerCase()) ? 'en-US' : 'zh-CN',
+  fallbackLocale: 'zh-CN',
   messages: {
     'zh-CN': ZhCN,
     'en-US': EnUS
