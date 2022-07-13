@@ -256,7 +256,22 @@ func (h *UBTTool) executeOneAction(action common.Action, actionchan chan common.
 	fullargs := []string{action.Cmd}
 	args, _ := shlex.Split(replaceWithNextExclude(action.Arg, '\\', "\\\\", []byte{'"'}))
 	fullargs = append(fullargs, args...)
-	exitcode, err := h.executor.Run(fullargs, action.Workdir)
+
+	//exitcode, err := h.executor.Run(fullargs, action.Workdir)
+	// try again if failed after sleep some time
+	var exitcode int
+	waitsecs := 5
+	var err error
+	for try := 0; try < 6; try++ {
+		exitcode, err = h.executor.Run(fullargs, action.Workdir)
+		if err != nil {
+			blog.Warnf("UBTTool: failed to execute action with error [%+v] for %d times, actions:%+v", err, try, action)
+			time.Sleep(time.Duration(waitsecs) * time.Second)
+			waitsecs = waitsecs * 2
+			continue
+		}
+		break
+	}
 
 	r := common.Actionresult{
 		Index:     action.Index,
