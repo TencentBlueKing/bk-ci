@@ -22,7 +22,7 @@ class UserCustomScheduleTaskController @Autowired constructor(
         projectId: String,
         customScheduleJobModel: CustomScheduleJobModel
     ): Boolean {
-        if (!turboAuthService.getAuthResult(projectId, user)) {
+        if (!turboAuthService.validatePlatformMember(projectId, user)) {
             throw TurboException(errorCode = IS_NOT_ADMIN_MEMBER, errorMessage = NO_ADMIN_MEMBER_MESSAGE)
         }
         return customScheduleJobService.customScheduledJobAdd(customScheduleJobModel)

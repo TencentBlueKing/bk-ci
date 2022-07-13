@@ -139,8 +139,8 @@ class TurboSummaryDao @Autowired constructor(
 
         val group = Aggregation.group("project_id")
             .first("project_id").`as`("project_id")
-            .first("execute_time").`as`("execute_time").sum("execute_time").`as`("execute_time")
-            .first("estimate_time").`as`("estimate_time").sum("estimate_time").`as`("estimate_time")
+            .sum("execute_time").`as`("execute_time")
+            .sum("estimate_time").`as`("estimate_time")
 
         val skip = Aggregation.skip(pageNum.toLong())
         val limit = Aggregation.limit(pageSize.toLong())
