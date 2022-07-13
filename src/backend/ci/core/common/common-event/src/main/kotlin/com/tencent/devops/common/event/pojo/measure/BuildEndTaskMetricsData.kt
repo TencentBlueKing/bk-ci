@@ -25,21 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.pojo
+package com.tencent.devops.common.event.pojo.measure
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("构建结束后stage指标数据")
-data class BuildEndStageMetricsData(
-    @ApiModelProperty("stageId", required = true)
-    val stageId: String,
-    @ApiModelProperty("stage标签名称列表", required = false)
-    val stageTagNames: List<String>?,
+@ApiModel("构建结束后task指标数据")
+data class BuildEndTaskMetricsData(
+    @ApiModelProperty("taskId", required = true)
+    val taskId: String,
+    @ApiModelProperty("插件名称", required = true)
+    val atomName: String,
+    @ApiModelProperty("插件标识", required = true)
+    val atomCode: String,
+    @ApiModelProperty("插件在model中的位置", required = true)
+    val atomPosition: String,
+    @ApiModelProperty("插件分类代码", required = true)
+    val classifyCode: String,
+    @ApiModelProperty("插件分类名称", required = true)
+    val classifyName: String,
+    @ApiModelProperty("执行开始时间", required = false)
+    val startTime: String?,
+    @ApiModelProperty("执行结束时间", required = false)
+    val endTime: String?,
+    @ApiModelProperty("task构建耗时", required = true)
+    val costTime: Long,
     @ApiModelProperty("是否执行成功", required = true)
     val successFlag: Boolean,
-    @ApiModelProperty("stage构建耗时", required = true)
-    val costTime: Long,
-    @ApiModelProperty("container指标数据列表", required = true)
-    val containers: List<BuildEndContainerMetricsData>
+    @ApiModelProperty("错误类型", required = false)
+    val errorType: Int? = null,
+    @ApiModelProperty("错误码", required = false)
+    val errorCode: Int? = null,
+    @ApiModelProperty("错误描述", required = false)
+    val errorMsg: String? = null
 )
