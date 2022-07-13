@@ -27,7 +27,7 @@
 
 package com.tencent.devops.metrics.dao
 
-import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
+import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.model.metrics.tables.TErrorTypeDict
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo

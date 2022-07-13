@@ -29,7 +29,7 @@ package com.tencent.devops.metrics.listener
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.PipelineLabelChangeTypeEnum
+import com.tencent.devops.common.event.enums.PipelineLabelChangeTypeEnum
 import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.event.pojo.measure.LabelChangeMetricsBroadCastEvent
 import com.tencent.devops.metrics.service.SyncPipelineRelateLabelDataService
