@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.event.pojo.measure
 
-import com.tencent.devops.common.api.pojo.BuildEndPipelineMetricsData
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 

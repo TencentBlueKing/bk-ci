@@ -25,37 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.pojo
+package com.tencent.devops.common.event.pojo.measure
 
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("构建结束后task指标数据")
-data class BuildEndTaskMetricsData(
-    @ApiModelProperty("taskId", required = true)
-    val taskId: String,
-    @ApiModelProperty("插件名称", required = true)
-    val atomName: String,
-    @ApiModelProperty("插件标识", required = true)
-    val atomCode: String,
-    @ApiModelProperty("插件在model中的位置", required = true)
-    val atomPosition: String,
-    @ApiModelProperty("插件分类代码", required = true)
-    val classifyCode: String,
-    @ApiModelProperty("插件分类名称", required = true)
-    val classifyName: String,
-    @ApiModelProperty("执行开始时间", required = false)
-    val startTime: String?,
-    @ApiModelProperty("执行结束时间", required = false)
-    val endTime: String?,
-    @ApiModelProperty("task构建耗时", required = true)
+@ApiModel("构建结束后流水线指标数据")
+data class BuildEndPipelineMetricsData(
+    @ApiModelProperty("统计时间", required = true)
+    val statisticsTime: String,
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("流水线ID", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("流水线名称", required = true)
+    val pipelineName: String,
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("构建序号", required = true)
+    val buildNum: Int,
+    @ApiModelProperty("代码库地址", required = false)
+    val repoUrl: String? = null,
+    @ApiModelProperty("代码库分支", required = false)
+    val branch: String? = null,
+    @ApiModelProperty("启动用户", required = true)
+    val startUser: String,
+    @ApiModelProperty("执行开始时间", required = true)
+    val startTime: String? = null,
+    @ApiModelProperty("执行结束时间", required = true)
+    val endTime: String? = null,
+    @ApiModelProperty("流水线构建耗时", required = true)
     val costTime: Long,
     @ApiModelProperty("是否执行成功", required = true)
     val successFlag: Boolean,
-    @ApiModelProperty("错误类型", required = false)
-    val errorType: Int? = null,
-    @ApiModelProperty("错误码", required = false)
-    val errorCode: Int? = null,
-    @ApiModelProperty("错误描述", required = false)
-    val errorMsg: String? = null
+    @ApiModelProperty("错误信息列表", required = false)
+    var errorInfos: List<ErrorInfo>? = null,
+    @ApiModelProperty("stage指标数据列表", required = true)
+    val stages: List<BuildEndStageMetricsData>,
+    @ApiModelProperty("渠道代码", required = true)
+    val channelCode: String
 )

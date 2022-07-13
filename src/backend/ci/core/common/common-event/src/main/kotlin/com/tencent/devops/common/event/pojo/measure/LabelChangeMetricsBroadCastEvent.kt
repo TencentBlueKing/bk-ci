@@ -1,7 +1,6 @@
 package com.tencent.devops.common.event.pojo.measure
 
-import com.tencent.devops.common.api.pojo.PipelineLabelChangeTypeEnum
-import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
+import com.tencent.devops.common.event.enums.PipelineLabelChangeTypeEnum
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import java.time.LocalDateTime

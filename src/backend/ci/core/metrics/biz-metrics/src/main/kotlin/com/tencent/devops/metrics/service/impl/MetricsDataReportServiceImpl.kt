@@ -27,11 +27,11 @@
 
 package com.tencent.devops.metrics.service.impl
 
-import com.tencent.devops.common.api.pojo.BuildEndPipelineMetricsData
-import com.tencent.devops.common.api.pojo.BuildEndTaskMetricsData
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
+import com.tencent.devops.common.event.pojo.measure.BuildEndTaskMetricsData
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.MetricsDataQueryDao

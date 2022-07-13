@@ -27,7 +27,7 @@
 
 package com.tencent.devops.metrics.service
 
-import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
+import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import java.time.LocalDateTime
 
 interface SyncPipelineRelateLabelDataService {

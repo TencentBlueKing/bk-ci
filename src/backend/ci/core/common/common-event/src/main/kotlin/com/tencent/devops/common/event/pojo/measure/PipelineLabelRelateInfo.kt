@@ -1,4 +1,4 @@
-package com.tencent.devops.common.api.pojo
+package com.tencent.devops.common.event.pojo.measure
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
