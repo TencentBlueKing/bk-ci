@@ -26,7 +26,9 @@ class WebSocketMQConfig {
 
     @Bean
     fun rabbitAdmin(@Autowired connectionFactory: ConnectionFactory): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
+        val rabbitAdmin = RabbitAdmin(connectionFactory)
+        rabbitAdmin.isAutoStartup = true
+        return rabbitAdmin
     }
     
     @Bean
@@ -56,6 +58,7 @@ class WebSocketMQConfig {
         @Autowired websocketConsumer: WebsocketConsumer,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
+        rabbitAdmin.declareQueue(websocketDefectQueue)
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(websocketDefectQueue.name)
         container.setConcurrentConsumers(5)
