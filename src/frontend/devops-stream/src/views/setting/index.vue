@@ -3,7 +3,7 @@
         <aside class="aside-nav">
             <h3 class="nav-title">
                 <i class="bk-icon icon-arrows-left" @click="backHome"></i>
-                Settings
+                {{$t('setting.settings')}}
             </h3>
             <ul>
                 <li v-for="setting in settingList"
@@ -42,10 +42,10 @@
 
             settingList () {
                 return [
-                    { label: 'Basic Settings', name: 'basicSetting', icon: 'edit', enable: true },
-                    { label: 'Credential Settings', name: 'credentialList', icon: 'lock', enable: this.enableCi },
-                    { label: 'Agent Pools', name: 'agentPools', icon: 'cc-cabinet', enable: this.enableCi },
-                    { label: 'Experience Groups', name: 'expGroups', icon: 'user', enable: this.enableCi }
+                    { label: this.$t('setting.baseSetting'), name: 'basicSetting', icon: 'edit', enable: true },
+                    { label: this.$t('setting.credentialSetting'), name: 'credentialList', icon: 'lock', enable: this.enableCi },
+                    // { label: this.$t('setting.agentPool'), name: 'agentPools', icon: 'cc-cabinet', enable: this.enableCi },
+                    { label: this.$t('setting.experienceGroups'), name: 'expGroups', icon: 'user', enable: this.enableCi }
                 ]
             }
         },

@@ -1005,7 +1005,8 @@ class PipelineRepositoryService constructor(
                 maxConRunningQueueSize = t.maxConRunningQueueSize,
                 buildNumRule = t.buildNumRule,
                 concurrencyCancelInProgress = t.concurrencyCancelInProgress,
-                concurrencyGroup = t.concurrencyGroup
+                concurrencyGroup = t.concurrencyGroup,
+                cleanVariablesWhenRetry = t.cleanVariablesWhenRetry
             )
         } else null
     }
@@ -1176,6 +1177,33 @@ class PipelineRepositoryService constructor(
             pipelineIds = pipelineIds
         )
     }
+
+    fun updateModelName(
+        pipelineId: String,
+        projectId: String,
+        modelName: String,
+        userId: String
+    ) {
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            // 1、update pipelineInf
+            pipelineInfoDao.update(
+                dslContext = transactionContext,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                pipelineName = modelName,
+                userId = null
+            )
+            // 2、update settingName
+            pipelineSettingDao.updateSettingName(
+                dslContext = transactionContext,
+                pipelineIdList = listOf(pipelineId),
+                name = modelName
+            )
+        }
+    }
+
+    // TODO: 2022/7/8 add new update method
 
     companion object {
         private const val MAX_LEN_FOR_NAME = 255

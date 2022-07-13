@@ -38,6 +38,11 @@ interface StreamMrAction : BaseAction {
     val mrIId: String
 
     /**
+     * 判断是否是fork仓库触发的
+     */
+    fun checkMrForkAction(): Boolean
+
+    /**
      * 为合并请求添加评论
      */
     fun addMrComment(

@@ -1,6 +1,6 @@
 <template>
     <section v-if="(stageControl.ruleIds || []).length">
-        <span class="review-title">Quality Gates</span>
+        <span class="review-title">{{$t('pipeline.qualityGate')}}</span>
         <section class="review-quality" v-bkloading="{ isLoading }">
             <bk-collapse v-model="activeName">
                 <bk-collapse-item v-for="(qualityItem, index) in qualityList" :key="index" :name="qualityItem.hashId">
@@ -28,9 +28,9 @@
                             >
                                 <span
                                     v-bk-tooltips="{
-                                        content: `Gate access requirement is not met. Gatekeeper【${getGateKeeper(qualityItem).join(',')}】's approval is needed.`
+                                        content: $t('pipeline.gateTips', [getGateKeeper(qualityItem).join(',')])
                                     }"
-                                >Continue</span>
+                                >{{$t('pipeline.continue')}}</span>
                             </bk-button>
                             <bk-button
                                 size="small"
@@ -39,9 +39,9 @@
                             >
                                 <span
                                     v-bk-tooltips="{
-                                        content: `Gate access requirement is not met. Gatekeeper【${getGateKeeper(qualityItem).join(',')}】's approval is needed.`
+                                        content: $t('pipeline.gateTips', [getGateKeeper(qualityItem).join(',')])
                                     }"
-                                >Stop</span>
+                                >{{$t('pipeline.stop')}}</span>
                             </bk-button>
                         </span>
                         <span v-if="['INTERCEPT', 'INTERCEPT_PASS'].includes(qualityItem.interceptResult)" class="text-ellipsis summary-right" v-bk-overflow-tips>
@@ -61,7 +61,7 @@
                                     theme="primary"
                                     class="quality-link"
                                     target="_blank"
-                                >查看详情</bk-link>
+                                >{{$t('pipeline.details')}}</bk-link>
                             </li>
                         </ul>
                     </section>
@@ -146,11 +146,11 @@
 
             getInterceptValue (val) {
                 const resultMap = {
-                    PASS: 'Passed',
-                    FAIL: 'Blocked',
-                    WAIT: 'Wait for approval',
-                    INTERCEPT: 'Blocked',
-                    INTERCEPT_PASS: 'Passed'
+                    PASS: this.$t('pipeline.passed'),
+                    FAIL: this.$t('pipeline.blocked'),
+                    WAIT: this.$t('pipeline.waitForApproval'),
+                    INTERCEPT: this.$t('pipeline.blocked'),
+                    INTERCEPT_PASS: this.$t('pipeline.passed')
                 }
                 return resultMap[val]
             },

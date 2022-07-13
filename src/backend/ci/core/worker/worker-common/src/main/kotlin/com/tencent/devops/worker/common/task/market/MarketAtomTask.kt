@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.task.market
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.annotation.SkipLogField
 import com.tencent.devops.common.api.constant.ARTIFACT
 import com.tencent.devops.common.api.constant.ARTIFACTORY_TYPE
 import com.tencent.devops.common.api.constant.LABEL
@@ -207,7 +208,13 @@ open class MarketAtomTask : ITask() {
         )
         buildTask.stepId?.let { variables = variables.plus(PIPELINE_STEP_ID to it) }
 
-        writeInputFile(atomTmpSpace, variables.plus(inputParams).plus(getAtomSensitiveConfMap(atomCode)))
+        val inputVariables = variables.plus(inputParams).toMutableMap<String, Any>()
+        val atomSensitiveConfWriteSwitch = System.getProperty("BK_CI_ATOM_PRIVATE_CONFIG_WRITE_SWITCH")?.toBoolean()
+        if (atomSensitiveConfWriteSwitch != false) {
+            // 开关关闭则不再写入插件私有配置到input.json中
+            inputVariables.putAll(getAtomSensitiveConfMap(atomCode))
+        }
+        writeInputFile(atomTmpSpace, inputVariables)
         writeSdkEnv(atomTmpSpace, buildTask, buildVariables)
         writeParamEnv(atomCode, atomTmpSpace, workspace, buildTask, buildVariables)
 
@@ -219,7 +226,7 @@ open class MarketAtomTask : ITask() {
                 OUTPUT_ENV to outputFile,
                 JAVA_PATH_ENV to getJavaFile().absolutePath
             )
-        )
+        ).toMutableMap()
 
         var error: Throwable? = null
         try {
@@ -245,6 +252,10 @@ open class MarketAtomTask : ITask() {
             atomDevLanguageEnvVars?.forEach {
                 systemEnvVariables[it.envKey] = it.envValue
             }
+
+            // #7023 找回重构导致的逻辑丢失： runtime 覆盖 system 环境变量
+            systemEnvVariables.forEach { runtimeVariables.putIfAbsent(it.key, it.value) }
+
             val preCmd = atomData.preCmd
             val buildEnvs = buildVariables.buildEnvs
             if (!preCmd.isNullOrBlank()) {
@@ -514,7 +525,7 @@ open class MarketAtomTask : ITask() {
                 )
             }
         }
-        logger.info("sdkEnv is:$sdkEnv")
+        logger.info("sdkEnv is:${JsonUtil.skipLogFields(sdkEnv)}")
         inputFileFile.writeText(JsonUtil.toJson(sdkEnv))
     }
 
@@ -563,6 +574,7 @@ open class MarketAtomTask : ITask() {
         val buildType: BuildType,
         val projectId: String,
         val agentId: String,
+        @SkipLogField
         val secretKey: String,
         val gateway: String,
         val buildId: String,

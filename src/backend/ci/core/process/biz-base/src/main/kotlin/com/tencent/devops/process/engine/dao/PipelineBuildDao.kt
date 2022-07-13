@@ -329,7 +329,7 @@ class PipelineBuildDao {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
-                .and(STATUS.eq(BuildStatus.QUEUE.ordinal))
+                .and(STATUS.`in`(setOf(BuildStatus.QUEUE.ordinal, BuildStatus.QUEUE_CACHE.ordinal)))
                 .orderBy(QUEUE_TIME.asc()).limit(1)
             select.fetchAny()
         }
@@ -568,7 +568,8 @@ class PipelineBuildDao {
         remark: String?,
         buildNoStart: Int?,
         buildNoEnd: Int?,
-        buildMsg: String?
+        buildMsg: String?,
+        startUser: List<String>?
     ): Int {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val where = dslContext.selectCount().from(this)
@@ -615,6 +616,9 @@ class PipelineBuildDao {
             }
             if (status != null && status.isNotEmpty()) { // filterNotNull不能删
                 where.and(STATUS.`in`(status.map { it.ordinal }))
+            }
+            if (!startUser.isNullOrEmpty()) {
+                where.and(START_USER.`in`(startUser.map { it }))
             }
             if (trigger != null && trigger.isNotEmpty()) { // filterNotNull不能删
                 where.and(TRIGGER.`in`(trigger.map { it.name }))
@@ -695,7 +699,9 @@ class PipelineBuildDao {
         limit: Int,
         buildNoStart: Int?,
         buildNoEnd: Int?,
-        buildMsg: String?
+        buildMsg: String?,
+        startUser: List<String>?,
+        updateTimeDesc: Boolean? = null
     ): Collection<TPipelineBuildHistoryRecord> {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val where = dslContext.selectFrom(this)
@@ -742,6 +748,9 @@ class PipelineBuildDao {
             }
             if (status != null && status.isNotEmpty()) { // filterNotNull不能删
                 where.and(STATUS.`in`(status.map { it.ordinal }))
+            }
+            if (!startUser.isNullOrEmpty()) {
+                where.and(START_USER.`in`(startUser.map { it }))
             }
             if (trigger != null && trigger.isNotEmpty()) { // filterNotNull不能删
                 where.and(TRIGGER.`in`(trigger.map { it.name }))
@@ -794,8 +803,13 @@ class PipelineBuildDao {
             if (buildMsg != null && buildMsg.isNotEmpty()) {
                 where.and(BUILD_MSG.like("%$buildMsg%"))
             }
-            where.orderBy(BUILD_NUM.desc())
-                .limit(offset, limit)
+
+            when (updateTimeDesc) {
+                true -> where.orderBy(UPDATE_TIME.desc())
+                false -> where.orderBy(UPDATE_TIME.asc())
+                null -> where.orderBy(BUILD_NUM.desc())
+            }
+            where.limit(offset, limit)
                 .fetch()
         }
     }
