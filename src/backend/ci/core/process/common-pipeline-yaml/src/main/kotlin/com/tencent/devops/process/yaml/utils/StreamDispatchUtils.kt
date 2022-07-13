@@ -152,6 +152,7 @@ object StreamDispatchUtils {
                     env = job.env
                 }
             }
+            logger.info("===========>> image: $image")
 
             return DockerDispatchType(
                 dockerBuildVersion = image,
