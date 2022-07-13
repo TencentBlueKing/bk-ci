@@ -137,7 +137,7 @@ class MergeConflictCheck @Autowired constructor(
     // 检查是否存在冲突，供Rabbit Listener使用
     // 需要抓住里面的异常防止mq不停消费
     fun checkMrConflictByListener(
-        action: GitBaseAction,
+        action: StreamMrAction,
         // 是否是最后一次的检查
         isEndCheck: Boolean = false,
         notBuildRecordId: Long
@@ -145,12 +145,10 @@ class MergeConflictCheck @Autowired constructor(
         var isFinish: Boolean
         var isTrigger: Boolean
         val projectId = action.data.eventCommon.gitProjectId
-        val event = action.event() as GitMergeRequestEvent
-        val mrRequestId = event.object_attributes.id.toString()
         val mrInfo = try {
             action.api.getMrInfo(
                 gitProjectId = action.getGitProjectIdOrName(projectId),
-                mrId = mrRequestId,
+                mrId = action.getMrId().toString(),
                 cred = action.getGitCred(),
                 retry = ApiRequestRetryInfo(retry = true)
             )!!
@@ -187,7 +185,8 @@ class MergeConflictCheck @Autowired constructor(
                 }
             }
             TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {
-                logger.warn("git ci mr request has conflict , git project id: $projectId, mr request id: $mrRequestId")
+                logger.warn("git ci mr request has conflict , git project id: $projectId," +
+                    " mr request id: ${action.getMrId()}")
                 gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
                     dslContext = dslContext,
                     recordId = notBuildRecordId,
