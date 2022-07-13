@@ -225,7 +225,14 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
         val routingRule = redisOperation.get(key)
         return if (routingRule.isNullOrBlank()) {
             // redis缓存中未取到规则信息则从db查
-            val record = shardingRoutingRuleDao.getByName(dslContext, routingName)
+            val record = shardingRoutingRuleDao.get(
+                dslContext = dslContext,
+                clusterName = clusterName,
+                moduleCode = moduleCode,
+                type = ruleType,
+                routingName = routingName,
+                tableName = tableName
+            )
             if (record != null) {
                 // 更新redis缓存规则信息
                 redisOperation.set(
