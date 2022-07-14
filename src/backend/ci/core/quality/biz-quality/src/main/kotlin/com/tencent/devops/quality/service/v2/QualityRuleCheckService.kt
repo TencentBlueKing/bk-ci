@@ -493,19 +493,23 @@ class QualityRuleCheckService @Autowired constructor(
             if (indicator.taskName.isNullOrEmpty()) {
                 if (metadataList.count { it.enName == indicator.enName } > 1) {
                     indicatorsCopy.remove(indicator)
-                    metadataList.filter { it.enName == indicator.enName }.map { metadata ->
+                    metadataList.filter { it.enName == indicator.enName }.forEachIndexed { index, metadata ->
                         val extraIndicator = indicator.copy()
-                        extraIndicator.taskName = metadata.taskName
+                        val extraTaskName = "${metadata.taskName}+$index"
+                        extraIndicator.taskName = extraTaskName
+                        metadata.taskName = extraTaskName
                         indicatorsCopy.add(extraIndicator)
                     }
                 }
             } else {
                 metadataList.filter { it.enName == indicator.enName &&
                         it.taskName.startsWith(indicator.taskName ?: "")
-                }.map { metadata ->
+                }.forEachIndexed { index, metadata ->
                     indicatorsCopy.remove(indicator)
                     val extraIndicator = indicator.copy()
-                    extraIndicator.taskName = metadata.taskName
+                    val extraTaskName = "${metadata.taskName}+$index"
+                    extraIndicator.taskName = extraTaskName
+                    metadata.taskName = extraTaskName
                     indicatorsCopy.add(extraIndicator)
                 }
             }
