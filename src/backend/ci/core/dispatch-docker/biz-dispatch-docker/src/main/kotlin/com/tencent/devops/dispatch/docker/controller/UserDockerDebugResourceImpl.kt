@@ -76,18 +76,19 @@ class UserDockerDebugResourceImpl @Autowired constructor(
         }
 
         val formatDispatchType = formatDispatchType(debugStartParam.projectId)
-        val debugUrl = DebugServiceEnum.valueOf(formatDispatchType.name).instance().startDebug(
+        val debugUrl = DebugServiceEnum.valueOf(formatDispatchType.first.name).instance().startDebug(
             userId = userId,
             projectId = debugStartParam.projectId,
             pipelineId = debugStartParam.pipelineId,
             vmSeqId = debugStartParam.vmSeqId,
-            buildId = debugStartParam.buildId
+            buildId = debugStartParam.buildId,
+            dockerRoutingType = formatDispatchType.second
         )
         return Result(
             DebugResponse(
             websocketUrl = debugUrl,
             containerName = null,
-            dispatchType = formatDispatchType.name
+            dispatchType = formatDispatchType.first.name
         )
         )
     }
@@ -115,23 +116,25 @@ class UserDockerDebugResourceImpl @Autowired constructor(
         }
 
         val formatDispatchType = formatDispatchType(projectId)
-        return Result(DebugServiceEnum.valueOf(formatDispatchType.name!!).instance().stopDebug(
+        return Result(DebugServiceEnum.valueOf(formatDispatchType.first.name!!).instance().stopDebug(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             vmSeqId = vmSeqId,
-            containerName = containerName ?: ""
+            containerName = containerName ?: "",
+            dockerRoutingType = formatDispatchType.second
         ))
     }
 
     /**
      * BCS和VM构建类型在前端统一表现为VM类型，通过白名单控制BCS构建类型路由
      */
-    private fun formatDispatchType(projectId: String): BuildType {
+    private fun formatDispatchType(projectId: String): Pair<BuildType, DockerRoutingType> {
         return when (dockerRoutingService.getDockerRoutingType(projectId)) {
-            DockerRoutingType.VM -> BuildType.DOCKER
-            DockerRoutingType.BCS -> BuildType.PUBLIC_BCS
-            else -> BuildType.DOCKER
+            DockerRoutingType.VM -> Pair(BuildType.DOCKER, DockerRoutingType.VM)
+            DockerRoutingType.BCS -> Pair(BuildType.KUBERNETES, DockerRoutingType.BCS)
+            DockerRoutingType.KUBERNETES -> Pair(BuildType.KUBERNETES, DockerRoutingType.KUBERNETES)
+            else -> Pair(BuildType.DOCKER, DockerRoutingType.VM)
         }
     }
 

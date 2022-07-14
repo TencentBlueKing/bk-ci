@@ -27,13 +27,16 @@
 
 package com.tencent.devops.dispatch.docker.service.debug
 
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
+
 interface DebugInterface {
     fun startDebug(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String?,
-        vmSeqId: String
+        vmSeqId: String,
+        dockerRoutingType: DockerRoutingType
     ): String
 
     fun stopDebug(
@@ -41,6 +44,7 @@ interface DebugInterface {
         projectId: String,
         pipelineId: String,
         vmSeqId: String,
-        containerName: String
+        containerName: String,
+        dockerRoutingType: DockerRoutingType
     ): Boolean
 }

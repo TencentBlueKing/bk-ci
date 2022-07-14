@@ -30,14 +30,17 @@ package com.tencent.devops.dispatch.docker.service.debug.impl
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.dispatch.bcs.api.service.ServiceBcsDebugResource
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.dispatch.docker.service.debug.DebugInterface
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBaseDebugResource
+import com.tencent.devops.dispatch.kubernetes.pojo.base.StartDebugReq
+import com.tencent.devops.dispatch.kubernetes.pojo.base.StopDebugReq
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class BcsDebugServiceImpl @Autowired constructor(
+class KubernetesDebugServiceImpl @Autowired constructor(
     private val client: Client
 ) : DebugInterface {
     override fun startDebug(
@@ -45,17 +48,21 @@ class BcsDebugServiceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String?,
-        vmSeqId: String
+        vmSeqId: String,
+        dockerRoutingType: DockerRoutingType
     ): String {
-        val bcsDebugResult = client.get(ServiceBcsDebugResource::class).startDebug(
+        val bcsDebugResult = client.get(ServiceBaseDebugResource::class).startDebug(
             userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            vmSeqId = vmSeqId,
-            buildId = buildId
+            startDebugReq = StartDebugReq(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                dockerRoutingType = dockerRoutingType.name
+            )
         )
 
-        logger.info("$userId $pipelineId| bcs debug response: ${JsonUtil.toJson(bcsDebugResult.data ?: "")}")
+        logger.info("$userId $pipelineId| kubernetes debug response: ${JsonUtil.toJson(bcsDebugResult.data ?: "")}")
         return bcsDebugResult.data?.websocketUrl ?: throw ErrorCodeException(
             errorCode = "2103503",
             defaultMessage = "Can not found debug container.",
@@ -68,15 +75,23 @@ class BcsDebugServiceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         vmSeqId: String,
-        containerName: String
+        containerName: String,
+        dockerRoutingType: DockerRoutingType
     ): Boolean {
-        logger.info("$userId $pipelineId| stop bcs debug.")
-        return client.get(ServiceBcsDebugResource::class).stopDebug(
-            userId, pipelineId, vmSeqId, containerName
+        logger.info("$userId $pipelineId| stop kubernetes debug.")
+        return client.get(ServiceBaseDebugResource::class).stopDebug(
+            userId = userId,
+            stopDebugReq = StopDebugReq(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                vmSeqId = vmSeqId,
+                containerName = containerName,
+                dockerRoutingType = dockerRoutingType.name
+            )
         ).data ?: false
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BcsDebugServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(KubernetesDebugServiceImpl::class.java)
     }
 }
