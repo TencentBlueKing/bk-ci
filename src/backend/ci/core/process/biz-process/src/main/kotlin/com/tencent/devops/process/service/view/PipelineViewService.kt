@@ -38,6 +38,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
+import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineViewUserLastViewDao
 import com.tencent.devops.process.dao.PipelineViewUserSettingsDao
@@ -325,23 +326,30 @@ class PipelineViewService @Autowired constructor(
         )
     }
 
-    fun addView(userId: String, projectId: String, pipelineView: PipelineNewViewCreate): String {
+    fun addView(
+        userId: String,
+        projectId: String,
+        pipelineView: PipelineNewViewCreate,
+        context: DSLContext? = null
+    ): Long {
         try {
-            return dslContext.transactionResult { configuration ->
-                val context = DSL.using(configuration)
-                val viewId = pipelineViewDao.create(
-                    dslContext = context,
-                    projectId = projectId,
-                    name = pipelineView.name,
-                    logic = pipelineView.logic.name,
-                    isProject = pipelineView.projected,
-                    filters = objectMapper.writerFor(object :
-                        TypeReference<List<PipelineViewFilter>>() {}).writeValueAsString(pipelineView.filters),
-                    userId = userId,
-                    id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_VIEW").data
-                )
-                encode(viewId)
+            val filters = if (pipelineView.viewType == PipelineViewType.DYNAMIC) {
+                objectMapper.writerFor(object :
+                    TypeReference<List<PipelineViewFilter>>() {}).writeValueAsString(pipelineView.filters)
+            } else {
+                ""
             }
+            val logic = if (pipelineView.viewType == PipelineViewType.DYNAMIC) pipelineView.logic.name else ""
+            return pipelineViewDao.create(
+                dslContext = context ?: dslContext,
+                projectId = projectId,
+                name = pipelineView.name,
+                logic = logic,
+                isProject = pipelineView.projected,
+                filters = filters,
+                userId = userId,
+                id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_VIEW").data
+            )
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to create the pipeline $pipelineView by userId")
             throw throw ErrorCodeException(

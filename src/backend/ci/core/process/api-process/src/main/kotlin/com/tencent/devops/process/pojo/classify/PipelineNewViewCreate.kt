@@ -37,8 +37,12 @@ data class PipelineNewViewCreate(
     val name: String,
     @ApiModelProperty("是否项目", required = false)
     val projected: Boolean,
+    @ApiModelProperty("流水线组类型,1--动态,2--静态")
+    val viewType: Int = 1,
     @ApiModelProperty("逻辑符", required = false)
     val logic: Logic,
     @ApiModelProperty("流水线视图过滤器列表", required = false)
-    val filters: List<PipelineViewFilter>
+    val filters: List<PipelineViewFilter>,
+    @ApiModelProperty("流水线列表", required = false)
+    val pipelineIds: List<String>
 )

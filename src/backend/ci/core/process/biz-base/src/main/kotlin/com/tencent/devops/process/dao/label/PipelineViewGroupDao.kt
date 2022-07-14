@@ -35,63 +35,74 @@ import java.time.LocalDateTime
 
 @Repository
 class PipelineViewGroupDao {
-    fun create(
+    fun batchCreate(
         dslContext: DSLContext,
-        viewId: Long,
-        pipelineId: String,
-        creator: String
-    ): Long {
-        return with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
-            dslContext.insertInto(
+        viewGroups: List<TPipelineViewGroupRecord>
+    ) {
+        with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+            val insertInto = dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 VIEW_ID,
                 PIPELINE_ID,
                 CREATE_TIME,
                 CREATOR
-            ).values(
-                viewId,
-                pipelineId,
-                LocalDateTime.now(),
-                creator
-            ).returning(ID).fetchOne()!!.id
+            )
+            viewGroups.forEach {
+                insertInto.values(it.projectId, it.viewId, it.pipelineId, LocalDateTime.now(), it.creator)
+            }
+            insertInto.execute()
         }
     }
 
     fun listByViewId(
         dslContext: DSLContext,
+        projectId: String,
         viewId: Long
     ): List<TPipelineViewGroupRecord> {
         return with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
             dslContext.selectFrom(this)
-                .where(VIEW_ID.eq(viewId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(VIEW_ID.eq(viewId))
                 .fetch()
         }
     }
 
     fun listByPipelineId(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String
     ): List<TPipelineViewGroupRecord> {
         return with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
             dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
                 .fetch()
         }
     }
 
     fun countByPipelineId(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String
     ) = with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
-        dslContext.selectCount().from(this).where(PIPELINE_ID.eq(pipelineId)).fetchOne()?.component1() ?: 0
+        dslContext.selectCount().from(this)
+            .where(PROJECT_ID.eq(projectId))
+            .and(PIPELINE_ID.eq(pipelineId))
+            .fetchOne()?.component1() ?: 0
     }
 
-    fun removeById(
+    fun remove(
         dslContext: DSLContext,
-        id: Long
+        projectId: String,
+        viewId: Long,
+        pipelineId: String
     ) {
         with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
-            dslContext.deleteFrom(this).where(ID.eq(id))
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(VIEW_ID.eq(viewId))
+                .and(PIPELINE_ID.eq(pipelineId))
         }
     }
 }

@@ -55,10 +55,10 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPipelineViewResource {
+    // TODO 前两个为老接口, 为流水线列表页上方的配置, 新的体验组不会用到
     @ApiOperation("获取视图设置")
     @GET
     @Path("/projects/{projectId}/settings")
-    // @Path("/{projectId}/settings")
     fun getViewSettings(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -71,7 +71,6 @@ interface UserPipelineViewResource {
     @ApiOperation("更新视图设置")
     @POST
     @Path("/projects/{projectId}/settings")
-    // @Path("/{projectId}/settings")
     fun updateViewSettings(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -82,10 +81,10 @@ interface UserPipelineViewResource {
         viewIdList: List<String>
     ): Result<Boolean>
 
+    // TODO 后面的接口要兼容
     @ApiOperation("获取所有视图")
     @GET
     @Path("/projects/{projectId}/")
-    // @Path("/{projectId}/")
     fun getViews(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -98,7 +97,6 @@ interface UserPipelineViewResource {
     @ApiOperation("添加视图")
     @POST
     @Path("/projects/{projectId}/")
-    // @Path("/{projectId}/")
     fun addView(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -112,7 +110,6 @@ interface UserPipelineViewResource {
     @ApiOperation("获取视图")
     @GET
     @Path("/projects/{projectId}/views/{viewId}")
-    // @Path("/{projectId}/{viewId}")
     fun getView(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -127,7 +124,6 @@ interface UserPipelineViewResource {
     @ApiOperation("删除视图")
     @DELETE
     @Path("/projects/{projectId}/views/{viewId}")
-    // Path("/{projectId}/{viewId}")
     fun deleteView(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -143,7 +139,6 @@ interface UserPipelineViewResource {
     @ApiOperation("更改视图")
     @PUT
     @Path("/projects/{projectId}/views/{viewId}")
-    // @Path("/{projectId}/{viewId}")
     fun updateView(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

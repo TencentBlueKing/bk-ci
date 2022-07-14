@@ -28,6 +28,7 @@
 package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import com.tencent.devops.process.pojo.classify.PipelineNewView
@@ -64,7 +65,17 @@ class UserPipelineViewResourceImpl @Autowired constructor(private val pipelineVi
         projectId: String,
         pipelineView: PipelineNewViewCreate
     ): Result<PipelineViewId> {
-        return Result(PipelineViewId(pipelineViewService.addView(userId, projectId, pipelineView)))
+        return Result(
+            PipelineViewId(
+                HashUtil.encodeLongId(
+                    pipelineViewService.addView(
+                        userId,
+                        projectId,
+                        pipelineView
+                    )
+                )
+            )
+        )
     }
 
     override fun deleteView(userId: String, projectId: String, viewId: String): Result<Boolean> {
