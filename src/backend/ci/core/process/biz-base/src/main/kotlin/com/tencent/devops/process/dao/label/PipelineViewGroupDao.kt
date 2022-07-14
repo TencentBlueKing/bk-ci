@@ -105,4 +105,16 @@ class PipelineViewGroupDao {
                 .and(PIPELINE_ID.eq(pipelineId))
         }
     }
+
+    fun remove(
+        dslContext: DSLContext,
+        projectId: String,
+        viewId: Long
+    ) {
+        with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(VIEW_ID.eq(viewId))
+        }
+    }
 }

@@ -184,9 +184,11 @@ object ProcessMessageCode {
     const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_TARGETPROJECTID = "2101123"
 
     const val ERROR_BUILD_TASK_QUALITY_IN = "2101137" // 质量红线(准入)检测失败
+
     // 质量红线(准入)配置有误：Fail to find quality gate intercept element
     const val ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT = "2101908"
     const val ERROR_BUILD_TASK_QUALITY_OUT = "2101909" // 质量红线(准出)检测失败
+
     // 质量红线(准出)配置有误：Fail to find quality gate intercept element
     const val ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT = "2101910"
 
@@ -237,6 +239,7 @@ object ProcessMessageCode {
 
     // 其他构建进程挂掉的参考信息，自由添加方便打印卫通日志里
     const val BUILD_WORKER_DEAD_ERROR = "2101318"
+
     // 构建机Agent详情链接
     const val BUILD_AGENT_DETAIL_LINK_ERROR = "2101319"
 
@@ -247,4 +250,8 @@ object ProcessMessageCode {
     const val ERROR_GROUP_COUNT_EXCEEDS_LIMIT = "2101401" // 一个项目标签组不能超过10个
     const val ERROR_LABEL_COUNT_EXCEEDS_LIMIT = "2101402" // 同一分组下最多可添加12个标签
     const val ERROR_LABEL_NAME_TOO_LONG = "2101403" // 一个标签最多输入20个字符
+
+    // 流水线组错误21015开头
+    const val ERROR_VIEW_GROUP_NO_PERMISSON = "2101501" // 没有修改流水线组权限
+    const val ERROR_VIEW_GROUP_IS_PROJECT_NO_SAME = "2101502" // 流水线组的视图范围不一致
 }

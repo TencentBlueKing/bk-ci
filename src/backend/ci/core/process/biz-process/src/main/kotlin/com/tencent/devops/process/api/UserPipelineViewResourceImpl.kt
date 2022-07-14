@@ -28,7 +28,6 @@
 package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import com.tencent.devops.process.pojo.classify.PipelineNewView
@@ -37,12 +36,15 @@ import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineNewViewUpdate
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
+import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserPipelineViewResourceImpl @Autowired constructor(private val pipelineViewService: PipelineViewService) :
-    UserPipelineViewResource {
+class UserPipelineViewResourceImpl @Autowired constructor(
+    private val pipelineViewService: PipelineViewService,
+    private val pipelineViewGroupService: PipelineViewGroupService
+) : UserPipelineViewResource {
     override fun getViewSettings(userId: String, projectId: String): Result<PipelineViewSettings> {
         return Result(pipelineViewService.getViewSettings(userId, projectId))
     }
@@ -65,21 +67,11 @@ class UserPipelineViewResourceImpl @Autowired constructor(private val pipelineVi
         projectId: String,
         pipelineView: PipelineNewViewCreate
     ): Result<PipelineViewId> {
-        return Result(
-            PipelineViewId(
-                HashUtil.encodeLongId(
-                    pipelineViewService.addView(
-                        userId,
-                        projectId,
-                        pipelineView
-                    )
-                )
-            )
-        )
+        return Result(PipelineViewId(pipelineViewGroupService.addViewGroup(userId, projectId, pipelineView)))
     }
 
     override fun deleteView(userId: String, projectId: String, viewId: String): Result<Boolean> {
-        return Result(pipelineViewService.deleteView(userId, projectId, viewId))
+        return Result(pipelineViewGroupService.deleteViewGroup(projectId, userId, viewId))
     }
 
     override fun updateView(
@@ -88,6 +80,6 @@ class UserPipelineViewResourceImpl @Autowired constructor(private val pipelineVi
         viewId: String,
         pipelineView: PipelineNewViewUpdate
     ): Result<Boolean> {
-        return Result(pipelineViewService.updateView(userId, projectId, viewId, pipelineView))
+        return Result(pipelineViewGroupService.updateViewGroup(projectId, userId, viewId, pipelineView))
     }
 }

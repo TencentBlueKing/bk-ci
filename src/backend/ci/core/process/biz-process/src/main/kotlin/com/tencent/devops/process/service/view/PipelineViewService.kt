@@ -63,7 +63,6 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
@@ -359,61 +358,30 @@ class PipelineViewService @Autowired constructor(
         }
     }
 
-    fun deleteView(userId: String, projectId: String, viewId: String): Boolean {
-        val id = decode(viewId)
-        val viewRecord = pipelineViewDao.get(dslContext, projectId, decode(viewId))
-            ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
-                params = arrayOf(viewId)
-            )
-        val isUserManager = isUserManager(userId, projectId)
-
-        if (!(userId == viewRecord.createUser || (viewRecord.isProject && isUserManager))) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_DEL_PIPELINE_VIEW_NO_PERM,
-                params = arrayOf(userId, viewId)
-            )
-        }
-
-        return dslContext.transactionResult { configuration ->
-            val context = DSL.using(configuration)
-            pipelineViewDao.delete(context, projectId, id)
-        }
+    fun deleteView(userId: String, projectId: String, viewId: Long, context: DSLContext? = null): Boolean {
+        return pipelineViewDao.delete(context ?: dslContext, projectId, viewId)
     }
 
-    fun updateView(userId: String, projectId: String, viewId: String, pipelineView: PipelineNewViewUpdate): Boolean {
-        val id = decode(viewId)
-        val viewRecord = pipelineViewDao.get(dslContext = dslContext, projectId = projectId, viewId = decode(viewId))
-            ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
-                params = arrayOf(viewId)
-            )
-        val isUserManager = isUserManager(userId = userId, projectId = projectId)
-
-        if (!(userId == viewRecord.createUser || (viewRecord.isProject && isUserManager))) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_EDIT_PIPELINE_VIEW_NO_PERM,
-                params = arrayOf(userId, viewId)
-            )
-        }
-
+    fun updateView(
+        userId: String,
+        projectId: String,
+        viewId: Long,
+        pipelineView: PipelineNewViewUpdate,
+        context: DSLContext? = null
+    ): Boolean {
         try {
-            return dslContext.transactionResult { configuration ->
-                val context = DSL.using(configuration)
-                val result = pipelineViewDao.update(
-                    dslContext = context,
-                    projectId = projectId,
-                    viewId = id,
-                    name = pipelineView.name,
-                    logic = pipelineView.logic.name,
-                    isProject = pipelineView.projected,
-                    filters = objectMapper.writerFor(object :
-                        TypeReference<List<PipelineViewFilter>>() {}).writeValueAsString(
-                        pipelineView.filters
-                    )
+            return pipelineViewDao.update(
+                dslContext = context ?: dslContext,
+                projectId = projectId,
+                viewId = viewId,
+                name = pipelineView.name,
+                logic = pipelineView.logic.name,
+                isProject = pipelineView.projected,
+                filters = objectMapper.writerFor(object :
+                    TypeReference<List<PipelineViewFilter>>() {}).writeValueAsString(
+                    pipelineView.filters
                 )
-                result
-            }
+            )
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to update the pipeline $pipelineView by userId")
             throw throw ErrorCodeException(
