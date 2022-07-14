@@ -17,7 +17,7 @@
         "@icon-cool/bk-icon-devops": "^0.2.1",
         "axios": "^0.27.2",
         "bk-magic-vue": "2.4.11",
-        "bkui-pipeline": "~0.1.24",
+        "bkui-pipeline": "~0.1.26",
         "clipboard": "^1.7.1",
         "moment": "^2.29.2",
         "monaco-editor": "^0.30.1",

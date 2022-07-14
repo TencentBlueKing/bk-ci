@@ -51,6 +51,7 @@ object YamlFormat {
     fun formatYaml(
         action: BaseAction
     ): PreTemplateScriptBuildYaml {
+        // to format
         return try {
             YamlUtil.getObjectMapper().readValue(
                 ScriptYmlUtils.formatYaml(action.data.context.originYaml!!),

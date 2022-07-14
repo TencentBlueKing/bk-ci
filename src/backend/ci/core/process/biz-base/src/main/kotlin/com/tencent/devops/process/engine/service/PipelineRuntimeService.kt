@@ -392,7 +392,9 @@ class PipelineRuntimeService @Autowired constructor(
         remark: String?,
         buildNoStart: Int?,
         buildNoEnd: Int?,
-        buildMsg: String?
+        buildMsg: String?,
+        startUser: List<String>?,
+        updateTimeDesc: Boolean? = null
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
@@ -422,7 +424,9 @@ class PipelineRuntimeService @Autowired constructor(
             } else limit,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
-            buildMsg = buildMsg
+            buildMsg = buildMsg,
+            startUser = startUser,
+            updateTimeDesc = updateTimeDesc
         )
         val result = mutableListOf<BuildHistory>()
         val buildStatus = BuildStatus.values()
@@ -850,7 +854,7 @@ class PipelineRuntimeService @Autowired constructor(
                     fastKill = stage.fastKill
                 )
                 if (stage.name.isNullOrBlank()) stage.name = stage.id
-                if (stage.tag == null) stage.tag = listOf(defaultStageTagId)
+                if (stage.tag == null) stage.tag = defaultStageTagId?.let { self -> listOf(self) }
             } else {
                 stageStatus = BuildStatus.RUNNING // Stage-1 一开始就计算为启动
                 stageStartTime = now
@@ -1474,7 +1478,8 @@ class PipelineRuntimeService @Autowired constructor(
         remark: String?,
         buildNoStart: Int?,
         buildNoEnd: Int?,
-        buildMsg: String?
+        buildMsg: String?,
+        startUser: List<String>?
     ): Int {
         return pipelineBuildDao.count(
             dslContext = dslContext,
@@ -1498,7 +1503,8 @@ class PipelineRuntimeService @Autowired constructor(
             remark = remark,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
-            buildMsg = buildMsg
+            buildMsg = buildMsg,
+            startUser = startUser
         )
     }
 
