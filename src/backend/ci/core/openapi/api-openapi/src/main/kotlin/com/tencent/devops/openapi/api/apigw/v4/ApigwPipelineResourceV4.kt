@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
@@ -366,4 +367,25 @@ interface ApigwPipelineResourceV4 {
         @ApiParam(value = "流水线设置", required = true)
         setting: PipelineSetting
     ): Result<Boolean>
+
+    @ApiOperation("根据流水线名称搜索", tags = ["v4_app_pipeline_search_by_name", "v4_user_pipeline_search_by_name"])
+    @GET
+    @Path("/search_by_name")
+    fun searchByName(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("搜索名称")
+        @QueryParam("pipelineName")
+        pipelineName: String?
+    ): Result<List<PipelineIdAndName>>
 }
