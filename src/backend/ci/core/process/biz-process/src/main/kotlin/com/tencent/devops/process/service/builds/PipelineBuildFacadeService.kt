@@ -97,6 +97,7 @@ import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -1294,7 +1295,7 @@ class PipelineBuildFacadeService(
                 id = buildHistory.id,
                 userId = buildHistory.userId,
                 trigger = buildHistory.trigger,
-                pipelineName = pipelineInfo.pipelineName,
+                pipelineName = allVariable[PIPELINE_NAME] ?: "",
                 buildNum = buildHistory.buildNum ?: 1,
                 pipelineVersion = buildHistory.pipelineVersion,
                 status = buildHistory.status,
