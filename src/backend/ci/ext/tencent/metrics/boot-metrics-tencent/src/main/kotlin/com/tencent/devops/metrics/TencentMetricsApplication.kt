@@ -25,9 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.constant
+package com.tencent.devops.metrics
 
-const val PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY = "PROCESS_SHARDING_DB_BUILD_NUM"
-const val PROCESS_SHARDING_TABLE_BUILD_NUM_REDIS_KEY = "PROCESS_SHARDING_TABLE_BUILD_NUM"
-const val PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY = "PROCESS_SHARDING_DB_BUILD_PROJECT_NUM"
-const val PROCESS_SHARDING_TABLE_BUILD_PROJECT_NUM_REDIS_KEY = "PROCESS_SHARDING_TABLE_BUILD_PROJECT_NUM"
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
+
+@MicroService
+@ComponentScan("com.tencent.devops.common", "com.tencent.devops.metrics")
+class TencentMetricsApplication
+
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(TencentMetricsApplication::class, args)
+}
