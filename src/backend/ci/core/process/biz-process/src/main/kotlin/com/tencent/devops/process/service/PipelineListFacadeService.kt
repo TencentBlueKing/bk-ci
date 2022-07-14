@@ -468,7 +468,6 @@ class PipelineListFacadeService @Autowired constructor(
                 pipelineIds = pipelineIds,
                 favorPipelines = favorPipelines,
                 authPipelines = authPipelines,
-                viewId = viewId,
                 pipelineFilterParamList = pipelineFilterParamList,
                 permissionFlag = true
             )
@@ -481,7 +480,6 @@ class PipelineListFacadeService @Autowired constructor(
                     channelCode = channelCode,
                     favorPipelines = favorPipelines,
                     authPipelines = authPipelines,
-                    viewId = viewId,
                     pipelineFilterParamList = pipelineFilterParamList,
                     permissionFlag = false
                 )
@@ -500,7 +498,6 @@ class PipelineListFacadeService @Autowired constructor(
                         pipelineIds = pipelineIds,
                         favorPipelines = favorPipelines,
                         authPipelines = authPipelines,
-                        viewId = viewId,
                         pipelineFilterParamList = pipelineFilterParamList,
                         permissionFlag = true,
                         page = page,
@@ -517,7 +514,6 @@ class PipelineListFacadeService @Autowired constructor(
                         pipelineIds = pipelineIds,
                         favorPipelines = favorPipelines,
                         authPipelines = authPipelines,
-                        viewId = viewId,
                         pipelineFilterParamList = pipelineFilterParamList,
                         permissionFlag = true,
                         page = page,
@@ -533,7 +529,6 @@ class PipelineListFacadeService @Autowired constructor(
                             pipelineIds = pipelineIds,
                             favorPipelines = favorPipelines,
                             authPipelines = authPipelines,
-                            viewId = viewId,
                             pipelineFilterParamList = pipelineFilterParamList,
                             permissionFlag = false,
                             page = 1,
@@ -552,7 +547,6 @@ class PipelineListFacadeService @Autowired constructor(
                         pipelineIds = pipelineIds,
                         favorPipelines = favorPipelines,
                         authPipelines = authPipelines,
-                        viewId = viewId,
                         pipelineFilterParamList = pipelineFilterParamList,
                         permissionFlag = false,
                         page = page - totalAvailablePipelinePage,
@@ -570,7 +564,6 @@ class PipelineListFacadeService @Autowired constructor(
                     pipelineIds = pipelineIds,
                     favorPipelines = favorPipelines,
                     authPipelines = authPipelines,
-                    viewId = viewId,
                     pipelineFilterParamList = pipelineFilterParamList,
                     permissionFlag = true,
                     page = page,
@@ -586,7 +579,6 @@ class PipelineListFacadeService @Autowired constructor(
                         pipelineIds = pipelineIds,
                         favorPipelines = favorPipelines,
                         authPipelines = authPipelines,
-                        viewId = viewId,
                         pipelineFilterParamList = pipelineFilterParamList,
                         permissionFlag = false,
                         page = page,
