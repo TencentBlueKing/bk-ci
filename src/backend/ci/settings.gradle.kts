@@ -508,3 +508,7 @@ include(":ext:tencent:statistics:api-statistics-tencent")
 include(":ext:tencent:statistics:biz-statistics-tencent")
 include(":ext:tencent:statistics:boot-statistics-tencent")
 include(":ext:tencent:statistics:model-statistics-tencent")
+
+include(":ext:tencent:metrics")
+include(":ext:tencent:metrics:biz-metrics-tencent")
+include(":ext:tencent:metrics:boot-metrics-tencent")
