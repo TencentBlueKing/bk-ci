@@ -47,6 +47,7 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.TableField
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -254,6 +255,7 @@ class PipelineBuildSummaryDao {
                 // 查询所有流水线
             }
             else -> if (pipelineFilterParamList != null && pipelineFilterParamList.size > 1) {
+                logger.warn("this view logic has deprecated , viewId:$viewId")
                 handleFilterParamCondition(pipelineFilterParamList[1], conditions)
             }
         }
@@ -603,5 +605,9 @@ class PipelineBuildSummaryDao {
             }
             dslContext.selectFrom(this).where(conditions).fetch()
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineBuildSummaryDao::class.java)
     }
 }
