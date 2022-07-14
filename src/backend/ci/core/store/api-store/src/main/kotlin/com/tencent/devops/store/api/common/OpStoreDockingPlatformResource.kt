@@ -97,7 +97,7 @@ interface OpStoreDockingPlatformResource {
         platformName: String? = null,
         @ApiParam("平台ID", required = false)
         @QueryParam("id")
-        @BkField(patternStyle = BkStyleEnum.ID_STYLE)
+        @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
         id: String? = null,
         @ApiParam("页码", required = true)
         @QueryParam("page")
