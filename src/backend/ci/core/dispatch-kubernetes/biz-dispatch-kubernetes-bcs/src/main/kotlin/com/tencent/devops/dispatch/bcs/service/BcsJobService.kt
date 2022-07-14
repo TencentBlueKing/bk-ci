@@ -48,7 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
-@Service("bcsDispatchTypeService")
+@Service("bcsJobService")
 class BcsJobService @Autowired constructor(
     private val bcsJobClient: BcsJobClient,
     private val bcsTaskClient: BcsTaskClient,

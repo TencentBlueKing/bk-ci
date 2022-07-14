@@ -290,6 +290,13 @@ include(":core:sign:biz-sign-sample")
 include(":core:sign:boot-sign")
 include(":core:sign:model-sign")
 
+include(":core:metrics")
+include(":core:metrics:api-metrics")
+include(":core:metrics:biz-metrics")
+include(":core:metrics:biz-metrics-sample")
+include(":core:metrics:boot-metrics")
+include(":core:metrics:model-metrics")
+
 //  ==================== tencent ============================================================
 include(":ext")
 include(":ext:tencent")

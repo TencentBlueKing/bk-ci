@@ -40,7 +40,6 @@ import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServiceTemplateAcrossResource
-import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
@@ -179,7 +178,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     userId = pipeline.creator ?: "",
                     gitProjectId = gitProjectId.toLong(),
                     projectCode = projectCode,
-                    modelAndSetting = createTriggerModel(projectCode),
+                    modelAndSetting = createTriggerModel(pipeline.displayName),
                     updateLastModifyUser = true
                 )
                 streamPipelineBranchService.saveOrUpdate(
@@ -214,9 +213,9 @@ class StreamYamlBaseBuild @Autowired constructor(
         return "git_$gitProjectId"
     }
 
-    private fun createTriggerModel(projectCode: String) = PipelineModelAndSetting(
+    private fun createTriggerModel(displayName: String) = PipelineModelAndSetting(
         model = Model(
-            name = StreamPipelineUtils.genBKPipelineName(projectCode),
+            name = displayName,
             desc = "",
             stages = listOf(
                 Stage(
@@ -246,14 +245,6 @@ class StreamYamlBaseBuild @Autowired constructor(
         model: Model,
         yamlTransferData: YamlTransferData? = null
     ) {
-        // 【ID92537607】 stream 流水线标签不生效
-        client.get(UserPipelineGroupResource::class).updatePipelineLabel(
-            userId = action.data.getUserId(),
-            projectId = action.getProjectCode(),
-            pipelineId = pipeline.pipelineId,
-            labelIds = model.labels
-        )
-
         // 添加模板跨项目信息
         if (yamlTransferData != null && yamlTransferData.templateData.transferDataMap.isNotEmpty()) {
             client.get(ServiceTemplateAcrossResource::class).batchCreate(

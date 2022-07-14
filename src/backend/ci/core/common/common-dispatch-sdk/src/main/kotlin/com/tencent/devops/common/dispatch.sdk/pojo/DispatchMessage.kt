@@ -41,8 +41,7 @@ data class DispatchMessage(
     val userId: String,
     val vmSeqId: String,
     val channelCode: String,
-    @Deprecated("废弃字段")
-    val vmNames: String? = null,
+    val vmNames: String,
     val atoms: Map<String, String> = mapOf(),
     @Deprecated("废弃字段")
     val zone: Zone? = null,

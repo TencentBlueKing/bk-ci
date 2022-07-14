@@ -79,7 +79,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
-@Service("kubernetesDispatchBuildTypeService")
+@Service("kubernetesContainerService")
 class KubernetesContainerService @Autowired constructor(
     private val logsPrinter: LogsPrinter,
     private val kubernetesTaskClient: KubernetesTaskClient,
@@ -98,17 +98,17 @@ class KubernetesContainerService @Autowired constructor(
         troubleShooting = "Kubernetes构建异常，请联系蓝盾助手排查，异常信息 - "
     )
 
-    @Value("\${bcs.resources.builder.cpu}")
+    @Value("\${kubernetes.resources.builder.cpu}")
     override var cpu: Double = 32.0
 
-    @Value("\${bcs.resources.builder.memory}")
+    @Value("\${kubernetes.resources.builder.memory}")
     override var memory: String = "65535"
 
-    @Value("\${bcs.resources.builder.disk}")
+    @Value("\${kubernetes.resources.builder.disk}")
     override var disk: String = "500"
 
-    @Value("\${bcs.entrypoint}")
-    override val entrypoint: String = "bcs_init.sh"
+    @Value("\${kubernetes.entrypoint}")
+    override val entrypoint: String = "kubernetes_init.sh"
 
     override val helpUrl: String? = ""
 
@@ -187,7 +187,7 @@ class KubernetesContainerService @Autowired constructor(
                     name = builderName,
                     image = "$name:$tag",
                     registry = DockerRegistry(host, userName, password),
-                    cpu = cpu,
+                    cpu = cpu.toString(),
                     mem = mem,
                     disk = disk,
                     env = mapOf(
@@ -218,8 +218,8 @@ class KubernetesContainerService @Autowired constructor(
             if (taskStatus == TaskStatusEnum.SUCCEEDED) {
                 // 启动成功
                 logger.info(
-                    "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo create bcs " +
-                        "vm success, wait vm start..."
+                    "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
+                        "create kubernetes vm success, wait vm start..."
                 )
                 logsPrinter.printLogs(this, "构建机创建成功，等待机器启动...")
             } else {
@@ -364,6 +364,6 @@ class KubernetesContainerService @Autowired constructor(
             userId, dispatchBuildImageReq))
     }
 
-    private fun getOnlyName(userId: String) = "bcs-${userId}${System.currentTimeMillis()}-" +
-        RandomStringUtils.randomAlphabetic(16)
+    private fun getOnlyName(userId: String) = "kubernetes-${userId}${System.currentTimeMillis()}-" +
+        RandomStringUtils.randomAlphabetic(16).toLowerCase()
 }

@@ -41,7 +41,7 @@ data class Stage(
     @ApiModelProperty("阶段名称", required = true)
     var name: String? = "",
     @ApiModelProperty("阶段标签", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    var tag: List<String?>? = null,
+    var tag: List<String>? = null,
     @ApiModelProperty("阶段状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var status: String? = null,
     @ApiModelProperty("阶段启动时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)

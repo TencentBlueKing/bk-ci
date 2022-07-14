@@ -48,7 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
-@Service("kubernetesDispatchTypeService")
+@Service("kubernetesJobService")
 class KubernetesJobService @Autowired constructor(
     private val kubernetesTaskClient: KubernetesTaskClient,
     private val kubernetesJobClient: KubernetesJobClient,

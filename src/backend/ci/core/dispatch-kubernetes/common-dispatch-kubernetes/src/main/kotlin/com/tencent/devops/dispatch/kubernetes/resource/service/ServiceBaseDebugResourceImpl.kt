@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBaseDebugResource
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchDebugResponse
+import com.tencent.devops.dispatch.kubernetes.pojo.base.StartDebugReq
+import com.tencent.devops.dispatch.kubernetes.pojo.base.StopDebugReq
 import com.tencent.devops.dispatch.kubernetes.service.DispatchBaseDebugService
 import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,39 +43,36 @@ class ServiceBaseDebugResourceImpl @Autowired constructor(
 ) : ServiceBaseDebugResource {
     override fun startDebug(
         userId: String,
-        dispatchType: String,
-        projectId: String,
-        pipelineId: String,
-        vmSeqId: String,
-        buildId: String?
+        startDebugReq: StartDebugReq
     ): Result<DispatchDebugResponse> {
         return Result(
-            dispatchBaseDebugService.startDebug(
-                userId = userId,
-                dockerRoutingType = CommonUtils.checkDispatchType(dispatchType),
-                projectId = projectId,
-                pipelineId = pipelineId,
-                vmSeqId = vmSeqId,
-                buildId = buildId
-            )
+            with(startDebugReq) {
+                dispatchBaseDebugService.startDebug(
+                    userId = userId,
+                    dockerRoutingType = CommonUtils.checkDispatchType(dockerRoutingType),
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    vmSeqId = vmSeqId,
+                    buildId = buildId
+                )
+            }
         )
     }
 
     override fun stopDebug(
         userId: String,
-        dispatchType: String,
-        pipelineId: String,
-        vmSeqId: String,
-        builderName: String
+        stopDebugReq: StopDebugReq
     ): Result<Boolean> {
         return Result(
-            dispatchBaseDebugService.stopDebug(
-                userId = userId,
-                dockerRoutingType = CommonUtils.checkDispatchType(dispatchType),
-                pipelineId = pipelineId,
-                vmSeqId = vmSeqId,
-                builderName = builderName
-            )
+            with(stopDebugReq) {
+                dispatchBaseDebugService.stopDebug(
+                    userId = userId,
+                    dockerRoutingType = CommonUtils.checkDispatchType(dockerRoutingType),
+                    pipelineId = pipelineId,
+                    vmSeqId = vmSeqId,
+                    builderName = containerName
+                )
+            }
         )
     }
 }
