@@ -78,7 +78,8 @@ class DispatchBaseDebugService @Autowired constructor(
         buildId: String?,
         needCheckPermission: Boolean = true
     ): DispatchDebugResponse {
-        logger.info("$userId start debug $dockerRoutingType pipelineId: $pipelineId buildId: $buildId vmSeqId: $vmSeqId")
+        logger.info("$userId start debug $dockerRoutingType pipelineId: $pipelineId buildId: " +
+                        "$buildId vmSeqId: $vmSeqId")
         // 根据是否传入buildId 查找builderName
         val buildHistory = if (buildId == null) {
             // 查找当前pipeline下的最近一次构建
@@ -111,11 +112,9 @@ class DispatchBaseDebugService @Autowired constructor(
             builderName = builderName
         )
         if (statusResponse.isOk()) {
-            val status = statusResponse.data!!
-
-            when (status) {
-                DispatchBuildBuilderStatus.CAN_RESTART -> {
-                    // 出于关机状态，开机
+            when (val status = statusResponse.data!!) {
+                DispatchBuildBuilderStatus.CAN_RESTART, DispatchBuildBuilderStatus.READY_START -> {
+                    // 处于关机状态，开机
                     logger.info("Update container status stop to running, builderName: $builderName")
                     startSleepContainer(
                         dockerRoutingType = dockerRoutingType,
