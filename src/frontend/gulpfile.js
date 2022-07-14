@@ -8,21 +8,21 @@ const yargs = require('yargs')
 const fs = require('fs')
 const path = require('path')
 const argv = yargs.alias({
-    'dist': 'd',
-    'env': 'e',
-    'lsVersion': 'l',
-    'type': 't',
-    'scope': 's'
+    dist: 'd',
+    env: 'e',
+    lsVersion: 'l',
+    type: 't',
+    scope: 's'
 }).default({
-    'dist': 'frontend',
-    'env': 'master',
-    'lsVersion': 'dev',
-    'type': 'tencent'
+    dist: 'frontend',
+    env: 'master',
+    lsVersion: 'dev',
+    type: 'tencent'
 }).describe({
-    'dist': 'build output dist directory',
-    'env': 'environment [dev, test, master, external]',
-    'lsVersion': 'localStorage version',
-    'type': 'bkdevops version 【ee | tencent】'
+    dist: 'build output dist directory',
+    env: 'environment [dev, test, master, external]',
+    lsVersion: 'localStorage version',
+    type: 'bkdevops version 【ee | tencent】'
 }).argv
 const { dist, env, lsVersion, type, scope } = argv
 
@@ -89,7 +89,7 @@ function getScopeStr (scope) {
 
 task('devops', series([taskGenerator('devops'), renameSvg('devops')]))
 task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline')]))
-task('copy', () => src(['common-lib/**'], { 'base': '.' }).pipe(dest(`${dist}/`)))
+task('copy', () => src(['common-lib/**'], { base: '.' }).pipe(dest(`${dist}/`)))
 
 task('build', async cb => {
     const assetJson = await getAssetsJSON(ASSETS_JSON_URL)
@@ -109,7 +109,7 @@ task('build', async cb => {
             console.log(err)
             process.exit(1)
         }
-        spinner.succeed(`Finished building bk-ci frontend project`)
+        spinner.succeed('Finished building bk-ci frontend project')
         cb()
     })
 })
