@@ -185,7 +185,16 @@
                 <bk-form-item :label="$t('pipeline.buildMsg')" :required="true" :rules="[requireRule($t('pipeline.buildMsg'))]" property="customCommitMsg" :desc="$t('pipeline.buildMsgTips')" error-display-type="normal">
                     <bk-input v-model="formData.customCommitMsg" :placeholder="$t('pipeline.buildMsgPlaceholder')"></bk-input>
                 </bk-form-item>
-                <bk-form-item label="Yaml" ref="codeSection" property="yaml" :required="true" :rules="[requireRule('yaml'), checkYaml]" error-display-type="normal" v-bkloading="{ isLoading: isLoadingYaml }">
+                <bk-form-item
+                    label="Yaml"
+                    ref="codeSection"
+                    property="yaml"
+                    error-display-type="normal"
+                    class="mb15"
+                    :required="true"
+                    :rules="[requireRule('yaml'), checkYaml]"
+                    v-bkloading="{ isLoading: isLoadingYaml }"
+                >
                     <code-section @blur="$refs.codeSection.validate('blur')"
                         @focus="$refs.codeSection.clearValidator()"
                         :code.sync="formData.yaml"
@@ -225,7 +234,13 @@
     import register from '@/utils/websocket-register'
     import validateRule from '@/utils/validate-rule'
     import createForm from '@blueking/bkui-form'
-    const BkUiForm = createForm()
+    import '@blueking/bkui-form/dist/bkui-form.css'
+    import UiTips from '@/components/ui-tip.vue'
+    const BkUiForm = createForm({
+        components: {
+            tips: UiTips
+        }
+    })
 
     export default {
         components: {
@@ -613,8 +628,8 @@
 
             submitData () {
                 Promise.all([
-                    this.$refs.triggleForm.validate(),
-                    this.$refs.bkUiForm?.validate(),
+                    this.$refs.triggleForm.validate()
+                    // this.$refs.bkUiForm?.validateForm(),
                 ]).then(() => {
                     const postData = {
                         ...this.formData,
