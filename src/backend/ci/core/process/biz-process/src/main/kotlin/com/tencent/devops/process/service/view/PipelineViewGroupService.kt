@@ -267,14 +267,26 @@ class PipelineViewGroupService @Autowired constructor(
             if (!firstInit) {
                 return@lockAround emptyList()
             }
-            val pipelineInfos = pipelineInfoDao.listInfoByPipelineIds(
-                dslContext = context ?: dslContext,
-                pipelineIds = setOf(projectId)
-            )
-            return@lockAround pipelineInfos.asSequence()
-                .filter { pipelineViewService.matchView(view, it) }
-                .map { it.pipelineId }
-                .toList()
+            var hasNext = true
+            val result = mutableListOf<String>()
+            val step = 1000
+            while (hasNext) {
+                val pipelineInfos = pipelineInfoDao.listPipelineInfoByProject(
+                    dslContext = context ?: dslContext,
+                    projectId = projectId,
+                    offset = 0,
+                    limit = step
+                )
+                result.addAll(
+                    pipelineInfos!!.asSequence()
+                        .filter { pipelineViewService.matchView(view, it) }
+                        .map { it.pipelineId }
+                        .toList()
+                )
+                hasNext = pipelineInfos.size == step
+            }
+
+            return@lockAround result
         }
     }
 
