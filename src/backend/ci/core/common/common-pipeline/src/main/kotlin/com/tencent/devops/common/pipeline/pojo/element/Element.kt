@@ -112,8 +112,8 @@ abstract class Element(
     @ApiModelProperty("启动时间", required = false)
     open var startEpoch: Long? = null,
     @ApiModelProperty("插件原始版本", required = false)
-    open var originVersion: String = "1.*",
-    @ApiModelProperty("插件版本", required = false)
+    open var originVersion: String? = null,
+    @ApiModelProperty("插件版本", required = true)
     open var version: String = "1.*",
     @ApiModelProperty("模板对比的时候是不是有变更", required = false)
     open var templateModify: Boolean? = null, // 模板对比的时候是不是又变更
