@@ -1,4 +1,5 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 com.tencent.devops.common.web.handler.ExceptionControllerAdvice,\
 com.tencent.devops.common.web.config.WebAutoConfiguration,\
-com.tencent.devops.common.web.mq.RabbitMQAutoConfiguration
+com.tencent.devops.common.web.mq.CoreRabbitMQConfiguration, \
+com.tencent.devops.common.web.mq.ExtendRabbitMQConfiguration

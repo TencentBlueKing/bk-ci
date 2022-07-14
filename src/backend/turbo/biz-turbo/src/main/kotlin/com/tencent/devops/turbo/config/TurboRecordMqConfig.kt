@@ -8,6 +8,8 @@ import com.tencent.devops.common.util.constants.ROUTE_TURBO_REPORT_UPDATE
 import com.tencent.devops.common.util.constants.EXCHANGE_TURBO_PLUGIN
 import com.tencent.devops.common.util.constants.QUEUE_TURBO_PLUGIN_DATA
 import com.tencent.devops.common.util.constants.ROUTE_TURBO_PLUGIN_DATA
+import com.tencent.devops.common.web.mq.CORE_CONNECTION_FACTORY_NAME
+import com.tencent.devops.common.web.mq.CORE_RABBIT_ADMIN_NAME
 import com.tencent.devops.turbo.component.TurboRecordConsumer
 import org.springframework.amqp.core.DirectExchange
 import org.springframework.amqp.core.Queue
@@ -28,9 +30,9 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class TurboRecordMqConfig {
 
-    @Bean
+    @Bean(value = [CORE_RABBIT_ADMIN_NAME])
     fun rabbitAdmin(
-        @Qualifier("rabbitConnectionFactory") @Autowired connectionFactory: ConnectionFactory
+        @Qualifier(CORE_CONNECTION_FACTORY_NAME) @Autowired connectionFactory: ConnectionFactory
     ): RabbitAdmin {
         return RabbitAdmin(connectionFactory)
     }
@@ -57,7 +59,7 @@ class TurboRecordMqConfig {
 
     @Bean
     fun turboRecordCreateListenerContainer(
-        @Qualifier("rabbitConnectionFactory") connectionFactory: ConnectionFactory,
+        @Qualifier(CORE_CONNECTION_FACTORY_NAME) connectionFactory: ConnectionFactory,
         turboRecordCreateQueue: Queue,
         rabbitAdmin: RabbitAdmin,
         turboRecordConsumer: TurboRecordConsumer,
@@ -90,7 +92,7 @@ class TurboRecordMqConfig {
 
     @Bean
     fun turboRecordUpdateListenerContainer(
-        @Qualifier("rabbitConnectionFactory") connectionFactory: ConnectionFactory,
+        @Qualifier(CORE_CONNECTION_FACTORY_NAME) connectionFactory: ConnectionFactory,
         turboRecordUpdateQueue: Queue,
         rabbitAdmin: RabbitAdmin,
         turboRecordConsumer: TurboRecordConsumer,

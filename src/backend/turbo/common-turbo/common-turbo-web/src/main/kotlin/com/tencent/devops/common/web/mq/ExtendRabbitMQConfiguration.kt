@@ -1,4 +1,4 @@
-package com.tencent.devops.turbo.config
+package com.tencent.devops.common.web.mq
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -19,15 +18,14 @@ import org.springframework.context.annotation.Configuration
  */
 @Configuration
 @AutoConfigureBefore(RabbitAutoConfiguration::class)
-@ConditionalOnProperty(prefix = "rabbitmq.bkMetrics", name = ["addresses", "virtual-host", "username", "password"])
-class BkMetricsMQAutoConfig {
+class ExtendRabbitMQConfiguration {
 
-    @Bean(name = ["bkMetricsConnectionFactory"])
-    fun bkMetricsConnectionFactory(
-        @Value("\${rabbitmq.bkMetrics.username:#{null}}") userName: String,
-        @Value("\${rabbitmq.bkMetrics.password:#{null}}") passWord: String,
-        @Value("\${rabbitmq.bkMetrics.virtual-host:#{null}}") vHost: String,
-        @Value("\${rabbitmq.bkMetrics.addresses:#{null}}") address: String,
+    @Bean(name = [EXTEND_CONNECTION_FACTORY_NAME])
+    fun extendConnectionFactory(
+        @Value("\${spring.rabbitmq.extend.username:#{null}}") userName: String,
+        @Value("\${spring.rabbitmq.extend.password:#{null}}") passWord: String,
+        @Value("\${spring.rabbitmq.extend.virtual-host:#{null}}") vHost: String,
+        @Value("\${spring.rabbitmq.extend.addresses:#{null}}") address: String
     ): ConnectionFactory {
         val connectionFactory = CachingConnectionFactory()
         connectionFactory.username = userName
@@ -41,9 +39,9 @@ class BkMetricsMQAutoConfig {
     @Bean
     fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
 
-    @Bean(name= ["bkMetricsRabbitTemplate"])
-    fun bkMetricsRabbitTemplate(
-        @Qualifier("bkMetricsConnectionFactory") connectionFactory: ConnectionFactory,
+    @Bean(name = [EXTEND_RABBIT_TEMPLATE_NAME])
+    fun extendRabbitTemplate(
+        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME) connectionFactory: ConnectionFactory,
         objectMapper: ObjectMapper
     ) : RabbitTemplate {
         val rabbitTemplate = RabbitTemplate(connectionFactory)

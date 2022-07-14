@@ -20,15 +20,15 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(RabbitAutoConfiguration::class)
 @EnableRabbit
-class RabbitMQAutoConfiguration {
+class CoreRabbitMQConfiguration {
 
-    @Bean(name = ["rabbitConnectionFactory"])
+    @Bean(name = [CORE_CONNECTION_FACTORY_NAME])
     @Primary
-    fun rabbitConnectionFactory(
-        @Value("\${spring.rabbitmq.username:#{null}}") userName: String,
-        @Value("\${spring.rabbitmq.password:#{null}}") passWord: String,
-        @Value("\${spring.rabbitmq.virtual-host:#{null}}") vHost: String,
-        @Value("\${spring.rabbitmq.addresses:#{null}}") address: String
+    fun coreConnectionFactory(
+        @Value("\${spring.rabbitmq.core.username:#{null}}") userName: String,
+        @Value("\${spring.rabbitmq.core.password:#{null}}") passWord: String,
+        @Value("\${spring.rabbitmq.core.virtual-host:#{null}}") vHost: String,
+        @Value("\${spring.rabbitmq.core.addresses:#{null}}") address: String
     ) : ConnectionFactory {
         val connectionFactory = CachingConnectionFactory()
         connectionFactory.username = userName
@@ -41,10 +41,10 @@ class RabbitMQAutoConfiguration {
     @Bean
     fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
 
-    @Bean
+    @Bean(name = [CORE_RABBIT_TEMPLATE_NAME])
     @Primary
-    fun rabbitTemplate(
-        @Qualifier("rabbitConnectionFactory") connectionFactory: ConnectionFactory,
+    fun coreRabbitTemplate(
+        @Qualifier(CORE_CONNECTION_FACTORY_NAME) connectionFactory: ConnectionFactory,
         objectMapper: ObjectMapper,
     ): RabbitTemplate {
         val rabbitTemplate = RabbitTemplate(connectionFactory)
