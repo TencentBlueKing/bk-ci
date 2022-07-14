@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 @DisplayName("表达式解析类综合测试")
 class ExpressionParserTest {
 
@@ -138,6 +138,74 @@ class ExpressionParserTest {
             }
             ev.expressionValues.add("funcTest", fContextData)
         }
+    }
+
+    @DisplayName("测试流水线变量转换")
+    @Test
+    fun variablesConvert() {
+        val variables = mapOf(
+            "variables.pipeline_name" to "流水线名称",
+            "variables.pipeline_id" to "p-xxx",
+            "ci.actor" to "royalhuang",
+            "envs.aaa" to "bbb",
+            "jobs.job_1.steps.step_1.outputs.key_1" to "value1",
+            "jobs.job_1.steps.step_2.outputs.key_1" to "value1",
+            "jobs.job_2.steps.step_1.outputs.key_1" to "value1",
+            "jobs.job_2.steps.step_1.outputs.key_2" to "value2",
+            "jobs.build.0.steps.runStep.outputs.myoutput" to "build_0",
+            "jobs.build.2.steps.runStep.outputs.myoutput" to "build_1"
+        )
+        val parser = ExpressionParser()
+        val context = ExecutionContext(DictionaryContextData())
+        val nameValue = mutableListOf<NamedValueInfo>()
+        variables.forEach { (key, value) ->
+            var data: DictionaryContextData? = null
+            val tokens = key.split('.')
+            tokens.forEachIndexed { index, token ->
+                if (index == tokens.size - 1) {
+                    data!!.add(token, StringContextData(value))
+                    return@forEachIndexed
+                }
+
+                if (index == 0) {
+                    if (context.expressionValues[token] != null) {
+                        data = context.expressionValues[token] as DictionaryContextData
+                        return@forEachIndexed
+                    }
+                    nameValue.add(NamedValueInfo(token, ContextValueNode()))
+                    context.expressionValues[token] = DictionaryContextData()
+                    data = context.expressionValues[token] as DictionaryContextData
+                    return@forEachIndexed
+                }
+
+                if (data!![token] != null) {
+                    data = data!![token] as DictionaryContextData
+                    return@forEachIndexed
+                }
+                data!![token] = DictionaryContextData()
+                data = data!![token] as DictionaryContextData
+            }
+        }
+        Assertions.assertEquals(
+            parser.createTree("jobs['build'][0].steps.runStep.outputs.myoutput == 'build_0'", null, nameValue, null)!!
+                .evaluate(null, context, null).value,
+            true
+        )
+        Assertions.assertEquals(
+            parser.createTree("jobs.build[0].steps.runStep.outputs.myoutput == 'build_0'", null, nameValue, null)!!
+                .evaluate(null, context, null).value,
+            true
+        )
+        Assertions.assertEquals(
+            parser.createTree("jobs.build.'0'.steps.runStep.outputs.myoutput == 'build_0'", null, nameValue, null)!!
+                .evaluate(null, context, null).value,
+            true
+        )
+        Assertions.assertEquals(
+            parser.createTree("variables.pipeline_name == '流水线名称'", null, nameValue, null)!!
+                .evaluate(null, context, null).value,
+            true
+        )
     }
 
     @DisplayName("测试解析文字")
