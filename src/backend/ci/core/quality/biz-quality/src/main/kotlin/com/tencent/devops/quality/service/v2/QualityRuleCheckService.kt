@@ -652,7 +652,7 @@ class QualityRuleCheckService @Autowired constructor(
                         indicatorName = if (indicator.taskName.isNullOrEmpty()) {
                             cnName
                         } else {
-                            "[${indicator.taskName}]$cnName"
+                            "[${indicator.taskName!!.substringBeforeLast("+")}]$cnName"
                         },
                         indicatorType = elementType,
                         controlPoint = controlPointName,
