@@ -25,37 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.service
+package com.tencent.devops.quality.config
 
-import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
-import org.apache.commons.collections4.ListUtils
-import org.jooq.DSLContext
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import org.springframework.amqp.core.Binding
+import org.springframework.amqp.core.BindingBuilder
+import org.springframework.amqp.core.DirectExchange
+import org.springframework.amqp.core.Queue
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-@Service
-class PipelineStatisticService @Autowired constructor(
-    private val pipelineModelTaskDao: PipelineModelTaskDao,
-    private val dslContext: DSLContext
-) {
-    /**
-     * 根据原子标识，获取使用该原子的pipeline个数
-     */
-    fun getPipelineCountByAtomCode(atomCode: String, projectCode: String?): Int {
-        return pipelineModelTaskDao.getPipelineCountByAtomCode(dslContext, atomCode, projectCode)
+@Configuration
+class QualityMQConfig {
+
+    @Bean
+    fun qualityDailyQueue() = Queue(MQ.QUEUE_QUALITY_DAILY_EVENT)
+
+    @Bean
+    fun qualityDailyExchange(): DirectExchange {
+        val directExchange = DirectExchange(MQ.EXCHANGE_QUALITY_DAILY_FANOUT, true, false)
+        directExchange.isDelayed = true
+        return directExchange
     }
 
-    fun batchGetPipelineCountByAtomCode(atomCodes: String, projectCode: String?): Map<String, Int> {
-        val atomCodeList = atomCodes.split(",")
-        val ret = mutableMapOf<String, Int>()
-        // 按批次去数据库查询插件所关联的流水线数量
-        ListUtils.partition(atomCodeList, 30).forEach { rids ->
-            val records =
-                pipelineModelTaskDao.batchGetPipelineCountByAtomCode(dslContext, rids, projectCode)
-            records.map {
-                ret[it.value2()] = it.value1()
-            }
-        }
-        return ret
+    @Bean
+    fun qualityQueueBind(
+        @Autowired qualityDailyQueue: Queue,
+        @Autowired qualityDailyExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(qualityDailyQueue).to(qualityDailyExchange).with(MQ.ROUTE_QUALITY_DAILY_FANOUT)
     }
 }
