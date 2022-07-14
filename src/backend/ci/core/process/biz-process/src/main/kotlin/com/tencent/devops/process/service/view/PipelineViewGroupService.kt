@@ -154,7 +154,7 @@ class PipelineViewGroupService @Autowired constructor(
         val isStatic = view.viewType == PipelineViewType.STATIC
         val viewGroups = pipelineViewGroupDao.listByViewId(dslContext, projectId, viewId)
         if (viewGroups.isEmpty()) {
-            return if (isStatic) emptyList() else initDynamicViewGroup(view)
+            return if (isStatic) emptyList() else initDynamicViewGroup(view, view.createUser)
         }
         return viewGroups.map { it.pipelineId }.toList()
     }
@@ -240,7 +240,7 @@ class PipelineViewGroupService @Autowired constructor(
         val watcher = Watcher("initViewGroup|$projectId|$viewId|$userId")
         if (viewType == PipelineViewType.DYNAMIC) {
             watcher.start("initDynamicViewGroup")
-            initDynamicViewGroup(pipelineViewDao.get(context, projectId, viewId)!!, context)
+            initDynamicViewGroup(pipelineViewDao.get(context, projectId, viewId)!!, userId, context)
             watcher.stop()
         } else {
             watcher.start("initStaticViewGroup")
@@ -259,6 +259,7 @@ class PipelineViewGroupService @Autowired constructor(
 
     private fun initDynamicViewGroup(
         view: TPipelineViewRecord,
+        userId: String,
         context: DSLContext? = null
     ): List<String> {
         val projectId = view.projectId
@@ -285,7 +286,14 @@ class PipelineViewGroupService @Autowired constructor(
                 )
                 hasNext = pipelineInfos.size == step
             }
-
+            pipelineViewGroupDao.batchCreate(dslContext, result.map {
+                val viewGroup = TPipelineViewGroupRecord()
+                viewGroup.projectId = projectId
+                viewGroup.viewId = view.id
+                viewGroup.pipelineId = it
+                viewGroup.creator = userId
+                viewGroup
+            })
             return@lockAround result
         }
     }
