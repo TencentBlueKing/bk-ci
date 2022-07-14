@@ -79,6 +79,7 @@ import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineStatusService
+import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
@@ -102,6 +103,7 @@ class PipelineListFacadeService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineViewService: PipelineViewService,
+    private val pipelineViewGroupService: PipelineViewGroupService,
     private val pipelineStatusService: PipelineStatusService,
     private val processJmxApi: ProcessJmxApi,
     private val dslContext: DSLContext,
@@ -448,21 +450,13 @@ class PipelineListFacadeService @Autowired constructor(
                 )
             )
             pipelineFilterParamList.add(pipelineFilterParam)
+
+            val pipelineIds = mutableListOf<String>()
+            pipelineIds.addAll(authPipelineIds)
             val viewIdList =
                 listOf(PIPELINE_VIEW_FAVORITE_PIPELINES, PIPELINE_VIEW_MY_PIPELINES, PIPELINE_VIEW_ALL_PIPELINES)
             if (!viewIdList.contains(viewId)) {
-                val view = pipelineViewService.getView(userId = userId, projectId = projectId, viewId = viewId)
-                val filters = pipelineViewService.getFilters(view)
-                val pipelineViewFilterParam = PipelineFilterParam(
-                    logic = view.logic,
-                    filterByPipelineNames = filters.first,
-                    filterByPipelineCreators = filters.second,
-                    filterByLabelInfo = PipelineFilterByLabelInfo(
-                        filterByLabels = filters.third,
-                        labelToPipelineMap = filters.third.generateLabelToPipelineMap(projectId)
-                    )
-                )
-                pipelineFilterParamList.add(pipelineViewFilterParam)
+                pipelineIds.addAll(pipelineViewGroupService.listPipelineIdsByViewId(projectId, viewId))
             }
             pipelineViewService.addUsingView(userId = userId, projectId = projectId, viewId = viewId)
 
@@ -471,7 +465,7 @@ class PipelineListFacadeService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 channelCode = channelCode,
-                pipelineIds = authPipelines,
+                pipelineIds = pipelineIds,
                 favorPipelines = favorPipelines,
                 authPipelines = authPipelines,
                 viewId = viewId,
@@ -503,6 +497,7 @@ class PipelineListFacadeService @Autowired constructor(
                         projectId = projectId,
                         channelCode = channelCode,
                         sortType = sortType,
+                        pipelineIds = pipelineIds,
                         favorPipelines = favorPipelines,
                         authPipelines = authPipelines,
                         viewId = viewId,
@@ -519,6 +514,7 @@ class PipelineListFacadeService @Autowired constructor(
                         projectId = projectId,
                         channelCode = channelCode,
                         sortType = sortType,
+                        pipelineIds = pipelineIds,
                         favorPipelines = favorPipelines,
                         authPipelines = authPipelines,
                         viewId = viewId,
@@ -534,6 +530,7 @@ class PipelineListFacadeService @Autowired constructor(
                             projectId = projectId,
                             channelCode = channelCode,
                             sortType = sortType,
+                            pipelineIds = pipelineIds,
                             favorPipelines = favorPipelines,
                             authPipelines = authPipelines,
                             viewId = viewId,
@@ -552,6 +549,7 @@ class PipelineListFacadeService @Autowired constructor(
                         projectId = projectId,
                         channelCode = channelCode,
                         sortType = sortType,
+                        pipelineIds = pipelineIds,
                         favorPipelines = favorPipelines,
                         authPipelines = authPipelines,
                         viewId = viewId,
@@ -569,6 +567,7 @@ class PipelineListFacadeService @Autowired constructor(
                     projectId = projectId,
                     channelCode = channelCode,
                     sortType = sortType,
+                    pipelineIds = pipelineIds,
                     favorPipelines = favorPipelines,
                     authPipelines = authPipelines,
                     viewId = viewId,
@@ -584,6 +583,7 @@ class PipelineListFacadeService @Autowired constructor(
                         projectId = projectId,
                         channelCode = channelCode,
                         sortType = sortType,
+                        pipelineIds = pipelineIds,
                         favorPipelines = favorPipelines,
                         authPipelines = authPipelines,
                         viewId = viewId,
@@ -668,17 +668,8 @@ class PipelineListFacadeService @Autowired constructor(
         pipelines: List<Pipeline>,
         viewId: String
     ): List<Pipeline> {
-        val view = pipelineViewService.getView(userId = userId, projectId = projectId, viewId = viewId)
-        val filters = pipelineViewService.getFilters(view)
-
-        return filterViewPipelines(
-            projectId = projectId,
-            pipelines = pipelines,
-            logic = view.logic,
-            filterByPipelineNames = filters.first,
-            filterByPipelineCreators = filters.second,
-            filterByLabels = filters.third
-        )
+        val pipelineIds = pipelineViewGroupService.listPipelineIdsByViewId(projectId, viewId)
+        return pipelines.filter { pipelineIds.contains(it.pipelineId) }
     }
 
     /**

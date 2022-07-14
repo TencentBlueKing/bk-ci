@@ -144,7 +144,8 @@ class PipelineViewGroupService @Autowired constructor(
         return result
     }
 
-    fun listPipelineIdsByViewId(projectId: String, viewId: Long): List<String> {
+    fun listPipelineIdsByViewId(projectId: String, viewIdEncode: String): List<String> {
+        val viewId = HashUtil.decodeIdToLong(viewIdEncode)
         val view = pipelineViewDao.get(dslContext, projectId, viewId)
         if (view == null) {
             logger.warn("null view , project:$projectId , view:$viewId")
