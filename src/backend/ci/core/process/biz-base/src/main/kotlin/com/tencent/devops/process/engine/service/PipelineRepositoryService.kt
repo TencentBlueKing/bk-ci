@@ -1203,6 +1203,14 @@ class PipelineRepositoryService constructor(
         }
     }
 
+    fun updateMaxConRunningQueueSize(pipelineId: String, maxConRunningQueueSize: Int): Int {
+        return pipelineSettingDao.updateMaxConRunningQueueSize(
+            dslContext = dslContext,
+            pipelineIdList = listOf(pipelineId),
+            maxConRunningQueueSize = maxConRunningQueueSize
+        )
+    }
+
     // TODO: 2022/7/8 add new update method
 
     companion object {

@@ -898,7 +898,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 val pipelineExist = isPipelineExist(
                     projectId = it.projectId,
                     name = it.name,
-                    channelCode = ChannelCode.GIT
+                    channelCode = ChannelCode.GIT,
+                    pipelineId = it.pipelineId
                 )
                 if (!pipelineExist) {
                     pipelineRepositoryService.updateModelName(

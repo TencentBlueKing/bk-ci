@@ -74,7 +74,7 @@ data class PipelineSetting(
     @ApiModelProperty("保存流水线编排的最大个数", required = false)
     val maxPipelineResNum: Int = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
     @ApiModelProperty("并发构建数量限制", required = false)
-    val maxConRunningQueueSize: Int = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT, // MULTIPLE类型时，并发构建数量限制
+    val maxConRunningQueueSize: Int? = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT, // MULTIPLE类型时，并发构建数量限制
     @ApiModelProperty("版本", required = false)
     var version: Int = 0,
     @field:BkField(patternStyle = BkStyleEnum.BUILD_NUM_RULE_STYLE, required = false)
@@ -103,8 +103,8 @@ data class PipelineSetting(
                 throw InvalidParamException("最大排队数量非法", params = arrayOf("maxQueueSize"))
             }
         }
-        if (maxConRunningQueueSize <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
-            maxConRunningQueueSize > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+        if (maxConRunningQueueSize != null && (maxConRunningQueueSize <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
+                maxConRunningQueueSize > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX)
         ) {
             throw InvalidParamException("最大并发数量非法", params = arrayOf("maxConRunningQueueSize"))
         }

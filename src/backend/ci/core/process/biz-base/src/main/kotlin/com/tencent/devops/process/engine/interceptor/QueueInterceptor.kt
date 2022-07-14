@@ -99,7 +99,7 @@ class QueueInterceptor @Autowired constructor(
                     runningCount = buildSummaryRecord.runningCount,
                     queueCount = buildSummaryRecord.queueCount
                 )
-            setting.maxConRunningQueueSize <= (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) ->
+            setting.maxConRunningQueueSize!! <= (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) ->
                 Response(
                     status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
                     message = "并行上限/Max parallel: ${setting.maxConRunningQueueSize}"

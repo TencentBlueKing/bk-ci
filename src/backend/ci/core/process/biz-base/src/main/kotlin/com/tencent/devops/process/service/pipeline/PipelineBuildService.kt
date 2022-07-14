@@ -62,6 +62,7 @@ import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
 import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
@@ -119,7 +120,9 @@ class PipelineBuildService(
         val lockKey = "PipelineRateLimit:$pipelineId"
         try {
             if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL) {
-                acquire = simpleRateLimiter.acquire(bucketSize, lockKey = lockKey)
+                acquire = simpleRateLimiter.acquire(
+                    bucketSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT, lockKey = lockKey
+                )
                 if (!acquire) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_START_BUILD_FREQUENT_LIMIT,

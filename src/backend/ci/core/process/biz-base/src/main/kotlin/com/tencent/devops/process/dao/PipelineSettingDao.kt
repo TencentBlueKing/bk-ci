@@ -174,7 +174,7 @@ class PipelineSettingDao {
                     setting.cleanVariablesWhenRetry
                 ).execute()
             } else {
-                dslContext.update(this)
+                val updateSetMoreStep = dslContext.update(this)
                     .set(NAME, setting.pipelineName)
                     .set(DESC, setting.desc)
                     .set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(setting.runLockType))
@@ -197,11 +197,15 @@ class PipelineSettingDao {
                     .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute))
                     .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
                     .set(MAX_PIPELINE_RES_NUM, setting.maxPipelineResNum)
-                    .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
                     .set(BUILD_NUM_RULE, setting.buildNumRule)
                     .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
                     .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
                     .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
+                // maxConRunningQueueSize 默认传空不更新
+                if (setting.maxConRunningQueueSize != null) {
+                    updateSetMoreStep.set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
+                }
+                updateSetMoreStep
                     .where(PIPELINE_ID.eq(setting.pipelineId).and(PROJECT_ID.eq(setting.projectId)))
                     .execute()
             }
@@ -323,6 +327,19 @@ class PipelineSettingDao {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             return dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .execute()
+        }
+    }
+
+    fun updateMaxConRunningQueueSize(
+        dslContext: DSLContext,
+        pipelineIdList: List<String>,
+        maxConRunningQueueSize: Int
+    ): Int {
+        with(TPipelineSetting.T_PIPELINE_SETTING) {
+            return dslContext.update(this)
+                .set(MAX_CON_RUNNING_QUEUE_SIZE, maxConRunningQueueSize)
+                .where(PIPELINE_ID.`in`(pipelineIdList))
                 .execute()
         }
     }

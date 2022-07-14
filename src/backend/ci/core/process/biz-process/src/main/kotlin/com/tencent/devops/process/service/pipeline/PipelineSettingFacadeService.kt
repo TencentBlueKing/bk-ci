@@ -273,4 +273,14 @@ class PipelineSettingFacadeService @Autowired constructor(
             waitQueueTimeMinute = oldSetting.waitQueueTimeMinute
         )
     }
+
+    fun updateMaxConRunningQueueSize(
+        pipelineId: String,
+        maxConRunningQueueSize: Int
+    ): Int {
+        return pipelineRepositoryService.updateMaxConRunningQueueSize(
+            pipelineId = pipelineId,
+            maxConRunningQueueSize = maxConRunningQueueSize
+        )
+    }
 }
