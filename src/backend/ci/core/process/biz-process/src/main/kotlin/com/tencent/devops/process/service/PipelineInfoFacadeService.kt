@@ -769,10 +769,10 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.desc = pipelineInfo.pipelineDesc
             model.pipelineCreator = pipelineInfo.creator
 
-            val defaultTagIds by lazy { listOf(stageTagService.getDefaultStageTag().data?.id) } // 优化
+            val defaultTagId by lazy { stageTagService.getDefaultStageTag().data?.id } // 优化
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
-                if (it.tag == null) it.tag = defaultTagIds
+                if (it.tag == null) it.tag = defaultTagId?.let { self -> listOf(self) }
                 it.resetBuildOption()
             }
 
