@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG
@@ -46,9 +45,7 @@ import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -63,16 +60,11 @@ import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectSourceEnum
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.service.impl.TxProjectServiceImpl
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.stream.api.service.ServiceGitForAppResource
-import okhttp3.MediaType
-import okhttp3.Request
-import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.core.MessageProperties
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -82,12 +74,9 @@ import org.springframework.stereotype.Service
 class ProjectLocalService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
-    private val objectMapper: ObjectMapper,
-    private val redisOperation: RedisOperation,
     private val authProjectApi: AuthProjectApi,
     bkAuthProperties: BkAuthProperties,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
-    private val gray: Gray,
     private val jmxApi: ProjectJmxApi,
     private val projectService: ProjectService,
     private val projectTagService: ProjectTagService,
@@ -148,7 +137,7 @@ class ProjectLocalService @Autowired constructor(
                     projectName = it.projectName,
                     logoUrl = if (it.logoAddr.startsWith("http://radosgw.open.oa.com")) {
                         "https://dev-download.bkdevops.qq.com/images" +
-                                it.logoAddr.removePrefix("http://radosgw.open.oa.com")
+                            it.logoAddr.removePrefix("http://radosgw.open.oa.com")
                     } else {
                         it.logoAddr
                     },
@@ -173,7 +162,7 @@ class ProjectLocalService @Autowired constructor(
                     projectName = it.projectName,
                     logoUrl = if (it.logoAddr.startsWith("http://radosgw.open.oa.com")) {
                         "https://dev-download.bkdevops.qq.com/images" +
-                                it.logoAddr.removePrefix("http://radosgw.open.oa.com")
+                            it.logoAddr.removePrefix("http://radosgw.open.oa.com")
                     } else {
                         it.logoAddr
                     },
@@ -208,13 +197,15 @@ class ProjectLocalService @Autowired constructor(
                 dslContext = dslContext,
                 bgId = bgId,
                 deptName = deptName,
-                centerName = centerName
-            )?.filter { it.enabled == null || it.enabled }?.map { it.englishName }?.toList() ?: emptyList()
+                centerName = centerName,
+                enabled = true
+            )?.map { it.englishName }?.toList() ?: emptyList()
             success = true
             return list
         } finally {
-            jmxApi.execute("getProjectEnNamesByOrganization", System.currentTimeMillis() - startEpoch, success)
-            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list project EnNames,userName:$userId")
+            val elapse = System.currentTimeMillis() - startEpoch
+            jmxApi.execute(api = "getProjectEnNamesByOrganization", elapse = elapse, success = success)
+            logger.info("It took ${elapse}ms to list project EnNames,userName:$userId")
         }
     }
 
@@ -226,12 +217,9 @@ class ProjectLocalService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val list = projectDao.listByGroupId(
-                dslContext = dslContext,
-                bgId = null,
-                deptId = null,
-                centerId = centerId
-            ).filter { it.enabled == null || it.enabled }.map { it.englishName }.toList()
+            val list = projectDao.listByOrganization(dslContext, centerId = centerId, enabled = true)?.map {
+                it.englishName
+            }?.toList() ?: emptyList()
             success = true
             return list
         } finally {
@@ -252,13 +240,15 @@ class ProjectLocalService @Autowired constructor(
             val list = projectDao.listByOrganization(
                 dslContext = dslContext,
                 deptId = deptId,
-                centerName = centerName
-            )?.filter { it.enabled == null || it.enabled }?.map { it.englishName }?.toList() ?: emptyList()
+                centerName = centerName,
+                enabled = true
+            )?.map { it.englishName }?.toList() ?: emptyList()
             success = true
             return list
         } finally {
-            jmxApi.execute("getProjectEnNamesByOrganization", System.currentTimeMillis() - startEpoch, success)
-            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list project EnNames,userName:$userId")
+            val elapse = System.currentTimeMillis() - startEpoch
+            jmxApi.execute(api = "getProjectEnNamesByOrganization", elapse = elapse, success = success)
+            logger.info("It took ${elapse}ms to list project EnNames,userName:$userId")
         }
     }
 
@@ -266,7 +256,7 @@ class ProjectLocalService @Autowired constructor(
         val projectCode = "_$userId"
         var userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
         if (userProjectRecord != null) {
-            return ProjectUtils.packagingBean(userProjectRecord, setOf())
+            return ProjectUtils.packagingBean(userProjectRecord)
         }
         var projectName = projectCode
         val tmpProjectRecord = projectDao.getByCnName(dslContext, projectName)
@@ -294,18 +284,15 @@ class ProjectLocalService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val createExt = ProjectCreateExtInfo(
-                needValidate = false,
-                needAuth = projectId.isNullOrEmpty()
-            )
             projectService.create(
                 userId = userId,
                 projectCreateInfo = projectCreateInfo,
                 accessToken = accessToken,
-                createExt = createExt,
-                projectId = projectId,
-                channel = ProjectChannelCode.PREBUILD
+                createExtInfo = ProjectCreateExtInfo(needValidate = false, needAuth = projectId.isNullOrEmpty()),
+                defaultProjectId = projectId,
+                projectChannel = ProjectChannelCode.PREBUILD
             )
+            success = true
         } catch (e: Exception) {
             logger.warn("Fail to create the project ($projectCreateInfo)", e)
             throw e
@@ -313,13 +300,13 @@ class ProjectLocalService @Autowired constructor(
             jmxApi.execute(PROJECT_CREATE, System.currentTimeMillis() - startEpoch, success)
         }
         userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
-        return ProjectUtils.packagingBean(userProjectRecord!!, setOf())
+        return ProjectUtils.packagingBean(userProjectRecord!!)
     }
 
     fun getOrCreateRdsProject(userId: String, projectId: String, projectName: String): ProjectVO {
         var userProjectRecord = projectDao.getByEnglishName(dslContext, projectId)
         if (userProjectRecord != null) {
-            return ProjectUtils.packagingBean(userProjectRecord, setOf())
+            return ProjectUtils.packagingBean(userProjectRecord)
         }
 
         val projectCreateInfo = ProjectCreateInfo(
@@ -348,9 +335,9 @@ class ProjectLocalService @Autowired constructor(
                 userId = userId,
                 projectCreateInfo = projectCreateInfo,
                 accessToken = null,
-                createExt = createExt,
-                projectId = projectId,
-                channel = ProjectChannelCode.BS
+                createExtInfo = createExt,
+                defaultProjectId = projectId,
+                projectChannel = ProjectChannelCode.BS
             )
             success = true
         } catch (e: Exception) {
@@ -360,23 +347,27 @@ class ProjectLocalService @Autowired constructor(
             jmxApi.execute(PROJECT_CREATE, System.currentTimeMillis() - startEpoch, success)
         }
         userProjectRecord = projectDao.getByEnglishName(dslContext, projectId)
-        return ProjectUtils.packagingBean(userProjectRecord!!, setOf())
+        return ProjectUtils.packagingBean(userProjectRecord!!)
     }
 
     fun getProjectByGroup(userId: String, bgName: String?, deptName: String?, centerName: String?): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val grayProjectSet = grayProjectSet()
             val list = ArrayList<ProjectVO>()
-            projectDao.listByGroup(dslContext, bgName, deptName, centerName).filter { it.enabled == null || it.enabled }
-                .map {
-                    list.add(ProjectUtils.packagingBean(it, grayProjectSet))
-                }
+            projectDao.listByOrganization(
+                dslContext = dslContext,
+                bgName = bgName,
+                deptName = deptName,
+                centerName = centerName,
+                enabled = true
+            )?.map {
+                list.add(ProjectUtils.packagingBean(it))
+            }
             success = true
             return list
         } finally {
-            jmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            jmxApi.execute(PROJECT_LIST, elapse = System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects,userName:$userId")
         }
     }
@@ -392,31 +383,38 @@ class ProjectLocalService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val grayProjectSet = grayProjectSet()
             val list = ArrayList<ProjectVO>()
             val records = when (organizationType) {
                 AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG -> {
-                    projectDao.listByOrganization(dslContext, organizationId, deptName, centerName)
+                    projectDao.listByOrganization(
+                        dslContext = dslContext,
+                        bgId = organizationId,
+                        deptName = deptName,
+                        centerName = centerName,
+                        enabled = true
+                    )
                 }
                 AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> {
-                    projectDao.listByOrganization(dslContext, organizationId, centerName)
+                    projectDao.listByOrganization(
+                        dslContext = dslContext,
+                        deptId = organizationId,
+                        deptName = deptName,
+                        centerName = centerName,
+                        enabled = true
+                    )
                 }
                 AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> {
-                    projectDao.listByGroupId(dslContext, null, null, organizationId)
+                    projectDao.listByOrganization(dslContext = dslContext, centerId = organizationId, enabled = true)
                 }
-                else -> {
-                    null
-                }
+                else -> null
             }
-            records?.filter { it.enabled == null || it.enabled }
-                ?.map {
-                    list.add(ProjectUtils.packagingBean(it, grayProjectSet))
-                }
+            records?.map { list.add(ProjectUtils.packagingBean(it)) }
             success = true
             return list
         } finally {
-            jmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
-            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects,userName:$userId")
+            val elapse = System.currentTimeMillis() - startEpoch
+            jmxApi.execute(api = PROJECT_LIST, elapse = elapse, success = success)
+            logger.info("It took ${elapse}ms to list projects,userName:$userId")
         }
     }
 
@@ -424,23 +422,26 @@ class ProjectLocalService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val grayProjectSet = grayProjectSet()
             val list = ArrayList<ProjectVO>()
-            projectDao.listByGroupId(dslContext, bgId, deptId, centerId).filter { it.enabled == null || it.enabled }
-                .map {
-                    list.add(ProjectUtils.packagingBean(it, grayProjectSet))
-                }
+            projectDao.listByOrganization(
+                dslContext = dslContext,
+                bgId = bgId,
+                deptId = deptId,
+                centerId = centerId,
+                enabled = true
+            )?.map { list.add(ProjectUtils.packagingBean(it)) }
             success = true
             return list
         } finally {
-            jmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
-            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects,userName:$userId")
+            val elapse = System.currentTimeMillis() - startEpoch
+            jmxApi.execute(PROJECT_LIST, elapse, success)
+            logger.info("It took ${elapse}ms to list projects,userName:$userId")
         }
     }
 
     fun getByEnglishName(englishName: String): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
-        return ProjectUtils.packagingBean(record, grayProjectSet())
+        return ProjectUtils.packagingBean(record)
     }
 
     @SuppressWarnings("ALL")
@@ -478,7 +479,7 @@ class ProjectLocalService @Autowired constructor(
                 }
             }
         }
-        return ProjectUtils.packagingBean(projectInfo, grayProjectSet())
+        return ProjectUtils.packagingBean(projectInfo)
     }
 
     fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?> {
@@ -487,7 +488,7 @@ class ProjectLocalService @Autowired constructor(
 //        val validateResult = verifyUserProjectPermission(accessToken, projectCode, userId)
         val validateFlag = projectPermissionService.verifyUserProjectPermission(accessToken, projectCode, userId)
         logger.info("getProjectUsers validateResult is :$validateFlag")
-        if (null == validateFlag || !validateFlag) {
+        if (!validateFlag) {
             val messageResult = MessageCodeUtil.generateResponseDataObject<String>(CommonMessageCode.PERMISSION_DENIED)
             return Result(messageResult.status, messageResult.message, null)
         }
@@ -512,57 +513,6 @@ class ProjectLocalService @Autowired constructor(
                     UserRole(it.displayName, it.roleId, it.roleName, it.type)
                 }
             }
-    }
-
-    fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Result<Boolean> {
-        val url = "$authUrl/$projectCode/users/$userId/verfiy?access_token=$accessToken"
-        logger.info("the verifyUserProjectPermission url is:$url")
-        val body = RequestBody.create(MediaType.parse(MessageProperties.CONTENT_TYPE_JSON), "{}")
-        val request = Request.Builder().url(url).post(body).build()
-        val responseContent = request(request, "verifyUserProjectPermission error")
-        val result = objectMapper.readValue<Result<Any?>>(responseContent)
-        logger.info("the verifyUserProjectPermission result is:$result")
-        if (result.isOk()) {
-            return Result(true)
-        }
-        return Result(false)
-    }
-
-    private fun grayProjectSet() = gray.grayProjectSet(redisOperation)
-
-    private fun request(request: Request, errorMessage: String): String {
-//        val httpClient = okHttpClient.newBuilder().build()
-        OkhttpUtils.doHttp(request).use { response ->
-            //        httpClient.newCall(request).execute().use { response ->
-            val responseContent = response.body()!!.string()
-            if (!response.isSuccessful) {
-                logger.warn("Fail to request($request) with code ${response.code()} , " +
-                                "message ${response.message()} and response $responseContent")
-                throw OperationException(errorMessage)
-            }
-            return responseContent
-        }
-    }
-
-    private fun deleteProjectFromAuth(projectId: String, accessToken: String, retry: Boolean = true) {
-        logger.warn("Deleting the project $projectId from auth")
-        try {
-            val url = "$authUrl/$projectId?access_token=$accessToken"
-            val request = Request.Builder().url(url).delete().build()
-            val responseContent = request(request, "Fail to delete the project $projectId")
-            logger.info("Get the delete project $projectId response $responseContent")
-            val response: Response<Any?> = objectMapper.readValue(responseContent)
-            if (response.code.toInt() != 0) {
-                logger.warn("Fail to delete the project $projectId with response $responseContent")
-                deleteProjectFromAuth(projectId, accessToken, false)
-            }
-            logger.info("Finish deleting the project $projectId from auth")
-        } catch (t: Throwable) {
-            logger.warn("Fail to delete the project $projectId from auth", t)
-            if (retry) {
-                deleteProjectFromAuth(projectId, accessToken, false)
-            }
-        }
     }
 
     fun getProjectIdInAuth(projectCode: String, accessToken: String): String? {
@@ -590,7 +540,7 @@ class ProjectLocalService @Autowired constructor(
         val projectCode = "git_$gitProjectId"
         var gitCiProject = projectDao.getByEnglishName(dslContext, projectCode)
         if (gitCiProject != null) {
-            return ProjectUtils.packagingBean(gitCiProject, setOf())
+            return ProjectUtils.packagingBean(gitCiProject)
         }
 
         val projectCreateInfo = ProjectCreateInfo(
@@ -617,9 +567,9 @@ class ProjectLocalService @Autowired constructor(
                 userId = userId,
                 projectCreateInfo = projectCreateInfo,
                 accessToken = null,
-                createExt = createExt,
-                projectId = projectCode,
-                channel = ProjectChannelCode.GITCI
+                createExtInfo = createExt,
+                defaultProjectId = projectCode,
+                projectChannel = ProjectChannelCode.GITCI
             )
 
             // stream项目自动把流量指向gitCI集群, 注意此tag写死在代码内,若对应集群的consulTag调整需要变更代码
@@ -629,33 +579,10 @@ class ProjectLocalService @Autowired constructor(
             throw e
         }
         gitCiProject = projectDao.getByEnglishName(dslContext, projectCode)
-        return ProjectUtils.packagingBean(gitCiProject!!, setOf())
+        return ProjectUtils.packagingBean(gitCiProject!!)
     }
 
-    fun createUser2ProjectByApp(
-        userId: String,
-        projectCode: String,
-        roleId: Int?,
-        roleName: String?
-    ): Boolean {
-        logger.info("[createUser2ProjectByApp] |$userId|$projectCode｜$roleId $roleName")
-        projectDao.get(dslContext, projectCode) ?: throw ErrorCodeException(
-            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-            defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST)
-        )
-        return projectExtPermissionService.createUser2Project(
-            createUser = "", // 应用态无需校验创建者身份
-            projectCode = projectCode,
-            roleId = roleId,
-            roleName = roleName,
-            userIds = arrayListOf(userId),
-            checkManager = false
-        )
-    }
-
-    fun getProjectRole(
-        projectId: String
-    ): List<BKAuthProjectRolesResources> {
+    fun getProjectRole(projectId: String): List<BKAuthProjectRolesResources> {
         logger.info("[getProjectRole] $projectId")
         val queryProject = projectDao.get(dslContext, projectId) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
@@ -666,30 +593,6 @@ class ProjectLocalService @Autowired constructor(
             queryProject.englishName,
             queryProject.projectId
         ).toMutableList()
-    }
-
-    fun createPipelinePermissionByApp(
-        userId: String,
-        projectId: String,
-        permission: String,
-        resourceType: String,
-        resourceTypeCode: String
-    ): Boolean {
-        logger.info("createPipelinePermissionByApp $userId $projectId $permission $resourceType")
-        projectDao.get(dslContext, projectId) ?: throw ErrorCodeException(
-            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-            defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
-
-        val createUserList = userId.split(",")
-        return grantInstancePermission(
-            userId = userId,
-            projectId = projectId,
-            permission = permission,
-            resourceType = resourceType,
-            resourceCode = resourceTypeCode,
-            createUserList = createUserList,
-            checkManager = false
-        )
     }
 
     fun updateRelationId(projectCode: String, relationId: String) {
@@ -710,9 +613,12 @@ class ProjectLocalService @Autowired constructor(
             // 操作人必须为项目的管理员
             if (!authProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectId)) {
                 logger.error("$userId is not manager for project[$projectId]")
-                throw OperationException((MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.NOT_MANAGER,
-                    params = arrayOf(userId, projectId))))
+                throw OperationException(
+                    (MessageCodeUtil.getCodeLanMessage(
+                        messageCode = ProjectMessageCode.NOT_MANAGER,
+                        params = arrayOf(userId, projectId)
+                    ))
+                )
             }
         }
 
@@ -721,11 +627,15 @@ class ProjectLocalService @Autowired constructor(
             if (!projectPermissionService.verifyUserProjectPermission(
                     accessToken = null,
                     projectCode = projectId,
-                    userId = userId)) {
+                    userId = userId
+                )) {
                 logger.error("createPipelinePermission userId is not project user,userId[$it] projectId[$projectId]")
-                throw OperationException((MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
-                    params = arrayOf(userId, projectId))))
+                throw OperationException(
+                    (MessageCodeUtil.getCodeLanMessage(
+                        messageCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
+                        params = arrayOf(userId, projectId)
+                    ))
+                )
             }
         }
 
@@ -740,9 +650,8 @@ class ProjectLocalService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(ProjectLocalService::class.java)
+        private val logger = LoggerFactory.getLogger(ProjectLocalService::class.java)
         const val PROJECT_LIST = "project_list"
         const val PROJECT_CREATE = "project_create"
-        const val PROJECT_UPDATE = "project_update"
     }
 }

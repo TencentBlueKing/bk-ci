@@ -211,19 +211,6 @@ interface ServiceTxProjectResource {
     ): Result<List<String>>
 
     @GET
-//    @Path("/preBuild/userProject/{userId}")
-    @Path("/preBuild/userProject/userId/{userId}")
-    @ApiOperation("查询用户项目")
-    fun getPreUserProjectV2(
-        @ApiParam("用户ID", required = true)
-        @PathParam("userId")
-        userId: String,
-        @ApiParam("accessToken", required = true)
-        @QueryParam("accessToken")
-        accessToken: String
-    ): Result<ProjectVO?>
-
-    @GET
     @Path("/rds/getOrCreate")
     @ApiOperation("查询用户项目")
     fun getOrCreateRdsProject(

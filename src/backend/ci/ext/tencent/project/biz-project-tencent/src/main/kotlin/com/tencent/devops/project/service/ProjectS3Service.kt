@@ -54,21 +54,17 @@ class ProjectS3Service @Autowired constructor(
         logger.info("start to create public scan project $projectCreateInfo!")
         var publicScanProject = projectDao.getByEnglishName(dslContext, projectCreateInfo.englishName)
         if (null != publicScanProject) {
-            return packagingBean(publicScanProject, setOf())
+            return packagingBean(publicScanProject)
         }
 
         try {
-            val createExt = ProjectCreateExtInfo(
-                needValidate = false,
-                needAuth = false
-            )
             projectService.create(
                 userId = userId,
                 projectCreateInfo = projectCreateInfo,
                 accessToken = null,
-                createExt = createExt,
-                projectId = projectCreateInfo.englishName,
-                channel = ProjectChannelCode.CODECC
+                createExtInfo = ProjectCreateExtInfo(needValidate = false, needAuth = false),
+                defaultProjectId = projectCreateInfo.englishName,
+                projectChannel = ProjectChannelCode.CODECC
             )
 
             // codecc任务自动将流量指向auto集群
@@ -80,6 +76,6 @@ class ProjectS3Service @Autowired constructor(
 
         publicScanProject = projectDao.getByEnglishName(dslContext, projectCreateInfo.englishName)
         logger.info("create public scan project successfully!")
-        return packagingBean(publicScanProject!!, setOf())
+        return packagingBean(publicScanProject!!)
     }
 }

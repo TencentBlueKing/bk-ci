@@ -42,14 +42,12 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
-import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -71,7 +69,6 @@ import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
-import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ImageUtil
 import com.tencent.devops.project.util.ProjectUtils
@@ -93,19 +90,16 @@ class TxProjectServiceImpl @Autowired constructor(
     private val tofService: TOFService,
     private val bkRepoClient: BkRepoClient,
     private val projectPaasCCService: ProjectPaasCCService,
-    private val bkAuthProperties: BkAuthProperties,
     private val bsAuthProjectApi: AuthProjectApi,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
-    gray: Gray,
     client: Client,
     private val projectDispatcher: ProjectDispatcher,
     authPermissionApi: AuthPermissionApi,
     projectAuthServiceCode: ProjectAuthServiceCode,
     shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
     private val managerService: ManagerService,
-    private val projectIamV0Service: ProjectIamV0Service,
     private val tokenService: ClientTokenService,
     private val bsAuthTokenApi: BSAuthTokenApi,
     private val projectExtPermissionService: ProjectExtPermissionService,
@@ -117,7 +111,6 @@ class TxProjectServiceImpl @Autowired constructor(
     projectDao = projectDao,
     projectJmxApi = projectJmxApi,
     redisOperation = redisOperation,
-    gray = gray,
     client = client,
     projectDispatcher = projectDispatcher,
     authPermissionApi = authPermissionApi,
@@ -178,14 +171,13 @@ class TxProjectServiceImpl @Autowired constructor(
             if (englishNames.isEmpty()) {
                 return emptyList()
             }
-            logger.info("项目列表：$englishNames")
-            val list = ArrayList<ProjectVO>()
-            projectDao.listByCodes(dslContext, englishNames).map {
-                list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
+            val list = ArrayList<ProjectVO>(englishNames.size)
+            projectDao.listByCodes(dslContext, englishNames, enabled = null).map {
+                list.add(ProjectUtils.packagingBean(it))
             }
             return list
         } finally {
-            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
+            logger.info("$userId|It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
         }
     }
 
@@ -319,12 +311,6 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun drawFile(projectCode: String): File {
-        // 随机生成首字母图片
-        val firstChar = projectCode.substring(0, 1).toUpperCase()
-        return ImageUtil.drawImage(firstChar)
-    }
-
     override fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
         return if (permission == AuthPermission.MANAGE) {
             bsAuthProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectCode)
@@ -339,7 +325,7 @@ class TxProjectServiceImpl @Autowired constructor(
 
     fun getInfoByEnglishName(englishName: String): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
-        return ProjectUtils.packagingBean(record, grayProjectSet())
+        return ProjectUtils.packagingBean(record)
     }
 
     override fun hasCreatePermission(userId: String): Boolean {
@@ -388,11 +374,9 @@ class TxProjectServiceImpl @Autowired constructor(
         val centerId = if (projectCreateInfo.centerId == 0L) {
             userDeptDetail.centerId.toLong()
         } else projectCreateInfo.centerId
-        val bgName = if (projectCreateInfo.bgName.isNullOrEmpty()) userDeptDetail.bgName else projectCreateInfo.bgName
-        val deptName =
-            if (projectCreateInfo.deptName.isNullOrEmpty()) userDeptDetail.deptName else projectCreateInfo.deptName
-        val centerName =
-            if (projectCreateInfo.centerName.isNullOrEmpty()) userDeptDetail.centerName else projectCreateInfo.centerName
+        val bgName = projectCreateInfo.bgName.ifEmpty { userDeptDetail.bgName }
+        val deptName = projectCreateInfo.deptName.ifEmpty { userDeptDetail.deptName }
+        val centerName = projectCreateInfo.centerName.ifEmpty { userDeptDetail.centerName }
 
         return ProjectCreateInfo(
             projectName = projectCreateInfo.projectName,
@@ -435,7 +419,7 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     private fun getV3UserProject(userId: String): List<String>? {
-        if (v3Tag.isNullOrEmpty()) {
+        if (v3Tag.isBlank()) {
             return emptyList()
         }
         logger.info("getV3userProject tag: $v3Tag")
