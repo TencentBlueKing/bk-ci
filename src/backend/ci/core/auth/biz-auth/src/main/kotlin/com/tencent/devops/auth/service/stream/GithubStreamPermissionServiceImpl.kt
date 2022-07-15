@@ -73,14 +73,15 @@ class GithubStreamPermissionServiceImpl @Autowired constructor(
             return publicProjectCache.getIfPresent(projectCode)!!
         }
 
+        val authUser = getProjectAuthUser(projectCode, userId!!)
         val publicProject = client.get(ServiceGithubPermissionResource::class)
-            .isPublicProject(userId!!, projectCode).data
+            .isPublicProject(authUser, projectCode).data
         publicProjectCache.put(projectCode, publicProject!!)
         return publicProject
     }
 
     override fun isProjectMember(projectCode: String, userId: String): Pair<Boolean, Boolean> {
-        val authUser = getProjectAuthUser(projectCode)
+        val authUser = getProjectAuthUser(projectCode, userId)
         // 是否是项目成员
         val checkProjectMember = checkProjectMemeber(projectCode, userId, authUser)
         if (!checkProjectMember) {
@@ -100,22 +101,19 @@ class GithubStreamPermissionServiceImpl @Autowired constructor(
     }
 
     // 获取github项目在stream内创建auth的用户名（github stream项目的开启人）
-    private fun getProjectAuthUser(projectCode: String): String {
+    private fun getProjectAuthUser(projectCode: String, userId: String): String {
         if (!projectAuthUserCache.getIfPresent(projectCode).isNullOrEmpty()) {
             return projectAuthUserCache.getIfPresent(projectCode)!!
         }
-        // TODO: userID如何获取
-        val projectInfo = client.get(ServiceStreamBasicSettingResource::class).getStreamConf("", projectCode).data
-        if (projectInfo == null) {
-            logger.warn("$projectCode not exist")
-            throw ErrorCodeException(
-                errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST)
-            )
+        val projectInfo = client.get(ServiceStreamBasicSettingResource::class)
+            .getStreamConf("", projectCode).data
+        return if (projectInfo == null) {
+            userId
+        } else {
+            val projectAuthUser = projectInfo.enableUserId
+            projectAuthUserCache.put(projectCode, projectAuthUser)
+            projectAuthUser
         }
-        val projectAuthUser = projectInfo!!.enableUserId
-        projectAuthUserCache.put(projectCode, projectAuthUser)
-        return projectAuthUser
     }
 
     private fun projectMemberKey(projectCode: String, userId: String) : String {
