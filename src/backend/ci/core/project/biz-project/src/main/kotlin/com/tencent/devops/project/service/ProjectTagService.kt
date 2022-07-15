@@ -374,8 +374,7 @@ class ProjectTagService @Autowired constructor(
     ): com.tencent.devops.project.pojo.Result<Map<String, Any?>?> {
         val dataObj = mutableMapOf<String, Any?>()
 
-
-        val routerTag = if (grayFlag) grayTag else  null
+        val routerTag = if (grayFlag) grayTag else null
 
         val otherRouterTagMaps = mutableMapOf<String, String>()
         if (codeCCGrayFlag && grayTag != null) {
