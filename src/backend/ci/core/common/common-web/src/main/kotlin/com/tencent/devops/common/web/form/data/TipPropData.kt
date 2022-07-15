@@ -27,42 +27,26 @@
 
 package com.tencent.devops.common.web.form.data
 
-import com.tencent.devops.common.web.form.models.ui.components.TimeComponent
+import com.tencent.devops.common.web.form.models.ui.components.TipComponent
+import com.tencent.devops.common.web.form.models.ui.components.UiComponent
 import com.tencent.devops.common.web.form.models.ui.props.UiProps
 import com.tencent.devops.common.web.form.models.ui.props.UiPropsCommon
 
-/**
- * input组件需要的参数
- */
-data class TimePropData(
+data class TipPropData(
     override val id: String,
-    override val type: FormDataType,
+    override val type: FormDataType = FormDataType.STRING,
     override val title: String,
-    override val default: Any? = null,
+    override val default: Any?,
     override val required: Boolean? = false,
-    override val description: String?,
-    val timeType: TimePropType? = null
+    override val description: String?
 ) : FormPropData {
-    override fun buildComponent(): TimeComponent {
-        return TimeComponent(
-            props = this.buildProps(
-                mapOf(
-                    "type" to if (timeType == TimePropType.TIMERANGE) {
-                        TimePropType.TIMERANGE.value
-                    } else {
-                        TimePropType.TIME.value
-                    }
-                )
-            )
+    override fun buildComponent(): UiComponent {
+        return TipComponent(
+            props = this.buildProps(mapOf("tipStr" to (default?.toString() ?: "")))
         )
     }
 
     override fun buildUiProps(): UiProps {
         return UiPropsCommon(this.titleWidth)
     }
-}
-
-enum class TimePropType(val value: String) {
-    TIME("time"),
-    TIMERANGE("timerange")
 }

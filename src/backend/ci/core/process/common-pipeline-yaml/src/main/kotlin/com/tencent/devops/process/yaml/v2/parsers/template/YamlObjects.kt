@@ -37,6 +37,7 @@ import com.tencent.devops.process.yaml.v2.models.TemplateInfo
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.VariableDatasource
 import com.tencent.devops.process.yaml.v2.models.VariablePropOption
+import com.tencent.devops.process.yaml.v2.models.VariablePropType
 import com.tencent.devops.process.yaml.v2.models.VariableProps
 import com.tencent.devops.process.yaml.v2.models.job.Container
 import com.tencent.devops.process.yaml.v2.models.job.Credentials
@@ -65,10 +66,22 @@ object YamlObjects {
             }
         )
 
-        if (!va.props?.options.isNullOrEmpty()) {
-            va.props?.options?.filter { it.id == va.value }?.ifEmpty {
-                // 说明默认值没有匹配到选项值，报错
-                throw throw YamlFormatException(
+        // 只有列表需要判断
+        if ((va.props?.type == VariablePropType.SELECTOR.value && va.props.datasource == null) ||
+            va.props?.type == VariablePropType.CHECKBOX.value
+        ) {
+            if (!va.value.isNullOrBlank() && va.props.options.isNullOrEmpty()) {
+                throw YamlFormatException(
+                    "$fromPath variable $key format error: " +
+                            "value ${va.value} not in variable options"
+                )
+            }
+            val expectValues =
+                va.value?.split(",")?.asSequence()?.filter { it.isNotBlank() }?.map { it.trim() }?.toSet()
+            val resultValues = va.props.options?.map { it.id.toString() }?.toSet() ?: emptySet()
+            // 说明默认值没有匹配到选项值，报错
+            if (expectValues?.subtract(resultValues)?.isEmpty() == false) {
+                throw YamlFormatException(
                     "$fromPath variable $key format error: " +
                             "value ${va.value} not in variable options"
                 )
@@ -91,7 +104,7 @@ object YamlObjects {
         )
 
         if (!po.options.isNullOrEmpty() && po.datasource != null) {
-            throw throw YamlFormatException("$fromPath variable format error: options and datasource cannot coexist")
+            throw YamlFormatException("$fromPath variable format error: options and datasource cannot coexist")
         }
 
         return po

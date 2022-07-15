@@ -28,6 +28,7 @@
 package com.tencent.devops.common.web.form.data
 
 import com.tencent.devops.common.web.form.models.ui.components.UiComponent
+import com.tencent.devops.common.web.form.models.ui.props.UiProps
 
 /**
  * 给构造器使用的，用户填写的表单项数据
@@ -42,14 +43,24 @@ interface FormPropData {
     // 必需，表单组件的label
     val title: String
 
+    // label宽度,默认500
+    val titleWidth: Int
+        get() = 500
+
     // 可选，表单组件的默认值
     val default: Any?
 
     // 可选，是否为必填项，默认为false
     val required: Boolean?
 
+    // 可选，组件描述
+    val description: String?
+
     // 构造表单对象
     fun buildComponent(): UiComponent
+
+    // 构造UI对象
+    fun buildUiProps(): UiProps
 }
 
 @Suppress("ComplexCondition")

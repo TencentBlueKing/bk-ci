@@ -69,7 +69,7 @@ interface UserStreamTriggerResource {
     ): Result<TriggerBuildResult>
 
     @ApiOperation("人工TriggerBuild拿启动信息")
-    @POST
+    @GET
     @Path("/{projectId}/{pipelineId}/manual")
     fun getManualTriggerInfo(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

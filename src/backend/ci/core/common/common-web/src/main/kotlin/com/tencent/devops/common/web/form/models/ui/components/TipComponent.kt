@@ -25,44 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.form.data
+package com.tencent.devops.common.web.form.models.ui.components
 
-import com.tencent.devops.common.web.form.models.ui.components.TimeComponent
-import com.tencent.devops.common.web.form.models.ui.props.UiProps
-import com.tencent.devops.common.web.form.models.ui.props.UiPropsCommon
-
-/**
- * input组件需要的参数
- */
-data class TimePropData(
-    override val id: String,
-    override val type: FormDataType,
-    override val title: String,
-    override val default: Any? = null,
-    override val required: Boolean? = false,
-    override val description: String?,
-    val timeType: TimePropType? = null
-) : FormPropData {
-    override fun buildComponent(): TimeComponent {
-        return TimeComponent(
-            props = this.buildProps(
-                mapOf(
-                    "type" to if (timeType == TimePropType.TIMERANGE) {
-                        TimePropType.TIMERANGE.value
-                    } else {
-                        TimePropType.TIME.value
-                    }
-                )
-            )
-        )
-    }
-
-    override fun buildUiProps(): UiProps {
-        return UiPropsCommon(this.titleWidth)
-    }
-}
-
-enum class TimePropType(val value: String) {
-    TIME("time"),
-    TIMERANGE("timerange")
-}
+data class TipComponent(
+    override val name: String = "tips",
+    override val props: Map<String, Any>?
+) : UiComponent

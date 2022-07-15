@@ -1,7 +1,7 @@
 parameters:
   - name: username
     type: string
-    default: world
+    default: world,xxxx
 
 variables:
   USERNAME:
@@ -17,6 +17,7 @@ variables:
       - id: 3
         description: xxx
       - id: VARIABLES
+      - id: xxxxx
       multiple: true
       description: 这是个允许多选的下拉选择字段
 

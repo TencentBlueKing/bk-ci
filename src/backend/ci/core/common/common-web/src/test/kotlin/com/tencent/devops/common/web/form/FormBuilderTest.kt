@@ -29,12 +29,17 @@ package com.tencent.devops.common.web.form
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.form.data.CheckboxPropData
+import com.tencent.devops.common.web.form.data.CompanyStaffPropData
 import com.tencent.devops.common.web.form.data.FormDataType
 import com.tencent.devops.common.web.form.data.InputPropData
 import com.tencent.devops.common.web.form.data.InputPropType
 import com.tencent.devops.common.web.form.data.RadioPropData
 import com.tencent.devops.common.web.form.data.SelectPropData
+import com.tencent.devops.common.web.form.data.SelectPropOption
+import com.tencent.devops.common.web.form.data.SelectPropOptionConf
+import com.tencent.devops.common.web.form.data.SelectPropOptionItem
 import com.tencent.devops.common.web.form.data.TimePropData
+import com.tencent.devops.common.web.form.data.TipPropData
 import com.tencent.devops.common.web.form.models.ui.DataSourceItem
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
@@ -54,8 +59,12 @@ internal class FormBuilderTest {
             "title": "input表单测试",
             "default": "123",
             "required": false,
+            "description": "456",
             "ui:component": {
                 "name": "input"
+            },
+            "ui:props": {
+                "labelWidth": 500
             }
         }
     }
@@ -71,7 +80,8 @@ internal class FormBuilderTest {
                     id = "input-test-id",
                     type = FormDataType.STRING,
                     title = "input表单测试",
-                    default = "123"
+                    default = "123",
+                    description = "456"
                 )
             ).build()
 
@@ -94,6 +104,9 @@ internal class FormBuilderTest {
                 "props": {
                     "type": "textarea"
                 }
+            },
+            "ui:props": {
+                "labelWidth": 500
             }
         }
     }
@@ -110,7 +123,8 @@ internal class FormBuilderTest {
                     type = FormDataType.STRING,
                     title = "input表单测试",
                     default = "123",
-                    inputType = InputPropType.TEXTAREA
+                    inputType = InputPropType.TEXTAREA,
+                    description = null
                 )
             ).build()
 
@@ -131,18 +145,23 @@ internal class FormBuilderTest {
             "ui:component": {
                 "name": "select",
                 "props": {
-                    "datasource": [
+                    "options": [
                         {
-                            "value": "official",
-                            "label": "官方插件"
+                            "id": "official",
+                            "name": "官方插件"
                         },
                         {
-                            "value": "external",
-                            "label": "第三方插件"
+                            "id": "external",
+                            "name": "第三方插件"
                         }
                     ],
-                    "multiple": false
+                    "optionsConf": {
+                        "multiple": false
+                    }
                 }
+            },
+            "ui:props": {
+                "labelWidth": 500
             }
         }
     }
@@ -160,11 +179,17 @@ internal class FormBuilderTest {
                     title = "select表单测试",
                     default = "official",
                     required = true,
-                    dataSource = listOf(
-                        DataSourceItem("官方插件", "official"),
-                        DataSourceItem("第三方插件", "external")
-                    ),
-                    multiple = false
+                    description = null,
+                    option = SelectPropOption(
+                        items = listOf(
+                            SelectPropOptionItem(
+                                "official", "官方插件"
+                            ), SelectPropOptionItem(
+                                "external", "第三方插件"
+                            )
+                        ),
+                        conf = SelectPropOptionConf(multiple = false)
+                    )
                 )
             ).build()
 
@@ -196,6 +221,9 @@ internal class FormBuilderTest {
                         }
                     ]
                 }
+            },
+            "ui:props": {
+                "labelWidth": 500
             }
         }
     }
@@ -215,7 +243,8 @@ internal class FormBuilderTest {
                     dataSource = listOf(
                         DataSourceItem("官方插件", "official"),
                         DataSourceItem("第三方插件", "external")
-                    )
+                    ),
+                    description = null
                 )
             ).build()
 
@@ -247,6 +276,9 @@ internal class FormBuilderTest {
                         }
                     ]
                 }
+            },
+            "ui:props": {
+                "labelWidth": 500
             }
         }
     }
@@ -266,7 +298,8 @@ internal class FormBuilderTest {
                     dataSource = listOf(
                         DataSourceItem("是", true),
                         DataSourceItem("否", false)
-                    )
+                    ),
+                    description = null
                 )
             ).build()
 
@@ -288,6 +321,9 @@ internal class FormBuilderTest {
                 "props" : {
                   "type" : "time"
                 }
+            },
+            "ui:props": {
+                "labelWidth": 500
             }
         }
     }
@@ -302,11 +338,91 @@ internal class FormBuilderTest {
                 TimePropData(
                     id = "time-test-id",
                     type = FormDataType.STRING,
-                    title = "time表单测试"
+                    title = "time表单测试",
+                    description = null
                 )
             ).build()
 
         assertJson(timeTestResData, form)
+    }
+
+    private val tipsTestResData = """
+{
+    "title": "tips-test",
+    "description": "tips-desc-test",
+    "type": "object",
+    "properties": {
+        "tips-test-id": {
+            "type": "string",
+            "title": "tips表单测试",
+            "default": "tips",
+            "required" : false,
+            "ui:component": {
+                "name": "tips",
+                "props" : {
+                  "tipStr" : "tips"
+                }
+            },
+            "ui:props": {
+                "labelWidth": 500
+            }
+        }
+    }
+}
+        """.trimIndent()
+
+    @DisplayName("测试tips表单")
+    @Test
+    fun tipsFromTest() {
+        val form = FormBuilder().setTitle("tips-test").setDescription("tips-desc-test")
+            .setProp(
+                TipPropData(
+                    id = "tips-test-id",
+                    title = "tips表单测试",
+                    default = "tips",
+                    description = null
+                )
+            ).build()
+
+        assertJson(tipsTestResData, form)
+    }
+
+    private val companyStaffTestResData = """
+{
+    "title": "companyStaff-test",
+    "description": "companyStaff-desc-test",
+    "type": "object",
+    "properties": {
+        "companyStaff-test-id": {
+            "type": "array",
+            "title": "companyStaff表单测试",
+            "required" : false,
+            "ui:component": {
+                "name": "company-staff-input"
+            },
+            "ui:props": {
+                "labelWidth": 500
+            }
+        }
+    }
+}
+        """.trimIndent()
+
+    @DisplayName("测试companyStaff表单")
+    @Test
+    fun companyStaffFromTest() {
+        val form = FormBuilder().setTitle("companyStaff-test").setDescription("companyStaff-desc-test")
+            .setProp(
+                CompanyStaffPropData(
+                    id = "companyStaff-test-id",
+                    title = "companyStaff表单测试",
+                    default = null,
+                    required = false,
+                    description = null
+                )
+            ).build()
+
+        assertJson(companyStaffTestResData, form)
     }
 
     companion object {

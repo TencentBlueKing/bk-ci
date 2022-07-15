@@ -36,3 +36,8 @@ interface UiComponent {
     // 可选，透传到组件的属性，可传入的属性由渲染的组件决定，组件支持的属性都可传入
     val props: Map<String, Any>?
 }
+
+data class UiComponentCommon(
+    override val name: String,
+    override val props: Map<String, Any>?
+):UiComponent

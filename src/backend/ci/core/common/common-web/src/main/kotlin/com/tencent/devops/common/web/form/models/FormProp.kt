@@ -30,6 +30,7 @@ package com.tencent.devops.common.web.form.models
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.web.form.models.ui.components.UiComponent
+import com.tencent.devops.common.web.form.models.ui.props.UiProps
 
 /**
  * 表单项
@@ -37,6 +38,7 @@ import com.tencent.devops.common.web.form.models.ui.components.UiComponent
  * @param title 必需，表单组件的label
  * @param default 可选，表单组件的默认值
  * @param required 可选，是否为必填项，默认为false
+ * @param description 可选，描述
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class FormProp(
@@ -44,6 +46,9 @@ data class FormProp(
     val title: String,
     val default: Any? = null,
     val required: Boolean? = null,
+    val description: String? = null,
     @JsonProperty("ui:component")
-    val uiComponent: UiComponent
+    val uiComponent: UiComponent,
+    @JsonProperty("ui:props")
+    val uiProps: UiProps
 )

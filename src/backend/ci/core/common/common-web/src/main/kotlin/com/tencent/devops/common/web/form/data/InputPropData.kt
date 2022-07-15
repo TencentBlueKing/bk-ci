@@ -28,6 +28,8 @@
 package com.tencent.devops.common.web.form.data
 
 import com.tencent.devops.common.web.form.models.ui.components.InputComponent
+import com.tencent.devops.common.web.form.models.ui.props.UiProps
+import com.tencent.devops.common.web.form.models.ui.props.UiPropsCommon
 
 /**
  * input组件需要的参数
@@ -38,7 +40,8 @@ data class InputPropData(
     override val title: String,
     override val default: Any? = null,
     override val required: Boolean? = false,
-    val inputType: InputPropType? = null
+    val inputType: InputPropType? = null,
+    override val description: String? = null
 ) : FormPropData {
     override fun buildComponent(): InputComponent {
         if (inputType == null) {
@@ -48,6 +51,10 @@ data class InputPropData(
         return when (inputType) {
             InputPropType.TEXTAREA -> InputComponent(props = mapOf("type" to "textarea"))
         }
+    }
+
+    override fun buildUiProps(): UiProps {
+        return UiPropsCommon(this.titleWidth)
     }
 }
 

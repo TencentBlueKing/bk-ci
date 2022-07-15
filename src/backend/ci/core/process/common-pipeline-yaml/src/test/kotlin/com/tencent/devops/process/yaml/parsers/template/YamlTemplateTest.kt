@@ -140,7 +140,7 @@ class YamlTemplateTest {
         Assertions.assertEquals(
             mapOf<String, Any>(
                 "USERNAME" to Variable(
-                    value = "VARIABLES", readonly = null, allowModifyAtStartup = true,
+                    value = "1,2,3", readonly = null, allowModifyAtStartup = true,
                     props = VariableProps(
                         label = "我是预定义下拉可选值的字段",
                         type = VariablePropType.SELECTOR.value,
@@ -148,7 +148,8 @@ class YamlTemplateTest {
                             VariablePropOption(1),
                             VariablePropOption(2, "二"),
                             VariablePropOption(3, description = "xxx"),
-                            VariablePropOption("VARIABLES")
+                            VariablePropOption("VARIABLES"),
+                            VariablePropOption("xxxxx")
                         ),
                         multiple = true,
                         description = "这是个允许多选的下拉选择字段",
@@ -186,26 +187,24 @@ class YamlTemplateTest {
 
     private val variableCoexist = """
 variables:
-  template:
-    - name: variables.yml
-      value: xxx
-      props:
-        type: selector
-        datasource:
-          url: xxx
-        options:
-        - id: xxx  
+    test:
+        value: xxx
+        props:
+            type: selector
+            datasource:
+              url: xxx
+            options:
+            - id: xxx  
     """.trimIndent()
 
     private val variableNotInOptions = """
 variables:
-  template:
-    - name: variables.yml
-      value: xxx
-      props:
-        type: selector
-        options:
-        - id: xxxx 
+    test:
+        value: xxxx, xxx
+        props:
+            type: selector
+            options:
+            - id: xxxx
     """.trimIndent()
 
     @DisplayName("测试模板替换异常")

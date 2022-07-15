@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.yaml.v2.models.Variable
+import com.tencent.devops.process.yaml.v2.models.VariableDatasource
 import com.tencent.devops.process.yaml.v2.models.VariablePropOption
 import com.tencent.devops.process.yaml.v2.models.VariablePropType
 import com.tencent.devops.process.yaml.v2.models.VariableProps
@@ -86,7 +87,18 @@ internal class ManualTriggerServiceTest {
                             )
                         )
                     )
-                    // TODO: url的等待补充
+                    variables["select类型-url"] = Variable(
+                        "select类型-v",
+                        allowModifyAtStartup = true,
+                        props = VariableProps(
+                            type = VariablePropType.SELECTOR.value,
+                            datasource = VariableDatasource(
+                                "", "", "", "", false, "", ""
+                            ),
+                            multiple = true,
+                            required = true
+                        )
+                    )
                 }
                 VariablePropType.CHECKBOX -> variables["checkBox类型"] = Variable(
                     "checkBox类型-v",
@@ -122,9 +134,20 @@ internal class ManualTriggerServiceTest {
                         type = VariablePropType.TIME_PICKER.value
                     )
                 )
-                // TODO: 等待补充测试样例
-                VariablePropType.COMPANY_STAFF_INPUT -> return@forEach
-                VariablePropType.TIPS -> return@forEach
+                VariablePropType.COMPANY_STAFF_INPUT -> variables["company-staff-input类型"] = Variable(
+                    "company-staff-input类型-v",
+                    allowModifyAtStartup = true,
+                    props = VariableProps(
+                        type = VariablePropType.COMPANY_STAFF_INPUT.value
+                    )
+                )
+                VariablePropType.TIPS -> variables["tips类型"] = Variable(
+                    "tips类型-v",
+                    allowModifyAtStartup = true,
+                    props = VariableProps(
+                        type = VariablePropType.TIPS.value
+                    )
+                )
             }
         }
 
