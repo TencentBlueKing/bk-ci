@@ -250,8 +250,8 @@ class ManualTriggerService @Autowired constructor(
                                     items = if (!value.props?.options.isNullOrEmpty()) {
                                         value.props?.options?.map { option ->
                                             SelectPropOptionItem(
-                                                id = option.label ?: option.id.toString(),
-                                                name = option.id.toString()
+                                                id = option.id.toString(),
+                                                name = option.label ?: option.id.toString()
                                             )
                                         }
                                     } else {
