@@ -55,7 +55,7 @@ class GitCITriggerResourceImpl @Autowired constructor(
         v1TriggerBuildReq: V1TriggerBuildReq
     ): Result<Boolean> {
         checkParam(userId)
-        val result = txManualTriggerService.triggerBuild(userId, pipelineId, v1TriggerBuildReq)
+        val result = txManualTriggerService.triggerBuild(userId, pipelineId, v1TriggerBuildReq, null)
         logger.info("STREAM|$userId|$pipelineId|v1TriggerBuildReq=$v1TriggerBuildReq|result=$result")
         return Result(true)
     }

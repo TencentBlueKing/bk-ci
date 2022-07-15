@@ -57,7 +57,7 @@ class AppStreamTriggerResourceImpl @Autowired constructor(
                 commitId = commitId
             )
         }
-        return Result(AppTriggerBuildResult(txManualTriggerService.triggerBuild(userId, pipelineId, new).buildId))
+        return Result(AppTriggerBuildResult(txManualTriggerService.triggerBuild(userId, pipelineId, new, null).buildId))
     }
 
     private fun checkParam(userId: String) {
