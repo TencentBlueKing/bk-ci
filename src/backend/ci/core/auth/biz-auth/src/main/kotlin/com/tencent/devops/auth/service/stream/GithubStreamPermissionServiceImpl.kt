@@ -28,16 +28,12 @@
 package com.tencent.devops.auth.service.stream
 
 import com.google.common.cache.CacheBuilder
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.repository.api.github.ServiceGithubPermissionResource
 import com.tencent.devops.stream.api.service.ServiceStreamBasicSettingResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import sun.misc.MessageUtils
 import java.util.concurrent.TimeUnit
 
 class GithubStreamPermissionServiceImpl @Autowired constructor(
