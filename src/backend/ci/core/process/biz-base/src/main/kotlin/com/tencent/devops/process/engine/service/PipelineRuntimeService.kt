@@ -147,6 +147,7 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM_ALIAS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import org.jooq.DSLContext
@@ -930,7 +931,21 @@ class PipelineRuntimeService @Autowired constructor(
                     buildHistoryRecord.queueTime = now // for EPC
                     buildHistoryRecord.status = startBuildStatus.ordinal
                     // 重试时启动参数只需要刷新执行次数
-                    buildHistoryRecord.buildParameters = JsonUtil.toJson(originStartParams, formatted = false)
+                    buildHistoryRecord.buildParameters = buildHistoryRecord.buildParameters?.let { self ->
+                        val retryCount = context.executeCount - 1
+                        val list = JsonUtil.getObjectMapper().readValue(self) as MutableList<BuildParameters>
+                        list.find { it.key == PIPELINE_RETRY_COUNT }?.let { param ->
+                            param.value = retryCount
+                        } ?: run {
+                            list.add(
+                                BuildParameters(
+                                    key = PIPELINE_RETRY_COUNT,
+                                    value = retryCount
+                                )
+                            )
+                        }
+                        JsonUtil.toJson(list)
+                    }
                     transactionContext.batchStore(buildHistoryRecord).execute()
                     // 重置状态和人
                     buildDetailDao.update(
