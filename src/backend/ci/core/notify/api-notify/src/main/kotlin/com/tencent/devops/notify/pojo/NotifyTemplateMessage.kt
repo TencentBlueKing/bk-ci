@@ -44,5 +44,5 @@ data class NotifyTemplateMessage(
     @ApiModelProperty("回调地址")
     val callBackUrl: String?,
     @ApiModelProperty("流程名称")
-    val processName: String?,
+    val processName: String?
 )
