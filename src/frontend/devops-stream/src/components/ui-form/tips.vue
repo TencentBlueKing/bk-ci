@@ -1,7 +1,7 @@
 <template>
     <h3 class="component-tip pointer-events-auto">
         <span class="tip-icon">
-            <i class="devops-icon icon-info-circle-shape"></i>
+            <i class="bk-icon icon-info-circle-shape"></i>
         </span>
         <span class="tip-message" v-html="tip"></span>
     </h3>
@@ -79,7 +79,7 @@
                     const isSafe = /^https?\:\/\//i.test(value)
                     let res = ''
                     if (isSafe) res = `<a class="text-link" href="${value}" target="_Blank">${key}</a>`
-                    else res = `<a class="text-bad-link text-link" title="$t('editPage.badLink')">${key}</a>`
+                    else res = `<a class="text-bad-link text-link">${key}</a>`
                     return res
                 })
 
@@ -156,7 +156,7 @@
             min-width: 44px;
             background-color: #ffb400;
             position: relative;
-            .devops-icon {
+            .bk-icon {
                 font-size: 18px;
                 color: #fff;
                 display: inline-block;

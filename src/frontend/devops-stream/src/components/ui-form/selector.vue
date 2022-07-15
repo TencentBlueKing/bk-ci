@@ -34,6 +34,8 @@
 <script>
     import mixins from './mixins'
     import selectorMixins from './selectorMixins'
+    import api from '@/http/ajax'
+
     export default {
         mixins: [mixins, selectorMixins],
         props: {
@@ -124,7 +126,7 @@
                     ...atomValue
                 })
                 this.isLoading = true
-                this.$ajax.get(changeUrl).then((res) => {
+                api.get(changeUrl).then((res) => {
                     this.list = transformList(res)
                     // 添加无权限查看项
                     const valueArray = mergedOptionsConf.multiple && Array.isArray(this.value) ? this.value : [this.value]
