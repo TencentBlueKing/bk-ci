@@ -185,7 +185,7 @@ data class MoaWorkItemCreateForm(
     val name: String?, // TextBox
     @JsonProperty("ui_type")
     @ApiModelProperty("控件的类型，目前仅支持五种类型", required = false)
-    val uiType: String? = MoaWorkItemCreateUiType.TextBox.value, // TextBox
+    val uiType: String? = MoaWorkItemCreateUiType.TEXT_BOX.value, // TextBox
     @JsonProperty("values")
     @ApiModelProperty("控件值的集合，数组类型", required = false)
     val values: List<String>?
@@ -193,19 +193,19 @@ data class MoaWorkItemCreateForm(
 
 enum class MoaWorkItemCreateUiType(val value: String) {
     // 文本输入框
-    TextBox("TextBox"),
+    TEXT_BOX("TextBox"),
 
     // 下拉选择框
-    DropDownList("DropDownList"),
+    DROP_DOWN_LIST("DropDownList"),
 
     // 单选
-    RadioBox("RadioBox"),
+    RADIO_BOX("RadioBox"),
 
     // 多选
-    CheckBox("CheckBox"),
+    CHECK_BOX("CheckBox"),
 
     // 日期选择器
-    DatePicker("DatePicker");
+    DATE_PICKER("DatePicker");
 }
 
 data class MoaWorkItemCreateKeyAndValue(

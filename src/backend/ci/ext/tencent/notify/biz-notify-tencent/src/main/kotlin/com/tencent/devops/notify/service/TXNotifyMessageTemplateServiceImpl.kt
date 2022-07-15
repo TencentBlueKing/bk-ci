@@ -91,11 +91,11 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                         isRequired = param.required,
                         name = param.chineseName ?: param.key,
                         uiType = when (param.valueType) {
-                            ManualReviewParamType.STRING -> MoaWorkItemCreateUiType.TextBox.value
-                            ManualReviewParamType.TEXTAREA -> MoaWorkItemCreateUiType.TextBox.value
-                            ManualReviewParamType.BOOLEAN -> MoaWorkItemCreateUiType.RadioBox.value
-                            ManualReviewParamType.ENUM -> MoaWorkItemCreateUiType.DropDownList.value
-                            ManualReviewParamType.MULTIPLE -> MoaWorkItemCreateUiType.CheckBox.value
+                            ManualReviewParamType.STRING -> MoaWorkItemCreateUiType.TEXT_BOX.value
+                            ManualReviewParamType.TEXTAREA -> MoaWorkItemCreateUiType.TEXT_BOX.value
+                            ManualReviewParamType.BOOLEAN -> MoaWorkItemCreateUiType.RADIO_BOX.value
+                            ManualReviewParamType.ENUM -> MoaWorkItemCreateUiType.DROP_DOWN_LIST.value
+                            ManualReviewParamType.MULTIPLE -> MoaWorkItemCreateUiType.CHECK_BOX.value
                         },
                         values = when (param.valueType) {
                             ManualReviewParamType.STRING -> listOf(param.value.toString())
