@@ -85,12 +85,12 @@
         },
         methods: {
             handleSelect (selected, data) {
-                this.handleChange(this.name, selected)
+                this.handleChange(selected)
             },
             handleClear () {
                 const val = this.dropdownConf.multiple ? [] : ''
 
-                this.handleChange(this.name, val)
+                this.handleChange(val)
             },
             toggleVisible (open) {
                 open && this.hasUrl && this.freshList()

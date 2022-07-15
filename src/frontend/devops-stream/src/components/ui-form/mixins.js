@@ -32,10 +32,6 @@ export default {
             type: Boolean,
             default: false
         },
-        handleChange: {
-            type: Function,
-            default: () => () => {}
-        },
         atomValue: {
             type: Object,
             default: () => ({})
@@ -64,6 +60,9 @@ export default {
         }
     },
     methods: {
+        handleChange (val) {
+            this.$emit('change', val)
+        },
         getResponseData (response, dataPath = 'data.records', defaultVal = []) {
             try {
                 switch (true) {
