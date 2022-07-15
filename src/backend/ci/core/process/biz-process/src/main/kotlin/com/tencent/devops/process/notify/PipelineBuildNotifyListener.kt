@@ -92,7 +92,8 @@ class PipelineBuildNotifyListener @Autowired constructor(
                 cc = receivers.toMutableSet(),
                 titleParams = titleParams,
                 bodyParams = bodyParams,
-                notifyType = notifyType
+                notifyType = notifyType,
+                callbackData = callbackData
             )
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
         } catch (ignored: Exception) {

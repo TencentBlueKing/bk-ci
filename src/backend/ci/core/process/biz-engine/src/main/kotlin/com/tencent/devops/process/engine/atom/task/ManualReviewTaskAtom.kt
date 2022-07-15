@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -50,6 +51,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.util.Date
 
@@ -64,6 +66,8 @@ class ManualReviewTaskAtom(
     private val pipelineVariableService: BuildVariableService
 ) : IAtomTask<ManualReviewUserTaskElement> {
 
+    @Value("\${esb.appSecret}")
+    private val appSecret = ""
     override fun getParamElement(task: PipelineBuildTask): ManualReviewUserTaskElement {
         return JsonUtil.mapTo((task.taskParams), ManualReviewUserTaskElement::class.java)
     }
@@ -130,10 +134,19 @@ class ManualReviewTaskAtom(
                     "projectName" to "need to add in notifyListener",
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
-                    "reviewDesc" to reviewDesc
+                    "reviewDesc" to reviewDesc,
+                    "manualReviewParam" to JsonUtil.toJson(param.params)
                 ),
                 position = null,
-                stageId = null
+                stageId = null,
+                callbackData = mapOf(
+                    "projectId" to projectCode,
+                    "pipelineId" to pipelineId,
+                    "buildId" to buildId,
+                    "elementId" to (param.id ?: ""),
+                    "reviewUsers" to reviewUsers,
+                    "signature" to ShaUtils.sha256(projectCode + buildId + (param.id ?: "") + appSecret)
+                )
             )
         )
 
@@ -165,10 +178,12 @@ class ManualReviewTaskAtom(
 
         val response = when (ManualReviewAction.valueOf(manualAction)) {
             ManualReviewAction.PROCESS -> {
-                buildLogPrinter.addLine(buildId = buildId, message = "审核结果：继续",
+                buildLogPrinter.addLine(
+                    buildId = buildId, message = "审核结果：继续",
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
-                buildLogPrinter.addLine(buildId = buildId, message = "审核参数：${getParamList(taskParam)}",
+                buildLogPrinter.addLine(
+                    buildId = buildId, message = "审核参数：${getParamList(taskParam)}",
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
                 pipelineEventDispatcher.dispatch(
@@ -183,7 +198,8 @@ class ManualReviewTaskAtom(
                 AtomResponse(BuildStatus.SUCCEED)
             }
             ManualReviewAction.ABORT -> {
-                buildLogPrinter.addRedLine(buildId = buildId, message = "审核结果：驳回",
+                buildLogPrinter.addRedLine(
+                    buildId = buildId, message = "审核结果：驳回",
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
                 pipelineEventDispatcher.dispatch(
