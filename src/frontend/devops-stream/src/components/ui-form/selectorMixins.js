@@ -23,7 +23,7 @@ export default {
     props: {
         options: {
             type: Array,
-            default: []
+            default: () => ([])
         },
         optionsConf: {
             type: Object,

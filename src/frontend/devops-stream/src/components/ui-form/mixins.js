@@ -19,12 +19,8 @@
 
 export default {
     props: {
-        name: {
-            type: String,
-            required: true
-        },
         value: {
-            type: String,
+            type: [String, Array],
             required: true,
             default: ''
         },

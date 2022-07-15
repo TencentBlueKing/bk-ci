@@ -1,7 +1,6 @@
 <template>
     <bk-select
         v-bind="dropdownConf"
-        :name="name"
         :loading="isLoading"
         :placeholder="placeholder"
         :value="value"
@@ -146,11 +145,7 @@
 
                     this.$emit('change', this.list)
                 }).catch((e) => {
-                    console.log(e)
-                    this.$showTips({
-                        message: e.message,
-                        theme: 'error'
-                    })
+                    this.messageError(e.message || e)
                 }).finally(() => {
                     this.isLoading = false
                 })
