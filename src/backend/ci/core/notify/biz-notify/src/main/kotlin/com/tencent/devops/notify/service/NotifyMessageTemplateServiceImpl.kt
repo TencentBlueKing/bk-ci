@@ -47,6 +47,7 @@ import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.NotifyContext
 import com.tencent.devops.notify.pojo.NotifyMessageCommonTemplate
 import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
+import com.tencent.devops.notify.pojo.NotifyTemplateMessage
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -324,6 +325,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         var hasEmail = false
         var hasRtx = false
         var hasWechat = false
+        var hasMoa = false
         val notifyTypeScopeSet = mutableSetOf<String>()
         // 判断提交的数据中是否存在同样类型的
         notifyMessageTemplateRequest.msg.forEach {
@@ -353,6 +355,17 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 hasWechat = true
                 notifyTypeScopeSet.add(NotifyType.WECHAT.name)
             } else if (it.notifyTypeScope.contains(NotifyType.WECHAT.name) && hasWechat) {
+                return MessageCodeUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf("notifyType"),
+                    data = false
+                )
+            }
+
+            if (it.notifyTypeScope.contains(NotifyType.MOA.name) && !hasMoa) {
+                hasMoa = true
+                notifyTypeScopeSet.add(NotifyType.MOA.name)
+            } else if (it.notifyTypeScope.contains(NotifyType.MOA.name) && hasMoa) {
                 return MessageCodeUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf("notifyType"),
@@ -430,9 +443,25 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                         )
                     }
                 }
+                if (it.notifyTypeScope.contains(NotifyType.MOA.name)) {
+                    updateMoaNotifyMessageTemplate(
+                        id = templateId,
+                        newId = uid,
+                        userId = userId,
+                        addNotifyTemplateMessage = it
+                    )
+                }
             }
         }
         return Result(true)
+    }
+
+    fun updateMoaNotifyMessageTemplate(
+        id: String,
+        newId: String,
+        userId: String,
+        addNotifyTemplateMessage: NotifyTemplateMessage
+    ) {
     }
 
     /**
@@ -590,13 +619,27 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 )
             }
         }
+        // moa实现
+        if (sendAllNotify || request.notifyType?.contains(NotifyType.MOA.name) == true) {
+            if (!notifyTypeScope.contains(NotifyType.MOA.name)) {
+                logger.error("NotifyTemplate|NOT_FOUND|type=${NotifyType.MOA}|template=${request.templateCode}")
+            } else {
+                logger.info("send wework msg: ${commonNotifyMessageTemplateRecord.id}")
+                sendMoaNotifyMessage(request, commonNotifyMessageTemplateRecord.id)
+            }
+        }
+
         return Result(true)
     }
 
+    fun sendMoaNotifyMessage(request: SendNotifyMessageTemplateRequest, commonTemplateId: String) {}
+
     override fun getNotifyMessageByTemplate(request: NotifyMessageContextRequest): Result<NotifyContext?> {
-        logger.info("getNotifyMessageByTemplate|templateCode=${request.templateCode}|" +
-            "notifyTypeEnum=${request.notifyType.name}|" +
-            "titleParams=${request.titleParams}|bodyParams=${request.bodyParams}")
+        logger.info(
+            "getNotifyMessageByTemplate|templateCode=${request.templateCode}|" +
+                "notifyTypeEnum=${request.notifyType.name}|" +
+                "titleParams=${request.titleParams}|bodyParams=${request.bodyParams}"
+        )
         // 1.查出消息模板
         val commonNotifyMessageTemplateRecord =
             commonNotifyMessageTemplateDao.getCommonNotifyMessageTemplateByCode(dslContext, request.templateCode)
@@ -653,7 +696,8 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         // 企业微信通知触发人
         val triggerUserId = sendNotifyMessageTemplateRequest.bodyParams?.get("cc")
         if (null != triggerUserId && "" != triggerUserId &&
-            !sendNotifyMessageTemplateRequest.receivers.contains(triggerUserId)) {
+            !sendNotifyMessageTemplateRequest.receivers.contains(triggerUserId)
+        ) {
             rtxNotifyMessage.addReceiver(triggerUserId)
         }
         rtxNotifyMessage.title = title
@@ -729,7 +773,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         weworkService.sendMqMsg(wechatNotifyMessage)
     }
 
-    private fun replaceContentParams(params: Map<String, String>?, content: String): String {
+    protected fun replaceContentParams(params: Map<String, String>?, content: String): String {
         var content1 = content
         params?.forEach { paramName, paramValue ->
             content1 = content1.replace("\${$paramName}", paramValue).replace("#{$paramName}", paramValue)
