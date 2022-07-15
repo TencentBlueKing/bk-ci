@@ -74,7 +74,7 @@ class LambdaProjectService @Autowired constructor(
             kafkaClient.send(projectInfoTopic, JsonUtil.toJson(projectInfo))
 //            kafkaClient.send(KafkaTopic.LANDUN_PROJECT_INFO_TOPIC, JsonUtil.toJson(projectInfo))
         } catch (e: Exception) {
-            logger.error("onReceiveProjectCreate failed, projectId: ${event.projectId}", e)
+            logger.warn("onReceiveProjectCreate failed, projectId: ${event.projectId}", e)
         }
     }
 
@@ -102,7 +102,7 @@ class LambdaProjectService @Autowired constructor(
             kafkaClient.send(projectInfoTopic, JsonUtil.toJson(projectInfo))
 //            kafkaClient.send(KafkaTopic.LANDUN_PROJECT_INFO_TOPIC, JsonUtil.toJson(projectInfo))
         } catch (e: Exception) {
-            logger.error("onReceiveProjectUpdate failed, projectId: ${event.projectId}", e)
+            logger.warn("onReceiveProjectUpdate failed, projectId: ${event.projectId}", e)
         }
     }
 
@@ -135,7 +135,7 @@ class LambdaProjectService @Autowired constructor(
 //                    kafkaClient.send(KafkaTopic.LANDUN_PROJECT_INFO_TOPIC, JsonUtil.toJson(projectInfo))
                     logger.info("Success send project: ${it.projectId} to kafka.")
                 } catch (e: Exception) {
-                    logger.error("Failed send project: ${it.projectId} to kafka.", e)
+                    logger.warn("Failed send project: ${it.projectId} to kafka.", e)
                 }
             }
         }
