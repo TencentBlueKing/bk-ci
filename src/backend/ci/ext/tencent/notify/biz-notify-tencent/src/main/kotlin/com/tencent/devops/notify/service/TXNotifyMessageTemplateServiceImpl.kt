@@ -27,22 +27,27 @@
 package com.tencent.devops.notify.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.notify.dao.CommonNotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.TNotifyMessageTemplateDao
 import com.tencent.devops.notify.pojo.NotifyTemplateMessage
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.support.api.service.ServiceMessageApproveResource
+import com.tencent.devops.support.model.approval.CompleteMoaWorkItemRequest
 import com.tencent.devops.support.model.approval.MoaWorkItemCreateAction
 import com.tencent.devops.support.model.approval.MoaWorkItemCreateData
 import com.tencent.devops.support.model.approval.MoaWorkItemCreateForm
 import com.tencent.devops.support.model.approval.MoaWorkItemCreateUiType
 import com.tencent.devops.support.model.approval.MoaWorkItemElement
+import com.tencent.devops.support.model.approval.MoaWorkitemCreateCategoryType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -109,7 +114,9 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                 null
             }
         }
-        val processInstId = UUIDUtil.generate()
+
+        // 保持和complete时的id一致, 考虑不需要持久化该字段，采用可计算出的 signature 前32位作为id
+        val processInstId = request.callbackData?.get("signature")?.take(32) ?: UUIDUtil.generate()
         val moaWorkItemElementList = request.receivers.map { receiver ->
             MoaWorkItemElement(
                 actions = listOf(
@@ -122,6 +129,7 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                     )
                 ),
                 activity = "指定审批人审批",
+                category = MoaWorkitemCreateCategoryType.IT.id,
                 callbackUrl = moaTplRecord.callbackUrl,
                 form = moaForm,
                 formUrl = request.bodyParams?.get("reviewUrl"),
@@ -136,6 +144,37 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
         val createMoaMessageApprovalResult = client.get(ServiceMessageApproveResource::class)
             .createMoaWorkItemMessageApproval(moaWorkItemElementList)
         logger.info("createMoaMessageApprovalResult is :$createMoaMessageApprovalResult")
+    }
+
+    override fun completeNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
+        val templateCode = request.templateCode
+        // 查出消息模板
+        val commonNotifyMessageTemplateRecord =
+            commonNotifyMessageTemplateDao.getCommonNotifyMessageTemplateByCode(dslContext, templateCode)
+                ?: return MessageCodeUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(templateCode),
+                    data = false
+                )
+        // 暂时仅支持moa
+        val moaTplRecord = tNotifyMessageTemplateDao.getMoaNotifyMessageTemplate(
+            dslContext = dslContext,
+            commonTemplateId = commonNotifyMessageTemplateRecord.id
+        )!!
+        // 保持和send时的id一致, 考虑不需要持久化该字段，采用可计算出的 signature 前32位作为id
+        val processInstId = request.callbackData?.get("signature")?.take(32) ?: return Result(false)
+        request.receivers.map { receiver ->
+            client.get(ServiceMessageApproveResource::class).createMoaWorkItemMessageComplete(
+                CompleteMoaWorkItemRequest(
+                    activity = "指定审批人审批",
+                    category = MoaWorkitemCreateCategoryType.IT.id,
+                    handler = receiver,
+                    processInstId = processInstId,
+                    processName = moaTplRecord.processName
+                )
+            )
+        }
+        return Result(true)
     }
 
     override fun updateMoaNotifyMessageTemplate(
