@@ -48,7 +48,6 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
-import com.tencent.devops.project.service.ProjectTagService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -68,13 +67,11 @@ class OpProjectServiceImpl @Autowired constructor(
     private val bkAuthProjectApi: AuthProjectApi,
     private val bsAuthTokenApi: AuthTokenApi,
     private val bsPipelineAuthServiceCode: AuthServiceCode,
-    projectTagService: ProjectTagService
 ) : AbsOpProjectServiceImpl(
     dslContext = dslContext,
     projectDao = projectDao,
     projectLabelRelDao = projectLabelRelDao,
     redisOperation = redisOperation,
-    projectTagService = projectTagService,
     projectDispatcher = projectDispatcher
 ) {
 
