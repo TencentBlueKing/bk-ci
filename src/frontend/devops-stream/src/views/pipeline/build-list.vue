@@ -277,10 +277,12 @@
     import '@blueking/bkui-form/dist/bkui-form.css'
     import UiTips from '@/components/ui-form/tips.vue'
     import UiSelector from '@/components/ui-form/selector.vue'
+    import UiCompanyStaff from '@/components/ui-form/company-staff.vue'
     const BkUiForm = createForm({
         components: {
             tips: UiTips,
-            selector: UiSelector
+            selector: UiSelector,
+            companyStaff: UiCompanyStaff
         }
     })
 
