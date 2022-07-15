@@ -60,4 +60,16 @@ interface ServiceNotifyMessageTemplateResource {
         @ApiParam("使用模板获取消息内容请求", required = true)
         request: NotifyMessageContextRequest
     ): Result<NotifyContext?>
+
+    /**
+     * 使用模板取消消息通知
+     * @param request 使用模板发送消息通知请求报文体
+     */
+    @ApiOperation("使用模板发送消息取消通知")
+    @POST
+    @Path("/complete")
+    fun completeNotifyMessageByTemplate(
+        @ApiParam("使用模板获取消息内容请求", required = true)
+        request: SendNotifyMessageTemplateRequest
+    ): Result<Boolean>
 }

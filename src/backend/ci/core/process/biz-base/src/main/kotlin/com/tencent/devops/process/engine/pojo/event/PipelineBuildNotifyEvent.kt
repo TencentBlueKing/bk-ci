@@ -50,6 +50,7 @@ data class PipelineBuildNotifyEvent(
     val titleParams: MutableMap<String, String>,
     val bodyParams: MutableMap<String, String>,
     val callbackData: Map<String, String>? = null,
+    val notifyCompleteCheck: Boolean = false,
     val position: String?,
     val stageId: String?,
     override var actionType: ActionType = ActionType.START,

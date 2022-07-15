@@ -634,6 +634,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
 
     fun sendMoaNotifyMessage(request: SendNotifyMessageTemplateRequest, commonTemplateId: String) {}
 
+    override fun completeNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
+        // TODO("core暂无实现,需要支持时添加")
+        return Result(true)
+    }
+
     override fun getNotifyMessageByTemplate(request: NotifyMessageContextRequest): Result<NotifyContext?> {
         logger.info(
             "getNotifyMessageByTemplate|templateCode=${request.templateCode}|" +
