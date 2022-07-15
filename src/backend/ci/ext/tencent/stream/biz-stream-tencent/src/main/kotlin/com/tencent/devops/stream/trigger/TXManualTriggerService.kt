@@ -128,7 +128,8 @@ class TXManualTriggerService @Autowired constructor(
                 yaml = triggerBuildReq.yaml,
                 description = triggerBuildReq.description,
                 commitId = triggerBuildReq.commitId
-            )
+            ),
+            inputs = triggerBuildReq.inputs
         )
     }
 
@@ -138,7 +139,8 @@ class TXManualTriggerService @Autowired constructor(
     fun triggerBuild(
         userId: String,
         pipelineId: String,
-        v1TriggerBuildReq: V1TriggerBuildReq
+        v1TriggerBuildReq: V1TriggerBuildReq,
+        inputs: Map<String, String>?
     ): TriggerBuildResult {
         logger.info("Trigger build, userId: $userId, pipeline: $pipelineId, v1TriggerBuildReq: $v1TriggerBuildReq")
 
@@ -171,7 +173,8 @@ class TXManualTriggerService @Autowired constructor(
                     description = v1TriggerBuildReq.description,
                     commitId = v1TriggerBuildReq.commitId,
                     payload = v1TriggerBuildReq.payload,
-                    eventType = v1TriggerBuildReq.eventType
+                    eventType = v1TriggerBuildReq.eventType,
+                    inputs = inputs
                 )
             )
         }
