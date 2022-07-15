@@ -245,6 +245,7 @@ class ManualTriggerService @Autowired constructor(
                                 default = value.value?.split(",")?.toSet() ?: emptySet<String>(),
                                 required = value.props?.required,
                                 description = value.props?.description,
+                                componentName = "selector",
                                 option = SelectPropOption(
                                     items = if (!value.props?.options.isNullOrEmpty()) {
                                         value.props?.options?.map { option ->

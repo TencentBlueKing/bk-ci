@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.web.form.data
 
-import com.tencent.devops.common.web.form.models.ui.DataSourceItem
 import com.tencent.devops.common.web.form.models.ui.components.SelectComponent
 import com.tencent.devops.common.web.form.models.ui.props.UiProps
 import com.tencent.devops.common.web.form.models.ui.props.UiPropsCommon
@@ -39,10 +38,13 @@ data class SelectPropData(
     override val default: Any? = null,
     override val required: Boolean? = false,
     override val description: String?,
+    // select 组件名字有不同的
+    val componentName: String? = null,
     val option: SelectPropOption? = null
 ) : FormPropData {
     override fun buildComponent(): SelectComponent {
         return SelectComponent(
+            name = componentName ?: "select",
             props = when {
                 option != null -> this.buildProps(
                     mapOf(

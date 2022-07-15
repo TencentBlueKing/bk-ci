@@ -49,7 +49,7 @@
       ],
       "required": false,
       "ui:component": {
-        "name": "select",
+        "name": "selector",
         "props": {
           "options": [
             {
@@ -83,7 +83,7 @@
       ],
       "required": true,
       "ui:component": {
-        "name": "select",
+        "name": "selector",
         "props": {
           "optionsConf": {
             "url": "",
