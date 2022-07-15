@@ -47,4 +47,8 @@ class ServiceNotifyMessageTemplateResourceImpl @Autowired constructor(
     override fun getNotifyMessageByTemplate(request: NotifyMessageContextRequest): Result<NotifyContext?> {
         return notifyMessageTemplateService.getNotifyMessageByTemplate(request)
     }
+
+    override fun completeNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
+        return notifyMessageTemplateService.completeNotifyMessageByTemplate(request)
+    }
 }

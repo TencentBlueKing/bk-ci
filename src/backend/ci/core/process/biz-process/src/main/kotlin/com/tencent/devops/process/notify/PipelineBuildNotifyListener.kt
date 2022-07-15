@@ -53,20 +53,24 @@ class PipelineBuildNotifyListener @Autowired constructor(
             PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE,
             PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE
             -> {
-                event.sendReviewNotify(
-                    templateCode = notifyTemplateEnumType.templateCode,
-                    reviewUrl = pipelineUrlBean.genBuildDetailUrl(
-                        projectCode = event.projectId,
-                        pipelineId = event.pipelineId,
-                        buildId = event.buildId,
-                        position = event.position,
-                        stageId = event.stageId,
-                        needShortUrl = true
-                    ),
-                    reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(
-                        projectCode = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId
+                if (event.notifyCompleteCheck) {
+                    event.completeReviewNotify()
+                } else {
+                    event.sendReviewNotify(
+                        templateCode = notifyTemplateEnumType.templateCode,
+                        reviewUrl = pipelineUrlBean.genBuildDetailUrl(
+                            projectCode = event.projectId,
+                            pipelineId = event.pipelineId,
+                            buildId = event.buildId,
+                            position = event.position,
+                            stageId = event.stageId,
+                            needShortUrl = true
+                        ),
+                        reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(
+                            projectCode = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId
+                        )
                     )
-                )
+                }
             }
             else -> {
                 // need to add
@@ -98,6 +102,22 @@ class PipelineBuildNotifyListener @Autowired constructor(
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
         } catch (ignored: Exception) {
             logger.warn("[$buildId]|[$source]|PIPELINE_SEND_NOTIFY_FAIL| receivers: $receivers error: $ignored")
+        }
+    }
+
+    /**
+     * 取消审批单。目前仅支持取消moa
+     */
+    fun PipelineBuildNotifyEvent.completeReviewNotify() {
+        try {
+            val request = SendNotifyMessageTemplateRequest(
+                templateCode = PipelineNotifyTemplateEnum.valueOf(notifyTemplateEnum).templateCode,
+                receivers = receivers.toMutableSet(),
+                callbackData = callbackData
+            )
+            client.get(ServiceNotifyMessageTemplateResource::class).completeNotifyMessageByTemplate(request)
+        } catch (ignored: Exception) {
+            logger.warn("[$buildId]|[$source]|PIPELINE_SEND_FINISH_NOTIFY_FAIL| receivers: $receivers error: $ignored")
         }
     }
 }

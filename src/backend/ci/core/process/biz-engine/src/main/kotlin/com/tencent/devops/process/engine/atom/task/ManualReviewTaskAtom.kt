@@ -214,7 +214,25 @@ class ManualReviewTaskAtom(
                 AtomResponse(BuildStatus.REVIEW_ABORT)
             }
         }
-
+        val reviewUsers = parseVariable(param.reviewUsers.joinToString(","), runVariables)
+        pipelineEventDispatcher.dispatch(
+            // 发送审批取消通知
+            PipelineBuildNotifyEvent(
+                notifyCompleteCheck = true,
+                notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE.name,
+                source = "ManualReviewTaskAtomFinish", projectId = task.projectId, pipelineId = task.pipelineId,
+                userId = task.starter, buildId = buildId,
+                receivers = reviewUsers.split(","),
+                notifyType = checkNotifyType(param.notifyType),
+                titleParams = mutableMapOf(),
+                bodyParams = mutableMapOf(),
+                position = null,
+                stageId = null,
+                callbackData = mapOf(
+                    "signature" to ShaUtils.sha256(task.projectId + buildId + (param.id ?: "") + appSecret)
+                )
+            )
+        )
         postPrint(param = param, task = task, suggestContent = suggestContent)
         return response
     }
