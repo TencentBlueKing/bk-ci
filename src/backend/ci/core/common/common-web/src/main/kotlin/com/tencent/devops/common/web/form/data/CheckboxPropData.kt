@@ -29,6 +29,8 @@ package com.tencent.devops.common.web.form.data
 
 import com.tencent.devops.common.web.form.models.ui.DataSourceItem
 import com.tencent.devops.common.web.form.models.ui.components.CheckboxComponent
+import com.tencent.devops.common.web.form.models.ui.props.UiProps
+import com.tencent.devops.common.web.form.models.ui.props.UiPropsCommon
 
 data class CheckboxPropData(
     override val id: String,
@@ -36,6 +38,7 @@ data class CheckboxPropData(
     override val title: String,
     override val default: Any? = null,
     override val required: Boolean? = false,
+    override val description: String?,
     val dataSource: List<DataSourceItem>?
 ) : FormPropData {
     override fun buildComponent(): CheckboxComponent {
@@ -46,5 +49,9 @@ data class CheckboxPropData(
                 )
             )
         )
+    }
+
+    override fun buildUiProps(): UiProps {
+        return UiPropsCommon(this.titleWidth)
     }
 }

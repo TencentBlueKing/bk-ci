@@ -29,6 +29,8 @@ package com.tencent.devops.common.web.form.data
 
 import com.tencent.devops.common.web.form.models.ui.DataSourceItem
 import com.tencent.devops.common.web.form.models.ui.components.RadioComponent
+import com.tencent.devops.common.web.form.models.ui.props.UiProps
+import com.tencent.devops.common.web.form.models.ui.props.UiPropsCommon
 
 data class RadioPropData(
     override val id: String,
@@ -36,7 +38,8 @@ data class RadioPropData(
     override val title: String,
     override val default: Any? = null,
     override val required: Boolean? = false,
-    val dataSource: List<DataSourceItem>?
+    val dataSource: List<DataSourceItem>?,
+    override val description: String?
 ) : FormPropData {
     override fun buildComponent(): RadioComponent {
         return RadioComponent(
@@ -46,5 +49,9 @@ data class RadioPropData(
                 )
             )
         )
+    }
+
+    override fun buildUiProps(): UiProps {
+        return UiPropsCommon(this.titleWidth)
     }
 }

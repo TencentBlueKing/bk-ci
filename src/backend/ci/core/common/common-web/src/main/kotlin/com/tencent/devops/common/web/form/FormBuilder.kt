@@ -50,7 +50,6 @@ class FormBuilder {
     }
 
     fun setProp(prop: FormPropData): FormBuilder {
-        val uiComponent = prop.buildComponent()
 
         val type = when (prop) {
             // checkbox只能是array才能成立
@@ -63,7 +62,9 @@ class FormBuilder {
             title = prop.title,
             default = prop.default,
             required = prop.required,
-            uiComponent = uiComponent
+            description = prop.description,
+            uiComponent = prop.buildComponent(),
+            uiProps = prop.buildUiProps()
         )
 
         return this

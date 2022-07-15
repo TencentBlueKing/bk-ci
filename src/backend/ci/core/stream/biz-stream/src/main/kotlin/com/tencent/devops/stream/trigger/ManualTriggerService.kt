@@ -31,12 +31,17 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.form.FormBuilder
 import com.tencent.devops.common.web.form.data.CheckboxPropData
+import com.tencent.devops.common.web.form.data.CompanyStaffPropData
 import com.tencent.devops.common.web.form.data.FormDataType
 import com.tencent.devops.common.web.form.data.InputPropData
 import com.tencent.devops.common.web.form.data.InputPropType
 import com.tencent.devops.common.web.form.data.RadioPropData
 import com.tencent.devops.common.web.form.data.SelectPropData
+import com.tencent.devops.common.web.form.data.SelectPropOption
+import com.tencent.devops.common.web.form.data.SelectPropOptionConf
+import com.tencent.devops.common.web.form.data.SelectPropOptionItem
 import com.tencent.devops.common.web.form.data.TimePropData
+import com.tencent.devops.common.web.form.data.TipPropData
 import com.tencent.devops.common.web.form.models.Form
 import com.tencent.devops.common.web.form.models.ui.DataSourceItem
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
@@ -74,7 +79,7 @@ class ManualTriggerService @Autowired constructor(
     streamEventService: StreamEventService,
     streamBasicSettingService: StreamBasicSettingService,
     streamYamlTrigger: StreamYamlTrigger,
-    private val streamBasicSettingDao: StreamBasicSettingDao,
+    streamBasicSettingDao: StreamBasicSettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
     gitPipelineResourceDao: GitPipelineResourceDao,
     gitRequestEventBuildDao: GitRequestEventBuildDao,
@@ -212,7 +217,8 @@ class ManualTriggerService @Autowired constructor(
                             type = FormDataType.STRING,
                             title = value.props?.label ?: name,
                             default = value.value,
-                            required = value.props?.required
+                            required = value.props?.required,
+                            description = value.props?.description
                         )
                     )
                     VariablePropType.VUEX_TEXTAREA -> builder.setProp(
@@ -222,6 +228,7 @@ class ManualTriggerService @Autowired constructor(
                             title = value.props?.label ?: name,
                             default = value.value,
                             required = value.props?.required,
+                            description = value.props?.description,
                             inputType = InputPropType.TEXTAREA
                         )
                     )
@@ -229,23 +236,38 @@ class ManualTriggerService @Autowired constructor(
                         builder.setProp(
                             SelectPropData(
                                 id = name,
-                                type = FormDataType.STRING,
+                                type = if (value.props?.multiple == true) {
+                                    FormDataType.ARRAY
+                                } else {
+                                    FormDataType.STRING
+                                },
                                 title = value.props?.label ?: name,
-                                default = value.value,
+                                default = value.value?.split(",")?.toSet() ?: emptySet<String>(),
                                 required = value.props?.required,
-                                multiple = value.props?.multiple,
-                                dataSource = when {
-                                    !value.props?.options.isNullOrEmpty() -> value.props?.options?.map { option ->
-                                        DataSourceItem(
-                                            label = option.label ?: option.id.toString(),
-                                            value = option.id.toString()
-                                        )
-                                    }
-                                    // TODO: 确认下description用法
-                                    // TODO: 需要确认url的写法
-                                    value.props?.datasource != null -> TODO()
-                                    else -> null
-                                }
+                                description = value.props?.description,
+                                option = SelectPropOption(
+                                    items = if (!value.props?.options.isNullOrEmpty()) {
+                                        value.props?.options?.map { option ->
+                                            SelectPropOptionItem(
+                                                id = option.label ?: option.id.toString(),
+                                                name = option.id.toString()
+                                            )
+                                        }
+                                    } else {
+                                        null
+                                    },
+                                    conf = SelectPropOptionConf(
+                                        url = value.props?.datasource?.url,
+                                        dataPath = value.props?.datasource?.dataPath,
+                                        paramId = value.props?.datasource?.paramId,
+                                        paramName = value.props?.datasource?.paramName,
+                                        hasAddItem = value.props?.datasource?.hasAddItem,
+                                        itemTargetUrl = value.props?.datasource?.itemTargetUrl,
+                                        itemText = value.props?.datasource?.itemText,
+                                        multiple = value.props?.multiple,
+                                        clearable = true
+                                    )
+                                )
                             )
                         )
                     }
@@ -254,8 +276,9 @@ class ManualTriggerService @Autowired constructor(
                             id = name,
                             type = FormDataType.ARRAY,
                             title = value.props?.label ?: name,
-                            default = value.value,
+                            default = value.value?.split(",")?.toSet() ?: emptySet<String>(),
                             required = value.props?.required,
+                            description = value.props?.description,
                             dataSource = value.props?.options?.map { option ->
                                 DataSourceItem(
                                     label = option.label ?: option.id.toString(),
@@ -271,6 +294,7 @@ class ManualTriggerService @Autowired constructor(
                             title = value.props?.label ?: name,
                             default = value.value?.toBoolean(),
                             required = value.props?.required,
+                            description = value.props?.description,
                             dataSource = listOf(
                                 DataSourceItem("true", true),
                                 DataSourceItem("false", false)
@@ -283,15 +307,28 @@ class ManualTriggerService @Autowired constructor(
                             type = FormDataType.STRING,
                             title = value.props?.label ?: name,
                             default = value.value,
-                            required = value.props?.required
+                            required = value.props?.required,
+                            description = value.props?.description
                         )
                     )
-                    VariablePropType.COMPANY_STAFF_INPUT -> {
-                        // TODO: 需要确认
-                    }
-                    VariablePropType.TIPS -> {
-                        // TODO: 需要确认
-                    }
+                    VariablePropType.COMPANY_STAFF_INPUT -> builder.setProp(
+                        CompanyStaffPropData(
+                            id = name,
+                            title = value.props?.label ?: name,
+                            default = value.value?.split(",")?.toSet() ?: emptySet<String>(),
+                            required = value.props?.required,
+                            description = value.props?.description
+                        )
+                    )
+                    VariablePropType.TIPS -> builder.setProp(
+                        TipPropData(
+                            id = name,
+                            title = value.props?.label ?: name,
+                            default = value.value,
+                            required = value.props?.required,
+                            description = value.props?.description
+                        )
+                    )
                     // 默认按input, string类型算
                     else -> builder.setProp(
                         InputPropData(
@@ -299,7 +336,8 @@ class ManualTriggerService @Autowired constructor(
                             type = FormDataType.STRING,
                             title = value.props?.label ?: name,
                             default = value.value,
-                            required = value.props?.required
+                            required = value.props?.required,
+                            description = value.props?.description
                         )
                     )
                 }

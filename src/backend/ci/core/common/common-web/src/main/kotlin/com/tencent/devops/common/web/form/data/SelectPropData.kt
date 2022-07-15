@@ -29,6 +29,8 @@ package com.tencent.devops.common.web.form.data
 
 import com.tencent.devops.common.web.form.models.ui.DataSourceItem
 import com.tencent.devops.common.web.form.models.ui.components.SelectComponent
+import com.tencent.devops.common.web.form.models.ui.props.UiProps
+import com.tencent.devops.common.web.form.models.ui.props.UiPropsCommon
 
 data class SelectPropData(
     override val id: String,
@@ -36,17 +38,47 @@ data class SelectPropData(
     override val title: String,
     override val default: Any? = null,
     override val required: Boolean? = false,
-    val dataSource: List<DataSourceItem>?,
-    val multiple: Boolean? = null
+    override val description: String?,
+    val option: SelectPropOption? = null
 ) : FormPropData {
     override fun buildComponent(): SelectComponent {
         return SelectComponent(
-            props = this.buildProps(
-                mapOf(
-                    "datasource" to dataSource,
-                    "multiple" to multiple
+            props = when {
+                option != null -> this.buildProps(
+                    mapOf(
+                        "options" to option.items,
+                        "optionsConf" to option.conf,
+                    )
                 )
-            )
+                else -> null
+            }
         )
     }
+
+    override fun buildUiProps(): UiProps {
+        return UiPropsCommon(this.titleWidth)
+    }
 }
+
+data class SelectPropOption(
+    val items: List<SelectPropOptionItem>?,
+    val conf: SelectPropOptionConf
+)
+
+data class SelectPropOptionItem(
+    val id: String,
+    val name: String
+)
+
+data class SelectPropOptionConf(
+    val url: String? = null,
+    val paramId: String? = null,
+    val paramName: String? = null,
+    val dataPath: String? = null,
+    val itemTargetUrl: String? = null,
+    val hasAddItem: Boolean? = null,
+    val itemText: String? = null,
+    val searchable: Boolean? = null,
+    val multiple: Boolean? = null,
+    val clearable: Boolean? = null,
+)

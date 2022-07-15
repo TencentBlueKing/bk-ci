@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test
 internal class FormPropDataKtTest {
 
     companion object {
-        private val formData = InputPropData("", FormDataType.STRING, "")
+        private val formData = InputPropData("", FormDataType.STRING, "","")
     }
 
     @DisplayName("测试都不为空的结果")
