@@ -30,12 +30,12 @@
                     class="stream-link"
                     :is="permission ? 'router-link' : 'span'"
                     :to="{ name: 'basicSetting' }"
+                    v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }"
                 >
                     <icon
                         name="setting-link"
                         size="18"
                         class="link-icon"
-                        v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }"
                     ></icon>
                     {{$t('header.settings')}}
                 </router-link>

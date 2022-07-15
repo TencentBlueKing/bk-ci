@@ -1938,7 +1938,8 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     private fun updateModelParam(model: Model) {
-        val defaultTagIds by lazy { listOf(stageTagService.getDefaultStageTag().data?.id) }
+        val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
+        val defaultTagIds = defaultStageTagId?.let { listOf(it) }
         model.stages.forEachIndexed { index, stage ->
             stage.id = stage.id ?: VMUtils.genStageId(index + 1)
             if (stage.name.isNullOrBlank()) stage.name = stage.id

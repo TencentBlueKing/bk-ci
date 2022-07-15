@@ -33,5 +33,8 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 
 @Event(exchange = MQ.EXCHANGE_ATOM_MONITOR_DATA_REPORT_FANOUT)
 data class AtomMonitorReportBroadCastEvent(
+    override val projectId: String,
+    override val pipelineId: String,
+    override val buildId: String,
     val monitorData: AtomMonitorData
-)
+) : IMeasureEvent(projectId, pipelineId, buildId)

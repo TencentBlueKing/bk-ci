@@ -289,7 +289,7 @@ bkci:
     enable: false
     
 process:
-  deletedPipelineStoreDays: 30    
+  deletedPipelineStoreDays: 30
 
 net:
   proxy:
