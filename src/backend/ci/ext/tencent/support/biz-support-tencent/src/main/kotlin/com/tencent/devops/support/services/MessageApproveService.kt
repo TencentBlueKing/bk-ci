@@ -33,9 +33,12 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.support.model.approval.CompleteMoaWorkItemRequest
 import com.tencent.devops.support.model.approval.CreateEsbMoaApproveParam
 import com.tencent.devops.support.model.approval.CreateEsbMoaCompleteParam
+import com.tencent.devops.support.model.approval.CreateEsbMoaWorkItem
 import com.tencent.devops.support.model.approval.CreateMoaApproveRequest
+import com.tencent.devops.support.model.approval.MoaWorkItemElement
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -63,6 +66,12 @@ class MessageApproveService @Autowired constructor() {
     @Value("\${gateway.moa.pushDataUrl}")
     private lateinit var moaPushDataUrl: String
 
+    @Value("\${gateway.moa.pushWorkItemUrl}")
+    private lateinit var moaPushWorkItemUrl: String
+
+    @Value("\${gateway.moa.completeWorkItemUrl}")
+    private lateinit var moaCompleteWorkItemUrl: String
+
     fun createMoaMessageApproval(userId: String, createMoaApproveRequest: CreateMoaApproveRequest): Result<Boolean> {
         logger.info("createMoaMessageApproval userId is :$userId, createMoaApproveRequest is :$createMoaApproveRequest")
         val createEsbMoaApproveParam = CreateEsbMoaApproveParam(
@@ -80,6 +89,62 @@ class MessageApproveService @Autowired constructor() {
         logger.info("the requestBody is:$requestBody")
         val request = Request.Builder()
             .url(urlPrefix + moaPushDataUrl)
+            .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))
+            .build()
+        OkhttpUtils.doHttp(request).use { res ->
+            val data = res.body()!!.string()
+            logger.info("the response>> $data")
+            if (!res.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            val response: Map<String, Any> = JsonUtil.toMap(data)
+            val code = response["code"]
+            if (code != "00") {
+                return Result(status = code.toString().toInt(), message = response["message"] as String) // 发送失败抛出错误提示
+            }
+        }
+        return Result(true)
+    }
+
+    fun createMoaWorkItem(moaWorkItemElementList: List<MoaWorkItemElement>): Result<Boolean> {
+        val createEsbMoaWorkItem = CreateEsbMoaWorkItem(
+            appCode = appCode,
+            appSecret = appSecret,
+            operator = "DevOps",
+            workItems = moaWorkItemElementList
+        )
+        val requestBody = JsonUtil.toJson(createEsbMoaWorkItem)
+        logger.info("the requestBody is:$requestBody")
+        val request = Request.Builder()
+            .url(urlPrefix + moaPushWorkItemUrl)
+            .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))
+            .build()
+        OkhttpUtils.doHttp(request).use { res ->
+            val data = res.body()!!.string()
+            logger.info("the response>> $data")
+            if (!res.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            val response: Map<String, Any> = JsonUtil.toMap(data)
+            val code = response["code"]
+            if (code != "00") {
+                return Result(status = code.toString().toInt(), message = response["message"] as String) // 发送失败抛出错误提示
+            }
+        }
+        return Result(true)
+    }
+
+    fun completeMoaWorkItem(completeMoaWorkItemRequest: CompleteMoaWorkItemRequest): Result<Boolean> {
+        val completeEsbMoaWorkItem = CompleteMoaWorkItemRequest(
+            appCode = appCode,
+            appSecret = appSecret,
+            operator = "DevOps",
+            activity = completeMoaWorkItemRequest.activity,
+            category = completeMoaWorkItemRequest.category,
+            handler = completeMoaWorkItemRequest.handler,
+            processInstId = completeMoaWorkItemRequest.processInstId,
+            processName = completeMoaWorkItemRequest.processName
+        )
+        val requestBody = JsonUtil.toJson(completeEsbMoaWorkItem)
+        logger.info("the requestBody is:$requestBody")
+        val request = Request.Builder()
+            .url(urlPrefix + moaCompleteWorkItemUrl)
             .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))
             .build()
         OkhttpUtils.doHttp(request).use { res ->

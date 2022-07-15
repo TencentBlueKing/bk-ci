@@ -222,5 +222,22 @@ CREATE TABLE IF NOT EXISTS  `T_WECHAT_NOTIFY_MESSAGE_TEMPLATE` (
   KEY `idx_templateId` (`COMMON_TEMPLATE_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `T_MOA_NOTIFY_MESSAGE_TEMPLATE`
+(
+    `ID`                 varchar(32)  NOT NULL COMMENT '主键ID',
+    `COMMON_TEMPLATE_ID` varchar(32)  NOT NULL COMMENT '模板ID',
+    `CREATOR`            varchar(50)  NOT NULL COMMENT '创建者',
+    `MODIFIOR`           varchar(50)  NOT NULL COMMENT '修改者',
+    `TITLE`              varchar(256)          DEFAULT NULL COMMENT '标题',
+	`CALLBACK_URL`		 varchar(256)          DEFAULT NULL COMMENT '回调地址',
+	`PROCESS_NAME`       varchar(256) NOT NULL COMMENT '流程名称: 单据所属的业务流程名称，由业务传入',
+    `BODY`               mediumtext   NOT NULL COMMENT '内容',
+    `CREATE_TIME`        datetime(6)     NOT NULL DEFAULT NOW(6) COMMENT '创建时间',
+    `UPDATE_TIME`        datetime(6)     DEFAULT NULL COMMENT '更新时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE KEY `idx_templateId` (`COMMON_TEMPLATE_ID`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT='MOA模板表';
+
 SET FOREIGN_KEY_CHECKS = 1;
 

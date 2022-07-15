@@ -25,43 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.support.resources.service
+package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.support.api.service.ServiceMessageApproveResource
-import com.tencent.devops.support.model.approval.CompleteMoaWorkItemRequest
-import com.tencent.devops.support.model.approval.CreateMoaApproveRequest
-import com.tencent.devops.support.model.approval.MoaWorkItemElement
-import com.tencent.devops.support.services.MessageApproveService
+import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineReq
+import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineResp
+import com.tencent.devops.process.pojo.pipeline.ExtServiceMoaWorkItemReq
+import com.tencent.devops.process.service.ExtServiceBuildInitPipelineService
+import com.tencent.devops.process.service.TXPipelineMoaService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceMessageApproveResourceImpl @Autowired constructor(
-    private val messageApproveService: MessageApproveService
-) :
-    ServiceMessageApproveResource {
+class ServiceTXMoaCallBackResourceImpl @Autowired constructor(
+    private val txPipelineMoaService: TXPipelineMoaService
+) : ServiceTXMoaCallBackResource {
 
-    override fun moaComplete(taskId: String): Result<Boolean> {
-        return messageApproveService.moaComplete(taskId)
-    }
-
-    override fun createMoaMessageApproval(
-        userId: String,
-        createMoaApproveRequest: CreateMoaApproveRequest
-    ): Result<Boolean> {
-        return messageApproveService.createMoaMessageApproval(userId, createMoaApproveRequest)
-    }
-
-    override fun createMoaWorkItemMessageApproval(
-        moaWorkItemElementList: List<MoaWorkItemElement>
-    ): Result<Boolean> {
-        return messageApproveService.createMoaWorkItem(moaWorkItemElementList)
-    }
-
-    override fun createMoaWorkItemMessageComplete(
-        completeMoaWorkItemRequest: CompleteMoaWorkItemRequest
-    ): Result<Boolean> {
-        return messageApproveService.completeMoaWorkItem(completeMoaWorkItemRequest)
+    override fun manualReviewCallBack(extServiceMoaWorkItemReq: ExtServiceMoaWorkItemReq): Result<Boolean> {
+        return txPipelineMoaService.manualReviewMoaApprove(extServiceMoaWorkItemReq)
     }
 }

@@ -25,63 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.support.api.service
+package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.support.model.approval.CompleteMoaWorkItemRequest
-import com.tencent.devops.support.model.approval.CreateMoaApproveRequest
-import com.tencent.devops.support.model.approval.MoaWorkItemElement
+import com.tencent.devops.process.pojo.pipeline.ExtServiceMoaWorkItemReq
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_MESSAGE_APPROVE"], description = "消息通知审批")
-@Path("/service/message/approve")
+@Api(tags = ["SERVICE_PIPELINE"], description = "服务-流水线moa审批资源")
+@Path("/service/pipelines/moa")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceMessageApproveResource {
+interface ServiceTXMoaCallBackResource {
 
-    @ApiOperation("创建MOA审批单")
+    @ApiOperation("人工审核插件moa回调")
     @POST
-    @Path("/moa/create")
-    fun createMoaMessageApproval(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("创建MOA审批单请求报文体", required = true)
-        createMoaApproveRequest: CreateMoaApproveRequest
-    ): Result<Boolean>
-
-    @ApiOperation("MOA审批结单")
-    @POST
-    @Path("/moa/ids/{taskId}/complete")
-    fun moaComplete(
-        @ApiParam(value = "任务ID", required = true)
-        @PathParam("taskId")
-        taskId: String
-    ): Result<Boolean>
-
-    @ApiOperation("创建MOA审批单")
-    @POST
-    @Path("/moa/create_work_item")
-    fun createMoaWorkItemMessageApproval(
-        @ApiParam("创建MOA审批单据请求报文体", required = true)
-        moaWorkItemElementList: List<MoaWorkItemElement>
-    ): Result<Boolean>
-
-    @ApiOperation("完成MOA审批单")
-    @POST
-    @Path("/moa/complete_work_item")
-    fun createMoaWorkItemMessageComplete(
-        @ApiParam("创建MOA审批单据请求报文体", required = true)
-        completeMoaWorkItemRequest: CompleteMoaWorkItemRequest
+    @Path("/manual_review_call_back")
+    fun manualReviewCallBack(
+        @ApiParam("MyOA返回的审批结果结构", required = true)
+        extServiceMoaWorkItemReq: ExtServiceMoaWorkItemReq
     ): Result<Boolean>
 }
