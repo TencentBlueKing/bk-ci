@@ -43,18 +43,15 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoService: BkRepoService,
     private val bkRepoDownloadService: BkRepoDownloadService,
-    private val redisOperation: RedisOperation,
-    private val gray: Gray,
     private val shortUrlService: ShortUrlService,
     private val client: Client
 ) : BuildArtifactoryResource {
@@ -181,12 +178,6 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         }
     }
 
-    private fun checkProjectId(projectId: String) {
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-    }
-
     override fun acrossProjectCopy(
         projectId: String,
         pipelineId: String,
@@ -207,7 +198,8 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun checkGrayProject(projectId: String): Result<Boolean> {
-        return Result(gray.isGrayProject(projectId, redisOperation))
+        val gray = client.get(ServiceProjectResource::class).get(projectId).data?.gray ?: false
+        return Result(gray)
     }
 
     override fun externalUrl(
