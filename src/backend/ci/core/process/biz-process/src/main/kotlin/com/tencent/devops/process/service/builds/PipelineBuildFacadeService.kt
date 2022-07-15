@@ -376,13 +376,15 @@ class PipelineBuildFacadeService(
             )
 
             val paramMap = HashMap<String, BuildParameters>(100, 1F)
-            buildInfo.buildParameters?.forEach { param -> paramMap[param.key] = param }
             // #2821 构建重试均要传递触发插件ID，否则当有多个事件触发插件时，rebuild后触发器的标记不对
             buildVariableService.getVariable(projectId, buildId, PIPELINE_START_TASK_ID)?.let { startTaskId ->
                 paramMap[PIPELINE_START_TASK_ID] = BuildParameters(PIPELINE_START_TASK_ID, startTaskId)
             }
             val startType = StartType.toStartType(buildInfo.trigger)
             if (!taskId.isNullOrBlank()) {
+                buildInfo.buildParameters?.associateBy { it.key }?.get(PIPELINE_RETRY_COUNT)?.let { param ->
+                    paramMap[param.key] = param
+                }
                 // stage/job/task级重试
                 run {
                     model.stages.forEach { s ->
@@ -431,6 +433,7 @@ class PipelineBuildFacadeService(
                 // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数，并清理VAR表内容
                 try {
                     val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+                    buildInfo.buildParameters?.forEach { param -> paramMap[param.key] = param }
                     webhookBuildParameterService.getBuildParameters(buildId)?.forEach { param ->
                         paramMap[param.key] = param
                     }
