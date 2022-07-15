@@ -1211,8 +1211,6 @@ class PipelineRepositoryService constructor(
         )
     }
 
-    // TODO: 2022/7/8 add new update method
-
     companion object {
         private const val MAX_LEN_FOR_NAME = 255
         private val logger = LoggerFactory.getLogger(PipelineRepositoryService::class.java)

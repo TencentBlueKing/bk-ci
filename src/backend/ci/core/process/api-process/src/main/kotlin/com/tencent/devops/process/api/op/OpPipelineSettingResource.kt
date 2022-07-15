@@ -78,7 +78,7 @@ interface OpPipelineSettingResource {
         pipelineId: String
     ): Result<PipelineSetting>
 
-    @ApiOperation("更新流水线设置")
+    @ApiOperation("最大并发队列大小")
     @POST
     @Path("/updateMaxConRunningQueueSize")
     fun updateMaxConRunningQueueSize(
