@@ -53,6 +53,8 @@
     "signInGithub": "SIGN IN WITH GITHUB",
     "project": "project",
     "group": "group",
+    "failToGetData": "get data failed",
+    "noPermToView": "no view permission",
     "header": {
         "pipelines": "Pipelines",
         "metrics": "Metrics",

@@ -190,7 +190,7 @@
                     ref="codeSection"
                     property="yaml"
                     error-display-type="normal"
-                    class="mb15"
+                    class="mb8"
                     :required="true"
                     :rules="[requireRule('yaml'), checkYaml]"
                     v-bkloading="{ isLoading: isLoadingYaml }"
@@ -208,6 +208,7 @@
                     v-model="formData.inputs"
                     ref="bkUiForm"
                     :schema="uiFormSchema"
+                    :layout="uiFormLayout"
                 />
                 <bk-form-item>
                     <bk-button ext-cls="mr5" theme="primary" @click.stop.prevent="submitData" :loading="isTriggering">{{$t('submit')}}</bk-button>
@@ -235,10 +236,12 @@
     import validateRule from '@/utils/validate-rule'
     import createForm from '@blueking/bkui-form'
     import '@blueking/bkui-form/dist/bkui-form.css'
-    import UiTips from '@/components/ui-tip.vue'
+    import UiTips from '@/components/ui-form/tips.vue'
+    import UiSelector from '@/components/ui-form/selector.vue'
     const BkUiForm = createForm({
         components: {
-            tips: UiTips
+            tips: UiTips,
+            selector: UiSelector
         }
     })
 
@@ -308,7 +311,12 @@
                 isLoadingEvent: false,
                 eventList: [],
                 isLoadingSchema: false,
-                uiFormSchema: {}
+                uiFormSchema: {},
+                uiFormLayout: {
+                    container: {
+                        gap: '8px'
+                    }
+                }
             }
         },
 
@@ -851,5 +859,8 @@
         /deep/ .bk-tag-selector .bk-tag-input .tag {
             max-width: 500px;
         }
+    }
+    .mb8 {
+        margin-bottom: 8px;
     }
 </style>

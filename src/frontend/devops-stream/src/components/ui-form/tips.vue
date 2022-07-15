@@ -8,7 +8,10 @@
 </template>
 
 <script>
+    import mixins from './mixins'
+
     export default {
+        mixins: [mixins],
         props: {
             tipStr: {
                 type: String
@@ -76,7 +79,7 @@
                     const isSafe = /^https?\:\/\//i.test(value)
                     let res = ''
                     if (isSafe) res = `<a class="text-link" href="${value}" target="_Blank">${key}</a>`
-                    else res = `<a class="text-bad-link text-link"">${key}</a>`
+                    else res = `<a class="text-bad-link text-link" title="$t('editPage.badLink')">${key}</a>`
                     return res
                 })
 
@@ -88,35 +91,6 @@
                     const val = this.formatter(value)
                     return this.escapeHtml(val)
                 })
-            },
-
-            getResponseData (response, dataPath = 'data.records', defaultVal = []) {
-                try {
-                    switch (true) {
-                        case Array.isArray(response.data):
-                            return response.data
-                        case response.data && response.data.record && Array.isArray(response.data.record):
-                            return response.data.record
-                        default: {
-                            const path = dataPath.split('.')
-                            let result = response
-                            let pos = 0
-                            while (path[pos] && result) {
-                                const key = path[pos]
-                                result = result[key]
-                                pos++
-                            }
-                            if (pos === path.length && Object.prototype.toString.call(result) === Object.prototype.toString.call(defaultVal)) {
-                                return result
-                            } else {
-                                throw Error(this.$t('editPage.failToGetData'))
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.error(e)
-                    return defaultVal
-                }
             },
 
             formatter (data) {

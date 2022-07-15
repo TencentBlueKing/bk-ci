@@ -53,6 +53,8 @@
     "signInGithub": "使用 GITHUB 登录",
     "project": "项目",
     "group": "项目组",
+    "failToGetData": "获取数据失败",
+    "noPermToView": "没有查看权限",
     "header": {
         "pipelines": "流水线",
         "metrics": "数据分析",
