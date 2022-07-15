@@ -61,6 +61,7 @@ export default {
     },
     methods: {
         handleChange (val) {
+            this.$emit('input', val)
             this.$emit('change', val)
         },
         getResponseData (response, dataPath = 'data.records', defaultVal = []) {
