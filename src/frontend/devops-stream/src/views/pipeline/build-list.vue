@@ -30,7 +30,12 @@
         <section class="main-body section-box">
             <section class="build-filter">
                 <bk-input v-model="filterData.commitMsg" class="filter-item w300" :placeholder="$t('pipeline.commitMsg')"></bk-input>
-                <bk-user-selector v-model="filterData.triggerUser" class="filter-item" :placeholder="$t('pipeline.actor')" api="https://api.open.woa.com/api/c/compapi/v2/usermanage/fs_list_users/"></bk-user-selector>
+                <bk-user-selector
+                    class="filter-item"
+                    api="https://api.open.woa.com/api/c/compapi/v2/usermanage/fs_list_users/"
+                    :placeholder="$t('pipeline.actor')"
+                    v-model="filterData.triggerUser"
+                ></bk-user-selector>
                 <bk-select v-model="filterData.branch"
                     class="filter-item"
                     :placeholder="$t('pipeline.branch')"

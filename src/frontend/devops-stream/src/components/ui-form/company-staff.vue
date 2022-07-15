@@ -1,18 +1,23 @@
 <template>
     <bk-user-selector
-        v-model="value"
+        v-model="copyValue"
+        :style="{ width: '100%' }"
         :disabled="disabled"
         :placeholder="placeholder"
-        class="filter-item"
+        key="company-staff"
         api="https://api.open.woa.com/api/c/compapi/v2/usermanage/fs_list_users/"
+        @change="handleChoose"
     ></bk-user-selector>
 </template>
 
 <script>
-    import mixins from './mixins.js'
+    import BkUserSelector from '@blueking/user-selector'
 
     export default {
-        mixins: [mixins],
+        name: 'CompanyStaff',
+        components: {
+            BkUserSelector
+        },
         props: {
             value: {
                 type: Array,
@@ -26,6 +31,20 @@
             placeholder: {
                 type: String,
                 default: ''
+            }
+        },
+        data () {
+            return {
+                copyValue: []
+            }
+        },
+        created () {
+            this.copyValue = [...this.value]
+        },
+        methods: {
+            handleChoose (val) {
+                this.$emit('input', val)
+                this.$emit('change', val)
             }
         }
     }
