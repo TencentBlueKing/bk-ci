@@ -1,0 +1,37 @@
+@font-face {
+  font-family: 'metrics';
+  src: url('/public/fonts/iconcool.svg#iconcool') format('svg'),
+    url('/public/fonts/iconcool.ttf') format('truetype'),
+    url('/public/fonts/iconcool.woff') format('woff'),
+    url('/public/fonts/iconcool.eot?#iefix') format('embedded-opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.metrics-icon {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'metrics' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  text-align: center;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.metrics-plugin-trend:before {
+  content: '\e101';
+}
+
+.metrics-fail-analysis:before {
+  content: '\e102';
+}
+
+.metrics-overview:before {
+  content: '\e103';
+}
