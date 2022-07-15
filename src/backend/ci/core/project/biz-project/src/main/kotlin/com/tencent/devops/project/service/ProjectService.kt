@@ -57,9 +57,9 @@ interface ProjectService {
         userId: String,
         projectCreateInfo: ProjectCreateInfo,
         accessToken: String?,
-        createExt: ProjectCreateExtInfo,
-        projectId: String? = null,
-        channel: ProjectChannelCode
+        createExtInfo: ProjectCreateExtInfo,
+        defaultProjectId: String? = null,
+        projectChannel: ProjectChannelCode
     ): String
 
     fun createExtProject(
@@ -86,9 +86,15 @@ interface ProjectService {
     fun getByEnglishName(englishName: String): ProjectVO?
 
     /**
-     * 修改项目信息
+     * 修改项目信息 [englishName]是项目英文名，目前平台在api接口上会把他命名成projectId，实际上与t_project表中的project_id字段不同
+     * 后续会统一
      */
-    fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo, accessToken: String?): Boolean
+    fun update(
+        userId: String,
+        englishName: String,
+        projectUpdateInfo: ProjectUpdateInfo,
+        accessToken: String?
+    ): Boolean
 
     /**
      * 更新Logo
@@ -132,8 +138,6 @@ interface ProjectService {
     fun getProjectByUser(userName: String): List<ProjectVO>
 
     fun getNameByCode(projectCodes: String): HashMap<String, String>
-
-    fun grayProjectSet(): Set<String>
 
     fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
 

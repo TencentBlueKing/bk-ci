@@ -103,16 +103,12 @@ class ServiceProjectResourceImpl @Autowired constructor(
         accessToken: String?
     ): Result<Boolean> {
         // 创建项目
-        val createExtInfo = ProjectCreateExtInfo(
-            needAuth = true,
-            needValidate = true
-        )
         projectService.create(
-                userId = userId,
-                projectCreateInfo = projectCreateInfo,
-                accessToken = accessToken,
-                createExt = createExtInfo,
-                channel = ProjectChannelCode.BS
+            userId = userId,
+            projectCreateInfo = projectCreateInfo,
+            accessToken = accessToken,
+            createExtInfo = ProjectCreateExtInfo(needAuth = true, needValidate = true),
+            projectChannel = ProjectChannelCode.BS
         )
 
         return Result(true)
@@ -125,14 +121,16 @@ class ServiceProjectResourceImpl @Autowired constructor(
         needValidate: Boolean,
         channel: ProjectChannelCode
     ): Result<ProjectVO?> {
-        return Result(projectService.createExtProject(
-            userId = userId,
-            projectCreateInfo = projectInfo,
-            channel = channel,
-            projectCode = projectInfo.englishName,
-            needAuth = needAuth,
-            needValidate = needValidate
-        ))
+        return Result(
+            projectService.createExtProject(
+                userId = userId,
+                projectCreateInfo = projectInfo,
+                channel = channel,
+                projectCode = projectInfo.englishName,
+                needAuth = needAuth,
+                needValidate = needValidate
+            )
+        )
     }
 
     override fun update(
@@ -141,15 +139,13 @@ class ServiceProjectResourceImpl @Autowired constructor(
         projectUpdateInfo: ProjectUpdateInfo,
         accessToken: String?
     ): Result<Boolean> {
-        return Result(projectService.update(userId, projectId, projectUpdateInfo, accessToken))
+        return Result(projectService.update(userId, englishName = projectId, projectUpdateInfo, accessToken))
     }
 
     override fun updateProjectName(userId: String, projectCode: String, projectName: String): Result<Boolean> {
-        return Result(projectService.updateProjectName(
-            userId = userId,
-            projectCode = projectCode,
-            projectName = projectName
-        ))
+        return Result(
+            projectService.updateProjectName(userId = userId, projectCode = projectCode, projectName = projectName)
+        )
     }
 
     override fun getProjectByName(userId: String, projectName: String): Result<ProjectVO?> {

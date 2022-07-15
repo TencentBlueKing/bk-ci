@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
   `pipeline_limit` int(10) DEFAULT 500 COMMENT '流水线数量上限',
   `router_tag` varchar(32) DEFAULT NULL COMMENT '网关路由tags',
   `relation_id` varchar(32) DEFAULT NULL COMMENT '扩展系统关联ID',
-  `other_router_tags` varchar(128) DEFAULT NULL COMMENT '其他系统网关路由tags',
+  `other_router_tags` json DEFAULT NULL COMMENT '其他系统网关路由tags',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `project_name` (`project_name`) USING BTREE,
   UNIQUE KEY `project_id` (`project_id`) USING BTREE,
