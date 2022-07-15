@@ -87,6 +87,7 @@ class TXPipelineMoaService @Autowired constructor(
     /**
      * moa 回调处理人工审核插件
      */
+    @Suppress("NestedBlockDepth")
     fun doManualReviewMoaApprove(
         extServiceMoaWorkItemReq: ExtServiceMoaWorkItemReq,
         callBackData: Map<String, String>
