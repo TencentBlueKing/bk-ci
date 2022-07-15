@@ -42,7 +42,6 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
@@ -65,9 +64,9 @@ import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
+import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -88,7 +87,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val projectDao: ProjectDao,
     private val projectJmxApi: ProjectJmxApi,
     val redisOperation: RedisOperation,
-    private val gray: Gray,
     val client: Client,
     private val projectDispatcher: ProjectDispatcher,
     private val authPermissionApi: AuthPermissionApi,
@@ -277,12 +275,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     // 内部版独立实现
     override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
-        return ProjectUtils.packagingBean(record, grayProjectSet())
+        return ProjectUtils.packagingBean(record)
     }
 
     override fun getByEnglishName(englishName: String): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
-        return ProjectUtils.packagingBean(record, grayProjectSet())
+        return ProjectUtils.packagingBean(record)
     }
 
     override fun update(
@@ -329,11 +327,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         projectInfo = projectUpdateInfo
                     ))
                 }
+                success = true
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectUpdateInfo", e)
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
             }
-            success = true
         } finally {
             projectJmxApi.execute(ProjectJmxApi.PROJECT_UPDATE, System.currentTimeMillis() - startEpoch, success)
         }
@@ -361,7 +359,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 searchName = null,
                 enabled = enabled
             ).map {
-                list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
+                list.add(ProjectUtils.packagingBean(it))
             }
             success = true
             return list
@@ -377,10 +375,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
             val list = ArrayList<ProjectVO>()
 
-            val grayProjectSet = grayProjectSet()
-
-            projectDao.listByCodes(dslContext, projectCodes).filter { it.enabled == null || it.enabled }.map {
-                list.add(ProjectUtils.packagingBean(it, grayProjectSet))
+            projectDao.listByCodes(dslContext, projectCodes, enabled = true).map {
+                list.add(ProjectUtils.packagingBean(it))
             }
             success = true
             return list
@@ -396,10 +392,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
             val list = ArrayList<ProjectVO>()
 
-            val grayProjectSet = grayProjectSet()
-
-            projectDao.listByCodes(dslContext, projectCodes).map {
-                list.add(ProjectUtils.packagingBean(it, grayProjectSet))
+            projectDao.listByCodes(dslContext, projectCodes, enabled = null).map {
+                list.add(ProjectUtils.packagingBean(it))
             }
             success = true
             return list
@@ -417,12 +411,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         try {
 
-//            val projects = projectPermissionService.getUserProjects(userId)
             val projects = getProjectFromAuth(userId, null)
             logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
             projectDao.listByEnglishName(dslContext, projects, null, null, null).map {
-                list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
+                list.add(ProjectUtils.packagingBean(it))
             }
             success = true
             return list
@@ -441,13 +434,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         try {
             val list = ArrayList<ProjectVO>()
-            val grayProjectSet = grayProjectSet()
 
             projectCodes.forEach {
                 // 多次查询保证有序
                 val projectRecord =
                     projectDao.getByEnglishName(dslContext, it) ?: throw ProjectNotExistException("projectCode=$it")
-                list.add(ProjectUtils.packagingBean(projectRecord, grayProjectSet))
+                list.add(ProjectUtils.packagingBean(projectRecord))
             }
             success = true
             return list
@@ -463,7 +455,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
             val list = ArrayList<ProjectVO>()
             projectDao.getAllProject(dslContext).filter { it.enabled == null || it.enabled }.map {
-                list.add(ProjectUtils.packagingBean(it, emptySet()))
+                list.add(ProjectUtils.packagingBean(it))
             }
             success = true
             return list
@@ -479,7 +471,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
             val list = ArrayList<ProjectVO>()
             projectDao.list(dslContext, limit, offset).map {
-                list.add(ProjectUtils.packagingBean(it, emptySet()))
+                list.add(ProjectUtils.packagingBean(it))
             }
             val count = projectDao.getCount(dslContext)
             success = true
@@ -501,7 +493,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
             val list = ArrayList<ProjectVO>()
             projectDao.listByChannel(dslContext, limit, offset, projectChannelCode).map {
-                list.add(ProjectUtils.packagingBean(it, emptySet()))
+                list.add(ProjectUtils.packagingBean(it))
             }
             val count = projectDao.getCount(dslContext)
             logger.info("list count$count")
@@ -528,10 +520,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             val list = ArrayList<ProjectVO>()
             val projectCodes = projectList.map { it.key }
 
-            val grayProjectSet = grayProjectSet()
-
-            projectDao.listByCodes(dslContext, projectCodes.toSet()).filter { it.enabled == null || it.enabled }.map {
-                list.add(ProjectUtils.packagingBean(it, grayProjectSet))
+            projectDao.listByCodes(dslContext, projectCodes.toSet(), enabled = true).map {
+                list.add(ProjectUtils.packagingBean(it))
             }
             success = true
             return list
@@ -543,13 +533,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun getNameByCode(projectCodes: String): HashMap<String, String> {
         val map = HashMap<String, String>()
-        projectDao.listByCodes(dslContext, projectCodes.split(",").toSet()).map {
+        projectDao.listByCodes(dslContext, projectCodes.split(",").toSet(), enabled = null).map {
             map.put(it.englishName, it.projectName)
         }
         return map
     }
-
-    override fun grayProjectSet() = gray.grayProjectSet(redisOperation)
 
     override fun updateLogo(
         userId: String,
@@ -582,7 +570,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 logoFile?.delete()
             }
         } else {
-            logger.warn("$projectRecord is null or $projectRecord is empty")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_PROJECT_FAIL))
         }
     }
@@ -635,7 +622,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             limit = limit,
             offset = offset
         ).map {
-            list.add(ProjectUtils.packagingBean(it, emptySet()))
+            list.add(ProjectUtils.packagingBean(it))
         }
         val count = projectDao.countByProjectName(dslContext, projectName).toLong()
         LogUtils.costTime("search project by projectName", startTime)
@@ -735,8 +722,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo)
 
-    abstract fun drawFile(projectCode: String): File
-
     abstract fun organizationMarkUp(
         projectCreateInfo: ProjectCreateInfo,
         userDeptDetail: UserDeptDetail
@@ -745,8 +730,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     abstract fun modifyProjectAuthResource(projectCode: String, projectName: String)
 
     companion object {
-        const val Width = 128
-        const val Height = 128
         const val MAX_PROJECT_NAME_LENGTH = 64
         private val logger = LoggerFactory.getLogger(AbsProjectServiceImpl::class.java)!!
         private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9-]+"

@@ -29,7 +29,6 @@ package com.tencent.devops.common.service
 
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.gray.MacOSGray
 import com.tencent.devops.common.service.prometheus.BkTimedAspect
 import com.tencent.devops.common.service.trace.TraceFilter
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -65,9 +64,6 @@ class ServiceAutoConfiguration {
 
     @Bean
     fun commonConfig() = CommonConfig()
-
-    @Bean
-    fun macosGray() = MacOSGray()
 
     @Bean
     fun traceFilter() = TraceFilter()

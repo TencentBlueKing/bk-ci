@@ -30,7 +30,6 @@ package com.tencent.devops.project.api.op
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.project.pojo.OpGrayProject
 import com.tencent.devops.project.pojo.OpProjectGraySetRequest
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectVO
@@ -79,7 +78,7 @@ interface OPProjectResource {
         projectInfoRequest: OpProjectUpdateInfoRequest
     ): Result<Int>
 
-    @ApiOperation("获取项目信息列表")
+    @ApiOperation("获取项目信息列表，支持筛选仓库灰度")
     @GET
     @Path("/list/project")
     fun getProjectList(
@@ -113,164 +112,14 @@ interface OPProjectResource {
         @ApiParam(value = "是否灰度 true：是 false：否", required = true)
         @QueryParam(value = "is_gray")
         grayFlag: Boolean,
-        @Context request: HttpServletRequest
-    ): Result<Map<String, Any?>?>
-
-    @ApiOperation("获取项目信息列表，支持筛选仓库灰度")
-    @GET
-    @Path("/list/repoGrayProject")
-    fun getProjectList(
-        @ApiParam(value = "项目名称", required = false)
-        @QueryParam(value = "project_name")
-        projectName: String?,
-        @ApiParam(value = "项目简称", required = false)
-        @QueryParam(value = "english_name")
-        englishName: String?,
-        @ApiParam(value = "项目类型", required = false)
-        @QueryParam(value = "project_type")
-        projectType: Int?,
-        @ApiParam(value = "是否保密", required = false)
-        @QueryParam(value = "is_secrecy")
-        isSecrecy: Boolean?,
-        @ApiParam(value = "注册人", required = false)
-        @QueryParam(value = "creator")
-        creator: String?,
-        @ApiParam(value = "审批人", required = false)
-        @QueryParam(value = "approver")
-        approver: String?,
-        @ApiParam(value = "审核状态", required = false)
-        @QueryParam(value = "approval_status")
-        approvalStatus: Int?,
-        @ApiParam(value = "偏移量", required = true)
-        @QueryParam(value = "offset")
-        offset: Int,
-        @ApiParam(value = "查询数量", required = true)
-        @QueryParam(value = "limit")
-        limit: Int,
-        @ApiParam(value = "是否灰度 true：是 false：否", required = true)
-        @QueryParam(value = "is_gray")
-        grayFlag: Boolean,
         @ApiParam(value = "是否灰度 true：是 false：否", required = false)
         @QueryParam(value = "is_codecc_gray")
-        codeCCGrayFlag: Boolean?,
+        codeCCGrayFlag: Boolean = false,
         @ApiParam(value = "是否仓库灰度 true：是 false：否", required = true)
         @QueryParam(value = "is_repo_gray")
-        repoGrayFlag: Boolean,
+        repoGrayFlag: Boolean = false,
         @Context request: HttpServletRequest
     ): Result<Map<String, Any?>?>
-
-    @ApiOperation("获取项目信息列表，支持筛选仓库灰度")
-    @GET
-    @Path("/list/macosGrayProject")
-    fun getProjectList(
-        @ApiParam(value = "项目名称", required = false)
-        @QueryParam(value = "project_name")
-        projectName: String?,
-        @ApiParam(value = "项目简称", required = false)
-        @QueryParam(value = "english_name")
-        englishName: String?,
-        @ApiParam(value = "项目类型", required = false)
-        @QueryParam(value = "project_type")
-        projectType: Int?,
-        @ApiParam(value = "是否保密", required = false)
-        @QueryParam(value = "is_secrecy")
-        isSecrecy: Boolean?,
-        @ApiParam(value = "注册人", required = false)
-        @QueryParam(value = "creator")
-        creator: String?,
-        @ApiParam(value = "审批人", required = false)
-        @QueryParam(value = "approver")
-        approver: String?,
-        @ApiParam(value = "审核状态", required = false)
-        @QueryParam(value = "approval_status")
-        approvalStatus: Int?,
-        @ApiParam(value = "偏移量", required = true)
-        @QueryParam(value = "offset")
-        offset: Int,
-        @ApiParam(value = "查询数量", required = true)
-        @QueryParam(value = "limit")
-        limit: Int,
-        @ApiParam(value = "是否灰度 true：是 false：否", required = true)
-        @QueryParam(value = "is_gray")
-        grayFlag: Boolean,
-        @ApiParam(value = "是否CodeCC灰度 true：是 false：否", required = false)
-        @QueryParam(value = "is_codecc_gray")
-        codeCCGrayFlag: Boolean?,
-        @ApiParam(value = "是否仓库灰度 true：是 false：否", required = true)
-        @QueryParam(value = "is_repo_gray")
-        repoGrayFlag: Boolean,
-        @ApiParam(value = "是否MacOS公共构建机灰度 true：是 false：否", required = true)
-        @QueryParam(value = "is_repo_gray")
-        macosGrayFlag: Boolean,
-        @Context request: HttpServletRequest
-    ): Result<Map<String, Any?>?>
-
-//    @ApiOperation("获取项目信息列表")
-//    @GET
-//    @Path("/list/query")
-//    fun getProjectListV2(
-//            @ApiParam(value = "项目名称", required = false)
-//            @QueryParam(value = "project_name")
-//            projectName: String?,
-//            @ApiParam(value = "项目简称", required = false)
-//            @QueryParam(value = "english_name")
-//            englishName: String?,
-//            @ApiParam(value = "项目类型", required = false)
-//            @QueryParam(value = "project_type")
-//            projectType: Int?,
-//            @ApiParam(value = "是否保密", required = false)
-//            @QueryParam(value = "is_secrecy")
-//            isSecrecy: Boolean?,
-//            @ApiParam(value = "注册人", required = false)
-//            @QueryParam(value = "creator")
-//            creator: String?,
-//            @ApiParam(value = "审批人", required = false)
-//            @QueryParam(value = "approver")
-//            approver: String?,
-//            @ApiParam(value = "审核状态", required = false)
-//            @QueryParam(value = "approval_status")
-//            approvalStatus: Int?,
-//            @ApiParam(value = "偏移量", required = true)
-//            @QueryParam(value = "offset")
-//            offset: Int,
-//            @ApiParam(value = "查询数量", required = true)
-//            @QueryParam(value = "limit")
-//            limit: Int,
-//            @ApiParam(value = "是否灰度 true：是 false：否", required = true)
-//            @QueryParam(value = "is_gray")
-//            grayFlag: Boolean,
-//            @Context request: HttpServletRequest
-//    ): Result<Map<String, Any?>?>
-
-    @ApiOperation("获取项目数量")
-    @GET
-    @Path("/list/projectCount")
-    fun getProjectCount(
-        @ApiParam(value = "项目名称", required = false)
-        @QueryParam(value = "project_name")
-        projectName: String?,
-        @ApiParam(value = "项目简称", required = false)
-        @QueryParam(value = "english_name")
-        englishName: String?,
-        @ApiParam(value = "项目类型", required = false)
-        @QueryParam(value = "project_type")
-        projectType: Int?,
-        @ApiParam(value = "是否保密", required = false)
-        @QueryParam(value = "is_secrecy")
-        isSecrecy: Boolean?,
-        @ApiParam(value = "注册人", required = false)
-        @QueryParam(value = "creator")
-        creator: String?,
-        @ApiParam(value = "审批人", required = false)
-        @QueryParam(value = "approver")
-        approver: String?,
-        @ApiParam(value = "审核状态", required = false)
-        @QueryParam(value = "approval_status")
-        approvalStatus: Int?,
-        @ApiParam(value = "是否灰度 true：是 false：否", defaultValue = false.toString())
-        @QueryParam(value = "is_gray")
-        grayFlag: Boolean
-    ): Result<Int>
 
     @ApiOperation("灰度项目设置")
     @PUT
@@ -287,43 +136,6 @@ interface OPProjectResource {
         @ApiParam(value = "灰度项目设置请求实体", required = true)
         projectGraySetRequest: OpProjectGraySetRequest
     ): Result<Boolean>
-
-    @ApiOperation("bkrepo灰度项目设置")
-    @PUT
-    @Path("/setRepoGrayProject")
-    fun setRepoGrayProject(
-        @ApiParam(value = "灰度项目设置请求实体", required = true)
-        projectGraySetRequest: OpProjectGraySetRequest
-    ): Result<Boolean>
-
-    @ApiOperation("bkrepo非灰度项目设置")
-    @PUT
-    @Path("/setRepoNotGrayProject")
-    fun setRepoNotGrayProject(
-        @ApiParam(value = "非灰度项目设置请求实体", required = true)
-        projectGraySetRequest: OpProjectGraySetRequest
-    ): Result<Boolean>
-
-    @ApiOperation("macos灰度项目设置")
-    @PUT
-    @Path("/setMacOSGrayProject")
-    fun setMacOSGrayProject(
-        @ApiParam(value = "灰度项目设置请求实体", required = true)
-        projectGraySetRequest: OpProjectGraySetRequest
-    ): Result<Boolean>
-
-//    @ApiOperation("灰度项目设置")
-//    @PUT
-//    @Path("/{projectId}/gray")
-//    fun setGrayProjectV2(
-//            @ApiParam(value = "灰度项目设置请求实体", required = true)
-//            projectGraySetRequest: OpProjectGraySetRequest
-//    ): Result<Boolean>
-
-    @ApiOperation("查看灰度项目列表")
-    @GET
-    @Path("/listGrayProject")
-    fun listGrayProject(): Result<OpGrayProject>
 
     @ApiOperation("同步项目")
     @PUT

@@ -34,7 +34,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 @Suppress("ALL")
 object ProjectUtils {
 
-    fun packagingBean(tProjectRecord: TProjectRecord, grayProjectSet: Set<String>): ProjectVO {
+    fun packagingBean(tProjectRecord: TProjectRecord): ProjectVO {
         return ProjectVO(
             /* 已经投产旧插件的使用字段兼容 */
             project_id = tProjectRecord.projectId,
@@ -84,7 +84,7 @@ object ProjectUtils {
             },
             useBk = tProjectRecord.useBk,
             enabled = tProjectRecord.enabled ?: true,
-            gray = grayProjectSet.contains(tProjectRecord.englishName),
+            gray = tProjectRecord.routerTag == "gray",
             hybridCcAppId = tProjectRecord.hybridCcAppId,
             enableExternal = tProjectRecord.enableExternal,
             pipelineLimit = tProjectRecord.pipelineLimit,
