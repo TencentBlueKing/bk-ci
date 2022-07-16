@@ -102,7 +102,7 @@ class GithubStreamPermissionServiceImpl @Autowired constructor(
             return projectAuthUserCache.getIfPresent(projectCode)!!
         }
         val projectInfo = client.get(ServiceStreamBasicSettingResource::class)
-            .getStreamConf("", projectCode).data
+            .getStreamConf(projectCode).data
         return if (projectInfo == null) {
             userId
         } else {
