@@ -1,23 +1,17 @@
 <template>
-    <bk-user-selector
+    <bk-member-selector
         v-model="copyValue"
         :style="{ width: '100%' }"
         :disabled="disabled"
         :placeholder="placeholder"
-        key="company-staff"
         api="https://api.open.woa.com/api/c/compapi/v2/usermanage/fs_list_users/"
         @change="handleChoose"
-    ></bk-user-selector>
+    ></bk-member-selector>
 </template>
 
 <script>
-    import BkUserSelector from '@blueking/user-selector'
-
     export default {
         name: 'CompanyStaff',
-        components: {
-            BkUserSelector
-        },
         props: {
             value: {
                 type: Array,
