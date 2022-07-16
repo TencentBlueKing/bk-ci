@@ -61,6 +61,7 @@
     ]
   },
   "dependencies": {
+    "@blueking/user-selector": "^1.0.7",
     "cross-env": "^7.0.3",
     "glob-parent": "5.1.2",
     "uuid": "^8.3.2"
