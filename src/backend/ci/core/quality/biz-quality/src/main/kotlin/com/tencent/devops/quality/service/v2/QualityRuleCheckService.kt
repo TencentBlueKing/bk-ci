@@ -488,12 +488,13 @@ class QualityRuleCheckService @Autowired constructor(
 
         logger.info("QUALITY|metadataList is: $metadataList, indicators is:$indicators")
         val indicatorsCopy = indicators.toMutableList()
+        val metadataListCopy = metadataList.toMutableList()
         indicators.forEach { indicator ->
             // 没有设置taskName时，当输出多个相同指标值，每一个都要加入判断，否则把使用通配符的替换为taskName全名，用于后面加入到指标前缀
             if (indicator.taskName.isNullOrEmpty()) {
-                if (metadataList.count { it.enName == indicator.enName } > 1) {
+                if (metadataListCopy.count { it.enName == indicator.enName } > 1) {
                     indicatorsCopy.remove(indicator)
-                    metadataList.filter { it.enName == indicator.enName }.forEachIndexed { index, metadata ->
+                    metadataListCopy.filter { it.enName == indicator.enName }.forEachIndexed { index, metadata ->
                         val extraIndicator = indicator.copy()
                         val extraTaskName = "${metadata.taskName}+$index"
                         extraIndicator.taskName = extraTaskName
@@ -502,7 +503,7 @@ class QualityRuleCheckService @Autowired constructor(
                     }
                 }
             } else {
-                metadataList.filter { it.enName == indicator.enName &&
+                metadataListCopy.filter { it.enName == indicator.enName &&
                         it.taskName.startsWith(indicator.taskName ?: "")
                 }.forEachIndexed { index, metadata ->
                     indicatorsCopy.remove(indicator)
@@ -524,21 +525,21 @@ class QualityRuleCheckService @Autowired constructor(
             // 脚本原子的指标特殊处理：取指标英文名 = 基础数据名
             val filterMetadataList = if (indicator.taskName.isNullOrBlank()) {
                 if (indicator.isScriptElementIndicator()) {
-                    listOf(metadataList
+                    listOf(metadataListCopy
                         .find { indicator.enName == it.enName &&
                                 it.elementType in QualityIndicator.SCRIPT_ELEMENT })
                 } else {
                     indicator.metadataList.map {
-                        metadata -> metadataList.find { it.enName == metadata.enName }
+                        metadata -> metadataListCopy.find { it.enName == metadata.enName }
                     }.toList()
                 }
             } else {
                 if (indicator.isScriptElementIndicator()) {
-                    listOf(metadataList
+                    listOf(metadataListCopy
                         .filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
                         .find { indicator.enName == it.enName && it.taskName.startsWith(indicator.taskName ?: "") })
                 } else {
-                    metadataList.filter {
+                    metadataListCopy.filter {
                         it.taskName.startsWith(indicator.taskName ?: "") &&
                         indicator.metadataList.map { metadata -> metadata.enName }.contains(it.enName)
                     }
