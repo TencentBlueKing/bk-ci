@@ -171,7 +171,7 @@ class TxProjectServiceImpl @Autowired constructor(
                 return emptyList()
             }
             val list = ArrayList<ProjectVO>(englishNames.size)
-            projectDao.listByCodes(dslContext, englishNames, enabled = null).map {
+            projectDao.listByCodes(dslContext, englishNames, enabled = enabled).map {
                 list.add(ProjectUtils.packagingBean(it))
             }
             return list
