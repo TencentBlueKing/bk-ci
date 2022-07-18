@@ -27,7 +27,6 @@
 
 package com.tencent.devops.stream.util
 
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
