@@ -379,10 +379,6 @@ class StreamPipelineService @Autowired constructor(
             StreamTriggerPipeline(it)
         } ?: pipeline
 
-    private fun getProjectCode(gitProjectId: String): String {
-        return "git_$gitProjectId"
-    }
-
     private fun createTriggerModel(displayName: String) = PipelineModelAndSetting(
         model = Model(
             name = displayName,
@@ -475,7 +471,7 @@ class StreamPipelineService @Autowired constructor(
         try {
             val response = processClient.get(
                 userId = userId,
-                projectId = "${StreamConstant.DEVOPS_PROJECT_PREFIX}$gitProjectId",
+                projectId = GitCommonUtils.getCiProjectId(gitProjectId, gitConfig.getScmType()),
                 pipelineId = pipelineId,
                 channelCode = channelCode
             )
@@ -503,7 +499,7 @@ class StreamPipelineService @Autowired constructor(
         try {
             val response = processClient.edit(
                 userId = userId,
-                projectId = "${StreamConstant.DEVOPS_PROJECT_PREFIX}$gitProjectId",
+                projectId = GitCommonUtils.getCiProjectId(gitProjectId, gitConfig.getScmType()),
                 pipelineId = pipelineId,
                 pipeline = model,
                 channelCode = channelCode
