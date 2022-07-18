@@ -66,7 +66,7 @@ class UserPipelineViewResourceImpl @Autowired constructor(
         projectId: String,
         pipelineView: PipelineViewForm
     ): Result<PipelineViewId> {
-        return Result(PipelineViewId(pipelineViewGroupService.addViewGroup(userId, projectId, pipelineView)))
+        return Result(PipelineViewId(pipelineViewGroupService.addViewGroup(projectId, userId, pipelineView)))
     }
 
     override fun deleteView(userId: String, projectId: String, viewId: String): Result<Boolean> {
