@@ -62,6 +62,7 @@ const (
 	KeyDetectShell       = "devops.agent.detect.shell"
 	KeyIgnoreLocalIps    = "devops.agent.ignoreLocalIps"
 	KeyBatchInstall      = "devops.agent.batch.install"
+	KeyLogsKeepHours     = "devops.agent.logs.keep.hours"
 )
 
 // AgentConfig Agent 配置
@@ -80,6 +81,7 @@ type AgentConfig struct {
 	DetectShell       bool
 	IgnoreLocalIps    string
 	BatchInstallKey   string
+	LogsKeepHours     int
 }
 
 // AgentEnv Agent 环境配置
@@ -172,8 +174,9 @@ func DetectWorkerVersion() string {
 // DetectWorkerVersionByDir 检测指定目录下的Worker文件版本
 func DetectWorkerVersionByDir(workDir string) string {
 	jar := fmt.Sprintf("%s/%s", workDir, WorkAgentFile)
+	tmpDir, _ := systemutil.MkBuildTmpDir()
 	output, err := command.RunCommand(GetJava(),
-		[]string{"-Xmx256m", "-cp", jar, "com.tencent.devops.agent.AgentVersionKt"},
+		[]string{"-Djava.io.tmpdir=" + tmpDir, "-Xmx256m", "-cp", jar, "com.tencent.devops.agent.AgentVersionKt"},
 		workDir, nil)
 
 	if err != nil {
@@ -269,8 +272,14 @@ func LoadAgentConfig() error {
 
 	ignoreLocalIps := strings.TrimSpace(conf.Section("").Key(KeyIgnoreLocalIps).String())
 	if len(ignoreLocalIps) == 0 {
-		ignoreLocalIps = "127.0.0.1,192.168.10.255" // 临时代码，上线更新即移除
+		ignoreLocalIps = "127.0.0.1"
 	}
+
+	logsKeepHours, err := conf.Section("").Key(KeyLogsKeepHours).Int()
+	if err != nil {
+		logsKeepHours = 96
+	}
+	GAgentConfig.LogsKeepHours = logsKeepHours
 
 	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.Section("").Key(KeyBatchInstall).String())
 
@@ -302,6 +311,7 @@ func LoadAgentConfig() error {
 	GAgentConfig.IgnoreLocalIps = ignoreLocalIps
 	logs.Info("IgnoreLocalIps: ", GAgentConfig.IgnoreLocalIps)
 	logs.Info("BatchInstallKey: ", GAgentConfig.BatchInstallKey)
+	logs.Info("logsKeepHours: ", GAgentConfig.LogsKeepHours)
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
@@ -322,6 +332,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyRequestTimeoutSec + "=" + strconv.FormatInt(GAgentConfig.TimeoutSec, 10) + "\n")
 	content.WriteString(KeyDetectShell + "=" + strconv.FormatBool(GAgentConfig.DetectShell) + "\n")
 	content.WriteString(KeyIgnoreLocalIps + "=" + GAgentConfig.IgnoreLocalIps + "\n")
+	content.WriteString(KeyLogsKeepHours + "=" + strconv.Itoa(GAgentConfig.LogsKeepHours) + "\n")
 
 	err := ioutil.WriteFile(filePath, []byte(content.String()), 0666)
 	if err != nil {

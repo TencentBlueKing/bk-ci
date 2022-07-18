@@ -41,12 +41,12 @@ import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerR
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.scm.code.p4.api.P4FileSpec
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.core.io.ClassPathResource
 import java.nio.charset.Charset
+import org.junit.jupiter.api.BeforeEach
 
 class P4WebHookMatcherTest {
     private val repository = CodeP4Repository(
@@ -61,7 +61,7 @@ class P4WebHookMatcherTest {
     private val client: Client = mock()
     private val serviceP4Resource: ServiceP4Resource = mock()
 
-    @Before
+    @BeforeEach
     fun setUp() {
         CodeWebhookHandlerRegistrar.register(P4ChangeTriggerHandler(client))
     }
@@ -97,7 +97,7 @@ class P4WebHookMatcherTest {
 
         val matcher = P4WebHookMatcher(event)
 
-        Assert.assertTrue(matcher.preMatch().isMatch)
+        Assertions.assertTrue(matcher.preMatch().isMatch)
         var webHookParams = WebHookParams(
             repositoryConfig = RepositoryConfig(
                 repositoryHashId = "dfd",
@@ -108,7 +108,7 @@ class P4WebHookMatcherTest {
             includePaths = "//demo/**",
             excludePaths = ""
         )
-        Assert.assertTrue(
+        Assertions.assertTrue(
             matcher.isMatch(
                 projectId = "mht",
                 pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -126,7 +126,7 @@ class P4WebHookMatcherTest {
             includePaths = "//depot/**",
             excludePaths = ""
         )
-        Assert.assertFalse(
+        Assertions.assertFalse(
             matcher.isMatch(
                 projectId = "mht",
                 pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",

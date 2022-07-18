@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
+import com.tencent.devops.store.pojo.common.StorePkgRunEnvInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -41,6 +42,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_STORE"], description = "build-store")
@@ -66,4 +68,25 @@ interface BuildStoreResource {
         @PathParam("storeCode")
         storeCode: String
     ): Result<List<SensitiveConfResp>?>
+
+    @ApiOperation("获取组件安装包运行时环境信息")
+    @GET
+    @Path("/pkg/envs/types/{storeType}/languages/{language}/versions/{runtimeVersion}/get")
+    fun getStorePkgRunEnvInfo(
+        @ApiParam("组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum,
+        @ApiParam("开发语言", required = true)
+        @PathParam("language")
+        language: String,
+        @ApiParam("运行时版本", required = true)
+        @PathParam("runtimeVersion")
+        runtimeVersion: String,
+        @ApiParam("支持的操作系统名称", required = true)
+        @QueryParam("osName")
+        osName: String,
+        @ApiParam("支持的操作系统架构", required = true)
+        @QueryParam("osArch")
+        osArch: String
+    ): Result<StorePkgRunEnvInfo?>
 }

@@ -48,12 +48,16 @@ class RemoteEventJobExecutor(
                 val action: () -> Unit = when (type) {
                     EventType.REPO_CREATED -> {
                         {
-                            helmOperationService.initPackageInfo(projectId, repoName, userId)
+                            helmOperationService.lockAction(projectId, repoName) {
+                                helmOperationService.initPackageInfo(projectId, repoName, userId)
+                            }
                         }
                     }
                     else -> {
                         {
-                            helmOperationService.updatePackageForRemote(projectId, repoName, userId)
+                            helmOperationService.lockAction(projectId, repoName) {
+                                helmOperationService.updatePackageForRemote(projectId, repoName, userId)
+                            }
                         }
                     }
                 }

@@ -35,5 +35,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties("webhook")
 data class WebHookProperties(
     var maxRequests: Int? = null,
-    var maxRequestsPerHost: Int? = null
+    var maxRequestsPerHost: Int? = null,
+    var filterProjectRepoKey: MutableList<String> = mutableListOf()
 )

@@ -1337,7 +1337,8 @@ class RepositoryService @Autowired constructor(
                     aliasName = it.aliasName,
                     url = it.url,
                     type = ScmType.valueOf(it.type),
-                    updatedTime = it.updatedTime.timestampmilli()
+                    updatedTime = it.updatedTime.timestampmilli(),
+                    createUser = it.userId
                 )
             )
         }

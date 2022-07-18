@@ -37,7 +37,7 @@ import io.swagger.annotations.ApiModelProperty
 @Api("Oci error 包装返回模型")
 data class OciErrorResponse(
     @ApiModelProperty("错误提示")
-    val message: String,
+    val message: String?,
     @ApiModelProperty("编码")
     val code: Any?,
     @ApiModelProperty("详情")

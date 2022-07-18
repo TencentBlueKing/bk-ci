@@ -134,8 +134,8 @@ class BuildLessContainerService(
                         }",
                         "$ENV_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
                         "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
-                        "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
-                        "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
+                        "$BK_DISTCC_LOCAL_IP=${CommonUtils.getHostIp()}",
+                        "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
                         "$ENV_JOB_BUILD_TYPE=BUILD_LESS",
                         "$ENV_CONTAINER_NAME=$containerName",
                         "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$linkPath"

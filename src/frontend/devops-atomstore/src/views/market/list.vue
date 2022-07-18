@@ -127,7 +127,9 @@
                 const apiFun = {
                     atom: () => this.$store.dispatch('store/requestMarketAtom', postData),
                     template: () => this.$store.dispatch('store/requestMarketTemplate', postData),
-                    image: () => this.$store.dispatch('store/requestMarketImage', postData)
+                    image: () => this.$store.dispatch('store/requestMarketImage', postData),
+                    ide: () => this.$store.dispatch('store/requestMarketIDE', postData),
+                    service: () => this.$store.dispatch('store/requestMarketService', postData)
                 }
 
                 apiFun[pipeType]().then((res) => {

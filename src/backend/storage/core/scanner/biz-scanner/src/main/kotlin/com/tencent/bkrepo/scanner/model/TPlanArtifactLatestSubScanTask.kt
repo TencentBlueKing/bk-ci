@@ -40,8 +40,8 @@ import java.time.LocalDateTime
 @Document("plan_artifact_latest_sub_scan_task")
 @CompoundIndexes(
     CompoundIndex(
-        name = "projectId_repoName_fullPath_planId_idx",
-        def = "{'projectId': 1, 'repoName': 1, 'fullPath': 1, 'planId': 1}",
+        name = "projectId_repoName_fullPath_planId_scanner_idx",
+        def = "{'projectId': 1, 'repoName': 1, 'fullPath': 1, 'planId': 1, 'scanner': 1}",
         background = true,
         unique = true
     ),

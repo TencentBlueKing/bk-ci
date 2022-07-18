@@ -62,6 +62,14 @@ class CheckPauseReviewStageCmd(
         val stage = commandContext.stage
         val event = commandContext.event
 
+        // 处于等待中，遇到停止/取消等行为直接结束，因为本Stage还未进入
+        if (event.actionType.isEnd() && commandContext.buildStatus.isPause()) {
+            commandContext.buildStatus = BuildStatus.CANCELED
+            commandContext.cmdFlowState = CmdFlowState.FINALLY
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_CANCEL|${event.stageId}")
+            return
+        }
+
         // #115 若stage状态为暂停，且来源不是BS_MANUAL_START_STAGE，碰到状态为暂停就停止运行
         if (commandContext.buildStatus.isPause() && event.source != BS_MANUAL_START_STAGE) {
 

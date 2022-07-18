@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.env
 
+import com.tencent.devops.common.api.enums.OSArch
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.PropertyUtil
@@ -63,6 +64,7 @@ object AgentEnv {
     private var secretKey: String? = null
     private var gateway: String? = null
     private var os: OSType? = null
+    private var arch: OSArch? = null
     private var env: Env? = null
     private var logStorageMode: LogStorageMode? = null
     private var macOSWorkspace: String? = null
@@ -200,6 +202,41 @@ object AgentEnv {
             }
         }
         return os!!
+    }
+
+    fun getOSArch(): OSArch {
+        if (arch == null) {
+            synchronized(this) {
+                val osType = os ?: getOS()
+                if (arch == null) {
+                    val osArch = System.getProperty("os.arch", "amd64").toLowerCase(Locale.ENGLISH)
+                    logger.info("Get the os arch from system properties - ($osArch)")
+                    arch = when (osType) {
+                        OSType.LINUX, OSType.MAC_OS -> {
+                            if (osArch.contains("amd") || osArch.contains("x86")) {
+                                OSArch.AMD_64
+                            } else if (osArch.contains("arm") || osArch.contains("aarch")) {
+                                OSArch.ARM_64
+                            } else if (osArch.contains("mips") && osType == OSType.LINUX) {
+                                // 默认使用amd64，非m1芯片
+                                OSArch.MIPS_64
+                            } else {
+                                OSArch.AMD_64
+                            }
+                        }
+                        OSType.WINDOWS -> {
+                            // 保持和agent编译一致，使用386指令集
+                            OSArch.I_386
+                        }
+                        else -> {
+                            OSArch.AMD_64
+                        }
+                    }
+                }
+            }
+        }
+        logger.info("Get the os arch - (${arch?.name})")
+        return arch!!
     }
 
     fun is32BitSystem() = System.getProperty("sun.arch.data.model") == "32"

@@ -31,6 +31,7 @@ dependencies {
     implementation(project(":common:common-security"))
     implementation(project(":common:common-mongo"))
     implementation(project(":common:common-storage:storage-service"))
-    implementation("com.github.docker-java:docker-java:3.2.13")
-    implementation("com.github.docker-java:docker-java-transport-okhttp:3.2.13")
+    implementation("commons-io:commons-io")
+    implementation("com.github.docker-java:docker-java:${Versions.DockerJava}")
+    implementation("com.github.docker-java:docker-java-transport-okhttp:${Versions.DockerJava}")
 }

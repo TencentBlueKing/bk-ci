@@ -27,18 +27,37 @@
 
 package com.tencent.bkrepo.generic.model
 
+import com.tencent.bkrepo.generic.model.TSignFile.Companion.PROJECT_ID_REPO_NAME_SRC_MD5_BLOCK_SIZE_IDX
+import com.tencent.bkrepo.generic.model.TSignFile.Companion.PROJECT_ID_REPO_NAME_SRC_MD5_BLOCK_SIZE_IDX_DEF
+import org.springframework.data.mongodb.core.index.CompoundIndex
+import org.springframework.data.mongodb.core.index.CompoundIndexes
 import org.springframework.data.mongodb.core.mapping.Document
 import java.time.LocalDateTime
 
 @Document("sign_file")
+@CompoundIndexes(
+    CompoundIndex(
+        name = PROJECT_ID_REPO_NAME_SRC_MD5_BLOCK_SIZE_IDX,
+        def = PROJECT_ID_REPO_NAME_SRC_MD5_BLOCK_SIZE_IDX_DEF,
+        unique = true
+    )
+)
 class TSignFile(
     var id: String? = null,
     var createdBy: String,
     var createdDate: LocalDateTime,
 
-    var srcSha256: String,
+    var srcProjectId: String,
+    var srcRepoName: String,
+    var srcMd5: String,
     var blockSize: Int,
     var projectId: String,
     var repoName: String,
     var fullPath: String
-)
+) {
+    companion object {
+        const val PROJECT_ID_REPO_NAME_SRC_MD5_BLOCK_SIZE_IDX = "srcProjectId_srcRepoName_srcMd5_blockSize_idx"
+        const val PROJECT_ID_REPO_NAME_SRC_MD5_BLOCK_SIZE_IDX_DEF =
+            "{'srcProjectId': 1, 'srcRepoName': 1, 'srcMd5': 1, 'blockSize': 1}"
+    }
+}

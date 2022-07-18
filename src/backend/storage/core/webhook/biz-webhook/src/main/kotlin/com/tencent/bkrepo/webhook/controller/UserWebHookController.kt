@@ -65,7 +65,7 @@ class UserWebHookController(
         return ResponseBuilder.success()
     }
 
-    @ApiOperation("创建WebHook")
+    @ApiOperation("更新WebHook")
     @PutMapping("/update")
     fun updateWebHook(
         @RequestAttribute userId: String,
@@ -99,13 +99,13 @@ class UserWebHookController(
     fun listWebHook(
         @RequestAttribute userId: String,
         @RequestParam associationType: AssociationType,
-        @RequestParam associationId: String
+        @RequestParam associationId: String?
     ): Response<List<WebHook>> {
         return ResponseBuilder.success(webHookService.listWebHook(userId, associationType, associationId))
     }
 
     @ApiOperation("测试WebHook")
-    @GetMapping("/test/{id}")
+    @PostMapping("/test/{id}")
     fun testWebHook(
         @RequestAttribute userId: String,
         @PathVariable id: String

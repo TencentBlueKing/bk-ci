@@ -60,6 +60,7 @@ import com.tencent.devops.stream.util.RetryUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class TGitApiService @Autowired constructor(
@@ -392,7 +393,11 @@ class TGitApiService @Autowired constructor(
         if (this.accessToken != null) {
             return this.accessToken
         }
-        return client.get(ServiceOauthResource::class).gitGet(this.userId!!).data!!.accessToken
+        return client.get(ServiceOauthResource::class).gitGet(this.userId!!).data?.accessToken
+            ?: throw CustomException(
+                Response.Status.FORBIDDEN,
+                "STEAM PROJECT ENABLE USER NO OAUTH PERMISSION"
+            )
     }
 
     protected fun StreamGitCred.toTokenType(): TokenTypeEnum {

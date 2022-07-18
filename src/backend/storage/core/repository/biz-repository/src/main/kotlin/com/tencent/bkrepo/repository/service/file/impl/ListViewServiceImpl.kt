@@ -60,7 +60,7 @@ class ListViewServiceImpl(
     private val viewModelService: ViewModelService
 ) : ListViewService {
 
-    @Value("\${service.name}")
+    @Value("\${spring.application.name}")
     private var applicationName: String = "repository"
 
     override fun listNodeView(artifactInfo: ArtifactInfo) {

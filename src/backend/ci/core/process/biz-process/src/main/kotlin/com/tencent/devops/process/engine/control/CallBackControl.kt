@@ -53,7 +53,9 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import com.tencent.devops.process.pojo.CallBackHeader
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.event.StreamEnabledEvent
 import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import okhttp3.MediaType
@@ -100,6 +102,24 @@ class CallBackControl @Autowired constructor(
     fun pipelineRestoreEvent(projectId: String, pipelineId: String) {
         callBackPipelineEvent(projectId, pipelineId, CallBackEvent.RESTORE_PIPELINE)
     }
+
+    fun pipelineStreamEnabledEvent(event: PipelineStreamEnabledEvent) {
+        with(event) {
+            logger.info("$projectId|STREAM_ENABLED|callback stream enable event")
+            val list = projectPipelineCallBackService.listProjectCallBack(
+                projectId = projectId,
+                events = CallBackEvent.STREAM_ENABLED.name
+            )
+            val streamEnabledEvent = StreamEnabledEvent(
+                gitProjectId = gitProjectId,
+                gitProjectUrl = gitProjectUrl,
+                userId = userId,
+                enable = enable
+            )
+            sendToCallBack(CallBackData(event = CallBackEvent.STREAM_ENABLED, data = streamEnabledEvent), list)
+        }
+    }
+
     private fun callBackPipelineEvent(projectId: String, pipelineId: String, callBackEvent: CallBackEvent) {
         logger.info("$projectId|$pipelineId|$callBackEvent|callback pipeline event")
         val list = projectPipelineCallBackService.listProjectCallBack(
@@ -186,6 +206,7 @@ class CallBackControl @Autowired constructor(
             pipelineId = modelDetail.pipelineId,
             pipelineName = modelDetail.pipelineName,
             userId = modelDetail.userId,
+            triggerUser = modelDetail.triggerUser,
             status = modelDetail.status,
             startTime = modelDetail.startTime,
             endTime = modelDetail.endTime ?: 0,
@@ -195,7 +216,6 @@ class CallBackControl @Autowired constructor(
             stageId = event.stageId,
             taskId = event.taskId
         )
-
         sendToCallBack(CallBackData(event = callBackEvent, data = buildEvent), list)
     }
 
@@ -246,8 +266,10 @@ class CallBackControl @Autowired constructor(
                 callbackClient.newCall(request).execute()
             }
         } catch (e: Exception) {
-            logger.warn("BKSystemErrorMonitor|[${callBack.projectId}]|CALL_BACK|" +
-                "url=${callBack.callBackUrl}|${callBack.events}", e)
+            logger.warn(
+                "BKSystemErrorMonitor|[${callBack.projectId}]|CALL_BACK|" +
+                        "url=${callBack.callBackUrl}|${callBack.events}", e
+            )
             errorMsg = e.message
             status = ProjectPipelineCallbackStatus.FAILED
         } finally {
@@ -271,21 +293,23 @@ class CallBackControl @Autowired constructor(
         endTime: Long
     ) {
         try {
-            projectPipelineCallBackService.createHistory(ProjectPipelineCallBackHistory(
-                projectId = callBack.projectId,
-                callBackUrl = callBack.callBackUrl,
-                events = callBack.events,
-                status = status,
-                errorMsg = errorMsg,
-                requestHeaders = requestHeaders,
-                requestBody = "",
-                responseCode = 0,
-                responseBody = "",
-                startTime = startTime,
-                endTime = endTime,
-                id = client.get(ServiceAllocIdResource::class)
-                    .generateSegmentId("PROJECT_PIPELINE_CALLBACK_HISTORY").data
-            ))
+            projectPipelineCallBackService.createHistory(
+                ProjectPipelineCallBackHistory(
+                    projectId = callBack.projectId,
+                    callBackUrl = callBack.callBackUrl,
+                    events = callBack.events,
+                    status = status,
+                    errorMsg = errorMsg,
+                    requestHeaders = requestHeaders,
+                    requestBody = "",
+                    responseCode = 0,
+                    responseBody = "",
+                    startTime = startTime,
+                    endTime = endTime,
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("PROJECT_PIPELINE_CALLBACK_HISTORY").data
+                )
+            )
         } catch (e: Throwable) {
             logger.error("[${callBack.projectId}]|[${callBack.callBackUrl}]|[${callBack.events}]|save fail", e)
         }

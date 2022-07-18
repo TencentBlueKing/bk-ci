@@ -12,8 +12,8 @@ import com.tencent.devops.process.pojo.MarketBuildAtomElementWithLocation
 import com.tencent.devops.process.pojo.PipelineExportV2YamlConflictMapItem
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.scm.ScmProxyService
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class TXPipelineExportServiceTest {
     private val stageTagService: StageTagService = mock()
@@ -47,7 +47,7 @@ class TXPipelineExportServiceTest {
             exportFile = true
         )
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
-        Assert.assertEquals(result, "null")
+        Assertions.assertEquals(result, "null")
     }
 
     @Test
@@ -88,7 +88,7 @@ class TXPipelineExportServiceTest {
         )
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
         println(result)
-        Assert.assertEquals(
+        Assertions.assertEquals(
             result, "{\"key1\":\"value\",\"key2\":\"\${{ variables.haha }}\",\"key3\":\"abcedf\${{ variables.haha }}" +
                 "hijklmn\",\"key4\":\"aaaaaa\${{ variables.haha }}hijklmn\${{ jobs.job_1.steps.stepId.outputs.aaaa " +
                 "}}\",\"key5\":\"\${{ 123456 }}aaaaaa\${{ variables.haha }}hijklmn\${{ jobs.job_1.steps.stepId." +
@@ -131,7 +131,7 @@ class TXPipelineExportServiceTest {
         )
         println(resultMap)
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
-        Assert.assertEquals(
+        Assertions.assertEquals(
             result, "{\"key1\":\"value\",\"key2\":[\"\${{ variables.haha }}\"," +
                 "\"abcedf\${{ variables.haha }}hijklmn\",\"\${{ 123456 }}aaaaaa" +
                 "\${{ variables.haha }}hijklmn\${{ jobs.job_1.steps.stepId.outputs.aaaa }}\",123]}"
@@ -186,7 +186,7 @@ class TXPipelineExportServiceTest {
         )
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
         println(result)
-        Assert.assertEquals(
+        Assertions.assertEquals(
             resultMap, "# 您可以通过setEnv函数设置插件间传递的参数\n# echo \"::set-output " +
                 "name=FILENAME::package.zip\"\n# 然后在后续的插件的表单中使用\${{ FILENAME }}引用这个变量\n\n#" +
                 " 您可以在质量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\" " +

@@ -42,5 +42,7 @@ data class StreamProjectSimpleInfo(
     val description: String?,
     @JsonProperty("avatar_url")
     @ApiModelProperty(name = "avatar_url")
-    val avatarUrl: String?
+    val avatarUrl: String?,
+    val enabledCi: Boolean?,
+    val projectCode: String?
 )

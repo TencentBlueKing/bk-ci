@@ -3,10 +3,18 @@
 </template>
 
 <script>
-    import Terminal from './Xterm'
+    import { Base64 } from 'js-base64'
+    import { Terminal } from 'xterm'
+    import { FitAddon } from 'xterm-addon-fit'
+    import { AttachAddon } from 'xterm-addon-attach'
+    import 'xterm/css/xterm.css'
     export default {
         name: 'Console',
         props: {
+            consoleType: {
+                type: String,
+                default: ''
+            },
             url: {
                 type: String,
                 default: ''
@@ -23,6 +31,7 @@
         data () {
             return {
                 term: null,
+                fitAddon: null,
                 terminalSocket: null,
                 wsUrl: '',
                 heartTimer: null
@@ -31,8 +40,10 @@
         mounted () {
             window.onresize = this.triggerTermResize
             this.term = new Terminal()
+            this.fitAddon = new FitAddon()
             const terminalContainer = document.getElementById('terminal')
             this.term.open(terminalContainer)
+            this.term.loadAddon(this.fitAddon)
 
             if (this.url) {
                 this.wsUrl = this.url
@@ -41,10 +52,20 @@
                 this.terminalSocket.onmessage = this.receiveFromTerminal
                 this.terminalSocket.onclose = this.closeTerminal
                 this.terminalSocket.onerror = this.errorTerminal
-                this.term.attach(this.terminalSocket)
-                this.term.on('resize', this.handleResize)
+                if (this.consoleType === 'PUBLIC_BCS') {
+                    this.term.onData((data) => {
+                        this.sendEncodeCmd(data)
+                    })
+                } else {
+                    const attachAddon = new AttachAddon(this.terminalSocket)
+                    // Attach the socket to term
+                    this.term.loadAddon(attachAddon)
+                }
+                this.term.onResize(this.handleResize)
+
                 setTimeout(() => {
-                    this.term.fit()
+                    this.fitAddon.fit()
+                    this.term.focus()
                     this.term._initialized = true
                 }, 1000)
 
@@ -55,15 +76,26 @@
         },
         beforeDestroy () {
             this.terminalSocket.close()
-            this.term.destroy()
+            this.term.dispose()
         },
         methods: {
-            runTerminal (e) {
-                // this.heartCheck()
-                this.terminalSocket.send('source /etc/profile\n')
+            // BCS类型，消息需要加密后发送
+            sendEncodeCmd (cmd, channel = '0') {
+                this.terminalSocket.send(channel + Base64.encode(cmd))
             },
+            runTerminal (e) {
+                const etcFileCmd = 'source /etc/profile\n'
+                if (this.consoleType === 'PUBLIC_BCS') {
+                    this.sendEncodeCmd('source /etc/profile\n')
+                } else {
+                    this.terminalSocket.send(etcFileCmd)
+                }
+            },
+            // BCS类型，消息需要解密后才能显示
             receiveFromTerminal (e) {
-                // this.heartCheck()
+                if (this.consoleType === 'PUBLIC_BCS') {
+                    this.term.write(Base64.decode(e.data))
+                }
                 // console.log(e.data, 'receive msg')
             },
             errorTerminal (e) {
@@ -75,28 +107,25 @@
                 // this.term.write('连接中断')
             },
             triggerTermResize (e) {
-                this.term.fit()
-                // this.term.on('resize', this.handleResize)
+                this.fitAddon.fit()
             },
             handleResize (size) {
-                this.$nextTick(() => {
-                    this.$store.dispatch('soda/resizeTerm', {
-                        resizeUrl: this.resizeUrl,
-                        params: {
-                            exec_id: this.execId,
-                            height: size.rows,
-                            width: size.cols
-                        }
-                    })
-                })
+                if (this.consoleType === 'PUBLIC_BCS') {
+                    const data = JSON.stringify({ cols: size.cols, rows: size.rows })
+                    this.sendEncodeCmd(data, '4')
+                }
+                // this.$nextTick(() => {
+                //     this.resizeUrl && this.$store.dispatch('common/resizeTerm', {
+                //         resizeUrl: this.resizeUrl,
+                //         params: {
+                //             exec_id: this.execId,
+                //             height: size.rows,
+                //             width: size.cols
+                //         }
+                //     })
+                //     !this.resizeUrl && this.terminalSocket.send(`__resize__:${size.rows},${size.cols}\n`)
+                // })
             }
-            // heartCheck () {
-            //     clearTimeout(this.heartTimer)
-            //     this.heartTimer = setTimeout(() => {
-            //         this.terminalSocket.send('\n')
-            //         console.log('sendping')
-            //     }, 10000)
-            // }
         }
     }
 </script>
@@ -104,5 +133,9 @@
 <style lang="scss">
     .terminal {
         height: 100%;
+        background: black;
+    }
+    .xterm .xterm-viewport::-webkit-scrollbar {
+        background: transparent;
     }
 </style>

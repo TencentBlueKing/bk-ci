@@ -38,6 +38,13 @@ import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.FAIL
 import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.constant.JS
+import com.tencent.devops.common.api.constant.KEY_BRANCH
+import com.tencent.devops.common.api.constant.KEY_COMMIT_ID
+import com.tencent.devops.common.api.constant.KEY_OS_ARCH
+import com.tencent.devops.common.api.constant.KEY_OS_NAME
+import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
+import com.tencent.devops.common.api.constant.KEY_REPOSITORY_PATH
+import com.tencent.devops.common.api.constant.KEY_SCRIPT
 import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.constant.NUM_FIVE
 import com.tencent.devops.common.api.constant.NUM_FOUR
@@ -50,6 +57,8 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.enums.OSArch
+import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
@@ -65,6 +74,7 @@ import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.plugin.api.ServiceCodeccResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineInitResource
+import com.tencent.devops.process.utils.KEY_PIPELINE_NAME
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -82,11 +92,16 @@ import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
+import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
 import com.tencent.devops.store.pojo.common.KEY_EXECUTION
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
+import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
+import com.tencent.devops.store.pojo.common.KEY_RUNTIME_VERSION
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
+import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.STORE_REPO_CODECC_BUILD_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX
@@ -498,9 +513,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap)
             marketAtomDao.updateMarketAtomProps(context, atomId, props, userId)
-            atomEnvRequests.forEach { atomEnvRequest ->
-                marketAtomEnvInfoDao.updateMarketAtomEnvInfo(context, atomId, atomEnvRequest)
-            }
+            marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
+            marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
             // 执行构建流水线
             runPipeline(context = context, atomId = atomId, userId = userId, branch = branch)
         }
@@ -567,6 +581,24 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         logger.info("the buildInfo is:$buildInfo")
         val script = buildInfo.value1()
         val language = buildInfo.value3()
+        // 获取打包所需的操作系统名称和操作系统cpu架构
+        val atomEnvRecords = marketAtomEnvInfoDao.getMarketAtomEnvInfosByAtomId(context, atomId)
+        val osNames = mutableSetOf(OSType.LINUX.name.toLowerCase())
+        val osArchs = mutableSetOf(OSArch.AMD_64.archStr)
+        var runtimeVersion: String? = null
+        atomEnvRecords?.forEach { atomEnvRecord ->
+            if (runtimeVersion == null) {
+                runtimeVersion = atomEnvRecord.runtimeVersion
+            }
+            val osName = atomEnvRecord.osName
+            if (!osName.isNullOrBlank()) {
+                osNames.add(osName)
+            }
+            val osArch = atomEnvRecord.osArch
+            if (!osArch.isNullOrBlank()) {
+                osArchs.add(osArch)
+            }
+        }
         if (null == atomPipelineRelRecord) {
             // 为用户初始化构建流水线并触发执行
             val version = atomRecord.version
@@ -576,7 +608,11 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 version = atomRecord.version,
                 atomStatus = AtomStatusEnum.getAtomStatus(atomRecord.atomStatus.toInt()),
                 language = language,
-                commitId = commitId
+                commitId = commitId,
+                branch = branch ?: MASTER,
+                osName = JsonUtil.toJson(osNames),
+                osArch = JsonUtil.toJson(osArchs),
+                runtimeVersion = runtimeVersion
             )
             val pipelineModelConfig = businessConfigDao.get(
                 dslContext = context,
@@ -590,14 +626,14 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 pipelineName = "am-$atomCode-${UUIDUtil.generate()}"
             }
             val paramMap = mapOf(
-                "pipelineName" to pipelineName,
-                "storeCode" to atomCode,
-                "version" to version,
-                "language" to language,
-                "script" to StringEscapeUtils.escapeJava(script),
-                "repositoryHashId" to atomRecord.repositoryHashId,
-                "repositoryPath" to (buildInfo.value2() ?: ""),
-                "branch" to (branch ?: MASTER)
+                KEY_PIPELINE_NAME to pipelineName,
+                KEY_STORE_CODE to atomCode,
+                KEY_VERSION to version,
+                KEY_LANGUAGE to language,
+                KEY_SCRIPT to StringEscapeUtils.escapeJava(script),
+                KEY_REPOSITORY_HASH_ID to atomRecord.repositoryHashId,
+                KEY_REPOSITORY_PATH to (buildInfo.value2() ?: ""),
+                KEY_BRANCH to (branch ?: MASTER)
             )
             // 将流水线模型中的变量替换成具体的值
             paramMap.forEach { (key, value) ->
@@ -653,12 +689,15 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             }
             // 触发执行流水线
             val startParams = mutableMapOf<String, String>() // 启动参数
-            startParams["atomCode"] = atomCode
-            startParams["version"] = atomRecord.version
-            startParams["language"] = language
-            startParams["script"] = script
-            startParams["commitId"] = commitId
-            startParams["branch"] = branch ?: MASTER
+            startParams[KEY_ATOM_CODE] = atomCode
+            startParams[KEY_VERSION] = atomRecord.version
+            startParams[KEY_LANGUAGE] = language
+            startParams[KEY_SCRIPT] = script
+            startParams[KEY_COMMIT_ID] = commitId
+            startParams[KEY_BRANCH] = branch ?: MASTER
+            startParams[KEY_OS_NAME] = JsonUtil.toJson(osNames)
+            startParams[KEY_OS_ARCH] = JsonUtil.toJson(osArchs)
+            runtimeVersion?.let { startParams[KEY_RUNTIME_VERSION] = it }
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, initProjectCode, atomPipelineRelRecord.pipelineId, startParams,
                 ChannelCode.AM

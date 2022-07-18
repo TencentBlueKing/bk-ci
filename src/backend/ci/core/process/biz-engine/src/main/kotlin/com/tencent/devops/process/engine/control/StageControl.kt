@@ -31,6 +31,7 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
@@ -44,6 +45,7 @@ import com.tencent.devops.process.engine.control.command.stage.impl.CheckPauseRe
 import com.tencent.devops.process.engine.control.command.stage.impl.StartContainerStageCmd
 import com.tencent.devops.process.engine.control.command.stage.impl.UpdateStateForStageCmdFinally
 import com.tencent.devops.process.engine.control.lock.StageIdLock
+import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -129,7 +131,8 @@ class StageControl @Autowired constructor(
             latestSummary = "init",
             watcher = watcher,
             variables = pipelineContextService.getAllBuildContext(variables), // 传递全量上下文
-            executeCount = executeCount
+            executeCount = executeCount,
+            previousStageStatus = addPreviousStageStatus(stage)
         )
         watcher.stop()
 
@@ -142,5 +145,27 @@ class StageControl @Autowired constructor(
         )
 
         StageCmdChain(commandList).doCommand(stageContext)
+    }
+
+    // 查找最后一个结束状态的Stage (排除Finally）
+    private fun addPreviousStageStatus(stage: PipelineBuildStage): BuildStatus? {
+        return if (stage.controlOption?.finally == true) {
+            val previousStage = pipelineStageService.listStages(stage.projectId, stage.buildId)
+                .lastOrNull {
+                    it.stageId != stage.stageId &&
+                        (it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS || hasFailedCheck(it))
+                }
+            // #5246 前序中如果有准入准出失败的stage则直接作为前序stage并把构建状态设为红线失败
+            if (hasFailedCheck(previousStage)) {
+                BuildStatus.QUALITY_CHECK_FAIL
+            } else {
+                previousStage?.status
+            }
+        } else stage.status
+    }
+
+    private fun hasFailedCheck(stage: PipelineBuildStage?): Boolean {
+        return stage?.checkIn?.status == BuildStatus.QUALITY_CHECK_FAIL.name ||
+            stage?.checkOut?.status == BuildStatus.QUALITY_CHECK_FAIL.name
     }
 }

@@ -10,20 +10,25 @@
                 <div>
                     <div class="form-group">
                         <label for="pipelineName" class="filter-label">{{ $t('pipelineName') }}：</label>
-                        <input type="text" class="bk-form-input input-text" name="pipelineName" id="pipelineName" :placeholder="$t('newlist.filterByNameTips')"
+                        <bk-input
                             v-validate.initial="'max:40'"
+                            name="pipelineName"
+                            id="pipelineName"
+                            :placeholder="$t('newlist.filterByNameTips')"
                             :class="{
-                                'is-danger': errors.has('pipelineName')
+                                'is-danger': errors.has('pipelineName'),
+                                'input-text': true
                             }"
-                            v-model="currentFilter.filterByPipelineName">
+                            clearable
+                            v-model.trim="currentFilter.filterByPipelineName"
+                            @enter="filterCommit"
+                        />
                         <p :class="errors.has('pipelineName') ? 'error-tips' : 'normal-tips'">{{errors.first("pipelineName")}}</p>
                     </div>
                     <div class="form-group">
                         <form-field :label="$t('creator')">
-                            <user-input :handle-change="handleChange"
-                                name="users"
-                                v-model="currentFilter.filterByCreator">
-                            </user-input>
+                            <bk-member-selector v-model="currentFilter.filterByCreator">
+                            </bk-member-selector>
                         </form-field>
                     </div>
                     <div class="form-group"
@@ -38,8 +43,7 @@
                     </div>
                     <div class="form-group filter-modify">
                         <bk-button theme="primary" size="small" :disabled="isDisabled" @click.stop.prevent="filterCommit">{{ $t('newlist.filter') }}</bk-button>
-                        <a class="btn"
-                            @click="empty">{{ $t('newlist.reset') }}</a>
+                        <bk-button text class="btn" @click="resetFilter">{{ $t('newlist.reset') }}</bk-button>
                     </div>
                 </div>
             </div>
@@ -50,12 +54,10 @@
 <script>
     import { mapGetters } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
-    import UserInput from '@/components/atomFormField/UserInput/index.vue'
 
     export default {
         components: {
-            FormField,
-            UserInput
+            FormField
         },
         props: {
             isDisabled: {
@@ -105,9 +107,6 @@
             this.init()
         },
         methods: {
-            handleChange (name, value) {
-                this.currentFilter.filterByCreator = value
-            },
             async init () {
                 if (Object.keys(this.selectedFilter).length > 0) {
                     Object.assign(this.currentFilter, this.selectedFilter)
@@ -125,7 +124,6 @@
                     }
                 })
             },
-            selected (id, data) {},
             async filterCommit () {
                 let labels = []
                 let labelIds = ''
@@ -136,12 +134,17 @@
                 })
                 labelIds = labels.join(',')
                 this.isDisabled = true
+
                 await this.$emit('filter', {
                     projectId: this.projectId,
                     filterByLabels: labelIds,
                     filterByPipelineName: this.currentFilter.filterByPipelineName,
                     filterByCreator: this.currentFilter.filterByCreator.join(',')
                 }, this.currentFilter)
+            },
+            resetFilter () {
+                this.empty()
+                this.$nextTick(this.filterCommit)
             },
             empty () {
                 this.currentFilter = {

@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.api.util
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class EmojiUtilTest {
 
@@ -36,31 +36,31 @@ class EmojiUtilTest {
     fun removeAllEmoji() {
         val str = "This is a happy emoji 😊, this is a crying emoji 😭"
         val expected = "This is a happy emoji , this is a crying emoji "
-        Assert.assertEquals(expected, EmojiUtil.removeAllEmoji(str))
+        Assertions.assertEquals(expected, EmojiUtil.removeAllEmoji(str))
     }
 
     @Test
     fun removeEmptyStr() {
         val str = ""
-        Assert.assertEquals("", EmojiUtil.removeAllEmoji(str))
+        Assertions.assertEquals("", EmojiUtil.removeAllEmoji(str))
     }
 
     @Test
     fun removeNotEmojiStr() {
         val str = "This is a happy emoji"
         val expected = "This is a happy emoji"
-        Assert.assertEquals(expected, EmojiUtil.removeAllEmoji(str))
+        Assertions.assertEquals(expected, EmojiUtil.removeAllEmoji(str))
     }
 
     @Test
     fun isEmoji() {
         val str = "This is a happy emoji 😊"
-        Assert.assertFalse(EmojiUtil.isEmoji(str))
+        Assertions.assertFalse(EmojiUtil.isEmoji(str))
     }
 
     @Test
     fun containsEmoji() {
         val str = "This is a happy emoji 😊"
-        Assert.assertTrue(EmojiUtil.containsEmoji(str))
+        Assertions.assertTrue(EmojiUtil.containsEmoji(str))
     }
 }

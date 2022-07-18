@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
@@ -50,6 +51,7 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
+import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
@@ -63,6 +65,7 @@ import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.measure.MetricsService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
@@ -77,6 +80,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 构建控制器
@@ -93,6 +97,7 @@ class BuildEndControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineRedisService: PipelineRedisService,
     private val meterRegistry: MeterRegistry,
+    private val metricsService: MetricsService,
     private val buildVariableService: BuildVariableService
 ) {
 
@@ -104,16 +109,15 @@ class BuildEndControl @Autowired constructor(
         val watcher = Watcher(id = "ENGINE|BuildEnd|${event.traceId}|${event.buildId}|Job#${event.status}")
         try {
             with(event) {
-
                 val buildIdLock = BuildIdLock(redisOperation, buildId)
-                try {
+                val buildInfo = try {
                     watcher.start("BuildIdLock")
                     buildIdLock.lock()
                     watcher.start("finish")
-                    finish()
-                    watcher.stop()
+                    finish().also { watcher.stop() }
                 } catch (ignored: Exception) {
                     LOG.warn("ENGINE|$buildId|$source|BUILD_FINISH_ERR|build finish fail: $ignored", ignored)
+                    pipelineRuntimeService.getBuildInfo(projectId, buildId)
                 } finally {
                     buildIdLock.unlock()
                 }
@@ -123,7 +127,7 @@ class BuildEndControl @Autowired constructor(
                     watcher.start("PipelineBuildStartLock")
                     buildStartLock.lock()
                     watcher.start("popNextBuild")
-                    popNextBuild()
+                    popNextBuild(buildInfo)
                     watcher.stop()
                 } finally {
                     buildStartLock.unlock()
@@ -135,30 +139,29 @@ class BuildEndControl @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildFinishEvent.finish() {
+    private fun PipelineBuildFinishEvent.finish(): BuildInfo? {
 
         // 将状态设置正确
         val buildStatus = BuildStatusSwitcher.pipelineStatusMaker.finish(status)
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
-
         // 当前构建整体的状态，可能是运行中，也可能已经失败
         // 已经结束的构建，不再受理，抛弃消息 #5090 STAGE_SUCCESS 状态的也可能是已经处理完成
         if (buildInfo == null || buildInfo.isFinish()) {
             LOG.info("ENGINE|$buildId|$source|BUILD_FINISH_REPEAT_EVENT|STATUS=${buildInfo?.status}| abandon!")
-            return
+            return buildInfo
         }
-
         LOG.info("ENGINE|$buildId|$source|BUILD_FINISH|$pipelineId|es=$status|bs=${buildInfo.status}")
 
         fixTask(buildInfo)
 
         // 记录本流水线最后一次构建的状态
+        val endTime = LocalDateTime.now()
         pipelineRuntimeService.finishLatestRunningBuild(
             latestRunningBuild = LatestRunningBuild(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 userId = buildInfo.startUser, status = buildStatus, taskCount = buildInfo.taskCount,
-                buildNum = buildInfo.buildNum
+                endTime = endTime, buildNum = buildInfo.buildNum
             ),
             currentBuildStatus = buildInfo.status,
             errorInfoList = buildInfo.errorInfoList
@@ -170,10 +173,11 @@ class BuildEndControl @Autowired constructor(
         }
 
         // 设置状态
-        val allStageStatus = pipelineBuildDetailService.buildEnd(
+        val (model, allStageStatus) = pipelineBuildDetailService.buildEnd(
             projectId = projectId,
             buildId = buildId,
-            buildStatus = buildStatus
+            buildStatus = buildStatus,
+            errorMsg = errorMsg
         )
 
         pipelineRuntimeService.updateBuildHistoryStageState(projectId, buildId, allStageStatus)
@@ -184,6 +188,8 @@ class BuildEndControl @Autowired constructor(
         } else if (buildStatus.isFailure()) {
             failPipelineCount()
         }
+        buildInfo.endTime = endTime.timestampmilli()
+        buildInfo.status = buildStatus
 
         buildDurationTime(buildInfo.startTime!!)
         callBackParentPipeline(projectId, buildId)
@@ -216,8 +222,11 @@ class BuildEndControl @Autowired constructor(
             )
         )
 
+        // 发送metrics统计数据消息
+        metricsService.postMetricsData(buildInfo, model)
         // 记录日志
         buildLogPrinter.stopLog(buildId = buildId, tag = "", jobId = null)
+        return buildInfo
     }
 
     private fun setBuildNoWhenBuildSuccess(projectId: String, pipelineId: String, buildId: String) {
@@ -281,15 +290,18 @@ class BuildEndControl @Autowired constructor(
             }
             // 将插件出错信息逐一加入构建错误信息
             if (it.errorType != null) {
-                errorInfos.add(ErrorInfo(
-                    taskId = it.taskId,
-                    taskName = it.taskName,
-                    atomCode = it.atomCode ?: it.taskParams["atomCode"] as String? ?: it.taskType,
-                    errorType = it.errorType?.num ?: ErrorType.USER.num,
-                    errorCode = it.errorCode ?: PLUGIN_DEFAULT_ERROR,
-                    errorMsg = CommonUtils.interceptStringInLength(
-                        string = it.errorMsg, length = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX) ?: ""
-                ))
+                errorInfos.add(
+                    ErrorInfo(
+                        taskId = it.taskId,
+                        taskName = it.taskName,
+                        atomCode = it.atomCode ?: it.taskParams["atomCode"] as String? ?: it.taskType,
+                        errorType = it.errorType?.num ?: ErrorType.USER.num,
+                        errorCode = it.errorCode ?: PLUGIN_DEFAULT_ERROR,
+                        errorMsg = CommonUtils.interceptStringInLength(
+                            string = it.errorMsg, length = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+                        ) ?: ""
+                    )
+                )
                 // 做入库长度保护，假设超过上限则抛弃该错误信息
                 if (JsonUtil.toJson(errorInfos).toByteArray().size > PIPELINE_MESSAGE_STRING_LENGTH_MAX) {
                     errorInfos.removeAt(errorInfos.lastIndex)
@@ -299,14 +311,34 @@ class BuildEndControl @Autowired constructor(
         if (errorInfos.isNotEmpty()) buildInfo.errorInfoList = errorInfos
     }
 
-    private fun PipelineBuildFinishEvent.popNextBuild() {
+    private fun PipelineBuildFinishEvent.popNextBuild(buildInfo: BuildInfo?) {
         if (pipelineRedisService.getBuildRestartValue(this.buildId) != null) {
             // 删除buildId占用的refresh锁
             pipelineRedisService.deleteRestartBuild(this.buildId)
         }
 
-        // 获取下一个排队的
-        val nextBuild = pipelineRuntimeExtService.popNextQueueBuildInfo(projectId = projectId, pipelineId = pipelineId)
+        if (buildInfo?.concurrencyGroup.isNullOrBlank()) {
+            // 获取同流水线的下一个队首
+            startNextBuild(
+                pipelineRuntimeExtService.popNextQueueBuildInfo(
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )
+            )
+        } else {
+            // 获取同并发组的下一个队首
+            buildInfo?.concurrencyGroup?.let { group ->
+                ConcurrencyGroupLock(redisOperation, projectId, group).use { groupLock ->
+                    groupLock.lock()
+                    startNextBuild(
+                        pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(projectId, group)
+                    )
+                }
+            }
+        }
+    }
+
+    private fun PipelineBuildFinishEvent.startNextBuild(nextBuild: BuildInfo?) {
         if (nextBuild == null) {
             LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|$pipelineId no queue build!")
             return

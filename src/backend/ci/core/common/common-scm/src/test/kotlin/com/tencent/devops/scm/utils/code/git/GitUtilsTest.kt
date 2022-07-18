@@ -27,9 +27,9 @@
 
 package com.tencent.devops.scm.utils.code.git
 
-import org.junit.Assert
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class GitUtilsTest {
 
@@ -129,21 +129,21 @@ class GitUtilsTest {
 
     @Test
     fun isLegalHttpUrl() {
-        Assert.assertTrue(GitUtils.isLegalHttpUrl("https://github.com/Tencent/bk-ci.git"))
-        Assert.assertTrue(GitUtils.isLegalHttpUrl("http://github.com/Tencent/bk-ci.git"))
-        Assert.assertTrue(GitUtils.isLegalHttpUrl("http://github.com:8080/Tencent/bk-ci.git"))
-        Assert.assertFalse(GitUtils.isLegalHttpUrl("http://github.com:8080/Tencent/bk-ci"))
-        Assert.assertFalse(GitUtils.isLegalHttpUrl("git@git.xxx.com:Tencent/bk-ci.git"))
+        Assertions.assertTrue(GitUtils.isLegalHttpUrl("https://github.com/Tencent/bk-ci.git"))
+        Assertions.assertTrue(GitUtils.isLegalHttpUrl("http://github.com/Tencent/bk-ci.git"))
+        Assertions.assertTrue(GitUtils.isLegalHttpUrl("http://github.com:8080/Tencent/bk-ci.git"))
+        Assertions.assertFalse(GitUtils.isLegalHttpUrl("http://github.com:8080/Tencent/bk-ci"))
+        Assertions.assertFalse(GitUtils.isLegalHttpUrl("git@git.xxx.com:Tencent/bk-ci.git"))
     }
 
     @Test
     fun isLegalSshUrl() {
-        Assert.assertFalse(GitUtils.isLegalSshUrl("https://github.com/Tencent/bk-ci.git"))
-        Assert.assertFalse(GitUtils.isLegalSshUrl("http://github.com/Tencent/bk-ci.git"))
-        Assert.assertFalse(GitUtils.isLegalSshUrl("http://github.com:8080/Tencent/bk-ci.git"))
-        Assert.assertFalse(GitUtils.isLegalSshUrl("http://github.com:8080/Tencent/bk-ci"))
-        Assert.assertTrue(GitUtils.isLegalSshUrl("git@git.xxx.com:Tencent/bk-ci.git"))
-        Assert.assertFalse(GitUtils.isLegalHttpUrl("git@git.xxx.com:Tencent/bk-ci"))
+        Assertions.assertFalse(GitUtils.isLegalSshUrl("https://github.com/Tencent/bk-ci.git"))
+        Assertions.assertFalse(GitUtils.isLegalSshUrl("http://github.com/Tencent/bk-ci.git"))
+        Assertions.assertFalse(GitUtils.isLegalSshUrl("http://github.com:8080/Tencent/bk-ci.git"))
+        Assertions.assertFalse(GitUtils.isLegalSshUrl("http://github.com:8080/Tencent/bk-ci"))
+        Assertions.assertTrue(GitUtils.isLegalSshUrl("git@git.xxx.com:Tencent/bk-ci.git"))
+        Assertions.assertFalse(GitUtils.isLegalHttpUrl("git@git.xxx.com:Tencent/bk-ci"))
     }
 
     @Test

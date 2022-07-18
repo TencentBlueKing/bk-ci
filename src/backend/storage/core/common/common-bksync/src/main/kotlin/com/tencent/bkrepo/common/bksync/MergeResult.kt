@@ -16,7 +16,9 @@ data class MergeResult(
     // 旧文件名称
     val name: String,
     // 分块大小
-    val blockSize: Int
+    val blockSize: Int,
+    val sha256: String?,
+    val md5: String?
 ) {
     // 重复使用大小
     private val reuseSize = reuse.toLong() * blockSize
@@ -37,6 +39,7 @@ data class MergeResult(
 
     override fun toString(): String {
         return "old source[$name]($baseSizeReadable),reuse block[$reuse/$originBlocksCount]($hitRate%)," +
-            "size[$reuseSizeReadable/$deltaDataLengthReadable/$newFileSizeReadable](r/d/n)."
+            "size[$reuseSizeReadable/$deltaDataLengthReadable/$newFileSizeReadable](r/d/n)," +
+            "new file md5[$md5], sha256[$sha256]."
     }
 }

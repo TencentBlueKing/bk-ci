@@ -27,10 +27,18 @@
 
 package com.tencent.bkrepo.oci.service
 
+import com.tencent.bkrepo.common.artifact.api.ArtifactFile
 import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
-import com.tencent.bkrepo.oci.pojo.OciDomainInfo
+import com.tencent.bkrepo.common.storage.pojo.FileInfo
 import com.tencent.bkrepo.oci.pojo.artifact.OciArtifactInfo
+import com.tencent.bkrepo.oci.pojo.artifact.OciManifestArtifactInfo
+import com.tencent.bkrepo.oci.pojo.digest.OciDigest
+import com.tencent.bkrepo.oci.pojo.response.OciImageResult
+import com.tencent.bkrepo.oci.pojo.response.OciTagResult
 import com.tencent.bkrepo.oci.pojo.user.PackageVersionInfo
+import com.tencent.bkrepo.repository.pojo.node.NodeDetail
+import com.tencent.bkrepo.repository.pojo.node.service.NodeCreateRequest
+import javax.servlet.http.HttpServletRequest
 
 interface OciOperationService {
 
@@ -61,19 +69,10 @@ interface OciOperationService {
      */
     fun updatePackageInfo(
         ociArtifactInfo: OciArtifactInfo,
+        packageKey: String,
         appVersion: String? = null,
         description: String? = null
     )
-
-    /**
-     * 根据artifactInfo获取对应manifest文件path
-     */
-    fun queryManifestFullPathByNameAndDigest(
-        projectId: String,
-        repoName: String,
-        packageName: String,
-        version: String
-    ): String
 
     /**
      * 查询包版本详情
@@ -98,5 +97,89 @@ interface OciOperationService {
     /**
      * 获取对应域名
      */
-    fun getRegistryDomain(): OciDomainInfo
+    fun getRegistryDomain(): String
+
+    /**
+     * 更新整个blob相关信息,blob相关的mediatype，version等信息需要从manifest中获取
+     */
+    fun updateOciInfo(
+        ociArtifactInfo: OciManifestArtifactInfo,
+        digest: OciDigest,
+        artifactFile: ArtifactFile,
+        fullPath: String,
+        storageCredentials: StorageCredentials?
+    )
+
+    /**
+     * 当使用追加上传时，文件已存储，只需存储节点信息
+     */
+    fun createNode(request: NodeCreateRequest, storageCredentials: StorageCredentials?): NodeDetail
+
+    /**
+     * 保存文件内容(当使用追加上传时，文件已存储，只需存储节点信息)
+     * 特殊：对于manifest文件，node存tag
+     */
+    fun storeArtifact(
+        ociArtifactInfo: OciArtifactInfo,
+        artifactFile: ArtifactFile,
+        storageCredentials: StorageCredentials?,
+        fileInfo: FileInfo? = null,
+        proxyUrl: String? = null
+    ): NodeDetail?
+
+    /**
+     * 获取对应存储节点路径
+     * 特殊：manifest文件按tag存储， 但是查询时存在tag/digest
+     */
+    fun getNodeFullPath(artifactInfo: OciArtifactInfo): String?
+
+    /**
+     * 根据sha256值获取对应的node fullpath
+     */
+    fun getNodeByDigest(
+        projectId: String,
+        repoName: String,
+        digestStr: String
+    ): String?
+
+    /**
+     * 针对老的docker仓库的数据做兼容性处理
+     * 老版数据node存储格式不一样：
+     * 1 docker-local/nginx/latest 下存所有manifest和blobs
+     * 2 docker-local/nginx/_uploads/ 临时存储上传的blobs，待manifest文件上传成功后移到到对应版本下，如docker-local/nginx/latest
+     */
+    fun getDockerNode(artifactInfo: OciArtifactInfo): String?
+
+    /**
+     * 根据request生成response url
+     */
+    fun getReturnDomain(request: HttpServletRequest): String
+
+    /**
+     * 获取对应的image的manifest文件内容
+     */
+    fun getManifest(artifactInfo: OciManifestArtifactInfo): String
+
+    /**
+     * 获取指定projectId和repoName下的所有镜像
+     */
+    fun getImageList(
+        projectId: String,
+        repoName: String,
+        pageNumber: Int,
+        pageSize: Int,
+        name: String?
+    ): OciImageResult
+
+    /**
+     * 获取repo的所有tag
+     */
+    fun getRepoTag(
+        projectId: String,
+        repoName: String,
+        pageNumber: Int,
+        packageName: String,
+        pageSize: Int,
+        tag: String?
+    ): OciTagResult
 }

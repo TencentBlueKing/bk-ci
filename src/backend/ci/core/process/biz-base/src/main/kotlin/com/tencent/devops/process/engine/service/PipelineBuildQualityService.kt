@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -34,6 +35,8 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -101,7 +104,8 @@ class PipelineBuildQualityService(
         buildId: String,
         elementId: String,
         action: ManualReviewAction,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        ruleIds: List<String>?
     ) {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
@@ -182,6 +186,25 @@ class PipelineBuildQualityService(
                 defaultMessage = "用户($userId)不在审核人员名单中",
                 params = arrayOf(userId)
             )
+        }
+
+        try {
+            if (!ruleIds.isNullOrEmpty()) {
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildQualityReviewBroadCastEvent(
+                        source = "pipeline_quality_review",
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        userId = userId,
+                        buildId = buildId,
+                        reviewType = if (action == ManualReviewAction.PROCESS)
+                            BuildReviewType.QUALITY_TASK_REVIEW_PASS else BuildReviewType.QUALITY_TASK_REVIEW_ABORT,
+                        ruleIds = ruleIds
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            logger.error("[$buildId]|qualityReview error|taskId=$elementId|userId=$userId|action=$action")
         }
 
         logger.info("[$buildId]|buildManualReview|taskId=$elementId|userId=$userId|action=$action")
@@ -524,6 +547,20 @@ class PipelineBuildQualityService(
             if (success.toBoolean()) {
                 AtomResponse(BuildStatus.REVIEW_PROCESSED)
             } else {
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildReviewBroadCastEvent(
+                        source = "taskAtom",
+                        projectId = task.projectId,
+                        pipelineId = task.pipelineId,
+                        buildId = buildId,
+                        reviewType = BuildReviewType.QUALITY_TASK_REVIEW_ABORT,
+                        status = "",
+                        userId = "",
+                        taskId = null,
+                        stageId = "",
+                        timeout = true
+                    )
+                )
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "${taskName}审核超时",

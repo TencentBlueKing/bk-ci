@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.docker.service
 
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.dispatch.docker.client.BuildLessClient
@@ -52,7 +51,6 @@ import org.springframework.stereotype.Service
 class PipelineAgentLessDispatchService @Autowired constructor(
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
-    private val jobQuotaService: JobQuotaService,
     private val dockerHostClient: DockerHostClient,
     private val buildLessClient: BuildLessClient,
     private val dockerHostUtils: DockerHostUtils,
@@ -92,7 +90,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
             )
         }
 
-        if (buildLessWhitelistService.checkBuildLessWhitelist(event.projectId)) {
+        if (!buildLessWhitelistService.checkBuildLessWhitelist(event.projectId)) {
             val agentLessDockerIp = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
@@ -145,7 +143,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
         LOG.info("Finish the docker buildless (${record.buildId}) with result($success)")
         try {
             if (record.dockerIp.isNotEmpty()) {
-                if (buildLessWhitelistService.checkBuildLessWhitelist(record.projectId)) {
+                if (!buildLessWhitelistService.checkBuildLessWhitelist(record.projectId)) {
                     buildLessClient.endBuild(
                         projectId = record.projectId,
                         pipelineId = record.pipelineId,

@@ -44,6 +44,7 @@ import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
+import com.tencent.devops.store.pojo.common.StorePkgRunEnvInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiFactory
@@ -73,11 +74,19 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         projectCode: String,
         atomCode: String,
         atomVersion: String,
-        atomStatus: Byte?
+        atomStatus: Byte?,
+        osName: String?,
+        osArch: String?,
+        convertOsFlag: Boolean?
     ): Result<AtomEnv> {
         var path = "/store/api/build/market/atom/env/$projectCode/$atomCode/$atomVersion"
-        if (atomStatus != null) {
-            path = "$path?atomStatus=$atomStatus"
+        val queryParamSb = StringBuilder()
+        atomStatus?.let { queryParamSb.append("atomStatus=$atomStatus&") }
+        osName?.let { queryParamSb.append("osName=$osName&") }
+        osArch?.let { queryParamSb.append("osArch=$osArch&") }
+        convertOsFlag?.let { queryParamSb.append("convertOsFlag=$convertOsFlag&") }
+        if (queryParamSb.isNotBlank()) {
+            path = "$path?${queryParamSb.removeSuffix("&")}"
         }
         val request = buildGet(path)
         val responseContent = request(request, "获取插件执行环境信息失败")
@@ -246,5 +255,18 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             "bk-plugin/$atomFilePath"
         val request = buildGet(bkrepoUrl, mapOf(AUTH_HEADER_PROJECT_ID to projectId))
         download(request, file)
+    }
+
+    override fun getStorePkgRunEnvInfo(
+        language: String,
+        osName: String,
+        osArch: String,
+        runtimeVersion: String
+    ): Result<StorePkgRunEnvInfo?> {
+        val path = "/store/api/build/store/pkg/envs/types/ATOM/languages/$language/versions/$runtimeVersion/get?" +
+            "osName=$osName&osArch=$osArch"
+        val request = buildGet(path)
+        val responseContent = request(request, "get pkgRunEnvInfo fail")
+        return objectMapper.readValue(responseContent)
     }
 }

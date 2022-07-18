@@ -202,10 +202,20 @@ class ServiceGitCiResourceImpl @Autowired constructor(
         to: String,
         straight: Boolean?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        useAccessToken: Boolean
     ): Result<List<ChangeFileInfo>> {
         return Result(
-            gitCiService.getChangeFileList(token, gitProjectId, from, to, straight, page, pageSize)
+            gitCiService.getChangeFileList(
+                token = token,
+                gitProjectId = gitProjectId,
+                from = from,
+                to = to,
+                straight = straight,
+                page = page,
+                pageSize = pageSize,
+                useAccessToken = useAccessToken
+            )
         )
     }
 

@@ -167,7 +167,7 @@
             return {
                 showContent: false,
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/Services/Store/start-new-template.md`,
+                docsLink: `${DOCS_URL_PREFIX}/store/store-home`,
                 sortList: [],
                 labelList: [],
                 categoryList: [],
@@ -237,7 +237,7 @@
                     this.templateForm.categoryIdList = this.templateForm.categoryList.map(item => {
                         return item.id
                     })
-                    this.templateForm.labelIdList = this.templateForm.labelList.map(item => {
+                    this.templateForm.labelIdList = (this.templateForm.labelList || []).map(item => {
                         return item.id
                     })
                 } catch (err) {
@@ -414,7 +414,7 @@
                             templateType: this.templateForm.templateType,
                             categoryIdList: this.templateForm.categoryIdList,
                             classifyCode: this.templateForm.classifyCode,
-                            labelIdList: this.templateForm.labelIdList,
+                            labelIdList: this.templateForm.labelIdList.filter(i => i !== 'null' && i !== ' ' && i),
                             publisher: this.templateForm.publisher,
                             logoUrl: this.templateForm.logoUrl || undefined,
                             iconData: this.templateForm.iconData || undefined,
@@ -528,7 +528,7 @@
                 .bk-tooltip {
                     margin-top: 10px;
                     margin-left: 10px;
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                     p {
                         max-width: 400px;
                         text-align: left;

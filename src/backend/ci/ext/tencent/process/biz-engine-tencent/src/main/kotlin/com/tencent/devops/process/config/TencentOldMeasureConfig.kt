@@ -30,11 +30,11 @@ package com.tencent.devops.process.config
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.measure.MeasureServiceImpl
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
-import com.tencent.devops.process.service.measure.AtomMonitorEventDispatcher
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import com.tencent.devops.process.template.service.TemplateService
 import org.jooq.DSLContext
@@ -60,10 +60,6 @@ class TencentOldMeasureConfig {
     fun measureEventDispatcher(rabbitTemplate: RabbitTemplate) = MeasureEventDispatcher(rabbitTemplate)
 
     @Bean
-    @ConditionalOnMissingBean(name = ["atomMonitorEventDispatcher"])
-    fun atomMonitorEventDispatcher(rabbitTemplate: RabbitTemplate) = AtomMonitorEventDispatcher(rabbitTemplate)
-
-    @Bean
     @ConditionalOnMissingBean(name = ["measureService"])
     fun measureService(
         @Autowired projectCacheService: ProjectCacheService,
@@ -71,20 +67,20 @@ class TencentOldMeasureConfig {
         @Autowired buildVariableService: BuildVariableService,
         @Autowired dslContext: DSLContext,
         @Autowired templateService: TemplateService,
+        @Autowired pipelineInfoService: PipelineInfoService,
         @Autowired redisOperation: RedisOperation,
         @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
-        @Autowired measureEventDispatcher: MeasureEventDispatcher,
-        @Autowired atomMonitorEventDispatcher: AtomMonitorEventDispatcher
+        @Autowired measureEventDispatcher: MeasureEventDispatcher
     ) = MeasureServiceImpl(
         projectCacheService = projectCacheService,
         pipelineTaskService = pipelineTaskService,
         buildVariableService = buildVariableService,
         templateService = templateService,
+        pipelineInfoService = pipelineInfoService,
         redisOperation = redisOperation,
         pipelineEventDispatcher = pipelineEventDispatcher,
         atomMonitorSwitch = atomMonitorSwitch,
         maxMonitorDataSize = maxMonitorDataSize,
-        measureEventDispatcher = measureEventDispatcher,
-        atomMonitorEventDispatcher = atomMonitorEventDispatcher
+        measureEventDispatcher = measureEventDispatcher
     )
 }

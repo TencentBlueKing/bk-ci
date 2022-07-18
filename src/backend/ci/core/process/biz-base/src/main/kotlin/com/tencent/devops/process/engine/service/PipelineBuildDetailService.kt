@@ -156,6 +156,7 @@ class PipelineBuildDetailService @Autowired constructor(
             pipelineId = buildInfo.pipelineId,
             pipelineName = model.name,
             userId = record.startUser ?: "",
+            triggerUser = buildInfo.triggerUser,
             trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
             startTime = record.startTime?.timestampmilli() ?: LocalDateTime.now().timestampmilli(),
             endTime = record.endTime?.timestampmilli(),
@@ -214,7 +215,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
                 // #3138 状态实时刷新
                 val refreshFlag = status.isRunning() && container.elements[0].status.isNullOrBlank() &&
-                    container.containPostTaskFlag != true
+                        container.containPostTaskFlag != true
                 if (status == BuildStatus.PREPARE_ENV || refreshFlag) {
                     ContainerUtils.clearQueueContainerName(container)
                     container.status = buildStatus.name
@@ -265,10 +266,15 @@ class PipelineBuildDetailService @Autowired constructor(
         }, buildStatus = BuildStatus.RUNNING, cancelUser = cancelUser, operation = "buildCancel")
     }
 
-    fun buildEnd(projectId: String, buildId: String, buildStatus: BuildStatus): List<BuildStageStatus> {
+    fun buildEnd(
+        projectId: String,
+        buildId: String,
+        buildStatus: BuildStatus,
+        errorMsg: String?
+    ): Pair<Model, List<BuildStageStatus>> {
         logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
         var allStageStatus: List<BuildStageStatus> = emptyList()
-        update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
+        val model = update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
             var update = false
 
             override fun onFindContainer(container: Container, stage: Stage): Traverse {
@@ -287,7 +293,11 @@ class PipelineBuildDetailService @Autowired constructor(
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
                 if (allStageStatus.isEmpty()) {
-                    allStageStatus = fetchHistoryStageStatus(model, buildStatus)
+                    allStageStatus = fetchHistoryStageStatus(
+                        model = model,
+                        buildStatus = buildStatus,
+                        errorMsg = errorMsg
+                    )
                 }
                 if (BuildStatus.parse(stage.status).isRunning()) {
                     stage.status = buildStatus.name
@@ -328,7 +338,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 return update
             }
         }, buildStatus = buildStatus, operation = "buildEnd")
-        return allStageStatus
+        return model to allStageStatus
     }
 
     fun updateBuildCancelUser(projectId: String, buildId: String, cancelUserId: String) {

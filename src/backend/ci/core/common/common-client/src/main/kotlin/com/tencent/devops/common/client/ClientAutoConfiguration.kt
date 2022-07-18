@@ -62,7 +62,10 @@ class ClientAutoConfiguration {
     fun commonConfig() = CommonConfig()
 
     @Bean
-    fun bkTag() = BkTag(consulTag)
+    fun bkTag(): BkTag {
+        val finalConsulTag = consulTag.split(',')[0].trim()
+        return BkTag(finalConsulTag)
+    }
 
     @Bean
     fun clientErrorDecoder(objectMapper: ObjectMapper) = ClientErrorDecoder(objectMapper)

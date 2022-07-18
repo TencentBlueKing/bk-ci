@@ -69,7 +69,7 @@ object TXStreamDispatchUtils {
     fun getBaseOs(job: Job, context: Map<String, String>? = null): VMBaseOS {
         val poolName = EnvUtils.parseEnv(job.runsOn.poolName, context ?: mapOf())
         // 公共构建机池
-        if (poolName == JobRunsOnType.DOCKER.type) {
+        if (poolName == JobRunsOnType.DOCKER.type || poolName == JobRunsOnType.DEV_CLOUD.type) {
             return VMBaseOS.LINUX
         } else if (poolName.startsWith("macos")) {
             return VMBaseOS.MACOS
