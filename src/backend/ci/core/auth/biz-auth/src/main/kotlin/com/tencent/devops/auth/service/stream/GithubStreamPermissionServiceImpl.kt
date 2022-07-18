@@ -71,7 +71,7 @@ class GithubStreamPermissionServiceImpl @Autowired constructor(
 
         val authUser = getProjectAuthUser(projectCode, userId!!)
         val publicProject = client.get(ServiceGithubPermissionResource::class)
-            .isPublicProject(authUser, projectCode).data
+            .isPublicProject(authUser, getGitProjectId(projectCode)).data
         publicProjectCache.put(projectCode, publicProject!!)
         return publicProject
     }
@@ -128,7 +128,7 @@ class GithubStreamPermissionServiceImpl @Autowired constructor(
             projectMember = client.get(ServiceGithubPermissionResource::class).isProjectMember(
                 authUserId = authUser,
                 userId = userId,
-                gitProjectId = projectCode
+                gitProjectId = getGitProjectId(projectCode)
             ).data
             projectMemberCache.put(projectMemberKey(projectCode, userId), projectMember!!)
         }
@@ -147,7 +147,7 @@ class GithubStreamPermissionServiceImpl @Autowired constructor(
             executePermission = client.get(ServiceGithubPermissionResource::class).checkUserAuth(
                 authUserId = authUser,
                 userId = userId,
-                gitProjectId = projectCode,
+                gitProjectId = getGitProjectId(projectCode),
                 accessLevel = ACCESSLEVEL
             ).data
             projectMemberCache.put(projectMemberKey(projectCode, userId), executePermission!!)
@@ -155,9 +155,18 @@ class GithubStreamPermissionServiceImpl @Autowired constructor(
         return executePermission
     }
 
+    fun getGitProjectId(projectCode: String): String {
+        return if (projectCode.contains(GITHUB_PROJECT_PREFIX)) {
+            projectCode.substringAfter(GITHUB_PROJECT_PREFIX)
+        } else {
+            projectCode
+        }
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(GithubStreamPermissionServiceImpl::class.java)
         const val MAX_SIZE = 500L
         const val ACCESSLEVEL = 30
+        private const val GITHUB_PROJECT_PREFIX = "github_"
     }
 }
