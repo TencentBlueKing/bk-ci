@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.model.process.tables.records.TPipelineViewGroupRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -169,14 +168,15 @@ class PipelineViewGroupService @Autowired constructor(
                     .filter { pipelineViewService.matchView(it, pipelineInfo) }
                     .map { it.id }
                     .toSet()
-                pipelineViewGroupDao.batchCreate(dslContext, matchViewIds.map {
-                    val viewGroup = TPipelineViewGroupRecord()
-                    viewGroup.projectId = projectId
-                    viewGroup.pipelineId = pipelineId
-                    viewGroup.viewId = it
-                    viewGroup.creator = userId
-                    viewGroup
-                })
+                matchViewIds.forEach {
+                    pipelineViewGroupDao.create(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        viewId = it,
+                        userId = userId
+                    )
+                }
             }
         }
     }
@@ -211,14 +211,15 @@ class PipelineViewGroupService @Autowired constructor(
                     .toSet()
             val baseViewIds = baseViewGroups.map { it.viewId }.toSet()
             // 新增新命中的项目组
-            pipelineViewGroupDao.batchCreate(dslContext, matchViewIds.filterNot { baseViewIds.contains(it) }.map {
-                val viewGroup = TPipelineViewGroupRecord()
-                viewGroup.projectId = projectId
-                viewGroup.pipelineId = pipelineId
-                viewGroup.viewId = it
-                viewGroup.creator = userId
-                viewGroup
-            })
+            matchViewIds.filterNot { baseViewIds.contains(it) }.forEach {
+                pipelineViewGroupDao.create(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    viewId = it,
+                    userId = userId
+                )
+            }
             // 删除未命中的老项目组
             baseViewGroups.filterNot { matchViewIds.contains(it.viewId) }.forEach {
                 pipelineViewGroupDao.remove(dslContext, it.projectId, it.viewId, it.pipelineId)
@@ -240,14 +241,15 @@ class PipelineViewGroupService @Autowired constructor(
             watcher.stop()
         } else {
             watcher.start("initStaticViewGroup")
-            pipelineViewGroupDao.batchCreate(context, pipelineView.pipelineIds.map {
-                val viewGroup = TPipelineViewGroupRecord()
-                viewGroup.projectId = projectId
-                viewGroup.viewId = viewId
-                viewGroup.pipelineId = it
-                viewGroup.creator = userId
-                viewGroup
-            })
+            pipelineView.pipelineIds.forEach {
+                pipelineViewGroupDao.create(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = it,
+                    viewId = viewId,
+                    userId = userId
+                )
+            }
             watcher.stop()
         }
         LogUtils.printCostTimeWE(watcher)
@@ -265,7 +267,7 @@ class PipelineViewGroupService @Autowired constructor(
                 return@lockAround emptyList()
             }
             var hasNext = true
-            val result = mutableListOf<String>()
+            val pipelineIds = mutableListOf<String>()
             val step = 1000
             while (hasNext) {
                 val pipelineInfos = pipelineInfoDao.listPipelineInfoByProject(
@@ -274,7 +276,7 @@ class PipelineViewGroupService @Autowired constructor(
                     offset = 0,
                     limit = step
                 )
-                result.addAll(
+                pipelineIds.addAll(
                     pipelineInfos!!.asSequence()
                         .filter { pipelineViewService.matchView(view, it) }
                         .map { it.pipelineId }
@@ -282,15 +284,16 @@ class PipelineViewGroupService @Autowired constructor(
                 )
                 hasNext = pipelineInfos.size == step
             }
-            pipelineViewGroupDao.batchCreate(dslContext, result.map {
-                val viewGroup = TPipelineViewGroupRecord()
-                viewGroup.projectId = projectId
-                viewGroup.viewId = view.id
-                viewGroup.pipelineId = it
-                viewGroup.creator = userId
-                viewGroup
-            })
-            return@lockAround result
+            pipelineIds.forEach {
+                pipelineViewGroupDao.create(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = it,
+                    viewId = view.id,
+                    userId = userId
+                )
+            }
+            return@lockAround pipelineIds
         }
     }
 
