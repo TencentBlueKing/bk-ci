@@ -699,7 +699,7 @@ object ScriptYmlUtils {
             return null
         }
 
-        if (preTriggerOn.manual != EnableType.TRUE.value || preTriggerOn.manual != EnableType.FALSE.value) {
+        if (preTriggerOn.manual != EnableType.TRUE.value && preTriggerOn.manual != EnableType.FALSE.value) {
             throw YamlFormatException("not allow manual type ${preTriggerOn.manual}")
         }
 

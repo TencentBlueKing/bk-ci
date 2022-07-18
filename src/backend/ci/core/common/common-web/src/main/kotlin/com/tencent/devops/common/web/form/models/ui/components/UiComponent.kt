@@ -40,4 +40,4 @@ interface UiComponent {
 data class UiComponentCommon(
     override val name: String,
     override val props: Map<String, Any>?
-):UiComponent
+) : UiComponent

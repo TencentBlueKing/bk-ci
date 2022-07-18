@@ -273,13 +273,14 @@ class StreamYamlBaseBuild @Autowired constructor(
                 modelAndSetting = modelAndSetting,
                 updateLastModifyUser = updateLastModifyUser
             )
+            val pipelineParams = modelParameters.webHookParams.toMutableMap()
             buildId = client.get(ServiceWebhookBuildResource::class).webhookTrigger(
                 userId = action.data.getUserId(),
                 projectId = action.getProjectCode(),
                 pipelineId = pipeline.pipelineId,
                 params = WebhookTriggerParams(
-                    params = modelParameters.webHookParams,
-                    startValues = mutableMapOf(PIPELINE_NAME to pipeline.displayName).also { it.putAll(manualValues) }
+                    params = pipelineParams.also { it.putAll(manualValues) },
+                    startValues = mutableMapOf(PIPELINE_NAME to pipeline.displayName)
                 ),
                 channelCode = channelCode,
                 startType = StartType.SERVICE

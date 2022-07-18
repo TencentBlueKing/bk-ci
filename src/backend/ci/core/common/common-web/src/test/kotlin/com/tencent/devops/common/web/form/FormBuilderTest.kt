@@ -143,7 +143,7 @@ internal class FormBuilderTest {
             "default": "official",
             "required": true,
             "ui:component": {
-                "name": "select",
+                "name": "selector",
                 "props": {
                     "options": [
                         {
@@ -180,6 +180,7 @@ internal class FormBuilderTest {
                     default = "official",
                     required = true,
                     description = null,
+                    componentName = "selector",
                     option = SelectPropOption(
                         items = listOf(
                             SelectPropOptionItem(

@@ -30,11 +30,11 @@ package com.tencent.devops.common.web.form.models.ui.props
 /**
  * 表单项中的UI项接口类，不同组件自己实现
  */
-interface UiProps{
+interface UiProps {
     // label 项页面展示宽度
     val labelWidth: Int?
 }
 
 data class UiPropsCommon(
     override val labelWidth: Int?
-):UiProps
+) : UiProps

@@ -41,7 +41,7 @@ data class CompanyStaffPropData(
     override val description: String?
 ) : FormPropData {
     override fun buildComponent(): UiComponent {
-        return UiComponentCommon("company-staff-input", null)
+        return UiComponentCommon("companyStaff", null)
     }
 
     override fun buildUiProps(): UiProps {

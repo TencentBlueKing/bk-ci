@@ -33,9 +33,11 @@ import com.tencent.devops.process.yaml.v2.models.VariableDatasource
 import com.tencent.devops.process.yaml.v2.models.VariablePropOption
 import com.tencent.devops.process.yaml.v2.models.VariablePropType
 import com.tencent.devops.process.yaml.v2.models.VariableProps
+import com.tencent.devops.stream.trigger.ManualTriggerService.Companion.stringToOther
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.core.io.ClassPathResource
 
 @DisplayName("stream手动触发相关测试")
@@ -158,6 +160,17 @@ internal class ManualTriggerServiceTest {
                 ClassPathResource("parseVariablesToFormTestResult.json").inputStream
             ),
             JsonUtil.getObjectMapper().readTree(JsonUtil.toJson(form))
+        )
+    }
+
+    @DisplayName("测试string转其他类型")
+    @Test
+    fun stringToOtherTest() {
+        val testData = "1,true,1.2,1.x,xxx,1xx,truexx,false , 1.2.3, 2.0 "
+        val expectData = setOf(1L, true, 1.2, "1.x", "xxx", "1xx", "truexx", false, "1.2.3", 2.0)
+        Assertions.assertEquals(
+            expectData,
+            testData.split(",").map { it.trim().stringToOther() }.toSet()
         )
     }
 
