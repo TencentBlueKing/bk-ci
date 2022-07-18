@@ -293,7 +293,9 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     props = props,
                     buildLessRunFlag = atom.buildLessRunFlag,
                     createTime = atom.createTime,
-                    updateTime = atom.updateTime
+                    updateTime = atom.updateTime,
+                    classifyCode = atom.classifyCode,
+                    classifyName = atom.classifyName
                 )
             )
         }
@@ -386,7 +388,9 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     shaContent = atomEnvInfoRecord[tAtomEnvInfo.SHA_CONTENT],
                     preCmd = atomEnvInfoRecord[tAtomEnvInfo.PRE_CMD],
                     jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
-                    atomPostInfo = atomPostInfo
+                    atomPostInfo = atomPostInfo,
+                    classifyCode = atom.classifyCode,
+                    classifyName = atom.classifyName
                 )
             }
         )

@@ -31,9 +31,11 @@ import com.tencent.devops.model.quality.tables.THistory
 import com.tencent.devops.model.quality.tables.records.THistoryRecord
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import org.jooq.DSLContext
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL.max
 import org.springframework.beans.factory.annotation.Autowired
+import org.jooq.impl.DSL.count
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -300,6 +302,19 @@ class HistoryDao @Autowired constructor(
                 .where(conditions)
                 .and(RESULT.eq(RuleInterceptResult.WAIT.name))
                 .execute()
+        }
+    }
+
+    fun batchDailyTotalCount(
+        dslContext: DSLContext,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime
+    ): Result<Record2<String, Int>> {
+        with(THistory.T_HISTORY) {
+            val sql = dslContext.select(PROJECT_ID, count())
+                .from(this)
+                .where(CREATE_TIME.between(startTime, endTime)).groupBy(PROJECT_ID)
+            return sql.fetch()
         }
     }
 }
