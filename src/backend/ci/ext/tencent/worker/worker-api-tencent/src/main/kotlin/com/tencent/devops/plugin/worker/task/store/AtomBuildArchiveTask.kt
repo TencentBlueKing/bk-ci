@@ -49,7 +49,7 @@ import com.tencent.devops.worker.common.utils.ArchiveUtils
 import java.io.File
 import java.nio.file.Paths
 
-@Suppress("UNUSED")
+@Suppress("UNUSED", "ComplexMethod")
 @TaskClassType(classTypes = [AtomBuildArchiveElement.classType])
 class AtomBuildArchiveTask : ITask() {
 
