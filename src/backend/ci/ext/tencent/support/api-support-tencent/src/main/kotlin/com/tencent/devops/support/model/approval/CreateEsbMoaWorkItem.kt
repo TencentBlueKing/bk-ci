@@ -99,7 +99,8 @@ data class MoaWorkItemElement(
     @JsonProperty("list_view")
     @ApiModelProperty(
         "列表视图: 在这里定义的字段会在待办列表中被简要展示出来（最多支持显示5个字段）。" +
-            "如果此字段没有定义，则会使用详情的数据来进行填充。", required = false
+            "如果此字段没有定义，则会使用详情的数据来进行填充。",
+                required = false
     )
     val listView: List<MoaWorkItemCreateKeyAndValue>? = null,
     @JsonProperty("mobile_form_url")
@@ -129,7 +130,8 @@ data class MoaWorkItemCreateAction(
     @JsonProperty("opinion_required")
     @ApiModelProperty(
         "动作的审批意见是否必填。默认为false，若为true，执行该动作时会提示必填审批意见。" +
-            "仅针对详情页的审批动作，对于列表页的审批动作无效。", required = false
+            "仅针对详情页的审批动作，对于列表页的审批动作无效。",
+                required = false
     )
     val opinionRequired: Boolean? = false
 )
@@ -176,7 +178,7 @@ data class MoaWorkItemCreateForm(
     val defaultValue: String?, // TextBox1
     @JsonProperty("description")
     @ApiModelProperty("控件的描述", required = false)
-    val description: String?, // TextBox description
+    var description: String?, // TextBox description
     @JsonProperty("is_required")
     @ApiModelProperty("提交表单用，决定此字段是否必填，布尔类型", required = false)
     val isRequired: Boolean?, // true

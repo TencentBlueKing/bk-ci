@@ -46,7 +46,6 @@ import org.springframework.stereotype.Service
 @Service
 class TXPipelineMoaService @Autowired constructor(
     private var client: Client,
-    private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService
 ) {
@@ -54,6 +53,8 @@ class TXPipelineMoaService @Autowired constructor(
 
     @Value("\${esb.appSecret}")
     private val appSecret = ""
+
+    private val ignoredMoaMessage = listOf("【通过MOA快速审批】", "【通过PC快速审批】")
 
     /**
      * 保证回调一次之后就结单
@@ -131,11 +132,12 @@ class TXPipelineMoaService @Autowired constructor(
                 buildId = buildId,
                 elementId = elementId
             ).apply {
-                suggest = submitOpinion
+                suggest = checkSuggest(submitOpinion)
                 params.forEach {
-                    val reviewValue = submitForm[it.chineseName ?: it.key]
+                    val reviewValue = submitForm[checkParamName(it.chineseName) ?: it.key]
                     it.value = when (it.valueType) {
                         ManualReviewParamType.BOOLEAN -> reviewValue.toBoolean()
+                        ManualReviewParamType.STRING -> reviewValue?.replace("\n","\\n")
                         else -> reviewValue
                     }
                 }
@@ -162,5 +164,15 @@ class TXPipelineMoaService @Autowired constructor(
 
     private fun checkParameter(vararg args: String) {
         args.find { it.isBlank() }?.let { throw IllegalArgumentException("parameter is null or blank, ignore it.") }
+    }
+
+    private fun checkParamName(name: String?) = if (name.isNullOrBlank()) null else name
+
+    private fun checkSuggest(suggest: String): String {
+        var str = suggest
+        for (s in ignoredMoaMessage) {
+            str = str.replace(s, "")
+        }
+        return str
     }
 }

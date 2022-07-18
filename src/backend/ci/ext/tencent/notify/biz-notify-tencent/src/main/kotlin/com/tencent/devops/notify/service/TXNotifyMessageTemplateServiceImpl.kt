@@ -45,6 +45,7 @@ import com.tencent.devops.support.model.approval.CompleteMoaWorkItemRequest
 import com.tencent.devops.support.model.approval.MoaWorkItemCreateAction
 import com.tencent.devops.support.model.approval.MoaWorkItemCreateData
 import com.tencent.devops.support.model.approval.MoaWorkItemCreateForm
+import com.tencent.devops.support.model.approval.MoaWorkItemCreateKeyAndValue
 import com.tencent.devops.support.model.approval.MoaWorkItemCreateUiType
 import com.tencent.devops.support.model.approval.MoaWorkItemElement
 import com.tencent.devops.support.model.approval.MoaWorkitemCreateCategoryType
@@ -94,7 +95,7 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                         defaultValue = param.value.toString(),
                         description = param.desc,
                         isRequired = param.required,
-                        name = param.chineseName ?: param.key,
+                        name = checkParamName(param.chineseName) ?: param.key,
                         uiType = when (param.valueType) {
                             ManualReviewParamType.STRING -> MoaWorkItemCreateUiType.TEXT_BOX.value
                             ManualReviewParamType.TEXTAREA -> MoaWorkItemCreateUiType.TEXT_BOX.value
@@ -108,12 +109,20 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                             ManualReviewParamType.BOOLEAN -> listOf("true", "false")
                             ManualReviewParamType.ENUM, ManualReviewParamType.MULTIPLE -> param.options?.map { it.key }
                         }
-                    )
+                    ).apply {
+                        if (param.valueType == ManualReviewParamType.STRING) {
+                            description += "(注意: 换行会被转义为\\n)"
+                        }
+                    }
                 }
             } catch (ignore: Throwable) {
                 null
             }
         }
+        val detailView = JsonUtil.toOrNull(
+            replaceContentParams(request.bodyParams, moaTplRecord.body),
+            object : TypeReference<List<MoaWorkItemCreateKeyAndValue>>() {}
+        )
 
         // 保持和complete时的id一致, 考虑不需要持久化该字段，采用可计算出的 signature 前32位作为id
         val processInstId = request.callbackData?.get("signature")?.take(32) ?: UUIDUtil.generate()
@@ -128,6 +137,7 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                         value = "reject"
                     )
                 ),
+                detailView = detailView,
                 activity = "指定审批人审批",
                 category = MoaWorkitemCreateCategoryType.IT.id,
                 callbackUrl = moaTplRecord.callbackUrl,
@@ -191,4 +201,6 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
             addNotifyTemplateMessage = addNotifyTemplateMessage
         )
     }
+
+    private fun checkParamName(name: String?) = if (name.isNullOrBlank()) null else name
 }
