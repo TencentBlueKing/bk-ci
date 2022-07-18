@@ -312,7 +312,8 @@ class StreamPipelineService @Autowired constructor(
             setting = modelAndSetting.setting.copy(
                 projectId = projectCode,
                 pipelineId = pipeline.pipelineId,
-                pipelineName = modelAndSetting.model.name
+                pipelineName = modelAndSetting.model.name,
+                maxConRunningQueueSize = null
             ),
             updateLastModifyUser = updateLastModifyUser,
             channelCode = channelCode
@@ -360,7 +361,7 @@ class StreamPipelineService @Autowired constructor(
                     userId = userId,
                     gitProjectId = gitProjectId.toLong(),
                     projectCode = gitProjectCode,
-                    modelAndSetting = createTriggerModel(gitProjectCode),
+                    modelAndSetting = createTriggerModel(realPipeline.displayName),
                     updateLastModifyUser = true,
                     branch = branch
                 )
