@@ -181,9 +181,10 @@ class PipelineBuildService(
             pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
                 key = PIPELINE_BUILD_MSG,
                 value = BuildMsgUtils.getBuildMsg(
-                    pipelineParamMap[PIPELINE_BUILD_MSG]?.value?.toString(),
-                    startType,
-                    channelCode
+                    buildMsg = startValues?.get(PIPELINE_BUILD_MSG)
+                        ?: pipelineParamMap[PIPELINE_BUILD_MSG]?.value?.toString(),
+                    startType = startType,
+                    channelCode = channelCode
                 ),
                 readOnly = true
             )

@@ -36,7 +36,7 @@ object Versions {
     const val Elasticsearch = "7.17.3"
     const val Lucene = "8.11.1"
     const val PinyinPlus = "1.0"
-    const val ShardingSphere = "5.0.0"
+    const val ShardingSphere = "5.1.2"
     const val Oshi = "5.8.3"
     const val Leaf = "1.0.1-RELEASE"
     const val p4 = "2021.1.2163843"
