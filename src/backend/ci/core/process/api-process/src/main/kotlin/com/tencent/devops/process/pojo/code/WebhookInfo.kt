@@ -53,5 +53,7 @@ data class WebhookInfo(
     // mr iid
     val mrIid: String?,
     // mr url
-    val mrUrl: String?
+    val mrUrl: String?,
+    // webhook仓库授权用户
+    val repoAuthUser: String?
 )
