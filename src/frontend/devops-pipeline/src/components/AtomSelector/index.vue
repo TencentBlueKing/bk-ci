@@ -203,8 +203,8 @@
                 handler (val) {
                     this.curTabList = val
                     if (this.searchKey) {
-                        this.uninstallArr = val.filter(item => (!item.defaultFlag && !item.installed && item.recommendFlag !== false))
-                        this.installArr = val.filter(item => (item.defaultFlag || (item.installed && item.recommendFlag !== false)))
+                        this.uninstallArr = val.filter(item => !item.defaultFlag && !item.installed)
+                        this.installArr = val.filter(item => item.defaultFlag || item.installed)
                     }
                 },
                 immediate: true

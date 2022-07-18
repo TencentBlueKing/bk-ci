@@ -338,6 +338,20 @@
                 pipelineId: this.routerParams.pipelineId
             })
             webSocketMessage.installWsMessage(this.setPipelineDetail)
+
+            // 第三方系统、通知等，点击链接进入流水线执行详情页面时，定位到具体的 task/ job (自动打开对应的侧滑框)
+            const { stageIndex, elementIndex, containerGroupIndex, containerIndex } = this.$route.query
+            if (stageIndex) {
+                this.togglePropertyPanel({
+                    isShow: true,
+                    editingElementPos: {
+                        containerGroupIndex,
+                        containerIndex,
+                        elementIndex,
+                        stageIndex
+                    }
+                })
+            }
         },
 
         beforeDestroy () {

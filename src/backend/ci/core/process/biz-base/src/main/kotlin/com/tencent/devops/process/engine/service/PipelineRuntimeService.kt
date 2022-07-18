@@ -75,6 +75,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_URL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_AUTH_USER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
@@ -147,6 +148,7 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM_ALIAS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import org.jooq.DSLContext
@@ -854,7 +856,7 @@ class PipelineRuntimeService @Autowired constructor(
                     fastKill = stage.fastKill
                 )
                 if (stage.name.isNullOrBlank()) stage.name = stage.id
-                if (stage.tag == null) stage.tag = listOf(defaultStageTagId)
+                if (stage.tag == null) stage.tag = defaultStageTagId?.let { self -> listOf(self) }
             } else {
                 stageStatus = BuildStatus.RUNNING // Stage-1 一开始就计算为启动
                 stageStartTime = now
@@ -934,7 +936,21 @@ class PipelineRuntimeService @Autowired constructor(
                     buildHistoryRecord.queueTime = now // for EPC
                     buildHistoryRecord.status = startBuildStatus.ordinal
                     // 重试时启动参数只需要刷新执行次数
-                    buildHistoryRecord.buildParameters = JsonUtil.toJson(originStartParams, formatted = false)
+                    buildHistoryRecord.buildParameters = buildHistoryRecord.buildParameters?.let { self ->
+                        val retryCount = context.executeCount - 1
+                        val list = JsonUtil.getObjectMapper().readValue(self) as MutableList<BuildParameters>
+                        list.find { it.key == PIPELINE_RETRY_COUNT }?.let { param ->
+                            param.value = retryCount
+                        } ?: run {
+                            list.add(
+                                BuildParameters(
+                                    key = PIPELINE_RETRY_COUNT,
+                                    value = retryCount
+                                )
+                            )
+                        }
+                        JsonUtil.toJson(list)
+                    }
                     transactionContext.batchStore(buildHistoryRecord).execute()
                     // 重置状态和人
                     buildDetailDao.update(
@@ -1131,7 +1147,8 @@ class PipelineRuntimeService @Autowired constructor(
                 webhookSourceBranch = params[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH]?.toString(),
                 mrId = params[BK_REPO_GIT_WEBHOOK_MR_ID]?.toString(),
                 mrIid = params[BK_REPO_GIT_WEBHOOK_MR_NUMBER]?.toString(),
-                mrUrl = params[BK_REPO_GIT_WEBHOOK_MR_URL]?.toString()
+                mrUrl = params[BK_REPO_GIT_WEBHOOK_MR_URL]?.toString(),
+                repoAuthUser = params[BK_REPO_WEBHOOK_REPO_AUTH_USER]?.toString()
             ),
             formatted = false
         )

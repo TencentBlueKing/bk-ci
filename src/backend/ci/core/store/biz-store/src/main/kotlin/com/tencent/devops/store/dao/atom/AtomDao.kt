@@ -89,6 +89,7 @@ import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
@@ -1216,6 +1217,17 @@ class AtomDao : AtomBaseDao() {
                 .where(
                     LATEST_FLAG.eq(true)
                         .and(DEFAULT_FLAG.eq(true))
+                )
+                .fetch()
+        }
+    }
+
+    fun batchGetAtomName(dslContext: DSLContext, atomCodes: Collection<String>): Result<Record2<String, String>>? {
+        return with(TAtom.T_ATOM) {
+            dslContext.select(ATOM_CODE, NAME).from(this)
+                .where(
+                    LATEST_FLAG.eq(true)
+                        .and(ATOM_CODE.`in`(atomCodes))
                 )
                 .fetch()
         }
