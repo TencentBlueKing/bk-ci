@@ -27,7 +27,7 @@
 
 package com.tencent.devops.dispatch.kubernetes.pojo.base
 
-data class DispatchDebugResponse(
+data class DebugResponse(
     val websocketUrl: String,
     val containerName: String
 )

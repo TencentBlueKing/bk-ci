@@ -37,7 +37,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchJobReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchTaskResp
 import com.tencent.devops.dispatch.kubernetes.service.DispatchBaseJobService
 import com.tencent.devops.dispatch.kubernetes.service.DispatchBuildService
-import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -49,7 +48,6 @@ class BuildBaseJobResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         buildId: String,
-        dispatchType: String,
         jobReq: DispatchJobReq
     ): Result<DispatchTaskResp> {
         return Result(
@@ -57,17 +55,22 @@ class BuildBaseJobResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 buildId = buildId,
-                dockerRoutingType = CommonUtils.checkDispatchType(dispatchType),
                 jobReq = jobReq
             )
         )
     }
 
-    override fun getJobStatus(userId: String, dispatchType: String, jobName: String): Result<DispatchBuildStatusResp> {
+    override fun getJobStatus(
+        userId: String,
+        projectId: String,
+        buildId: String,
+        jobName: String
+    ): Result<DispatchBuildStatusResp> {
         return Result(
             dispatchBaseJobService.getJobStatus(
                 userId = userId,
-                dockerRoutingType = CommonUtils.checkDispatchType(dispatchType),
+                projectId = projectId,
+                buildId = buildId,
                 jobName = jobName
             )
         )
@@ -75,14 +78,16 @@ class BuildBaseJobResourceImpl @Autowired constructor(
 
     override fun getJobLogs(
         userId: String,
-        dispatchType: String,
+        projectId: String,
+        buildId: String,
         jobName: String,
         sinceTime: Int?
     ): Result<DispatchJobLogResp> {
         return Result(
             dispatchBaseJobService.getJobLogs(
                 userId = userId,
-                dockerRoutingType = CommonUtils.checkDispatchType(dispatchType),
+                projectId = projectId,
+                buildId = buildId,
                 jobName = jobName,
                 sinceTime = sinceTime
             )
@@ -93,7 +98,6 @@ class BuildBaseJobResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         buildId: String,
-        dispatchType: String,
         buildImageReq: DispatchBuildImageReq
     ): Result<DispatchTaskResp> {
         return Result(
@@ -101,7 +105,6 @@ class BuildBaseJobResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 buildId = buildId,
-                dockerRoutingType = CommonUtils.checkDispatchType(dispatchType),
                 dispatchBuildImageReq = buildImageReq
             )
         )

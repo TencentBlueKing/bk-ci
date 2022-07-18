@@ -30,7 +30,7 @@ package com.tencent.devops.dispatch.kubernetes.resource.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBaseDebugResource
-import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchDebugResponse
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DebugResponse
 import com.tencent.devops.dispatch.kubernetes.pojo.base.StartDebugReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.StopDebugReq
 import com.tencent.devops.dispatch.kubernetes.service.DispatchBaseDebugService
@@ -44,12 +44,11 @@ class ServiceBaseDebugResourceImpl @Autowired constructor(
     override fun startDebug(
         userId: String,
         startDebugReq: StartDebugReq
-    ): Result<DispatchDebugResponse> {
+    ): Result<DebugResponse> {
         return Result(
             with(startDebugReq) {
                 dispatchBaseDebugService.startDebug(
                     userId = userId,
-                    dockerRoutingType = CommonUtils.checkDispatchType(dockerRoutingType),
                     projectId = projectId,
                     pipelineId = pipelineId,
                     vmSeqId = vmSeqId,
@@ -67,7 +66,7 @@ class ServiceBaseDebugResourceImpl @Autowired constructor(
             with(stopDebugReq) {
                 dispatchBaseDebugService.stopDebug(
                     userId = userId,
-                    dockerRoutingType = CommonUtils.checkDispatchType(dockerRoutingType),
+                    projectId = projectId,
                     pipelineId = pipelineId,
                     vmSeqId = vmSeqId,
                     builderName = containerName

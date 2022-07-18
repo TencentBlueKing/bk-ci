@@ -30,12 +30,12 @@ package com.tencent.devops.dispatch.docker.controller
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
+import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.user.UserDockerDebugResource
 import com.tencent.devops.dispatch.docker.pojo.DebugResponse
 import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
-import com.tencent.devops.dispatch.docker.service.DockerRoutingService
 import com.tencent.devops.dispatch.docker.service.debug.DebugServiceEnum
 import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
 import org.slf4j.LoggerFactory
@@ -44,7 +44,7 @@ import java.util.stream.Collectors
 
 @RestResource
 class UserDockerDebugResourceImpl @Autowired constructor(
-    private val dockerRoutingService: DockerRoutingService,
+    private val dockerRoutingSdkService: DockerRoutingSdkService,
     private val extDebugService: ExtDebugService
 ) : UserDockerDebugResource {
 
@@ -130,7 +130,7 @@ class UserDockerDebugResourceImpl @Autowired constructor(
      * BCS和VM构建类型在前端统一表现为VM类型，通过白名单控制BCS构建类型路由
      */
     private fun formatDispatchType(projectId: String): Pair<BuildType, DockerRoutingType> {
-        return when (dockerRoutingService.getDockerRoutingType(projectId)) {
+        return when (dockerRoutingSdkService.getDockerRoutingType(projectId)) {
             DockerRoutingType.VM -> Pair(BuildType.DOCKER, DockerRoutingType.VM)
             DockerRoutingType.BCS -> Pair(BuildType.KUBERNETES, DockerRoutingType.BCS)
             DockerRoutingType.KUBERNETES -> Pair(BuildType.KUBERNETES, DockerRoutingType.KUBERNETES)

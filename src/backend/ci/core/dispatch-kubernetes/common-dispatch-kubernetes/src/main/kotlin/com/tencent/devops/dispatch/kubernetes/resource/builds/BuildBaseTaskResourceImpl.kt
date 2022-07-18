@@ -32,18 +32,23 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.builds.BuildBaseTaskResource
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
 import com.tencent.devops.dispatch.kubernetes.service.DispatchBaseTaskService
-import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildBaseTaskResourceImpl @Autowired constructor(
     private val dispatchBaseTaskService: DispatchBaseTaskService
 ) : BuildBaseTaskResource {
-    override fun getTaskStatus(userId: String, dispatchType: String, taskId: String): Result<DispatchBuildStatusResp> {
+    override fun getTaskStatus(
+        userId: String,
+        projectId: String,
+        buildId: String,
+        taskId: String
+    ): Result<DispatchBuildStatusResp> {
         return Result(
             dispatchBaseTaskService.getTaskStatus(
                 userId = userId,
-                dockerRoutingType = CommonUtils.checkDispatchType(dispatchType),
+                projectId = projectId,
+                buildId = buildId,
                 taskId = taskId
             )
         )

@@ -33,11 +33,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
+import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
-import com.tencent.devops.common.pipeline.type.bcs.PublicBcsDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
@@ -52,7 +52,6 @@ import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.Credential
 import com.tencent.devops.dispatch.docker.pojo.Pool
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
-import com.tencent.devops.dispatch.docker.service.DockerRoutingService
 import com.tencent.devops.dispatch.docker.utils.CommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
@@ -79,7 +78,7 @@ class DockerVMListener @Autowired constructor(
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
-    private val dockerRoutingService: DockerRoutingService,
+    private val dockerRoutingSdkService: DockerRoutingSdkService,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : BuildListener {
 
@@ -116,7 +115,7 @@ class DockerVMListener @Autowired constructor(
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
         logger.info("On shutdown - ($event)")
 
-        val dockerRoutingType = dockerRoutingService.getDockerRoutingType(event.projectId)
+        val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(event.projectId)
         if (dockerRoutingType == DockerRoutingType.VM) {
             dockerHostBuildService.finishDockerBuild(event)
         } else {
@@ -176,7 +175,7 @@ class DockerVMListener @Autowired constructor(
             imageType = dispatchType.imageType?.type
         )
 
-        val dockerRoutingType = dockerRoutingService.getDockerRoutingType(dispatchMessage.projectId)
+        val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(dispatchMessage.projectId)
         if (dockerRoutingType == DockerRoutingType.VM) {
             startup(dispatchMessage, containerPool)
         } else {

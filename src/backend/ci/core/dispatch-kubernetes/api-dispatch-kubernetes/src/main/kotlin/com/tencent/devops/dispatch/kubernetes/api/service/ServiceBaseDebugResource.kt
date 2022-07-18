@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchDebugResponse
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DebugResponse
 import com.tencent.devops.dispatch.kubernetes.pojo.base.StartDebugReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.StopDebugReq
 import io.swagger.annotations.Api
@@ -60,7 +60,7 @@ interface ServiceBaseDebugResource {
         userId: String,
         @ApiParam("debug请求体", required = true)
         startDebugReq: StartDebugReq
-    ): Result<DispatchDebugResponse>
+    ): Result<DebugResponse>
 
     @POST
     @Path("/stop")

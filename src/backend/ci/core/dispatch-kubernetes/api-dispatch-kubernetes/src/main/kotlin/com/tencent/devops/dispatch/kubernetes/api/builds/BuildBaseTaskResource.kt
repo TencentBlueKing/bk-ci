@@ -27,6 +27,8 @@
 
 package com.tencent.devops.dispatch.kubernetes.api.builds
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -44,21 +46,24 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_DISPATCH_BASE_TASK"], description = "构建-DISPATCH-BASE TASK资源操作")
-@Path("/build/base")
+@Path("/build/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildBaseTaskResource {
 
     @ApiOperation("获取任务状态")
     @GET
-    @Path("/{dispatchType}/task/status")
+    @Path("/task/status")
     fun getTaskStatus(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("Dispatch类型", required = true)
-        @PathParam("dispatchType")
-        dispatchType: String,
+        @ApiParam("projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @ApiParam("构建id", required = true)
+        @HeaderParam(AUTH_HEADER_BUILD_ID)
+        buildId: String,
         @ApiParam("taskId", required = true)
         @QueryParam("taskId")
         taskId: String

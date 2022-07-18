@@ -25,44 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.utils
+package com.tencent.devops.common.dispatch.sdk.pojo.docker
 
-import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
-import com.tencent.devops.common.redis.RedisOperation
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
-
-@Component
-class RedisUtils @Autowired constructor(
-    private val redisOperation: RedisOperation
-) {
-    fun setDebugBuilderName(
-        userId: String,
-        pipelineId: String,
-        vmSeqId: String,
-        builderName: String
-    ) {
-        redisOperation.set(
-            debugContainerNameKey(userId, pipelineId, vmSeqId),
-            builderName,
-            3600 * 6,
-            true
-        )
-    }
-
-    fun getDebugBuilderName(
-        userId: String,
-        pipelineId: String,
-        vmSeqId: String
-    ): String? {
-        return redisOperation.get(debugContainerNameKey(userId, pipelineId, vmSeqId))
-    }
-
-    private fun debugContainerNameKey(
-        userId: String,
-        pipelineId: String,
-        vmSeqId: String
-    ): String {
-        return "dispatchkubernetes:debug:$userId-$pipelineId-$vmSeqId"
-    }
+object DockerConstants {
+    /**
+     * docker路由Key
+     */
+    const val DOCKER_ROUTING_KEY_PREFIX = "dispatchdocker:docker_routing"
 }
