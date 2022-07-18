@@ -41,14 +41,12 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import java.util.regex.Pattern
 
 @Suppress("ComplexMethod", "LongMethod", "MaxLineLength")
 @DisplayName("表达式解析类综合测试")
 class ExpressionParserTest {
 
     companion object {
-        val ex = ExpressionParser()
         val ev = ExecutionContext(DictionaryContextData())
         val nameValue = mutableListOf<NamedValueInfo>()
 
@@ -157,26 +155,25 @@ class ExpressionParserTest {
             "jobs.build.0.steps.runStep.outputs.myoutput" to "build_0",
             "jobs.build.2.steps.runStep.outputs.myoutput" to "build_1"
         )
-        val parser = ExpressionParser()
         Assertions.assertEquals(
             true,
-            parser.evaluateByMap("jobs.build[0].steps.runStep.outputs.myoutput == 'build_0'", variables)
+            ExpressionParser.evaluateByMap("jobs.build[0].steps.runStep.outputs.myoutput == 'build_0'", variables)
         )
         Assertions.assertEquals(
             true,
-            parser.evaluateByMap("jobs.build.0.steps.runStep.outputs.myoutput == 'build_0'", variables)
+            ExpressionParser.evaluateByMap("jobs.build.0.steps.runStep.outputs.myoutput == 'build_0'", variables)
         )
         Assertions.assertEquals(
             true,
-            parser.evaluateByMap( "contains(jobs.build.0.steps.runStep.outputs.myoutput, 'build_0')", variables)
+            ExpressionParser.evaluateByMap("contains(jobs.build.0.steps.runStep.outputs.myoutput, 'build_0')", variables)
         )
         Assertions.assertEquals(
             true,
-            parser.evaluateByMap("variables.pipeline_name == '流水线名称'", variables)
+            ExpressionParser.evaluateByMap("variables.pipeline_name == '流水线名称'", variables)
         )
         Assertions.assertEquals(
             "p-xxx",
-            parser.evaluateByMap("variables.pipeline_id", variables)
+            ExpressionParser.evaluateByMap("variables.pipeline_id", variables)
         )
     }
 
@@ -193,7 +190,7 @@ class ExpressionParserTest {
         )
 
         literals.forEach { (exp, v) ->
-            val res = ex.createTree(exp, null, null, null)!!.evaluate(null, null, null).value
+            val res = ExpressionParser.createTree(exp, null, null, null)!!.evaluate(null, null, null).value
             Assertions.assertEquals(v, res)
         }
     }
@@ -418,7 +415,7 @@ class ExpressionParserTest {
     )
     fun functionFromJsonTest(fromJson: String) {
         val (index, exp) = fromJson.split(" => ")
-        val res = ex.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
         when (index.toInt()) {
             1 -> {
                 Assertions.assertTrue(res is DictionaryContextData)
@@ -456,7 +453,7 @@ class ExpressionParserTest {
     )
     fun functionJoinTest(join: String) {
         val (index, exp) = join.split(" => ")
-        val res = ex.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
         when (index.toInt()) {
             1 -> {
                 Assertions.assertEquals("push|mr|tag", res)
@@ -478,7 +475,7 @@ class ExpressionParserTest {
 
     private fun valuesTest(param: String) {
         val (exp, result) = param.split(" => ")
-        val res = ex.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
         Assertions.assertEquals(
             when (result) {
                 "true", "false" -> {
