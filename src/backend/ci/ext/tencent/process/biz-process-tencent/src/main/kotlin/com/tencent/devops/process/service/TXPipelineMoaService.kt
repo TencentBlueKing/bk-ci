@@ -137,7 +137,7 @@ class TXPipelineMoaService @Autowired constructor(
                     val reviewValue = submitForm[checkParamName(it.chineseName) ?: it.key]
                     it.value = when (it.valueType) {
                         ManualReviewParamType.BOOLEAN -> reviewValue.toBoolean()
-                        ManualReviewParamType.STRING -> reviewValue?.replace("\n","\\n")
+                        ManualReviewParamType.STRING -> reviewValue?.replace("\n", "\\n")
                         else -> reviewValue
                     }
                 }
