@@ -52,7 +52,6 @@ class ProjectCodeCCScanFacadeService @Autowired constructor(
             return publicScanProject
         }
 
-
         try {
             projectService.create(
                 userId = userId,

@@ -198,12 +198,16 @@ class ProjectLocalService @Autowired constructor(
         organizationId: Long,
         projectId: String
     ): List<BKAuthProjectRolesResources> {
-        logger.info("[getProjectRole] organizationType[$organizationType]," +
-                        " organizationId[$organizationId] projectCode[$projectId]")
+        logger.info(
+            "[getProjectRole] organizationType[$organizationType]," +
+                " organizationId[$organizationId] projectCode[$projectId]"
+        )
         val projectList = getProjectListByOrg(organizationType = organizationType, organizationId = organizationId)
         if (projectList.isEmpty()) {
-            logger.error("organizationType[$organizationType] :organizationId[$organizationId] " +
-                             " not project[$projectId] permission ")
+            logger.error(
+                "organizationType[$organizationType] :organizationId[$organizationId] " +
+                    " not project[$projectId] permission "
+            )
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
         }
         var queryProject: ProjectVO? = null
