@@ -1244,7 +1244,8 @@ class GitService @Autowired constructor(
     ): Result<GitCommit?> {
         logger.info("getRepoRecentCommitInfo repoName:$repoName, sha:$sha, tokenType is:$tokenType")
         val encodeProjectName = URLEncoder.encode(repoName, Charsets.UTF_8.name())
-        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/commits/$sha")
+        val encodeSha = URLEncoder.encode(sha, Charsets.UTF_8.name())
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/commits/$encodeSha")
         setToken(tokenType, url, token)
         val request = Request.Builder()
             .url(url.toString())
