@@ -37,8 +37,6 @@ import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServiceTemplateAcrossResource
 import com.tencent.devops.process.api.service.ServiceWebhookBuildResource
-import com.tencent.devops.process.api.user.UserPipelineGroupResource
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType

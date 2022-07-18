@@ -49,7 +49,7 @@ data class SelectPropData(
                 option != null -> this.buildProps(
                     mapOf(
                         "options" to option.items,
-                        "optionsConf" to option.conf,
+                        "optionsConf" to option.conf
                     )
                 )
                 else -> null
@@ -82,5 +82,5 @@ data class SelectPropOptionConf(
     val itemText: String? = null,
     val searchable: Boolean? = null,
     val multiple: Boolean? = null,
-    val clearable: Boolean? = null,
+    val clearable: Boolean? = null
 )
