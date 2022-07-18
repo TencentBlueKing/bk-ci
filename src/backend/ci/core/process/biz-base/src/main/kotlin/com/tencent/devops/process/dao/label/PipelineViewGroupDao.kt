@@ -30,6 +30,7 @@ package com.tencent.devops.process.dao.label
 import com.tencent.devops.model.process.tables.TPipelineViewGroup
 import com.tencent.devops.model.process.tables.records.TPipelineViewGroupRecord
 import org.jooq.DSLContext
+import org.jooq.InsertValuesStep5
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -39,19 +40,28 @@ class PipelineViewGroupDao {
         dslContext: DSLContext,
         viewGroups: List<TPipelineViewGroupRecord>
     ) {
+        dslContext.batch(viewGroups.map { getCreateQuery(dslContext, it) }).execute()
+    }
+
+    private fun getCreateQuery(
+        dslContext: DSLContext,
+        viewGroup: TPipelineViewGroupRecord
+    ): InsertValuesStep5<TPipelineViewGroupRecord, String, Long, String, LocalDateTime, String> {
         with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
-            val insertInto = dslContext.insertInto(
+            return dslContext.insertInto(
                 this,
                 PROJECT_ID,
                 VIEW_ID,
                 PIPELINE_ID,
                 CREATE_TIME,
                 CREATOR
+            ).values(
+                viewGroup.projectId,
+                viewGroup.viewId,
+                viewGroup.pipelineId,
+                LocalDateTime.now(),
+                viewGroup.creator
             )
-            viewGroups.forEach {
-                insertInto.values(it.projectId, it.viewId, it.pipelineId, LocalDateTime.now(), it.creator)
-            }
-            insertInto.execute()
         }
     }
 
