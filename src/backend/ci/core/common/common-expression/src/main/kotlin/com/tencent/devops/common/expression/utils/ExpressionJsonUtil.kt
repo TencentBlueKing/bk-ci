@@ -25,19 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.context
+package com.tencent.devops.common.expression.utils
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.TextNode
-import com.tencent.devops.common.expression.expression.sdk.IString
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import java.io.Reader
 
-class StringContextData(val value: String) : PipelineContextData(PipelineContextDataType.STRING), IString {
-    override fun getString(): String = value
+object ExpressionJsonUtil {
 
-    override fun clone(): PipelineContextData = StringContextData(value)
+    private val objectMapper = ObjectMapper()
 
-    override fun toJson(): JsonNode = TextNode(value)
-    override fun fetchValue() = getString()
+    fun createObjectNode(): ObjectNode = objectMapper.createObjectNode()
 
-    override fun toString(): String = value
+    fun createArrayNode(): ArrayNode = objectMapper.createArrayNode()
+
+    fun read(jsonReader: Reader): JsonNode {
+        return objectMapper.readTree(jsonReader)
+    }
 }

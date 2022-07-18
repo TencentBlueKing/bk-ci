@@ -43,4 +43,6 @@ class BooleanContextData(val value: Boolean) : PipelineContextData(PipelineConte
             BooleanNode.FALSE
         }
     }
+
+    override fun fetchValue() = getBoolean()
 }

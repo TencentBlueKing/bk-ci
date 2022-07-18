@@ -55,4 +55,6 @@ class NumberContextData(val value: Double) : PipelineContextData(PipelineContext
             DoubleNode(value)
         }
     }
+
+    override fun fetchValue() = getNumber()
 }

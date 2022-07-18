@@ -29,7 +29,7 @@ package com.tencent.devops.common.expression.context
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.tencent.devops.common.expression.expression.sdk.IReadOnlyObject
-import com.tencent.devops.common.expression.utils.ExpJsonUtil
+import com.tencent.devops.common.expression.utils.ExpressionJsonUtil
 import java.util.TreeMap
 
 class DictionaryContextData :
@@ -132,13 +132,23 @@ class DictionaryContextData :
     }
 
     override fun toJson(): JsonNode {
-        val json = ExpJsonUtil.createObjectNode()
+        val json = ExpressionJsonUtil.createObjectNode()
         if (mList.isNotEmpty()) {
             mList.forEach {
                 json.set<JsonNode>(it.key, it.value?.toJson())
             }
         }
         return json
+    }
+
+    override fun fetchValue(): Map<String, Any> {
+        val map = mutableMapOf<String, Any>()
+        if (mList.isNotEmpty()) {
+            mList.forEach {
+                map[it.key] = it.value?.fetchValue() ?: ""
+            }
+        }
+        return map
     }
 
     override fun iterator(): Iterator<Pair<String, PipelineContextData?>> {

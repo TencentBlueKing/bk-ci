@@ -153,7 +153,24 @@ class ExpressionParserTest {
             "jobs.job_2.steps.step_1.outputs.key_1" to "value1",
             "jobs.job_2.steps.step_1.outputs.key_2" to "value2",
             "jobs.build.0.steps.runStep.outputs.myoutput" to "build_0",
-            "jobs.build.2.steps.runStep.outputs.myoutput" to "build_1"
+            "jobs.build.2.steps.runStep.outputs.myoutput" to "build_1",
+            "depends.job1.outputs.matrix_include" to
+                """[{"service":"api","var1":"b","var3":"yyy"},{"service":"c","cpu":"zzz"}]"""
+        )
+        val expected = listOf(
+            mapOf(
+                "service" to "api",
+                "var1" to "b",
+                "var3" to "yyy"
+            ),
+            mapOf(
+                "service" to "c",
+                "cpu" to "zzz"
+            )
+        )
+        Assertions.assertEquals(
+            expected,
+            ExpressionParser.evaluateByMap("fromJSON(depends.job1.outputs.matrix_include)", variables)
         )
         Assertions.assertEquals(
             true,
@@ -165,7 +182,9 @@ class ExpressionParserTest {
         )
         Assertions.assertEquals(
             true,
-            ExpressionParser.evaluateByMap("contains(jobs.build.0.steps.runStep.outputs.myoutput, 'build_0')", variables)
+            ExpressionParser.evaluateByMap(
+                "contains(jobs.build.0.steps.runStep.outputs.myoutput, 'build_0')", variables
+            )
         )
         Assertions.assertEquals(
             true,
@@ -229,8 +248,8 @@ class ExpressionParserTest {
             "opTest.dic.dd.ddd => dd"
         ]
     )
-    fun operatorDereferenceTest(Dereference: String) {
-        valuesTest(Dereference)
+    fun operatorDereferenceTest(dereference: String) {
+        valuesTest(dereference)
     }
 
     @DisplayName("测试操作符: !")
@@ -350,8 +369,8 @@ class ExpressionParserTest {
             "(true != false) && (false != false) => false"
         ]
     )
-    fun operatorAndOrTest(Aor: String) {
-        valuesTest(Aor)
+    fun operatorAndOrTest(aor: String) {
+        valuesTest(aor)
     }
 
     @DisplayName("测试函数: contains(search, item)")

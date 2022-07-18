@@ -29,6 +29,7 @@ package com.tencent.devops.common.expression
 
 import com.tencent.devops.common.expression.context.ContextValueNode
 import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.ExpressionConstants
 import com.tencent.devops.common.expression.expression.IExpressionNode
@@ -94,8 +95,9 @@ object ExpressionParser {
                 data = data!![token] as DictionaryContextData
             }
         }
-        return createTree(expression.legalizeExpression(), null, nameValue, null)!!
+        val result = createTree(expression.legalizeExpression(), null, nameValue, null)!!
             .evaluate(null, context, null).value
+        return if (result is PipelineContextData) result.fetchValue() else result
     }
 
     fun createTree(
@@ -119,15 +121,16 @@ object ExpressionParser {
     }
 
     private fun String.legalizeExpression(): String {
+        val expression = this.replace("fromJSON", "fromJson")
         val regex = "jobs\\.([\\S]+)\\.([0-9]+)\\.steps\\.([\\S]+)\\.outputs\\.([\\S]+)"
         val pattern = Pattern.compile(regex)
-        val matcher = pattern.matcher(this)
+        val matcher = pattern.matcher(expression)
         return if (matcher.find()) {
-            this.replace(
+            expression.replace(
                 Regex(regex),
                 "jobs.${matcher.group(1)}[${matcher.group(2)}].steps.${matcher.group(3)}.outputs.${matcher.group(4)}"
             )
-        } else this
+        } else expression
     }
 
     private fun createTreeByContext(context: ParseContext): IExpressionNode? {
