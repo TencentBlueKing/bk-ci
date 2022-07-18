@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.KEY_COMMIT_ID
 import com.tencent.devops.common.api.constant.KEY_OS_ARCH
 import com.tencent.devops.common.api.constant.KEY_OS_NAME
 import com.tencent.devops.common.api.constant.KEY_SCRIPT
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
@@ -44,7 +45,6 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_RUNTIME_VERSION
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.docker.controller
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.user.UserDockerDebugResource
 import com.tencent.devops.dispatch.docker.pojo.DebugResponse
@@ -47,7 +48,7 @@ class UserDockerDebugResourceImpl @Autowired constructor(
     private val dockerRoutingService: DockerRoutingService,
     private val extDebugService: ExtDebugService
 ) : UserDockerDebugResource {
-
+    @BkTimed
     override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<DebugResponse>? {
         logger.info("[$userId]| start debug, debugStartParam: $debugStartParam")
         // dispatchType不在枚举工厂类内时默认为ext debug服务

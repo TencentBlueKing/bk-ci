@@ -27,6 +27,7 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.AESUtil
@@ -48,7 +49,6 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_VAR_DESC
 import com.tencent.devops.store.pojo.common.KEY_VAR_NAME
 import com.tencent.devops.store.pojo.common.KEY_VAR_VALUE
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.StoreEnvChangeLogInfo
 import com.tencent.devops.store.pojo.common.StoreEnvVarInfo
 import com.tencent.devops.store.pojo.common.StoreEnvVarRequest

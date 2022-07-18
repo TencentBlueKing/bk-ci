@@ -45,6 +45,7 @@ import com.tencent.devops.common.api.constant.KEY_OS_NAME
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_PATH
 import com.tencent.devops.common.api.constant.KEY_SCRIPT
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.constant.NUM_FIVE
 import com.tencent.devops.common.api.constant.NUM_FOUR
@@ -101,7 +102,6 @@ import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
 import com.tencent.devops.store.pojo.common.KEY_RUNTIME_VERSION
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.STORE_REPO_CODECC_BUILD_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX

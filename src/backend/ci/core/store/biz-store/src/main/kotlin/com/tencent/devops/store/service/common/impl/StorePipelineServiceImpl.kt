@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_PATH
 import com.tencent.devops.common.api.constant.KEY_SCRIPT
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
@@ -54,7 +55,6 @@ import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.OperationLogCreateRequest
 import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
 import com.tencent.devops.store.pojo.common.enums.ScopeTypeEnum

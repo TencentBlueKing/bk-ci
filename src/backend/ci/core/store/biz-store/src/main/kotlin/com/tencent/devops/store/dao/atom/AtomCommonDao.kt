@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.JS
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_PATH
 import com.tencent.devops.common.api.constant.KEY_SCRIPT
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
@@ -44,7 +45,6 @@ import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
