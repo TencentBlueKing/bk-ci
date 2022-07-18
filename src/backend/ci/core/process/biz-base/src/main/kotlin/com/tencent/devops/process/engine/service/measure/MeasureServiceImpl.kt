@@ -32,6 +32,7 @@ import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.KEY_CHANNEL
 import com.tencent.devops.common.api.constant.KEY_END_TIME
 import com.tencent.devops.common.api.constant.KEY_START_TIME
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.api.pojo.OrganizationDetailInfo
 import com.tencent.devops.common.api.util.timestampmilli
@@ -47,7 +48,6 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import com.tencent.devops.process.template.service.TemplateService
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import org.apache.lucene.util.RamUsageEstimator
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit

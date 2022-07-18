@@ -114,8 +114,8 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         templateId: String,
-        page: Int?,
-        pageSize: Int?,
+        page: Int,
+        pageSize: Int,
         searchKey: String?,
         sortType: TemplateSortTypeEnum?,
         desc: Boolean?
@@ -152,5 +152,5 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(
         )
     }
 
-    private fun checkPageSize(pageSize: Int?) = if (pageSize != null && pageSize > 30) 30 else pageSize
+    private fun checkPageSize(pageSize: Int) = if (pageSize > 30) 30 else pageSize
 }

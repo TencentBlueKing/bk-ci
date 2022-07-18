@@ -106,8 +106,8 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         templateId: String,
-        page: Int?,
-        pageSize: Int?,
+        page: Int,
+        pageSize: Int,
         searchKey: String?,
         sortType: TemplateSortTypeEnum?,
         desc: Boolean?
