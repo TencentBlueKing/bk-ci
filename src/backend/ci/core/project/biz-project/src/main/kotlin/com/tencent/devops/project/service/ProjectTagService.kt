@@ -129,7 +129,7 @@ class ProjectTagService @Autowired constructor(
         refreshRouterByProject(
             routerTag = projectTagUpdateDTO.routerTag,
             redisOperation = redisOperation,
-            projectCodeIds = projectTagUpdateDTO.projectCodeList!!
+            projectIds = projectTagUpdateDTO.projectCodeList!!
         )
         return Result(true)
     }
@@ -179,7 +179,7 @@ class ProjectTagService @Autowired constructor(
                 refreshRouterByProject(
                     routerTag = projectTagUpdateDTO.routerTag,
                     redisOperation = redisOperation,
-                    projectCodeIds = it
+                    projectIds = it
                 )
             }
         }
@@ -229,6 +229,9 @@ class ProjectTagService @Autowired constructor(
                 englishName = it.englishName,
                 otherRouterTag = JsonUtil.toJson(newRouteMap)
             )
+            if (extSystemTag.system == SystemEnums.CODECC.name) { // 网关会用到来做codecc路由
+                redisOperation.hset(PROJECT_TAG_CODECC_REDIS_KEY, it.englishName, extSystemTag.routerTag)
+            }
         }
         return Result(true)
     }
@@ -268,17 +271,13 @@ class ProjectTagService @Autowired constructor(
         }
     }
 
-    fun refreshRouterByProject(
-        routerTag: String,
-        projectCodeIds: List<String>,
-        redisOperation: RedisOperation
-    ) {
+    fun refreshRouterByProject(routerTag: String, projectIds: List<String>, redisOperation: RedisOperation) {
         val watcher = Watcher("ProjectTagRefresh $routerTag")
-        logger.info("ProjectTagRefresh start $routerTag $projectCodeIds")
-        projectCodeIds.forEach { projectCode ->
-            redisOperation.hset(PROJECT_TAG_REDIS_KEY, projectCode, routerTag)
+        logger.info("ProjectTagRefresh start $routerTag $projectIds")
+        projectIds.forEach { projectId ->
+            redisOperation.hset(PROJECT_TAG_REDIS_KEY, projectId, routerTag)
         }
-        logger.info("ProjectTagRefresh success. $routerTag ${projectCodeIds.size}")
+        logger.info("ProjectTagRefresh success. $routerTag ${projectIds.size}")
         LogUtils.printCostTimeWE(watcher)
     }
 
@@ -465,5 +464,6 @@ class ProjectTagService @Autowired constructor(
         private const val grayLabel = 1
         private const val prodLabel = 2
         private val logger = LoggerFactory.getLogger(ProjectTagService::class.java)
+        const val PROJECT_TAG_CODECC_REDIS_KEY = "project:setting:tag:codecc:v2"
     }
 }
