@@ -57,8 +57,8 @@
               "name": "select类型-v"
             },
             {
-              "id": "第二个",
-              "name": "123"
+              "id": "123",
+              "name": "第二个"
             },
             {
               "id": "true",
@@ -179,7 +179,7 @@
       ],
       "required": false,
       "ui:component": {
-        "name": "company-staff-input"
+        "name": "companyStaff"
       },
       "ui:props": {
         "labelWidth": 500

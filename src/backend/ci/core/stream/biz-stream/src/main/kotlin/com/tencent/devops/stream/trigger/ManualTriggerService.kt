@@ -242,7 +242,12 @@ class ManualTriggerService @Autowired constructor(
                                     FormDataType.STRING
                                 },
                                 title = value.props?.label ?: name,
-                                default = value.value?.split(",")?.toSet() ?: emptySet<String>(),
+                                default = if (value.props?.options.isNullOrEmpty()) {
+                                    // 从url拿的转一下类型
+                                    value.value?.split(",")?.map { it.trim().stringToOther() }?.toSet() ?: emptySet()
+                                } else {
+                                    value.value?.split(",")?.map { it.trim() }?.toSet() ?: emptySet<String>()
+                                },
                                 required = value.props?.required,
                                 description = value.props?.description,
                                 componentName = "selector",
@@ -277,7 +282,7 @@ class ManualTriggerService @Autowired constructor(
                             id = name,
                             type = FormDataType.ARRAY,
                             title = value.props?.label ?: name,
-                            default = value.value?.split(",")?.toSet() ?: emptySet<String>(),
+                            default = value.value?.split(",")?.map { it.trim() }?.toSet() ?: emptySet<String>(),
                             required = value.props?.required,
                             description = value.props?.description,
                             dataSource = value.props?.options?.map { option ->
@@ -345,6 +350,18 @@ class ManualTriggerService @Autowired constructor(
             }
 
             return builder.build()
+        }
+
+        // 将string转为其他可能的类型，如double，int或bool
+        fun String.stringToOther(): Any {
+            if (this == "true" || this == "false") {
+                return this.toBoolean()
+            }
+            // 有小数说明只有可能是double
+            if (this.contains(".")) {
+                return this.toDoubleOrNull() ?: this
+            }
+            return this.toLongOrNull() ?: this
         }
 
         fun parseInputs(inputs: Map<String, Any?>?): Map<String, String>? {
