@@ -25,15 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.expression
+package com.tencent.devops.common.expression
 
-import com.tencent.devops.common.expression.InvalidOperationException
-import com.tencent.devops.common.expression.NotSupportedException
-import com.tencent.devops.common.expression.ParseException
+import com.tencent.devops.common.expression.context.ContextValueNode
+import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.StringContextData
+import com.tencent.devops.common.expression.expression.ExpressionConstants
+import com.tencent.devops.common.expression.expression.IExpressionNode
+import com.tencent.devops.common.expression.expression.IFunctionInfo
+import com.tencent.devops.common.expression.expression.INamedValueInfo
+import com.tencent.devops.common.expression.expression.ITraceWriter
+import com.tencent.devops.common.expression.expression.ParseExceptionKind
 import com.tencent.devops.common.expression.expression.functions.NoOperation
 import com.tencent.devops.common.expression.expression.sdk.Container
 import com.tencent.devops.common.expression.expression.sdk.ExpressionNode
 import com.tencent.devops.common.expression.expression.sdk.Function
+import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import com.tencent.devops.common.expression.expression.sdk.NoOperationNamedValue
 import com.tencent.devops.common.expression.expression.sdk.operators.And
 import com.tencent.devops.common.expression.expression.sdk.operators.Or
@@ -45,6 +52,7 @@ import com.tencent.devops.common.expression.expression.tokens.peek
 import com.tencent.devops.common.expression.expression.tokens.pop
 import com.tencent.devops.common.expression.expression.tokens.push
 import java.util.TreeMap
+import java.util.regex.Pattern
 
 @Suppress(
     "NestedBlockDepth",
@@ -56,6 +64,41 @@ import java.util.TreeMap
     "ThrowsCount"
 )
 class ExpressionParser {
+
+    fun evaluateByMap(expression: String, contextMap: Map<String, String>): Any? {
+        val context = ExecutionContext(DictionaryContextData())
+        val nameValue = mutableListOf<NamedValueInfo>()
+        contextMap.forEach { (key, value) ->
+            var data: DictionaryContextData? = null
+            val tokens = key.split('.')
+            tokens.forEachIndexed { index, token ->
+                if (index == tokens.size - 1) {
+                    data!!.add(token, StringContextData(value))
+                    return@forEachIndexed
+                }
+
+                if (index == 0) {
+                    if (context.expressionValues[token] != null) {
+                        data = context.expressionValues[token] as DictionaryContextData
+                        return@forEachIndexed
+                    }
+                    nameValue.add(NamedValueInfo(token, ContextValueNode()))
+                    context.expressionValues[token] = DictionaryContextData()
+                    data = context.expressionValues[token] as DictionaryContextData
+                    return@forEachIndexed
+                }
+
+                if (data!![token] != null) {
+                    data = data!![token] as DictionaryContextData
+                    return@forEachIndexed
+                }
+                data!![token] = DictionaryContextData()
+                data = data!![token] as DictionaryContextData
+            }
+        }
+        return ExpressionParser().createTree(expression.legalizeExpression(), null, nameValue, null)!!
+            .evaluate(null, context, null).value
+    }
 
     fun createTree(
         expression: String,
@@ -75,6 +118,18 @@ class ExpressionParser {
         val context = ParseContext(expression, trace, null, null, true)
         context.trace.info("Validating expression syntax: <$expression>")
         return createTree(context)
+    }
+
+    private fun String.legalizeExpression(): String {
+        val regex = "jobs\\.([\\S]+)\\.([0-9]+)\\.steps\\.([\\S]+)\\.outputs\\.([\\S]+)"
+        val pattern = Pattern.compile(regex)
+        val matcher = pattern.matcher(this)
+        return if (matcher.find()) {
+            this.replace(
+                Regex(regex),
+                "jobs.${matcher.group(1)}[${matcher.group(2)}].steps.${matcher.group(3)}.outputs.${matcher.group(4)}"
+            )
+        } else this
     }
 
     companion object {

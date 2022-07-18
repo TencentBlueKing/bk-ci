@@ -28,6 +28,7 @@
 package com.tencent.devops.common.expression.expression
 
 import com.tencent.devops.common.expression.ExecutionContext
+import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.context.ArrayContextData
 import com.tencent.devops.common.expression.context.BooleanContextData
 import com.tencent.devops.common.expression.context.ContextValueNode
@@ -40,8 +41,9 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import java.util.regex.Pattern
 
-@Suppress("ComplexMethod", "LongMethod")
+@Suppress("ComplexMethod", "LongMethod", "MaxLineLength")
 @DisplayName("表达式解析类综合测试")
 class ExpressionParserTest {
 
@@ -156,55 +158,25 @@ class ExpressionParserTest {
             "jobs.build.2.steps.runStep.outputs.myoutput" to "build_1"
         )
         val parser = ExpressionParser()
-        val context = ExecutionContext(DictionaryContextData())
-        val nameValue = mutableListOf<NamedValueInfo>()
-        variables.forEach { (key, value) ->
-            var data: DictionaryContextData? = null
-            val tokens = key.split('.')
-            tokens.forEachIndexed { index, token ->
-                if (index == tokens.size - 1) {
-                    data!!.add(token, StringContextData(value))
-                    return@forEachIndexed
-                }
-
-                if (index == 0) {
-                    if (context.expressionValues[token] != null) {
-                        data = context.expressionValues[token] as DictionaryContextData
-                        return@forEachIndexed
-                    }
-                    nameValue.add(NamedValueInfo(token, ContextValueNode()))
-                    context.expressionValues[token] = DictionaryContextData()
-                    data = context.expressionValues[token] as DictionaryContextData
-                    return@forEachIndexed
-                }
-
-                if (data!![token] != null) {
-                    data = data!![token] as DictionaryContextData
-                    return@forEachIndexed
-                }
-                data!![token] = DictionaryContextData()
-                data = data!![token] as DictionaryContextData
-            }
-        }
         Assertions.assertEquals(
-            parser.createTree("jobs['build'][0].steps.runStep.outputs.myoutput == 'build_0'", null, nameValue, null)!!
-                .evaluate(null, context, null).value,
-            true
+            true,
+            parser.evaluateByMap("jobs.build[0].steps.runStep.outputs.myoutput == 'build_0'", variables)
         )
         Assertions.assertEquals(
-            parser.createTree("jobs.build[0].steps.runStep.outputs.myoutput == 'build_0'", null, nameValue, null)!!
-                .evaluate(null, context, null).value,
-            true
+            true,
+            parser.evaluateByMap("jobs.build.0.steps.runStep.outputs.myoutput == 'build_0'", variables)
         )
         Assertions.assertEquals(
-            parser.createTree("jobs.build.'0'.steps.runStep.outputs.myoutput == 'build_0'", null, nameValue, null)!!
-                .evaluate(null, context, null).value,
-            true
+            true,
+            parser.evaluateByMap( "contains(jobs.build.0.steps.runStep.outputs.myoutput, 'build_0')", variables)
         )
         Assertions.assertEquals(
-            parser.createTree("variables.pipeline_name == '流水线名称'", null, nameValue, null)!!
-                .evaluate(null, context, null).value,
-            true
+            true,
+            parser.evaluateByMap("variables.pipeline_name == '流水线名称'", variables)
+        )
+        Assertions.assertEquals(
+            "p-xxx",
+            parser.evaluateByMap("variables.pipeline_id", variables)
         )
     }
 
