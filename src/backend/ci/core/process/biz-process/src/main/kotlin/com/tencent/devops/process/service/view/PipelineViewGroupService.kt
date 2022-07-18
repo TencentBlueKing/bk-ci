@@ -286,7 +286,7 @@ class PipelineViewGroupService @Autowired constructor(
             }
             pipelineIds.forEach {
                 pipelineViewGroupDao.create(
-                    dslContext = dslContext,
+                    dslContext = context ?: dslContext,
                     projectId = projectId,
                     pipelineId = it,
                     viewId = view.id,
