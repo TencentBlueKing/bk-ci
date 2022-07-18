@@ -35,6 +35,38 @@ BEGIN
 				 AND INDEX_NAME = 'inx_taf_certification_flag') THEN
 		ALTER TABLE T_ATOM_FEATURE ADD INDEX `inx_taf_certification_flag` (`CERTIFICATION_FLAG`); 
 	END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ATOM_ENV_INFO'
+                    AND COLUMN_NAME = 'OS_NAME') THEN
+        ALTER TABLE T_ATOM_ENV_INFO ADD `OS_NAME` varchar(128) DEFAULT NULL COMMENT '支持的操作系统名称';
+    END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ATOM_ENV_INFO'
+                    AND COLUMN_NAME = 'OS_ARCH') THEN
+        ALTER TABLE T_ATOM_ENV_INFO ADD `OS_ARCH` varchar(128) DEFAULT NULL COMMENT '支持的操作系统架构';
+    END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ATOM_ENV_INFO'
+                    AND COLUMN_NAME = 'RUNTIME_VERSION') THEN
+        ALTER TABLE T_ATOM_ENV_INFO ADD `RUNTIME_VERSION` varchar(128) DEFAULT NULL COMMENT '运行时版本';
+    END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ATOM_ENV_INFO'
+                    AND COLUMN_NAME = 'DEFAULT_FLAG') THEN
+        ALTER TABLE T_ATOM_ENV_INFO ADD `DEFAULT_FLAG` bit(1) NOT NULL DEFAULT b'1' COMMENT '是否为默认环境信息';
+    END IF;
 
     COMMIT;
 END <CI_UBF>
