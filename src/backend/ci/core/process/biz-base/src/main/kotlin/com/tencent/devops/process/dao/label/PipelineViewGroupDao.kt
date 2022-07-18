@@ -103,6 +103,7 @@ class PipelineViewGroupDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(VIEW_ID.eq(viewId))
                 .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
         }
     }
 
@@ -115,6 +116,7 @@ class PipelineViewGroupDao {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(VIEW_ID.eq(viewId))
+                .execute()
         }
     }
 }
