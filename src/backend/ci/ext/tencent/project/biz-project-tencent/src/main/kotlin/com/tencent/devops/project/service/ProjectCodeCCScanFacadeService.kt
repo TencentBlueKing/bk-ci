@@ -27,35 +27,31 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
-import com.tencent.devops.project.util.ProjectUtils.packagingBean
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ProjectS3Service @Autowired constructor(
-    private val projectDao: ProjectDao,
-    private val dslContext: DSLContext,
+class ProjectCodeCCScanFacadeService @Autowired constructor(
     private val projectService: ProjectService,
     val projectTagService: ProjectTagService
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ProjectS3Service::class.java)
+        private val logger = LoggerFactory.getLogger(ProjectCodeCCScanFacadeService::class.java)
     }
 
     fun createCodeCCScanProject(userId: String, projectCreateInfo: ProjectCreateInfo): ProjectVO {
-        logger.info("start to create public scan project $projectCreateInfo!")
-        var publicScanProject = projectDao.getByEnglishName(dslContext, projectCreateInfo.englishName)
+        logger.info("createCodeCCScanProject|${projectCreateInfo.englishName}|${projectCreateInfo.projectName}|$userId")
+        var publicScanProject = projectService.getByEnglishName(projectCreateInfo.englishName)
         if (null != publicScanProject) {
-            return packagingBean(publicScanProject)
+            return publicScanProject
         }
+
 
         try {
             projectService.create(
@@ -70,12 +66,12 @@ class ProjectS3Service @Autowired constructor(
             // codecc任务自动将流量指向auto集群
             projectTagService.updateTagByProject(projectCreateInfo.englishName, null)
         } catch (e: Throwable) {
-            logger.error("Create project failed,", e)
+            logger.error("CodeCC_Scan_Project_Create_Failed| error=${e.message}", e)
             throw e
         }
 
-        publicScanProject = projectDao.getByEnglishName(dslContext, projectCreateInfo.englishName)
+        publicScanProject = projectService.getByEnglishName(projectCreateInfo.englishName)
         logger.info("create public scan project successfully!")
-        return packagingBean(publicScanProject!!)
+        return publicScanProject!!
     }
 }

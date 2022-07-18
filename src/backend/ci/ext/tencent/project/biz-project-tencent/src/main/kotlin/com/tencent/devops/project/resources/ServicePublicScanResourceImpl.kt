@@ -32,18 +32,18 @@ import com.tencent.devops.project.api.service.service.ServicePublicScanResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.service.ProjectS3Service
+import com.tencent.devops.project.service.ProjectCodeCCScanFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePublicScanResourceImpl @Autowired constructor(
-    private val projectS3Service: ProjectS3Service
+    private val projectCodeCCScanFacadeService: ProjectCodeCCScanFacadeService
 ) : ServicePublicScanResource {
 
     override fun createCodeCCScanProject(
         userId: String,
         projectCreateInfo: ProjectCreateInfo
     ): Result<ProjectVO> {
-        return Result(projectS3Service.createCodeCCScanProject(userId, projectCreateInfo))
+        return Result(projectCodeCCScanFacadeService.createCodeCCScanProject(userId, projectCreateInfo))
     }
 }
