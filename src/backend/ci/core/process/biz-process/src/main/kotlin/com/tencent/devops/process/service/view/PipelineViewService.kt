@@ -45,14 +45,13 @@ import com.tencent.devops.process.dao.PipelineViewUserSettingsDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.classify.PipelineNewView
-import com.tencent.devops.process.pojo.classify.PipelineNewViewCreate
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
-import com.tencent.devops.process.pojo.classify.PipelineNewViewUpdate
 import com.tencent.devops.process.pojo.classify.PipelineViewClassify
 import com.tencent.devops.process.pojo.classify.PipelineViewFilter
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByCreator
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByLabel
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
+import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewIdAndName
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import com.tencent.devops.process.pojo.classify.enums.Condition
@@ -328,7 +327,7 @@ class PipelineViewService @Autowired constructor(
     fun addView(
         userId: String,
         projectId: String,
-        pipelineView: PipelineNewViewCreate,
+        pipelineView: PipelineViewForm,
         context: DSLContext? = null
     ): Long {
         try {
@@ -366,7 +365,7 @@ class PipelineViewService @Autowired constructor(
         userId: String,
         projectId: String,
         viewId: Long,
-        pipelineView: PipelineNewViewUpdate,
+        pipelineView: PipelineViewForm,
         context: DSLContext? = null
     ): Boolean {
         try {

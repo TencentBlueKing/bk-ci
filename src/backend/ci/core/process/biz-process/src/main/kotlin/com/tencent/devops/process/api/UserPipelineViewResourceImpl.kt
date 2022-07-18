@@ -31,9 +31,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import com.tencent.devops.process.pojo.classify.PipelineNewView
-import com.tencent.devops.process.pojo.classify.PipelineNewViewCreate
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
-import com.tencent.devops.process.pojo.classify.PipelineNewViewUpdate
+import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import com.tencent.devops.process.service.view.PipelineViewGroupService
@@ -65,7 +64,7 @@ class UserPipelineViewResourceImpl @Autowired constructor(
     override fun addView(
         userId: String,
         projectId: String,
-        pipelineView: PipelineNewViewCreate
+        pipelineView: PipelineViewForm
     ): Result<PipelineViewId> {
         return Result(PipelineViewId(pipelineViewGroupService.addViewGroup(userId, projectId, pipelineView)))
     }
@@ -78,7 +77,7 @@ class UserPipelineViewResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         viewId: String,
-        pipelineView: PipelineNewViewUpdate
+        pipelineView: PipelineViewForm
     ): Result<Boolean> {
         return Result(pipelineViewGroupService.updateViewGroup(projectId, userId, viewId, pipelineView))
     }

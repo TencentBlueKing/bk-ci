@@ -41,8 +41,7 @@ import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.classify.PipelineNewViewCreate
-import com.tencent.devops.process.pojo.classify.PipelineNewViewUpdate
+import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
 import org.jooq.DSLContext
@@ -63,7 +62,7 @@ class PipelineViewGroupService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation
 ) {
-    fun addViewGroup(projectId: String, userId: String, pipelineView: PipelineNewViewCreate): String {
+    fun addViewGroup(projectId: String, userId: String, pipelineView: PipelineViewForm): String {
         checkPermission(userId, projectId, pipelineView.projected)
         var viewId = 0L
         dslContext.transaction { t ->
@@ -71,8 +70,7 @@ class PipelineViewGroupService @Autowired constructor(
             viewId = pipelineViewService.addView(userId, projectId, pipelineView, context)
             initViewGroup(
                 context = context,
-                viewType = pipelineView.viewType,
-                pipelineIds = pipelineView.pipelineIds,
+                pipelineView = pipelineView,
                 projectId = projectId,
                 viewId = viewId,
                 userId = userId
@@ -85,7 +83,7 @@ class PipelineViewGroupService @Autowired constructor(
         projectId: String,
         userId: String,
         viewIdEncode: String,
-        pipelineView: PipelineNewViewUpdate
+        pipelineView: PipelineViewForm
     ): Boolean {
         // 获取老视图
         val viewId = HashUtil.decodeIdToLong(viewIdEncode)
@@ -111,8 +109,7 @@ class PipelineViewGroupService @Autowired constructor(
                 redisOperation.delete(firstInitMark(projectId, viewId))
                 initViewGroup(
                     context = context,
-                    viewType = pipelineView.viewType,
-                    pipelineIds = pipelineView.pipelineIds,
+                    pipelineView = pipelineView,
                     projectId = projectId,
                     viewId = viewId,
                     userId = userId
@@ -231,20 +228,19 @@ class PipelineViewGroupService @Autowired constructor(
 
     private fun initViewGroup(
         context: DSLContext,
-        viewType: Int,
-        pipelineIds: List<String>,
+        pipelineView: PipelineViewForm,
         projectId: String,
         viewId: Long,
         userId: String,
     ) {
         val watcher = Watcher("initViewGroup|$projectId|$viewId|$userId")
-        if (viewType == PipelineViewType.DYNAMIC) {
+        if (pipelineView.viewType == PipelineViewType.DYNAMIC) {
             watcher.start("initDynamicViewGroup")
             initDynamicViewGroup(pipelineViewDao.get(context, projectId, viewId)!!, userId, context)
             watcher.stop()
         } else {
             watcher.start("initStaticViewGroup")
-            pipelineViewGroupDao.batchCreate(context, pipelineIds.map {
+            pipelineViewGroupDao.batchCreate(context, pipelineView.pipelineIds.map {
                 val viewGroup = TPipelineViewGroupRecord()
                 viewGroup.projectId = projectId
                 viewGroup.viewId = viewId

@@ -31,9 +31,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.classify.PipelineNewView
-import com.tencent.devops.process.pojo.classify.PipelineNewViewCreate
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
-import com.tencent.devops.process.pojo.classify.PipelineNewViewUpdate
+import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import io.swagger.annotations.Api
@@ -55,7 +54,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPipelineViewResource {
-    // TODO 前两个为老接口, 为流水线列表页上方的配置, 新的体验组不会用到
     @ApiOperation("获取视图设置")
     @GET
     @Path("/projects/{projectId}/settings")
@@ -81,7 +79,6 @@ interface UserPipelineViewResource {
         viewIdList: List<String>
     ): Result<Boolean>
 
-    // TODO 后面的接口要兼容
     @ApiOperation("获取所有视图")
     @GET
     @Path("/projects/{projectId}/")
@@ -104,7 +101,7 @@ interface UserPipelineViewResource {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        pipelineView: PipelineNewViewCreate
+        pipelineView: PipelineViewForm
     ): Result<PipelineViewId>
 
     @ApiOperation("获取视图")
@@ -148,6 +145,6 @@ interface UserPipelineViewResource {
         @ApiParam("标签ID", required = true)
         @PathParam("viewId")
         viewId: String,
-        pipelineView: PipelineNewViewUpdate
+        pipelineView: PipelineViewForm
     ): Result<Boolean>
 }
