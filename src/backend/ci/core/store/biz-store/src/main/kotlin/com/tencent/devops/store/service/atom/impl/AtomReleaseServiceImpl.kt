@@ -30,6 +30,7 @@ package com.tencent.devops.store.service.atom.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEPLOY
 import com.tencent.devops.common.api.constant.DEVELOP
+import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
 import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.constant.SECURITY
 import com.tencent.devops.common.api.constant.TEST
@@ -42,6 +43,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.quality.api.v2.ServiceQualityControlPointMarketResource
@@ -77,6 +79,7 @@ import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.KEY_CODE_SRC
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
 import com.tencent.devops.store.pojo.common.KEY_EXECUTION
 import com.tencent.devops.store.pojo.common.KEY_INPUT
@@ -186,6 +189,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         return Result(true)
     }
 
+    @BkTimed(extraTags = ["publish", "addMarketAtom"], value = "store_publish_pipeline_atom")
     override fun addMarketAtom(
         userId: String,
         marketAtomCreateRequest: MarketAtomCreateRequest
@@ -211,8 +215,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 dslContext = context,
                 userId = userId,
                 id = id,
-                repositoryHashId = handleAtomPackageMap?.get("repositoryHashId") ?: "",
-                codeSrc = handleAtomPackageMap?.get("codeSrc") ?: "",
+                repositoryHashId = handleAtomPackageMap?.get(KEY_REPOSITORY_HASH_ID) ?: "",
+                codeSrc = handleAtomPackageMap?.get(KEY_CODE_SRC) ?: "",
                 docsLink = atomDetailBaseUrl + atomCode,
                 marketAtomCreateRequest = marketAtomCreateRequest
             )
@@ -271,6 +275,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     abstract fun getAtomPackageSourceType(atomCode: String): AtomPackageSourceTypeEnum
 
     @Suppress("UNCHECKED_CAST")
+    @BkTimed(extraTags = ["publish", "updateMarketAtom"], value = "store_publish_pipeline_atom")
     override fun updateMarketAtom(
         userId: String,
         projectCode: String,
@@ -428,7 +433,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
             }
             // 更新标签信息
-            val labelIdList = marketAtomUpdateRequest.labelIdList
+            val labelIdList = marketAtomUpdateRequest.labelIdList?.filter { !it.isNullOrBlank() }
             if (null != labelIdList) {
                 atomLabelRelDao.deleteByAtomId(context, atomId)
                 if (labelIdList.isNotEmpty()) {
@@ -495,6 +500,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             releaseType = releaseType,
             versionContent = marketAtomUpdateRequest.versionContent
         )
+        marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
         marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
@@ -873,6 +879,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     /**
      * 通过测试
      */
+    @BkTimed(extraTags = ["publish", "passTest"], value = "store_publish_pipeline_atom")
     override fun passTest(userId: String, atomId: String): Result<Boolean> {
         logger.info("passTest, userId=$userId, atomId=$atomId")
         val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
@@ -913,6 +920,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
     }
 
+    @BkTimed(extraTags = ["publish", "handleAtomRelease"], value = "store_publish_pipeline_atom")
     override fun handleAtomRelease(
         userId: String,
         releaseFlag: Boolean,

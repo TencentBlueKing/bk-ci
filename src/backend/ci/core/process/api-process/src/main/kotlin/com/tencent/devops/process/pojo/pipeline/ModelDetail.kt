@@ -41,6 +41,8 @@ data class ModelDetail(
     val pipelineName: String,
     @ApiModelProperty("启动用户", required = true)
     val userId: String,
+    @ApiModelProperty("触发用户", required = true)
+    val triggerUser: String? = null,
     @ApiModelProperty("触发条件", required = true)
     val trigger: String,
     @ApiModelProperty("Start time", required = true)

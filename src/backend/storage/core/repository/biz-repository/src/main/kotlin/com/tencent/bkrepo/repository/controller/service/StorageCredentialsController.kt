@@ -31,8 +31,8 @@
 
 package com.tencent.bkrepo.repository.controller.service
 
-import com.tencent.bkrepo.common.api.message.CommonMessageCode
 import com.tencent.bkrepo.common.api.pojo.Response
+import com.tencent.bkrepo.common.service.util.ResponseBuilder
 import com.tencent.bkrepo.common.storage.core.StorageProperties
 import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
 import com.tencent.bkrepo.repository.api.StorageCredentialsClient
@@ -53,19 +53,10 @@ class StorageCredentialsController(
         } else {
             storageCredentialService.findByKey(key)
         }
-        return StorageCredentialsResponse.success(credentials)
+        return ResponseBuilder.buildTyped(credentials)
     }
-    /**
-     * 原来的ResponseBuilder是泛型，会导致类型擦出，致使在序列化的时候抽象JsonTypeInfo注解无效，
-     * type字段不会序列化，使用StorageCredentialsClient的接收方反序列化时就会报错。
-     * 所以这里要使用具体类型
-     * */
-    class StorageCredentialsResponse(code: Int, data: StorageCredentials?) :
-        Response<StorageCredentials>(code, data = data) {
-        companion object {
-            fun success(data: StorageCredentials?): StorageCredentialsResponse {
-                return StorageCredentialsResponse(CommonMessageCode.SUCCESS.getCode(), data)
-            }
-        }
+
+    override fun list(region: String?): Response<List<StorageCredentials>> {
+        return ResponseBuilder.buildTyped(storageCredentialService.list(region))
     }
 }

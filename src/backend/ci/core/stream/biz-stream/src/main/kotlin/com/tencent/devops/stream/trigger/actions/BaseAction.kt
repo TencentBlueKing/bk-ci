@@ -90,8 +90,9 @@ interface BaseAction {
     /**
      * 获取yaml文件具体内容
      * @param fileName 文件名称
+     * @return <ref,yaml>
      */
-    fun getYamlContent(fileName: String): String
+    fun getYamlContent(fileName: String): Pair<String, String>
 
     /**
      * 获取本次触发变更的文件列表
@@ -142,4 +143,9 @@ interface BaseAction {
     fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook)
 
     fun needAddWebhookParams() = false
+
+    fun updateLastBranch(
+        pipelineId: String,
+        branch: String
+    )
 }

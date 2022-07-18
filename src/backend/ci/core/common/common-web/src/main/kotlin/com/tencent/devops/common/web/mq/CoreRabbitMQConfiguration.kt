@@ -28,7 +28,13 @@
 package com.tencent.devops.common.web.mq
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.service.utils.KubernetesUtils
+import com.tencent.devops.common.web.mq.factory.CustomSimpleRabbitListenerContainerFactory
 import com.tencent.devops.common.web.mq.property.CoreRabbitMQProperties
+import org.slf4j.MDC
+import org.springframework.amqp.core.Message
+import org.springframework.amqp.core.MessagePostProcessor
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
@@ -54,20 +60,28 @@ class CoreRabbitMQConfiguration {
 
     @Value("\${spring.rabbitmq.core.virtual-host}")
     private val virtualHost: String? = null
+
     @Value("\${spring.rabbitmq.core.username}")
     private val username: String? = null
+
     @Value("\${spring.rabbitmq.core.password}")
     private val password: String? = null
+
     @Value("\${spring.rabbitmq.core.addresses}")
     private val addresses: String? = null
+
     @Value("\${spring.rabbitmq.core.listener.simple.concurrency:#{null}}")
     private var concurrency: Int? = null
+
     @Value("\${spring.rabbitmq.core.listener.simple.max-concurrency:#{null}}")
     private var maxConcurrency: Int? = null
+
     @Value("\${spring.rabbitmq.core.cache.channel.size:#{null}}")
     private var channelCacheSize: Int? = null
+
     @Value("\${spring.rabbitmq.listener.simple.prefetch:#{null}}")
     private val preFetchCount: Int? = null
+
     @Value("\${spring.rabbitmq.core.channel-rpc-timeout:#{null}}")
     private val channelRpcTimeout: Int? = null
 
@@ -79,7 +93,7 @@ class CoreRabbitMQConfiguration {
         connectionFactory.port = config.port
         connectionFactory.username = username!!
         connectionFactory.setPassword(password!!)
-        connectionFactory.virtualHost = virtualHost!!
+        connectionFactory.virtualHost = getVirtualHost()
         connectionFactory.setAddresses(addresses!!)
         if (channelCacheSize != null && channelCacheSize!! > 0) {
             connectionFactory.channelCacheSize = channelCacheSize!!
@@ -99,6 +113,7 @@ class CoreRabbitMQConfiguration {
     ): RabbitTemplate {
         val rabbitTemplate = RabbitTemplate(connectionFactory)
         rabbitTemplate.messageConverter = messageConverter(objectMapper)
+        rabbitTemplate.addBeforePublishPostProcessors(setTraceIdToMessageProcess)
         return rabbitTemplate
     }
 
@@ -118,7 +133,7 @@ class CoreRabbitMQConfiguration {
         connectionFactory: ConnectionFactory,
         objectMapper: ObjectMapper
     ): SimpleRabbitListenerContainerFactory {
-        val factory = SimpleRabbitListenerContainerFactory()
+        val factory = CustomSimpleRabbitListenerContainerFactory(traceMessagePostProcessor)
         factory.setMessageConverter(messageConverter(objectMapper))
         factory.setConnectionFactory(connectionFactory)
         if (concurrency != null) {
@@ -136,4 +151,27 @@ class CoreRabbitMQConfiguration {
     @Bean
     fun messageConverter(objectMapper: ObjectMapper) =
         Jackson2JsonMessageConverter(objectMapper)
+
+    fun getVirtualHost(): String {
+        return virtualHost + if (KubernetesUtils.isMultiCluster()) "-k8s" else ""
+    }
+
+    companion object {
+        private fun mdcFromMessage(message: Message?) {
+            (message ?: return).messageProperties.getHeader<String?>(TraceTag.X_DEVOPS_RID)?.let {
+                MDC.put(TraceTag.BIZID, it)
+            }
+        }
+
+        internal val traceMessagePostProcessor = MessagePostProcessor { message ->
+            mdcFromMessage(message)
+            message
+        }
+
+        internal val setTraceIdToMessageProcess = MessagePostProcessor { message ->
+            val traceId = MDC.get(TraceTag.BIZID)?.ifBlank { TraceTag.buildBiz() }
+            message.messageProperties.setHeader(TraceTag.X_DEVOPS_RID, traceId)
+            message
+        }
+    }
 }

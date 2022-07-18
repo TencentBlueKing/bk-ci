@@ -32,10 +32,9 @@ import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.bkrepo.common.artifact.event.base.ArtifactEvent
 import com.tencent.bkrepo.common.artifact.util.okhttp.HttpClientBuilderFactory
 import com.tencent.bkrepo.webhook.config.WebHookProperties
-import com.tencent.bkrepo.webhook.constant.WEBHOOK_AUTH_HEADER
-import com.tencent.bkrepo.webhook.constant.WEBHOOK_EVENT_HEADER
 import com.tencent.bkrepo.webhook.constant.WebHookRequestStatus
 import com.tencent.bkrepo.webhook.dao.WebHookLogDao
+import com.tencent.bkrepo.webhook.metrics.WebHookMetrics
 import com.tencent.bkrepo.webhook.model.TWebHook
 import com.tencent.bkrepo.webhook.model.TWebHookLog
 import com.tencent.bkrepo.webhook.payload.EventPayloadFactory
@@ -63,7 +62,8 @@ import java.util.Locale
 class WebHookExecutor(
     private val webHookLogDao: WebHookLogDao,
     private val eventPayloadFactory: EventPayloadFactory,
-    private val webHookProperties: WebHookProperties
+    private val webHookProperties: WebHookProperties,
+    private val webHookMetrics: WebHookMetrics
 ) {
 
     private val httpClient = HttpClientBuilderFactory.create().build()
@@ -112,29 +112,38 @@ class WebHookExecutor(
     }
 
     fun asyncExecutor(event: ArtifactEvent, webHook: TWebHook) {
-        val payload = eventPayloadFactory.build(event)
+        val payload = try {
+            eventPayloadFactory.build(event)
+        }catch (e :Exception) {
+            logger.warn("webhook build payload error, event[$event], error: ${e.message}")
+            webHookLogDao.insert(buildWebHookErrorLog(event, webHook, e))
+            return
+        }
         val request = buildRequest(webHook, payload)
         val startTimestamp = System.currentTimeMillis()
         val log = buildWebHookLog(webHook, request, payload)
+        webHookMetrics.executingCount.incrementAndGet()
         httpClient.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, exception: IOException) {
-                logger.error("Execute webhook[id=${webHook.id}, url=${webHook.url}] error. ${exception.cause}")
+                logger.info("Execute webhook[id=${webHook.id}, url=${webHook.url}] error. ${exception.cause}")
                 buildWebHookFailedLog(log, startTimestamp, exception.message)
                 webHookLogDao.insert(log)
+                webHookMetrics.executingCount.decrementAndGet()
             }
 
             override fun onResponse(call: Call, response: Response) {
                 try {
                     response.use {
                         if (!it.isSuccessful) throw IOException("unexpected code $it")
-                        logger.info("Execute web hook[id=${webHook.id}, url=${webHook.url}] success.")
+                        logger.info("Execute webhook[id=${webHook.id}, url=${webHook.url}] success.")
                         buildWebHookSuccessLog(log, startTimestamp, it)
                     }
                 } catch (exception: IOException) {
-                    logger.error("Execute web hook[id=${webHook.id}, url=${webHook.url}] error. ${exception.cause}")
+                    logger.info("Execute webhook[id=${webHook.id}, url=${webHook.url}] error. ${exception.cause}")
                     buildWebHookFailedLog(log, startTimestamp, exception.message)
                 }
                 webHookLogDao.insert(log)
+                webHookMetrics.executingCount.decrementAndGet()
             }
         })
     }
@@ -153,6 +162,20 @@ class WebHookExecutor(
             requestDuration = 0L,
             requestTime = LocalDateTime.now(),
             status = WebHookRequestStatus.FAIL
+        )
+    }
+
+    private fun buildWebHookErrorLog(event: ArtifactEvent, webHook: TWebHook, e: Exception): TWebHookLog {
+        return TWebHookLog(
+            webHookId = webHook.id!!,
+            webHookUrl = webHook.url,
+            triggeredEvent = event.type,
+            requestDuration = 0,
+            requestTime = LocalDateTime.now(),
+            status = WebHookRequestStatus.ERROR,
+            errorMsg = e.message,
+            requestHeaders = emptyMap(),
+            requestPayload = event.toJsonString()
         )
     }
 
@@ -176,7 +199,9 @@ class WebHookExecutor(
         val requestBody = RequestBody.create(MediaType.parse(MediaTypes.APPLICATION_JSON), payload.toJsonString())
         val builder = Request.Builder().url(webHook.url).post(requestBody)
         builder.addHeader(WEBHOOK_EVENT_HEADER, payload.eventType.name)
-        webHook.token?.let { token -> builder.addHeader(WEBHOOK_AUTH_HEADER, token) }
+        webHook.headers?.forEach { (k, v) ->
+            builder.addHeader(k, v)
+        }
         return builder.build()
     }
 
@@ -192,5 +217,6 @@ class WebHookExecutor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WebHookExecutor::class.java)
+        const val WEBHOOK_EVENT_HEADER = "X-BKREPO-EVENT"
     }
 }

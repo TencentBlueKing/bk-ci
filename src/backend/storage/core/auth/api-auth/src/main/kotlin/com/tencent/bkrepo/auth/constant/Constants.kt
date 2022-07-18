@@ -81,6 +81,9 @@ const val AUTH_API_KEY_PREFIX = "/api/key"
 const val AUTH_API_OAUTH_PREFIX = "/api/oauth"
 const val AUTH_SERVICE_OAUTH_PREFIX = "/service/oauth"
 
+const val AUTH_API_EXT_PERMISSION_PREFIX = "/api/ext-permission"
+const val AUTH_SERVICE_EXT_PERMISSION_PREFIX = "/service/ext-permission"
+
 const val AUTH_ADMIN = "admin"
 const val AUTH_BUILTIN_ADMIN = "repo_admin"
 const val AUTH_BUILTIN_USER = "repo_user"

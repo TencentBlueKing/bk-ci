@@ -40,6 +40,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
@@ -174,7 +175,12 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineName = model.name
         )
         // setting pipeline需替换成新流水线的
-        pipelineSettingFacadeService.saveSetting(userId = userId, setting = newSetting, checkPermission = true)
+        pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            setting = newSetting,
+            checkPermission = true,
+            dispatchPipelineUpdateEvent = false
+        )
         return newPipelineId
     }
 
@@ -234,7 +240,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     pipelineId = fixPipelineId,
                     name = model.name,
                     channelCode = channelCode
-                )) {
+                )
+            ) {
                 logger.warn("The pipeline(${model.name}) is exist")
                 throw ErrorCodeException(
                     statusCode = Response.Status.CONFLICT.statusCode,
@@ -483,10 +490,11 @@ class PipelineInfoFacadeService @Autowired constructor(
 //                message = "用户($userId)无权限在工程($projectId)下创建流水线"
 //            )
             if (!pipelinePermissionService.checkPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                permission = AuthPermission.CREATE
-            )) {
+                    userId = userId,
+                    projectId = projectId,
+                    permission = AuthPermission.CREATE
+                )
+            ) {
                 throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下创建流水线")
             }
         }
@@ -522,7 +530,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 // 复制setting到新流水线
                 pipelineSettingFacadeService.saveSetting(
                     userId = userId,
-                    setting = newSetting
+                    setting = newSetting,
+                    dispatchPipelineUpdateEvent = false
                 )
             }
             return newPipelineId
@@ -586,7 +595,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     pipelineId = pipelineId,
                     name = model.name,
                     channelCode = channelCode
-                )) {
+                )
+            ) {
                 logger.warn("The pipeline(${model.name}) is exist")
                 throw ErrorCodeException(
                     statusCode = Response.Status.CONFLICT.statusCode,
@@ -655,7 +665,12 @@ class PipelineInfoFacadeService @Autowired constructor(
     ) {
         val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId, channelCode)
         setting.pipelineName = name
-        pipelineSettingFacadeService.saveSetting(userId = userId, setting = setting, checkPermission = true)
+        pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            setting = setting,
+            checkPermission = true,
+            dispatchPipelineUpdateEvent = true
+        )
     }
 
     fun saveAll(
@@ -681,7 +696,13 @@ class PipelineInfoFacadeService @Autowired constructor(
             setting.projectId = projectId
         }
         setting.pipelineId = pipelineResult.pipelineId // fix 用户端可能不传入pipelineId的问题，或者传错的问题
-        pipelineSettingFacadeService.saveSetting(userId, setting, false, pipelineResult.version)
+        pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            setting = setting,
+            checkPermission = false,
+            version = pipelineResult.version,
+            dispatchPipelineUpdateEvent = false
+        )
         return pipelineResult
     }
 
@@ -748,10 +769,10 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.desc = pipelineInfo.pipelineDesc
             model.pipelineCreator = pipelineInfo.creator
 
-            val defaultTagIds by lazy { listOf(stageTagService.getDefaultStageTag().data?.id) } // 优化
+            val defaultTagId by lazy { stageTagService.getDefaultStageTag().data?.id } // 优化
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
-                if (it.tag == null) it.tag = defaultTagIds
+                if (it.tag == null) it.tag = defaultTagId?.let { self -> listOf(self) }
                 it.resetBuildOption()
             }
 
@@ -868,6 +889,34 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineChannelCache.put(pipelineId, channelCode)
         }
         return channelCode
+    }
+
+    fun batchUpdateModelName(modelUpdateList: List<ModelUpdate>): List<ModelUpdate> {
+        val failUpdateModels = mutableListOf<ModelUpdate>()
+        modelUpdateList.forEach {
+            try {
+                val pipelineExist = isPipelineExist(
+                    projectId = it.projectId,
+                    name = it.name,
+                    channelCode = ChannelCode.GIT
+                )
+                if (!pipelineExist) {
+                    pipelineRepositoryService.updateModelName(
+                        pipelineId = it.pipelineId,
+                        projectId = it.projectId,
+                        modelName = it.name,
+                        userId = it.updateUserId
+                    )
+                } else {
+                    it.updateResultMessage = "pipeline name exist"
+                    failUpdateModels.add(it)
+                }
+            } catch (e: Exception) {
+                it.updateResultMessage = "some wrong happen in dao update,error message:${e.message}"
+                failUpdateModels.add(it)
+            }
+        }
+        return failUpdateModels
     }
 
     companion object {

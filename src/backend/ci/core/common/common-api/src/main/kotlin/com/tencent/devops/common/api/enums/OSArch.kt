@@ -27,13 +27,24 @@
 
 package com.tencent.devops.common.api.enums
 
-/**
- *
- * Powered By Tencent
- */
-enum class OSArch {
-    WINDOWS,
-    LINUX,
-    MAC_OS,
-    OTHER
+enum class OSArch(
+    val osTypeList: List<OSType>,
+    val archStr: String // 编译插件的参数
+) {
+    AMD_64(
+        osTypeList = listOf(OSType.LINUX, OSType.MAC_OS, OSType.WINDOWS),
+        archStr = "amd64"
+    ),
+    ARM_64(
+        osTypeList = listOf(OSType.LINUX, OSType.MAC_OS),
+        archStr = "arm64"
+    ),
+    MIPS_64(
+        osTypeList = listOf(OSType.LINUX),
+        archStr = "mips64"
+    ),
+    I_386(
+        osTypeList = listOf(OSType.WINDOWS),
+        archStr = "386"
+    );
 }

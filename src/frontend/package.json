@@ -14,6 +14,8 @@
     "node-fetch": "^2.6.0",
     "ora": "^3.4.0",
     "svg-sprite-loader": "^6.0.9",
+    "typescript": "3.4.5",
+    "@typescript-eslint/parser": "^1.9.0",
     "webpack-bundle-analyzer": "^4.4.2",
     "webpack-cli": "^4.9.0",
     "webpack-dev-server": "^4.3.1"
@@ -35,18 +37,26 @@
       "eslint --fix"
     ]
   },
-  "workspaces": [
-    "devops-codelib",
-    "devops-environment",
-    "devops-atomstore",
-    "devops-artifactory",
-    "devops-ticket",
-    "devops-pipeline",
-    "devops-quality",
-    "devops-nav",
-    "devops-turbo",
-    "bk-pipeline"
-  ],
+  "workspaces": {
+    "packages": [
+      "devops-codelib",
+      "devops-environment",
+      "devops-atomstore",
+      "devops-artifactory",
+      "devops-ticket",
+      "devops-pipeline",
+      "devops-quality",
+      "devops-nav",
+      "devops-turbo",
+      "devops-stream",
+      "devops-metrics",
+      "bk-pipeline"
+    ],
+    "nohoist": [
+      "devops-metrics",
+      "devops-metrics/**"
+    ]
+  },
   "dependencies": {
     "cross-env": "^7.0.3",
     "glob-parent": "5.1.2",

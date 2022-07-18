@@ -278,7 +278,7 @@ func (cl *TaskCL) preExecute(command []string) (*dcSDK.BKDistCommand, error) {
 	// debugRecordFileName(fmt.Sprintf("cl: start pre execute for: %v", command))
 
 	cl.originArgs = command
-	responseFile, args, showinclude, err := ensureCompiler(command)
+	responseFile, args, showinclude, err := ensureCompiler(command, cl.sandbox.Dir)
 	if err != nil {
 		blog.Warnf("cl: pre execute ensure compiler failed %v: %v", args, err)
 		return nil, err
@@ -433,7 +433,7 @@ func (cl *TaskCL) postExecute(r *dcSDK.BKDistResult) error {
 	if len(r.Results[0].ResultFiles) > 0 {
 		for _, f := range r.Results[0].ResultFiles {
 			if f.Buffer != nil {
-				if err := saveResultFile(&f); err != nil {
+				if err := saveResultFile(&f, cl.sandbox.Dir); err != nil {
 					blog.Errorf("cl: failed to save file [%s]", f.FilePath)
 					return err
 				}
@@ -538,6 +538,14 @@ func (cl *TaskCL) preBuild(args []string) error {
 		if serverSideArgs[index] == cl.inputFile {
 			serverSideArgs[index] = cl.preprocessedFile
 			break
+		}
+	}
+
+	if !scannedData.specifiedSourceType {
+		if filepath.Ext(cl.preprocessedFile) == ".ii" {
+			serverSideArgs = append(serverSideArgs, "/TP")
+		} else if filepath.Ext(cl.preprocessedFile) == ".i" {
+			serverSideArgs = append(serverSideArgs, "/TC")
 		}
 	}
 

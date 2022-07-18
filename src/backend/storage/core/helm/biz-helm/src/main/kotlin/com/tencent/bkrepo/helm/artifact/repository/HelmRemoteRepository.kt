@@ -49,6 +49,7 @@ import com.tencent.bkrepo.helm.constants.FULL_PATH
 import com.tencent.bkrepo.helm.constants.META_DETAIL
 import com.tencent.bkrepo.helm.constants.NAME
 import com.tencent.bkrepo.helm.constants.PROV
+import com.tencent.bkrepo.helm.constants.PROXY_URL
 import com.tencent.bkrepo.helm.constants.SIZE
 import com.tencent.bkrepo.helm.constants.VERSION
 import com.tencent.bkrepo.helm.exception.HelmForbiddenRequestException
@@ -59,12 +60,12 @@ import com.tencent.bkrepo.helm.utils.HelmUtils
 import com.tencent.bkrepo.helm.utils.ObjectBuilderUtil
 import com.tencent.bkrepo.repository.pojo.download.PackageDownloadRecord
 import com.tencent.bkrepo.repository.pojo.node.service.NodeCreateRequest
+import java.net.MalformedURLException
+import java.net.URL
 import okhttp3.Response
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.net.MalformedURLException
-import java.net.URL
 
 @Component
 class HelmRemoteRepository(
@@ -91,8 +92,9 @@ class HelmRemoteRepository(
         if (result == null) {
             logger.info("store the new helm file to replace the old version..")
             parseAttribute(context, artifactFile)
+            val stream = artifactFile.getInputStream().artifactStream(Range.full(size))
             cacheArtifactFile(context, artifactFile)
-            return artifactFile.getInputStream().artifactStream(Range.full(size))
+            return stream
         }
         return result
     }
@@ -118,11 +120,8 @@ class HelmRemoteRepository(
         }
     }
 
-    /**
-     * 下载前回调
-     */
-    override fun onDownloadBefore(context: ArtifactDownloadContext) {
-        super.onDownloadBefore(context)
+    override fun createRemoteDownloadUrl(context: ArtifactContext): String {
+        logger.info("create remote download url...")
         val fullPath = when (context.artifactInfo.getArtifactFullPath()) {
             HelmUtils.getIndexCacheYamlFullPath() -> HelmUtils.getIndexYamlFullPath()
             else -> helmOperationService.findRemoteArtifactFullPath(
@@ -130,16 +129,12 @@ class HelmRemoteRepository(
             )
         }
         context.putAttribute(FULL_PATH, fullPath)
-    }
-
-    override fun createRemoteDownloadUrl(context: ArtifactContext): String {
-        logger.info("create remote download url...")
         val remoteConfiguration = context.getRemoteConfiguration()
-        val fullPath = context.getStringAttribute(FULL_PATH)!!.let { HelmUtils.convertIndexYamlPath(it) }
-        return if (checkUrl(fullPath)) {
-            fullPath
+        val tempPath = context.getStringAttribute(FULL_PATH)!!.let { HelmUtils.convertIndexYamlPath(it) }
+        return if (checkUrl(tempPath)) {
+            tempPath
         } else {
-            remoteConfiguration.url.trimEnd('/') + "/" + fullPath
+            remoteConfiguration.url.trimEnd('/') + "/" + tempPath
         }
     }
 
@@ -188,6 +183,12 @@ class HelmRemoteRepository(
      * 获取缓存节点创建请求
      */
     override fun buildCacheNodeCreateRequest(context: ArtifactContext, artifactFile: ArtifactFile): NodeCreateRequest {
+        val metadata: MutableMap<String, Any> = context.getAttribute(META_DETAIL) ?: mutableMapOf()
+        if (context.getStringAttribute(FILE_TYPE) != null) {
+            val remoteConfiguration = context.getRemoteConfiguration()
+            metadata[PROXY_URL] = remoteConfiguration.url
+        }
+
         return NodeCreateRequest(
             projectId = context.projectId,
             repoName = context.repoName,
@@ -197,7 +198,7 @@ class HelmRemoteRepository(
             sha256 = artifactFile.getFileSha256(),
             md5 = artifactFile.getFileMd5(),
             operator = context.userId,
-            metadata = context.getAttribute(META_DETAIL),
+            metadata = metadata,
             overwrite = true
         )
     }

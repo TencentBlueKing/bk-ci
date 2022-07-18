@@ -28,8 +28,8 @@ package com.tencent.devops.openapi.resources.apigw.v3
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
-import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwProjectResourceV3
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -46,7 +46,8 @@ import org.springframework.beans.factory.annotation.Value
 @RestResource
 class ApigwProjectResourceV3Impl @Autowired constructor(
     private val client: Client,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val bkTag: BkTag
 ) : ApigwProjectResourceV3 {
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwProjectResourceV3Impl::class.java)
@@ -66,7 +67,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
 
         // 创建项目需要指定对接的主集群。 不同集群可能共用同一个套集群
         if (!projectRouteTag.isNullOrEmpty()) {
-            ConsulContent.setConsulContent(projectRouteTag!!)
+            bkTag.setGatewayTag(projectRouteTag)
         }
 
         return client.get(ServiceProjectResource::class).create(
@@ -142,7 +143,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
     ): Result<Boolean?> {
         val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
         if (!projectConsulTag.isNullOrEmpty()) {
-            ConsulContent.setConsulContent(projectConsulTag)
+            bkTag.setGatewayTag(projectConsulTag)
         }
         logger.info("createProjectUser v3 $projectId| $createInfo $projectConsulTag")
         return client.get(ServiceProjectResource::class).createProjectUser(

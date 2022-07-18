@@ -185,25 +185,39 @@ object AgentEnv {
         return os!!
     }
 
-    fun getOSArch(): OSType {
+    fun getOSArch(): OSArch {
         if (arch == null) {
             synchronized(this) {
-                if (os == null) {
-                    val osName = System.getProperty("os.arch", "generic").toLowerCase(Locale.ENGLISH)
-                    logger.info("Get the os arch - ($osName)")
-                    os = if (osName.indexOf(string = "mac") >= 0 || osName.indexOf("darwin") >= 0) {
-                        OSType.MAC_OS
-                    } else if (osName.indexOf("win") >= 0) {
-                        OSType.WINDOWS
-                    } else if (osName.indexOf("nux") >= 0) {
-                        OSType.LINUX
-                    } else {
-                        OSType.OTHER
+                val osType = os ?: getOS()
+                if (arch == null) {
+                    val osArch = System.getProperty("os.arch", "amd64").toLowerCase(Locale.ENGLISH)
+                    logger.info("Get the os arch from system properties - ($osArch)")
+                    arch = when (osType) {
+                        OSType.LINUX, OSType.MAC_OS -> {
+                            if (osArch.contains("amd") || osArch.contains("x86")) {
+                                OSArch.AMD_64
+                            } else if (osArch.contains("arm") || osArch.contains("aarch")) {
+                                OSArch.ARM_64
+                            } else if (osArch.contains("mips") && osType == OSType.LINUX) {
+                                // 默认使用amd64，非m1芯片
+                                OSArch.MIPS_64
+                            } else {
+                                OSArch.AMD_64
+                            }
+                        }
+                        OSType.WINDOWS -> {
+                            // 保持和agent编译一致，使用386指令集
+                            OSArch.I_386
+                        }
+                        else -> {
+                            OSArch.AMD_64
+                        }
                     }
                 }
             }
         }
-        return os!!
+        logger.info("Get the os arch - (${arch?.name})")
+        return arch!!
     }
 
     fun is32BitSystem() = System.getProperty("sun.arch.data.model") == "32"

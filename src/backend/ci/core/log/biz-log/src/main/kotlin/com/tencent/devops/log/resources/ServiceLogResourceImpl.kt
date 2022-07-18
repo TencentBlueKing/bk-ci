@@ -28,6 +28,7 @@
 package com.tencent.devops.log.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
@@ -45,6 +46,10 @@ import javax.ws.rs.core.Response
 class ServiceLogResourceImpl @Autowired constructor(
     private val buildLogQueryService: BuildLogQueryService
 ) : ServiceLogResource {
+
+    companion object {
+        private const val defaultNum = 100
+    }
 
     override fun getInitLogs(
         userId: String,
@@ -92,7 +97,7 @@ class ServiceLogResourceImpl @Autowired constructor(
             buildId = buildId,
             debug = debug,
             logType = logType,
-            num = num,
+            num = num ?: defaultNum,
             fromStart = fromStart,
             start = start,
             end = end,
@@ -164,6 +169,20 @@ class ServiceLogResourceImpl @Autowired constructor(
             buildId = buildId,
             tag = tag,
             executeCount = executeCount
+        )
+    }
+
+    override fun getLogLastLineNum(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<QueryLogLineNum> {
+        return buildLogQueryService.getLastLineNum(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
         )
     }
 }

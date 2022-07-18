@@ -33,20 +33,25 @@ package com.tencent.bkrepo.oci.artifact.resolver
 
 import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
+import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContextHolder
 import com.tencent.bkrepo.common.artifact.resolve.path.ArtifactInfoResolver
 import com.tencent.bkrepo.common.artifact.resolve.path.Resolver
-import com.tencent.bkrepo.common.artifact.util.PackageKeys
+import com.tencent.bkrepo.oci.artifact.OciRegistryArtifactConfigurer
 import com.tencent.bkrepo.oci.constant.NAME
 import com.tencent.bkrepo.oci.constant.PACKAGE_KEY
 import com.tencent.bkrepo.oci.constant.VERSION
-import com.tencent.bkrepo.oci.pojo.artifact.OciArtifactInfo
+import com.tencent.bkrepo.oci.pojo.artifact.OciDeleteArtifactInfo
+import com.tencent.bkrepo.oci.util.OciUtils
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerMapping
 import javax.servlet.http.HttpServletRequest
 
 @Component
-@Resolver(OciArtifactInfo::class)
-class OciDeleteArtifactInfoResolver : ArtifactInfoResolver {
+@Resolver(OciDeleteArtifactInfo::class)
+class OciDeleteArtifactInfoResolver(
+    private val artifactConfigurerSupport: OciRegistryArtifactConfigurer
+) : ArtifactInfoResolver {
+
     override fun resolve(
         projectId: String,
         repoName: String,
@@ -54,25 +59,35 @@ class OciDeleteArtifactInfoResolver : ArtifactInfoResolver {
         request: HttpServletRequest
     ): ArtifactInfo {
         // 判断是客户端的请求还是页面发送的请求分别进行处理
-        val requestURL = request.requestURL
+        val requestURL = ArtifactContextHolder.getUrlPath(this.javaClass.name)!!
         return when {
             // 页面删除包请求
             requestURL.contains(PACKAGE_DELETE_PREFIX) -> {
                 val packageKey = request.getParameter(PACKAGE_KEY)
-                OciArtifactInfo(projectId, repoName, PackageKeys.resolveOci(packageKey), StringPool.EMPTY)
+                val packageName = OciUtils.getPackageNameFormPackageKey(
+                    packageKey = packageKey,
+                    defaultType = artifactConfigurerSupport.getRepositoryType(),
+                    extraTypes = artifactConfigurerSupport.getRepositoryTypes()
+                )
+                OciDeleteArtifactInfo(projectId, repoName, packageName, StringPool.EMPTY)
             }
             // 页面删除包版本请求
             requestURL.contains(PACKAGE_VERSION_DELETE_PREFIX) -> {
                 val packageKey = request.getParameter(PACKAGE_KEY)
+                val packageName = OciUtils.getPackageNameFormPackageKey(
+                    packageKey = packageKey,
+                    defaultType = artifactConfigurerSupport.getRepositoryType(),
+                    extraTypes = artifactConfigurerSupport.getRepositoryTypes()
+                )
                 val version = request.getParameter(VERSION)
-                OciArtifactInfo(projectId, repoName, PackageKeys.resolveOci(packageKey), version)
+                OciDeleteArtifactInfo(projectId, repoName, packageName, version)
             }
             else -> {
                 // 客户端请求删除版本
                 val attributes = request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE) as Map<*, *>
                 val id = attributes[NAME].toString().trim()
                 val version = attributes[VERSION].toString().trim()
-                OciArtifactInfo(projectId, repoName, id, version)
+                OciDeleteArtifactInfo(projectId, repoName, id, version)
             }
         }
     }

@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service.detail
 
 import com.google.common.base.Preconditions
 import com.tencent.devops.common.api.constant.BUILD_CANCELED
+import com.tencent.devops.common.api.constant.BUILD_COMPLETED
 import com.tencent.devops.common.api.constant.BUILD_FAILED
 import com.tencent.devops.common.api.constant.BUILD_REVIEWING
 import com.tencent.devops.common.api.constant.BUILD_RUNNING
@@ -82,7 +83,7 @@ open class BaseBuildDetailService constructor(
         buildStatus: BuildStatus,
         cancelUser: String? = null,
         operation: String = ""
-    ) {
+    ): Model {
         val watcher = Watcher(id = "updateDetail#$buildId#$operation")
         var message = "nothing"
         val lock = RedisLock(redisOperation, "process.build.detail.lock.$buildId", ExpiredTimeInSeconds)
@@ -112,7 +113,7 @@ open class BaseBuildDetailService constructor(
             val (change, finalStatus) = takeBuildStatus(record, buildStatus)
             if (modelStr.isNullOrBlank() && !change) {
                 message = "Will not update"
-                return
+                return model
             }
 
             watcher.start("updateModel")
@@ -122,15 +123,21 @@ open class BaseBuildDetailService constructor(
                 buildId = buildId,
                 model = modelStr,
                 buildStatus = finalStatus,
-                cancelUser = cancelUser
+                cancelUser = cancelUser ?: if (buildStatus.isCancel()) { "System" } else null // 系统行为导致的取消状态
             )
 
             watcher.start("dispatchEvent")
             pipelineDetailChangeEvent(projectId, buildId)
             message = "update done"
+            return model
         } catch (ignored: Throwable) {
             message = ignored.message ?: ""
             logger.warn("[$buildId]| Fail to update the build detail: ${ignored.message}", ignored)
+            watcher.start("getDetail")
+            val record = buildDetailDao.get(dslContext, projectId, buildId)
+            Preconditions.checkArgument(record != null, "The build detail is not exist")
+            watcher.start("model")
+            return JsonUtil.to(record!!.model, Model::class.java)
         } finally {
             lock.unlock()
             watcher.stop()
@@ -142,19 +149,23 @@ open class BaseBuildDetailService constructor(
     protected fun fetchHistoryStageStatus(
         model: Model,
         buildStatus: BuildStatus,
+        reviewers: List<String>? = null,
+        errorMsg: String? = null,
         cancelUser: String? = null
     ): List<BuildStageStatus> {
         val stageTagMap: Map<String, String>
             by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } }
         // 更新Stage状态至BuildHistory
-        val statusMessage = if (buildStatus == BuildStatus.REVIEWING) {
-            BUILD_REVIEWING
+        val (statusMessage, reason) = if (buildStatus == BuildStatus.REVIEWING) {
+            Pair(BUILD_REVIEWING, reviewers?.joinToString(","))
         } else if (buildStatus.isFailure()) {
-            BUILD_FAILED
+            Pair(BUILD_FAILED, errorMsg ?: buildStatus.name)
         } else if (buildStatus.isCancel()) {
-            BUILD_CANCELED
+            Pair(BUILD_CANCELED, cancelUser)
+        } else if (buildStatus.isSuccess()) {
+            Pair(BUILD_COMPLETED, null)
         } else {
-            BUILD_RUNNING
+            Pair(BUILD_RUNNING, null)
         }
         return model.stages.map {
             BuildStageStatus(
@@ -168,8 +179,7 @@ open class BaseBuildDetailService constructor(
                 },
                 // #6655 利用stageStatus中的第一个stage传递构建的状态信息
                 showMsg = if (it.id == STATUS_STAGE) {
-                    MessageCodeUtil.getCodeLanMessage(statusMessage) +
-                        (cancelUser?.let { "by $cancelUser" } ?: "")
+                    MessageCodeUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
                 } else null
             )
         }

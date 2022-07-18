@@ -17,14 +17,12 @@
                     <div class="bk-form-item is-required">
                         <label class="bk-label">{{ $t('codelib.codelibUrl') }}:</label>
                         <div class="bk-form-content">
-                            <bk-select v-model="codelibUrl"
-                                searchable
-                                :clearable="false"
+                            <bk-select
+                                v-model="codelibUrl"
+                                v-bind="selectComBindData"
                                 v-validate="'required'"
                                 name="name"
                                 class="codelib-credential-selector"
-                                :placeholder="$t('codelib.codelibUrlPlaceholder')"
-                                :remote-method="handleSearchCodeLib"
                             >
                                 <bk-option v-for="option in oAuth.project"
                                     :key="option.httpUrl"
@@ -346,6 +344,17 @@
             },
             portPlaceholder () {
                 return this.placeholders.port[this.codelibConfig.label]
+            },
+            selectComBindData () {
+                const bindData = {
+                    searchable: true,
+                    clearable: false,
+                    placeholder: this.$t('codelib.codelibUrlPlaceholder')
+                }
+                if (this.isGit) {
+                    bindData.remoteMethod = this.handleSearchCodeLib
+                }
+                return bindData
             }
         },
 
@@ -390,6 +399,11 @@
                     this.hasValidate = true
                     this.saving = false
                 }
+            },
+            isShow (val) {
+                if (!val) {
+                    this.setTemplateCodelib()
+                }
             }
         },
 
@@ -401,7 +415,8 @@
                 'updateCodelib',
                 'gitOAuth',
                 'checkOAuth',
-                'checkTGitOAuth'
+                'checkTGitOAuth',
+                'setTemplateCodelib'
             ]),
             async submitCodelib () {
                 const {
@@ -430,7 +445,6 @@
                         this.toggleCodelibDialog(false)
                         this.hasValidate = false
                         this.saving = true
-                        this.codelib.url = ''
                         this.$bkMessage({
                             message: repositoryHashId
                                 ? this.$t('codelib.successfullyEdited')

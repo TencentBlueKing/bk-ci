@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.api.util
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class ReplacementUtilsTest {
     class Replacement(
@@ -58,7 +58,7 @@ class ReplacementUtilsTest {
 
         val template2 = "abcd_\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end"
         val buff = EnvUtils.parseEnv(template2, data)
-        Assert.assertEquals(template2, buff)
+        Assertions.assertEquals(template2, buff)
 
         parseAndEquals(
             data = data,
@@ -95,7 +95,7 @@ class ReplacementUtilsTest {
     ) {
         val buff = ReplacementUtils.replace(template, Replacement(data), contextMap)
         println("template=$template\nreplaced=$buff\n")
-        Assert.assertEquals(expect, buff)
+        Assertions.assertEquals(expect, buff)
     }
 
     @Test
@@ -114,16 +114,16 @@ class ReplacementUtilsTest {
             "variables.hello" to "hahahahaha"
         )
 
-        Assert.assertEquals("hello variables.value world", ReplacementUtils.replace(command1, Replacement(varData)))
-        Assert.assertEquals("variables.valueworld", ReplacementUtils.replace(command2, Replacement(varData)))
-        Assert.assertEquals("hellovariables.value", ReplacementUtils.replace(command3, Replacement(varData)))
-        Assert.assertEquals(command4, ReplacementUtils.replace(command4, Replacement(varData)))
-        Assert.assertEquals(command5, ReplacementUtils.replace(command5, Replacement(varData)))
-        Assert.assertEquals("hellovariables.value}", ReplacementUtils.replace(command6, Replacement(varData)))
-        Assert.assertEquals(command7, ReplacementUtils.replace(command7, Replacement(varData)))
-        Assert.assertEquals("echo context.value", ReplacementUtils.replace(command8,
+        Assertions.assertEquals("hello variables.value world", ReplacementUtils.replace(command1, Replacement(varData)))
+        Assertions.assertEquals("variables.valueworld", ReplacementUtils.replace(command2, Replacement(varData)))
+        Assertions.assertEquals("hellovariables.value", ReplacementUtils.replace(command3, Replacement(varData)))
+        Assertions.assertEquals(command4, ReplacementUtils.replace(command4, Replacement(varData)))
+        Assertions.assertEquals(command5, ReplacementUtils.replace(command5, Replacement(varData)))
+        Assertions.assertEquals("hellovariables.value}", ReplacementUtils.replace(command6, Replacement(varData)))
+        Assertions.assertEquals(command7, ReplacementUtils.replace(command7, Replacement(varData)))
+        Assertions.assertEquals("echo context.value", ReplacementUtils.replace(command8,
             Replacement(varData), mapOf("context.hello" to "context.value")))
-        Assert.assertEquals("echo variables.value", ReplacementUtils.replace(command9, Replacement(varData)))
+        Assertions.assertEquals("echo variables.value", ReplacementUtils.replace(command9, Replacement(varData)))
     }
 
     @Test
@@ -143,23 +143,23 @@ class ReplacementUtilsTest {
             "context.hello" to "context.value"
         )
 
-        Assert.assertEquals("hello variables.value world",
+        Assertions.assertEquals("hello variables.value world",
             ReplacementUtils.replace(command1, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("variables.valueworld",
+        Assertions.assertEquals("variables.valueworld",
             ReplacementUtils.replace(command2, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("hellovariables.value",
+        Assertions.assertEquals("hellovariables.value",
             ReplacementUtils.replace(command3, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("hello\${{variables.abc",
+        Assertions.assertEquals("hello\${{variables.abc",
             ReplacementUtils.replace(command4, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("hello\${{variables.abc}",
+        Assertions.assertEquals("hello\${{variables.abc}",
             ReplacementUtils.replace(command5, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("hellovariables.value}",
+        Assertions.assertEquals("hellovariables.value}",
             ReplacementUtils.replace(command6, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("hello\$variables.abc}}",
+        Assertions.assertEquals("hello\$variables.abc}}",
             ReplacementUtils.replace(command7, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("echo context.value",
+        Assertions.assertEquals("echo context.value",
             ReplacementUtils.replace(command8, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("echo variables.value",
+        Assertions.assertEquals("echo variables.value",
             ReplacementUtils.replace(command9, Replacement(emptyMap()), contextData))
     }
 }

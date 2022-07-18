@@ -231,7 +231,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         val fileName = disposition.fileName
         val index = fileName.lastIndexOf(".")
         val fileType = fileName.substring(index + 1)
-        val file = Files.createTempFile("random_" + System.currentTimeMillis(), ".$fileType").toFile()
+        val file = Files.createTempFile(UUIDUtil.generate(), ".$fileType").toFile()
         file.outputStream().use {
             inputStream.copyTo(it)
         }

@@ -34,5 +34,8 @@ data class OciProperties(
     /**
      * oci服务domain地址
      */
-    var domain: String = "localhost"
+    var authUrl: String = "localhost",
+
+    var domain: String = "localhost",
+    var http: Boolean = false
 )

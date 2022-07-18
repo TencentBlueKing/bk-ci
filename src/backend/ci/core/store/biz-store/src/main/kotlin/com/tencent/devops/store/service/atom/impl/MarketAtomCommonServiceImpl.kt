@@ -58,7 +58,7 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.KEY_ARCHS
+import com.tencent.devops.store.pojo.common.KEY_ARCH
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_DEFAULT
 import com.tencent.devops.store.pojo.common.KEY_DEFAULT_FLAG
@@ -344,6 +344,14 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 params = arrayOf(KEY_EXECUTION)
             )
         }
+        val language = executionInfoMap[KEY_LANGUAGE] as? String
+        if (language.isNullOrBlank()) {
+            // 抛出错误提示
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
+                params = arrayOf(KEY_LANGUAGE)
+            )
+        }
         val atomPostMap = executionInfoMap[ATOM_POST] as? Map<String, Any>
         if (null != atomPostMap) {
             try {
@@ -373,6 +381,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val atomEnvRequests = mutableListOf<AtomEnvRequest>()
         val osList = executionInfoMap[KEY_OS] as? List<Map<String, Any>>
         if (null != osList) {
+            val osDefaultEnvNumMap = mutableMapOf<String, Int>()
             osList.forEach { osExecutionInfoMap ->
                 val osName = osExecutionInfoMap[KEY_OS_NAME] as? String
                 if (osName.isNullOrBlank()) {
@@ -390,26 +399,38 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                         params = arrayOf(KEY_TARGET)
                     )
                 }
-                val archs = JsonUtil.toOrNull(
-                    json = osExecutionInfoMap[KEY_ARCHS] as? String,
-                    type = List::class.java
-                ) as List<String>? ?: listOf("")
-                archs.forEach { arch ->
-                    val atomEnvRequest = AtomEnvRequest(
-                        userId = userId,
-                        pkgPath = osExecutionInfoMap[KEY_PACKAGE_PATH] as? String ?: "",
-                        language = osExecutionInfoMap[KEY_LANGUAGE] as? String,
-                        minVersion = osExecutionInfoMap[KEY_MINIMUM_VERSION] as? String,
-                        target = osExecutionInfoMap[KEY_TARGET] as String,
-                        shaContent = null,
-                        preCmd = JsonUtil.toJson(osExecutionInfoMap[KEY_DEMANDS] ?: ""),
-                        atomPostInfo = atomPostInfo,
-                        osName = osName,
-                        osArch = arch,
-                        runtimeVersion = osExecutionInfoMap[KEY_RUNTIME_VERSION] as? String,
-                        defaultFlag = osExecutionInfoMap[KEY_DEFAULT_FLAG] as? Boolean
+                val osArch = osExecutionInfoMap[KEY_ARCH] as? String
+                val defaultFlag = osExecutionInfoMap[KEY_DEFAULT_FLAG] as? Boolean ?: false
+                // 统计每种操作系统默认环境配置数量
+                val increaseDefaultEnvNum = if (defaultFlag) 1 else 0
+                if (osDefaultEnvNumMap.containsKey(osName)) {
+                    osDefaultEnvNumMap[osName] = osDefaultEnvNumMap[osName]!! + increaseDefaultEnvNum
+                } else {
+                    osDefaultEnvNumMap[osName] = increaseDefaultEnvNum
+                }
+                val atomEnvRequest = AtomEnvRequest(
+                    userId = userId,
+                    pkgPath = osExecutionInfoMap[KEY_PACKAGE_PATH] as? String ?: "",
+                    language = language,
+                    minVersion = executionInfoMap[KEY_MINIMUM_VERSION] as? String,
+                    target = osExecutionInfoMap[KEY_TARGET] as String,
+                    shaContent = null,
+                    preCmd = JsonUtil.toJson(osExecutionInfoMap[KEY_DEMANDS] ?: ""),
+                    atomPostInfo = atomPostInfo,
+                    osName = osName,
+                    osArch = osArch,
+                    runtimeVersion = executionInfoMap[KEY_RUNTIME_VERSION] as? String,
+                    defaultFlag = defaultFlag
+                )
+                atomEnvRequests.add(atomEnvRequest)
+            }
+            osDefaultEnvNumMap.forEach { (osName, defaultEnvNum) ->
+                // 判断每种操作系统默认环境配置是否有且只有1个
+                if (defaultEnvNum != 1) {
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_OS_DEFAULT_ENV_IS_INVALID,
+                        params = arrayOf(osName, defaultEnvNum.toString())
                     )
-                    atomEnvRequests.add(atomEnvRequest)
                 }
             }
         } else {
@@ -424,12 +445,14 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             val atomEnvRequest = AtomEnvRequest(
                 userId = userId,
                 pkgPath = executionInfoMap[KEY_PACKAGE_PATH] as? String ?: "",
-                language = executionInfoMap[KEY_LANGUAGE] as? String,
+                language = language,
                 minVersion = executionInfoMap[KEY_MINIMUM_VERSION] as? String,
                 target = executionInfoMap[KEY_TARGET] as String,
                 shaContent = null,
                 preCmd = JsonUtil.toJson(executionInfoMap[KEY_DEMANDS] ?: ""),
-                atomPostInfo = atomPostInfo
+                atomPostInfo = atomPostInfo,
+                runtimeVersion = executionInfoMap[KEY_RUNTIME_VERSION] as? String,
+                defaultFlag = true
             )
             atomEnvRequests.add(atomEnvRequest)
         }
@@ -473,7 +496,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     }
 
     override fun handleAtomCache(atomId: String, atomCode: String, version: String, releaseFlag: Boolean) {
-        val atomEnv = marketAtomEnvInfoDao.getMarketAtomEnvInfoByAtomId(dslContext, atomId)
+        val atomEnv = marketAtomEnvInfoDao.getNewestAtomEnvInfo(dslContext, atomId)
             ?: throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomId)

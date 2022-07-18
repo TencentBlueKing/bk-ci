@@ -31,9 +31,11 @@ import com.tencent.devops.common.api.constant.KEY_DEFAULT
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.atom.AtomUtils
+import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
@@ -65,7 +67,8 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val stageCommonSettingConfig: StageCommonSettingConfig,
     private val jobCommonSettingConfig: JobCommonSettingConfig,
     private val taskCommonSettingConfig: TaskCommonSettingConfig,
-    private val client: Client
+    private val client: Client,
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
     fun saveSetting(
@@ -73,7 +76,8 @@ class PipelineSettingFacadeService @Autowired constructor(
         setting: PipelineSetting,
         checkPermission: Boolean = true,
         version: Int = 0,
-        updateLastModifyUser: Boolean? = true
+        updateLastModifyUser: Boolean? = true,
+        dispatchPipelineUpdateEvent: Boolean = true
     ): String {
         if (checkPermission) {
             checkEditPermission(
@@ -105,6 +109,17 @@ class PipelineSettingFacadeService @Autowired constructor(
             pipelineId = setting.pipelineId,
             labelIds = setting.labels
         )
+        if (dispatchPipelineUpdateEvent) {
+            pipelineEventDispatcher.dispatch(
+                PipelineUpdateEvent(
+                    source = "update_pipeline",
+                    projectId = setting.projectId,
+                    pipelineId = setting.pipelineId,
+                    version = version,
+                    userId = userId
+                )
+            )
+        }
         return setting.pipelineId
     }
 

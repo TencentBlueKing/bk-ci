@@ -83,6 +83,7 @@ allprojects {
             dependency("com.alibaba:easyexcel:${Versions.easyexcel}")
             dependency("org.redisson:redisson:${Versions.redisson}")
             dependency("org.apache.lucene:lucene-core:${Versions.lucene}")
+            dependency("com.alibaba:fastjson:${Versions.fastjson}")
             dependencySet("io.swagger:${Versions.swaggerVersion}") {
                 entry("swagger-annotations")
                 entry("swagger-jersey2-jaxrs")

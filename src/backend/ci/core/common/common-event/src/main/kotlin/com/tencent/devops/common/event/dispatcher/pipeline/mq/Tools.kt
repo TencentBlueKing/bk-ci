@@ -29,7 +29,11 @@ package com.tencent.devops.common.event.dispatcher.pipeline.mq
 
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
+import org.springframework.amqp.core.Message
+import org.springframework.amqp.core.MessagePostProcessor
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
@@ -38,7 +42,6 @@ import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import kotlin.math.max
 
-@Suppress("ALL")
 object Tools {
 
     private val logger = LoggerFactory.getLogger(Tools::class.java)!!
@@ -55,8 +58,10 @@ object Tools {
         maxConcurrency: Int,
         prefetchCount: Int = 1
     ): SimpleMessageListenerContainer {
-        logger.info("createMQListener|queue=${queue.name}|listener=${buildListener::class.java.name}|concurrency=" +
-            "$concurrency|max=$maxConcurrency|trigger=$consecutiveActiveTrigger|jnterval=$startConsumerMinInterval")
+        logger.info(
+            "createMQListener|queue=${queue.name}|listener=${buildListener::class.java.name}|concurrency=$concurrency" +
+                "|max=$maxConcurrency|trigger=$consecutiveActiveTrigger|interval=$startConsumerMinInterval"
+        )
         val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
         adapter.setMessageConverter(messageConverter)
         return createSimpleMessageListenerContainerByAdapter(
@@ -93,6 +98,18 @@ object Tools {
         container.setMismatchedQueuesFatal(true)
         container.setMessageListener(adapter)
         container.setPrefetchCount(prefetchCount)
+        container.addAfterReceivePostProcessors(traceMessagePostProcessor)
         return container
+    }
+
+    private fun mdcFromMessage(message: Message?) {
+        (message ?: return).messageProperties.getHeader<String?>(TraceTag.X_DEVOPS_RID)?.let {
+            MDC.put(TraceTag.BIZID, it)
+        }
+    }
+
+    private val traceMessagePostProcessor = MessagePostProcessor { message ->
+        mdcFromMessage(message)
+        message
     }
 }

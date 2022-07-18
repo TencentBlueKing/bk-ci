@@ -49,11 +49,7 @@ class ArrowheadScanner(
     @ApiModelProperty("漏洞知识库配置")
     val knowledgeBase: KnowledgeBase,
     @ApiModelProperty("使用的容器镜像")
-    val container: ArrowheadDockerImage,
-    @ApiModelProperty("结果过滤规则")
-    val resultFilterRule: ResultFilterRule? = null,
-    @ApiModelProperty("最大允许的扫描时间")
-    val maxScanDuration: Long = DEFAULT_MAX_SCAN_DURATION
+    val container: ArrowheadDockerImage
 ) : Scanner(name, TYPE, version) {
     companion object {
         /**
@@ -62,21 +58,8 @@ class ArrowheadScanner(
         const val VERSION_SPLIT = "::"
         const val TYPE = "arrowhead"
         const val DEFAULT_CONFIG_FILE_PATH = "/standalone.toml"
-        const val DEFAULT_MAX_SCAN_DURATION = 10 * 60 * 1000L
     }
 }
-
-@ApiModel("结果过滤规则")
-data class ResultFilterRule(
-    @ApiModelProperty("敏感信息扫描结果过滤规则")
-    val sensitiveItemFilterRule: SensitiveItemFilterRule
-)
-
-@ApiModel("敏感信息结果过滤规则")
-data class SensitiveItemFilterRule(
-    @ApiModelProperty("结果字段过滤规则")
-    val excludes: Map<String, List<String>>
-)
 
 @ApiModel("arrowhead容器镜像配置")
 data class ArrowheadDockerImage(

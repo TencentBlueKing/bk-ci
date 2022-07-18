@@ -33,17 +33,23 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.PageQueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.log.jmx.LogStorageBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
+@Suppress("LongParameterList", "TooManyFunctions")
 @Service
 class BuildLogQueryService @Autowired constructor(
     private val logService: LogService,
     private val logStatusService: LogStatusService,
+    private val indexService: IndexService,
+    private val logStorageBean: LogStorageBean,
     private val logPermissionService: LogPermissionService
 ) {
 
@@ -60,8 +66,10 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
-        return Result(
-            logService.queryInitLogs(
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        val queryLogs = try {
+            val result = logService.queryInitLogs(
                 buildId = buildId,
                 debug = debug ?: false,
                 logType = logType,
@@ -70,7 +78,13 @@ class BuildLogQueryService @Autowired constructor(
                 jobId = jobId,
                 executeCount = executeCount
             )
-        )
+            result.timeUsed = System.currentTimeMillis() - startEpoch
+            success = logStatusSuccess(result.status)
+            result
+        } finally {
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
+        }
+        return Result(queryLogs)
     }
 
     fun getInitLogsPage(
@@ -88,8 +102,10 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null
     ): Result<PageQueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
-        return Result(
-            logService.queryInitLogsPage(
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        val queryLogs = try {
+            val result = logService.queryInitLogsPage(
                 buildId = buildId,
                 debug = debug ?: false,
                 logType = logType,
@@ -100,7 +116,13 @@ class BuildLogQueryService @Autowired constructor(
                 page = page ?: -1,
                 pageSize = pageSize ?: -1
             )
-        )
+            result.timeUsed = System.currentTimeMillis() - startEpoch
+            success = logStatusSuccess(result.status)
+            result
+        } finally {
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
+        }
+        return Result(queryLogs)
     }
 
     fun getMoreLogs(
@@ -110,7 +132,7 @@ class BuildLogQueryService @Autowired constructor(
         buildId: String,
         debug: Boolean?,
         logType: LogType?,
-        num: Int?,
+        num: Int,
         fromStart: Boolean?,
         start: Long,
         end: Long,
@@ -120,10 +142,12 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
-        return Result(
-            logService.queryLogsBetweenLines(
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        val queryLogs = try {
+            val result = logService.queryLogsBetweenLines(
                 buildId = buildId,
-                num = num ?: 100,
+                num = num,
                 fromStart = fromStart ?: true,
                 start = start,
                 end = end,
@@ -134,7 +158,13 @@ class BuildLogQueryService @Autowired constructor(
                 jobId = jobId,
                 executeCount = executeCount
             )
-        )
+            result.timeUsed = System.currentTimeMillis() - startEpoch
+            success = logStatusSuccess(result.status)
+            result
+        } finally {
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
+        }
+        return Result(queryLogs)
     }
 
     fun getAfterLogs(
@@ -151,8 +181,10 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
-        return Result(
-            logService.queryLogsAfterLine(
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        val queryLogs = try {
+            val result = logService.queryLogsAfterLine(
                 buildId = buildId,
                 start = start,
                 debug = debug ?: false,
@@ -162,7 +194,13 @@ class BuildLogQueryService @Autowired constructor(
                 jobId = jobId,
                 executeCount = executeCount
             )
-        )
+            result.timeUsed = System.currentTimeMillis() - startEpoch
+            success = logStatusSuccess(result.status)
+            result
+        } finally {
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
+        }
+        return Result(queryLogs)
     }
 
     fun getBeforeLogs(
@@ -180,8 +218,10 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
-        return Result(
-            logService.queryLogsBeforeLine(
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        val queryLogs = try {
+            val result = logService.queryLogsBeforeLine(
                 buildId = buildId,
                 end = end,
                 size = size,
@@ -192,7 +232,13 @@ class BuildLogQueryService @Autowired constructor(
                 jobId = jobId,
                 executeCount = executeCount
             )
-        )
+            result.timeUsed = System.currentTimeMillis() - startEpoch
+            success = logStatusSuccess(result.status)
+            result
+        } finally {
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
+        }
+        return Result(queryLogs)
     }
 
     fun getLogMode(
@@ -213,6 +259,24 @@ class BuildLogQueryService @Autowired constructor(
         )
     }
 
+    fun getLastLineNum(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<QueryLogLineNum> {
+        validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
+        val lastLineNum = indexService.getLastLineNum(buildId)
+        val finished = logStatusService.isFinish(buildId, null, null, null, null)
+        return Result(
+            QueryLogLineNum(
+                buildId = buildId,
+                finished = finished,
+                lastLineNum = lastLineNum
+            )
+        )
+    }
+
     fun downloadLogs(
         userId: String,
         projectId: String,
@@ -225,15 +289,23 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null
     ): Response {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.DOWNLOAD)
-        return logService.downloadLogs(
-            pipelineId = pipelineId,
-            buildId = buildId,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount,
-            fileName = fileName
-        )
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val result = logService.downloadLogs(
+                pipelineId = pipelineId,
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount,
+                fileName = fileName
+            )
+            success = true
+            return result
+        } finally {
+            logStorageBean.download(System.currentTimeMillis() - startEpoch, success)
+        }
     }
 
     fun getEndLogsPage(
@@ -249,17 +321,28 @@ class BuildLogQueryService @Autowired constructor(
         executeCount: Int?,
         subTag: String? = null
     ): Result<EndPageQueryLogs> {
-        return Result(logService.getEndLogsPage(
-            pipelineId = pipelineId,
-            buildId = buildId,
-            debug = debug ?: false,
+        validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        val queryLogs = try {
+            val result = logService.getEndLogsPage(
+                pipelineId = pipelineId,
+                buildId = buildId,
+                debug = debug ?: false,
                 logType = logType,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount,
-            size = size
-        ))
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount,
+                size = size
+            )
+            result.timeUsed = System.currentTimeMillis() - startEpoch
+            success = logStatusSuccess(result.status)
+            result
+        } finally {
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
+        }
+        return Result(queryLogs)
     }
 
     fun getBottomLogs(
@@ -276,19 +359,30 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
-        return Result(logService.getBottomLogs(
-            pipelineId = pipelineId,
-            buildId = buildId,
-            debug = debug ?: false,
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        val queryLogs = try {
+            val result = logService.getBottomLogs(
+                pipelineId = pipelineId,
+                buildId = buildId,
+                debug = debug ?: false,
                 logType = logType,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount,
-            size = size
-        ))
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount,
+                size = size
+            )
+            result.timeUsed = System.currentTimeMillis() - startEpoch
+            success = logStatusSuccess(result.status)
+            result
+        } finally {
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
+        }
+        return Result(queryLogs)
     }
 
+    @Suppress("ThrowsCount")
     private fun validateAuth(
         userId: String,
         projectId: String,
@@ -317,5 +411,10 @@ class BuildLogQueryService @Autowired constructor(
         ) {
             throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下${permission.alias}流水线")
         }
+    }
+
+    private fun logStatusSuccess(logStatus: Int): Boolean {
+        return LogStatus.parse(logStatus) == LogStatus.EMPTY ||
+            LogStatus.parse(logStatus) == LogStatus.SUCCEED
     }
 }
