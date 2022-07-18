@@ -53,7 +53,8 @@ class ExternalPipelineResourceImpl @Autowired constructor(
             pipelineRemoteAuthService.startPipeline(
                 auth = token,
                 values = values,
-                sourceIp = realIp
+                sourceIp = realIp,
+                startUser = startUser
             )
         )
     }

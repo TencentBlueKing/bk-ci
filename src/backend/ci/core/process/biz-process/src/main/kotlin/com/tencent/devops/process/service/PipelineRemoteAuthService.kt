@@ -88,7 +88,12 @@ class PipelineRemoteAuthService @Autowired constructor(
         return pipelineRemoteAuthDao.getByAuth(dslContext, auth)
     }
 
-    fun startPipeline(auth: String, values: Map<String, String>, sourceIp: String? = null): BuildId {
+    fun startPipeline(
+        auth: String,
+        values: Map<String, String>,
+        sourceIp: String? = null,
+        startUser: String? = null
+    ): BuildId {
         val pipeline = getPipeline(auth)
         if (pipeline == null) {
             logger.warn("The pipeline of auth $auth is not exist")
@@ -123,11 +128,10 @@ class PipelineRemoteAuthService @Autowired constructor(
                 buildId = buildId.id,
                 varName = PIPELINE_START_TASK_ID
             )
-            logger.info("start task id is $taskId")
             if (taskId != null) {
                 buildLogPrinter.addLine(
                     buildId = buildId.id,
-                    message = "本次远程调用的来源IP是[$sourceIp]",
+                    message = "本次远程调用的来源IP是[$sourceIp], 启动用户是[$startUser]",
                     tag = taskId,
                     executeCount = 1
                 )
