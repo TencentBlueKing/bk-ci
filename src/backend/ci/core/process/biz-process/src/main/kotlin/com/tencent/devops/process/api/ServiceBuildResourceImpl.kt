@@ -256,7 +256,27 @@ class ServiceBuildResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         channelCode: ChannelCode,
-        updateTimeDesc: Boolean?
+        updateTimeDesc: Boolean?,
+        materialAlias: List<String>?,
+        materialUrl: String?,
+        materialBranch: List<String>?,
+        materialCommitId: String?,
+        materialCommitMessage: String?,
+        status: List<BuildStatus>?,
+        trigger: List<StartType>?,
+        queueTimeStartTime: Long?,
+        queueTimeEndTime: Long?,
+        startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?,
+        totalTimeMin: Long?,
+        totalTimeMax: Long?,
+        remark: String?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?,
+        buildMsg: String?,
+        startUser: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -266,8 +286,28 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             page = page,
             pageSize = pageSize,
-            channelCode = channelCode,
+            materialAlias = materialAlias?.filter { it.isNotBlank() },
+            materialUrl = materialUrl,
+            materialBranch = materialBranch?.filter { it.isNotBlank() },
+            materialCommitId = materialCommitId,
+            materialCommitMessage = materialCommitMessage,
+            // 可能出现[null] 的情况
+            status = status?.filterNotNull(),
+            trigger = trigger?.filterNotNull(),
+            queueTimeStartTime = queueTimeStartTime,
+            queueTimeEndTime = queueTimeEndTime,
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
+            totalTimeMin = totalTimeMin,
+            totalTimeMax = totalTimeMax,
+            remark = remark,
+            buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd,
+            buildMsg = buildMsg,
             checkPermission = ChannelCode.isNeedAuth(channelCode),
+            startUser = startUser?.filter { it.isNotBlank() },
             updateTimeDesc = updateTimeDesc
         )
         return Result(result)

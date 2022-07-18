@@ -39,6 +39,7 @@ import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
 import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue
 import org.apache.shardingsphere.sharding.api.sharding.standard.RangeShardingValue
 import org.apache.shardingsphere.sharding.api.sharding.standard.StandardShardingAlgorithm
+import java.util.Properties
 
 class BkProcessDatabaseShardingAlgorithm : StandardShardingAlgorithm<String> {
 
@@ -93,5 +94,9 @@ class BkProcessDatabaseShardingAlgorithm : StandardShardingAlgorithm<String> {
         return null
     }
 
-    override fun init() = Unit
+    override fun init(props: Properties?) = Unit
+
+    override fun getProps(): Properties? {
+        return null
+    }
 }
