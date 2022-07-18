@@ -266,6 +266,7 @@ interface ServiceProjectResource {
     @Path("/listSecrecyProject")
     fun listSecrecyProject(): Result<Set<String>?>
 
+    @ApiOperation("为项目添加成员")
     @POST
     @Path("/{projectId}/createUser")
     fun createProjectUser(

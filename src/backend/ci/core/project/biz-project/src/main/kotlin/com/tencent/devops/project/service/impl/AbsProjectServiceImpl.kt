@@ -541,7 +541,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun updateLogo(
         userId: String,
-        englishName: String,
+        englishName: String /* englishName is projectId */,
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
         accessToken: String?
@@ -574,20 +574,20 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun updateProjectName(userId: String, projectCode: String, projectName: String): Boolean {
+    override fun updateProjectName(userId: String, projectId: String, projectName: String): Boolean {
         if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.NAME_TOO_LONG,
                 defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG)
             )
         }
-        if (projectDao.existByProjectName(dslContext, projectName, projectCode)) {
+        if (projectDao.existByProjectName(dslContext, projectName, projectId)) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.PROJECT_NAME_EXIST,
                 defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST)
             )
         }
-        return projectDao.updateProjectName(dslContext, projectCode, projectName) > 0
+        return projectDao.updateProjectName(dslContext, projectId, projectName) > 0
     }
 
     override fun updateUsableStatus(userId: String, englishName: String, enabled: Boolean) {
@@ -604,7 +604,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
             throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
         }
-        logger.info("updateUsableStatus userId[$userId], projectInfo[${projectInfo.projectId}]")
         projectDao.updateUsableStatus(
             dslContext = dslContext,
             userId = userId,

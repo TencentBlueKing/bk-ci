@@ -144,7 +144,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
 
     override fun updateProjectName(userId: String, projectCode: String, projectName: String): Result<Boolean> {
         return Result(
-            projectService.updateProjectName(userId = userId, projectCode = projectCode, projectName = projectName)
+            projectService.updateProjectName(userId = userId, projectId = projectCode, projectName = projectName)
         )
     }
 
