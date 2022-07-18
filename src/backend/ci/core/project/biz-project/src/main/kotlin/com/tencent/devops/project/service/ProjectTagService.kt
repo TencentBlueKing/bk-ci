@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_CODECC_REDIS_KEY
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
@@ -464,6 +465,5 @@ class ProjectTagService @Autowired constructor(
         private const val grayLabel = 1
         private const val prodLabel = 2
         private val logger = LoggerFactory.getLogger(ProjectTagService::class.java)
-        const val PROJECT_TAG_CODECC_REDIS_KEY = "project:setting:tag:codecc:v2"
     }
 }

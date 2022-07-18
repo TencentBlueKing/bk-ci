@@ -31,4 +31,6 @@ package com.tencent.devops.common.client.consul
 object ConsulConstants {
 
     const val PROJECT_TAG_REDIS_KEY = "project:setting:tag:v2"
+
+    const val PROJECT_TAG_CODECC_REDIS_KEY = "project:setting:tag:codecc:v2"
 }
