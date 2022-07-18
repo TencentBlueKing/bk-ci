@@ -25,6 +25,15 @@ class ServiceGithubCheckResourceImpl @Autowired constructor(
         )
     }
 
+    override fun createCheckRunByToken(token: String, request: CreateCheckRunRequest): Result<CheckRunResponse> {
+        return Result(
+            githubCheckService.createCheckRun(
+                request = request,
+                token = token
+            )
+        )
+    }
+
     override fun updateCheckRun(userId: String, request: UpdateCheckRunRequest): Result<CheckRunResponse> {
         return Result(
             githubCheckService.updateCheckRun(

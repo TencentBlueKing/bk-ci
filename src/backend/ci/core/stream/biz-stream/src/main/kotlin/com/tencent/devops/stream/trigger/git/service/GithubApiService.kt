@@ -30,6 +30,7 @@ package com.tencent.devops.stream.trigger.git.service
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.sdk.github.request.CompareTwoCommitsRequest
+import com.tencent.devops.common.sdk.github.request.CreateCheckRunRequest
 import com.tencent.devops.common.sdk.github.request.CreateIssueCommentRequest
 import com.tencent.devops.common.sdk.github.request.GetCommitRequest
 import com.tencent.devops.common.sdk.github.request.GetPullRequestRequest
@@ -40,6 +41,7 @@ import com.tencent.devops.common.sdk.github.request.GetTreeRequest
 import com.tencent.devops.common.sdk.github.request.ListPullRequestFileRequest
 import com.tencent.devops.common.sdk.github.request.SearchRepositoriesRequest
 import com.tencent.devops.repository.api.ServiceGithubResource
+import com.tencent.devops.repository.api.github.ServiceGithubCheckResource
 import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
 import com.tencent.devops.repository.api.github.ServiceGithubDatabaseResource
 import com.tencent.devops.repository.api.github.ServiceGithubIssuesResource
@@ -47,6 +49,7 @@ import com.tencent.devops.repository.api.github.ServiceGithubPRResource
 import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
 import com.tencent.devops.repository.api.github.ServiceGithubUserResource
 import com.tencent.devops.repository.pojo.enums.GithubAccessLevelEnum
+import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
@@ -64,17 +67,20 @@ import com.tencent.devops.stream.trigger.git.pojo.github.GithubProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubUserInfo
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectUserInfo
 import com.tencent.devops.stream.trigger.git.service.StreamApiUtil.doRetryFun
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.util.QualityUtils
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import javax.ws.rs.core.Response
 
 @Service
+@SuppressWarnings("TooManyFunctions")
 class GithubApiService @Autowired constructor(
     private val client: Client
 ) : StreamGitApiService {
@@ -371,7 +377,37 @@ class GithubApiService @Autowired constructor(
     }
 
     override fun addCommitCheck(request: CommitCheckRequest, retry: ApiRequestRetryInfo) {
-        TODO("Not yet implemented")
+        with(request) {
+            val now = LocalDateTime.now().atZone(ZoneId.systemDefault()).format(
+                DateTimeFormatter.ISO_INSTANT
+            )
+            if (state == GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS) {
+                client.get(ServiceGithubCheckResource::class).createCheckRunByToken(
+                    token = token!!,
+                    request = CreateCheckRunRequest(
+                        id = projectName.toLong(),
+                        name = context,
+                        headSha = commitId,
+                        detailsUrl = targetUrl,
+                        status = GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS,
+                        startedAt = now
+                    )
+                )
+            } else {
+                client.get(ServiceGithubCheckResource::class).createCheckRunByToken(
+                    token = token!!,
+                    request = CreateCheckRunRequest(
+                        id = projectName.toLong(),
+                        name = context,
+                        headSha = commitId,
+                        detailsUrl = targetUrl,
+                        status = GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS,
+                        completedAt = now,
+                        conclusion = state
+                    )
+                )
+            }
+        }
     }
 
     // 以下非StreamGitApiService接口实现
@@ -381,6 +417,7 @@ class GithubApiService @Autowired constructor(
      * @param to 新commit
      * @param straight true：两个点比较差异，false：三个点比较差异。默认是 false
      */
+    @SuppressWarnings("LongParameterList")
     fun getCommitChangeList(
         cred: GithubCred,
         gitProjectId: String,

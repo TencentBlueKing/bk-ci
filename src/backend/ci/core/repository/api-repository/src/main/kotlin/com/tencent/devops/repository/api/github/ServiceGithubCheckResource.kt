@@ -30,6 +30,16 @@ interface ServiceGithubCheckResource {
         request: CreateCheckRunRequest
     ): Result<CheckRunResponse>
 
+    @ApiOperation("创建检查任务")
+    @POST
+    @Path("/createCheckRunByToken")
+    fun createCheckRunByToken(
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
+        request: CreateCheckRunRequest
+    ): Result<CheckRunResponse>
+
     @ApiOperation("更新检查任务")
     @POST
     @Path("/updateCheckRun")
