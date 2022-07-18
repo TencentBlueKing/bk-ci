@@ -50,6 +50,7 @@ import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -110,7 +111,8 @@ class ManualReviewTaskAtom(
             tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
 
-        val pipelineName = runVariables[PIPELINE_NAME].toString()
+        val pipelineName = runVariables[PIPELINE_NAME] ?: pipelineId
+        val projectName = runVariables[PROJECT_NAME_CHINESE] ?: projectCode
         pipelineEventDispatcher.dispatch(
             PipelineBuildReviewBroadCastEvent(
                 source = "ManualReviewTaskAtom",
@@ -131,11 +133,12 @@ class ManualReviewTaskAtom(
                 ),
                 bodyParams = mutableMapOf(
                     "buildNum" to (runVariables[PIPELINE_BUILD_NUM] ?: "1"),
-                    "projectName" to "need to add in notifyListener",
+                    "projectName" to projectName,
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                     "reviewDesc" to reviewDesc,
-                    "manualReviewParam" to JsonUtil.toJson(param.params)
+                    "manualReviewParam" to JsonUtil.toJson(param.params),
+                    "checkParams" to param.params.isNotEmpty().toString()
                 ),
                 position = null,
                 stageId = null,
