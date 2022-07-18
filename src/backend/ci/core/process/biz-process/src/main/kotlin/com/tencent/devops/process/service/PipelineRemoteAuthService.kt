@@ -44,6 +44,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
+import com.tencent.devops.process.utils.PIPELINE_START_REMOTE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -105,6 +106,8 @@ class PipelineRemoteAuthService @Autowired constructor(
             logger.info("Fail to get the userId of the pipeline, use ${pipeline.createUser}")
             userId = pipeline.createUser
         }
+        val vals = values.toMutableMap()
+        (startUser ?: userId)?.let { vals.put(PIPELINE_START_REMOTE_USER_ID, it) }
 
         logger.info("Start the pipeline remotely of $userId ${pipeline.pipelineId} of project ${pipeline.projectId}")
         // #5779 为兼容多集群的场景。流水线的启动需要路由到项目对应的集群。此处携带X-DEVOPS-PROJECT-ID头重新请求网关,由网关路由到项目对应的集群
@@ -117,7 +120,7 @@ class PipelineRemoteAuthService @Autowired constructor(
                 userId = userId!!,
                 projectId = pipeline.projectId,
                 pipelineId = pipeline.pipelineId,
-                values = values,
+                values = vals.toMap(),
                 channelCode = ChannelCode.BS,
                 startType = StartType.REMOTE,
                 buildNo = null
@@ -131,7 +134,7 @@ class PipelineRemoteAuthService @Autowired constructor(
             if (taskId != null) {
                 buildLogPrinter.addLine(
                     buildId = buildId.id,
-                    message = "本次远程调用的来源IP是[$sourceIp], 启动用户是[$startUser]",
+                    message = "本次远程调用的来源IP是[$sourceIp]",
                     tag = taskId,
                     executeCount = 1
                 )
