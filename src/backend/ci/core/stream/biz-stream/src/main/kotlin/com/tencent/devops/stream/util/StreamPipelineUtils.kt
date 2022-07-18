@@ -40,8 +40,6 @@ object StreamPipelineUtils {
 
     fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
 
-    fun genBKPipelineName(projectCode: String) = projectCode + "_" + UUIDUtil.generate()
-
     fun genStreamV2BuildUrl(
         homePage: String,
         gitProjectId: String,
@@ -62,9 +60,9 @@ object StreamPipelineUtils {
 
     fun genStreamV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
 
-    fun createEmptyPipelineAndSetting(projectCode: String) = PipelineModelAndSetting(
+    fun createEmptyPipelineAndSetting(displayName: String) = PipelineModelAndSetting(
         model = Model(
-            name = genBKPipelineName(projectCode),
+            name = displayName,
             desc = "",
             stages = listOf(
                 Stage(
