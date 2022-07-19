@@ -64,16 +64,12 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
         // 创建项目
-        val projectCreateExt = ProjectCreateExtInfo(
-            needValidate = true,
-            needAuth = true
-        )
         projectService.create(
             userId = userId,
             projectCreateInfo = projectCreateInfo,
             accessToken = accessToken,
-            createExt = projectCreateExt,
-            channel = ProjectChannelCode.BS
+            createExtInfo = ProjectCreateExtInfo(needValidate = true, needAuth = true),
+            projectChannel = ProjectChannelCode.BS
         )
 
         return Result(true)
@@ -85,7 +81,7 @@ class UserProjectResourceImpl @Autowired constructor(
         projectUpdateInfo: ProjectUpdateInfo,
         accessToken: String?
     ): Result<Boolean> {
-        return Result(projectService.update(userId, projectId, projectUpdateInfo, accessToken))
+        return Result(projectService.update(userId, englishName = projectId, projectUpdateInfo, accessToken))
     }
 
     override fun enable(

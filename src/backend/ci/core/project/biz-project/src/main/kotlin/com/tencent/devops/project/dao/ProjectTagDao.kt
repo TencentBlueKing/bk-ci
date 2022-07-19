@@ -40,44 +40,26 @@ import org.springframework.stereotype.Repository
 @Repository
 class ProjectTagDao {
 
-    fun updateProjectTags(
-        dslContext: DSLContext,
-        routerTag: String,
-        projectIds: List<String>
-    ) {
+    fun updateProjectTags(dslContext: DSLContext, englishNames: List<String>, routerTag: String) {
         with(Tables.T_PROJECT) {
-            dslContext.update(this).set(ROUTER_TAG, routerTag).where(ENGLISH_NAME.`in`(projectIds)).execute()
+            dslContext.update(this).set(ROUTER_TAG, routerTag).where(ENGLISH_NAME.`in`(englishNames)).execute()
         }
     }
 
-    fun updateExtSystemProjectTags(
-        dslContext: DSLContext,
-        routerTag: String,
-        projectCode: String
-    ) {
+    fun updateExtSystemProjectTags(dslContext: DSLContext, englishName: String, otherRouterTag: String) {
         with(Tables.T_PROJECT) {
-            dslContext.update(this).set(OTHER_ROUTER_TAGS, routerTag)
-                .where(ENGLISH_NAME.eq(projectCode)).execute()
+            dslContext.update(this).set(OTHER_ROUTER_TAGS, otherRouterTag)
+                .where(ENGLISH_NAME.eq(englishName)).execute()
         }
     }
 
-    fun updateChannelTags(
-        dslContext: DSLContext,
-        routerTag: String,
-        channel: String
-    ) {
+    fun updateChannelTags(dslContext: DSLContext, routerTag: String, channel: String) {
         with(Tables.T_PROJECT) {
             dslContext.update(this).set(ROUTER_TAG, routerTag).where(CHANNEL.eq(channel)).execute()
         }
     }
 
-    fun updateOrgTags(
-        dslContext: DSLContext,
-        routerTag: String,
-        bgId: Long?,
-        centerId: Long?,
-        deptId: Long?
-    ) {
+    fun updateOrgTags(dslContext: DSLContext, routerTag: String, bgId: Long?, centerId: Long?, deptId: Long?) {
         if (bgId == null && centerId == null && deptId == null) {
             throw ParamBlankException("Invalid project org")
         }
@@ -100,21 +82,13 @@ class ProjectTagDao {
         }
     }
 
-    fun listByChannel(
-        dslContext: DSLContext,
-        channel: String,
-        limit: Int,
-        offset: Int
-    ): Result<TProjectRecord> {
+    fun listByChannel(dslContext: DSLContext, channel: String, limit: Int, offset: Int): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this).where(CHANNEL.eq(channel)).limit(limit).offset(offset).fetch()
         }
     }
 
-    fun getExtSystemRouterTag(
-        dslContext: DSLContext,
-        projectIds: List<String>
-    ): Result<TProjectRecord>? {
+    fun getExtSystemRouterTag(dslContext: DSLContext, projectIds: List<String>): Result<TProjectRecord>? {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this).where(ENGLISH_NAME.`in`(projectIds)).fetch()
         }
