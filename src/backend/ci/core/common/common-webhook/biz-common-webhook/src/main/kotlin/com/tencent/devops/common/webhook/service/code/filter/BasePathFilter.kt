@@ -83,5 +83,5 @@ abstract class BasePathFilter(
         }
     }
 
-     abstract fun isPathMatch(eventPath: String, userPath: String): Boolean
+    abstract fun isPathMatch(eventPath: String, userPath: String): Boolean
 }
