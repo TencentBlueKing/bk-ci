@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.dao.common
 
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreEnvVar
@@ -43,7 +44,6 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_VAR_DESC
 import com.tencent.devops.store.pojo.common.KEY_VAR_NAME
 import com.tencent.devops.store.pojo.common.KEY_VAR_VALUE
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.StoreEnvVarRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition

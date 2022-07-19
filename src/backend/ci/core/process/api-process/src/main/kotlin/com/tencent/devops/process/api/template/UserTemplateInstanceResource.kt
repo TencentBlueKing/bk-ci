@@ -30,6 +30,8 @@ package com.tencent.devops.process.api.template
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplateCompareModelResult
@@ -184,10 +186,11 @@ interface UserTemplateInstanceResource {
         templateId: String,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
-        page: Int?,
+        page: Int,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?,
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+        pageSize: Int,
         @ApiParam("名字搜索的关键字", required = false)
         @QueryParam("searchKey")
         searchKey: String?,
