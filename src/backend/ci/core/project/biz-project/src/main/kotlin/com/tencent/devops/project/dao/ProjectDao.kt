@@ -394,7 +394,7 @@ class ProjectDao {
 
         if (!otherRouterTagMaps.isNullOrEmpty()) {
             otherRouterTagMaps.forEach { (jk, jv) ->
-                conditions.add(JooqUtils.jsonExtract(OTHER_ROUTER_TAGS,"\$.$jk").eq(jv))
+                conditions.add(JooqUtils.jsonExtract(OTHER_ROUTER_TAGS, "\$.$jk").eq(jv))
             }
         }
         return conditions
