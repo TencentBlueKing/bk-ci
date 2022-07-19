@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.dao
 
+import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
@@ -394,7 +395,7 @@ class ProjectDao {
 
         if (!otherRouterTagMaps.isNullOrEmpty()) {
             otherRouterTagMaps.forEach { (jk, jv) ->
-                conditions.add(DSL.jsonValue(OTHER_ROUTER_TAGS, "\$.$jk").eq(JSON.valueOf(jv)))
+                conditions.add(JooqUtils.jsonExtract(OTHER_ROUTER_TAGS,"\$.$jk").eq(jv))
             }
         }
         return conditions

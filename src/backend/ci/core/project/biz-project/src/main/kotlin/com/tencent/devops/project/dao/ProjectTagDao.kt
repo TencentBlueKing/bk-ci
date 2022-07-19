@@ -49,7 +49,7 @@ class ProjectTagDao {
 
     fun updateExtSystemProjectTags(dslContext: DSLContext, englishName: String, otherRouterTag: String) {
         with(Tables.T_PROJECT) {
-            dslContext.update(this).set(OTHER_ROUTER_TAGS, JSON.valueOf(otherRouterTag))
+            dslContext.update(this).set(OTHER_ROUTER_TAGS, otherRouterTag)
                 .where(ENGLISH_NAME.eq(englishName)).execute()
         }
     }
