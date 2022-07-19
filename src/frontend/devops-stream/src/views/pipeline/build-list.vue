@@ -536,6 +536,7 @@
                 this.showTriggle = false
                 this.triggerCommits = []
                 this.triggerBranches = []
+                this.uiFormSchema = {}
                 this.formData = {
                     branch: '',
                     useCommitId: false,

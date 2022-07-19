@@ -18,11 +18,17 @@
             :id="item.id"
             :name="item.name"
         >
+            <span>{{ item.name }}</span>
+            <i
+                v-if="item.description"
+                class="bk-icon icon-info"
+                v-bk-tooltips="{ content: item.description }"
+            ></i>
         </bk-option>
         <template v-if="mergedOptionsConf.hasAddItem">
             <div slot="extension" class="bk-selector-create-item">
                 <a :href="addItemUrl" target="_blank">
-                    <i class="devops-icon icon-plus-circle"></i>
+                    <i class="bk-icon icon-plus-circle"></i>
                     {{ mergedOptionsConf.itemText }}
                 </a>
             </div>
@@ -158,5 +164,9 @@
     .bk-form .bk-form-content,
     .form-field.bk-form-item {
         position: static;
+    }
+    .icon-info{
+        float: right;
+        line-height: 32px;
     }
 </style>
