@@ -28,6 +28,7 @@
 package com.tencent.devops.common.expression.expression
 
 import com.tencent.devops.common.expression.ExecutionContext
+import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.context.ArrayContextData
 import com.tencent.devops.common.expression.context.BooleanContextData
@@ -39,6 +40,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
@@ -194,10 +196,9 @@ class ExpressionParserTest {
             "p-xxx",
             ExpressionParser.evaluateByMap("variables.pipeline_id", variables)
         )
-        Assertions.assertEquals(
-            false,
-            ExpressionParser.evaluateByMap("a=='a'", variables)
-        )
+        assertThrows<ExpressionParseException> {
+            ExpressionParser.evaluateByMap("a==a", variables)
+        }
     }
 
     @DisplayName("测试解析文字")
