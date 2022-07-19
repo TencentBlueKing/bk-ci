@@ -488,67 +488,8 @@ class QualityRuleCheckService @Autowired constructor(
         }
 
         logger.info("QUALITY|metadataList is: $metadataList, indicators is:$indicators")
-        val indicatorsCopy = indicators.toMutableList()
-        val metadataListCopy = metadataList.map { it.clone() }
 
-        val codeccMetaList = metadataListCopy.filter {
-            ElementUtils.QUALITY_CODECC_METATYPE.contains(it.elementType)
-        }.groupBy { it.taskId }
-        if (codeccMetaList.size > 1) {
-            codeccMetaList.values.forEachIndexed { index, codeccMeta ->
-                codeccMeta.map { it.taskName = "${it.taskName}+$index" }
-            }
-        }
-
-        indicators.forEach { indicator ->
-            // 没有设置taskName时，当输出多个相同指标值，每一个都要加入判断，否则把使用通配符的替换为taskName全名，用于后面加入到指标前缀
-            if (indicator.taskName.isNullOrEmpty()) {
-                if (CodeccUtils.isCodeccAtom(indicator.elementType)) {
-                    if (codeccMetaList.size > 1) {
-                        indicatorsCopy.remove(indicator)
-                        codeccMetaList.values.forEachIndexed { index, codeccMeta ->
-                            val extraIndicator = indicator.copy()
-                            val extraTaskName = codeccMeta.firstOrNull()?.taskName
-                            extraIndicator.taskName = extraTaskName
-                            indicatorsCopy.add(extraIndicator)
-                        }
-                    }
-                } else {
-                    if (metadataListCopy.count { it.enName == indicator.enName } > 1) {
-                        indicatorsCopy.remove(indicator)
-                        metadataListCopy.filter { it.enName == indicator.enName }.forEachIndexed { index, metadata ->
-                            val extraIndicator = indicator.copy()
-                            val extraTaskName = "${metadata.taskName}+$index"
-                            extraIndicator.taskName = extraTaskName
-                            metadata.taskName = extraTaskName
-                            indicatorsCopy.add(extraIndicator)
-                        }
-                    }
-                }
-            } else {
-                if (CodeccUtils.isCodeccAtom(indicator.elementType)) {
-                    codeccMetaList.values.forEach { codeccMeta ->
-                        if (codeccMeta.firstOrNull()?.taskName?.startsWith(indicator.taskName ?: "") == true) {
-                            indicatorsCopy.remove(indicator)
-                            val extraIndicator = indicator.copy()
-                            extraIndicator.taskName = codeccMeta.firstOrNull()?.taskName
-                            indicatorsCopy.add(extraIndicator)
-                        }
-                    }
-                } else {
-                    metadataListCopy.filter { it.enName == indicator.enName &&
-                            it.taskName.startsWith(indicator.taskName ?: "")
-                    }.forEachIndexed { index, metadata ->
-                        indicatorsCopy.remove(indicator)
-                        val extraIndicator = indicator.copy()
-                        val extraTaskName = "${metadata.taskName}+$index"
-                        extraIndicator.taskName = extraTaskName
-                        metadata.taskName = extraTaskName
-                        indicatorsCopy.add(extraIndicator)
-                    }
-                }
-            }
-        }
+        val (indicatorsCopy, metadataListCopy) = handleWithMultiIndicator(indicators, metadataList)
 
         logger.info("QUALITY|indicatorsCopy is:$indicatorsCopy")
         // 遍历每个指标
@@ -969,6 +910,91 @@ class QualityRuleCheckService @Autowired constructor(
     private fun getProjectName(projectId: String): String {
         val project = client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectId)).data?.firstOrNull()
         return project?.projectName ?: throw OperationException("ProjectId: $projectId not exist")
+    }
+
+    private fun handleWithMultiIndicator(
+        indicators: List<QualityIndicator>,
+        metadataList: List<QualityHisMetadata>
+    ): Pair<List<QualityIndicator>, List<QualityHisMetadata>> {
+        val indicatorsCopy = indicators.toMutableList()
+        val metadataListCopy = metadataList.map { it.clone() }
+
+        // // CodeCC插件一个指标的元数据对应多条，先对多个CodeCC插件提前做标识
+        val codeccMetaList = metadataListCopy.filter {
+            ElementUtils.QUALITY_CODECC_METATYPE.contains(it.elementType)
+        }.groupBy { it.taskId }
+        if (codeccMetaList.size > 1) {
+            codeccMetaList.values.forEachIndexed { index, codeccMeta ->
+                codeccMeta.map { it.taskName = "${it.taskName}+$index" }
+            }
+        }
+
+        indicators.forEach { indicator ->
+            // 没有设置taskName时，当输出多个相同指标值，每一个都要加入判断，否则把使用通配符的替换为taskName全名，用于后面加入到指标前缀
+            if (indicator.taskName.isNullOrEmpty()) {
+                // 没有设置taskName且多个CodeCC插件时，每个要检查的指标额外添加为插件个数
+                if (CodeccUtils.isCodeccAtom(indicator.elementType)) {
+                    if (codeccMetaList.size > 1) {
+                        indicatorsCopy.remove(indicator)
+                        codeccMetaList.values.forEach { codeccMeta ->
+                            handleCodeCCPlugin(indicator, codeccMeta, indicatorsCopy)
+                        }
+                    }
+                } else {
+                    // 脚本及三方插件可直接用指标英文名判断，并对结果元数据和指标taskName添加标识后缀
+                    if (metadataListCopy.count { it.enName == indicator.enName } > 1) {
+                        indicatorsCopy.remove(indicator)
+                        metadataListCopy.filter { it.enName == indicator.enName }.forEachIndexed { index, metadata ->
+                            handleScriptAndThirdPlugin(indicator, metadata, index, indicatorsCopy)
+                        }
+                    }
+                }
+            } else {
+                // 设置了taskName的CodeCC插件指标，将匹配到的元数据taskName赋给检查指标的taskName，统一后面对taskName不为空的去标识后缀
+                if (CodeccUtils.isCodeccAtom(indicator.elementType)) {
+                    codeccMetaList.values.forEach { codeccMeta ->
+                        if (codeccMeta.firstOrNull()?.taskName?.startsWith(indicator.taskName ?: "") == true) {
+                            indicatorsCopy.remove(indicator)
+                            handleCodeCCPlugin(indicator, codeccMeta, indicatorsCopy)
+                        }
+                    }
+                } else {
+                    // 脚本及三方插件设置了taskName，将匹配到的结果元数据和指标taskName均加上标识后缀
+                    metadataListCopy.filter { it.enName == indicator.enName &&
+                            it.taskName.startsWith(indicator.taskName ?: "")
+                    }.forEachIndexed { index, metadata ->
+                        indicatorsCopy.remove(indicator)
+                        handleScriptAndThirdPlugin(indicator, metadata, index, indicatorsCopy)
+                    }
+                }
+            }
+        }
+        return Pair(indicatorsCopy, metadataListCopy)
+    }
+
+    private fun handleScriptAndThirdPlugin(
+        indicator: QualityIndicator,
+        metadata: QualityHisMetadata,
+        index: Int,
+        indicatorsCopy: MutableList<QualityIndicator>
+    ) {
+        // 非CodeCC插件的指标和对应元数据taskName添加标识后缀
+        val extraIndicator = indicator.copy()
+        val extraTaskName = "${metadata.taskName}+$index"
+        extraIndicator.taskName = extraTaskName
+        metadata.taskName = extraTaskName
+        indicatorsCopy.add(extraIndicator)
+    }
+
+    private fun handleCodeCCPlugin(
+        indicator: QualityIndicator,
+        metadata: List<QualityHisMetadata>,
+        indicatorsCopy: MutableList<QualityIndicator>
+    ) {
+        // 将指标taskName修改为元数据的taskName
+        val extraIndicator = indicator.copy()
+        extraIndicator.taskName = metadata.firstOrNull()?.taskName
+        indicatorsCopy.add(extraIndicator)
     }
 
     companion object {
