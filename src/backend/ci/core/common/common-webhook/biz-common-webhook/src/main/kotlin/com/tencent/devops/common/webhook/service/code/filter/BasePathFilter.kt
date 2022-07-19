@@ -41,12 +41,20 @@ abstract class BasePathFilter(
         private val logger = LoggerFactory.getLogger(this::class.java)
     }
 
-    @SuppressWarnings("NestedBlockDepth", "ReturnCount")
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info(
             "$pipelineId|triggerOnPath:$triggerOnPath|includedPaths:$includedPaths" +
                 "|excludedPaths:$excludedPaths|path prefix filter"
         )
+        return hasNoPathSpecs() || hashPathSpecs(response)
+    }
+
+    private fun hasNoPathSpecs(): Boolean {
+        return includedPaths.isEmpty() && excludedPaths.isEmpty()
+    }
+
+    @SuppressWarnings("NestedBlockDepth", "ReturnCount")
+    private fun hashPathSpecs(response: WebhookFilterResponse): Boolean {
         val matchIncludePaths = mutableSetOf<String>()
         if (includedPaths.isNotEmpty()) {
             triggerOnPath.forEach eventPath@{ eventPath ->
