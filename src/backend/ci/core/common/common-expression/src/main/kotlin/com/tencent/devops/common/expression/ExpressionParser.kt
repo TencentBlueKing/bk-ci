@@ -60,7 +60,8 @@ import java.util.regex.Pattern
     "TooManyFunctions",
     "LoopWithTooManyJumpStatements",
     "ReturnCount",
-    "ThrowsCount"
+    "ThrowsCount",
+    "MagicNumber"
 )
 object ExpressionParser {
 
@@ -70,29 +71,34 @@ object ExpressionParser {
         contextMap.forEach { (key, value) ->
             var data: DictionaryContextData? = null
             val tokens = key.split('.')
-            tokens.forEachIndexed { index, token ->
-                if (index == tokens.size - 1) {
-                    data!!.add(token, StringContextData(value))
-                    return@forEachIndexed
-                }
+            if (tokens.size > 1) {
+                tokens.forEachIndexed { index, token ->
+                    if (index == tokens.size - 1) {
+                        data!!.add(token, StringContextData(value))
+                        return@forEachIndexed
+                    }
 
-                if (index == 0) {
-                    if (context.expressionValues[token] != null) {
+                    if (index == 0) {
+                        if (context.expressionValues[token] != null) {
+                            data = context.expressionValues[token] as DictionaryContextData
+                            return@forEachIndexed
+                        }
+                        nameValue.add(NamedValueInfo(token, ContextValueNode()))
+                        context.expressionValues[token] = DictionaryContextData()
                         data = context.expressionValues[token] as DictionaryContextData
                         return@forEachIndexed
                     }
-                    nameValue.add(NamedValueInfo(token, ContextValueNode()))
-                    context.expressionValues[token] = DictionaryContextData()
-                    data = context.expressionValues[token] as DictionaryContextData
-                    return@forEachIndexed
-                }
 
-                if (data!![token] != null) {
+                    if (data!![token] != null) {
+                        data = data!![token] as DictionaryContextData
+                        return@forEachIndexed
+                    }
+                    data!![token] = DictionaryContextData()
                     data = data!![token] as DictionaryContextData
-                    return@forEachIndexed
                 }
-                data!![token] = DictionaryContextData()
-                data = data!![token] as DictionaryContextData
+            } else {
+                nameValue.add(NamedValueInfo(key, ContextValueNode()))
+                context.expressionValues[key] = StringContextData(value)
             }
         }
         val result = createTree(expression.legalizeExpression(), null, nameValue, null)!!
@@ -144,7 +150,7 @@ object ExpressionParser {
 
             // Unexpected
             if (context.token?.kind == TokenKind.Unexpected) {
-                throw ParseException(ParseExceptionKind.UnexpectedSymbol, context.token, context.expression)
+                throw ExpressionParseException(ParseExceptionKind.UnexpectedSymbol, context.token, context.expression)
             } else if (context.token?.isOperator == true) {
                 pushOperator(context)
             } else {
@@ -179,7 +185,7 @@ object ExpressionParser {
             }
 
             if (unexpectedLastToken || context.lexicalAnalyzer.unclosedTokens.any()) {
-                throw ParseException(
+                throw ExpressionParseException(
                     ParseExceptionKind.UnexpectedEndOfExpression,
                     context.lastToken,
                     context.expression
@@ -214,7 +220,7 @@ object ExpressionParser {
                     node = NoOperation()
                     node.name = function ?: ""
                 } else {
-                    throw ParseException(
+                    throw ExpressionParseException(
                         ParseExceptionKind.UnrecognizedFunction,
                         context.token,
                         context.expression
@@ -232,7 +238,7 @@ object ExpressionParser {
                     node = NoOperationNamedValue()
                     node.name = name ?: ""
                 } else {
-                    throw ParseException(
+                    throw ExpressionParseException(
                         ParseExceptionKind.UnrecognizedNamedValue,
                         context.token,
                         context.expression
@@ -261,12 +267,11 @@ object ExpressionParser {
                     topOperator.kind != TokenKind.StartIndex && // or unless top is "["
                     topOperator.kind != TokenKind.StartParameters && // or unless top is "(" function call
                     topOperator.kind != TokenKind.Separator
-                ) // or unless top is ","
-                {
+                ) {
+                    // or unless top is ","
                     flushTopOperator(context)
                     continue
                 }
-
                 break
             }
         }
@@ -424,9 +429,9 @@ object ExpressionParser {
         if (functionInfo == null && context.allowUnknownKeywords) {
             // Don't check min/max
         } else if (function.parameters.count() < functionInfo!!.minParameters) {
-            throw ParseException(ParseExceptionKind.TooFewParameters, operator, context.expression)
+            throw ExpressionParseException(ParseExceptionKind.TooFewParameters, operator, context.expression)
         } else if (function.parameters.count() > functionInfo.maxParameters) {
-            throw ParseException(ParseExceptionKind.TooManyParameters, operator, context.expression)
+            throw ExpressionParseException(ParseExceptionKind.TooManyParameters, operator, context.expression)
         }
     }
 
@@ -471,7 +476,7 @@ object ExpressionParser {
         depth: Int = 1
     ) {
         if (depth > ExpressionConstants.MAX_DEEP) {
-            throw ParseException(ParseExceptionKind.ExceededMaxDepth, null, context.expression)
+            throw ExpressionParseException(ParseExceptionKind.ExceededMaxDepth, null, context.expression)
         }
 
         if (node is Container) {

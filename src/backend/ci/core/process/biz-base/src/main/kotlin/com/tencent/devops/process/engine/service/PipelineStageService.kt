@@ -436,8 +436,10 @@ class PipelineStageService @Autowired constructor(
         timeout: Boolean? = false
     ) {
         with(buildStage) {
-            logger.info("ENGINE|$buildId|STAGE_QUALITY_TRIGGER|$stageId|" +
-                "inOrOut=$inOrOut|request=$qualityRequest|timeout=$timeout")
+            logger.info(
+                "ENGINE|$buildId|STAGE_QUALITY_TRIGGER|$stageId|" +
+                    "inOrOut=$inOrOut|request=$qualityRequest|timeout=$timeout"
+            )
             val (stageNextStatus, reviewType) = if (inOrOut) {
                 Pair(BuildStatus.QUEUE, BuildReviewType.QUALITY_CHECK_IN)
             } else {
@@ -567,11 +569,15 @@ class PipelineStageService @Autowired constructor(
                 stageId = stage.stageId,
                 runtimeVariable = buildContext
             )
-            logger.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_REQUEST|${event.stageId}|" +
-                "inOrOut=$inOrOut|request=$request|ruleIds=${check.ruleIds}")
+            logger.info(
+                "ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_REQUEST|${event.stageId}|" +
+                    "inOrOut=$inOrOut|request=$request|ruleIds=${check.ruleIds}"
+            )
             val result = client.get(ServiceQualityRuleResource::class).check(request).data!!
-            logger.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_RESPONSE|${event.stageId}|" +
-                "inOrOut=$inOrOut|response=$result|ruleIds=${check.ruleIds}")
+            logger.info(
+                "ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_RESPONSE|${event.stageId}|" +
+                    "inOrOut=$inOrOut|response=$result|ruleIds=${check.ruleIds}"
+            )
             check.checkTimes = result.checkTimes
 
             // #5246 如果红线通过则直接成功，否则判断是否需要等待把关
@@ -604,8 +610,11 @@ class PipelineStageService @Autowired constructor(
             )
             return qualityStatus
         } catch (ignore: Throwable) {
-            logger.error("ENGINE|${event.buildId}|${event.source}|inOrOut=$inOrOut|" +
-                "STAGE_QUALITY_CHECK_ERROR|${event.stageId}", ignore)
+            logger.error(
+                "ENGINE|${event.buildId}|${event.source}|inOrOut=$inOrOut|" +
+                    "STAGE_QUALITY_CHECK_ERROR|${event.stageId}",
+                ignore
+            )
             BuildStatus.QUALITY_CHECK_FAIL
         }
     }

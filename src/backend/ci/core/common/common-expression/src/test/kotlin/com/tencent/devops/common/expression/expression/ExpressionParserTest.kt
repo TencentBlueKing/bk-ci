@@ -194,6 +194,10 @@ class ExpressionParserTest {
             "p-xxx",
             ExpressionParser.evaluateByMap("variables.pipeline_id", variables)
         )
+        Assertions.assertEquals(
+            false,
+            ExpressionParser.evaluateByMap("a=='a'", variables)
+        )
     }
 
     @DisplayName("测试解析文字")

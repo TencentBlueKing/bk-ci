@@ -55,7 +55,7 @@ class ParseContext(
 
     init {
         if (expression.length > ExpressionConstants.MAX_LENGTH) {
-            throw ParseException(ParseExceptionKind.ExceededMaxLength, null, expression)
+            throw ExpressionParseException(ParseExceptionKind.ExceededMaxLength, null, expression)
         }
 
         namedValues?.forEach { namedValueInfo ->

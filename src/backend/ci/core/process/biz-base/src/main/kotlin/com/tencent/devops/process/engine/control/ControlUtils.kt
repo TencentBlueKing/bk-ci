@@ -29,6 +29,8 @@ package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.expression.ExpressionParser
+import com.tencent.devops.common.expression.ExpressionParseException
+import com.tencent.devops.common.expression.expression.ParseExceptionKind
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
@@ -306,7 +308,7 @@ object ControlUtils {
             try {
                 val expressionResult = ExpressionParser.evaluateByMap(customCondition, variables)
                 logger.info(
-                    "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
+                    "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
                         "|result=$expressionResult"
                 )
                 val resultIsTrue = expressionResult == true
@@ -319,23 +321,23 @@ object ControlUtils {
                         }
                 )
                 resultIsTrue
-            } catch (ignore: Exception) {
+            } catch (ignore: ExpressionParseException) {
                 // 异常，则任务表达式为false
                 logger.info(
-                    "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
+                    "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
                         "|result=exception: ${ignore.message}",
                     ignore
                 )
                 message.append(
                     "Custom condition($customCondition) parse failed, will be skipped! Detail: ${ignore.message}"
                 )
-                return false
+                throw ignore
             }
         } else {
             // 空表达式也认为是false
-            logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression is empty!")
+            logger.info("[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression is empty!")
             message.append("Custom condition is empty, will be skipped!")
-            false
+            throw ExpressionParseException(ParseExceptionKind.UnexpectedSymbol, null, "Custom condition is empty")
         }
     }
 

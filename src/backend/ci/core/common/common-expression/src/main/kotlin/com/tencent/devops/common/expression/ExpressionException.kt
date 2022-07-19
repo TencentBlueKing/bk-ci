@@ -36,8 +36,8 @@ abstract class ExpressionException(message: String = "") : RuntimeException(mess
 
 class NotSupportedException(override val message: String) : ExpressionException()
 
-class ParseException(
-    kind: ParseExceptionKind,
+class ExpressionParseException(
+    val kind: ParseExceptionKind,
     token: Token?,
     expression: String,
     override var message: String = ""
@@ -57,7 +57,7 @@ class ParseException(
         message = if (token == null) {
             desc
         } else {
-            "$desc: '${token.rawValue}'. Located at position ${token.index + 1} within expression:$expression"
+            "$desc: '${token.rawValue}'. Located at position ${token.index + 1} within expression: $expression"
         }
     }
 }
