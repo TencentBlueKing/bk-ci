@@ -360,7 +360,7 @@ class StreamPipelineService @Autowired constructor(
                     userId = userId,
                     gitProjectId = gitProjectId.toLong(),
                     projectCode = gitProjectCode,
-                    modelAndSetting = createTriggerModel(gitProjectCode),
+                    modelAndSetting = createTriggerModel(realPipeline.displayName),
                     updateLastModifyUser = true,
                     branch = branch
                 )
