@@ -36,6 +36,7 @@ const val PIPELINE_START_USER_ID = "BK_CI_START_USER_ID" // "pipeline.start.user
 const val PIPELINE_START_USER_NAME = "BK_CI_START_USER_NAME" // "pipeline.start.user.name"
 const val PIPELINE_START_WEBHOOK_USER_ID = "BK_CI_START_WEBHOOK_USER_ID" // "pipeline.start.webhook.user.id"
 const val PIPELINE_START_PIPELINE_USER_ID = "BK_CI_START_PIPELINE_USER_ID" // "pipeline.start.pipeline.user.id"
+const val PIPELINE_START_REMOTE_USER_ID = "BK_CI_START_REMOTE_USER_ID"
 const val PIPELINE_START_TYPE = "BK_CI_START_TYPE" // "pipeline.start.type"
 const val PIPELINE_START_CHANNEL = "BK_CI_START_CHANNEL" // "pipeline.start.channel"
 const val PIPELINE_BUILD_NUM = "BK_CI_BUILD_NUM" // "pipeline.build.num"
@@ -193,6 +194,8 @@ const val PIPELINE_RES_NUM_MIN = 50
 const val KEY_PIPELINE_ID = "pipelineId"
 
 const val KEY_PROJECT_ID = "projectId"
+
+const val KEY_TEMPLATE_ID = "templateId"
 
 const val KEY_STAGE = "stage"
 

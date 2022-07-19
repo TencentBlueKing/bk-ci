@@ -54,7 +54,6 @@ import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerLock
 import com.tencent.devops.stream.util.GitCommonUtils
-import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -361,7 +360,7 @@ class StreamPipelineService @Autowired constructor(
                     userId = userId,
                     gitProjectId = gitProjectId.toLong(),
                     projectCode = gitProjectCode,
-                    modelAndSetting = createTriggerModel(gitProjectCode),
+                    modelAndSetting = createTriggerModel(realPipeline.displayName),
                     updateLastModifyUser = true,
                     branch = branch
                 )
@@ -381,9 +380,9 @@ class StreamPipelineService @Autowired constructor(
         return "git_$gitProjectId"
     }
 
-    private fun createTriggerModel(projectCode: String) = PipelineModelAndSetting(
+    private fun createTriggerModel(displayName: String) = PipelineModelAndSetting(
         model = Model(
-            name = StreamPipelineUtils.genBKPipelineName(projectCode),
+            name = displayName,
             desc = "",
             stages = listOf(
                 Stage(

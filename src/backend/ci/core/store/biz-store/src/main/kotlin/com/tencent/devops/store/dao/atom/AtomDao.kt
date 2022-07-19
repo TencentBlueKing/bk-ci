@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.KEY_DESCRIPTION
 import com.tencent.devops.common.api.constant.KEY_DOCSLINK
 import com.tencent.devops.common.api.constant.KEY_OS
 import com.tencent.devops.common.api.constant.KEY_SUMMARY
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.constant.VERSION
@@ -80,7 +81,6 @@ import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
@@ -89,6 +89,7 @@ import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
@@ -1216,6 +1217,17 @@ class AtomDao : AtomBaseDao() {
                 .where(
                     LATEST_FLAG.eq(true)
                         .and(DEFAULT_FLAG.eq(true))
+                )
+                .fetch()
+        }
+    }
+
+    fun batchGetAtomName(dslContext: DSLContext, atomCodes: Collection<String>): Result<Record2<String, String>>? {
+        return with(TAtom.T_ATOM) {
+            dslContext.select(ATOM_CODE, NAME).from(this)
+                .where(
+                    LATEST_FLAG.eq(true)
+                        .and(ATOM_CODE.`in`(atomCodes))
                 )
                 .fetch()
         }

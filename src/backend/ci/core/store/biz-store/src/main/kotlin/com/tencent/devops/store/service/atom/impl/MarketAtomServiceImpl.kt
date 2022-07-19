@@ -53,6 +53,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.model.store.tables.records.TAtomRecord
@@ -341,6 +342,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     /**
      * 插件市场，首页
      */
+    @BkTimed(extraTags = ["web_operation", "mainPageList"], value = "store_web_operation")
     override fun mainPageList(
         userId: String,
         page: Int?,
@@ -440,6 +442,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     /**
      * 插件市场，查询插件列表
      */
+    @BkTimed(extraTags = ["web_operation", "getAtomList"], value = "store_web_operation")
     override fun list(
         userId: String,
         keyword: String?,
@@ -609,6 +612,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     }
 
     @Suppress("UNCHECKED_CAST")
+    @BkTimed(extraTags = ["web_operation", "getAtomVersion"], value = "store_web_operation")
     private fun getAtomVersion(atomId: String, userId: String): Result<AtomVersion?> {
         val record = marketAtomDao.getAtomById(dslContext, atomId)
         return if (null == record) {
@@ -762,6 +766,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     /**
      * 安装插件到项目
      */
+    @BkTimed(extraTags = ["web_operation", "installAtom"], value = "store_web_operation")
     override fun installAtom(
         accessToken: String,
         userId: String,

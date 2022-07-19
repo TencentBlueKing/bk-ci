@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
@@ -63,7 +64,6 @@ import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
