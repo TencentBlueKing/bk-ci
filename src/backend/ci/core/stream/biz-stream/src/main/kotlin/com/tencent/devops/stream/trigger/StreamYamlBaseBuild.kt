@@ -437,6 +437,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                     buildId = buildId
                 )
             }
+
+            savePipelineBuildCommit(action = action, pipeline = pipeline, gitBuildId = gitBuildId)
         } catch (ignore: Exception) {
             logger.error(
                 "Stream after Build failed, gitProjectId[${action.data.getGitProjectId()}], " +
