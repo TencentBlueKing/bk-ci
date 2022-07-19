@@ -490,21 +490,26 @@ class QualityRuleCheckService @Autowired constructor(
         logger.info("QUALITY|metadataList is: $metadataList, indicators is:$indicators")
         val indicatorsCopy = indicators.toMutableList()
         val metadataListCopy = metadataList.map { it.clone() }
-        indicators.forEachIndexed { num, indicator ->
+
+        val codeccMetaList = metadataListCopy.filter {
+            ElementUtils.QUALITY_CODECC_METATYPE.contains(it.elementType)
+        }.groupBy { it.taskId }
+        if (codeccMetaList.size > 1) {
+            codeccMetaList.values.forEachIndexed { index, codeccMeta ->
+                codeccMeta.map { it.taskName = "${it.taskName}+$index" }
+            }
+        }
+
+        indicators.forEach { indicator ->
             // 没有设置taskName时，当输出多个相同指标值，每一个都要加入判断，否则把使用通配符的替换为taskName全名，用于后面加入到指标前缀
             if (indicator.taskName.isNullOrEmpty()) {
                 if (CodeccUtils.isCodeccAtom(indicator.elementType)) {
-                    val codeccMetaList = metadataListCopy.filter {
-                        ElementUtils.QUALITY_CODECC_METATYPE.contains(it.elementType)
-                    }.groupBy { it.taskId }
                     if (codeccMetaList.size > 1) {
                         indicatorsCopy.remove(indicator)
                         codeccMetaList.values.forEachIndexed { index, codeccMeta ->
                             val extraIndicator = indicator.copy()
-                            val extraMeta = codeccMeta.firstOrNull()
-                            val extraTaskName = if (num == 0) "${extraMeta?.taskName}+$index" else extraMeta?.taskName
+                            val extraTaskName = codeccMeta.firstOrNull()?.taskName
                             extraIndicator.taskName = extraTaskName
-                            codeccMeta.map { it.taskName = extraTaskName ?: "" }
                             indicatorsCopy.add(extraIndicator)
                         }
                     }
@@ -522,15 +527,13 @@ class QualityRuleCheckService @Autowired constructor(
                 }
             } else {
                 if (CodeccUtils.isCodeccAtom(indicator.elementType)) {
-                    metadataListCopy.filter { ElementUtils.QUALITY_CODECC_METATYPE.contains(it.elementType) &&
-                            it.taskName.startsWith(indicator.taskName ?: "")
-                    }.forEachIndexed { index, codeccMeta ->
-                        indicatorsCopy.remove(indicator)
-                        val extraIndicator = indicator.copy()
-                        val extraTaskName = "${codeccMeta.taskName}+$index"
-                        extraIndicator.taskName = extraTaskName
-                        codeccMeta.taskName = extraTaskName
-                        indicatorsCopy.add(extraIndicator)
+                    codeccMetaList.values.forEach { codeccMeta ->
+                        if (codeccMeta.firstOrNull()?.taskName?.startsWith(indicator.taskName ?: "") == true) {
+                            indicatorsCopy.remove(indicator)
+                            val extraIndicator = indicator.copy()
+                            extraIndicator.taskName = codeccMeta.firstOrNull()?.taskName
+                            indicatorsCopy.add(extraIndicator)
+                        }
                     }
                 } else {
                     metadataListCopy.filter { it.enName == indicator.enName &&
