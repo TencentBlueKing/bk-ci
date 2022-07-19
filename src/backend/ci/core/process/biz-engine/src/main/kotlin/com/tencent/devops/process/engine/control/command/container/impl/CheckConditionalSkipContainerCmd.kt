@@ -79,7 +79,7 @@ class CheckConditionalSkipContainerCmd constructor(
             // 当条件判断出现异常情况时，stage直接判定为失败
             buildLogPrinter.addErrorLine(
                 buildId = container.buildId,
-                message = "[${e.kind}] condition of stage is invalid: ${e.message}",
+                message = "[${e.kind}] condition of job is invalid: ${e.message}",
                 jobId = container.containerHashId,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
                 executeCount = commandContext.executeCount
