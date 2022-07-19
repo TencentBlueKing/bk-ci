@@ -188,8 +188,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         val uploadResult = ApiFactory.create(ArchiveSDKApi::class).uploadFile(
             url = uploadFileUrl,
             file = file,
-            headers = headers,
-            isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+            headers = headers
         )
         logger.info("uploadAtomPkgFileResult: $uploadResult")
         val uploadFlag = uploadResult.data
@@ -227,8 +226,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         val uploadResult = ApiFactory.create(ArchiveSDKApi::class).uploadFile(
             url = uploadFileUrl,
             file = file,
-            headers = headers,
-            isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+            headers = headers
         )
         logger.info("uploadAtomStaticFileUrlResult: $uploadResult")
         val uploadFlag = uploadResult.data

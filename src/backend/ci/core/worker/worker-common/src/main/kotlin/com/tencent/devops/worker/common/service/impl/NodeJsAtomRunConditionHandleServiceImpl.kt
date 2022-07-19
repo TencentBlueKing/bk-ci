@@ -105,7 +105,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             } else {
                 "${pkgFileDir.absolutePath}/bin"
             }
-            System.setProperty(BK_CI_ATOM_EXECUTE_ENV_PATH, "$nodejsPath${File.separator}")
+            System.setProperty(BK_CI_ATOM_EXECUTE_ENV_PATH, nodejsPath)
         }
         return true
     }
@@ -119,7 +119,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         var convertTarget = target
         val executePath = System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)
         if (!executePath.isNullOrBlank()) {
-            convertTarget = "$executePath$target"
+            convertTarget = "$executePath${File.separator}$target"
         }
         if (!postEntryParam.isNullOrBlank()) {
             convertTarget = "$convertTarget --post-action=$postEntryParam"

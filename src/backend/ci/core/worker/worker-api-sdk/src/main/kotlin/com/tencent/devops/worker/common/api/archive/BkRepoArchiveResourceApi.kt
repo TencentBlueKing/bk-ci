@@ -277,7 +277,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         url: String,
         file: File,
         headers: Map<String, String>?,
-        isVmBuildEnv: Boolean
+        isVmBuildEnv: Boolean?
     ): Result<Boolean> {
         LoggerService.addNormalLine("upload file url >>> $url")
         val fileBody = RequestBody.create(MultipartFormData, file)
