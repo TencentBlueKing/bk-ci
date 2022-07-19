@@ -41,7 +41,6 @@ import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.util.ProjectUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.JSON
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result

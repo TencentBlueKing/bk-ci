@@ -34,7 +34,6 @@ import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.JSON
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
