@@ -185,6 +185,7 @@ class TaskBuildDetailService(
                                 c.startEpoch = e.startEpoch
                             }
                         }
+                        e.elapsed = null
                         e.errorType = null
                         e.errorCode = null
                         e.errorMsg = null
@@ -232,9 +233,7 @@ class TaskBuildDetailService(
         )
     }
 
-    fun taskEnd(
-        taskBuildEndParam: TaskBuildEndParam
-    ): List<PipelineTaskStatusInfo> {
+    fun taskEnd(taskBuildEndParam: TaskBuildEndParam): List<PipelineTaskStatusInfo> {
         val projectId = taskBuildEndParam.projectId
         val buildId = taskBuildEndParam.buildId
         val taskId = taskBuildEndParam.taskId
