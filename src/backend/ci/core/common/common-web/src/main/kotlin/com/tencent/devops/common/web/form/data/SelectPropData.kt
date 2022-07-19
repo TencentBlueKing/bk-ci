@@ -69,7 +69,8 @@ data class SelectPropOption(
 
 data class SelectPropOptionItem(
     val id: String,
-    val name: String
+    val name: String,
+    val description: String?
 )
 
 data class SelectPropOptionConf(
