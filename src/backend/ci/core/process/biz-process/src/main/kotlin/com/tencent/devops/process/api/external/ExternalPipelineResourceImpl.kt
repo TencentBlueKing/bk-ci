@@ -43,7 +43,19 @@ class ExternalPipelineResourceImpl @Autowired constructor(
         return pipelineBadgeService.get(projectId, pipelineId)
     }
 
-    override fun remoteBuild(token: String, values: Map<String, String>): Result<BuildId> {
-        return Result(pipelineRemoteAuthService.startPipeline(token, values))
+    override fun remoteBuild(
+        token: String,
+        realIp: String?,
+        startUser: String?,
+        values: Map<String, String>
+    ): Result<BuildId> {
+        return Result(
+            pipelineRemoteAuthService.startPipeline(
+                auth = token,
+                values = values,
+                sourceIp = realIp,
+                startUser = startUser
+            )
+        )
     }
 }
