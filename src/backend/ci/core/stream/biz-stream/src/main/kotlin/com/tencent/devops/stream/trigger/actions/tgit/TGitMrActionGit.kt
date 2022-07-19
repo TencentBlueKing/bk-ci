@@ -72,8 +72,9 @@ import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.GitCheckService
 import com.tencent.devops.stream.trigger.service.StreamTriggerTokenService
 import com.tencent.devops.stream.util.StreamCommonUtils
+import java.util.Base64
+import java.util.Date
 import org.slf4j.LoggerFactory
-import java.util.*
 
 class TGitMrActionGit(
     private val apiService: TGitApiService,

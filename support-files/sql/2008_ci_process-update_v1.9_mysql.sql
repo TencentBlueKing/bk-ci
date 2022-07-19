@@ -53,7 +53,7 @@ BEGIN
     END IF;
 
   IF NOT EXISTS(SELECT 1
-                FROM information_schema.statistics
+                FROM information_schema.COLUMNS
                 WHERE TABLE_SCHEMA = db
                   AND TABLE_NAME = 'T_PIPELINE_BUILD_COMMITS'
                   AND COLUMN_NAME = 'CHANNEL') THEN
