@@ -107,7 +107,9 @@ class PipelineRemoteAuthService @Autowired constructor(
             userId = pipeline.createUser
         }
         val vals = values.toMutableMap()
-        (startUser ?: userId)?.let { vals.put(PIPELINE_START_REMOTE_USER_ID, it) }
+        if (!startUser.isNullOrBlank()) {
+            vals[PIPELINE_START_REMOTE_USER_ID] = startUser
+        }
 
         logger.info("Start the pipeline remotely of $userId ${pipeline.pipelineId} of project ${pipeline.projectId}")
         // #5779 为兼容多集群的场景。流水线的启动需要路由到项目对应的集群。此处携带X-DEVOPS-PROJECT-ID头重新请求网关,由网关路由到项目对应的集群
