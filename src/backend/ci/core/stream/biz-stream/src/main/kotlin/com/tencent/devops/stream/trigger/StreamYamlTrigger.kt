@@ -124,7 +124,8 @@ class StreamYamlTrigger @Autowired constructor(
         action.data.setting = action.data.setting.copy(gitHttpUrl = gitProjectInfo.gitHttpUrl)
 
         val triggerResult = triggerMatcher.isMatch(action)
-        val (isTrigger, _, isTiming, isDelete, repoHookName) = triggerResult
+        val (isTriggerBody, _, isTiming, isDelete, repoHookName) = triggerResult
+        val (isTrigger, notTriggerReason) = isTriggerBody
         logger.info(
             "${pipeline.pipelineId}|Match return|isTrigger=$isTrigger|" +
                 "isTiming=$isTiming|isDelete=$isDelete|repoHookName=$repoHookName"
@@ -136,7 +137,11 @@ class StreamYamlTrigger @Autowired constructor(
                     "check mr fork review false, return, gitProjectId: ${action.data.getGitProjectId()}, " +
                     "eventId: ${action.data.context.requestEventId}"
             )
-            throw StreamTriggerException(action, TriggerReason.TRIGGER_NOT_MATCH)
+            throw StreamTriggerException(
+                action,
+                TriggerReason.TRIGGER_NOT_MATCH,
+                reasonParams = listOf("current trigger user(${action.data.eventCommon.userId}) not in whitelist")
+            )
         }
 
         val noNeedTrigger = !isTrigger && !isTiming && !isDelete && repoHookName.isNullOrEmpty()
@@ -146,7 +151,11 @@ class StreamYamlTrigger @Autowired constructor(
                     "Matcher is false, return, gitProjectId: ${action.data.getGitProjectId()}, " +
                     "eventId: ${action.data.context.requestEventId}"
             )
-            throw StreamTriggerException(action, TriggerReason.TRIGGER_NOT_MATCH)
+            throw StreamTriggerException(
+                action = action,
+                triggerReason = TriggerReason.TRIGGER_NOT_MATCH,
+                reasonParams = listOf(notTriggerReason ?: "")
+            )
         }
 
         // 替换yaml模板

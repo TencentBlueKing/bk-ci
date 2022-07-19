@@ -52,6 +52,7 @@ import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandlerUtil
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import com.tencent.devops.stream.util.GitCommonUtils
@@ -242,7 +243,7 @@ abstract class BaseManualTriggerService @Autowired constructor(
         return streamYamlBuild.gitStartBuild(
             action = action,
             TriggerResult(
-                trigger = true,
+                trigger = TriggerBody(true),
                 startParams = params,
                 timeTrigger = false,
                 deleteTrigger = false

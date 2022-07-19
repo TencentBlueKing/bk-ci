@@ -52,6 +52,7 @@ import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptio
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
@@ -226,7 +227,7 @@ class ScheduleTriggerService @Autowired constructor(
         return streamYamlBuild.gitStartBuild(
             action = action,
             triggerResult = TriggerResult(
-                trigger = true,
+                trigger = TriggerBody(true),
                 startParams = emptyMap(),
                 timeTrigger = false,
                 deleteTrigger = false

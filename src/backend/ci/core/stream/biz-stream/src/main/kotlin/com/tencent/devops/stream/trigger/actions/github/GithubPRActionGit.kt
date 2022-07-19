@@ -61,6 +61,7 @@ import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GithubRequestEventHandle
@@ -516,7 +517,7 @@ class GithubPRActionGit(
             triggerOn = triggerOn
         )
         return TriggerResult(
-            trigger = isMatch,
+            trigger = TriggerBody(isMatch),
             startParams = params,
             timeTrigger = false,
             deleteTrigger = false

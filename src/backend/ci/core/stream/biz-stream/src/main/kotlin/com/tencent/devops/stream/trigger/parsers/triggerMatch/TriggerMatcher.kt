@@ -70,7 +70,7 @@ class TriggerMatcher @Autowired constructor(
             if (repoTriggerOn == null) {
                 repoTriggerEventService.deleteRepoTriggerEvent(action.data.context.pipeline!!.pipelineId)
                 return TriggerResult(
-                    trigger = false,
+                    trigger = TriggerBody(false, "repo trigger delete yet"),
                     timeTrigger = false,
                     startParams = emptyMap(),
                     deleteTrigger = false
@@ -127,16 +127,20 @@ class TriggerMatcher @Autowired constructor(
             eventBranch: String,
             changeSet: Set<String>?,
             userId: String,
-            checkCreateAndUpdate: Boolean?
+            checkCreateAndUpdate: Boolean?,
+            triggerBody: TriggerBody
         ): Boolean {
             // 如果没有配置push，默认未匹配
             if (triggerOn.push == null) {
+                triggerBody.triggerFail("push", "does not currently exist")
                 return false
             }
 
             val pushRule = triggerOn.push!!
             // 1、check branchIgnore，满足屏蔽条件直接返回不匹配
-            if (BranchMatchUtils.isIgnoreBranchMatch(pushRule.branchesIgnore, eventBranch)) {
+            if (BranchMatchUtils.set(triggerBody, "push.branches-ignore")
+                    .isIgnoreBranchMatch(pushRule.branchesIgnore, eventBranch)
+            ) {
                 return false
             }
 

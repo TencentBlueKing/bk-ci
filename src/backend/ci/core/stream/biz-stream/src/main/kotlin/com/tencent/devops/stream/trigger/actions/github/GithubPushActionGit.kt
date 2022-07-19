@@ -56,6 +56,7 @@ import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
 import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
@@ -317,20 +318,22 @@ class GithubPushActionGit(
         } else {
             false
         }
+        val triggerBody = TriggerBody()
 
         val isMatch = TriggerMatcher.isPushMatch(
             triggerOn = triggerOn,
             eventBranch = data.eventCommon.branch,
             changeSet = changeSet,
             userId = data.getUserId(),
-            checkCreateAndUpdate = event().checkCreateAndUpdate()
+            checkCreateAndUpdate = event().checkCreateAndUpdate(),
+            triggerBody = triggerBody
         )
         val params = GitActionCommon.getStartParams(
             action = this,
             triggerOn = triggerOn
         )
         return TriggerResult(
-            trigger = isMatch,
+            trigger = triggerBody,
             startParams = params,
             timeTrigger = isTime,
             deleteTrigger = isDelete

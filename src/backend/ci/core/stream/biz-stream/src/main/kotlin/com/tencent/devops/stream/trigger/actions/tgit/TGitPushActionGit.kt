@@ -60,6 +60,7 @@ import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
@@ -337,14 +338,15 @@ class TGitPushActionGit(
             eventBranch = data.eventCommon.branch,
             changeSet = changeSet,
             userId = data.getUserId(),
-            checkCreateAndUpdate = event().create_and_update
+            checkCreateAndUpdate = event().create_and_update,
+            triggerBody = TriggerBody()
         )
         val params = GitActionCommon.getStartParams(
             action = this,
             triggerOn = triggerOn
         )
         return TriggerResult(
-            trigger = isMatch,
+            trigger = TriggerBody(isMatch),
             startParams = params,
             timeTrigger = isTime,
             deleteTrigger = isDelete

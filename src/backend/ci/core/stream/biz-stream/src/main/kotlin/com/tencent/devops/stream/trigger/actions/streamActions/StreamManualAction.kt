@@ -50,6 +50,7 @@ import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
@@ -168,7 +169,7 @@ class StreamManualAction(
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         return TriggerResult(
-            trigger = true,
+            trigger = TriggerBody(true),
             startParams = emptyMap(),
             timeTrigger = false,
             deleteTrigger = false

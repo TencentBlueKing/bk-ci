@@ -46,6 +46,7 @@ import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.CheckType
@@ -169,7 +170,7 @@ class TGitReviewActionGit(
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         val (isTrigger, startParams) = GitActionCommon.matchAndStartParams(this, triggerOn)
         return TriggerResult(
-            trigger = isTrigger,
+            trigger = TriggerBody(isTrigger),
             startParams = startParams,
             timeTrigger = false,
             deleteTrigger = false
