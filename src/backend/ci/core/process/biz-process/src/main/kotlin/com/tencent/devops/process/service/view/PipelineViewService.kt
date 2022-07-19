@@ -79,6 +79,8 @@ class PipelineViewService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val client: Client
 ) {
+    private val PROJECT_VIEW_LIMIT = 200
+    private val PERSONAL_VIEW_LIMIT = 100
 
     fun addUsingView(userId: String, projectId: String, viewId: String) {
         pipelineViewLastViewDao.save(
@@ -331,6 +333,7 @@ class PipelineViewService @Autowired constructor(
         context: DSLContext? = null
     ): Long {
         try {
+            checkForUpset(context, projectId, userId, pipelineView, true)
             val filters = if (pipelineView.viewType == PipelineViewType.DYNAMIC) {
                 objectMapper.writerFor(object :
                     TypeReference<List<PipelineViewFilter>>() {}).writeValueAsString(pipelineView.filters)
@@ -369,6 +372,7 @@ class PipelineViewService @Autowired constructor(
         context: DSLContext? = null
     ): Boolean {
         try {
+            checkForUpset(context, projectId, userId, pipelineView, false)
             return pipelineViewDao.update(
                 dslContext = context ?: dslContext,
                 projectId = projectId,
@@ -386,6 +390,40 @@ class PipelineViewService @Autowired constructor(
             throw throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_HAD_EXISTS,
                 params = arrayOf(pipelineView.name)
+            )
+        }
+    }
+
+    private fun checkForUpset(
+        context: DSLContext?,
+        projectId: String,
+        userId: String,
+        pipelineView: PipelineViewForm,
+        isCreate: Boolean
+    ) {
+        if (isCreate) {
+            val countForLimit = pipelineViewDao.countForLimit(
+                dslContext = context ?: dslContext,
+                projectId = projectId,
+                isProject = pipelineView.projected,
+                userId = userId
+            )
+            val limit = if (pipelineView.projected) PROJECT_VIEW_LIMIT else PERSONAL_VIEW_LIMIT
+
+            if (countForLimit > limit) {
+                logger.warn("exceed the limit for create , project:$projectId , user:$userId , view:$pipelineView")
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_VIEW_EXCEED_THE_LIMIT,
+                    defaultMessage = "exceed the limit for create , the limit is : $limit"
+                )
+            }
+        }
+
+        if (pipelineView.projected && pipelineViewDao.countByName(dslContext, projectId, pipelineView.name) > 0) {
+            logger.warn("duplicate name , project:$projectId , user:$userId , view:$pipelineView")
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_VIEW_DUPLICATE_NAME,
+                defaultMessage = "view name is duplicate , name:${pipelineView.name}"
             )
         }
     }

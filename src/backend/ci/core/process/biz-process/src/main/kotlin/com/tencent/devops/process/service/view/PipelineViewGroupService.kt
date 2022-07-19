@@ -306,7 +306,7 @@ class PipelineViewGroupService @Autowired constructor(
         if (isProject) {
             if (!pipelinePermissionService.checkProjectManager(userId, projectId)) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_VIEW_GROUP_NO_PERMISSON,
+                    errorCode = ProcessMessageCode.ERROR_VIEW_GROUP_NO_PERMISSION,
                     defaultMessage = "user:$userId has no permission to edit view group, project:$projectId"
                 )
             }

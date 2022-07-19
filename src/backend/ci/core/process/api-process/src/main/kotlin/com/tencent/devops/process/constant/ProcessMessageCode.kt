@@ -252,6 +252,8 @@ object ProcessMessageCode {
     const val ERROR_LABEL_NAME_TOO_LONG = "2101403" // 一个标签最多输入20个字符
 
     // 流水线组错误21015开头
-    const val ERROR_VIEW_GROUP_NO_PERMISSON = "2101501" // 没有修改流水线组权限
+    const val ERROR_VIEW_GROUP_NO_PERMISSION = "2101501" // 没有修改流水线组权限
     const val ERROR_VIEW_GROUP_IS_PROJECT_NO_SAME = "2101502" // 流水线组的视图范围不一致
+    const val ERROR_VIEW_EXCEED_THE_LIMIT = "2101503" // 流水线组创建太多了
+    const val ERROR_VIEW_DUPLICATE_NAME = "2101504" // 流水线组名称重复
 }

@@ -287,4 +287,34 @@ class PipelineViewDao {
                 .fetchOne()
         }
     }
+
+    fun countByName(
+        dslContext: DSLContext,
+        projectId: String,
+        name: String
+    ): Int {
+        with(TPipelineView.T_PIPELINE_VIEW) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NAME.eq(name))
+                .fetchOne()?.component1() ?: 0
+        }
+    }
+
+    fun countForLimit(
+        dslContext: DSLContext,
+        projectId: String,
+        isProject: Boolean,
+        userId: String
+    ): Int {
+        with(TPipelineView.T_PIPELINE_VIEW) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(IS_PROJECT.eq(isProject))
+                .let { if (isProject) it else it.and(CREATE_USER.eq(userId)) }
+                .fetchOne()?.component1() ?: 0
+        }
+    }
 }
