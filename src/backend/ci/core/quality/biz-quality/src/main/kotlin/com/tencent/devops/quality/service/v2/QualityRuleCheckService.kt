@@ -490,7 +490,7 @@ class QualityRuleCheckService @Autowired constructor(
         logger.info("QUALITY|metadataList is: $metadataList, indicators is:$indicators")
         val indicatorsCopy = indicators.toMutableList()
         val metadataListCopy = metadataList.map { it.clone() }
-        indicators.forEach { indicator ->
+        indicators.forEachIndexed { num, indicator ->
             // 没有设置taskName时，当输出多个相同指标值，每一个都要加入判断，否则把使用通配符的替换为taskName全名，用于后面加入到指标前缀
             if (indicator.taskName.isNullOrEmpty()) {
                 if (CodeccUtils.isCodeccAtom(indicator.elementType)) {
@@ -501,9 +501,10 @@ class QualityRuleCheckService @Autowired constructor(
                         indicatorsCopy.remove(indicator)
                         codeccMetaList.values.forEachIndexed { index, codeccMeta ->
                             val extraIndicator = indicator.copy()
-                            val extraTaskName = "${codeccMeta.firstOrNull()?.taskName}+$index"
+                            val extraMeta = codeccMeta.firstOrNull()
+                            val extraTaskName = if (num == 0) "${extraMeta?.taskName}+$index" else extraMeta?.taskName
                             extraIndicator.taskName = extraTaskName
-                            codeccMeta.map { it.taskName = extraTaskName }
+                            codeccMeta.map { it.taskName = extraTaskName ?: "" }
                             indicatorsCopy.add(extraIndicator)
                         }
                     }
