@@ -531,7 +531,6 @@ class QualityRuleCheckService @Autowired constructor(
                         codeccMeta.taskName = extraTaskName
                         indicatorsCopy.add(extraIndicator)
                     }
-
                 } else {
                     metadataListCopy.filter { it.enName == indicator.enName &&
                             it.taskName.startsWith(indicator.taskName ?: "")
