@@ -593,7 +593,7 @@
 
                 this.isLoadingSchema = true
                 return pipelines.getPipelineParamJson(this.projectId, this.curPipeline.pipelineId, { branchName, commitId }).then((res) => {
-                    this.uiFormSchema = res.schema || ''
+                    this.uiFormSchema = res.schema || {}
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {
