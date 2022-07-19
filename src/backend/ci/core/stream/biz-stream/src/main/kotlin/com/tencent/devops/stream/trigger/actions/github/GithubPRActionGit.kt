@@ -378,7 +378,7 @@ class GithubPRActionGit(
         val mergeRequest = apiService.getMrInfo(
             cred = getGitCred(),
             gitProjectId = getGitProjectIdOrName(event.pullRequest.base.repo.id.toString()),
-            mrId = event.pullRequest.id.toString(),
+            mrId =  this.getMrId().toString(),
             retry = ApiRequestRetryInfo(true)
         )!!
         val baseTargetFile = getFileInfo(
