@@ -338,15 +338,14 @@ class TGitPushActionGit(
             eventBranch = data.eventCommon.branch,
             changeSet = changeSet,
             userId = data.getUserId(),
-            checkCreateAndUpdate = event().create_and_update,
-            triggerBody = TriggerBody()
+            checkCreateAndUpdate = event().create_and_update
         )
         val params = GitActionCommon.getStartParams(
             action = this,
             triggerOn = triggerOn
         )
         return TriggerResult(
-            trigger = TriggerBody(isMatch),
+            trigger = isMatch,
             startParams = params,
             timeTrigger = isTime,
             deleteTrigger = isDelete

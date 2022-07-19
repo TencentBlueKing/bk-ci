@@ -27,8 +27,9 @@ data class TriggerBody(
     var trigger: Boolean = true,
     var notTriggerReason: String? = null
 ) {
-    fun triggerFail(path: String, message: String) {
+    fun triggerFail(path: String, message: String): TriggerBody {
         trigger = false
         notTriggerReason = "$path: $message"
+        return this
     }
 }

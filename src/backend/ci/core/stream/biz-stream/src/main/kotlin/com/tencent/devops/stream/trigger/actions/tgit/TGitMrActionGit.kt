@@ -494,7 +494,7 @@ class TGitMrActionGit(
             triggerOn = triggerOn
         )
         return TriggerResult(
-            trigger = TriggerBody(isMatch),
+            trigger = isMatch,
             startParams = params,
             timeTrigger = false,
             deleteTrigger = false

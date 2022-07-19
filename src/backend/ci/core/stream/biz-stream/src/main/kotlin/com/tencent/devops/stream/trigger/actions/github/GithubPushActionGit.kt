@@ -318,22 +318,20 @@ class GithubPushActionGit(
         } else {
             false
         }
-        val triggerBody = TriggerBody()
 
         val isMatch = TriggerMatcher.isPushMatch(
             triggerOn = triggerOn,
             eventBranch = data.eventCommon.branch,
             changeSet = changeSet,
             userId = data.getUserId(),
-            checkCreateAndUpdate = event().checkCreateAndUpdate(),
-            triggerBody = triggerBody
+            checkCreateAndUpdate = event().checkCreateAndUpdate()
         )
         val params = GitActionCommon.getStartParams(
             action = this,
             triggerOn = triggerOn
         )
         return TriggerResult(
-            trigger = triggerBody,
+            trigger = isMatch,
             startParams = params,
             timeTrigger = isTime,
             deleteTrigger = isDelete

@@ -80,7 +80,7 @@ class StreamDeleteAction(
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         val deleteObjectKinds = triggerOn.delete?.getTypesObjectKind()?.map { it.value }?.toSet()
             ?: return TriggerResult(
-                trigger = TriggerBody(false, "delete.type: does not currently exist"),
+                trigger = TriggerBody().triggerFail("on.delete.types", "does not currently exist"),
                 timeTrigger = false,
                 startParams = emptyMap(),
                 deleteTrigger = false
@@ -97,9 +97,9 @@ class StreamDeleteAction(
             )
         } else {
             TriggerResult(
-                trigger = TriggerBody(
-                    false,
-                    "delete.type: current type(${gitAction.metaData.streamObjectKind.value}) not match"
+                trigger = TriggerBody().triggerFail(
+                    "on.delete.types",
+                    "current type(${gitAction.metaData.streamObjectKind.value}) not match"
                 ),
                 timeTrigger = false,
                 startParams = emptyMap(),
