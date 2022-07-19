@@ -762,7 +762,7 @@ class GitRequestEventBuildDao {
             return if (records.isEmpty()) {
                 emptyList()
             } else {
-                records.map { result -> result.getValue(0) as String }
+                records.map { result -> result.getValue(0).toString() }
             }
         }
     }
