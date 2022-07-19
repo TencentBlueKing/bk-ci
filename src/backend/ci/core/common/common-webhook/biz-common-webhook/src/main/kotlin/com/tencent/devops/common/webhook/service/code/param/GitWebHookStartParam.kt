@@ -43,12 +43,17 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_FINAL_INC
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_INCLUDE_PATHS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_AUTH_USER
 import com.tencent.devops.common.webhook.pojo.code.MATCH_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.MATCH_PATHS
+import com.tencent.devops.common.webhook.service.code.GitScmService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class GitWebHookStartParam : ScmWebhookStartParams<CodeGitWebHookTriggerElement> {
+class GitWebHookStartParam @Autowired constructor(
+    private val gitScmService: GitScmService
+) : ScmWebhookStartParams<CodeGitWebHookTriggerElement> {
 
     override fun elementClass(): Class<CodeGitWebHookTriggerElement> {
         return CodeGitWebHookTriggerElement::class.java
@@ -77,6 +82,8 @@ class GitWebHookStartParam : ScmWebhookStartParams<CodeGitWebHookTriggerElement>
         startParams[BK_REPO_GIT_MANUAL_UNLOCK] = matcher.getEnv()[BK_REPO_GIT_MANUAL_UNLOCK] ?: false
         startParams[BK_REPO_GIT_WEBHOOK_ENABLE_CHECK] = element.enableCheck ?: true
         startParams[PIPELINE_GIT_REPO_ID] = element.repositoryName ?: ""
+        startParams[BK_REPO_WEBHOOK_REPO_AUTH_USER] =
+            gitScmService.getRepoAuthUser(projectId = projectId, repo = repo)
         startParams.putAll(
             matcher.retrieveParams(
                 projectId = projectId,
