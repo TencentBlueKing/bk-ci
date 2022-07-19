@@ -148,6 +148,7 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM_ALIAS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_VERSION
@@ -926,6 +927,8 @@ class PipelineRuntimeService @Autowired constructor(
                         originStartParams.add(buildParameters)
                     }
                 }
+                pipelineParamMap[PIPELINE_START_TASK_ID] =
+                    BuildParameters(PIPELINE_START_TASK_ID, context.firstTaskId, readOnly = true)
 
                 if (buildHistoryRecord != null) {
                     if (context.actionType.isRetry() && context.retryStartTaskId.isNullOrBlank()) {
