@@ -162,10 +162,10 @@ interface ServiceTemplateInstanceResource {
         templateId: String,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
-        page: Int?,
+        page: Int,
         @ApiParam("每页多少条", required = false, defaultValue = "30")
         @QueryParam("pageSize")
-        pageSize: Int?,
+        pageSize: Int,
         @ApiParam("名字搜索的关键字", required = false)
         @QueryParam("searchKey")
         searchKey: String?,
