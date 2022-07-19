@@ -46,7 +46,8 @@ default_value_dict = {
     'bkRepoGatewayIp': '127.0.0.1',
     'bkCiStreamScmType': 'CODE_GIT',
     'bkCiStreamUrl': 'devops.example.com',
-    'bkCiStreamGitUrl': 'www.github.com'
+    'bkCiStreamGitUrl': 'www.github.com',
+    'bkCiClusterTag':'devops'
 }
 
 if os.path.isfile(default_value_json):

@@ -309,3 +309,6 @@ net:
 sharding:
   routing:
     cacheSize: 100000  # 缓存分片规则最大数量
+
+cluster:
+  tag: __BK_CI_CLUSTER_TAG__
