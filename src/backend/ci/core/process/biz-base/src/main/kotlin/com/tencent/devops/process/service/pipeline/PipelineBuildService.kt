@@ -147,7 +147,6 @@ class PipelineBuildService(
             }
             val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
 
-            logger.info("remote start user : ${startValues?.get(PIPELINE_START_REMOTE_USER_ID)}")
             val userName = when (startType) {
                 StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value ?: userId
                 StartType.WEB_HOOK -> pipelineParamMap[PIPELINE_START_WEBHOOK_USER_ID]?.value ?: userId
