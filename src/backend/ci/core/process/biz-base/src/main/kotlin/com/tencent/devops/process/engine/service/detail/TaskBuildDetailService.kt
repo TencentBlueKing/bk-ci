@@ -38,9 +38,9 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
-import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.redis.RedisOperation
@@ -50,7 +50,6 @@ import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
-import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import org.jooq.DSLContext
@@ -178,12 +177,10 @@ class TaskBuildDetailService(
                             c.status = BuildStatus.RUNNING.name
                             e.status = BuildStatus.RUNNING.name
                         }
-                        // 如果是自动重试则不重置task和job的时间
-                        val retryCount = redisOperation.get(
-                            TaskUtils.getFailRetryTaskRedisKey(buildId = buildId, taskId = taskId)
-                        )?.toInt() ?: 0
-                        if (retryCount < 1) {
-                            e.startEpoch = System.currentTimeMillis()
+
+                        if (e.startEpoch == null) { // 自动重试，startEpoch 不会为null，所以不需要查redis来确认
+                            val currentTimeMillis = System.currentTimeMillis()
+                            e.startEpoch = currentTimeMillis
                             if (c.startEpoch == null) {
                                 c.startEpoch = e.startEpoch
                             }
