@@ -100,7 +100,7 @@ class StorePkgRunEnvInfoServiceImpl @Autowired constructor(
             storeType = storeType.type.toByte(),
             language = language,
             osName = finalOsName,
-            osArch = osArch,
+            osArch = finalOsArch,
             runtimeVersion = convertRuntimeVersion
         ) ?: storePkgRunEnvInfoDao.getDefaultStorePkgRunEnvInfo(
             dslContext = dslContext,
