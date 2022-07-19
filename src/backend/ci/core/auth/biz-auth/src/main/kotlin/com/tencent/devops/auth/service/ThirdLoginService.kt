@@ -29,10 +29,11 @@ package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.enum.LoginType
+import com.tencent.devops.auth.pojo.enum.UserStatus
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_CI_LOGIN_TOKEN
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.auth.utils.StringUtils
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,7 +56,7 @@ class ThirdLoginService @Autowired constructor(
     @Value("\${login.third.domain:#{null}}")
     val domain: String = ""
 
-    fun thirdLogin(code: String, userId: String, type: String): Response {
+    fun thirdLogin(code: String, userId: String, type: String, email: String?): Response {
         logger.info("$userId login by $type")
 
         // code校验不通过直接报错
@@ -64,17 +65,26 @@ class ThirdLoginService @Autowired constructor(
         }
 
         val token = buildLoginToken(userId, type)
-        val cookie = Cookie(AUTH_HEADER_BK_CI_LOGIN_TOKEN,"$type:$token", "/", domain)
-        try {
-            // 第三方登陆需同步注册账号
-            userInfoService.thridLoginAndRegister(userId, LoginType.getTypeNum(type).typeNum)
-        } catch (e: Exception) {
-            logger.warn("thirdLogin $userId $type register account fail: $e")
+        val cookie = Cookie(AUTH_HEADER_BK_CI_LOGIN_TOKEN, "$type:$token", "/", domain)
+        val userType = LoginType.getTypeNum(type).typeNum
+
+        val userInfo = userInfoService.getUserInfo(userId, userType)
+        if (userInfo == null) {
+            userInfoService.thirdLoginAndRegister(userId, userType, email)
+        } else {
+            if (userInfo.userStatus == UserStatus.FREEZE.id) {
+                logger.warn("user is freeze , user:$userId")
+                throw ErrorCodeException(
+                    errorCode = AuthMessageCode.LOGIN_USER_FREEZE,
+                    defaultMessage = "user is freeze , user:$userId"
+                )
+            }
         }
 
         logger.info("cookie: $cookie")
         return Response.temporaryRedirect(
-            UriBuilder.fromUri(callbackUrl).build())
+            UriBuilder.fromUri(callbackUrl).build()
+        )
             .cookie(NewCookie(cookie, "", LOGIN_EXPIRE_TIME.toInt(), false))
             .build()
     }
@@ -93,12 +103,12 @@ class ThirdLoginService @Autowired constructor(
 
     private fun buildLoginToken(userId: String, type: String): String {
         val token = UUIDUtil.generate()
-        redisOperation.set(LOGIN_REDIS_KEY + "$type:$token", userId, LOGIN_EXPIRE_TIME)
+        redisOperation.set("$LOGIN_REDIS_KEY$type:$token", userId, LOGIN_EXPIRE_TIME)
         return token
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(ThirdLoginService::class.java)
+        private val logger = LoggerFactory.getLogger(ThirdLoginService::class.java)
         const val LOGIN_EXPIRE_TIME = 7 * 24 * 3600L// 登陆7天有效
         const val LOGIN_REDIS_KEY = "bk:login:third:key:"
         const val LOGIN_CODE_REDIS_KEY = "bk:login:third:%s:code:%s"

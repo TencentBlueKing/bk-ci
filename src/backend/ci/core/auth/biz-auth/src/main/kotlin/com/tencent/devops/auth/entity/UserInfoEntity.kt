@@ -27,9 +27,10 @@
 
 package com.tencent.devops.auth.entity
 
-data class UserInfoEntity (
+data class UserInfoEntity(
     val userId: String,
     val userType: Int,
     val email: String?,
-    val phone: String?
+    val phone: String?,
+    val userStatus: Int
 )

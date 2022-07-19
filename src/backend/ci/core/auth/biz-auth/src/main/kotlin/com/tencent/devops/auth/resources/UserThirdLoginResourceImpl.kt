@@ -38,8 +38,8 @@ import javax.ws.rs.core.Response
 class UserThirdLoginResourceImpl @Autowired constructor(
     val loginService: ThirdLoginService
 ) : UserThirdLoginResource {
-    override fun thirdLogin(code: String, userId: String, type: String): Response {
-        return loginService.thirdLogin(code, userId, type)
+    override fun thirdLogin(code: String, userId: String, type: String, email: String?): Response {
+        return loginService.thirdLogin(code, userId, type, email)
     }
 
     override fun thirdLoginOut(userId: String): Result<Boolean> {

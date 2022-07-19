@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthUserInfoDao
 import com.tencent.devops.auth.entity.UserInfoEntity
+import com.tencent.devops.auth.pojo.enum.UserStatus
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.jooq.DSLContext
@@ -63,25 +64,25 @@ class UserInfoService @Autowired constructor(
             userId = userInfo.userid,
             userType = userInfo.userType,
             email = userInfo.email,
-            phone = userInfo.phone
+            phone = userInfo.phone,
+            userStatus = userInfo.userStatus
         )
     }
 
-    fun thridLoginAndRegister(userId: String, userType: Int) {
-        if (getUserInfo(userId, userType) != null) {
-            return
-        }
+    fun thirdLoginAndRegister(userId: String, userType: Int, email: String?) {
         createUserInfo(
             entity = UserInfoEntity(
                 userId = userId,
                 userType = userType,
-                email = null,
-                phone = null
-            ), existCheck = false)
+                email = email,
+                phone = null,
+                userStatus = UserStatus.NORMAL.id
+            ), existCheck = false
+        )
         logger.info("third login and register success: $userId $userType")
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(UserInfoService::class.java)
+        private val logger = LoggerFactory.getLogger(UserInfoService::class.java)
     }
 }

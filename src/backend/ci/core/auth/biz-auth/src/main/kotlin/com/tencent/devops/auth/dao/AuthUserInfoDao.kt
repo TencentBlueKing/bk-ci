@@ -47,19 +47,21 @@ class AuthUserInfoDao {
                 EMAIL,
                 PHONE,
                 CREATE_TIME,
-                LAST_LOGIN_TIME
+                LAST_LOGIN_TIME,
+                USER_STATUS
             ).values(
                 userInfo.userId,
                 userInfo.userType,
                 userInfo.email ?: "",
                 userInfo.phone ?: "",
                 LocalDateTime.now(),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                userInfo.userStatus
             ).execute()
         }
     }
 
-    fun updateLoginTime(dslContext: DSLContext, id:Int): Int {
+    fun updateLoginTime(dslContext: DSLContext, id: Int): Int {
         with(TAuthUserInfo.T_AUTH_USER_INFO) {
             return dslContext.update(this).set(LAST_LOGIN_TIME, LocalDateTime.now()).where(ID.eq(id)).execute()
         }
