@@ -419,7 +419,12 @@ class PipelineViewService @Autowired constructor(
             }
         }
 
-        if (pipelineView.projected && pipelineViewDao.countByName(dslContext, projectId, pipelineView.name) > 0) {
+        if (pipelineView.projected && pipelineViewDao.countByName(
+                dslContext = context ?: dslContext,
+                projectId = projectId,
+                name = pipelineView.name
+            ) > 0
+        ) {
             logger.warn("duplicate name , project:$projectId , user:$userId , view:$pipelineView")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_VIEW_DUPLICATE_NAME,
