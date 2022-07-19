@@ -750,7 +750,7 @@ class GitRequestEventBuildDao {
                 .fetch()
         }
     }
-    fun getLastEventIds(
+    fun getLastEventBuildIds(
         dslContext: DSLContext,
         pipelineIds: Set<String>
     ): List<String> {

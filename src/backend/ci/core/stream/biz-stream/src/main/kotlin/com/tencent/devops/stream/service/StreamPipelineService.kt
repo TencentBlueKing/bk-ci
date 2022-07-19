@@ -418,7 +418,7 @@ class StreamPipelineService @Autowired constructor(
             gitProjectId = gitProjectId,
             pipelineIds = pipelineIds
         ).associate { it.value1() to it.value2() }
-        val lastEventIds = gitRequestEventBuildDao.getLastEventIds(dslContext, pipelineIds)
+        val lastEventIds = gitRequestEventBuildDao.getLastEventBuildIds(dslContext, pipelineIds)
         val pipelineBuild = gitRequestEventBuildDao.getPipelinesLastBuild(dslContext, gitProjectId, lastEventIds)
             ?.associate { it.pipelineId to it.branch }
         // 获取没有构建记录的流水线的未构建成功的分支
