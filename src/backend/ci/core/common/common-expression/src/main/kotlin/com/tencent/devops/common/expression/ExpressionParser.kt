@@ -89,8 +89,8 @@ object ExpressionParser {
                         return@forEachIndexed
                     }
 
-                    if (data!![token] != null) {
-                        data = data!![token] as DictionaryContextData
+                    data!![token]?.let {
+                        data = it as DictionaryContextData
                         return@forEachIndexed
                     }
                     data!![token] = DictionaryContextData()
@@ -145,7 +145,7 @@ object ExpressionParser {
     }
 
     private fun String.legalizeExpression(): String {
-        val expression = this.replace("fromJSON", "fromJson")
+        val expression = this
         val regex = "jobs\\.([\\S]+)\\.([0-9]+)\\.steps\\.([\\S]+)\\.outputs\\.([\\S]+)"
         val pattern = Pattern.compile(regex)
         val matcher = pattern.matcher(expression)

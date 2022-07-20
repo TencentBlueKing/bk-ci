@@ -38,8 +38,8 @@ class NotSupportedException(override val message: String) : ExpressionException(
 
 class ExpressionParseException(
     val kind: ParseExceptionKind,
-    token: Token?,
-    expression: String,
+    val token: Token?,
+    val expression: String,
     override var message: String = ""
 ) : ExpressionException() {
     init {

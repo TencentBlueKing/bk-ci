@@ -301,16 +301,27 @@ class StartActionTaskContainerCmd(
             Pair(checkResult, null)
         } catch (e: ExpressionParseException) {
             buildLogPrinter.addErrorLine(
-                buildId = buildId,
-                message = "[${e.kind}] condition of task is invalid: ${e.message}",
-                jobId = containerHashId,
-                tag = taskId,
-                executeCount = executeCount ?: 1
+                message = "[${e.kind}] expression(${e.expression}) of task condition is invalid: ${e.message}",
+                buildId = buildId, jobId = containerHashId, tag = taskId, executeCount = executeCount ?: 1
             )
+            LOG.warn("ENGINE|$buildId|$source|EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|$status", e)
             containerContext.latestSummary = containerContext.latestSummary.plus(
-                " | conditionError=${e.message}"
+                " | conditionError=${e.kind}: ${e.message}"
             )
             Pair(false, e)
+        } catch (ignore: Throwable) {
+            buildLogPrinter.addErrorLine(
+                message = "[EXPRESSION_ERROR] failed to parse condition(${additionalOptions?.customCondition}) " +
+                    "with error: ${ignore.message}",
+                buildId = buildId, jobId = containerHashId, tag = taskId, executeCount = executeCount ?: 1
+            )
+            LOG.error(
+                "BKSystemErrorMonitor|findNeedToRunTask|$buildId|$source|" +
+                    "EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|" +
+                    "customCondition=${additionalOptions?.customCondition}",
+                ignore
+            )
+            Pair(false, ignore)
         }
         when { // [post action] 包含对应的关机任务，优先开机失败startVMFail=true
             additionalOptions?.elementPostInfo != null -> { // 如果是[post task], elementPostInfo必不为空
@@ -351,7 +362,6 @@ class StartActionTaskContainerCmd(
                 message.insert(0, "[$taskName]").append(" | summary=${containerContext.latestSummary}")
             }
             parseException != null -> { // 如果执行条件判断是出错则直接将插件设为失败
-                LOG.warn("ENGINE|$buildId|$source|EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|$status")
                 pipelineTaskService.updateTaskStatus(
                     task = this,
                     userId = starter,
