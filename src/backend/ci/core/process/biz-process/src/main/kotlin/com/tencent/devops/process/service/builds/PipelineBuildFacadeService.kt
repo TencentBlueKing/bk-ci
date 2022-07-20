@@ -1282,12 +1282,6 @@ class PipelineBuildFacadeService(
                 arrayOf(buildId)
             )
 
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
-                ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
-                arrayOf(buildId)
-            )
-
         val allVariable = buildVariableService.getAllVariable(projectId, buildId)
 
         return Result(
