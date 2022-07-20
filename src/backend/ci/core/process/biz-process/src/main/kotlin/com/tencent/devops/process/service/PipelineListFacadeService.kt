@@ -33,6 +33,8 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -51,6 +53,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineFavorDao
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
@@ -80,6 +83,7 @@ import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineStatusService
 import com.tencent.devops.process.service.view.PipelineViewService
+import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
@@ -109,7 +113,8 @@ class PipelineListFacadeService @Autowired constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
-    private val pipelineFavorDao: PipelineFavorDao
+    private val pipelineFavorDao: PipelineFavorDao,
+    private val pipelineLabelPipelineDao: PipelineLabelPipelineDao
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -229,7 +234,7 @@ class PipelineListFacadeService @Autowired constructor(
                 projectId = projectId,
                 instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
                 templateIds = templateIdList
-            ).map { it.pipelineId }
+            ).map { it[KEY_PIPELINE_ID] as String }
             resultPipelineIds.addAll(templatePipelineIds)
         }
 
@@ -1011,7 +1016,7 @@ class PipelineListFacadeService @Autowired constructor(
                 dslContext = dslContext,
                 pipelineIds = pipelineIds,
                 projectId = projectId
-            ).map { it.pipelineId } // TODO: 须将是否模板转为PIPELINE基本属性
+            ).map { it.value1() } // TODO: 须将是否模板转为PIPELINE基本属性
             watcher.stop()
             val simplePipelineIds = mutableListOf<String>()
             pipelines.forEach {
@@ -1388,6 +1393,57 @@ class PipelineListFacadeService @Autowired constructor(
         )
     }
 
+    fun searchByProjectIdAndName(
+        projectId: String,
+        keyword: String?,
+        page: Int,
+        pageSize: Int,
+        channelCodes: List<ChannelCode>?
+    ): Page<PipelineIdAndName> {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val pipelineRecords =
+            pipelineInfoDao.searchByProjectId(
+                dslContext = dslContext,
+                pipelineName = keyword,
+                projectCode = projectId,
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset,
+                channelCodes = channelCodes
+            )
+        val pipelineInfos = mutableListOf<PipelineIdAndName>()
+        pipelineRecords?.map {
+            pipelineInfos.add(
+                PipelineIdAndName(it.pipelineId, it.pipelineName))
+        }
+        val count = pipelineInfoDao.countByProjectIds(
+            dslContext = dslContext,
+            projectIds = listOf(projectId),
+            keyword = keyword
+        )
+        return Page(
+            page = page,
+            pageSize = pageSize,
+            count = count.toLong(),
+            records = pipelineInfos
+        )
+    }
+
+    fun searchByPipeline(
+        projectId: String,
+        pipelineId: String
+    ): PipelineIdAndName? {
+        val pipelineRecords = pipelineInfoDao.getPipelineId(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: return null
+        return PipelineIdAndName(
+            pipelineId = pipelineRecords.pipelineId,
+            pipelineName = pipelineRecords.pipelineName,
+            channelCode = ChannelCode.getChannel(pipelineRecords.channel)
+        )
+    }
+
     fun searchIdAndName(
         projectId: String,
         pipelineName: String?,
@@ -1667,5 +1723,11 @@ class PipelineListFacadeService @Autowired constructor(
             logger.info("listViewPipelines|[$projectId]|$userId|watch=$watch")
             processJmxApi.execute(ProcessJmxApi.LIST_NEW_PIPELINES, watch.totalTimeMillis)
         }
+    }
+
+    fun getProjectPipelineLabelInfos(
+        projectIds: List<String>
+    ): List<PipelineLabelRelateInfo> {
+        return pipelineLabelPipelineDao.getPipelineLabelRelateInfos(dslContext, projectIds)
     }
 }

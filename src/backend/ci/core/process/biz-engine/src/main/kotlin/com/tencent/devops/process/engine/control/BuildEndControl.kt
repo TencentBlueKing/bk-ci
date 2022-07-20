@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
@@ -45,6 +46,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.enum.RefreshType
@@ -64,6 +66,7 @@ import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.measure.MetricsService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
@@ -78,6 +81,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 构建控制器
@@ -94,13 +98,14 @@ class BuildEndControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineRedisService: PipelineRedisService,
     private val meterRegistry: MeterRegistry,
+    private val metricsService: MetricsService,
     private val buildVariableService: BuildVariableService
 ) {
 
     companion object {
         private val LOG = LoggerFactory.getLogger(BuildEndControl::class.java)
     }
-
+    @BkTimed
     fun handle(event: PipelineBuildFinishEvent) {
         val watcher = Watcher(id = "ENGINE|BuildEnd|${event.traceId}|${event.buildId}|Job#${event.status}")
         try {
@@ -152,11 +157,12 @@ class BuildEndControl @Autowired constructor(
         fixTask(buildInfo)
 
         // 记录本流水线最后一次构建的状态
+        val endTime = LocalDateTime.now()
         pipelineRuntimeService.finishLatestRunningBuild(
             latestRunningBuild = LatestRunningBuild(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 userId = buildInfo.startUser, status = buildStatus, taskCount = buildInfo.taskCount,
-                buildNum = buildInfo.buildNum
+                endTime = endTime, buildNum = buildInfo.buildNum
             ),
             currentBuildStatus = buildInfo.status,
             errorInfoList = buildInfo.errorInfoList
@@ -168,7 +174,7 @@ class BuildEndControl @Autowired constructor(
         }
 
         // 设置状态
-        val allStageStatus = pipelineBuildDetailService.buildEnd(
+        val (model, allStageStatus) = pipelineBuildDetailService.buildEnd(
             projectId = projectId,
             buildId = buildId,
             buildStatus = buildStatus,
@@ -183,6 +189,8 @@ class BuildEndControl @Autowired constructor(
         } else if (buildStatus.isFailure()) {
             failPipelineCount()
         }
+        buildInfo.endTime = endTime.timestampmilli()
+        buildInfo.status = buildStatus
 
         buildDurationTime(buildInfo.startTime!!)
         callBackParentPipeline(projectId, buildId)
@@ -215,6 +223,8 @@ class BuildEndControl @Autowired constructor(
             )
         )
 
+        // 发送metrics统计数据消息
+        metricsService.postMetricsData(buildInfo, model)
         // 记录日志
         buildLogPrinter.stopLog(buildId = buildId, tag = "", jobId = null)
         return buildInfo

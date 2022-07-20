@@ -5,7 +5,7 @@
     >
         <!-- <section v-if="showDebugBtn" class="web-console" :style="{ right: executeCount > 1 ? '390px' : '280px' }">
             <span>
-                {{$t('pipeline.webConsle')}}
+                {{$t('pipeline.webConsole')}}
             </span>
         </section> -->
         <job-log :plugin-list="pluginList"

@@ -668,7 +668,7 @@
                         releaseType: this.atomForm.releaseType,
                         jobType: this.atomForm.jobType,
                         os: this.atomForm.jobType === 'AGENT' ? this.atomForm.os : [],
-                        labelIdList: this.atomForm.labelIdList,
+                        labelIdList: this.atomForm.labelIdList.filter(i => i !== 'null' && i !== ' ' && i),
                         publisher: this.atomForm.publisher,
                         versionContent: this.atomForm.versionContent,
                         logoUrl: this.atomForm.logoUrl || undefined,
