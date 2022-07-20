@@ -932,12 +932,14 @@ class QualityRuleCheckService @Autowired constructor(
         indicators.forEach { indicator ->
             // 没有设置taskName时，当输出多个相同指标值，每一个都要加入判断，否则把使用通配符的替换为taskName全名，用于后面加入到指标前缀
             if (indicator.taskName.isNullOrEmpty()) {
-                // 没有设置taskName且多个CodeCC插件时，每个要检查的指标额外添加为插件个数
+                // 没有设置taskName且多个CodeCC插件时，每个要检查的指标额外添加为有对应元数据输出的插件个数
                 if (CodeccUtils.isCodeccAtom(indicator.elementType)) {
                     if (codeccMetaList.size > 1) {
                         indicatorsCopy.remove(indicator)
                         codeccMetaList.values.forEach { codeccMeta ->
-                            handleCodeCCPlugin(indicator, codeccMeta, indicatorsCopy)
+                            if (codeccMeta.contains(indicator.metadataList)) {
+                                handleCodeCCPlugin(indicator, codeccMeta, indicatorsCopy)
+                            }
                         }
                     }
                 } else {
