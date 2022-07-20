@@ -703,7 +703,7 @@ func (de *disttaskEngine) launchDirectDone(task *distTask) (bool, error) {
 	for _, info := range infoList {
 		switch info.Status {
 		case respack.CommandStatusInit:
-			return false, nil
+			continue
 		case respack.CommandStatusSucceed:
 			workerList = append(workerList, taskWorker{
 				CPU:       0,
@@ -746,6 +746,13 @@ func (de *disttaskEngine) launchDirectDone(task *distTask) (bool, error) {
 			EngineName, task.ID, err)
 		return false, err
 	}
+
+	for _, info := range infoList {
+		if info.Status == respack.CommandStatusInit {
+			return false, nil
+		}
+	}
+
 	blog.Infof("engine(%s) success to checking service info, task(%s) direct launching done",
 		EngineName, task.ID)
 	return true, nil
@@ -772,10 +779,6 @@ func (de *disttaskEngine) launchCRMDone(task *distTask) (bool, error) {
 		return false, err
 	}
 
-	if info.Status == crm.ServiceStatusStaging {
-		return false, nil
-	}
-
 	workerList := make([]taskWorker, 0, 100)
 	for _, endpoints := range info.AvailableEndpoints {
 		servicePort, _ := endpoints.Ports[portsService]
@@ -794,11 +797,17 @@ func (de *disttaskEngine) launchCRMDone(task *distTask) (bool, error) {
 	task.Stats.WorkerCount = len(task.Workers)
 	task.Stats.CPUTotal = float64(task.Stats.WorkerCount) * task.Operator.RequestCPUPerUnit
 	task.Stats.MemTotal = float64(task.Stats.WorkerCount) * task.Operator.RequestMemPerUnit
+	blog.Infof("kkk task(%s) has current cpu(%f), current workers(%d)", task.ID, task.Stats.CPUTotal, task.Stats.WorkerCount)
 	if err = de.updateTask(task); err != nil {
 		blog.Errorf("engine(%s) try checking service info, update crm task(%s) failed: %v",
 			EngineName, task.ID, err)
 		return false, err
 	}
+
+	if info.Status == crm.ServiceStatusStaging {
+		return false, nil
+	}
+
 	blog.Infof("engine(%s) success to checking service info, task(%s) crm launching done", EngineName, task.ID)
 	return true, nil
 }

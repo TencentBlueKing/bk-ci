@@ -60,6 +60,10 @@ type ServiceConfig struct {
 	InsecurePort    uint   `json:"insecure_port" value:"8443" usage:"insecure port to listen on for this service" mapstructure:"insecure_port"`
 }
 
+type TimeoutConfig struct {
+	KeeperStartingTimeout uint `json:"keep_starting_timeout_second"`
+}
+
 // Local info
 type LocalConfig struct {
 	LocalIP string `json:"local_ip" value:"" usage:"IP address of this host" mapstructure:"local_ip"`
