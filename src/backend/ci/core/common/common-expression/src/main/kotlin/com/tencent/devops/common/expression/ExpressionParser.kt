@@ -89,8 +89,8 @@ object ExpressionParser {
                         return@forEachIndexed
                     }
 
-                    if (data!![token] != null) {
-                        data = data!![token] as DictionaryContextData
+                    data!![token]?.let {
+                        data = it as DictionaryContextData
                         return@forEachIndexed
                     }
                     data!![token] = DictionaryContextData()
