@@ -299,18 +299,27 @@ class StartActionTaskContainerCmd(
                 message = message
             )
             Pair(checkResult, null)
-        } catch (e: ExpressionParseException) {
+        } catch (t: Throwable) {
             buildLogPrinter.addErrorLine(
                 buildId = buildId,
-                message = "[${e.kind}] condition of task is invalid: ${e.message}",
+                message = "[EXPRESSION] condition(${additionalOptions?.customCondition}) of task is invalid: ${t.message}",
                 jobId = containerHashId,
                 tag = taskId,
                 executeCount = executeCount ?: 1
             )
-            containerContext.latestSummary = containerContext.latestSummary.plus(
-                " | conditionError=${e.message}"
-            )
-            Pair(false, e)
+            if (t is ExpressionParseException) {
+                LOG.warn("ENGINE|$buildId|$source|EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|$status", t)
+                containerContext.latestSummary = containerContext.latestSummary.plus(
+                    " | conditionError=${t.kind}: ${t.message}"
+                )
+                Pair(false, t)
+            } else {
+                LOG.error(
+                    "BKSystemErrorMonitor|findNeedToRunTask|$buildId|$source|" +
+                        "EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|${additionalOptions?.customCondition}", t
+                )
+                Pair(false, t)
+            }
         }
         when { // [post action] 包含对应的关机任务，优先开机失败startVMFail=true
             additionalOptions?.elementPostInfo != null -> { // 如果是[post task], elementPostInfo必不为空
@@ -351,7 +360,6 @@ class StartActionTaskContainerCmd(
                 message.insert(0, "[$taskName]").append(" | summary=${containerContext.latestSummary}")
             }
             parseException != null -> { // 如果执行条件判断是出错则直接将插件设为失败
-                LOG.warn("ENGINE|$buildId|$source|EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|$status")
                 pipelineTaskService.updateTaskStatus(
                     task = this,
                     userId = starter,
