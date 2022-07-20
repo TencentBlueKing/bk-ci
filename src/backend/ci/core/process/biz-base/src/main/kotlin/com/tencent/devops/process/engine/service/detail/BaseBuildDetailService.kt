@@ -83,7 +83,7 @@ open class BaseBuildDetailService constructor(
         buildStatus: BuildStatus,
         cancelUser: String? = null,
         operation: String = ""
-    ) {
+    ): Model {
         val watcher = Watcher(id = "updateDetail#$buildId#$operation")
         var message = "nothing"
         val lock = RedisLock(redisOperation, "process.build.detail.lock.$buildId", ExpiredTimeInSeconds)
@@ -113,7 +113,7 @@ open class BaseBuildDetailService constructor(
             val (change, finalStatus) = takeBuildStatus(record, buildStatus)
             if (modelStr.isNullOrBlank() && !change) {
                 message = "Will not update"
-                return
+                return model
             }
 
             watcher.start("updateModel")
@@ -129,9 +129,15 @@ open class BaseBuildDetailService constructor(
             watcher.start("dispatchEvent")
             pipelineDetailChangeEvent(projectId, buildId)
             message = "update done"
+            return model
         } catch (ignored: Throwable) {
             message = ignored.message ?: ""
             logger.warn("[$buildId]| Fail to update the build detail: ${ignored.message}", ignored)
+            watcher.start("getDetail")
+            val record = buildDetailDao.get(dslContext, projectId, buildId)
+            Preconditions.checkArgument(record != null, "The build detail is not exist")
+            watcher.start("model")
+            return JsonUtil.to(record!!.model, Model::class.java)
         } finally {
             lock.unlock()
             watcher.stop()

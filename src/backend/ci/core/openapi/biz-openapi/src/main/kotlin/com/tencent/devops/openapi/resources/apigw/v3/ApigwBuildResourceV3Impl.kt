@@ -101,7 +101,27 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             page = page ?: 1,
             pageSize = pageSize ?: 20,
             channelCode = apiGatewayUtil.getChannelCode(),
-            updateTimeDesc = updateTimeDesc
+            updateTimeDesc = updateTimeDesc,
+            materialAlias = null,
+            materialUrl = null,
+            materialBranch = null,
+            materialCommitId = null,
+            materialCommitMessage = null,
+            status = null,
+            trigger = null,
+            queueTimeStartTime = null,
+            queueTimeEndTime = null,
+            startTimeStartTime = null,
+            startTimeEndTime = null,
+            endTimeStartTime = null,
+            endTimeEndTime = null,
+            totalTimeMin = null,
+            totalTimeMax = null,
+            remark = null,
+            buildNoStart = null,
+            buildNoEnd = null,
+            buildMsg = null,
+            startUser = null
         )
     }
 

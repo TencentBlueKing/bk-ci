@@ -10,7 +10,7 @@
                     <bk-link theme="primary" target="_blank" :href="LINK_CONFIG.STREAM_PERMISSION" v-if="exceptionType === 403">{{$t('exception.learnMore')}}</bk-link>
                 </span>
                 <div v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }" v-if="exceptionType === 419">
-                    <bk-button theme="primary" @click="enable" :loading="isSaving" :disabled="!permission">{{$t('enable')}}</bk-button>
+                    <bk-button theme="primary" @click="enable" :loading="isSaving" :disabled="!permission">{{$t('exception.enable')}}</bk-button>
                 </div>
                 <bk-button theme="primary" v-if="exceptionType === 418" @click="oauth" :loading="isSaving">{{$t('exception.oauthAuth')}}</bk-button>
                 <bk-button theme="primary" v-if="[500, 403].includes(exceptionType)" @click="refresh">{{$t('refresh')}}</bk-button>

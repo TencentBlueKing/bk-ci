@@ -300,7 +300,6 @@ class TGitMrTriggerHandler(
         page: Int,
         size: Int
     ): List<WebhookCommit> {
-        logger.info("merge request event is $event")
         if (projectId == null || repository == null) {
             return emptyList()
         }

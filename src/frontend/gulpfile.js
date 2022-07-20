@@ -66,7 +66,12 @@ task('copy', () => src(['common-lib/**'], { 'base': '.' }).pipe(dest(`${dist}/`)
 task('build', cb => {
     const spinner = new Ora('building bk-ci frontend project').start()
     const scopeStr = getScopeStr(scope)
-    require('child_process').exec(`lerna run public:${env} ${scopeStr} -- --env dist=${dist} --env lsVersion=${lsVersion}`, {
+    process.env = {
+        ...process.env,
+        dist,
+        lsVersion
+    }
+    require('child_process').exec(`lerna run public:${env} ${scopeStr}`, {
         maxBuffer: 5000 * 1024
     }, (err, res) => {
         if (err) {
