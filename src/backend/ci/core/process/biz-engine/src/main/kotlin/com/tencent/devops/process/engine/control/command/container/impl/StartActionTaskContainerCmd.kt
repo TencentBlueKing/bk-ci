@@ -299,27 +299,29 @@ class StartActionTaskContainerCmd(
                 message = message
             )
             Pair(checkResult, null)
-        } catch (t: Throwable) {
+        } catch (e: ExpressionParseException) {
             buildLogPrinter.addErrorLine(
-                buildId = buildId,
-                message = "[EXPRESSION] condition(${additionalOptions?.customCondition}) of task is invalid: ${t.message}",
-                jobId = containerHashId,
-                tag = taskId,
-                executeCount = executeCount ?: 1
+                message = "[${e.kind}] expression(${e.expression}) of task condition is invalid: ${e.message}",
+                buildId = buildId, jobId = containerHashId, tag = taskId, executeCount = executeCount ?: 1
             )
-            if (t is ExpressionParseException) {
-                LOG.warn("ENGINE|$buildId|$source|EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|$status", t)
-                containerContext.latestSummary = containerContext.latestSummary.plus(
-                    " | conditionError=${t.kind}: ${t.message}"
-                )
-                Pair(false, t)
-            } else {
-                LOG.error(
-                    "BKSystemErrorMonitor|findNeedToRunTask|$buildId|$source|" +
-                        "EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|${additionalOptions?.customCondition}", t
-                )
-                Pair(false, t)
-            }
+            LOG.warn("ENGINE|$buildId|$source|EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|$status", e)
+            containerContext.latestSummary = containerContext.latestSummary.plus(
+                " | conditionError=${e.kind}: ${e.message}"
+            )
+            Pair(false, e)
+        } catch (ignore: Throwable) {
+            buildLogPrinter.addErrorLine(
+                message = "[EXPRESSION_ERROR] failed to parse condition(${additionalOptions?.customCondition}) " +
+                    "with error: ${ignore.message}",
+                buildId = buildId, jobId = containerHashId, tag = taskId, executeCount = executeCount ?: 1
+            )
+            LOG.error(
+                "BKSystemErrorMonitor|findNeedToRunTask|$buildId|$source|" +
+                    "EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|" +
+                    "customCondition=${additionalOptions?.customCondition}",
+                ignore
+            )
+            Pair(false, ignore)
         }
         when { // [post action] 包含对应的关机任务，优先开机失败startVMFail=true
             additionalOptions?.elementPostInfo != null -> { // 如果是[post task], elementPostInfo必不为空
