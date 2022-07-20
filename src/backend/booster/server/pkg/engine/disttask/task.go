@@ -12,7 +12,6 @@ package disttask
 import (
 	"fmt"
 
-	"github.com/Tencent/bk-ci/src/booster/common/blog"
 	"github.com/Tencent/bk-ci/src/booster/common/codec"
 )
 
