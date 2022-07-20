@@ -47,7 +47,7 @@ class OpStoreLogoResourceImpl @Autowired constructor(
     override fun uploadStoreLogo(
         userId: String,
         contentLength: Long,
-//        rangeFlag: Boolean?,
+        rangeFlag: Boolean?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<StoreLogoInfo?> {
@@ -55,7 +55,7 @@ class OpStoreLogoResourceImpl @Autowired constructor(
             userId = userId,
             rangeFlag = true,
             contentLength = contentLength,
-            compressFlag = true,
+            compressFlag = rangeFlag,
             inputStream = inputStream,
             disposition = disposition
         )
