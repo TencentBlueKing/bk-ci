@@ -27,13 +27,17 @@
 
 package com.tencent.devops.common.expression.expression.functions
 
+import com.tencent.devops.common.expression.context.JsonExtensions.toPipelineContextData
 import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
 import com.tencent.devops.common.expression.expression.sdk.Function
 import com.tencent.devops.common.expression.expression.sdk.ResultMemory
-import com.tencent.devops.common.expression.context.JsonExtensions.toPipelineContextData
 import com.tencent.devops.common.expression.utils.ExpressionJsonUtil
 
 class FromJson : Function() {
+    companion object {
+        const val name = "fromJSON"
+    }
+
     override fun createNode(): Function = FromJson()
 
     override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
@@ -41,4 +45,7 @@ class FromJson : Function() {
         val token = ExpressionJsonUtil.read(jsonStr.reader())
         return Pair(null, token.toPipelineContextData())
     }
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext) =
+        "$name(${parameters[0].subNameValueEvaluate(context)})"
 }

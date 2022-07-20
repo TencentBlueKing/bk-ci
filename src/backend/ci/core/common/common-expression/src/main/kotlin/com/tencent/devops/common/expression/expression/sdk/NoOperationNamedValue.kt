@@ -35,4 +35,8 @@ class NoOperationNamedValue : NamedValue() {
     override fun createNode(): NamedValue {
         return NoOperationNamedValue()
     }
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext): String {
+        return "''"
+    }
 }

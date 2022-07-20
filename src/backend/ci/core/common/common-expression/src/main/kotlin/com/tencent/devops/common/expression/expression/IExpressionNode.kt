@@ -33,4 +33,17 @@ interface IExpressionNode {
         state: Any?,
         options: EvaluationOptions?
     ): EvaluationResult
+
+    /**
+     * 只负责替换指定的nameValued和index
+     * 指定的nameValued计算后替换为 toJson 之后的字符串
+     * 其他的nameValued涉及到与指定的nameValue进行计算时，为null，不涉及计算时打印原样保持不变
+     * 运算符除index之外保持原样不变
+     * 函数保持原样不变（只能保持为函数原命名）
+     */
+    fun subNameValueEvaluate(
+        trace: ITraceWriter?,
+        state: Any?,
+        options: EvaluationOptions?
+    ): String
 }

@@ -25,23 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.utils
+package com.tencent.devops.common.expression
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import java.io.Reader
-
-object ExpJsonUtil {
-
-    private val objectMapper = ObjectMapper()
-
-    fun createObjectNode(): ObjectNode = objectMapper.createObjectNode()
-
-    fun createArrayNode(): ArrayNode = objectMapper.createArrayNode()
-
-    fun read(jsonReader: Reader): JsonNode {
-        return objectMapper.readTree(jsonReader)
-    }
-}
+/**
+ * @param enableSubNameValueEvaluate 开启部分计算功能，方便一些变量的替换
+ * @param hasOtherNameValue 标记是否使用了不在部分计算外的变量进行了计算
+ */
+data class SubNameValueEvaluateInfo(
+    val enableSubNameValueEvaluate: Boolean = true,
+    var hasOtherNameValue: Boolean = false
+)

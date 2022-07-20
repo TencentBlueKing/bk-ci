@@ -49,4 +49,6 @@ class Literal(v: Any?) : ExpressionNode() {
     override fun convertToRealizedExpression(context: EvaluationContext) = ExpressionUtility.formatValue(value, kind)
 
     override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> = Pair(null, value)
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext) = ExpressionUtility.formatValue(value, kind)
 }

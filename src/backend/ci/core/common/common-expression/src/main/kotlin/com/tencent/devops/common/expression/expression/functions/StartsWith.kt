@@ -32,6 +32,10 @@ import com.tencent.devops.common.expression.expression.sdk.Function
 import com.tencent.devops.common.expression.expression.sdk.ResultMemory
 
 class StartsWith : Function() {
+    companion object {
+        const val name = "startsWith"
+    }
+
     override val traceFullyRealized: Boolean
         get() = false
 
@@ -51,4 +55,7 @@ class StartsWith : Function() {
 
         return Pair(null, false)
     }
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext) =
+        "$name(${parameters[0].subNameValueEvaluate(context)}, ${parameters[1].subNameValueEvaluate(context)})"
 }

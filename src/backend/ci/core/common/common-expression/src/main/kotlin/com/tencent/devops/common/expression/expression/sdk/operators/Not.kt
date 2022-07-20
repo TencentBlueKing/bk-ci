@@ -47,4 +47,7 @@ class Not(override val traceFullyRealized: Boolean = false) : Container() {
     override fun evaluateCore(
         context: EvaluationContext
     ): Pair<ResultMemory?, Any?> = Pair(null, parameters[0].evaluate(context).equalsFalse)
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext) =
+        "!${parameters[0].subNameValueEvaluate(context)}"
 }

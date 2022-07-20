@@ -28,11 +28,15 @@
 package com.tencent.devops.common.expression.expression.sdk
 
 import com.tencent.devops.common.expression.NotSupportedException
+import com.tencent.devops.common.expression.context.BooleanContextData
+import com.tencent.devops.common.expression.context.NumberContextData
+import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.expression.expression.EvaluationOptions
 import com.tencent.devops.common.expression.expression.EvaluationResult
 import com.tencent.devops.common.expression.expression.IExpressionNode
 import com.tencent.devops.common.expression.expression.ITraceWriter
 import com.tencent.devops.common.expression.expression.ValueKind
+import com.tencent.devops.common.expression.utils.ExpressionJsonUtil
 
 abstract class ExpressionNode : IExpressionNode {
 
@@ -117,6 +121,32 @@ abstract class ExpressionNode : IExpressionNode {
     abstract fun convertToRealizedExpression(context: EvaluationContext): String
 
     protected abstract fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?>
+
+    override fun subNameValueEvaluate(trace: ITraceWriter?, state: Any?, options: EvaluationOptions?): String {
+        if (container != null) {
+            throw NotSupportedException("Expected IExpressionNode.Evaluate to be called on root node only.")
+        }
+
+        val eTrace = EvaluationTraceWriter(trace)
+        val context = EvaluationContext(eTrace, state, options, this)
+
+        // 目前部分计算不涉及内存计算，未来启用内存计算时需要修改此处
+        return subNameValueEvaluate(context)
+    }
+
+    fun subNameValueEvaluate(context: EvaluationContext): String {
+        val result = subNameValueEvaluateCore(context) ?: return "''"
+        // 在subNameValue的情况下只有指定的nameValued才可能返回这个
+        if (result is PipelineContextData) {
+            if (result is BooleanContextData || result is NumberContextData) {
+                return ExpressionJsonUtil.getObjectMapper().writeValueAsString(result.toJson())
+            }
+            return "'${ExpressionJsonUtil.getObjectMapper().writeValueAsString(result.toJson())}'"
+        }
+        return result.toString()
+    }
+
+    protected abstract fun subNameValueEvaluateCore(context: EvaluationContext): Any?
 
     private fun traceTreeResult(
         context: EvaluationContext,
