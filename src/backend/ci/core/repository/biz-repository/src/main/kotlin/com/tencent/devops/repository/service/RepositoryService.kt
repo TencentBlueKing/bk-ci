@@ -959,8 +959,8 @@ class RepositoryService @Autowired constructor(
         aliasName: String?,
         offset: Int,
         limit: Int,
-        sortBy: String?,
-        sortType: String?
+        sortBy: String? = null,
+        sortType: String? = null
     ): Pair<SQLPage<RepositoryInfoWithPermission>, Boolean> {
         // 校验权限
         val hasCreatePermission = validatePermission(userId, projectId, AuthPermission.CREATE)

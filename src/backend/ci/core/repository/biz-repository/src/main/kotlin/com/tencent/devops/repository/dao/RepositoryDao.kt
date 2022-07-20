@@ -220,45 +220,9 @@ class RepositoryDao {
         aliasName: String?,
         repositoryIds: Set<Long>?,
         offset: Int,
-        limit: Int
-    ): Result<TRepositoryRecord> {
-        with(TRepository.T_REPOSITORY) {
-            val step = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(IS_DELETED.eq(false))
-            if (repositoryIds != null) {
-                step.and(REPOSITORY_ID.`in`(repositoryIds))
-            }
-
-            if (!aliasName.isNullOrBlank()) {
-                step.and(ALIAS_NAME.like("%$aliasName%"))
-            }
-
-            when (repositoryTypes) {
-                null -> {
-                }
-                else -> {
-                    step.and(TYPE.`in`(repositoryTypes))
-                }
-            }
-
-            return step.orderBy(REPOSITORY_ID.desc())
-                .offset(offset)
-                .limit(limit)
-                .fetch()
-        }
-    }
-
-    fun listByProject(
-        dslContext: DSLContext,
-        projectId: String,
-        repositoryTypes: List<ScmType>?,
-        aliasName: String?,
-        repositoryIds: Set<Long>?,
-        offset: Int,
         limit: Int,
-        sortBy: String?,
-        sortType: String?
+        sortBy: String? = null,
+        sortType: String? = null
     ): Result<TRepositoryRecord> {
         with(TRepository.T_REPOSITORY) {
             val step = dslContext.selectFrom(this)
