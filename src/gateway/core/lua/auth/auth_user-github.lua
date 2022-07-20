@@ -47,4 +47,5 @@ end
 --- 设置用户信息
 ngx.header["x-devops-uid"] = user_cache_value
 ngx.header["x-devops-bk-token"] = ci_login_token
+ngx.header["x-devops-access-token"] = ci_login_token
 ngx.exit(200)
