@@ -39,7 +39,6 @@ type distTask struct {
 // EnoughAvailableResource check if available cpu num is grater than least cpu.
 // if not, means there are no enough available resource.
 func (dt *distTask) EnoughAvailableResource() bool {
-	blog.Infof("task(%s) has current cpu (%d)", dt.ID, dt.Stats.CPUTotal)
 	return dt.Stats.CPUTotal >= dt.InheritSetting.LeastCPU
 }
 

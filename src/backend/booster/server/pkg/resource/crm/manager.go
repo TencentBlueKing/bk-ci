@@ -666,7 +666,7 @@ func (rm *resourceManager) getServiceInfo(resourceID, user string) (*op.ServiceI
 
 	terminated := false
 	switch info.Status {
-	//ServiceStatusRunning means all resource readyq:q:Q
+	//ServiceStatusRunning means all resource ready
 	case ServiceStatusRunning, ServiceStatusFailed:
 		terminated = true
 	}
