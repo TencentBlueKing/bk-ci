@@ -158,8 +158,7 @@ class ExpressionParserTest {
             "jobs.build.2.steps.runStep.outputs.myoutput" to "build_1",
             "depends.job1.outputs.matrix_include" to
                 """[{"service":"api","var1":"b","var3":"yyy"},{"service":"c","cpu":"zzz"}]""",
-            "project.name" to "蓝盾项目",
-            "project.name.chinese" to "project1"
+            "project.name.chinese" to "蓝盾项目"
         )
         val expected = listOf(
             mapOf(
