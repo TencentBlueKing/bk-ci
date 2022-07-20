@@ -48,6 +48,8 @@ abstract class ITask {
 
     private var platformErrorCode: Int? = null
 
+    private var finishKillFlag: Boolean? = null
+
     fun run(
         buildTask: BuildTask,
         buildVariables: BuildVariables,
@@ -142,6 +144,14 @@ abstract class ITask {
 
     fun getPlatformErrorCode(): Int? {
         return platformErrorCode
+    }
+
+    protected fun addFinishKillFlag(taskFinishKillFlag: Boolean) {
+        finishKillFlag = taskFinishKillFlag
+    }
+
+    fun getFinishKillFlag(): Boolean? {
+        return finishKillFlag
     }
 
     protected fun isThirdAgent() = BuildEnv.getBuildType() == BuildType.AGENT

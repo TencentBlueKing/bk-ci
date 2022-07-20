@@ -59,6 +59,7 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREF
 import com.tencent.devops.store.pojo.common.KEY_DEFAULT
 import com.tencent.devops.store.pojo.common.KEY_DEMANDS
 import com.tencent.devops.store.pojo.common.KEY_EXECUTION
+import com.tencent.devops.store.pojo.common.KEY_FINISH_KILL_FLAG
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_MINIMUM_VERSION
@@ -397,7 +398,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             target = executionInfoMap[KEY_TARGET] as String,
             shaContent = null,
             preCmd = JsonUtil.toJson(executionInfoMap[KEY_DEMANDS] ?: ""),
-            atomPostInfo = atomPostInfo
+            atomPostInfo = atomPostInfo,
+            finishKillFlag = executionInfoMap[KEY_FINISH_KILL_FLAG] as? Boolean
         )
         return GetAtomConfigResult("0", arrayOf(""), taskDataMap, atomEnvRequest)
     }

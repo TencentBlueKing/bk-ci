@@ -76,5 +76,7 @@ data class AtomEnv(
     @ApiModelProperty("Job类型", required = false)
     val jobType: JobTypeEnum? = null,
     @ApiModelProperty("插件post信息", required = false)
-    val atomPostInfo: AtomPostInfo? = null
+    val atomPostInfo: AtomPostInfo? = null,
+    @ApiModelProperty("插件运行结束后是否立即杀掉其进程", required = false)
+    val finishKillFlag: Boolean? = null
 )

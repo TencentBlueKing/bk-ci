@@ -386,7 +386,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     shaContent = atomEnvInfoRecord[tAtomEnvInfo.SHA_CONTENT],
                     preCmd = atomEnvInfoRecord[tAtomEnvInfo.PRE_CMD],
                     jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
-                    atomPostInfo = atomPostInfo
+                    atomPostInfo = atomPostInfo,
+                    finishKillFlag = atomEnvInfoRecord[tAtomEnvInfo.FINISH_KILL_FLAG]
                 )
             }
         )

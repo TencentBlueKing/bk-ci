@@ -39,6 +39,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record21
+import org.jooq.Record22
 import org.jooq.SelectOnConditionStep
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -62,6 +63,7 @@ class MarketAtomEnvInfoDao {
                 PRE_CMD,
                 POST_ENTRY_PARAM,
                 POST_CONDITION,
+                FINISH_KILL_FLAG,
                 CREATOR,
                 MODIFIER
             )
@@ -77,6 +79,7 @@ class MarketAtomEnvInfoDao {
                     atomEnvRequest.preCmd,
                     atomEnvRequest.atomPostInfo?.postEntryParam,
                     atomEnvRequest.atomPostInfo?.postCondition,
+                    atomEnvRequest.finishKillFlag,
                     atomEnvRequest.userId,
                     atomEnvRequest.userId
                 ).execute()
@@ -121,7 +124,7 @@ class MarketAtomEnvInfoDao {
         dslContext: DSLContext,
         tAtom: TAtom,
         tAtomEnvInfo: TAtomEnvInfo
-    ): SelectOnConditionStep<Record21<String, String, Byte, String, String, String, Boolean, String, String, Boolean, String, LocalDateTime, LocalDateTime, String, String, String, String, String, String, String, String>> {
+    ): SelectOnConditionStep<Record22<String, String, Byte, String, String, String, Boolean, String, String, Boolean, String, LocalDateTime, LocalDateTime, String, String, String, String, String, String, String, String, Boolean>> {
         return dslContext.select(
             tAtom.ID,
             tAtom.ATOM_CODE,
@@ -143,7 +146,8 @@ class MarketAtomEnvInfoDao {
             tAtomEnvInfo.SHA_CONTENT,
             tAtomEnvInfo.PRE_CMD,
             tAtomEnvInfo.POST_ENTRY_PARAM,
-            tAtomEnvInfo.POST_CONDITION
+            tAtomEnvInfo.POST_CONDITION,
+            tAtomEnvInfo.FINISH_KILL_FLAG
         ).from(tAtom)
             .join(tAtomEnvInfo)
             .on(tAtom.ID.eq(tAtomEnvInfo.ATOM_ID))
@@ -223,6 +227,7 @@ class MarketAtomEnvInfoDao {
             val atomPostInfo = atomEnvRequest.atomPostInfo
             baseStep.set(POST_ENTRY_PARAM, atomPostInfo?.postEntryParam)
             baseStep.set(POST_CONDITION, atomPostInfo?.postCondition)
+            baseStep.set(FINISH_KILL_FLAG, atomEnvRequest.finishKillFlag)
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, atomEnvRequest.userId)
                 .where(ATOM_ID.eq(atomId))

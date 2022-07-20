@@ -49,5 +49,7 @@ data class AtomEnvRequest(
     @ApiModelProperty("插件执行前置命令", required = false)
     val preCmd: String?,
     @ApiModelProperty("插件post信息", required = false)
-    val atomPostInfo: AtomPostInfo? = null
+    val atomPostInfo: AtomPostInfo? = null,
+    @ApiModelProperty("插件运行结束后是否立即杀掉其进程", required = false)
+    val finishKillFlag: Boolean? = null
 )

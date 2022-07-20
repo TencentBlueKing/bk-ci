@@ -153,6 +153,7 @@ CREATE TABLE IF NOT EXISTS `T_ATOM_ENV_INFO` (
   `PKG_NAME` varchar(256) DEFAULT '' COMMENT '插件包名',
   `POST_ENTRY_PARAM` VARCHAR(64) COMMENT '入口参数',
   `POST_CONDITION` VARCHAR(1024) COMMENT '执行条件',
+  `FINISH_KILL_FLAG` bit(1) COMMENT '插件运行结束后是否立即杀掉其进程',
   PRIMARY KEY (`ID`),
   KEY `inx_tpaei_atom_id` (`ATOM_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线原子执行环境信息表';
