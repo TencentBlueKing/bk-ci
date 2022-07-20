@@ -68,9 +68,9 @@ interface OpStoreLogoResource {
         @ApiParam("contentLength", required = true)
         @HeaderParam("content-length")
         contentLength: Long,
-        @ApiParam("是否限制图片尺寸范围", required = false, defaultValue = "true")
-        @QueryParam("rangeFlag")
-        rangeFlag: Boolean? = true,
+//        @ApiParam("是否限制图片尺寸范围", required = false, defaultValue = "true")
+//        @QueryParam("rangeFlag")
+//        rangeFlag: Boolean? = true,
         @ApiParam("logo", required = true)
         @FormDataParam("logo")
         inputStream: InputStream,
