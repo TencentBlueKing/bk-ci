@@ -438,7 +438,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 )
             }
 
-            savePipelineBuildCommit(action = action, pipeline = pipeline, gitBuildId = gitBuildId)
+            savePipelineBuildCommit(action = action, pipeline = pipeline, buildId = buildId)
         } catch (ignore: Exception) {
             logger.error(
                 "Stream after Build failed, gitProjectId[${action.data.getGitProjectId()}], " +
@@ -498,7 +498,7 @@ class StreamYamlBaseBuild @Autowired constructor(
     fun savePipelineBuildCommit(
         action: BaseAction,
         pipeline: StreamTriggerPipeline,
-        gitBuildId: Long
+        buildId: String
     ) {
         if (action !is GitBaseAction) {
             return
@@ -518,7 +518,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                         PipelineBuildCommit(
                             projectId = projectId,
                             pipelineId = pipelineId,
-                            buildId = gitBuildId.toString(),
+                            buildId = buildId,
                             commitId = it.commitId,
                             authorName = it.authorName,
                             message = it.message,
@@ -539,7 +539,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     source = "build_commits",
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    buildId = gitBuildId.toString()
+                    buildId = buildId
                 )
             )
         } catch (ignore: Throwable) {
