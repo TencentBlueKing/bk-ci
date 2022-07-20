@@ -127,7 +127,7 @@ object ExpressionParser {
     }
 
     private fun String.legalizeExpression(): String {
-        val expression = this.replace("fromJSON", "fromJson")
+        val expression = this
         val regex = "jobs\\.([\\S]+)\\.([0-9]+)\\.steps\\.([\\S]+)\\.outputs\\.([\\S]+)"
         val pattern = Pattern.compile(regex)
         val matcher = pattern.matcher(expression)
