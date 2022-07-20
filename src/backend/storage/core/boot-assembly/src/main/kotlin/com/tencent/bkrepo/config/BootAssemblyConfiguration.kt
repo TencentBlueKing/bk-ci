@@ -38,13 +38,15 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
+import org.springframework.context.annotation.Primary
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @Configuration
 class BootAssemblyConfiguration {
 
     @Bean
-    fun feignWebRegistrations(): WebMvcRegistrations {
+    @Primary
+    fun webRegistrations(): WebMvcRegistrations {
         return object : WebMvcRegistrations {
             override fun getRequestMappingHandlerMapping() = BootAssemblyHandlerMapping()
         }

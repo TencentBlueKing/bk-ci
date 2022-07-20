@@ -43,9 +43,11 @@ import com.tencent.bkrepo.repository.search.common.SelectFieldInterceptor
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Component
 import javax.annotation.PostConstruct
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
 
 @Component
-class NodeQueryInterpreter(
+class NodeQueryInterpreter @Autowired @Lazy constructor(
     private val permissionManager: PermissionManager,
     private val repoNameRuleInterceptor: RepoNameRuleInterceptor,
     private val repoTypeRuleInterceptor: RepoTypeRuleInterceptor,

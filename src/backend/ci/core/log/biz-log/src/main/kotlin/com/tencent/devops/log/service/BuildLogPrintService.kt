@@ -28,23 +28,24 @@
 package com.tencent.devops.log.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.log.event.ILogEvent
-import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.log.configuration.LogServiceConfig
 import com.tencent.devops.log.configuration.StorageProperties
+import com.tencent.devops.log.event.ILogEvent
+import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.jmx.LogPrintBean
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.log.util.LogErrorCodeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
+import org.springframework.scheduling.annotation.Scheduled
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import org.springframework.scheduling.annotation.Scheduled
-import java.util.concurrent.RejectedExecutionException
 
+@Suppress("MagicNumber")
 class BuildLogPrintService @Autowired constructor(
     private val streamBridge: StreamBridge,
     private val logPrintBean: LogPrintBean,
@@ -68,12 +69,16 @@ class BuildLogPrintService @Autowired constructor(
         if (!isEnabled(storageProperties.enable)) {
             val warnings = "Service refuses to write the log, the log file of the task will be archived."
             if (event is LogOriginEvent && event.logs.isNotEmpty()) {
-                dispatchEvent(event.copy(
-                    logs = listOf(event.logs.first().copy(
-                        message = Ansi().fgYellow().a(warnings).reset().toString(),
-                        logType = LogType.WARN
-                    ))
-                ))
+                dispatchEvent(
+                    event.copy(
+                        logs = listOf(
+                            event.logs.first().copy(
+                                message = Ansi().fgYellow().a(warnings).reset().toString(),
+                                logType = LogType.WARN
+                            )
+                        )
+                    )
+                )
             }
             return Result(
                 status = 503,

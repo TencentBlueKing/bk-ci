@@ -10,12 +10,19 @@
                 <div>
                     <div class="form-group">
                         <label for="pipelineName" class="filter-label">{{ $t('pipelineName') }}：</label>
-                        <input type="text" class="bk-form-input input-text" name="pipelineName" id="pipelineName" :placeholder="$t('newlist.filterByNameTips')"
+                        <bk-input
                             v-validate.initial="'max:40'"
+                            name="pipelineName"
+                            id="pipelineName"
+                            :placeholder="$t('newlist.filterByNameTips')"
                             :class="{
-                                'is-danger': errors.has('pipelineName')
+                                'is-danger': errors.has('pipelineName'),
+                                'input-text': true
                             }"
-                            v-model="currentFilter.filterByPipelineName">
+                            clearable
+                            v-model.trim="currentFilter.filterByPipelineName"
+                            @enter="filterCommit"
+                        />
                         <p :class="errors.has('pipelineName') ? 'error-tips' : 'normal-tips'">{{errors.first("pipelineName")}}</p>
                     </div>
                     <div class="form-group">
@@ -38,8 +45,7 @@
                     </div>
                     <div class="form-group filter-modify">
                         <bk-button theme="primary" size="small" :disabled="isDisabled" @click.stop.prevent="filterCommit">{{ $t('newlist.filter') }}</bk-button>
-                        <a class="btn"
-                            @click="empty">{{ $t('newlist.reset') }}</a>
+                        <bk-button text class="btn" @click="resetFilter">{{ $t('newlist.reset') }}</bk-button>
                     </div>
                 </div>
             </div>
@@ -125,7 +131,6 @@
                     }
                 })
             },
-            selected (id, data) {},
             async filterCommit () {
                 let labels = []
                 let labelIds = ''
@@ -142,6 +147,10 @@
                     filterByPipelineName: this.currentFilter.filterByPipelineName,
                     filterByCreator: this.currentFilter.filterByCreator.join(',')
                 }, this.currentFilter)
+            },
+            resetFilter () {
+                this.empty()
+                this.$nextTick(this.filterCommit)
             },
             empty () {
                 this.currentFilter = {

@@ -41,7 +41,7 @@
                 <h5>{{$t('setting.agent.emptyLinkTips')}}</h5>
                 <div>
                     <bk-button class="import-agent" @click="toLinkShare('PROJECT')">{{$t('setting.agent.linkProject')}}</bk-button>
-                    <bk-button @click="toLinkShare('GROUP')">Link group{{$t('setting.agent.linkGroup')}}</bk-button>
+                    <bk-button @click="toLinkShare('GROUP')">{{$t('setting.agent.linkGroup')}}</bk-button>
                 </div>
             </section>
         </main>

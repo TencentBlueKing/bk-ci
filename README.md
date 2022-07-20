@@ -40,6 +40,7 @@ bk-ci提供了流水线、代码检查、代码库、凭证管理、环境管理
 
 ## Experience
 - [bk-ci in docker](https://hub.docker.com/r/blueking/bk-ci)
+- [bk-repo in docker](https://hub.docker.com/r/bkrepo/bkrepo)
 
 ## Getting started
 - [下载与编译](docs/overview/source_compile.md)

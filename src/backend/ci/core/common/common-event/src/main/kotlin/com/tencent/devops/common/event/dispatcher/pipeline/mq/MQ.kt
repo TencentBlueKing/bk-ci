@@ -253,6 +253,12 @@ object MQ {
     // 蓝盾监控数据上报事件广播
     const val EXCHANGE_ATOM_MONITOR_DATA_REPORT_FANOUT = "e.engine.atom.monitor.data.report.fanout"
 
+    // 蓝盾构建结束后metrics数据上报事件广播
+    const val EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT = "e.engine.build.end.metrics.data.report.fanout"
+    // 流水线标签变化metrics数据同步广播
+    const val EXCHANGE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC_FANOUT =
+        "e.pipeline.label.change.metrics.data.sync.fanout"
+
     // webhook锁
     const val EXCHANGE_GIT_WEBHOOK_UNLOCK_EVENT = "e.webhook.unlock.event"
     const val ROUTE_GIT_WEBHOOK_UNLOCK_EVENT = "r.webhook.unlock.event"
@@ -268,4 +274,12 @@ object MQ {
 
     // 流水线质量红线人工审核时间广播
     const val EXCHANGE_PIPELINE_BUILD_QUALITY_REVIEW_FANOUT = "e.quality.pipeline.build.review.fanout"
+
+    // 质量红线每日数据上报队列
+    const val EXCHANGE_QUALITY_DAILY_FANOUT = "e.metrics.quality.daily.exchange.fanout"
+    const val ROUTE_QUALITY_DAILY_FANOUT = "r.quality.daily.exchange.fanout"
+    const val QUEUE_QUALITY_DAILY_EVENT = "q.metrics.quality.daily.exchange.queue"
+
+    const val ROUTE_PIPELINE_STREAM_ENABLED = "r.engine.pipeline.stream.enabled"
+    const val QUEUE_PIPELINE_STREAM_ENABLED = "q.engine.pipeline.stream.enabled"
 }

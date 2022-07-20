@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
@@ -84,7 +85,7 @@ class BuildCancelControl @Autowired constructor(
     companion object {
         private val LOG = LoggerFactory.getLogger(BuildCancelControl::class.java)
     }
-
+    @BkTimed
     fun handle(event: PipelineBuildCancelEvent) {
         val watcher = Watcher(id = "ENGINE|BuildCancel|${event.traceId}|${event.buildId}|${event.status}")
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = event.buildId)
@@ -127,9 +128,20 @@ class BuildCancelControl @Autowired constructor(
                 cancelUser = event.userId
             )
 
-            val pendingStage = pipelineStageService.getPendingStage(event.projectId, buildId)
+            // 排队的则不再获取Pending Stage，防止Final Stage被执行
+            val pendingStage: PipelineBuildStage? =
+                if (buildInfo.status.isReadyToRun() || buildInfo.status.isNeverRun()) {
+                    null
+                } else {
+                    pipelineStageService.getPendingStage(event.projectId, buildId)
+                }
+
             if (pendingStage != null) {
-                pendingStage.dispatchEvent(event)
+                if (pendingStage.status.isPause()) { // 处于审核暂停的Stage需要走取消Stage逻辑
+                    pipelineStageService.cancelStageBySystem(event.userId, pendingStage, timeout = false)
+                } else {
+                    pendingStage.dispatchEvent(event)
+                }
             } else {
                 sendBuildFinishEvent(event)
             }
@@ -189,7 +201,7 @@ class BuildCancelControl @Autowired constructor(
         val executeCount: Int by lazy { buildVariableService.getBuildExecuteCount(projectId, buildId) }
         val stages = model.stages
         stages.forEachIndexed nextStage@{ index, stage ->
-            if (stage.status == null) { // 未启动的忽略
+            if (stage.status == null || index == 0) { // Trigger 和 未启动的忽略
                 return@nextStage
             }
 
@@ -279,7 +291,8 @@ class BuildCancelControl @Autowired constructor(
                     executeCount = executeCount
                 )
                 // 释放互斥锁
-                unlockMutexGroup(variables = variables, container = container,
+                unlockMutexGroup(
+                    variables = variables, container = container,
                     buildId = event.buildId, projectId = event.projectId, stageId = stageId
                 )
                 // 构建机关机

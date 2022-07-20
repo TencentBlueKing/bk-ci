@@ -252,7 +252,8 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            setting = setting
+            setting = setting,
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 

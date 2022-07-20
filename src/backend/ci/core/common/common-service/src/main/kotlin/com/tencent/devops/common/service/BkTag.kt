@@ -9,12 +9,7 @@ class BkTag constructor(
     private val gatewayTag = ThreadLocal<String>()
 
     fun getFinalTag(): String {
-        val gatewayTag = getGatewayTag()
-        if (gatewayTag == null) {
-            logger.info("gateway tag is null , use local tag")
-            return getLocalTag()
-        }
-        return gatewayTag
+        return getGatewayTag() ?: getLocalTag()
     }
 
     fun getLocalTag(): String {

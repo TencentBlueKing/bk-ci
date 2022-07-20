@@ -39,6 +39,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -74,6 +75,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_URL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_AUTH_USER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
@@ -129,6 +131,7 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
+import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
@@ -145,6 +148,7 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM_ALIAS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_VERSION
@@ -190,6 +194,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineRuleService: PipelineRuleService,
     private val projectCacheService: ProjectCacheService,
     private val pipelineUrlBean: PipelineUrlBean,
+    private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation
 ) {
     companion object {
@@ -390,7 +395,9 @@ class PipelineRuntimeService @Autowired constructor(
         remark: String?,
         buildNoStart: Int?,
         buildNoEnd: Int?,
-        buildMsg: String?
+        buildMsg: String?,
+        startUser: List<String>?,
+        updateTimeDesc: Boolean? = null
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
@@ -420,7 +427,9 @@ class PipelineRuntimeService @Autowired constructor(
             } else limit,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
-            buildMsg = buildMsg
+            buildMsg = buildMsg,
+            startUser = startUser,
+            updateTimeDesc = updateTimeDesc
         )
         val result = mutableListOf<BuildHistory>()
         val buildStatus = BuildStatus.values()
@@ -511,7 +520,12 @@ class PipelineRuntimeService @Autowired constructor(
                 recommendVersion = recommendVersion,
                 retry = isRetry ?: false,
                 errorInfoList = errorInfo?.let { self ->
-                    JsonUtil.to(self, object : TypeReference<List<ErrorInfo>?>() {})
+                    // 特殊兼容修改数据类型前的老数据，必须保留try catch
+                    try {
+                        JsonUtil.to(self, object : TypeReference<List<ErrorInfo>?>() {})
+                    } catch (ignore: Throwable) {
+                        null
+                    }
                 },
                 buildMsg = BuildMsgUtils.getBuildMsg(buildMsg, startType = startType, channelCode = channelCode),
                 buildNumAlias = buildNumAlias,
@@ -709,7 +723,7 @@ class PipelineRuntimeService @Autowired constructor(
         )
         val projectName = projectCacheService.getProjectName(projectId) ?: ""
         val context = StartBuildContext.init(projectId, pipelineId, buildId, startParamMap)
-
+        buildLogPrinter.startLog(buildId, null, null, context.executeCount)
         val updateTaskExistsRecord: MutableList<TPipelineBuildTaskRecord> = mutableListOf()
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
         val lastTimeBuildTaskRecords = pipelineTaskService.listByBuildId(projectId, buildId)
@@ -843,7 +857,7 @@ class PipelineRuntimeService @Autowired constructor(
                     fastKill = stage.fastKill
                 )
                 if (stage.name.isNullOrBlank()) stage.name = stage.id
-                if (stage.tag == null) stage.tag = listOf(defaultStageTagId)
+                if (stage.tag == null) stage.tag = defaultStageTagId?.let { self -> listOf(self) }
             } else {
                 stageStatus = BuildStatus.RUNNING // Stage-1 一开始就计算为启动
                 stageStartTime = now
@@ -913,6 +927,8 @@ class PipelineRuntimeService @Autowired constructor(
                         originStartParams.add(buildParameters)
                     }
                 }
+                pipelineParamMap[PIPELINE_START_TASK_ID] =
+                    BuildParameters(PIPELINE_START_TASK_ID, context.firstTaskId, readOnly = true)
 
                 if (buildHistoryRecord != null) {
                     if (context.actionType.isRetry() && context.retryStartTaskId.isNullOrBlank()) {
@@ -980,6 +996,11 @@ class PipelineRuntimeService @Autowired constructor(
                         key = PIPELINE_BUILD_NUM, value = buildNum.toString(), readOnly = true
                     )
 
+                    // 优化并发组逻辑，只在GROUP_LOCK时才保存进history表
+                    val concurrencyGroup = if (setting?.runLockType == PipelineRunLockType.GROUP_LOCK) {
+                        setting.concurrencyGroup
+                    } else null
+
                     pipelineBuildDao.create(
                         dslContext = transactionContext,
                         projectId = pipelineInfo.projectId,
@@ -1001,7 +1022,7 @@ class PipelineRuntimeService @Autowired constructor(
                         webhookInfo = getWebhookInfo(startParamMap),
                         buildMsg = getBuildMsg(startParamMap[PIPELINE_BUILD_MSG]),
                         buildNumAlias = buildNumAlias,
-                        concurrencyGroup = setting?.concurrencyGroup
+                        concurrencyGroup = concurrencyGroup
                     )
                     // detail记录,未正式启动，先排队状态
                     buildDetailDao.create(
@@ -1129,7 +1150,8 @@ class PipelineRuntimeService @Autowired constructor(
                 webhookSourceBranch = params[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH]?.toString(),
                 mrId = params[BK_REPO_GIT_WEBHOOK_MR_ID]?.toString(),
                 mrIid = params[BK_REPO_GIT_WEBHOOK_MR_NUMBER]?.toString(),
-                mrUrl = params[BK_REPO_GIT_WEBHOOK_MR_URL]?.toString()
+                mrUrl = params[BK_REPO_GIT_WEBHOOK_MR_URL]?.toString(),
+                repoAuthUser = params[BK_REPO_WEBHOOK_REPO_AUTH_USER]?.toString()
             ),
             formatted = false
         )
@@ -1476,7 +1498,8 @@ class PipelineRuntimeService @Autowired constructor(
         remark: String?,
         buildNoStart: Int?,
         buildNoEnd: Int?,
-        buildMsg: String?
+        buildMsg: String?,
+        startUser: List<String>?
     ): Int {
         return pipelineBuildDao.count(
             dslContext = dslContext,
@@ -1500,7 +1523,8 @@ class PipelineRuntimeService @Autowired constructor(
             remark = remark,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
-            buildMsg = buildMsg
+            buildMsg = buildMsg,
+            startUser = startUser
         )
     }
 
@@ -1548,11 +1572,13 @@ class PipelineRuntimeService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
-            stageStatus = listOf(BuildStageStatus(
-                stageId = STATUS_STAGE,
-                name = STATUS_STAGE,
-                status = MessageCodeUtil.getCodeLanMessage(BUILD_QUEUE)
-            )),
+            stageStatus = listOf(
+                BuildStageStatus(
+                    stageId = STATUS_STAGE,
+                    name = STATUS_STAGE,
+                    status = MessageCodeUtil.getCodeLanMessage(BUILD_QUEUE)
+                )
+            ),
             oldBuildStatus = oldStatus,
             newBuildStatus = BuildStatus.QUEUE
         )
