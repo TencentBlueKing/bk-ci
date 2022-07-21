@@ -53,9 +53,9 @@ class OpStoreLogoResourceImpl @Autowired constructor(
     ): Result<StoreLogoInfo?> {
         return storeLogoService.uploadStoreLogo(
             userId = userId,
-            rangeFlag = true,
+            rangeFlag = rangeFlag,
             contentLength = contentLength,
-            compressFlag = rangeFlag,
+            compressFlag = true,
             inputStream = inputStream,
             disposition = disposition
         )
