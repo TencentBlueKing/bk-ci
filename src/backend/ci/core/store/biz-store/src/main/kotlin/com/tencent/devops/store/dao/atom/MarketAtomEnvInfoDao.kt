@@ -224,10 +224,10 @@ class MarketAtomEnvInfoDao {
             if (!atomEnvRequest.pkgName.isNullOrEmpty()) {
                 baseStep.set(PKG_NAME, atomEnvRequest.pkgName)
             }
+            atomEnvRequest.finishKillFlag?.let { baseStep.set(FINISH_KILL_FLAG, it) }
             val atomPostInfo = atomEnvRequest.atomPostInfo
             baseStep.set(POST_ENTRY_PARAM, atomPostInfo?.postEntryParam)
             baseStep.set(POST_CONDITION, atomPostInfo?.postCondition)
-            baseStep.set(FINISH_KILL_FLAG, atomEnvRequest.finishKillFlag)
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, atomEnvRequest.userId)
                 .where(ATOM_ID.eq(atomId))
