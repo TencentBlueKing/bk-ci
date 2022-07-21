@@ -7,10 +7,8 @@ import com.tencent.devops.artifactory.service.ArchiveAtomService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.client.BkRepoClient
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Primary
 import org.springframework.web.bind.annotation.RestController
 
-@Primary
 @RestController
 class ServiceArchiveAtomResourceImpl @Autowired constructor(
     private val archiveAtomService: ArchiveAtomService,
