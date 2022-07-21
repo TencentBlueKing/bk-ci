@@ -7,7 +7,6 @@ import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.Constansts
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
