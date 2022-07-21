@@ -325,7 +325,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         var hasEmail = false
         var hasRtx = false
         var hasWechat = false
-        var hasMoa = false
         val notifyTypeScopeSet = mutableSetOf<String>()
         // 判断提交的数据中是否存在同样类型的
         notifyMessageTemplateRequest.msg.forEach {
@@ -361,17 +360,14 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     data = false
                 )
             }
+        }
 
-            if (it.notifyTypeScope.contains(NotifyType.MOA.name) && !hasMoa) {
-                hasMoa = true
-                notifyTypeScopeSet.add(NotifyType.MOA.name)
-            } else if (it.notifyTypeScope.contains(NotifyType.MOA.name) && hasMoa) {
-                return MessageCodeUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf("notifyType"),
-                    data = false
-                )
-            }
+        if (!updateOtherNotifyMessageTemplate(notifyMessageTemplateRequest, notifyTypeScopeSet)) {
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("notifyType"),
+                data = false
+            )
         }
 
         dslContext.transaction { configuration ->
@@ -443,24 +439,24 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                         )
                     }
                 }
-                if (it.notifyTypeScope.contains(NotifyType.MOA.name)) {
-                    updateMoaNotifyMessageTemplate(
-                        id = templateId,
-                        newId = uid,
-                        userId = userId,
-                        addNotifyTemplateMessage = it
-                    )
-                }
+                updateOtherSpecialTemplate(it, templateId, uid, userId)
             }
         }
         return Result(true)
     }
 
-    fun updateMoaNotifyMessageTemplate(
-        id: String,
-        newId: String,
-        userId: String,
-        addNotifyTemplateMessage: NotifyTemplateMessage
+    fun updateOtherNotifyMessageTemplate(
+        notifyMessageTemplateRequest: NotifyTemplateMessageRequest,
+        notifyTypeScopeSet: MutableSet<String>
+    ): Boolean {
+        return true
+    }
+
+    fun updateOtherSpecialTemplate(
+        it: NotifyTemplateMessage,
+        templateId: String,
+        uid: String,
+        userId: String
     ) {
     }
 
@@ -619,20 +615,19 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 )
             }
         }
-        // moa实现
-        if (sendAllNotify || request.notifyType?.contains(NotifyType.MOA.name) == true) {
-            if (!notifyTypeScope.contains(NotifyType.MOA.name)) {
-                logger.error("NotifyTemplate|NOT_FOUND|type=${NotifyType.MOA}|template=${request.templateCode}")
-            } else {
-                logger.info("send wework msg: ${commonNotifyMessageTemplateRecord.id}")
-                sendMoaNotifyMessage(request, commonNotifyMessageTemplateRecord.id)
-            }
-        }
+        // 其余内部实现
+        sendOtherSpecialNotifyMessage(sendAllNotify, request, commonNotifyMessageTemplateRecord.id, notifyTypeScope)
 
         return Result(true)
     }
 
-    fun sendMoaNotifyMessage(request: SendNotifyMessageTemplateRequest, commonTemplateId: String) {}
+    fun sendOtherSpecialNotifyMessage(
+        sendAllNotify: Boolean,
+        request: SendNotifyMessageTemplateRequest,
+        templateId: String,
+        notifyTypeScope: String
+    ) {
+    }
 
     override fun completeNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
         // TODO("core暂无实现,需要支持时添加")
