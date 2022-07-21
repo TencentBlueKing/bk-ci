@@ -214,10 +214,8 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap)
             marketAtomDao.updateMarketAtomProps(context, atomId, props, userId)
-            val atomEnvRequests = atomPkgInfoUpdateRequest.atomEnvRequests
-            atomEnvRequests.forEach { atomEnvRequest ->
-                marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomId, atomEnvRequest)
-            }
+            marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
+            marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomPkgInfoUpdateRequest.atomEnvRequests)
         }
         return Result(true)
     }
