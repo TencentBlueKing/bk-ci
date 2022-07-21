@@ -27,12 +27,10 @@
 
 package com.tencent.devops.stream.trigger.mq.streamTrigger
 
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.stream.trigger.StreamYamlTrigger
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
