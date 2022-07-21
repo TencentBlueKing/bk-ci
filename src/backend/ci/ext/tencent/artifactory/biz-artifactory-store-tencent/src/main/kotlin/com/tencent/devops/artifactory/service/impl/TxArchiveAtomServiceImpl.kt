@@ -42,7 +42,6 @@ class TxArchiveAtomServiceImpl(
         throw UnsupportedOperationException()
     }
 
-
     override fun deleteAtom(userId: String, projectCode: String, atomCode: String) {
         bkRepoClient.delete(
             userId = bkRepoStoreConfig.bkrepoStoreUserName,
@@ -51,5 +50,4 @@ class TxArchiveAtomServiceImpl(
             path = atomCode
         )
     }
-
 }
