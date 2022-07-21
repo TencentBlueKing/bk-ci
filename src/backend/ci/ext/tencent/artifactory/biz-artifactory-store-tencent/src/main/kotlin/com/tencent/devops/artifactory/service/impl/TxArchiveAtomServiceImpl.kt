@@ -44,7 +44,12 @@ class TxArchiveAtomServiceImpl(
 
 
     override fun deleteAtom(userId: String, projectCode: String, atomCode: String) {
-        bkRepoClient.delete(userId, bkRepoStoreConfig.bkrepoStoreProjectName, BkRepoEnum.PLUGIN.repoName, atomCode)
+        bkRepoClient.delete(
+            userId = bkRepoStoreConfig.bkrepoStoreUserName,
+            projectId = bkRepoStoreConfig.bkrepoStoreProjectName,
+            repoName = BkRepoEnum.PLUGIN.repoName,
+            path = atomCode
+        )
     }
 
 }
