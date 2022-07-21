@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @Primary
 @RestController
-class ServiceArchiveAtomResourceImpl @Autowired constructor(
+class ServiceTxArchiveAtomResourceImpl @Autowired constructor(
     private val archiveAtomService: ArchiveAtomService,
     private val bkRepoClient: BkRepoClient,
     private val bkRepoStoreConfig: BkRepoStoreConfig
