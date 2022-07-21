@@ -119,7 +119,7 @@ object TemplateYamlUtil {
                 if (parameters != null) {
                     val valueName = param.name
 
-                    if (param.name.contains(".")){
+                    if (param.name.contains(".")) {
                         logger.info("PARAMETERS|NAME|WARNING|${param.name}")
                     }
 
