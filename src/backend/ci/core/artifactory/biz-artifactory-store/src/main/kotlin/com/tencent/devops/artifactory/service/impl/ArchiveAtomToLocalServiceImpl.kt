@@ -32,7 +32,6 @@ import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import org.apache.commons.io.FileUtils
-import org.apache.commons.io.file.PathUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
