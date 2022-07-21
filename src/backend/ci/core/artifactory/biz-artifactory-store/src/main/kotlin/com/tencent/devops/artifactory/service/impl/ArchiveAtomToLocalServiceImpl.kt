@@ -32,11 +32,13 @@ import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import org.apache.commons.io.FileUtils
+import org.apache.commons.io.file.PathUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
+import org.springframework.util.FileSystemUtils
 import java.io.File
 import java.io.InputStream
 import java.net.URLDecoder
@@ -59,6 +61,11 @@ class ArchiveAtomToLocalServiceImpl : ArchiveAtomServiceImpl() {
         val content = if (file.exists()) FileUtils.readFileToString(file) else ""
         logger.info("getAtomFileContent content: $content")
         return content
+    }
+
+    override fun deleteAtom(userId: String, projectCode: String, atomCode: String) {
+        val filePath = "$BK_CI_ATOM_DIR/$projectCode/$atomCode"
+        FileSystemUtils.deleteRecursively(File(atomArchiveLocalBasePath, filePath))
     }
 
     override fun handleArchiveFile(
