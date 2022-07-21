@@ -98,7 +98,7 @@ stages:
       continue-on-error: null
       retry-times: null
       env: null
-      run: "${{ parameters.STEP3 }}"
+      run: ""
       runAdditionalOptions:
         shell: null
       checkout: null

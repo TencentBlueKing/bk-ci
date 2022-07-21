@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.expression.expression
 
+import com.tencent.devops.common.expression.SubNameValueEvaluateInfo
+
 interface IExpressionNode {
     fun evaluate(
         trace: ITraceWriter?,
@@ -36,14 +38,21 @@ interface IExpressionNode {
 
     /**
      * 只负责替换指定的nameValued和index
-     * 指定的nameValued计算后替换为 toJson 之后的字符串
-     * 其他的nameValued涉及到与指定的nameValue进行计算时，为null，不涉及计算时打印原样保持不变
-     * 运算符除index之外保持原样不变
-     * 函数保持原样不变（只能保持为函数原命名）
+     *
+     * 如果包含其他nameValued
+     * * 指定的nameValued计算后替换为 toJson 之后的字符串
+     * * 其他的nameValued涉及到与指定的nameValue进行计算时，为null，不涉及计算时打印原样保持不变
+     * * 运算符除index之外保持原样不变
+     * * 函数保持原样不变（只能保持为函数原命名）
+     *
+     * 如果不包含
+     * * 直接计算
+     * @return 返回 <值，是否完全替换完成>
      */
     fun subNameValueEvaluate(
         trace: ITraceWriter?,
         state: Any?,
-        options: EvaluationOptions?
-    ): String
+        options: EvaluationOptions?,
+        subInfo: SubNameValueEvaluateInfo
+    ): Pair<String, Boolean>
 }

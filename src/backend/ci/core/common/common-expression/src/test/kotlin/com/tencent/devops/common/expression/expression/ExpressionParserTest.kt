@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.expression.expression
 
+import com.tencent.devops.common.expression.DistinguishType
 import com.tencent.devops.common.expression.ExecutionContext
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
@@ -36,10 +37,8 @@ import com.tencent.devops.common.expression.context.BooleanContextData
 import com.tencent.devops.common.expression.context.ContextValueNode
 import com.tencent.devops.common.expression.context.DictionaryContextData
 import com.tencent.devops.common.expression.context.NumberContextData
-import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
-import com.tencent.devops.common.expression.utils.ExpressionJsonUtil
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
@@ -408,7 +407,7 @@ class ExpressionParserTest {
         }
     }
 
-    @DisplayName("部分参数替换测试")
+    @DisplayName("部分参数替换测试(不含区分)")
     @ParameterizedTest
     @ValueSource(
         strings = [
@@ -422,28 +421,45 @@ class ExpressionParserTest {
             "startsWith(parameters.str, '121') => true"
         ]
     )
+    fun subNameValueEvaluateTestDistinguishString(subDistinguish: String) {
+        val items = subDistinguish.split(" => ")
+        val exp = items[0]
+        val result = items[1]
+        val subInfo = SubNameValueEvaluateInfo(distinguishTypes = null)
+        val tree = ExpressionParser.createSubNameValueEvaluateTree(exp, null, parametersNameValue, null, subInfo)!!
+        val res = tree.subNameValueEvaluate(null, parametersEv, null, subInfo).first
+        Assertions.assertEquals(result, res)
+
+        if (items.size == 3) {
+            valuesTest(res + " => " + items[2])
+        }
+    }
+
+    @DisplayName("部分参数替换测试(区分逻辑)")
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "parameters => '{\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"str\":\"12138\"}}}'",
+            "parameters.arry => '[12312.12,false,\"12138\",[\"12138\"]]'",
+            "fromJSON(parameters['arry']) == variables.arry => (fromJSON('[12312.12,false,\"12138\",[\"12138\"]]') == variables.arry) => false",
+            "fromJSON(parameters['arry'])[0] == variables.arry[0] => (fromJSON('[12312.12,false,\"12138\",[\"12138\"]]')[0] == variables.arry[0]) => true",
+            "parameters.doub => '12312.12'",
+            "parameters.bool => 'false'",
+            "parameters.str => '12138'",
+            "startsWith(parameters.str, '121') => 'true'"
+        ]
+    )
     fun subNameValueEvaluateTest(sub: String) {
         val items = sub.split(" => ")
         val exp = items[0]
         val result = items[1]
-        val subInfo = SubNameValueEvaluateInfo()
+        val subInfo = SubNameValueEvaluateInfo(distinguishTypes = DistinguishType.values().toSet())
         val tree = ExpressionParser.createSubNameValueEvaluateTree(exp, null, parametersNameValue, null, subInfo)!!
-        val res: Any = if (!subInfo.hasOtherNameValue) {
-            val re = tree.evaluate(null, parametersEv, null).value
-            val ress = if (re is PipelineContextData) {
-                ExpressionJsonUtil.getObjectMapper().writeValueAsString(re.toJson())
-            } else {
-                re.toString()
-            }
-            Assertions.assertEquals(result, ress)
-            return
-        } else {
-            val re = tree.subNameValueEvaluate(null, parametersEv, null)
-            Assertions.assertEquals(result, re)
-            re
-        }
+        val res = tree.subNameValueEvaluate(null, parametersEv, null, subInfo).first
+        Assertions.assertEquals(result, res)
+
         if (items.size == 3) {
-            valuesTest(res.toString() + " => " + items[2])
+            valuesTest(res + " => " + items[2])
         }
     }
 
