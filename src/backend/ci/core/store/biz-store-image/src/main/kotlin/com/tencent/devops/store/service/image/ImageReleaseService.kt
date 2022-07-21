@@ -50,6 +50,7 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineInitResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
@@ -145,6 +146,9 @@ abstract class ImageReleaseService {
 
     @Autowired
     lateinit var imageFeatureDao: ImageFeatureDao
+
+    @Autowired
+    lateinit var businessConfigDao: BusinessConfigDao
 
     @Autowired
     lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
@@ -454,8 +458,7 @@ abstract class ImageReleaseService {
                 runCheckImagePipeline(
                     context = context,
                     userId = userId,
-                    imageId = imageId,
-                    sendCheckResultNotify = sendCheckResultNotify
+                    imageId = imageId
                 )
             } else {
                 // 直接置为测试中状态
@@ -566,16 +569,14 @@ abstract class ImageReleaseService {
         runCheckImagePipeline(
             context = context,
             userId = userId,
-            imageId = imageId,
-            sendCheckResultNotify = false
+            imageId = imageId
         )
     }
 
     private fun runCheckImagePipeline(
         context: DSLContext,
         userId: String,
-        imageId: String,
-        sendCheckResultNotify: Boolean = true
+        imageId: String
     ) {
         logger.info("runCheckImagePipeline userId is:$userId,imageId is:$imageId")
         val imageRecord = imageDao.getImage(context, imageId)!!
@@ -627,14 +628,27 @@ abstract class ImageReleaseService {
         }
         val imageSourceType = imageRecord.imageSourceType
         if (null == imagePipelineRelRecord) {
+            val pipelineModelConfig = businessConfigDao.get(
+                dslContext = context,
+                business = StoreTypeEnum.IMAGE.name,
+                feature = "initBuildPipeline",
+                businessValue = "PIPELINE_MODEL"
+            )
+            var pipelineModel = pipelineModelConfig!!.configValue
+            val pipelineName = "am-$imageCode-${UUIDUtil.generate()}"
+            val paramMap = mapOf("pipelineName" to pipelineName)
+            // 将流水线模型中的变量替换成具体的值
+            paramMap.forEach { (key, value) ->
+                pipelineModel = pipelineModel.replace("#{$key}", value)
+            }
             val checkImageInitPipelineReq = CheckImageInitPipelineReq(
+                pipelineModel = pipelineModel,
                 imageCode = imageCode,
                 imageName = dockerImageName,
                 version = version,
                 imageType = imageSourceType,
                 registryUser = userName,
-                registryPwd = password,
-                sendNotify = sendCheckResultNotify
+                registryPwd = password
             )
             val checkImageInitPipelineResp = client.get(ServicePipelineInitResource::class)
                 .initCheckImagePipeline(userId, projectCode!!, checkImageInitPipelineReq).data
@@ -642,11 +656,11 @@ abstract class ImageReleaseService {
             if (null != checkImageInitPipelineResp) {
                 storePipelineRelDao.add(context, imageCode, StoreTypeEnum.IMAGE, checkImageInitPipelineResp.pipelineId)
                 marketImageDao.updateImageStatusById(
-                    context,
-                    imageId,
-                    checkImageInitPipelineResp.imageCheckStatus.status.toByte(),
-                    userId,
-                    null
+                    dslContext = context,
+                    imageId = imageId,
+                    imageStatus = checkImageInitPipelineResp.imageCheckStatus.status.toByte(),
+                    userId = userId,
+                    msg = null
                 )
                 val buildId = checkImageInitPipelineResp.buildId
                 if (null != buildId) {
@@ -659,15 +673,9 @@ abstract class ImageReleaseService {
             startParams["imageCode"] = imageCode
             startParams["imageName"] = dockerImageName
             startParams["version"] = version
-            if (null != imageSourceType) {
-                startParams["imageType"] = imageSourceType
-            }
-            if (null != userName) {
-                startParams["registryUser"] = userName
-            }
-            if (null != password) {
-                startParams["registryPwd"] = password
-            }
+            imageSourceType?.let { startParams["imageType"] = it }
+            userName?.let { startParams["registryUser"] = it }
+            password?.let { startParams["registryPwd"] = it }
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
                 userId = userId,
                 projectId = projectCode!!,
@@ -680,19 +688,19 @@ abstract class ImageReleaseService {
             if (null != buildIdObj) {
                 storePipelineBuildRelDao.add(context, imageId, imagePipelineRelRecord.pipelineId, buildIdObj.id)
                 marketImageDao.updateImageStatusById(
-                    context,
-                    imageId,
-                    ImageStatusEnum.CHECKING.status.toByte(),
-                    userId,
-                    null
+                    dslContext = context,
+                    imageId = imageId,
+                    imageStatus = ImageStatusEnum.CHECKING.status.toByte(),
+                    userId = userId,
+                    msg = null
                 ) // 验证中
             } else {
                 marketImageDao.updateImageStatusById(
-                    context,
-                    imageId,
-                    ImageStatusEnum.CHECK_FAIL.status.toByte(),
-                    userId,
-                    null
+                    dslContext = context,
+                    imageId = imageId,
+                    imageStatus = ImageStatusEnum.CHECK_FAIL.status.toByte(),
+                    userId = userId,
+                    msg = null
                 ) // 验证失败
             }
         }
@@ -765,7 +773,6 @@ abstract class ImageReleaseService {
     fun getProcessInfo(userId: String, imageId: String): Result<StoreProcessInfo> {
         logger.info("getProcessInfo imageId: $imageId")
         val record = imageDao.getImage(dslContext, imageId)
-        logger.info("getProcessInfo record: $record")
         if (null == record) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(imageId))
         } else {
