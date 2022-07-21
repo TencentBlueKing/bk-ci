@@ -83,16 +83,14 @@ class StreamTriggerMQConfig {
         @Autowired streamTriggerListener: StreamTriggerListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(
-            streamTriggerListener,
-            streamTriggerListener::listenStreamTriggerEvent.name
-        )
-        adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
             queue = requestTriggerQueue,
             rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
+            adapter = MessageListenerAdapter(
+                streamTriggerListener,
+                streamTriggerListener::listenStreamTriggerEvent.name
+            ).also { it.setMessageConverter(messageConverter) },
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
             concurrency = 30,
