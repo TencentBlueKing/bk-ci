@@ -937,7 +937,7 @@ class QualityRuleCheckService @Autowired constructor(
                     if (codeccMetaList.size > 1) {
                         indicatorsCopy.remove(indicator)
                         codeccMetaList.values.forEach { codeccMeta ->
-                            if (codeccMeta.contains(indicator.metadataList)) {
+                            if (codeccMeta.map { it.enName }.contains(indicator.metadataList.map { it.enName })) {
                                 handleCodeCCPlugin(indicator, codeccMeta, indicatorsCopy)
                             }
                         }
