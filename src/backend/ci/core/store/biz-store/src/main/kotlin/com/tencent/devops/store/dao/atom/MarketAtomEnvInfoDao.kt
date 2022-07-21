@@ -267,9 +267,7 @@ class MarketAtomEnvInfoDao {
             if (!atomEnvRequest.runtimeVersion.isNullOrEmpty()) {
                 baseStep.set(RUNTIME_VERSION, atomEnvRequest.runtimeVersion)
             }
-            if (atomEnvRequest.defaultFlag != null) {
-                baseStep.set(DEFAULT_FLAG, atomEnvRequest.defaultFlag)
-            }
+            atomEnvRequest.defaultFlag?.let { baseStep.set(DEFAULT_FLAG, it) }
             val atomPostInfo = atomEnvRequest.atomPostInfo
             baseStep.set(POST_ENTRY_PARAM, atomPostInfo?.postEntryParam)
             baseStep.set(POST_CONDITION, atomPostInfo?.postCondition)
