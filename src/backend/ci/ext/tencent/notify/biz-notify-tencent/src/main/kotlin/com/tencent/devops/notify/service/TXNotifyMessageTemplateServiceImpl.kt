@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -92,7 +91,7 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
             if (!notifyTypeScope.contains("MOA")) {
                 logger.error("NotifyTemplate|NOT_FOUND|type=MOA|template=${request.templateCode}")
             } else {
-                logger.info("send wework msg: ${templateId}")
+                logger.info("send wework msg: $templateId")
                 sendMoaNotifyMessage(request, templateId)
             }
         }
@@ -150,7 +149,8 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                     MoaWorkItemCreateAction(
                         displayName = "同意",
                         value = "agree"
-                    ), MoaWorkItemCreateAction(
+                    ),
+                        MoaWorkItemCreateAction(
                         displayName = "驳回",
                         value = "reject"
                     )
