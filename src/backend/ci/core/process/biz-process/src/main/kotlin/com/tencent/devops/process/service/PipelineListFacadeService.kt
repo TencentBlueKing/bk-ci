@@ -83,6 +83,7 @@ import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineStatusService
 import com.tencent.devops.process.service.view.PipelineViewService
+import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
@@ -233,7 +234,7 @@ class PipelineListFacadeService @Autowired constructor(
                 projectId = projectId,
                 instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
                 templateIds = templateIdList
-            ).map { it.pipelineId }
+            ).map { it[KEY_PIPELINE_ID] as String }
             resultPipelineIds.addAll(templatePipelineIds)
         }
 
@@ -1015,7 +1016,7 @@ class PipelineListFacadeService @Autowired constructor(
                 dslContext = dslContext,
                 pipelineIds = pipelineIds,
                 projectId = projectId
-            ).map { it.pipelineId } // TODO: 须将是否模板转为PIPELINE基本属性
+            ).map { it.value1() } // TODO: 须将是否模板转为PIPELINE基本属性
             watcher.stop()
             val simplePipelineIds = mutableListOf<String>()
             pipelines.forEach {
