@@ -32,6 +32,5 @@ enum class NotifyType {
     EMAIL,
     WECHAT,
     SMS,
-    WEWORK,
-    MOA
+    WEWORK
 }

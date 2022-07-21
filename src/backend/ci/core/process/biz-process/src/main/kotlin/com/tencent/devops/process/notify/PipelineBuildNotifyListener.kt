@@ -106,7 +106,7 @@ class PipelineBuildNotifyListener @Autowired constructor(
     }
 
     /**
-     * 取消审批单。目前仅支持取消moa
+     * 取消审批单.
      */
     fun PipelineBuildNotifyEvent.completeReviewNotify() {
         try {
