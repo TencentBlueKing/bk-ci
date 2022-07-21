@@ -423,7 +423,7 @@ class PipelineViewService @Autowired constructor(
                 dslContext = context ?: dslContext,
                 projectId = projectId,
                 name = pipelineView.name
-            ) > 0
+            ) > if (isCreate) 0 else 1
         ) {
             logger.warn("duplicate name , project:$projectId , user:$userId , view:$pipelineView")
             throw ErrorCodeException(
