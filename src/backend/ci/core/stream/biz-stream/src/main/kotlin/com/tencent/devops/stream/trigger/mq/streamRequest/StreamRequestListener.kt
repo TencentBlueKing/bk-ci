@@ -61,14 +61,6 @@ class StreamRequestListener @Autowired constructor(
         ]
     )
     fun listenStreamRequestEvent(streamRequestEvent: StreamRequestEvent) {
-        val traceId = MDC.get(TraceTag.BIZID)
-        if (traceId.isNullOrEmpty()) {
-            if (!streamRequestEvent.traceId.isNullOrEmpty()) {
-                MDC.put(TraceTag.BIZID, streamRequestEvent.traceId)
-            } else {
-                MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-            }
-        }
         try {
             steamRequestService.externalCodeGitBuild(
                 eventType = streamRequestEvent.eventType,
@@ -76,8 +68,6 @@ class StreamRequestListener @Autowired constructor(
             )
         } catch (ignore: Throwable) {
             logger.warn("Fail to request stream $streamRequestEvent", ignore)
-        } finally {
-            MDC.remove(TraceTag.BIZID)
         }
     }
 

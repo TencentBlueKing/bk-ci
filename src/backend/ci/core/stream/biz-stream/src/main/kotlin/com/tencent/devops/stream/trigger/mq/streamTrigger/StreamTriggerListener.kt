@@ -49,19 +49,9 @@ class StreamTriggerListener @Autowired constructor(
 
     fun listenStreamTriggerEvent(event: StreamTriggerEvent) {
         try {
-            val traceId = MDC.get(TraceTag.BIZID)
-            if (traceId.isNullOrEmpty()) {
-                if (!event.traceId.isNullOrEmpty()) {
-                    MDC.put(TraceTag.BIZID, event.traceId)
-                } else {
-                    MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-                }
-            }
             run(event)
         } catch (e: Throwable) {
             logger.error("listenStreamTriggerEvent|error", e)
-        } finally {
-            MDC.remove(TraceTag.BIZID)
         }
     }
 
