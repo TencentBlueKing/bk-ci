@@ -1115,6 +1115,9 @@ class PipelineListFacadeService @Autowired constructor(
             emptyMap()
         }
 
+        // 获取view信息
+        val pipelineViewNameMap = pipelineViewGroupService.getViewNameMap(projectId, pipelineIds)
+
         // 完善数据
         finalPipelines(
             pipelines = pipelines,
@@ -1122,7 +1125,8 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineTemplateMap = pipelineTemplateMap,
             pipelineGroupLabel = pipelineGroupLabel,
             pipelineBuildSummaryMap = pipelineBuildSummaryMap,
-            pipelineSettingMap = pipelineSettingMap
+            pipelineSettingMap = pipelineSettingMap,
+            pipelineViewNameMap = pipelineViewNameMap
         )
 
         return pipelines
@@ -1134,7 +1138,8 @@ class PipelineListFacadeService @Autowired constructor(
         pipelineTemplateMap: Map<String, String>,
         pipelineGroupLabel: Map<String, List<PipelineGroupLabels>>,
         pipelineBuildSummaryMap: Map<String, TPipelineBuildSummaryRecord>,
-        pipelineSettingMap: Map<String, Record4<String, String, Int, String>>
+        pipelineSettingMap: Map<String, Record4<String, String, Int, String>>,
+        pipelineViewNameMap: Map<String, MutableList<String>>
     ) {
         pipelines.forEach {
             val pipelineId = it.pipelineId
@@ -1159,6 +1164,7 @@ class PipelineListFacadeService @Autowired constructor(
                 it.latestBuildId = pipelineBuildSummaryRecord.latestBuildId
                 it.latestBuildUserId = pipelineBuildSummaryRecord.latestStartUser ?: ""
                 it.latestBuildNumAlias = pipelineBuildSummaryRecord.buildNumAlias
+                it.viewNames = pipelineViewNameMap[it.pipelineId]
             }
             val pipelineSettingRecord = pipelineSettingMap[pipelineId]
             if (pipelineSettingRecord != null) {

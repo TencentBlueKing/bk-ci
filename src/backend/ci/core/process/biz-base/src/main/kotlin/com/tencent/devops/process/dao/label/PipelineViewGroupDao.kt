@@ -86,6 +86,19 @@ class PipelineViewGroupDao {
         }
     }
 
+    fun listByPipelineIds(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: Collection<String>
+    ): List<TPipelineViewGroupRecord> {
+        return with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.`in`(pipelineIds))
+                .fetch()
+        }
+    }
+
     fun countByPipelineId(
         dslContext: DSLContext,
         projectId: String,

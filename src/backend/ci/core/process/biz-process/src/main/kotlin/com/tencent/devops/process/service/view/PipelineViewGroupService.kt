@@ -61,6 +61,34 @@ class PipelineViewGroupService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation
 ) {
+    fun getViewNameMap(
+        projectId: String,
+        pipelineIds: MutableSet<String>
+    ): Map<String/*pipelineId*/, MutableList<String>/*viewNames*/> {
+        val pipelineViewGroups = pipelineViewGroupDao.listByPipelineIds(dslContext, projectId, pipelineIds)
+        if (pipelineViewGroups.isEmpty()) {
+            return emptyMap()
+        }
+        val viewIds = pipelineViewGroups.map { it.viewId }.toSet()
+        val views = pipelineViewDao.list(dslContext, projectId, viewIds)
+        if (viewIds.isEmpty()) {
+            return emptyMap()
+        }
+        val viewId2Name = views.filter { it.isProject }.associate { it.id to it.name }
+        val result = mutableMapOf<String, MutableList<String>>()
+        for (p in pipelineViewGroups) {
+            if (!viewId2Name.containsKey(p.viewId)) {
+                continue
+            }
+            if (!result.containsKey(p.pipelineId)) {
+                result[p.pipelineId] = mutableListOf()
+            }
+            result[p.pipelineId]!!.add(viewId2Name[p.viewId]!!)
+        }
+
+        return result
+    }
+
     fun addViewGroup(projectId: String, userId: String, pipelineView: PipelineViewForm): String {
         checkPermission(userId, projectId, pipelineView.projected)
         var viewId = 0L
