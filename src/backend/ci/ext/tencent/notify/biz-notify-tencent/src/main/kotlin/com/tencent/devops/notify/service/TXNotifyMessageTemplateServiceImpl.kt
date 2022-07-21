@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -39,6 +40,7 @@ import com.tencent.devops.notify.dao.CommonNotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.TNotifyMessageTemplateDao
 import com.tencent.devops.notify.pojo.NotifyTemplateMessage
+import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.support.api.service.ServiceMessageApproveResource
 import com.tencent.devops.support.model.approval.CompleteMoaWorkItemRequest
@@ -80,7 +82,23 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(TXNotifyMessageTemplateServiceImpl::class.java)
 
-    override fun sendMoaNotifyMessage(
+    override fun sendOtherSpecialNotifyMessage(
+        sendAllNotify: Boolean,
+        request: SendNotifyMessageTemplateRequest,
+        templateId: String,
+        notifyTypeScope: String
+    ) {
+        if (sendAllNotify || request.notifyType?.contains("MOA") == true) {
+            if (!notifyTypeScope.contains("MOA")) {
+                logger.error("NotifyTemplate|NOT_FOUND|type=MOA|template=${request.templateCode}")
+            } else {
+                logger.info("send wework msg: ${templateId}")
+                sendMoaNotifyMessage(request, templateId)
+            }
+        }
+    }
+
+    private fun sendMoaNotifyMessage(
         request: SendNotifyMessageTemplateRequest,
         commonTemplateId: String
     ) {
@@ -187,7 +205,40 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun updateMoaNotifyMessageTemplate(
+    override fun updateOtherNotifyMessageTemplate(
+        notifyMessageTemplateRequest: NotifyTemplateMessageRequest,
+        notifyTypeScopeSet: MutableSet<String>
+    ): Boolean {
+        var hasMoa = false
+        // 判断提交的数据中是否存在同样类型的
+        notifyMessageTemplateRequest.msg.forEach {
+            if (it.notifyTypeScope.contains("MOA") && !hasMoa) {
+                hasMoa = true
+                notifyTypeScopeSet.add("MOA")
+            } else if (it.notifyTypeScope.contains("MOA") && hasMoa) {
+                return false
+            }
+        }
+        return true
+    }
+
+    override fun updateOtherSpecialTemplate(
+        it: NotifyTemplateMessage,
+        templateId: String,
+        uid: String,
+        userId: String
+    ) {
+        if (it.notifyTypeScope.contains("MOA")) {
+            updateMoaNotifyMessageTemplate(
+                id = templateId,
+                newId = uid,
+                userId = userId,
+                addNotifyTemplateMessage = it
+            )
+        }
+    }
+
+    private fun updateMoaNotifyMessageTemplate(
         id: String,
         newId: String,
         userId: String,
