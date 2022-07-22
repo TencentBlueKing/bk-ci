@@ -176,11 +176,17 @@ class PipelineViewGroupService @Autowired constructor(
             return emptyList()
         }
         val isStatic = view.viewType == PipelineViewType.STATIC
+        val pipelineIds = mutableListOf<String>()
         val viewGroups = pipelineViewGroupDao.listByViewId(dslContext, projectId, viewId)
         if (viewGroups.isEmpty()) {
-            return if (isStatic) emptyList() else initDynamicViewGroup(view, view.createUser)
+            pipelineIds.addAll(if (isStatic) emptyList() else initDynamicViewGroup(view, view.createUser))
+        } else {
+            pipelineIds.addAll(viewGroups.map { it.pipelineId }.toList())
         }
-        return viewGroups.map { it.pipelineId }.toList()
+        if (pipelineIds.isEmpty()) {
+            pipelineIds.add("##NONE##") // 特殊标志,避免有些判空逻辑导致过滤器没有执行
+        }
+        return pipelineIds
     }
 
     fun updateGroupAfterPipelineCreate(projectId: String, pipelineId: String, userId: String) {
