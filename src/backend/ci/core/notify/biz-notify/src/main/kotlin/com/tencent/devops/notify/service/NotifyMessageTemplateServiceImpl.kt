@@ -504,7 +504,10 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         // 邮件消息
         if (sendAllNotify || request.notifyType?.contains(NotifyType.EMAIL.name) == true) {
             if (!notifyTypeScope.contains(NotifyType.EMAIL.name)) {
-                logger.error("NotifyTemplate|NOT_FOUND|type=${NotifyType.EMAIL}|template=${request.templateCode}")
+                logger.warn(
+                    "COMMON_NOTIFY_MESSAGE_TEMPLATE_NOT_FOUND|If needed, add on the OP" +
+                        "|type=${NotifyType.EMAIL}|template=${request.templateCode}"
+                )
             } else {
                 val emailTplRecord = notifyMessageTemplateDao.getEmailNotifyMessageTemplate(
                     dslContext,
@@ -527,7 +530,10 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         // 企业微信消息
         if (sendAllNotify || request.notifyType?.contains(NotifyType.RTX.name) == true) {
             if (!notifyTypeScope.contains(NotifyType.RTX.name)) {
-                logger.error("NotifyTemplate|NOT_FOUND|type=${NotifyType.RTX}|template=${request.templateCode}")
+                logger.warn(
+                    "COMMON_NOTIFY_MESSAGE_TEMPLATE_NOT_FOUND|If needed, add on the OP" +
+                        "|type=${NotifyType.RTX}|template=${request.templateCode}"
+                )
             } else {
                 logger.info("send wework msg: ${commonNotifyMessageTemplateRecord.id}")
                 val weworkTplRecord =
@@ -551,7 +557,10 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         // 微信消息
         if (sendAllNotify || request.notifyType?.contains(NotifyType.WECHAT.name) == true) {
             if (!notifyTypeScope.contains(NotifyType.WECHAT.name)) {
-                logger.error("NotifyTemplate|NOT_FOUND|type=${NotifyType.WECHAT}|template=${request.templateCode}")
+                logger.warn(
+                    "COMMON_NOTIFY_MESSAGE_TEMPLATE_NOT_FOUND|If needed, add on the OP" +
+                        "|type=${NotifyType.WECHAT}|template=${request.templateCode}"
+                )
             } else {
                 val wechatTplRecord = notifyMessageTemplateDao.getWechatNotifyMessageTemplate(
                     dslContext = dslContext,
@@ -571,7 +580,10 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         // 新企业微信实现
         if (sendAllNotify || request.notifyType?.contains(NotifyType.WEWORK.name) == true) {
             if (!notifyTypeScope.contains(NotifyType.WEWORK.name)) {
-                logger.error("NotifyTemplate|NOT_FOUND|type=${NotifyType.WEWORK}|template=${request.templateCode}")
+                logger.warn(
+                    "COMMON_NOTIFY_MESSAGE_TEMPLATE_NOT_FOUND|If needed, add on the OP" +
+                        "|type=${NotifyType.WEWORK}|template=${request.templateCode}"
+                )
             } else {
                 val weworkTplRecord = notifyMessageTemplateDao.getWeworkNotifyMessageTemplate(
                     dslContext = dslContext,
@@ -592,9 +604,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     }
 
     override fun getNotifyMessageByTemplate(request: NotifyMessageContextRequest): Result<NotifyContext?> {
-        logger.info("getNotifyMessageByTemplate|templateCode=${request.templateCode}|" +
-            "notifyTypeEnum=${request.notifyType.name}|" +
-            "titleParams=${request.titleParams}|bodyParams=${request.bodyParams}")
+        logger.info(
+            "getNotifyMessageByTemplate|templateCode=${request.templateCode}|" +
+                "notifyTypeEnum=${request.notifyType.name}|" +
+                "titleParams=${request.titleParams}|bodyParams=${request.bodyParams}"
+        )
         // 1.查出消息模板
         val commonNotifyMessageTemplateRecord =
             commonNotifyMessageTemplateDao.getCommonNotifyMessageTemplateByCode(dslContext, request.templateCode)
@@ -651,7 +665,8 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         // 企业微信通知触发人
         val triggerUserId = sendNotifyMessageTemplateRequest.bodyParams?.get("cc")
         if (null != triggerUserId && "" != triggerUserId &&
-            !sendNotifyMessageTemplateRequest.receivers.contains(triggerUserId)) {
+            !sendNotifyMessageTemplateRequest.receivers.contains(triggerUserId)
+        ) {
             rtxNotifyMessage.addReceiver(triggerUserId)
         }
         rtxNotifyMessage.title = title

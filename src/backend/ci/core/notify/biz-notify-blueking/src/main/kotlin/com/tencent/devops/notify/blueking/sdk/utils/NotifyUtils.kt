@@ -94,7 +94,7 @@ class NotifyUtils constructor(
             }
             return resultBean
         } catch (ignore: Exception) {
-            logger.error("notify send msg failed , message: ${ignore.message}")
+            logger.error("notify send msg failed , message: ${ignore.message}", ignore)
             throw ErrorCodeException(
                 errorCode = ERROR_NOTIFY_SEND_FAIL,
                 defaultMessage = "notify send msg failed: ${ignore.message}"
