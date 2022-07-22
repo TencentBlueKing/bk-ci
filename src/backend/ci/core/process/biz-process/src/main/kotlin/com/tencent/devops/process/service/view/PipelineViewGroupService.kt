@@ -396,6 +396,7 @@ class PipelineViewGroupService @Autowired constructor(
         // 获取新流水线组的流水线
         val newPipelineMap = if (pipelineView.viewType == PipelineViewType.DYNAMIC) {
             val previewCondition = TPipelineViewRecord()
+            previewCondition.logic = pipelineView.logic.name
             previewCondition.filterByPipeineName = StringUtils.EMPTY
             previewCondition.filterByCreator = StringUtils.EMPTY
             previewCondition.filters = objectMapper
