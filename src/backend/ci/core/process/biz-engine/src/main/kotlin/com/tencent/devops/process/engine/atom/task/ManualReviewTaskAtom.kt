@@ -95,19 +95,19 @@ class ManualReviewTaskAtom(
 
         // 开始进入人工审核步骤，需要打印日志，并发送通知给审核人
         buildLogPrinter.addYellowLine(
-            buildId = task.buildId, message = "============步骤等待审核============",
+            buildId = task.buildId, message = "============步骤等待审核(Pending approval)============",
             tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "待审核人：$reviewUsers",
+            buildId = task.buildId, message = "待审核人(Reviewers)：$reviewUsers",
             tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "审核说明：$reviewDesc",
+            buildId = task.buildId, message = "审核说明(Description)：$reviewDesc",
             tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = buildId, message = "审核参数：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
+            buildId = buildId, message = "审核参数(Params)：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
             tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
 
@@ -182,11 +182,11 @@ class ManualReviewTaskAtom(
         val response = when (ManualReviewAction.valueOf(manualAction)) {
             ManualReviewAction.PROCESS -> {
                 buildLogPrinter.addLine(
-                    buildId = buildId, message = "审核结果：继续",
+                    buildId = buildId, message = "审核结果：继续(Approve)",
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
                 buildLogPrinter.addLine(
-                    buildId = buildId, message = "审核参数：${getParamList(taskParam)}",
+                    buildId = buildId, message = "审核参数(Params)：${getParamList(taskParam)}",
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
                 pipelineEventDispatcher.dispatch(
@@ -202,7 +202,7 @@ class ManualReviewTaskAtom(
             }
             ManualReviewAction.ABORT -> {
                 buildLogPrinter.addRedLine(
-                    buildId = buildId, message = "审核结果：驳回",
+                    buildId = buildId, message = "审核结果：驳回(Reject)",
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
                 pipelineEventDispatcher.dispatch(
@@ -298,15 +298,15 @@ class ManualReviewTaskAtom(
     ): Any? {
         val suggestContent = taskParam[BS_MANUAL_ACTION_SUGGEST]
         buildLogPrinter.addYellowLine(
-            buildId = task.buildId, message = "============步骤审核结束============",
+            buildId = task.buildId, message = "============步骤审核结束(Final approval)============",
             tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "审核人：$manualActionUserId",
+            buildId = task.buildId, message = "审核人(Reviewer)：$manualActionUserId",
             tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "审核意见：$suggestContent",
+            buildId = task.buildId, message = "审核意见(Review comments)：$suggestContent",
             tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         return suggestContent
