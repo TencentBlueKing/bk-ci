@@ -215,7 +215,7 @@ object ScriptYmlUtils {
                 val condition = line.substring(line.indexOfFirst { it == '"' } + 1 until line.length).trimEnd()
                     .removeSuffix("\"")
 
-                logger.info("IF|CONDITION|${condition}")
+                logger.info("IF|CONDITION|$condition")
 
                 // 去掉花括号
                 val baldExpress = condition.replace("\${{", "").replace("}}", "").trim()
