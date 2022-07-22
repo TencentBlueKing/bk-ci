@@ -57,7 +57,7 @@ class ApigwSignResourceV4Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<SignHistory>> {
-        logger.info("get the sign task list by user($userId)")
+        logger.info("OPENAPI_SIGN_V4|$userId|get the sign task list|$startTime|$endTime|$page|$pageSize")
         return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).getHistorySign(
             userId = userId,
             startTime = startTime,
@@ -75,7 +75,7 @@ class ApigwSignResourceV4Impl @Autowired constructor(
         pipelineId: String?,
         buildId: String
     ): Result<IpaUploadInfo> {
-        logger.info("get the pipeline($pipelineId) of project($projectId) getSignToken by user($userId)")
+        logger.info("OPENAPI_SIGN_V4|$userId|get sign token|$projectId|$pipelineId|$buildId")
         return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).getSignToken(
             userId = userId,
             projectId = projectId,
@@ -90,7 +90,7 @@ class ApigwSignResourceV4Impl @Autowired constructor(
         userId: String,
         resignId: String
     ): Result<String> {
-        logger.info("get sign status: the resignId($resignId)")
+        logger.info("OPENAPI_SIGN_V4|$userId|get sign status|$resignId")
         return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).getSignStatus(resignId)
     }
 
@@ -100,7 +100,7 @@ class ApigwSignResourceV4Impl @Autowired constructor(
         userId: String,
         resignId: String
     ): Result<SignDetail> {
-        logger.info("get sign detail: the resignId($resignId)")
+        logger.info("OPENAPI_SIGN_V4|$userId|get sign detail|$resignId")
         return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).getSignDetail(resignId)
     }
 
@@ -110,7 +110,7 @@ class ApigwSignResourceV4Impl @Autowired constructor(
         userId: String,
         resignId: String
     ): Result<String> {
-        logger.info("get sign download url: the resignId($resignId)")
+        logger.info("OPENAPI_SIGN_V4|$userId|get sign download url|$resignId")
         return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).downloadUrl(resignId)
     }
 
