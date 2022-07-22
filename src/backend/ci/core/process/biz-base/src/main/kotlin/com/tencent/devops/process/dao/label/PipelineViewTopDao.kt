@@ -27,9 +27,65 @@
 
 package com.tencent.devops.process.dao.label
 
+import com.tencent.devops.model.process.tables.TPipelineViewTop
+import com.tencent.devops.model.process.tables.records.TPipelineViewTopRecord
+import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class PipelineViewTopDao {
-    // TODO
+    fun add(
+        dslContext: DSLContext,
+        projectId: String,
+        viewId: Long,
+        userId: String
+    ) {
+        with(TPipelineViewTop.T_PIPELINE_VIEW_TOP) {
+            val now = LocalDateTime.now()
+            dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                VIEW_ID,
+                CREATOR,
+                CREATE_TIME,
+                UPDATE_TIME
+            ).values(
+                projectId,
+                viewId,
+                userId,
+                now,
+                now
+            ).execute()
+        }
+    }
+
+    fun remove(
+        dslContext: DSLContext,
+        projectId: String,
+        viewId: Long,
+        userId: String
+    ) {
+        with(TPipelineViewTop.T_PIPELINE_VIEW_TOP) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(VIEW_ID.eq(viewId))
+                .and(CREATOR.eq(userId))
+                .execute()
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext,
+        projectId: String,
+        userId: String
+    ): List<TPipelineViewTopRecord> {
+        with(TPipelineViewTop.T_PIPELINE_VIEW_TOP) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(CREATOR.eq(userId))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
+        }
+    }
 }

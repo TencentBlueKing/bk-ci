@@ -43,6 +43,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineViewUserLastViewDao
 import com.tencent.devops.process.dao.PipelineViewUserSettingsDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
+import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
@@ -73,14 +74,14 @@ class PipelineViewService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val pipelineViewDao: PipelineViewDao,
+    private val pipelineViewTopDao: PipelineViewTopDao,
     private val pipelineViewUserSettingDao: PipelineViewUserSettingsDao,
     private val pipelineViewLastViewDao: PipelineViewUserLastViewDao,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineGroupService: PipelineGroupService,
     private val client: Client
 ) {
-    private val PROJECT_VIEW_LIMIT = 200
-    private val PERSONAL_VIEW_LIMIT = 100
+
 
     fun addUsingView(userId: String, projectId: String, viewId: String) {
         pipelineViewLastViewDao.save(
@@ -279,7 +280,7 @@ class PipelineViewService @Autowired constructor(
     }
 
     fun getViews(userId: String, projectId: String): List<PipelineNewViewSummary> {
-        val views = pipelineViewDao.listProjectOrUser(
+        val views = pipelineViewDao.listAll(
             dslContext = dslContext,
             projectId = projectId,
             isProject = true,
@@ -540,10 +541,82 @@ class PipelineViewService @Autowired constructor(
     private fun encode(id: Long) = HashUtil.encodeLongId(id)
 
     private fun decode(id: String) = HashUtil.decodeIdToLong(id)
+    fun getProjectViews(userId: String, projectId: String): List<PipelineNewViewSummary> {
+        val views = pipelineViewDao.listProjectOrUser(
+            dslContext = dslContext,
+            projectId = projectId,
+            isProject = true,
+            userId = userId
+        )
+        var score = 1
+        val viewScoreMap = pipelineViewTopDao.list(dslContext, projectId, userId).associate { it.viewId to score++ }
+
+        return views.sortedBy {
+            viewScoreMap[it.id] ?: Int.MAX_VALUE
+        }.map {
+            PipelineNewViewSummary(
+                id = encode(it.id),
+                projectId = it.projectId,
+                name = it.name,
+                projected = it.isProject,
+                createTime = it.createTime.timestamp(),
+                updateTime = it.updateTime.timestamp(),
+                creator = it.createUser,
+                top = viewScoreMap.containsKey(it.id)
+            )
+        }
+    }
+
+    fun getPersonalViews(userId: String, projectId: String): List<PipelineNewViewSummary> {
+        val views = pipelineViewDao.listProjectOrUser(
+            dslContext = dslContext,
+            projectId = projectId,
+            isProject = false,
+            userId = userId
+        )
+
+        var score = 1
+        val viewScoreMap = pipelineViewTopDao.list(dslContext, projectId, userId).associate { it.viewId to score++ }
+
+        return views.sortedBy {
+            viewScoreMap[it.id] ?: Int.MAX_VALUE
+        }.map {
+            PipelineNewViewSummary(
+                id = encode(it.id),
+                projectId = it.projectId,
+                name = it.name,
+                projected = it.isProject,
+                createTime = it.createTime.timestamp(),
+                updateTime = it.updateTime.timestamp(),
+                creator = it.createUser
+            )
+        }
+    }
+
+    fun topView(userId: String, projectId: String, viewId: String, enabled: Boolean): Boolean {
+        if (enabled) {
+            pipelineViewTopDao.add(
+                dslContext = dslContext,
+                projectId = projectId,
+                viewId = decode(viewId),
+                userId = userId
+            )
+        } else {
+            pipelineViewTopDao.remove(
+                dslContext = dslContext,
+                projectId = projectId,
+                viewId = decode(viewId),
+                userId = userId
+            )
+        }
+        return true
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineViewService::class.java)
         private val SYSTEM_VIEW_ID_LIST =
             listOf(PIPELINE_VIEW_FAVORITE_PIPELINES, PIPELINE_VIEW_MY_PIPELINES, PIPELINE_VIEW_ALL_PIPELINES)
+        private const val PROJECT_VIEW_LIMIT = 200
+        private const val PERSONAL_VIEW_LIMIT = 100
     }
 }

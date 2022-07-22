@@ -35,6 +35,7 @@ import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
+import com.tencent.devops.process.pojo.classify.PipelineViewTopForm
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -83,6 +84,30 @@ interface UserPipelineViewResource {
     @GET
     @Path("/projects/{projectId}/")
     fun getViews(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<PipelineNewViewSummary>>
+
+    @ApiOperation("获取项目视图")
+    @GET
+    @Path("/projects/{projectId}/projectViews")
+    fun getProjectViews(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<PipelineNewViewSummary>>
+
+    @ApiOperation("获取个人视图")
+    @GET
+    @Path("/projects/{projectId}/personalViews")
+    fun getPersonalViews(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -146,5 +171,20 @@ interface UserPipelineViewResource {
         @PathParam("viewId")
         viewId: String,
         pipelineView: PipelineViewForm
+    ): Result<Boolean>
+
+    @ApiOperation("置顶视图")
+    @POST
+    @Path("/projects/{projectId}/views/{viewId}/top")
+    fun topView(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("标签ID", required = true)
+        @PathParam("viewId")
+        viewId: String,
+        pipelineViewTopForm: PipelineViewTopForm
     ): Result<Boolean>
 }

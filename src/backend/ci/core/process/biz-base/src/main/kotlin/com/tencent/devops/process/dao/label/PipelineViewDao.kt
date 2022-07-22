@@ -250,7 +250,7 @@ class PipelineViewDao {
         }
     }
 
-    fun listProjectOrUser(
+    fun listAll(
         dslContext: DSLContext,
         projectId: String,
         isProject: Boolean,
@@ -260,6 +260,22 @@ class PipelineViewDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(IS_PROJECT.eq(isProject).or(CREATE_USER.eq(userId)))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
+        }
+    }
+
+    fun listProjectOrUser(
+        dslContext: DSLContext,
+        projectId: String,
+        isProject: Boolean,
+        userId: String
+    ): Result<TPipelineViewRecord> {
+        with(TPipelineView.T_PIPELINE_VIEW) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(IS_PROJECT.eq(isProject))
+                .let { if (isProject) it else it.and(CREATE_USER.eq(userId)) }
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
         }

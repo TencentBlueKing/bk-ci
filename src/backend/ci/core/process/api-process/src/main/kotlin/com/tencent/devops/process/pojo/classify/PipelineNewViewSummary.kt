@@ -45,5 +45,7 @@ data class PipelineNewViewSummary(
     @ApiModelProperty("更新时间", required = false)
     val updateTime: Long,
     @ApiModelProperty("创建者", required = false)
-    val creator: String
+    val creator: String,
+    @ApiModelProperty("是否置顶", required = false)
+    val top: Boolean = false
 )
