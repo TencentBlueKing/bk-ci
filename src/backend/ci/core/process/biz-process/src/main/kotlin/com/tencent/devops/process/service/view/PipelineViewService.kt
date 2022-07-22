@@ -63,6 +63,7 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
@@ -548,23 +549,7 @@ class PipelineViewService @Autowired constructor(
             isProject = true,
             userId = userId
         )
-        var score = 1
-        val viewScoreMap = pipelineViewTopDao.list(dslContext, projectId, userId).associate { it.viewId to score++ }
-
-        return views.sortedBy {
-            viewScoreMap[it.id] ?: Int.MAX_VALUE
-        }.map {
-            PipelineNewViewSummary(
-                id = encode(it.id),
-                projectId = it.projectId,
-                name = it.name,
-                projected = it.isProject,
-                createTime = it.createTime.timestamp(),
-                updateTime = it.updateTime.timestamp(),
-                creator = it.createUser,
-                top = viewScoreMap.containsKey(it.id)
-            )
-        }
+        return sortViews2Summary(projectId, userId, views)
     }
 
     fun getPersonalViews(userId: String, projectId: String): List<PipelineNewViewSummary> {
@@ -574,24 +559,7 @@ class PipelineViewService @Autowired constructor(
             isProject = false,
             userId = userId
         )
-
-        var score = 1
-        val viewScoreMap = pipelineViewTopDao.list(dslContext, projectId, userId).associate { it.viewId to score++ }
-
-        return views.sortedBy {
-            viewScoreMap[it.id] ?: Int.MAX_VALUE
-        }.map {
-            PipelineNewViewSummary(
-                id = encode(it.id),
-                projectId = it.projectId,
-                name = it.name,
-                projected = it.isProject,
-                createTime = it.createTime.timestamp(),
-                updateTime = it.updateTime.timestamp(),
-                creator = it.createUser,
-                top = viewScoreMap.containsKey(it.id)
-            )
-        }
+        return sortViews2Summary(projectId, userId, views)
     }
 
     fun topView(userId: String, projectId: String, viewId: String, enabled: Boolean): Boolean {
@@ -611,6 +579,30 @@ class PipelineViewService @Autowired constructor(
             )
         }
         return true
+    }
+
+    private fun sortViews2Summary(
+        projectId: String,
+        userId: String,
+        views: Result<TPipelineViewRecord>
+    ): List<PipelineNewViewSummary> {
+        var score = 1
+        val viewScoreMap = pipelineViewTopDao.list(dslContext, projectId, userId).associate { it.viewId to score++ }
+
+        return views.sortedBy {
+            viewScoreMap[it.id] ?: Int.MAX_VALUE
+        }.map {
+            PipelineNewViewSummary(
+                id = encode(it.id),
+                projectId = it.projectId,
+                name = it.name,
+                projected = it.isProject,
+                createTime = it.createTime.timestamp(),
+                updateTime = it.updateTime.timestamp(),
+                creator = it.createUser,
+                top = viewScoreMap.containsKey(it.id)
+            )
+        }
     }
 
     companion object {
