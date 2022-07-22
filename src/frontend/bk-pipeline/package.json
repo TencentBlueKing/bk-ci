@@ -53,6 +53,7 @@
     "webpack": "^5.58.1"
   },
   "dependencies": {
+    "vue": "2.6.12",
     "bk-magic-vue": "^2.3.10",
     "vuedraggable": "^2.24.3"
   },

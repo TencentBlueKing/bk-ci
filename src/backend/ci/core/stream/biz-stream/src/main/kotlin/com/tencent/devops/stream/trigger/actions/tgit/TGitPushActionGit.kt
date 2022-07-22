@@ -28,7 +28,9 @@
 package com.tencent.devops.stream.trigger.actions.tgit
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
@@ -39,6 +41,7 @@ import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.DeleteRule
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v2.models.on.check
+import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
@@ -68,6 +71,7 @@ import com.tencent.devops.stream.trigger.service.GitCheckService
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.util.StreamCommonUtils
+import java.util.Date
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
@@ -450,6 +454,26 @@ class TGitPushActionGit(
     override fun needSaveOrUpdateBranch() = true
 
     override fun needSendCommitCheck() = !event().isDeleteBranch()
+
+    override fun getWebhookCommitList(page: Int, pageSize: Int): List<WebhookCommit> {
+        if (page > 1) {
+            // push 请求事件会在第一次请求时将所有的commit记录全部返回，所以如果分页参数不为1，则直接返回空列表
+            return emptyList()
+        }
+        return event().commits!!.map {
+            val commitTime =
+                DateTimeUtil.convertDateToLocalDateTime(Date(DateTimeUtil.zoneDateToTimestamp(it.timestamp)))
+            WebhookCommit(
+                commitId = it.id,
+                authorName = it.author.name,
+                message = it.message,
+                repoType = ScmType.CODE_TGIT.name,
+                commitTime = commitTime,
+                eventType = CodeEventType.PUSH.name,
+                mrId = null
+            )
+        }
+    }
 }
 
 @SuppressWarnings("ReturnCount")
