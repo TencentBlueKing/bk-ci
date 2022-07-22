@@ -173,7 +173,8 @@
         "alias": "Alias",
         "options": "Options",
         "defaultValue": "Default value",
-        "required": "Required"
+        "required": "Required",
+        "disableManual": "The current pipeline has disabled manual triggering"
     },
     "exception": {
         "systemErrTips": "'System error, please try again later!'",

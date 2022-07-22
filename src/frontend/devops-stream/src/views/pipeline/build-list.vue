@@ -162,6 +162,9 @@
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
+                <bk-form-item v-if="disableManual">
+                    <bk-alert type="warning" :title="t('pipeline.disableManual')"></bk-alert>
+                </bk-form-item>
                 <bk-form-item class="mt15">
                     <bk-checkbox v-model="formData.useCommitId" @change="getPipelineBranchYaml">{{$t('pipeline.commitTriggerTips')}}</bk-checkbox>
                 </bk-form-item>
@@ -211,8 +214,18 @@
                     :layout="uiFormLayout"
                 />
                 <bk-form-item>
-                    <bk-button ext-cls="mr5" theme="primary" @click.stop.prevent="submitData" :loading="isTriggering">{{$t('submit')}}</bk-button>
-                    <bk-button ext-cls="mr5" @click="hidden" :disabled="isTriggering">{{$t('cancel')}}</bk-button>
+                    <bk-button
+                        ext-cls="mr5"
+                        theme="primary"
+                        :disabled="disableManual"
+                        @click.stop.prevent="submitData"
+                        :loading="isTriggering"
+                    >{{$t('submit')}}</bk-button>
+                    <bk-button
+                        ext-cls="mr5"
+                        :disabled="isTriggering || disableManual"
+                        @click="hidden"
+                    >{{$t('cancel')}}</bk-button>
                 </bk-form-item>
             </bk-form>
         </bk-sideslider>
@@ -311,6 +324,7 @@
                 isLoadingEvent: false,
                 eventList: [],
                 isLoadingSchema: false,
+                disableManual: false,
                 uiFormSchema: {},
                 uiFormLayout: {
                     container: {
@@ -594,6 +608,7 @@
                 this.isLoadingSchema = true
                 return pipelines.getPipelineParamJson(this.projectId, this.curPipeline.pipelineId, { branchName, commitId }).then((res) => {
                     this.uiFormSchema = res.schema || {}
+                    this.disableManual = res.enable === false
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {
