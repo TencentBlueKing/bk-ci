@@ -89,7 +89,10 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
     ) {
         if (sendAllNotify || request.notifyType?.contains("MOA") == true) {
             if (!notifyTypeScope.contains("MOA")) {
-                logger.error("NotifyTemplate|NOT_FOUND|type=MOA|template=${request.templateCode}")
+                logger.warn(
+                    "COMMON_NOTIFY_MESSAGE_TEMPLATE_NOT_FOUND|If needed, add on the OP" +
+                        "|type=MOA|template=${request.templateCode}"
+                )
             } else {
                 logger.info("send wework msg: $templateId")
                 sendMoaNotifyMessage(request, templateId)
@@ -150,7 +153,7 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                         displayName = "同意",
                         value = "agree"
                     ),
-                        MoaWorkItemCreateAction(
+                    MoaWorkItemCreateAction(
                         displayName = "驳回",
                         value = "reject"
                     )
