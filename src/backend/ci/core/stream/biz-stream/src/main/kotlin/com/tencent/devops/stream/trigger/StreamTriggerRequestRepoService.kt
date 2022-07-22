@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -125,19 +126,32 @@ class StreamTriggerRequestRepoService @Autowired constructor(
         streamSettingDao.getSetting(dslContext, pipeline.gitProjectId.toLong())?.let { setting ->
             action.data.setting = StreamTriggerSetting(setting)
             logger.info("|${action.data.context.requestEventId}|triggerPerPipeline|action|${action.format()}")
-            action.data.context.repoTrigger = action.data.context.repoTrigger!!.copy(
-                branch = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                    gitProjectKey = pipeline.gitProjectId,
-                    action = action,
-                    getProjectInfo = action.api::getGitProjectInfo
-                )!!.defaultBranch!!
-            )
-            action.data.context.defaultBranch = action.data.context.repoTrigger!!.branch
             try {
                 CheckStreamSetting.checkGitProjectConf(action)
             } catch (triggerException: StreamTriggerException) {
                 return false
             }
+            val targetProjectInfo = try {
+                // 这里把第一个访问工蜂项目的接口异常抓住,主要是为了兼容项目被删除之后触发异常.待删除项目闭环处理之后.可去除该限制
+                streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                    gitProjectKey = pipeline.gitProjectId,
+                    action = action,
+                    getProjectInfo = action.api::getGitProjectInfo
+                )
+            } catch (error: ErrorCodeException) {
+                logger.warn("project[${pipeline.gitProjectId}] may be deleted, repo trigger error")
+                return false
+            }
+
+            action.data.context.repoTrigger = action.data.context.repoTrigger!!.copy(
+                branch = targetProjectInfo!!.defaultBranch!!
+            )
+            action.data.context.repoTrigger?.triggerGitHttpUrl = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                gitProjectKey = action.data.eventCommon.gitProjectId,
+                action = action,
+                getProjectInfo = action.api::getGitProjectInfo
+            )?.gitHttpUrl
+            action.data.context.defaultBranch = action.data.context.repoTrigger!!.branch
 
             // 校验mr请求是否产生冲突
             if (!action.checkMrConflict(path2PipelineExists = mapOf(pipeline.filePath to pipeline))) {

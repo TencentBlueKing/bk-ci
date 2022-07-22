@@ -30,9 +30,9 @@ package com.tencent.devops.process.engine.control.lock
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 
-class ConcurrencyGroupLock(redisOperation: RedisOperation, concurrencyGroup: String) :
+class ConcurrencyGroupLock(redisOperation: RedisOperation, projectId: String, concurrencyGroup: String) :
     RedisLock(
         redisOperation = redisOperation,
-        lockKey = "lock:build:concurrency:group:$concurrencyGroup",
+        lockKey = "lock:build:concurrency:project:$projectId:group:$concurrencyGroup",
         expiredTimeInSeconds = 30L
     )

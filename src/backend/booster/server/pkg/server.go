@@ -448,13 +448,14 @@ func (s *Server) initDistccEngine(r crm.ResourceManager) (engine.Engine, error) 
 			MySQLDebug:       s.conf.EngineDistCCConfig.MySQLDebug,
 			MysqlTableOption: s.conf.EngineDistCCConfig.MysqlTableOption,
 		},
-		Rd:                  s.rd,
-		ClusterID:           s.conf.ContainerResourceConfig.BcsClusterID,
-		CPUPerInstance:      s.conf.ContainerResourceConfig.BcsCPUPerInstance,
-		MemPerInstance:      s.conf.ContainerResourceConfig.BcsMemPerInstance,
-		LeastJobServer:      s.conf.EngineDistCCConfig.LeastJobServer,
-		JobServerTimesToCPU: s.conf.EngineDistCCConfig.JobServerTimesToCPU,
-		Brokers:             s.conf.EngineDistCCConfig.BrokerConfig,
+		QueueResourceAllocater: InitAllocater(s.conf.DistCCQueueList, s.conf.EngineDistCCConfig.QueueResourceAllocater),
+		Rd:                     s.rd,
+		ClusterID:              s.conf.ContainerResourceConfig.BcsClusterID,
+		CPUPerInstance:         s.conf.ContainerResourceConfig.BcsCPUPerInstance,
+		MemPerInstance:         s.conf.ContainerResourceConfig.BcsMemPerInstance,
+		LeastJobServer:         s.conf.EngineDistCCConfig.LeastJobServer,
+		JobServerTimesToCPU:    s.conf.EngineDistCCConfig.JobServerTimesToCPU,
+		Brokers:                s.conf.EngineDistCCConfig.BrokerConfig,
 	}, dccResourceMgr)
 	if err != nil {
 		blog.Errorf("init engine(%s) failed: %v", distcc.EngineName, err)
@@ -526,19 +527,20 @@ func (s *Server) initDisttaskEngine(
 			MySQLDebug:       s.conf.EngineDisttaskConfig.MySQLDebug,
 			MysqlTableOption: s.conf.EngineDisttaskConfig.MysqlTableOption,
 		},
-		Rd:                   s.rd,
-		QueueShareType:       s.conf.DisttaskQueueShareType,
-		JobServerTimesToCPU:  s.conf.EngineDisttaskConfig.JobServerTimesToCPU,
-		CRMClusterID:         s.conf.ContainerResourceConfig.BcsClusterID,
-		CRMCPUPerInstance:    s.conf.ContainerResourceConfig.BcsCPUPerInstance,
-		CRMMemPerInstance:    s.conf.ContainerResourceConfig.BcsMemPerInstance,
-		K8SCRMClusterID:      s.conf.K8sContainerResourceConfig.BcsClusterID,
-		K8SCRMCPUPerInstance: s.conf.K8sContainerResourceConfig.BcsCPUPerInstance,
-		K8SCRMMemPerInstance: s.conf.K8sContainerResourceConfig.BcsMemPerInstance,
-		VMCRMClusterID:       s.conf.DCMacContainerResourceConfig.BcsClusterID,
-		VMCRMCPUPerInstance:  s.conf.DCMacContainerResourceConfig.BcsCPUPerInstance,
-		VMCRMMemPerInstance:  s.conf.DCMacContainerResourceConfig.BcsMemPerInstance,
-		Brokers:              s.conf.EngineDisttaskConfig.BrokerConfig,
+		QueueResourceAllocater: InitAllocater(s.conf.DisttaskQueueList, s.conf.EngineDisttaskConfig.QueueResourceAllocater),
+		Rd:                     s.rd,
+		QueueShareType:         s.conf.DisttaskQueueShareType,
+		JobServerTimesToCPU:    s.conf.EngineDisttaskConfig.JobServerTimesToCPU,
+		CRMClusterID:           s.conf.ContainerResourceConfig.BcsClusterID,
+		CRMCPUPerInstance:      s.conf.ContainerResourceConfig.BcsCPUPerInstance,
+		CRMMemPerInstance:      s.conf.ContainerResourceConfig.BcsMemPerInstance,
+		K8SCRMClusterID:        s.conf.K8sContainerResourceConfig.BcsClusterID,
+		K8SCRMCPUPerInstance:   s.conf.K8sContainerResourceConfig.BcsCPUPerInstance,
+		K8SCRMMemPerInstance:   s.conf.K8sContainerResourceConfig.BcsMemPerInstance,
+		VMCRMClusterID:         s.conf.DCMacContainerResourceConfig.BcsClusterID,
+		VMCRMCPUPerInstance:    s.conf.DCMacContainerResourceConfig.BcsCPUPerInstance,
+		VMCRMMemPerInstance:    s.conf.DCMacContainerResourceConfig.BcsMemPerInstance,
+		Brokers:                s.conf.EngineDisttaskConfig.BrokerConfig,
 	}, crMgr, k8sCrMgr, dcMacMgr, drMgr)
 	if err != nil {
 		blog.Errorf("init engine(%s) failed: %v", disttask.EngineName, err)
@@ -547,6 +549,17 @@ func (s *Server) initDisttaskEngine(
 
 	blog.Infof("success to init engine %s", disttask.EngineName)
 	return dtEngine, nil
+}
+
+func InitAllocater(queueList []string, resourceMap map[string]config.ResourceAllocater) map[string]config.ResourceAllocater {
+	allocater := make(map[string]config.ResourceAllocater, len(queueList))
+
+	for _, queue := range queueList {
+		if mp, ok := resourceMap[queue]; ok {
+			allocater[queue] = mp
+		}
+	}
+	return allocater
 }
 
 func (s *Server) initDistccMacEngine(r direct.ResourceManager) (engine.Engine, error) {
@@ -631,8 +644,9 @@ func (s *Server) initApisEngine(k8sCr crm.ResourceManager, dr direct.ResourceMan
 			MySQLDebug:       s.conf.EngineApisJobConfig.MySQLDebug,
 			MysqlTableOption: s.conf.EngineApisJobConfig.MysqlTableOption,
 		},
-		K8SCRMCPUPerInstance: s.conf.K8sContainerResourceConfig.BcsCPUPerInstance,
-		K8SCRMMemPerInstance: s.conf.K8sContainerResourceConfig.BcsMemPerInstance,
+		QueueResourceAllocater: InitAllocater(s.conf.ApisJobQueueList, s.conf.EngineApisJobConfig.QueueResourceAllocater),
+		K8SCRMCPUPerInstance:   s.conf.K8sContainerResourceConfig.BcsCPUPerInstance,
+		K8SCRMMemPerInstance:   s.conf.K8sContainerResourceConfig.BcsMemPerInstance,
 	}, k8sCrMgr, ajResourceMgr)
 	if err != nil {
 		blog.Errorf("init engine(%s) failed: %v", apisjob.EngineName, err)

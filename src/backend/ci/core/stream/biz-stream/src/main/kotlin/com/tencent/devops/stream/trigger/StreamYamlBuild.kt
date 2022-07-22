@@ -61,6 +61,7 @@ import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
+import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
@@ -74,7 +75,6 @@ import com.tencent.devops.stream.trigger.service.DeleteEventService
 import com.tencent.devops.stream.trigger.service.RepoTriggerEventService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
-import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -137,7 +137,7 @@ class StreamYamlBuild @Autowired constructor(
                         userId = action.data.getUserId(),
                         gitProjectId = action.data.eventCommon.gitProjectId.toLong(),
                         projectCode = action.getProjectCode(),
-                        modelAndSetting = createTriggerModel(action.getProjectCode()),
+                        modelAndSetting = createTriggerModel(realPipeline.displayName),
                         updateLastModifyUser = true
                     )
                 }
@@ -259,9 +259,9 @@ class StreamYamlBuild @Autowired constructor(
         }
     }
 
-    private fun createTriggerModel(projectCode: String) = PipelineModelAndSetting(
+    private fun createTriggerModel(displayName: String) = PipelineModelAndSetting(
         model = Model(
-            name = StreamPipelineUtils.genBKPipelineName(projectCode),
+            name = displayName,
             desc = "",
             stages = listOf(
                 Stage(
@@ -310,7 +310,7 @@ class StreamYamlBuild @Autowired constructor(
 
         // create or refresh pipeline
         val modelAndSetting = modelCreate.createPipelineModel(
-            modelName = StreamPipelineUtils.genBKPipelineName(action.getProjectCode()),
+            modelName = pipeline.displayName,
             event = modelCreateEvent,
             yaml = replaceYamlPoolName(yaml, action),
             pipelineParams = modelParams
@@ -319,7 +319,8 @@ class StreamYamlBuild @Autowired constructor(
 
         // 判断是否更新最后修改人
         val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
-        val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
+        val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath) &&
+            !(action is StreamMrAction && action.checkMrForkAction())
 
         return streamYamlBaseBuild.startBuild(
             action = action,
@@ -343,9 +344,9 @@ class StreamYamlBuild @Autowired constructor(
             webhookParams = mapOf(),
             yamlTransferData = null
         )
-
+        val pipeline = action.data.context.pipeline!!
         val modelAndSetting = modelCreate.createPipelineModel(
-            modelName = StreamPipelineUtils.genBKPipelineName(action.getProjectCode()),
+            modelName = pipeline.displayName,
             event = modelCreateEvent,
             yaml = replaceYamlPoolName(yaml, action),
             pipelineParams = modelParams
@@ -353,9 +354,9 @@ class StreamYamlBuild @Autowired constructor(
         logger.info("savePipeline pipeline:${action.data.context.pipeline}, modelAndSetting: $modelAndSetting")
 
         // 判断是否更新最后修改人
-        val pipeline = action.data.context.pipeline!!
         val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
-        val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
+        val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath) &&
+            !(action is StreamMrAction && action.checkMrForkAction())
         StreamBuildLock(
             redisOperation = redisOperation,
             gitProjectId = action.data.getGitProjectId().toLong(),

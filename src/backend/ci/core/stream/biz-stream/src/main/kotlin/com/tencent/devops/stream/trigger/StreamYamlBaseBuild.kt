@@ -29,6 +29,8 @@ package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -38,13 +40,14 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineBuildCommitResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServiceTemplateAcrossResource
-import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
+import com.tencent.devops.process.pojo.code.PipelineBuildCommit
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.utils.PIPELINE_NAME
@@ -57,6 +60,7 @@ import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.service.StreamWebsocketService
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.expand.StreamYamlBuildExpand
@@ -83,11 +87,13 @@ class StreamYamlBaseBuild @Autowired constructor(
     private val streamPipelineBranchService: StreamPipelineBranchService,
     private val streamGitConfig: StreamGitConfig,
     private val streamTriggerCache: StreamTriggerCache,
-    private val streamYamlBuildExpand: StreamYamlBuildExpand
+    private val streamYamlBuildExpand: StreamYamlBuildExpand,
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamYamlBaseBuild::class.java)
         private const val ymlVersion = "v2.0"
+        private const val BUILD_COMMIT_PAGE_SIZE = 200
     }
 
     private val channelCode = ChannelCode.GIT
@@ -151,9 +157,11 @@ class StreamYamlBaseBuild @Autowired constructor(
             setting = modelAndSetting.setting.copy(
                 projectId = projectCode,
                 pipelineId = pipeline.pipelineId,
-                pipelineName = modelAndSetting.model.name
+                pipelineName = modelAndSetting.model.name,
+                maxConRunningQueueSize = null
             ),
-            updateLastModifyUser = updateLastModifyUser
+            updateLastModifyUser = updateLastModifyUser,
+            channelCode = channelCode
         )
     }
 
@@ -178,7 +186,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     userId = pipeline.creator ?: "",
                     gitProjectId = gitProjectId.toLong(),
                     projectCode = projectCode,
-                    modelAndSetting = createTriggerModel(projectCode),
+                    modelAndSetting = createTriggerModel(pipeline.displayName),
                     updateLastModifyUser = true
                 )
                 streamPipelineBranchService.saveOrUpdate(
@@ -213,9 +221,9 @@ class StreamYamlBaseBuild @Autowired constructor(
         return "git_$gitProjectId"
     }
 
-    private fun createTriggerModel(projectCode: String) = PipelineModelAndSetting(
+    private fun createTriggerModel(displayName: String) = PipelineModelAndSetting(
         model = Model(
-            name = StreamPipelineUtils.genBKPipelineName(projectCode),
+            name = displayName,
             desc = "",
             stages = listOf(
                 Stage(
@@ -245,14 +253,6 @@ class StreamYamlBaseBuild @Autowired constructor(
         model: Model,
         yamlTransferData: YamlTransferData? = null
     ) {
-        // 【ID92537607】 stream 流水线标签不生效
-        client.get(UserPipelineGroupResource::class).updatePipelineLabel(
-            userId = action.data.getUserId(),
-            projectId = action.getProjectCode(),
-            pipelineId = pipeline.pipelineId,
-            labelIds = model.labels
-        )
-
         // 添加模板跨项目信息
         if (yamlTransferData != null && yamlTransferData.templateData.transferDataMap.isNotEmpty()) {
             client.get(ServiceTemplateAcrossResource::class).batchCreate(
@@ -438,6 +438,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                     buildId = buildId
                 )
             }
+
+            savePipelineBuildCommit(action = action, pipeline = pipeline, buildId = buildId)
         } catch (ignore: Exception) {
             logger.error(
                 "Stream after Build failed, gitProjectId[${action.data.getGitProjectId()}], " +
@@ -491,6 +493,58 @@ class StreamYamlBaseBuild @Autowired constructor(
             TemplateType.STEP -> TemplateAcrossInfoType.STEP
             TemplateType.JOB -> TemplateAcrossInfoType.JOB
             else -> null
+        }
+    }
+
+    fun savePipelineBuildCommit(
+        action: BaseAction,
+        pipeline: StreamTriggerPipeline,
+        buildId: String
+    ) {
+        if (action !is GitBaseAction) {
+            return
+        }
+        val projectId = action.getProjectCode()
+        val pipelineId = pipeline.pipelineId
+        try {
+            var page = 1
+            val pageSize = BUILD_COMMIT_PAGE_SIZE
+            while (true) {
+                val webhookCommitList = action.getWebhookCommitList(
+                    page = page,
+                    pageSize = pageSize
+                )
+                client.get(ServicePipelineBuildCommitResource::class).save(
+                    commits = webhookCommitList.map {
+                        PipelineBuildCommit(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            commitId = it.commitId,
+                            authorName = it.authorName,
+                            message = it.message,
+                            repoType = it.repoType,
+                            commitTime = it.commitTime,
+                            url = action.data.setting.gitHttpUrl,
+                            eventType = it.eventType,
+                            mrId = it.mrId,
+                            channel = ChannelCode.GIT.name
+                        )
+                    }
+                )
+                if (webhookCommitList.size < pageSize) break
+                page++
+            }
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildCommitFinishEvent(
+                    source = "build_commits",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId
+                )
+            )
+        } catch (ignore: Throwable) {
+            logger.error("save build info err", ignore)
         }
     }
 }

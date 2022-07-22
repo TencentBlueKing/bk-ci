@@ -38,9 +38,7 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
-import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
-import com.tencent.devops.process.engine.service.PipelineStageService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -49,7 +47,6 @@ import org.springframework.stereotype.Service
  */
 @Service
 class StartContainerStageCmd(
-    private val pipelineStageService: PipelineStageService,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : StageCmd {
 
@@ -210,10 +207,5 @@ class StartContainerStageCmd(
                 reason = commandContext.latestSummary
             )
         )
-    }
-
-    private fun hasFailedCheck(stage: PipelineBuildStage?): Boolean {
-        return stage?.checkIn?.status == BuildStatus.QUALITY_CHECK_FAIL.name ||
-            stage?.checkOut?.status == BuildStatus.QUALITY_CHECK_FAIL.name
     }
 }
