@@ -28,6 +28,36 @@ const columns = [
   {
     label: t('Pipeline'),
     field: 'pipelineName',
+    render ({ cell, row }) {
+      return h(
+        'span',
+        {
+          style: {
+            cursor: 'pointer',
+            color: '#3a84ff',
+          }, 
+          onClick () {
+            const projectId = row.projectId
+            const pipelineId = row.pipelineId
+            const buildId = row.buildId
+            http.getPipelineType({
+              projectId,
+              pipelineId
+            }).then(res => {
+              if (res.channelCode === 'BS') {
+              window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}`, '_blank')
+              }
+              window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#${projectId.split('_')[1]}`, '_blank')
+            })
+          },
+        },
+        [
+          cell,
+          ' #',
+          row.buildNum
+        ]
+      );
+    },
   },
   {
     label: t('Branch'),
@@ -123,7 +153,7 @@ onMounted(getData);
     class="overview-card mt20"
     :loading="isLoading"
   >
-    <h3 class="g-card-title">{{ t('Details') }}</h3>
+    <h3 class="g-card-title">{{ t('Details1') }}</h3>
     <bk-table
       class="error-table"
       :columns="columns"
@@ -132,7 +162,6 @@ onMounted(getData);
       :pagination="pagination"
       @page-value-change="handlePageChange"
       @page-limit-change="handlePageLimitChange"
-      @row-click="handleRowClick"
     >
     </bk-table>
   </bk-loading>
@@ -142,8 +171,5 @@ onMounted(getData);
 .error-table {
   margin-top: .15rem;
   margin-bottom: .08rem;
-  ::v-deep .bk-table-body > .bk-table-body-content > table > tbody > tr {
-    cursor: pointer;
-  }
 }
 </style>

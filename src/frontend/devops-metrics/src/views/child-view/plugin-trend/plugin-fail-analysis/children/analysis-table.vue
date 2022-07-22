@@ -3,6 +3,7 @@ import {
   ref,
   onMounted,
   watch,
+  h,
 } from 'vue';
 import http from '@/http/api';
 import {
@@ -29,6 +30,55 @@ const columns = [
   {
     label: t('Pipeline'),
     field: 'pipelineName',
+    render ({ cell, row }) {
+      return h(
+        'span',
+        {
+          style: {
+            cursor: 'pointer',
+            color: '#3a84ff',
+          }, 
+          onClick () {
+            const projectId = row.projectId
+            const pipelineId = row.pipelineId
+            const buildId = row.buildId
+            const indexMap = row.atomPosition && row.atomPosition.split('-')
+
+            let stageIndex, containerIndex, containerGroupIndex, elementIndex
+
+            if (indexMap.length === 3) {
+                stageIndex = indexMap[0]
+                containerIndex = indexMap[1]
+                elementIndex = indexMap[2]
+            } else if (indexMap.length === 4) {
+                stageIndex = indexMap[0]
+                containerIndex = indexMap[1]
+                containerGroupIndex = indexMap[2]
+                elementIndex = indexMap[3]
+            }
+            
+            if (row.channelCode === 'BS') {
+                if (indexMap.length === 3) {
+                window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&elementIndex=${elementIndex}`, '_blank')
+                } else {
+                window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&containerGroupIndex=${containerGroupIndex}&elementIndex=${elementIndex}`, '_blank')
+                }
+            } else if (row.channelCode === 'GIT') {
+                if (indexMap.length === 3) {
+                window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#${projectId.split('_')[1]}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&elementIndex=${elementIndex}`, '_blank')
+                } else {
+                window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#${projectId.split('_')[1]}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&containerGroupIndex=${containerGroupIndex}&elementIndex=${elementIndex}`, '_blank')
+                }
+            }
+          },
+        },
+        [
+          cell,
+          ' #',
+          row.buildNum
+        ]
+      );
+    },
   },
   {
     label: t('Plugin'),
@@ -90,40 +140,6 @@ const getData = () => {
     });
 };
 
-const handleRowClick = (e, row) => {
-  const projectId = row.projectId
-  const pipelineId = row.pipelineId
-  const buildId = row.buildId
-  const indexMap = row.atomPosition && row.atomPosition.split('-')
-
-  let stageIndex, containerIndex, containerGroupIndex, elementIndex
-
-  if (indexMap.length === 3) {
-    stageIndex = indexMap[0]
-    containerIndex = indexMap[1]
-    elementIndex = indexMap[2]
-  } else if (indexMap.length === 4) {
-    stageIndex = indexMap[0]
-    containerIndex = indexMap[1]
-    containerGroupIndex = indexMap[2]
-    elementIndex = indexMap[3]
-  }
-  
-  if (row.channelCode === 'BS') {
-    if (indexMap.length === 3) {
-      window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&elementIndex=${elementIndex}`, '_blank')
-    } else {
-      window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&containerGroupIndex=${containerGroupIndex}&elementIndex=${elementIndex}`, '_blank')
-    }
-  } else {
-    if (indexMap.length === 3) {
-      window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#${projectId.split('_')[1]}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&elementIndex=${elementIndex}`, '_blank')
-    } else {
-      window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#${projectId.split('_')[1]}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&containerGroupIndex=${containerGroupIndex}&elementIndex=${elementIndex}`, '_blank')
-    }
-  }
-}
-
 watch(
   () => props.status,
   getData,
@@ -144,8 +160,7 @@ onMounted(getData);
       remote-pagination
       :pagination="pagination"
       @page-value-change="handlePageChange"
-      @page-limit-change="handlePageLimitChange"
-      @row-click="handleRowClick">
+      @page-limit-change="handlePageLimitChange">
     </bk-table>
   </bk-loading>
 </template>
@@ -154,8 +169,5 @@ onMounted(getData);
 .analysis-table {
   margin-top: .15rem;
   margin-bottom: .08rem;
-  ::v-deep .bk-table-body > .bk-table-body-content > table > tbody > tr {
-    cursor: pointer;
-  }
 }
 </style>

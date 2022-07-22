@@ -3,6 +3,7 @@ import {
   ref,
   onMounted,
   watch,
+  h,
 } from 'vue';
 import http from '@/http/api';
 import {
@@ -43,16 +44,6 @@ const handlePageLimitChange = (limit) => {
   getData();
 };
 
-const handleRowClick = (e, row) => {
-  router.push({
-    name: 'PluginFailAnalysis',
-    query: {
-      pipelineId: row.pipelineId,
-      atomCode: row.atomCode
-    },
-  })
-}
-
 const getData = () => {
   isLoading.value = true;
   http.getAtomStatisticsDetail(
@@ -62,11 +53,39 @@ const getData = () => {
     )
     .then((data) => {
       Object.entries(data.headerInfo).forEach(([field, label]) => {
-        if (field === 'atomCode') field = 'atomName'
-        columns.value.push({
-          label,
-          field,
-        });
+        const column = {
+            label,
+            field,
+        }
+        if (field === 'atomCode') {
+            column.field = 'atomName'
+            column['render'] = ({ cell, row }) => {
+                return h(
+                    'span',
+                    {
+                    style: {
+                        cursor: 'pointer',
+                        color: '#3a84ff',
+                    }, 
+                    onClick () {
+                        router.push({
+                            name: 'PluginFailAnalysis',
+                            query: {
+                            pipelineId: row.pipelineId,
+                            atomCode: row.atomCode
+                            },
+                        })
+                    },
+                    },
+                    [
+                    cell,
+                    ' #',
+                    row.buildNum
+                    ]
+                );
+            }
+        }
+        columns.value.push(column);
       });
       tableData.value = data.records?.map(record => {
         if (!record.classifyCode) {
@@ -110,8 +129,7 @@ watch(
       remote-pagination
       :pagination="pagination"
       @page-value-change="handlePageChange"
-      @page-limit-change="handlePageLimitChange"
-      @row-click="handleRowClick">
+      @page-limit-change="handlePageLimitChange">
     </bk-table>
   </bk-loading>
 </template>
@@ -120,8 +138,5 @@ watch(
 .analysis-table {
   margin-top: .15rem;
   margin-bottom: .08rem;
-  ::v-deep .bk-table-body > .bk-table-body-content > table > tbody > tr {
-    cursor: pointer;
-  }
 }
 </style>
