@@ -3,11 +3,11 @@
         :title="job.name"
         :status="job.status"
     >
-        <section v-if="showDebugBtn" class="web-console" :style="{ right: executeCount > 1 ? '390px' : '280px' }">
-            <span @click="startDebug">
+        <!-- <section v-if="showDebugBtn" class="web-console" :style="{ right: executeCount > 1 ? '390px' : '280px' }">
+            <span onclick="startDebug">
                 {{$t('pipeline.webConsole')}}
             </span>
-        </section>
+        </section> -->
         <job-log :plugin-list="pluginList"
             :build-id="$route.params.buildId"
             :down-load-link="downLoadJobLink"
