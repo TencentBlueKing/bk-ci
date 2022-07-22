@@ -48,6 +48,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
+import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -395,6 +396,8 @@ class PipelineViewGroupService @Autowired constructor(
         // 获取新流水线组的流水线
         val newPipelineMap = if (pipelineView.viewType == PipelineViewType.DYNAMIC) {
             val previewCondition = TPipelineViewRecord()
+            previewCondition.filterByPipeineName = StringUtils.EMPTY
+            previewCondition.filterByCreator = StringUtils.EMPTY
             previewCondition.filters = objectMapper
                 .writerFor(object : TypeReference<List<PipelineViewFilter>>() {})
                 .writeValueAsString(pipelineView.filters)
