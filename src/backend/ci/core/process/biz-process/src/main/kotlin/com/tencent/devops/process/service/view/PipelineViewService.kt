@@ -588,7 +588,8 @@ class PipelineViewService @Autowired constructor(
                 projected = it.isProject,
                 createTime = it.createTime.timestamp(),
                 updateTime = it.updateTime.timestamp(),
-                creator = it.createUser
+                creator = it.createUser,
+                top = viewScoreMap.containsKey(it.id)
             )
         }
     }
