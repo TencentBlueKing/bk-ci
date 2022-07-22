@@ -12,5 +12,6 @@ data class DataPlatBuildCommits(
     val createTime: String,
     val mrId: String,
     val url: String,
-    val eventType: String
+    val eventType: String,
+    val channel: String
 )

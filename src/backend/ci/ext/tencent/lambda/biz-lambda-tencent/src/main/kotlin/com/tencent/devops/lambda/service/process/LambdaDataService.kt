@@ -202,14 +202,15 @@ class LambdaDataService @Autowired constructor(
                         createTime = createTime.format(dateTimeFormatter),
                         mrId = mergeRequestId,
                         url = url,
-                        eventType = eventType
+                        eventType = eventType,
+                        channel = channel
                     )
                 }
                 checkParamBlank(lambdaKafkaTopicConfig.buildCommitsTopic, "buildCommitsTopic")
                 kafkaClient.send(lambdaKafkaTopicConfig.buildCommitsTopic!!, JsonUtil.toJson(buildCommits))
             }
         } catch (ignore: Throwable) {
-            logger.error("Push build commits to kafka error, buildId: ${event.buildId}", ignore)
+            logger.warn("Push build commits to kafka error, buildId: ${event.buildId}", ignore)
         }
     }
 
@@ -334,7 +335,7 @@ class LambdaDataService @Autowired constructor(
 //                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
             }
         } catch (e: Exception) {
-            logger.error("Push task detail to kafka error, buildId: ${task.buildId}, taskId: ${task.taskId}", e)
+            logger.warn("Push task detail to kafka error, buildId: ${task.buildId}, taskId: ${task.taskId}", e)
         }
     }
 
@@ -349,7 +350,7 @@ class LambdaDataService @Autowired constructor(
             kafkaClient.send(buildHistoryTopic, JsonUtil.toJson(history))
 //            kafkaClient.send(KafkaTopic.LANDUN_BUILD_HISTORY_TOPIC, JsonUtil.toJson(history))
         } catch (e: Exception) {
-            logger.error("Push build history to kafka error, buildId: ${historyRecord.buildId}", e)
+            logger.warn("Push build history to kafka error, buildId: ${historyRecord.buildId}", e)
         }
     }
 
@@ -361,7 +362,7 @@ class LambdaDataService @Autowired constructor(
             kafkaClient.send(buildDetailTopic, JsonUtil.toJson(buildDetail))
 //            kafkaClient.send(KafkaTopic.LANDUN_BUILD_DETAIL_TOPIC, JsonUtil.toJson(buildDetail))
         } catch (e: Exception) {
-            logger.error("Push build detail to kafka error, buildId: ${model.buildId}", e)
+            logger.warn("Push build detail to kafka error, buildId: ${model.buildId}", e)
         }
     }
 
@@ -453,7 +454,7 @@ class LambdaDataService @Autowired constructor(
                 }
             }
         } catch (ignore: Exception) {
-            logger.error("Push git task to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", ignore)
+            logger.warn("Push git task to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", ignore)
         }
     }
 

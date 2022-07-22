@@ -182,7 +182,7 @@ class ManualReviewTaskAtom(
         val response = when (ManualReviewAction.valueOf(manualAction)) {
             ManualReviewAction.PROCESS -> {
                 buildLogPrinter.addLine(
-                    buildId = buildId, message = "审核结果：继续(Approve)",
+                    buildId = buildId, message = "审核结果(result)：继续(Approve)",
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
                 buildLogPrinter.addLine(
@@ -202,7 +202,7 @@ class ManualReviewTaskAtom(
             }
             ManualReviewAction.ABORT -> {
                 buildLogPrinter.addRedLine(
-                    buildId = buildId, message = "审核结果：驳回(Reject)",
+                    buildId = buildId, message = "审核结果(result)：驳回(Reject)",
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
                 pipelineEventDispatcher.dispatch(

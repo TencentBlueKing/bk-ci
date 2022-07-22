@@ -322,7 +322,9 @@ class TGitMrTriggerHandler(
                 authorName = it.author_name,
                 message = it.message,
                 repoType = ScmType.CODE_TGIT.name,
-                commitTime = commitTime
+                commitTime = commitTime,
+                eventType = CodeEventType.MERGE_REQUEST.name,
+                mrId = mrId.toString()
             )
         }
     }
