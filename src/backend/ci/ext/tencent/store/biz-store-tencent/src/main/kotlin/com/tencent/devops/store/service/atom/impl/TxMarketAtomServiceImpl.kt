@@ -76,8 +76,8 @@ class TxMarketAtomServiceImpl : TxMarketAtomService, MarketAtomServiceImpl() {
                         )
                 logger.info("the delGitRepositoryResult is :$delGitRepositoryResult")
                 return delGitRepositoryResult
-            } catch (e: Exception) {
-                logger.error("delGitRepositoryError $e")
+            } catch (e: Throwable) {
+                logger.error("delGitRepositoryError", e)
             }
         }
         return Result(true)
