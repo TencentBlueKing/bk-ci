@@ -65,5 +65,6 @@ data class RepoTrigger(
     val branch: String,
     val repoTriggerPipelineList: List<StreamRepoHookEvent>,
     var repoTriggerCred: StreamGitCred? = null,
-    var buildUserID: String? = null
+    var buildUserID: String? = null,
+    var triggerGitHttpUrl: String? = null
 )
