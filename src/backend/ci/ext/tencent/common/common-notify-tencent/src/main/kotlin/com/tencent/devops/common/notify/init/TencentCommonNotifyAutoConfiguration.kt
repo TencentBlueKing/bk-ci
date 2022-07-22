@@ -37,10 +37,10 @@ import javax.annotation.PostConstruct
 class TencentCommonNotifyAutoConfiguration {
 
     /**
-     * 动态扩展BuildType中的配置项
+     * 动态扩展NotifyType中的配置项
      */
     @PostConstruct
-    fun buildTypeChange() {
+    fun notifyTypeChange() {
         NotifyTypeEnumModifier().modified()
     }
 }
