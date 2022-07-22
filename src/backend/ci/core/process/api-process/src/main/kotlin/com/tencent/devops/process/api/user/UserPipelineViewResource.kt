@@ -34,6 +34,7 @@ import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewId
+import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import com.tencent.devops.process.pojo.classify.PipelineViewTopForm
 import io.swagger.annotations.Api
@@ -48,6 +49,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_PIPELINE_VIEW"], description = "用户-流水线视图")
@@ -187,4 +189,19 @@ interface UserPipelineViewResource {
         viewId: String,
         pipelineViewTopForm: PipelineViewTopForm
     ): Result<Boolean>
+
+    @ApiOperation("预览视图")
+    @POST
+    @Path("/projects/{projectId}/preview")
+    fun preview(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("标签ID", required = true)
+        @QueryParam("viewId")
+        viewId: String? = null,
+        pipelineView: PipelineViewForm
+    ): Result<PipelineViewPreview>
 }

@@ -34,6 +34,7 @@ import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewId
+import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import com.tencent.devops.process.pojo.classify.PipelineViewTopForm
 import com.tencent.devops.process.service.view.PipelineViewGroupService
@@ -85,6 +86,15 @@ class UserPipelineViewResourceImpl @Autowired constructor(
         pipelineViewTopForm: PipelineViewTopForm
     ): Result<Boolean> {
         return Result(pipelineViewService.topView(userId, projectId, viewId, pipelineViewTopForm.enabled))
+    }
+
+    override fun preview(
+        userId: String,
+        projectId: String,
+        viewId: String?,
+        pipelineView: PipelineViewForm
+    ): Result<PipelineViewPreview> {
+        return Result(pipelineViewGroupService.preview(userId, projectId, viewId, pipelineView))
     }
 
     override fun deleteView(userId: String, projectId: String, viewId: String): Result<Boolean> {

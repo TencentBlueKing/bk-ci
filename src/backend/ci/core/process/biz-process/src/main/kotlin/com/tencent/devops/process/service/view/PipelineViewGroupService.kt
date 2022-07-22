@@ -27,11 +27,14 @@
 
 package com.tencent.devops.process.service.view
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -40,7 +43,9 @@ import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.classify.PipelineViewFilter
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
+import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
 import org.jooq.DSLContext
@@ -59,7 +64,8 @@ class PipelineViewGroupService @Autowired constructor(
     private val pipelineViewTopDao: PipelineViewTopDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val dslContext: DSLContext,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val objectMapper: ObjectMapper
 ) {
     fun getViewNameMap(
         projectId: String,
@@ -352,6 +358,64 @@ class PipelineViewGroupService @Autowired constructor(
                 )
             }
         }
+    }
+
+    fun preview(
+        userId: String,
+        projectId: String,
+        viewId: String?,
+        pipelineView: PipelineViewForm
+    ): PipelineViewPreview {
+        // 获取所以流水线信息
+        val step = 1000
+        var hasNext = true
+        val allPipelineInfoMap = mutableMapOf<String/*pipelineId*/, TPipelineInfoRecord>()
+        while (hasNext) {
+            val pipelineInfos = pipelineInfoDao.listPipelineInfoByProject(
+                dslContext = dslContext,
+                projectId = projectId,
+                offset = 0,
+                limit = step
+            ) ?: break
+            allPipelineInfoMap.putAll(pipelineInfos.associateBy { it.pipelineId })
+            hasNext = pipelineInfos.size == step
+        }
+
+        //获取老流水线组的流水线
+        val oldPipelineMap = if (null == viewId) {
+            emptyMap<String/*pipelineId*/, TPipelineInfoRecord>()
+        } else {
+            pipelineViewGroupDao
+                .listByViewId(dslContext, projectId, HashUtil.decodeIdToLong(viewId))
+                .map { it.pipelineId }
+                .filter { allPipelineInfoMap.containsKey(it) }
+                .associateWith { allPipelineInfoMap[it] }
+        }
+
+        // 获取新流水线组的流水线
+        val newPipelineMap = if (pipelineView.viewType == PipelineViewType.DYNAMIC) {
+            val previewCondition = TPipelineViewRecord()
+            previewCondition.filters = objectMapper
+                .writerFor(object : TypeReference<List<PipelineViewFilter>>() {})
+                .writeValueAsString(pipelineView.filters)
+            allPipelineInfoMap.values
+                .filter { pipelineViewService.matchView(previewCondition, it) }
+                .associateBy { it.pipelineId }
+        } else {
+            pipelineView.pipelineIds
+                .filter { allPipelineInfoMap.containsKey(it) }
+                .associateWith { allPipelineInfoMap[it] }
+        }
+
+        //新增流水线 = 新流水线 - 老流水线
+        val addedPipelines = newPipelineMap.filterNot { oldPipelineMap.containsKey(it.key) }
+            .map { PipelineViewPreview.PipelineInfo(it.key, it.value!!.pipelineName) }
+
+        // 移除流水线 = 老流水线 - 新流水线
+        val removedPipelines = oldPipelineMap.filterNot { newPipelineMap.containsKey(it.key) }
+            .map { PipelineViewPreview.PipelineInfo(it.key, it.value!!.pipelineName) }
+
+        return PipelineViewPreview(addedPipelines, removedPipelines)
     }
 
     companion object {
