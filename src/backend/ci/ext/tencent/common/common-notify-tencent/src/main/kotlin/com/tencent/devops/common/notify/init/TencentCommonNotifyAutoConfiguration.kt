@@ -25,10 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:process:biz-base"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:common:common-notify-tencent"))
+package com.tencent.devops.common.notify.init
+
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+import javax.annotation.PostConstruct
+
+@Configuration
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
+class TencentCommonNotifyAutoConfiguration {
+
+    /**
+     * 动态扩展NotifyType中的配置项
+     */
+    @PostConstruct
+    fun notifyTypeChange() {
+        NotifyTypeEnumModifier().modified()
+    }
 }

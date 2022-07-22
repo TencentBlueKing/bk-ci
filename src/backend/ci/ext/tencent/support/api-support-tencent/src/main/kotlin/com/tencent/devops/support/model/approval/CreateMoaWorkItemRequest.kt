@@ -25,10 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:process:biz-base"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:common:common-notify-tencent"))
-}
+package com.tencent.devops.support.model.approval
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("创建审批单请求报文体")
+data class CreateMoaWorkItemRequest(
+    @ApiModelProperty("审批人，多个以逗号分隔", required = true)
+    val verifier: String,
+    @ApiModelProperty("标题", required = true)
+    val title: String,
+    @ApiModelProperty("任务ID", required = true)
+    val taskId: String,
+    @ApiModelProperty("回调URL", required = true)
+    val backUrl: String,
+    @ApiModelProperty("系统URL，用于用户审核时跳转系统查看", required = false)
+    val sysUrl: String? = null
+)

@@ -25,10 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:process:biz-base"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:common:common-notify-tencent"))
+package com.tencent.devops.process.api.service
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.pipeline.ExtServiceMoaWorkItemReq
+import com.tencent.devops.process.service.TXPipelineMoaService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceTXMoaCallBackResourceImpl @Autowired constructor(
+    private val txPipelineMoaService: TXPipelineMoaService
+) : ServiceTXMoaCallBackResource {
+
+    override fun manualReviewCallBack(extServiceMoaWorkItemReq: ExtServiceMoaWorkItemReq): Result<Boolean> {
+        return txPipelineMoaService.manualReviewMoaApprove(extServiceMoaWorkItemReq)
+    }
 }

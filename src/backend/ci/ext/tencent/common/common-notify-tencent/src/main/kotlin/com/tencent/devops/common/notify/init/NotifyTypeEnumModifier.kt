@@ -25,10 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:process:biz-base"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:common:common-notify-tencent"))
+package com.tencent.devops.common.notify.init
+
+import com.tencent.devops.common.api.enums.EnumModifier
+import com.tencent.devops.common.api.util.EnumUtil
+import com.tencent.devops.common.notify.enums.NotifyType
+
+class NotifyTypeEnumModifier : EnumModifier {
+
+    override fun modified() {
+        EnumUtil.addEnum(
+            enumType = NotifyType::class.java,
+            enumName = "MOA",
+            additionalValues = arrayOf()
+        )
+    }
 }
