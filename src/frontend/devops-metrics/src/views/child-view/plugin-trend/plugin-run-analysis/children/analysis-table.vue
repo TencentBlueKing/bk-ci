@@ -58,32 +58,32 @@ const getData = () => {
             field,
         }
         if (field === 'atomCode') {
-            column.field = 'atomName'
-            column['render'] = ({ cell, row }) => {
-                return h(
-                    'span',
-                    {
-                    style: {
-                        cursor: 'pointer',
-                        color: '#3a84ff',
-                    }, 
-                    onClick () {
-                        router.push({
-                            name: 'PluginFailAnalysis',
-                            query: {
-                            pipelineId: row.pipelineId,
-                            atomCode: row.atomCode
-                            },
-                        })
+          column.field = 'atomName'
+          column['render'] = ({ cell, row }) => {
+            return h(
+              'span',
+              {
+                style: {
+                  cursor: 'pointer',
+                  color: '#3a84ff',
+                }, 
+                onClick () {
+                  router.push({
+                    name: 'PluginFailAnalysis',
+                    query: {
+                      pipelineId: row.pipelineId,
+                      atomCode: row.atomCode,
                     },
-                    },
-                    [
-                    cell,
-                    ' #',
-                    row.buildNum
-                    ]
-                );
-            }
+                  })
+                },
+              },
+              [
+                cell,
+                ' #',
+                row.buildNum,
+              ]
+            );
+          }
         }
         columns.value.push(column);
       });

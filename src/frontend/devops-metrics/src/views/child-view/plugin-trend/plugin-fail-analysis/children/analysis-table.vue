@@ -103,6 +103,18 @@ const columns = [
   {
     label: t('Error Message'),
     field: 'errorMsg',
+    render ({ cell, row }) {
+      return h(
+        'span',
+        {
+          title: row.errorMsg, 
+        },
+        [
+          cell,
+          row.errorMsg
+        ]
+      );
+    },
   },
 ];
 const tableData = ref([]);
