@@ -310,7 +310,7 @@ object TriggerBuilder {
             repositoryHashId = null,
             repositoryName = githubPrEvent.pullRequest.base.repo.id.toString(),
             repositoryType = RepositoryType.NAME,
-            branchName = triggerOn.mr?.targetBranches?.joinToString(JOIN_SEPARATOR),
+            branchName = triggerOn.mr?.targetBranches?.joinToString(JOIN_SEPARATOR) ?: "*",
             excludeBranchName = null,
             excludeUsers = triggerOn.mr?.usersIgnore?.joinToString(JOIN_SEPARATOR),
             eventType = CodeEventType.PULL_REQUEST
