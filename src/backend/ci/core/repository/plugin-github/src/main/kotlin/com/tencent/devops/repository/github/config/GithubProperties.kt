@@ -40,5 +40,7 @@ data class GithubProperties(
     // tapd回调地址
     val callbackUrl: String = "",
     // tapd授权后跳转页面
-    val redirectUrl: String = ""
+    val redirectUrl: String = "",
+    val appId: String = "",
+    val privateKey: String = ""
 )

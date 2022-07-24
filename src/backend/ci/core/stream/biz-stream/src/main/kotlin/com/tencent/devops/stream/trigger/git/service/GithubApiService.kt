@@ -39,7 +39,6 @@ import com.tencent.devops.common.sdk.github.request.GetRepositoryPermissionsRequ
 import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.common.sdk.github.request.GetTreeRequest
 import com.tencent.devops.common.sdk.github.request.ListPullRequestFileRequest
-import com.tencent.devops.common.sdk.github.request.SearchRepositoriesRequest
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.github.ServiceGithubCheckResource
 import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
@@ -70,14 +69,14 @@ import com.tencent.devops.stream.trigger.git.pojo.github.GithubUserInfo
 import com.tencent.devops.stream.trigger.git.service.StreamApiUtil.doRetryFun
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.util.QualityUtils
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.ws.rs.core.Response
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
 @Service
 @SuppressWarnings("TooManyFunctions")
@@ -115,7 +114,7 @@ class GithubApiService @Autowired constructor(
         ) {
             client.get(ServiceGithubRepositoryResource::class).getRepository(
                 request = GetRepositoryRequest(
-                    id = gitProjectId.toLong()
+                    repoId = gitProjectId.toLong()
                 ),
                 userId = cred.getUserId()
             ).data
@@ -138,7 +137,7 @@ class GithubApiService @Autowired constructor(
         ) {
             client.get(ServiceGithubCommitsResource::class).getCommit(
                 request = GetCommitRequest(
-                    id = gitProjectId.toLong(),
+                    repoId = gitProjectId.toLong(),
                     ref = sha
                 ),
                 userId = cred.getUserId()
@@ -169,7 +168,7 @@ class GithubApiService @Autowired constructor(
     ): GithubProjectUserInfo {
         return client.get(ServiceGithubRepositoryResource::class).getRepositoryPermissions(
             request = GetRepositoryPermissionsRequest(
-                id = gitProjectId.toLong(),
+                repoId = gitProjectId.toLong(),
                 username = userId
             ),
             userId = userId
@@ -193,7 +192,7 @@ class GithubApiService @Autowired constructor(
             client.get(ServiceGithubPRResource::class).getPullRequest(
                 userId = cred.getUserId(),
                 request = GetPullRequestRequest(
-                    id = gitProjectId.toLong(),
+                    repoId = gitProjectId.toLong(),
                     pullNumber = mrId
                 )
             )
@@ -220,7 +219,7 @@ class GithubApiService @Autowired constructor(
             client.get(ServiceGithubPRResource::class).listPullRequestFiles(
                 userId = cred.getUserId(),
                 request = ListPullRequestFileRequest(
-                    id = gitProjectId.toLong(),
+                    repoId = gitProjectId.toLong(),
                     pullNumber = mrId
                 )
             )
@@ -250,7 +249,7 @@ class GithubApiService @Autowired constructor(
             client.get(ServiceGithubDatabaseResource::class).getTree(
                 userId = cred.getUserId(),
                 request = GetTreeRequest(
-                    id = gitProjectId.toLong(),
+                    repoId = gitProjectId.toLong(),
                     treeSha = "${ref!!}:$path",
                     recursive = recursive.toString()
                 )
@@ -274,7 +273,7 @@ class GithubApiService @Autowired constructor(
         ) {
             client.get(ServiceGithubRepositoryResource::class).getRepositoryContent(
                 request = GetRepositoryContentRequest(
-                    id = gitProjectId.toLong(),
+                    repoId = gitProjectId.toLong(),
                     path = fileName,
                     ref = ref
                 ),
@@ -298,7 +297,7 @@ class GithubApiService @Autowired constructor(
         ) {
             client.get(ServiceGithubRepositoryResource::class).getRepositoryContent(
                 request = GetRepositoryContentRequest(
-                    id = gitProjectId.toLong(),
+                    repoId = gitProjectId.toLong(),
                     path = fileName,
                     ref = ref!!
                 ),
@@ -312,17 +311,8 @@ class GithubApiService @Autowired constructor(
         search: String?,
         minAccessLevel: GitAccessLevelEnum?
     ): List<GithubProjectInfo> {
-        val request = SearchRepositoriesRequest()
-        if (!search.isNullOrBlank()) {
-            request.name(search)
-        }
-        request.org(githubOrgWhite)
-        return client.get(ServiceGithubRepositoryResource::class).searchRepositories(
-            userId = cred.getUserId(),
-            request = request
-        ).data!!.map {
-            GithubProjectInfo(it)
-        }
+        // todo 跨库触发不支持
+        return emptyList()
     }
 
     override fun getLatestRevision(
@@ -343,7 +333,7 @@ class GithubApiService @Autowired constructor(
             client.get(ServiceGithubCommitsResource::class).getCommit(
                 userId = userName,
                 request = GetCommitRequest(
-                    id = projectName.toLong(),
+                    repoId = projectName.toLong(),
                     ref = branch
                 )
             )
@@ -369,7 +359,7 @@ class GithubApiService @Autowired constructor(
         client.get(ServiceGithubIssuesResource::class).createIssueComment(
             userId = cred.getUserId(),
             request = CreateIssueCommentRequest(
-                id = gitProjectId.toLong(),
+                repoId = gitProjectId.toLong(),
                 issueNumber = mrId,
                 body = QualityUtils.getQualityReport(mrBody.reportData.first, mrBody.reportData.second)
             )
@@ -385,7 +375,7 @@ class GithubApiService @Autowired constructor(
                 client.get(ServiceGithubCheckResource::class).createCheckRunByToken(
                     token = token!!,
                     request = CreateCheckRunRequest(
-                        id = projectName.toLong(),
+                        repoId = projectName.toLong(),
                         name = context,
                         headSha = commitId,
                         detailsUrl = targetUrl,
@@ -397,7 +387,7 @@ class GithubApiService @Autowired constructor(
                 client.get(ServiceGithubCheckResource::class).createCheckRunByToken(
                     token = token!!,
                     request = CreateCheckRunRequest(
-                        id = projectName.toLong(),
+                        repoId = projectName.toLong(),
                         name = context,
                         headSha = commitId,
                         detailsUrl = targetUrl,
@@ -438,7 +428,7 @@ class GithubApiService @Autowired constructor(
             client.get(ServiceGithubCommitsResource::class).compareTwoCommits(
                 userId = cred.getUserId(),
                 request = CompareTwoCommitsRequest(
-                    id = gitProjectId.toLong(),
+                    repoId = gitProjectId.toLong(),
                     base = from,
                     head = to,
                     page = page,

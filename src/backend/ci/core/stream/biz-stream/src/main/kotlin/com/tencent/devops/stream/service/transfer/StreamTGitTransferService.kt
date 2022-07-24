@@ -154,8 +154,8 @@ class StreamTGitTransferService @Autowired constructor(
 
     override fun getProjectList(
         userId: String,
-        page: Int?,
-        pageSize: Int?,
+        page: Int,
+        pageSize: Int,
         search: String?,
         orderBy: StreamProjectsOrder?,
         sort: StreamSortAscOrDesc?,
@@ -279,7 +279,7 @@ class StreamTGitTransferService @Autowired constructor(
             page = page,
             pageSize = pageSize,
             owned = false,
-            minAccessLevel = com.tencent.devops.scm.enums.GitAccessLevelEnum.DEVELOPER,
+            minAccessLevel = GitAccessLevelEnum.DEVELOPER,
             tokenType = TokenTypeEnum.OAUTH
         ).data?.ifEmpty { null }?.map {
             StreamGitGroup(it)

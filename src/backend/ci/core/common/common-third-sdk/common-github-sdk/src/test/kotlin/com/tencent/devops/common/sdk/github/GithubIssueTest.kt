@@ -36,7 +36,7 @@ class GithubIssueTest : GithubApiTest() {
     @Test
     fun createIssueComment() {
         val request = CreateIssueCommentRequest(
-            id = repoId,
+            repoId = repoId,
             issueNumber = 10L,
             body = "test issue comment"
         )

@@ -41,7 +41,9 @@ class GithubConfig {
         return with(properties) {
             DefaultGithubClient(
                 serverUrl = serverUrl,
-                apiUrl = apiUrl
+                apiUrl = apiUrl,
+                appId = appId,
+                privateKey = privateKey
             )
         }
     }
