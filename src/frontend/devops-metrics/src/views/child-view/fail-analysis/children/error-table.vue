@@ -35,7 +35,7 @@ const columns = [
           style: {
             cursor: 'pointer',
             color: '#3a84ff',
-          }, 
+          },
           onClick () {
             const projectId = row.projectId
             const pipelineId = row.pipelineId
@@ -82,6 +82,18 @@ const columns = [
   {
     label: t('Error Message'),
     field: 'errorMsg',
+    render ({ cell, row }) {
+      return h(
+        'span',
+        {
+          title: row.errorMsg, 
+        },
+        [
+          cell,
+          row.errorMsg
+        ]
+      );
+    },
   },
 ];
 const tableData = ref([]);
