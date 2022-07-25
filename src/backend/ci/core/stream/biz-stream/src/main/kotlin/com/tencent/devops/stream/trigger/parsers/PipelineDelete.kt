@@ -112,15 +112,16 @@ class PipelineDelete @Autowired constructor(
 
             repoTriggerEventService.deleteRepoTriggerEvent(pipelineId)
 
-            val isFileEmpty = if (null != filePath) {
-                checkFileEmpty(
-                    action,
-                    gitProjectId = gitProjectId,
-                    filePath = filePath
-                )
-            } else {
-                true
-            }
+            val isFileEmpty =
+                if (null != filePath && action.data.eventCommon.branch != action.data.context.defaultBranch) {
+                    checkFileEmpty(
+                        action,
+                        gitProjectId = gitProjectId,
+                        filePath = filePath
+                    )
+                } else {
+                    true
+                }
             if (isFileEmpty &&
                 !streamPipelineBranchService.hasBranchExist(gitProjectId.toLong(), pipelineId)
             ) {
@@ -158,18 +159,23 @@ class PipelineDelete @Autowired constructor(
         gitProjectId: String,
         filePath: String
     ): Boolean {
-        val fileList = action.api.getFileTree(
-            cred = action.getGitCred(),
-            gitProjectId = action.getGitProjectIdOrName(gitProjectId),
-            path = if (filePath.contains("/")) {
-                filePath.substring(0, filePath.lastIndexOf("/"))
-            } else {
-                filePath
-            },
-            ref = "",
-            recursive = true,
-            retry = ApiRequestRetryInfo(true)
-        )
+        val fileList = try {
+            action.api.getFileTree(
+                cred = action.getGitCred(),
+                gitProjectId = action.getGitProjectIdOrName(gitProjectId),
+                path = if (filePath.contains("/")) {
+                    filePath.substring(0, filePath.lastIndexOf("/"))
+                } else {
+                    filePath
+                },
+                ref = action.data.context.defaultBranch,
+                recursive = true,
+                retry = ApiRequestRetryInfo(true)
+            )
+        } catch (ignored: Throwable) {
+            logger.info("checkFileEmpty get file error , .ci/ may be delete ${ignored.message}")
+            listOf()
+        }
 
         fileList.forEach {
             if (it.name == filePath.substring(filePath.lastIndexOf("/") + 1)) {

@@ -61,6 +61,7 @@ import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GithubRequestEventHandle
@@ -378,7 +379,7 @@ class GithubPRActionGit(
         val mergeRequest = apiService.getMrInfo(
             cred = getGitCred(),
             gitProjectId = getGitProjectIdOrName(event.pullRequest.base.repo.id.toString()),
-            mrId = event.pullRequest.id.toString(),
+            mrId =  this.getMrId().toString(),
             retry = ApiRequestRetryInfo(true)
         )!!
         val baseTargetFile = getFileInfo(

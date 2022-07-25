@@ -40,7 +40,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.stream.api.user.UserGitBasicSettingResource
-import com.tencent.devops.stream.constant.StreamConstant.DEVOPS_PROJECT_PREFIX
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
@@ -56,7 +56,8 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
     private val streamBasicSettingService: StreamBasicSettingService,
     private val permissionService: StreamPermissionService,
     private val streamGitTransferService: StreamGitTransferService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val streamGitConfig: StreamGitConfig
 ) : UserGitBasicSettingResource {
 
     @BkTimed
@@ -65,7 +66,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         enabled: Boolean,
         projectInfo: StreamGitProjectInfoWithProject
     ): Result<Boolean> {
-        val projectId = "$DEVOPS_PROJECT_PREFIX${projectInfo.gitProjectId}"
+        val projectId = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId, streamGitConfig.getScmType())
         val gitProjectId = projectInfo.gitProjectId
         checkParam(userId)
         permissionService.checkCommonUser(userId)

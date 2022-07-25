@@ -171,11 +171,10 @@ object TriggerBuilder {
     fun buildCodeGitForRepoRepository(
         action: BaseAction
     ): CodeGitRepository {
-        val projectName = action.data.eventCommon.gitProjectName
-            ?: GitUtils.getProjectName(action.data.setting.gitHttpUrl)
+        val projectName = action.data.eventCommon.gitProjectName ?: ""
         return CodeGitRepository(
             aliasName = projectName,
-            url = action.data.setting.gitHttpUrl,
+            url = action.data.context.repoTrigger?.triggerGitHttpUrl ?: "",
             credentialId = "",
             projectName = projectName,
             userName = action.data.getUserId(),

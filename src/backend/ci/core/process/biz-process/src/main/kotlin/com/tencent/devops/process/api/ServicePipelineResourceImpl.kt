@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -454,6 +455,15 @@ class ServicePipelineResourceImpl @Autowired constructor(
     override fun batchUpdatePipelineNamePinYin(userId: String): Result<Boolean> {
         pipelineInfoFacadeService.batchUpdatePipelineNamePinYin(userId)
         return Result(true)
+    }
+
+    override fun getPipelineLabelInfos(
+        userId: String,
+        projectIds: List<String>
+    ): Result<List<PipelineLabelRelateInfo>> {
+        return Result(
+            pipelineListFacadeService.getProjectPipelineLabelInfos(projectIds)
+        )
     }
 
     override fun searchByName(

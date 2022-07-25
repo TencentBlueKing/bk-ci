@@ -12,6 +12,7 @@ import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
@@ -79,7 +80,7 @@ class StreamDeleteAction(
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         val deleteObjectKinds = triggerOn.delete?.getTypesObjectKind()?.map { it.value }?.toSet()
             ?: return TriggerResult(
-                trigger = false,
+                trigger = TriggerBody().triggerFail("on.delete.types", "does not currently exist"),
                 timeTrigger = false,
                 startParams = emptyMap(),
                 deleteTrigger = false
@@ -88,9 +89,22 @@ class StreamDeleteAction(
             val startParams = gitAction.getWebHookStartParam(
                 triggerOn = triggerOn
             )
-            TriggerResult(trigger = true, timeTrigger = false, startParams = startParams, deleteTrigger = true)
+            TriggerResult(
+                trigger = TriggerBody(true),
+                timeTrigger = false,
+                startParams = startParams,
+                deleteTrigger = true
+            )
         } else {
-            TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = false)
+            TriggerResult(
+                trigger = TriggerBody().triggerFail(
+                    "on.delete.types",
+                    "current type(${gitAction.metaData.streamObjectKind.value}) not match"
+                ),
+                timeTrigger = false,
+                startParams = emptyMap(),
+                deleteTrigger = false
+            )
         }
     }
 

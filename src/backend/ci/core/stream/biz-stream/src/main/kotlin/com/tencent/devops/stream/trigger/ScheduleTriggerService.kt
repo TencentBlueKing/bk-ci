@@ -52,11 +52,13 @@ import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptio
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -85,9 +87,10 @@ class ScheduleTriggerService @Autowired constructor(
         buildBranch: String,
         buildCommitInfo: StreamRevisionInfo
     ): BuildId? {
-        val streamTriggerSetting = streamBasicSettingDao.getSettingByProjectCode(
+        val streamTriggerSetting = streamBasicSettingDao.getSetting(
             dslContext = dslContext,
-            projectCode = streamTimerEvent.projectId
+            gitProjectId = GitCommonUtils.getGitProjectId(streamTimerEvent.projectId),
+            hasLastInfo = false
         )?.let {
             StreamTriggerSetting(
                 enableCi = it.enableCi,
@@ -100,10 +103,8 @@ class ScheduleTriggerService @Autowired constructor(
                 enableMrBlock = it.enableMrBlock,
                 name = it.name,
                 enableMrComment = it.enableMrComment,
-                homepage = it.homePage,
-                triggerReviewSetting = JsonUtil.toOrNull(
-                    it.triggerReviewSetting,
-                    object : TypeReference<TriggerReviewSetting>() {}) ?: TriggerReviewSetting()
+                homepage = it.homepage,
+                triggerReviewSetting = it.triggerReviewSetting
             )
         }
         if (streamTriggerSetting == null || !streamTriggerSetting.enableCi) {
@@ -226,7 +227,7 @@ class ScheduleTriggerService @Autowired constructor(
         return streamYamlBuild.gitStartBuild(
             action = action,
             triggerResult = TriggerResult(
-                trigger = true,
+                trigger = TriggerBody(true),
                 startParams = emptyMap(),
                 timeTrigger = false,
                 deleteTrigger = false
