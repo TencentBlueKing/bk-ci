@@ -52,7 +52,7 @@ class ServiceGithubPermissionResourceImpl @Autowired constructor(
     override fun isPublicProject(authUserId: String, gitProjectId: String): Result<Boolean> {
         val repository = githubRepositoryService.getRepository(
             request = GetRepositoryRequest(
-                id = gitProjectId.toLong()
+                repoId = gitProjectId.toLong()
             ),
             token = githubTokenService.getAccessTokenMustExist(authUserId).accessToken
         )
@@ -63,7 +63,7 @@ class ServiceGithubPermissionResourceImpl @Autowired constructor(
         return try {
             githubRepositoryService.getRepositoryPermissions(
                 request = GetRepositoryPermissionsRequest(
-                    id = gitProjectId.toLong(),
+                    repoId = gitProjectId.toLong(),
                     username = userId
                 ),
                 token = githubTokenService.getAccessTokenMustExist(authUserId).accessToken
@@ -88,7 +88,7 @@ class ServiceGithubPermissionResourceImpl @Autowired constructor(
         return try {
             val repositoryPermissions = githubRepositoryService.getRepositoryPermissions(
                 request = GetRepositoryPermissionsRequest(
-                    id = gitProjectId.toLong(),
+                    repoId = gitProjectId.toLong(),
                     username = userId
                 ),
                 token = githubTokenService.getAccessTokenMustExist(authUserId).accessToken

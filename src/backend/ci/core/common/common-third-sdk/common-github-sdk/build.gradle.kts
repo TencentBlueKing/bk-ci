@@ -26,7 +26,7 @@
  */
 dependencies {
     api(project(":core:common:common-third-sdk:common-sdk-util"))
-    implementation("io.jsonwebtoken:jjwt-api")
-    implementation("io.jsonwebtoken:jjwt-impl")
-    implementation("io.jsonwebtoken:jjwt-jackson")
+    api("io.jsonwebtoken:jjwt-api")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson")
 }

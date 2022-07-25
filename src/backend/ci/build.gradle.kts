@@ -100,9 +100,6 @@ allprojects {
             }
             dependency("com.perforce:p4java:${Versions.p4}")
             dependency("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Versions.JacksonDatatypeJsr}")
-            dependency("io.jsonwebtoken:jjwt-api:${Versions.jjwt}")
-            dependency("io.jsonwebtoken:jjwt-impl:${Versions.jjwt}")
-            dependency("io.jsonwebtoken:jjwt-jackson:${Versions.jjwt}")
         }
     }
 
