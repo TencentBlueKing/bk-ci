@@ -68,12 +68,12 @@ class StoreDailyStatisticServiceImpl @Autowired constructor(
                 dailyStatisticRecord.dailyFailDetail!!,
                 AtomMonitorFailDetailData::class.java
             ) else null
-            val totalNum = if (atomMonitorFailDetailData != null && !userId.isNullOrBlank()) {
+            val totalNum: Int = if (atomMonitorFailDetailData != null && !userId.isNullOrBlank()) {
                 if (storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType)) {
-                    dailySuccessNum + atomMonitorFailDetailData.totalComponentFailNum
+                    (dailySuccessNum + atomMonitorFailDetailData.totalComponentFailNum)
                 } else {
-                    dailySuccessNum + atomMonitorFailDetailData.totalUserFailNum
-                    + atomMonitorFailDetailData.totalThirdFailNum
+                    (dailySuccessNum + atomMonitorFailDetailData.totalUserFailNum
+                            + atomMonitorFailDetailData.totalThirdFailNum)
                 }
             } else dailySuccessNum + dailyFailNum
             val dailySuccessRate =
