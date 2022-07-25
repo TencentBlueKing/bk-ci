@@ -215,7 +215,8 @@ class GithubPRActionGit(
     }
 
     override fun skipStream(): Boolean {
-        return false
+        // 目前先把不支持的action全部过滤不触发
+        return GithubPrEventAction.get(event()) == GithubPrEventAction.STREAM_NOT_SUPPORT
     }
 
     override fun checkProjectConfig() {

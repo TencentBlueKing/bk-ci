@@ -50,7 +50,7 @@ enum class GithubPrEventAction(val value: String) {
 
     companion object {
         fun get(eventAction: GithubPullRequestEvent): GithubPrEventAction {
-            if (eventAction.pullRequest.merged == true && eventAction.action == CLOSE.value) return MERGE
+            if (eventAction.pullRequest.merged && eventAction.action == CLOSE.value) return MERGE
             values().forEach {
                 if (eventAction.action == it.value) return it
             }
