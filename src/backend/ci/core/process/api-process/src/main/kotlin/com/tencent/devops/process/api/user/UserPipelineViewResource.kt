@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
+import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
@@ -204,4 +205,15 @@ interface UserPipelineViewResource {
         viewId: String? = null,
         pipelineView: PipelineViewForm
     ): Result<PipelineViewPreview>
+
+    @ApiOperation("获取流水线组与流水线的对应关系")
+    @GET
+    @Path("/projects/{projectId}/dict")
+    fun dict(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String
+    ): Result<PipelineViewDict>
 }

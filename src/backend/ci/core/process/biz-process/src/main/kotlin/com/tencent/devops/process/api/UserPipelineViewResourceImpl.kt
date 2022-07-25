@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
+import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
@@ -95,6 +96,10 @@ class UserPipelineViewResourceImpl @Autowired constructor(
         pipelineView: PipelineViewForm
     ): Result<PipelineViewPreview> {
         return Result(pipelineViewGroupService.preview(userId, projectId, viewId, pipelineView))
+    }
+
+    override fun dict(userId: String, projectId: String): Result<PipelineViewDict> {
+        return Result(pipelineViewGroupService.dict(userId, projectId))
     }
 
     override fun deleteView(userId: String, projectId: String, viewId: String): Result<Boolean> {

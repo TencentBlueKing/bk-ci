@@ -43,6 +43,7 @@ import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewFilter
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
@@ -56,6 +57,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@SuppressWarnings("LoopWithTooManyJumpStatements")
 class PipelineViewGroupService @Autowired constructor(
     private val pipelineViewService: PipelineViewService,
     private val pipelineGroupService: PipelineGroupService,
@@ -307,24 +309,7 @@ class PipelineViewGroupService @Autowired constructor(
             if (!firstInit) {
                 return@lockAround emptyList()
             }
-            var hasNext = true
-            val pipelineIds = mutableListOf<String>()
-            val step = 1000
-            while (hasNext) {
-                val pipelineInfos = pipelineInfoDao.listPipelineInfoByProject(
-                    dslContext = context ?: dslContext,
-                    projectId = projectId,
-                    offset = 0,
-                    limit = step
-                )
-                pipelineIds.addAll(
-                    pipelineInfos!!.asSequence()
-                        .filter { pipelineViewService.matchView(view, it) }
-                        .map { it.pipelineId }
-                        .toList()
-                )
-                hasNext = pipelineInfos.size == step
-            }
+            val pipelineIds = allPipelineInfos(projectId).map { it.pipelineId }
             pipelineIds.forEach {
                 pipelineViewGroupDao.create(
                     dslContext = context ?: dslContext,
@@ -367,34 +352,24 @@ class PipelineViewGroupService @Autowired constructor(
         viewId: String?,
         pipelineView: PipelineViewForm
     ): PipelineViewPreview {
-        // 获取所以流水线信息
-        val step = 1000
-        var hasNext = true
-        val allPipelineInfoMap = mutableMapOf<String/*pipelineId*/, TPipelineInfoRecord>()
-        while (hasNext) {
-            val pipelineInfos = pipelineInfoDao.listPipelineInfoByProject(
-                dslContext = dslContext,
-                projectId = projectId,
-                offset = 0,
-                limit = step
-            ) ?: break
-            allPipelineInfoMap.putAll(pipelineInfos.associateBy { it.pipelineId })
-            hasNext = pipelineInfos.size == step
+        // 获取所有流水线信息
+        val allPipelineInfoMap = allPipelineInfos(projectId).associateBy { it.pipelineId }
+        if (allPipelineInfoMap.isEmpty()) {
+            return PipelineViewPreview.EMPTY
         }
 
         //获取老流水线组的流水线
-        val oldPipelineMap = if (null == viewId) {
-            emptyMap<String/*pipelineId*/, TPipelineInfoRecord>()
+        val oldPipelineIds = if (null == viewId) {
+            emptyList<String>()
         } else {
             pipelineViewGroupDao
                 .listByViewId(dslContext, projectId, HashUtil.decodeIdToLong(viewId))
                 .map { it.pipelineId }
                 .filter { allPipelineInfoMap.containsKey(it) }
-                .associateWith { allPipelineInfoMap[it] }
         }
 
         // 获取新流水线组的流水线
-        val newPipelineMap = if (pipelineView.viewType == PipelineViewType.DYNAMIC) {
+        val newPipelineIds = if (pipelineView.viewType == PipelineViewType.DYNAMIC) {
             val previewCondition = TPipelineViewRecord()
             previewCondition.logic = pipelineView.logic.name
             previewCondition.filterByPipeineName = StringUtils.EMPTY
@@ -404,22 +379,90 @@ class PipelineViewGroupService @Autowired constructor(
                 .writeValueAsString(pipelineView.filters)
             allPipelineInfoMap.values
                 .filter { pipelineViewService.matchView(previewCondition, it) }
-                .associateBy { it.pipelineId }
+                .map { it.pipelineId }
         } else {
-            pipelineView.pipelineIds
-                .filter { allPipelineInfoMap.containsKey(it) }
-                .associateWith { allPipelineInfoMap[it] }
+            pipelineView.pipelineIds.filter { allPipelineInfoMap.containsKey(it) }
         }
 
         //新增流水线 = 新流水线 - 老流水线
-        val addedPipelines = newPipelineMap.filterNot { oldPipelineMap.containsKey(it.key) }
-            .map { PipelineViewPreview.PipelineInfo(it.key, it.value!!.pipelineName) }
+        val addedPipelineIds = newPipelineIds.filterNot { oldPipelineIds.contains(it) }
 
         // 移除流水线 = 老流水线 - 新流水线
-        val removedPipelines = oldPipelineMap.filterNot { newPipelineMap.containsKey(it.key) }
-            .map { PipelineViewPreview.PipelineInfo(it.key, it.value!!.pipelineName) }
+        val removedPipelineIds = oldPipelineIds.filterNot { newPipelineIds.contains(it) }
 
-        return PipelineViewPreview(addedPipelines, removedPipelines)
+        return PipelineViewPreview(addedPipelineIds, removedPipelineIds)
+    }
+
+    fun dict(userId: String, projectId: String): PipelineViewDict {
+        // 流水线组信息
+        val viewInfos = pipelineViewDao.list(dslContext, projectId)
+        if (viewInfos.isEmpty()) {
+            return PipelineViewDict.EMPTY
+        }
+        // 流水线组映射关系
+        val viewGroups = pipelineViewGroupDao.listByProjectId(dslContext, projectId)
+        if (viewGroups.isEmpty()) {
+            return PipelineViewDict.EMPTY
+        }
+        val viewGroupMap = mutableMapOf<Long/*viewId*/, MutableList<String>/*pipelineIds*/>()
+        viewGroups.forEach {
+            val viewId = it.viewId
+            if (!viewGroupMap.containsKey(viewId)) {
+                viewGroupMap[viewId] = mutableListOf()
+            }
+            viewGroupMap[viewId]!!.add(it.pipelineId)
+        }
+        //流水线信息
+        val pipelineInfoMap = allPipelineInfos(projectId).associateBy { it.pipelineId }
+        if (pipelineInfoMap.isEmpty()) {
+            return PipelineViewDict.EMPTY
+        }
+        // 拼装返回结果
+        val personalViewList = mutableListOf<PipelineViewDict.ViewInfo>()
+        val projectViewList = mutableListOf<PipelineViewDict.ViewInfo>()
+        for (view in viewInfos) {
+            if (!view.isProject && view.createUser != userId) {
+                continue
+            }
+            if (!viewGroupMap.containsKey(view.id)) {
+                continue
+            }
+            val pipelineList = viewGroupMap[view.id]!!.filter { pipelineInfoMap.containsKey(it) }.map {
+                val pipelineInfo = pipelineInfoMap[it]!!
+                PipelineViewDict.ViewInfo.PipelineInfo(pipelineInfo.pipelineId, pipelineInfo.pipelineName)
+            }
+            val viewList = if (view.isProject) projectViewList else personalViewList
+            viewList.add(
+                PipelineViewDict.ViewInfo(
+                    viewId = HashUtil.encodeLongId(view.id),
+                    viewName = view.name,
+                    pipelineList = pipelineList
+                )
+            )
+        }
+        return PipelineViewDict(personalViewList, projectViewList)
+    }
+
+    private fun allPipelineInfos(projectId: String): List<TPipelineInfoRecord> {
+        val pipelineInfos = mutableListOf<TPipelineInfoRecord>()
+        val step = 200
+        var offset = 0
+        var hasNext = true
+        while (hasNext) {
+            val subPipelineInfos = pipelineInfoDao.listPipelineInfoByProject(
+                dslContext = dslContext,
+                projectId = projectId,
+                offset = offset,
+                limit = step
+            ) ?: emptyList<TPipelineInfoRecord>()
+            if (subPipelineInfos.isEmpty()) {
+                break
+            }
+            pipelineInfos.addAll(subPipelineInfos)
+            offset += step
+            hasNext = subPipelineInfos.size == step
+        }
+        return pipelineInfos
     }
 
     companion object {
