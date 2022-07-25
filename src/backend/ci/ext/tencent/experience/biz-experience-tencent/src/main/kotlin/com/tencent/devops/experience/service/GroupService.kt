@@ -262,8 +262,13 @@ class GroupService @Autowired constructor(
             remark = group.remark,
             updator = userId
         )
-
-        // 更新权限
+        // todo 构造一个新增 用户集合 userList
+        // todo 1、查询数据库中该组的内部体验人员A集合，然后查看前端传递的内部体验人员B集合，有多少没有在A中，即新增的。
+        // todo 2、查询是否有新增的，若有则将其加入到userList
+        // todo 3、查询数据库中该组的外部体验人员C集合，然后查看前端传递的外部体验人员C集合，有多少没有在D中，即新增的。
+        // todo 4、查询是否有新增的，若有则将其加入到userList
+        // todo 5、通过该体验组，去查询相关的体验。
+        // todo 6、调用接口进行发送体验。
         experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
         group.innerUsers.forEach {
             experienceGroupInnerDao.create(dslContext, groupId, it)
