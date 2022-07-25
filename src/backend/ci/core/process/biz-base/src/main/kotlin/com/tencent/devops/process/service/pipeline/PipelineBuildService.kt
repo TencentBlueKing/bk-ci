@@ -122,7 +122,7 @@ class PipelineBuildService(
         if (projectVO?.enabled == false) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_START_BUILD_PROJECT_UNENABLE,
-                defaultMessage = "Project [${projectVO.englishName}] disabled",
+                defaultMessage = "Project [${projectVO.englishName}] has disabled",
                 params = arrayOf(projectVO.englishName)
             )
         }
