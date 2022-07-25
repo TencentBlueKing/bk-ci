@@ -29,6 +29,8 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.monitoring.pojo.AtomMonitorFailDetailData
+import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreStatisticDailyDao
 import com.tencent.devops.store.pojo.common.StoreDailyStatistic
 import com.tencent.devops.store.service.common.StoreDailyStatisticService
@@ -40,10 +42,12 @@ import java.time.LocalDateTime
 @Service
 class StoreDailyStatisticServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val storeStatisticDailyDao: StoreStatisticDailyDao
+    private val storeStatisticDailyDao: StoreStatisticDailyDao,
+    private val storeMemberDao: StoreMemberDao
 ) : StoreDailyStatisticService {
 
     override fun getDailyStatisticListByCode(
+        userId: String?,
         storeCode: String,
         storeType: Byte,
         startTime: LocalDateTime,
@@ -60,8 +64,18 @@ class StoreDailyStatisticServiceImpl @Autowired constructor(
         dailyStatisticRecordList?.forEach { dailyStatisticRecord ->
             val dailySuccessNum = dailyStatisticRecord.dailySuccessNum
             val dailyFailNum = dailyStatisticRecord.dailyFailNum
-            // 计算插件运行成功和失败比率
-            val totalNum = dailySuccessNum + dailyFailNum
+            val atomMonitorFailDetailData = if (dailyStatisticRecord.dailyFailDetail != null) JsonUtil.to(
+                dailyStatisticRecord.dailyFailDetail!!,
+                AtomMonitorFailDetailData::class.java
+            ) else null
+            val totalNum = if (atomMonitorFailDetailData != null && !userId.isNullOrBlank()) {
+                if (storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType)) {
+                    dailySuccessNum + atomMonitorFailDetailData.totalComponentFailNum
+                } else {
+                    dailySuccessNum + atomMonitorFailDetailData.totalUserFailNum
+                    + atomMonitorFailDetailData.totalThirdFailNum
+                }
+            } else dailySuccessNum + dailyFailNum
             val dailySuccessRate =
                 if (totalNum > 0) String.format("%.2f", dailySuccessNum.toDouble() * 100 / totalNum)
                     .toDouble() else null

@@ -701,13 +701,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     // 开启插件yml显示
                     yamlFlag = true,
                     editFlag = marketAtomCommonService.checkEditCondition(atomCode),
-                    dailyStatisticList = getRecentDailyStatisticList(atomCode)
+                    dailyStatisticList = getRecentDailyStatisticList(userId, atomCode)
                 )
             )
         }
     }
 
     private fun getRecentDailyStatisticList(
+        userId: String,
         atomCode: String
     ): List<StoreDailyStatistic>? {
         // 统计昨天为截止日期的最近一周的数据
@@ -716,6 +717,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             format = "yyyy-MM-dd"
         )
         return storeDailyStatisticService.getDailyStatisticListByCode(
+            userId = userId,
             storeCode = atomCode,
             storeType = StoreTypeEnum.ATOM.type.toByte(),
             startTime = DateTimeUtil.convertDateToLocalDateTime(

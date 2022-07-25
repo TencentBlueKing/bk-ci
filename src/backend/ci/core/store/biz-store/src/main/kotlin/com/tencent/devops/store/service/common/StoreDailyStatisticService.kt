@@ -40,6 +40,7 @@ interface StoreDailyStatisticService {
      * @param endTime 查询结束时间
      */
     fun getDailyStatisticListByCode(
+        userId: String? = null,
         storeCode: String,
         storeType: Byte,
         startTime: LocalDateTime,

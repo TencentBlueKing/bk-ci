@@ -136,6 +136,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             format = "yyyy-MM-dd"
         )
         val dailyStatisticList = storeDailyStatisticService.getDailyStatisticListByCode(
+            userId = userId,
             storeCode = storeCode,
             storeType = storeType,
             startTime = DateTimeUtil.convertDateToLocalDateTime(
@@ -215,6 +216,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             )
         }
         val dailyStatisticList = storeDailyStatisticService.getDailyStatisticListByCode(
+            userId = userId,
             storeCode = storeCode,
             storeType = storeType,
             startTime = DateTimeUtil.stringToLocalDateTime(startTime),
