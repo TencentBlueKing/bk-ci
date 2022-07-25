@@ -185,6 +185,7 @@ func (k *keeper) checkTaskBasic(taskID string, wg *sync.WaitGroup) {
 				tb.ID, (time.Duration(k.conf.KeeperStartingTimeout) * time.Second).String(), tb.Status.LaunchTime.String())
 			if task.EnoughAvailableResource() {
 				tb.Status.Ready()
+				tb.Status.Start()
 				tb.Status.Message = messageTaskRunning
 				k.updateTaskBasic(tb)
 				blog.Infof("keeper: task(%s) starting timeout, will start with current workers:(%s)", taskID, task.WorkerList())
