@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.openapi.resources.apigw.V4.environment
+package com.tencent.devops.openapi.resources.apigw.v4.environment
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client

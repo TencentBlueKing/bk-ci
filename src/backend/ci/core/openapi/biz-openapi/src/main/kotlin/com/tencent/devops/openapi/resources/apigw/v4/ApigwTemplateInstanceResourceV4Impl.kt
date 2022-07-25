@@ -77,8 +77,8 @@ class ApigwTemplateInstanceResourceV4Impl @Autowired constructor(private val cli
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
         logger.info(
-            "OPENAPI_TEMPLATE_INSTANCE_V4|$userId|update template instances by version|$projectId|$templateId|$version" +
-                "|$useTemplateSettings|$instances"
+            "OPENAPI_TEMPLATE_INSTANCE_V4|$userId|update template instances by version|$projectId|$templateId" +
+                "|$version|$useTemplateSettings|$instances"
         )
         return client.get(ServiceTemplateInstanceResource::class).updateTemplate(
             userId = userId,
