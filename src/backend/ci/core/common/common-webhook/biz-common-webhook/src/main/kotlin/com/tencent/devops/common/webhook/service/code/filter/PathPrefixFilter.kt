@@ -27,74 +27,19 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
-import com.tencent.devops.common.webhook.pojo.code.MATCH_PATHS
-import org.slf4j.LoggerFactory
-
 class PathPrefixFilter(
     private val pipelineId: String,
     private val triggerOnPath: List<String>,
     private val includedPaths: List<String>,
     private val excludedPaths: List<String>
-) : WebhookFilter {
+) : BasePathFilter(
+    pipelineId = pipelineId,
+    triggerOnPath = triggerOnPath,
+    includedPaths = includedPaths,
+    excludedPaths = excludedPaths
+) {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(PathPrefixFilter::class.java)
-    }
-
-    override fun doFilter(response: WebhookFilterResponse): Boolean {
-        logger.info(
-            "$pipelineId|triggerOnPath:$triggerOnPath|includedPaths:$includedPaths" +
-                "|excludedPaths:$excludedPaths|path prefix filter"
-        )
-        return hasNoPathSpecs() || (isPathNotExcluded() && isPathIncluded(response))
-    }
-
-    private fun hasNoPathSpecs(): Boolean {
-        return includedPaths.isEmpty() && excludedPaths.isEmpty()
-    }
-
-    /**
-     * 路径过滤:触发的路径需要满足所有配置的路径
-     */
-    @Suppress("ReturnCount")
-    private fun isPathNotExcluded(): Boolean {
-        triggerOnPath.forEach eventPath@{ eventPath ->
-            excludedPaths.forEach userPath@{ userPath ->
-                if (isPathMatch(eventPath, userPath)) {
-                    return@eventPath
-                }
-            }
-            logger.warn("$pipelineId|excluded event path not match the user path")
-            return true
-        }
-        return false
-    }
-
-    /**
-     * 路径包含: 触发的路径只要有一个满足配置的路径
-     */
-    private fun isPathIncluded(response: WebhookFilterResponse): Boolean {
-        if (includedPaths.isEmpty()) {
-            return true
-        }
-        val matchPaths = mutableSetOf<String>()
-        triggerOnPath.forEach eventPath@{ eventPath ->
-            includedPaths.forEach userPath@{ userPath ->
-                if (isPathMatch(eventPath, userPath)) {
-                    matchPaths.add(userPath)
-                }
-            }
-        }
-        logger.warn("$pipelineId|$matchPaths|event path match the user path")
-        return if (matchPaths.isNotEmpty()) {
-            response.addParam(MATCH_PATHS, matchPaths.joinToString(","))
-            true
-        } else {
-            false
-        }
-    }
-
-    private fun isPathMatch(fullPath: String, prefixPath: String): Boolean {
-        return fullPath.removePrefix("/").startsWith(prefixPath.removePrefix("/"))
+    override fun isPathMatch(eventPath: String, userPath: String): Boolean {
+        return eventPath.removePrefix("/").startsWith(userPath.removePrefix("/"))
     }
 }

@@ -253,5 +253,22 @@ class PathPrefixFilterTest {
             excludedPaths = listOf("aa/", "bb/", "cc/")
         )
         Assertions.assertFalse(pathPrefixFilter.doFilter(response))
+
+        // 路径嵌套
+        pathPrefixFilter = PathPrefixFilter(
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            triggerOnPath = listOf("src/main/ext/include.txt", "doc/b.md", "cc/other.txt"),
+            includedPaths = listOf("src/main"),
+            excludedPaths = listOf("src/main/ext/", "doc/b.md")
+        )
+        Assertions.assertFalse(pathPrefixFilter.doFilter(response))
+
+        pathPrefixFilter = PathPrefixFilter(
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            triggerOnPath = listOf("src/main/ext/include.txt", "doc/b.md", "cc/other.txt"),
+            includedPaths = listOf("src/main", "cc/"),
+            excludedPaths = listOf("src/main/ext/", "doc/b.md")
+        )
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
     }
 }
