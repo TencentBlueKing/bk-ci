@@ -34,6 +34,7 @@ import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
+import com.tencent.devops.process.pojo.classify.PipelineViewHitFilters
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
@@ -216,4 +217,19 @@ interface UserPipelineViewResource {
         @PathParam("projectId")
         projectId: String
     ): Result<PipelineViewDict>
+
+    @ApiOperation("流水线组过滤条件")
+    @GET
+    @Path("/projects/{projectId}/getHitFilters")
+    fun getHitFilters(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @QueryParam("viewId")
+        viewId: String
+    ): Result<PipelineViewHitFilters>
 }

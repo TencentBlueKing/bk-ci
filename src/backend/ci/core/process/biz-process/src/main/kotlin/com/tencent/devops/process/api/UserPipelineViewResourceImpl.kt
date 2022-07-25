@@ -34,6 +34,7 @@ import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
+import com.tencent.devops.process.pojo.classify.PipelineViewHitFilters
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
@@ -100,6 +101,15 @@ class UserPipelineViewResourceImpl @Autowired constructor(
 
     override fun dict(userId: String, projectId: String): Result<PipelineViewDict> {
         return Result(pipelineViewGroupService.dict(userId, projectId))
+    }
+
+    override fun getHitFilters(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        viewId: String
+    ): Result<PipelineViewHitFilters> {
+        return Result(pipelineViewService.getHitFilters(userId, projectId, pipelineId, viewId))
     }
 
     override fun deleteView(userId: String, projectId: String, viewId: String): Result<Boolean> {

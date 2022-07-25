@@ -309,7 +309,9 @@ class PipelineViewGroupService @Autowired constructor(
             if (!firstInit) {
                 return@lockAround emptyList()
             }
-            val pipelineIds = allPipelineInfos(projectId).map { it.pipelineId }
+            val pipelineIds = allPipelineInfos(projectId)
+                .filter { pipelineViewService.matchView(view, it) }
+                .map { it.pipelineId }
             pipelineIds.forEach {
                 pipelineViewGroupDao.create(
                     dslContext = context ?: dslContext,

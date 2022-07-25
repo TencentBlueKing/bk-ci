@@ -53,6 +53,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewFilterByCreator
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByLabel
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
+import com.tencent.devops.process.pojo.classify.PipelineViewHitFilters
 import com.tencent.devops.process.pojo.classify.PipelineViewIdAndName
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import com.tencent.devops.process.pojo.classify.enums.Condition
@@ -457,7 +458,6 @@ class PipelineViewService @Autowired constructor(
         return Triple(first = filterByNames, second = filterByCreators, third = filterByLabels)
     }
 
-    @SuppressWarnings("LoopWithTooManyJumpStatements")
     fun matchView(
         pipelineView: TPipelineViewRecord,
         pipelineInfo: TPipelineInfoRecord
@@ -603,6 +603,10 @@ class PipelineViewService @Autowired constructor(
                 top = viewScoreMap.containsKey(it.id)
             )
         }
+    }
+
+    fun getHitFilters(userId: String, projectId: String, pipelineId: String, viewId: String): PipelineViewHitFilters {
+        TODO("Not yet implemented")
     }
 
     companion object {
