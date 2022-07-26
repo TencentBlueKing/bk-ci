@@ -36,6 +36,7 @@ import feign.Response
 import feign.codec.ErrorDecoder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.io.BufferedReader
 import java.io.IOException
 
 /**
@@ -52,7 +53,8 @@ class ClientErrorDecoder @Autowired constructor(val objectMapper: ObjectMapper) 
         try {
             result = objectMapper.readValue(responseStream)
         } catch (ignore: IOException) {
-            return ClientException("内部服务返回结果无法解析 $response")
+            val content = responseStream.bufferedReader().use(BufferedReader::readText)
+            return ClientException("内部服务返回结果无法解析 status:${response.status()} body:$content")
         }
         return RemoteServiceException(
             httpStatus = response.status(),
