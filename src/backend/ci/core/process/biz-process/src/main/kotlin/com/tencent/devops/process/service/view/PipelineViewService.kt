@@ -44,6 +44,7 @@ import com.tencent.devops.process.dao.PipelineViewUserLastViewDao
 import com.tencent.devops.process.dao.PipelineViewUserSettingsDao
 import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
+import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -81,7 +82,8 @@ class PipelineViewService @Autowired constructor(
     private val pipelineViewDao: PipelineViewDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineLabelDao: PipelineLabelDao,
-    private val pipelineGrouyDao: PipelineGroupDao,
+    private val pipelineGroupDao: PipelineGroupDao,
+    private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
     private val pipelineViewTopDao: PipelineViewTopDao,
     private val pipelineViewUserSettingDao: PipelineViewUserSettingsDao,
     private val pipelineViewLastViewDao: PipelineViewUserLastViewDao,
@@ -652,15 +654,17 @@ class PipelineViewService @Autowired constructor(
                     )
                 )
             } else if (filter is PipelineViewFilterByLabel) {
-                val labelGroup = pipelineGrouyDao.get(dslContext, decode(filter.groupId)) ?: continue
-                val labels = pipelineLabelDao.getByGroupIds(dslContext, projectId, setOf(decode(filter.groupId)))
+                val group = pipelineGroupDao.get(dslContext, decode(filter.groupId)) ?: continue
+                val labels =
+                    pipelineLabelDao.getByIds(dslContext, projectId, filter.labelIds.map { decode(it) }.toSet())
+                val labelIds = pipelineLabelPipelineDao.listLabels(dslContext, projectId, pipelineId).map { it.labelId }
                 labels.forEach {
                     hitFilters.filters.add(
                         PipelineViewHitFilters.FilterInfo(
-                            key = labelGroup.name,
+                            key = group.name,
                             hits = mutableListOf(
                                 PipelineViewHitFilters.FilterInfo.Hit(
-                                    hit = filter.labelIds.contains(encode(it.id)),
+                                    hit = labelIds.contains(it.id),
                                     value = it.name
                                 )
                             )
