@@ -111,13 +111,18 @@ class TXDockerHostImageScanService(
         imageId: String
     ): String {
         val dockerInspect = dockerClient.inspectImageCmd(imageId).exec()
+
+        val script = "docker inspect $imageId"
+        val scanResult = ShellUtil.executeEnhance(script)
+
+        logger.info("TEST =======>> dockerInspect: $scanResult")
         val leakScanReq = LeakScanReq(
-            content = JsonUtil.toJson(dockerInspect),
-            format = SCAN_FORMAT
+            content = scanResult,
+            format_type = SCAN_FORMAT
         )
 
         val dockerIp = CommonUtils.getInnerIP()
-        val request = Request.Builder().url("http://$dockerIp:8888/scan/directory")
+        val request = Request.Builder().url("http://$dockerIp:8888/scan/directory/")
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .post(
@@ -157,7 +162,7 @@ class TXDockerHostImageScanService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TXDockerHostImageScanService::class.java)
-        private const val SCAN_FORMAT = "json"
+        private const val SCAN_FORMAT = "html"
         private const val SENSITIVE_RESULT = "sensitiveResult"
         private const val LEAK_RESULT = "leakResult"
     }
