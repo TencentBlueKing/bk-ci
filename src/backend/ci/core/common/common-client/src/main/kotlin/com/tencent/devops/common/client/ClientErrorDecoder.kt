@@ -48,12 +48,11 @@ class ClientErrorDecoder @Autowired constructor(val objectMapper: ObjectMapper) 
 
     override fun decode(methodKey: String, response: Response): Exception {
         // 首先判断返回结果是否能被序列化
-        val responseStream = response.body().asInputStream()
+        val content = response.body().asReader(Charsets.UTF_8).buffered().use(BufferedReader::readText)
         val result: Result<*>
         try {
-            result = objectMapper.readValue(responseStream)
+            result = objectMapper.readValue(content)
         } catch (ignore: IOException) {
-            val content = response.body().asReader(Charsets.UTF_8).buffered().use(BufferedReader::readText)
             return ClientException("内部服务返回结果无法解析 status:${response.status()} body:$content")
         }
         return RemoteServiceException(
