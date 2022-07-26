@@ -269,6 +269,7 @@ class GroupService @Autowired constructor(
         // todo 4、查询是否有新增的，若有则将其加入到userList
         // todo 5、通过该体验组，去查询相关的体验。
         // todo 6、调用接口进行发送体验。
+        // Xiugai
         // 修改权限
         experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
         group.innerUsers.forEach {
