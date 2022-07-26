@@ -47,6 +47,7 @@ import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.NotifyContext
 import com.tencent.devops.notify.pojo.NotifyMessageCommonTemplate
 import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
+import com.tencent.devops.notify.pojo.NotifyTemplateMessage
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -361,6 +362,14 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             }
         }
 
+        if (!updateOtherNotifyMessageTemplate(notifyMessageTemplateRequest, notifyTypeScopeSet)) {
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("notifyType"),
+                data = false
+            )
+        }
+
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             // 更新Common表中的主体信息
@@ -430,9 +439,25 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                         )
                     }
                 }
+                updateOtherSpecialTemplate(it, templateId, uid, userId)
             }
         }
         return Result(true)
+    }
+
+    fun updateOtherNotifyMessageTemplate(
+        notifyMessageTemplateRequest: NotifyTemplateMessageRequest,
+        notifyTypeScopeSet: MutableSet<String>
+    ): Boolean {
+        return true
+    }
+
+    fun updateOtherSpecialTemplate(
+        it: NotifyTemplateMessage,
+        templateId: String,
+        uid: String,
+        userId: String
+    ) {
     }
 
     /**
@@ -590,13 +615,31 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 )
             }
         }
+        // 其余内部实现
+        sendOtherSpecialNotifyMessage(sendAllNotify, request, commonNotifyMessageTemplateRecord.id, notifyTypeScope)
+
+        return Result(true)
+    }
+
+    fun sendOtherSpecialNotifyMessage(
+        sendAllNotify: Boolean,
+        request: SendNotifyMessageTemplateRequest,
+        templateId: String,
+        notifyTypeScope: String
+    ) {
+    }
+
+    override fun completeNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
+        // TODO("core暂无实现,需要支持时添加")
         return Result(true)
     }
 
     override fun getNotifyMessageByTemplate(request: NotifyMessageContextRequest): Result<NotifyContext?> {
-        logger.info("getNotifyMessageByTemplate|templateCode=${request.templateCode}|" +
-            "notifyTypeEnum=${request.notifyType.name}|" +
-            "titleParams=${request.titleParams}|bodyParams=${request.bodyParams}")
+        logger.info(
+            "getNotifyMessageByTemplate|templateCode=${request.templateCode}|" +
+                "notifyTypeEnum=${request.notifyType.name}|" +
+                "titleParams=${request.titleParams}|bodyParams=${request.bodyParams}"
+        )
         // 1.查出消息模板
         val commonNotifyMessageTemplateRecord =
             commonNotifyMessageTemplateDao.getCommonNotifyMessageTemplateByCode(dslContext, request.templateCode)
@@ -653,7 +696,8 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         // 企业微信通知触发人
         val triggerUserId = sendNotifyMessageTemplateRequest.bodyParams?.get("cc")
         if (null != triggerUserId && "" != triggerUserId &&
-            !sendNotifyMessageTemplateRequest.receivers.contains(triggerUserId)) {
+            !sendNotifyMessageTemplateRequest.receivers.contains(triggerUserId)
+        ) {
             rtxNotifyMessage.addReceiver(triggerUserId)
         }
         rtxNotifyMessage.title = title
@@ -729,7 +773,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         weworkService.sendMqMsg(wechatNotifyMessage)
     }
 
-    private fun replaceContentParams(params: Map<String, String>?, content: String): String {
+    protected fun replaceContentParams(params: Map<String, String>?, content: String): String {
         var content1 = content
         params?.forEach { paramName, paramValue ->
             content1 = content1.replace("\${$paramName}", paramValue).replace("#{$paramName}", paramValue)

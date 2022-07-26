@@ -284,7 +284,8 @@ class BuildEndControl @Autowired constructor(
                             projectId = projectId, pipelineId = pipelineId, userId = it.starter,
                             stageId = it.stageId, buildId = it.buildId, containerId = it.containerId,
                             containerHashId = it.containerHashId, containerType = it.containerType,
-                            taskId = it.taskId, taskParam = it.taskParams, actionType = ActionType.TERMINATE
+                            taskId = it.taskId, taskParam = it.taskParams, actionType = ActionType.TERMINATE,
+                            executeCount = it.executeCount ?: 1
                         )
                     )
                 }
@@ -419,7 +420,8 @@ class BuildEndControl @Autowired constructor(
                 containerType = parentBuildTask.containerType,
                 taskId = parentBuildTask.taskId,
                 taskParam = parentBuildTask.taskParams,
-                actionType = ActionType.REFRESH
+                actionType = ActionType.REFRESH,
+                executeCount = parentBuildTask.executeCount ?: 1
             )
         )
     }

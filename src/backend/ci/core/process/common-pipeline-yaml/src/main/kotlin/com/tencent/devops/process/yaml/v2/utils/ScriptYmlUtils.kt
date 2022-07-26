@@ -214,6 +214,9 @@ object ScriptYmlUtils {
                 val ifPrefix = line.substring(0 until line.indexOfFirst { it == ':' } + 1)
                 val condition = line.substring(line.indexOfFirst { it == '"' } + 1 until line.length).trimEnd()
                     .removeSuffix("\"")
+
+                logger.info("IF|CONDITION|$condition")
+
                 // 去掉花括号
                 val baldExpress = condition.replace("\${{", "").replace("}}", "").trim()
                 val originItems: List<Word>
