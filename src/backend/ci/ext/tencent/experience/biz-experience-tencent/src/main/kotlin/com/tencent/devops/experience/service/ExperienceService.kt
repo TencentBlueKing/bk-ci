@@ -120,6 +120,7 @@ class ExperienceService @Autowired constructor(
     private val experienceBaseService: ExperienceBaseService,
     private val experiencePermissionService: ExperiencePermissionService,
     private val experiencePushService: ExperiencePushService,
+    private val experienceService: ExperienceService,
     private val experiencePushSubscribeDao: ExperiencePushSubscribeDao
 ) {
     private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
@@ -551,14 +552,29 @@ class ExperienceService @Autowired constructor(
         experience.experienceGroups?.forEach {
             experienceGroupDao.create(dslContext, experienceRecord.id, HashUtil.decodeIdToLong(it))
         }
-
-        // todo 构造一个新增 用户集合 userList
-        // todo 1、查询数据库中该体验的内部体验人员A集合，然后查看前端传递的内部体验人员B集合，有多少没有在A中，即新增的。
-        // todo 2、查询是否有新增的，若有则将其加入到userList
-        // todo 3、查询数据库中该体验的外部体验人员C集合，然后查看前端传递的外部体验人员C集合，有多少没有在D中，即新增的。
-        // todo 4、查询是否有新增的，若有则将其加入到userList
-        // todo 5、通过该体验组，去查询相关的体验。
-        // todo 6、调用接口进行发送体验。
+        // 新增内部人员
+        val oldInnerUsers = experienceInnerDao.listUserIdsByRecordId(dslContext, experienceRecord.id).map { it.value1() }.toSet()
+        val latestInnerUsers = experience.innerUsers
+        val newAddInnerUsers = latestInnerUsers?.subtract(oldInnerUsers)?.toMutableSet()
+        // 新增外部人员
+        val oldOuterUsers = experienceOuterDao.listUserIdsByRecordId(dslContext, experienceRecord.id).map { it.value1() }.toSet()
+        val latestOldOuterUsers = experience.outerUsers
+        val newAddOuterUsers = latestOldOuterUsers?.subtract(oldOuterUsers)?.toMutableSet()
+        // 向新增人员发送最新版本体验信息
+        if (newAddOuterUsers != null) {
+            sendNotificationToNewAddUser(
+                    newAddUsers = newAddOuterUsers,
+                    userType = "newAddOuterUsers",
+                    experienceId = experienceRecord.id
+            )
+        }
+        if (newAddInnerUsers != null) {
+            sendNotificationToNewAddUser(
+                    newAddUsers = newAddInnerUsers,
+                    userType = "newAddInnerUsers",
+                    experienceId = experienceRecord.id
+            )
+        }
 
         // 更新内部成员
         experience.innerUsers?.let { experienceInnerDao.deleteByRecordId(dslContext, experienceRecord.id, it) }
@@ -598,6 +614,39 @@ class ExperienceService @Autowired constructor(
         }
 
         sendNotification(experienceRecord.id)
+    }
+
+    private fun sendNotificationToNewAddUser(
+            newAddUsers: MutableSet<String>,
+            userType: String,
+            experienceId: Long,
+    ) {
+        // todo 是否需要判断体验是否过期？
+        val experienceRecord = experienceDao.get(dslContext, experienceId)
+        when (userType) {
+            "newAddOuterUsers" -> {
+                experienceService.sendMessageToOuterReceivers(
+                        outerReceivers = newAddUsers,
+                        experienceRecord = experienceRecord
+                )
+            }
+            "newAddInnerUsers" -> {
+                val notifyTypeList = objectMapper.readValue<Set<NotifyType>>(experienceRecord.notifyTypes)
+                val pcUrl = experienceService.getPcUrl(experienceRecord.projectId, experienceId)
+                val appUrl = experienceService.getShortExternalUrl(experienceId)
+                val projectName =
+                        client.get(ServiceProjectResource::class).get(experienceRecord.projectId).data!!.projectName
+                experienceService.sendMessageToInnerReceivers(
+                        notifyTypeList = notifyTypeList,
+                        projectName = projectName,
+                        innerReceivers = newAddUsers,
+                        experienceRecord = experienceRecord,
+                        pcUrl = pcUrl,
+                        appUrl = appUrl
+                )
+            }
+
+        }
     }
 
     fun getCreatorById(experienceHashId: String): String {

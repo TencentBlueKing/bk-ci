@@ -27,6 +27,8 @@
 
 package com.tencent.devops.experience.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
@@ -35,12 +37,14 @@ import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.ExperienceAuthServiceCode
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
+import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.GroupDao
 import com.tencent.devops.experience.pojo.Group
 import com.tencent.devops.experience.pojo.GroupCreate
@@ -50,6 +54,7 @@ import com.tencent.devops.experience.pojo.GroupUpdate
 import com.tencent.devops.experience.pojo.GroupUsers
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.enums.ProjectGroup
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -58,14 +63,18 @@ import javax.ws.rs.core.Response
 @Service
 class GroupService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val client: Client,
     private val groupDao: GroupDao,
     private val bsAuthProjectApi: AuthProjectApi,
     private val experienceServiceCode: ExperienceAuthServiceCode,
     private val experienceGroupInnerDao: ExperienceGroupInnerDao,
     private val experienceGroupOuterDao: ExperienceGroupOuterDao,
     private val experienceGroupDao: ExperienceGroupDao,
+    private val experienceDao: ExperienceDao,
+    private val objectMapper: ObjectMapper,
     private val experienceBaseService: ExperienceBaseService,
-    private val experiencePermissionService: ExperiencePermissionService
+    private val experiencePermissionService: ExperiencePermissionService,
+    private val experienceService: ExperienceService
 ) {
 
     private val resourceType = AuthResourceType.EXPERIENCE_GROUP
@@ -262,14 +271,31 @@ class GroupService @Autowired constructor(
             remark = group.remark,
             updator = userId
         )
-        // todo 构造一个新增 用户集合 userList
-        // todo 1、查询数据库中该组的内部体验人员A集合，然后查看前端传递的内部体验人员B集合，有多少没有在A中，即新增的。
-        // todo 2、查询是否有新增的，若有则将其加入到userList
-        // todo 3、查询数据库中该组的外部体验人员C集合，然后查看前端传递的外部体验人员C集合，有多少没有在D中，即新增的。
-        // todo 4、查询是否有新增的，若有则将其加入到userList
-        // todo 5、通过该体验组，去查询相关的体验。
-        // todo 6、调用接口进行发送体验。
-        // Xiugai
+        // 新增内部人员
+        // todo 是否为空
+        val oldInnerUsers = experienceGroupInnerDao.listByGroupIds(dslContext, setOf(groupId)).map { it.userId }.toSet()
+        val latestInnerUsers = group.innerUsers
+        val newAddInnerUsers = latestInnerUsers.subtract(oldInnerUsers).toMutableSet()
+        // 新增外部人员
+        val oldOuterUsers = experienceGroupOuterDao.listByGroupIds(dslContext, setOf(groupId)).map { it.outer }.toSet()
+        val latestOldOuterUsers = group.outerUsers
+        val newAddOuterUsers = latestOldOuterUsers.subtract(oldOuterUsers).toMutableSet()
+        // 向新增人员发送最新版本体验信息
+        if (newAddOuterUsers != null) {
+            sendNotificationToNewAddUser(
+                    newAddUsers = newAddOuterUsers,
+                    userType = "newAddOuterUsers",
+                    groupId = groupId
+            )
+        }
+        if (newAddInnerUsers != null) {
+            sendNotificationToNewAddUser(
+                    newAddUsers = newAddInnerUsers,
+                    userType = "newAddInnerUsers",
+                    groupId = groupId
+            )
+        }
+
         // 修改权限
         experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
         group.innerUsers.forEach {
@@ -285,6 +311,44 @@ class GroupService @Autowired constructor(
             groupId = groupId,
             groupName = group.name
         )
+    }
+
+    private fun sendNotificationToNewAddUser(
+            newAddUsers: MutableSet<String>,
+            userType: String,
+            groupId: Long,
+    ) {
+        val experienceIds = mutableSetOf<Long>()
+        val groupIds = mutableSetOf<Long>()
+        groupIds.add(groupId)
+        experienceIds.addAll(experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds).map { it.value1() }.toSet())
+        experienceIds.forEach { experienceId ->
+            // todo 是否需要判断体验是否过期？
+            val experienceRecord = experienceDao.get(dslContext, experienceId)
+            when (userType) {
+                "newAddOuterUsers" -> {
+                    experienceService.sendMessageToOuterReceivers(
+                            outerReceivers = newAddUsers,
+                            experienceRecord = experienceRecord
+                    )
+                }
+                "newAddInnerUsers" -> {
+                    val notifyTypeList = objectMapper.readValue<Set<NotifyType>>(experienceRecord.notifyTypes)
+                    val pcUrl = experienceService.getPcUrl(experienceRecord.projectId, experienceId)
+                    val appUrl = experienceService.getShortExternalUrl(experienceId)
+                    val projectName =
+                            client.get(ServiceProjectResource::class).get(experienceRecord.projectId).data!!.projectName
+                    experienceService.sendMessageToInnerReceivers(
+                            notifyTypeList = notifyTypeList,
+                            projectName = projectName,
+                            innerReceivers = newAddUsers,
+                            experienceRecord = experienceRecord,
+                            pcUrl = pcUrl,
+                            appUrl = appUrl
+                    )
+                }
+            }
+        }
     }
 
     fun delete(userId: String, projectId: String, groupHashId: String) {
