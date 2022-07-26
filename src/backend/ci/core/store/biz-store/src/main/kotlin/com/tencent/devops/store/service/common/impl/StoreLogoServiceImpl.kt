@@ -124,7 +124,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
             // 判断上传的logo是否为512x512规格
             val width = img.width
             val height = img.height
-            if (sizeLimitiFlag!!) {
+            if (sizeLimitiFlag != false) {
                 if (width != height || width < allowUploadLogoWidth.toInt()) {
                     return MessageCodeUtil.generateResponseDataObject(
                         StoreMessageCode.USER_ATOM_LOGO_SIZE_IS_INVALID,
