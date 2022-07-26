@@ -36,6 +36,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewHitFilters
 import com.tencent.devops.process.pojo.classify.PipelineViewId
+import com.tencent.devops.process.pojo.classify.PipelineViewMatchDynamic
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import com.tencent.devops.process.pojo.classify.PipelineViewTopForm
@@ -110,6 +111,14 @@ class UserPipelineViewResourceImpl @Autowired constructor(
         viewId: String
     ): Result<PipelineViewHitFilters> {
         return Result(pipelineViewService.getHitFilters(userId, projectId, pipelineId, viewId))
+    }
+
+    override fun matchDynamicView(
+        userId: String,
+        projectId: String,
+        pipelineViewMatchDynamic: PipelineViewMatchDynamic
+    ): Result<List<String>> {
+        return Result(pipelineViewService.matchDynamicView(userId, projectId, pipelineViewMatchDynamic))
     }
 
     override fun deleteView(userId: String, projectId: String, viewId: String): Result<Boolean> {

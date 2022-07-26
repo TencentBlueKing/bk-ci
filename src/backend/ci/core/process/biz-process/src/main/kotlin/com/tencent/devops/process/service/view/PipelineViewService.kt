@@ -59,6 +59,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewHitFilters
 import com.tencent.devops.process.pojo.classify.PipelineViewIdAndName
+import com.tencent.devops.process.pojo.classify.PipelineViewMatchDynamic
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import com.tencent.devops.process.pojo.classify.enums.Condition
 import com.tencent.devops.process.pojo.classify.enums.Logic
@@ -305,7 +306,8 @@ class PipelineViewService @Autowired constructor(
                 projected = it.isProject,
                 createTime = it.createTime.timestamp(),
                 updateTime = it.updateTime.timestamp(),
-                creator = it.createUser
+                creator = it.createUser,
+                viewType = it.viewType
             )
         }
     }
@@ -608,7 +610,8 @@ class PipelineViewService @Autowired constructor(
                 createTime = it.createTime.timestamp(),
                 updateTime = it.updateTime.timestamp(),
                 creator = it.createUser,
-                top = viewScoreMap.containsKey(it.id)
+                top = viewScoreMap.containsKey(it.id),
+                viewType = it.viewType
             )
         }
     }
@@ -679,6 +682,57 @@ class PipelineViewService @Autowired constructor(
 
         }
         return hitFilters
+    }
+
+    fun matchDynamicView(
+        userId: String,
+        projectId: String,
+        pipelineViewMatchDynamic: PipelineViewMatchDynamic
+    ): List<String> {
+        val viewList = pipelineViewDao.list(dslContext, projectId)
+        val labelGroupMap = pipelineViewMatchDynamic.labels.associate { it.groupId to it.labelIds.toSet() }
+        val result = mutableListOf<String>()
+        for (view in viewList) {
+            if (!view.isProject && view.createUser != userId) {
+                continue
+            }
+            if (view.viewType == PipelineViewType.STATIC) {
+                continue
+            }
+            val filters = getFilters(view.filterByPipeineName, view.filterByCreator, view.filters)
+            var isMatch = view.logic == Logic.AND.name
+            for (filter in filters) {
+                val match = if (filter is PipelineViewFilterByName) {
+                    pipelineViewMatchDynamic.pipelineName.contains(filter.pipelineName)
+                } else if (filter is PipelineViewFilterByCreator) {
+                    filter.userIds.contains(userId)
+                } else if (filter is PipelineViewFilterByLabel) {
+                    val newLabels = labelGroupMap[filter.groupId]
+                    if (newLabels != null) {
+                        val oldLabels = filter.labelIds.toMutableSet()
+                        oldLabels.retainAll(newLabels)
+                        oldLabels.isNotEmpty()
+                    } else {
+                        false
+                    }
+                } else {
+                    continue
+                }
+
+                if (view.logic == Logic.OR.name && match) {
+                    isMatch = true
+                    break
+                }
+                if (view.logic == Logic.AND.name && !match) {
+                    isMatch = false
+                    break
+                }
+            }
+            if (isMatch) {
+                result.add(encode(view.id))
+            }
+        }
+        return result
     }
 
     companion object {

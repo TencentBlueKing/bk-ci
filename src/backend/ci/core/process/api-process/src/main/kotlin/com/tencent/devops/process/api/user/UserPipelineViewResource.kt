@@ -36,6 +36,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewHitFilters
 import com.tencent.devops.process.pojo.classify.PipelineViewId
+import com.tencent.devops.process.pojo.classify.PipelineViewMatchDynamic
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import com.tencent.devops.process.pojo.classify.PipelineViewTopForm
@@ -232,4 +233,16 @@ interface UserPipelineViewResource {
         @QueryParam("viewId")
         viewId: String
     ): Result<PipelineViewHitFilters>
+
+    @ApiOperation("命中动态组情况")
+    @POST
+    @Path("/projects/{projectId}/matchDynamicView")
+    fun matchDynamicView(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        pipelineViewMatchDynamic: PipelineViewMatchDynamic
+    ): Result<List<String>>
 }
