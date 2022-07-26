@@ -14,13 +14,14 @@
                             v-validate.initial="'max:40'"
                             name="pipelineName"
                             id="pipelineName"
-                            v-model.trim="currentFilter.filterByPipelineName"
-                            @enter="filterCommit"
                             :placeholder="$t('newlist.filterByNameTips')"
                             :class="{
                                 'is-danger': errors.has('pipelineName'),
                                 'input-text': true
                             }"
+                            clearable
+                            v-model.trim="currentFilter.filterByPipelineName"
+                            @enter="filterCommit"
                         />
                         <p :class="errors.has('pipelineName') ? 'error-tips' : 'normal-tips'">{{errors.first("pipelineName")}}</p>
                     </div>
@@ -42,8 +43,7 @@
                     </div>
                     <div class="form-group filter-modify">
                         <bk-button theme="primary" size="small" :disabled="isDisabled" @click.stop.prevent="filterCommit">{{ $t('newlist.filter') }}</bk-button>
-                        <a class="btn"
-                            @click="empty">{{ $t('newlist.reset') }}</a>
+                        <bk-button text class="btn" @click="resetFilter">{{ $t('newlist.reset') }}</bk-button>
                     </div>
                 </div>
             </div>
@@ -124,7 +124,6 @@
                     }
                 })
             },
-            selected (id, data) {},
             async filterCommit () {
                 let labels = []
                 let labelIds = ''
@@ -142,6 +141,10 @@
                     filterByPipelineName: this.currentFilter.filterByPipelineName,
                     filterByCreator: this.currentFilter.filterByCreator.join(',')
                 }, this.currentFilter)
+            },
+            resetFilter () {
+                this.empty()
+                this.$nextTick(this.filterCommit)
             },
             empty () {
                 this.currentFilter = {

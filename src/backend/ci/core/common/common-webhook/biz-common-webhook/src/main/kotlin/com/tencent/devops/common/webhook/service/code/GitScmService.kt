@@ -295,6 +295,29 @@ class GitScmService @Autowired constructor(
         }
     }
 
+    fun getRepoAuthUser(
+        projectId: String,
+        repo: Repository
+    ): String {
+        val type = getType(repo) ?: return ""
+        val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+        return try {
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType
+            )
+            client.get(ServiceGitResource::class).getUserInfoByToken(
+                token = token,
+                tokenType = tokenType
+            ).data?.username ?: ""
+        } catch (ignore: Throwable) {
+            logger.error("fail to get repo auth user", ignore)
+            ""
+        }
+    }
+
     private fun getToken(projectId: String, credentialId: String, userName: String, authType: TokenTypeEnum): String {
         return if (authType == TokenTypeEnum.OAUTH) {
             client.get(ServiceOauthResource::class).gitGet(userName).data?.accessToken ?: ""

@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.trigger.actions
 
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.scm.pojo.WebhookCommit
 
 /**
  * 和Git的一些操作的相关抽象类，方便不同源操作
@@ -44,4 +45,6 @@ interface GitBaseAction : BaseAction {
     fun getWebHookStartParam(triggerOn: TriggerOn): Map<String, String>
 
     override fun needAddWebhookParams() = true
+
+    fun getWebhookCommitList(page: Int, pageSize: Int): List<WebhookCommit> = emptyList()
 }

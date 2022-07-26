@@ -109,11 +109,11 @@ class LambdaPipelineModelService @Autowired constructor(
                 kafkaClient.send(pipelineResourceTopic, JsonUtil.toJson(dataPlatPipelineResource))
 //                kafkaClient.send(KafkaTopic.LANDUN_PIPELINE_RESOURCE_TOPIC, JsonUtil.toJson(dataPlatPipelineResource))
             } else {
-                logger.error("onModelExchange sync pipeline resource failed, pipelineId: $pipelineId," +
+                logger.warn("onModelExchange sync pipeline resource failed, pipelineId: $pipelineId," +
                         " pipelineResource is null.")
             }
         } catch (e: Exception) {
-            logger.error("onModelExchange sync pipeline resource failed, pipelineId: $pipelineId", e)
+            logger.warn("onModelExchange sync pipeline resource failed, pipelineId: $pipelineId", e)
         }
     }
 
@@ -146,10 +146,10 @@ class LambdaPipelineModelService @Autowired constructor(
 //                    pipelineInfo = pipelineInfo
 //                )))
             } else {
-                logger.error("onModelExchange sync pipelineInfo failed, pipelineId: $pipelineId, pipelineInfo is null.")
+                logger.warn("onModelExchange sync pipelineInfo failed, pipelineId: $pipelineId, pipelineInfo is null.")
             }
         } catch (e: Exception) {
-            logger.error("onModelExchange sync pipelineInfo failed, pipelineId: $pipelineId", e)
+            logger.warn("onModelExchange sync pipelineInfo failed, pipelineId: $pipelineId", e)
         }
     }
 

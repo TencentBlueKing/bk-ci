@@ -30,6 +30,8 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
@@ -42,6 +44,7 @@ import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
+import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -94,7 +97,27 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         pipelineId: String,
         page: Int?,
         pageSize: Int?,
-        updateTimeDesc: Boolean?
+        updateTimeDesc: Boolean?,
+        materialAlias: List<String>?,
+        materialUrl: String?,
+        materialBranch: List<String>?,
+        materialCommitId: String?,
+        materialCommitMessage: String?,
+        status: List<BuildStatus>?,
+        trigger: List<StartType>?,
+        queueTimeStartTime: Long?,
+        queueTimeEndTime: Long?,
+        startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?,
+        totalTimeMin: Long?,
+        totalTimeMax: Long?,
+        remark: String?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?,
+        buildMsg: String?,
+        startUser: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         logger.info("$pipelineId|getHistoryBuild|user($userId)")
         return client.get(ServiceBuildResource::class).getHistoryBuild(
@@ -104,7 +127,27 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             page = page ?: 1,
             pageSize = pageSize ?: 20,
             channelCode = apiGatewayUtil.getChannelCode(),
-            updateTimeDesc = updateTimeDesc
+            updateTimeDesc = updateTimeDesc,
+            materialAlias = materialAlias,
+            materialUrl = materialUrl,
+            materialBranch = materialBranch,
+            materialCommitId = materialCommitId,
+            materialCommitMessage = materialCommitMessage,
+            status = status,
+            trigger = trigger,
+            queueTimeStartTime = queueTimeStartTime,
+            queueTimeEndTime = queueTimeEndTime,
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
+            totalTimeMin = totalTimeMin,
+            totalTimeMax = totalTimeMax,
+            remark = remark,
+            buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd,
+            buildMsg = buildMsg,
+            startUser = startUser
         )
     }
 
@@ -261,6 +304,26 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId
+        )
+    }
+
+    override fun manualReview(
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        buildId: String,
+        elementId: String,
+        params: ReviewParam
+    ): Result<Boolean> {
+        logger.info("v4|manualReview $userId|$projectId|$pipelineId|$buildId|$elementId|$params")
+        return client.get(ServiceBuildResource::class).manualReview(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
+            buildId = buildId,
+            elementId = elementId,
+            params = params,
+            channelCode = ChannelCode.BS
         )
     }
 

@@ -97,6 +97,7 @@ import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -450,7 +451,7 @@ class PipelineBuildFacadeService(
 
             logger.info(
                 "ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
-                    "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
+                        "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
             )
 
             paramMap[PIPELINE_RETRY_COUNT] = BuildParameters(PIPELINE_RETRY_COUNT, retryCount)
@@ -1278,12 +1279,6 @@ class PipelineBuildFacadeService(
                 arrayOf(buildId)
             )
 
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
-                ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
-                arrayOf(buildId)
-            )
-
         val allVariable = buildVariableService.getAllVariable(projectId, buildId)
 
         return Result(
@@ -1291,7 +1286,7 @@ class PipelineBuildFacadeService(
                 id = buildHistory.id,
                 userId = buildHistory.userId,
                 trigger = buildHistory.trigger,
-                pipelineName = pipelineInfo.pipelineName,
+                pipelineName = allVariable[PIPELINE_NAME] ?: "",
                 buildNum = buildHistory.buildNum ?: 1,
                 pipelineVersion = buildHistory.pipelineVersion,
                 status = buildHistory.status,
@@ -1446,7 +1441,10 @@ class PipelineBuildFacadeService(
         remark: String?,
         buildNoStart: Int?,
         buildNoEnd: Int?,
-        buildMsg: String? = null
+        buildMsg: String? = null,
+        checkPermission: Boolean = true,
+        startUser: List<String>? = null,
+        updateTimeDesc: Boolean? = null
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
@@ -1467,14 +1465,15 @@ class PipelineBuildFacadeService(
 
         val apiStartEpoch = System.currentTimeMillis()
         try {
-            pipelinePermissionService.validPipelinePermission(
-                userId = userId!!,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = AuthPermission.VIEW,
-                message = "用户（$userId) 无权限获取流水线($pipelineId)历史构建"
-            )
-
+            if (checkPermission) {
+                pipelinePermissionService.validPipelinePermission(
+                    userId = userId!!,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    permission = AuthPermission.VIEW,
+                    message = "用户（$userId) 无权限获取流水线($pipelineId)历史构建"
+                )
+            }
             val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -1496,7 +1495,8 @@ class PipelineBuildFacadeService(
                 remark = remark,
                 buildNoStart = buildNoStart,
                 buildNoEnd = buildNoEnd,
-                buildMsg = buildMsg
+                buildMsg = buildMsg,
+                startUser = startUser
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
@@ -1522,7 +1522,9 @@ class PipelineBuildFacadeService(
                 remark = remark,
                 buildNoStart = buildNoStart,
                 buildNoEnd = buildNoEnd,
-                buildMsg = buildMsg
+                buildMsg = buildMsg,
+                startUser = startUser,
+                updateTimeDesc = updateTimeDesc
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
@@ -1530,8 +1532,8 @@ class PipelineBuildFacadeService(
             // 获取流水线版本号
             val result = BuildHistoryWithPipelineVersion(
                 history = SQLPage(count, buildHistories),
-                hasDownloadPermission = pipelinePermissionService.checkPipelinePermission(
-                    userId = userId,
+                hasDownloadPermission = checkPermission || pipelinePermissionService.checkPipelinePermission(
+                    userId = userId!!,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     permission = AuthPermission.EXECUTE

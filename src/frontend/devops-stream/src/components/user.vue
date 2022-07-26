@@ -15,7 +15,10 @@
             class="user-info-dropmenu"
         >
             <p class="user-avatar">
-                <i class="stream-icon stream-user"></i>
+                <img
+                    :src="user.avatarUrl"
+                    alt="userAvatar"
+                >
                 <span>{{ user.chineseName }}</span>
             </p>
             <slot name="menu">
@@ -135,11 +138,9 @@
                 border-bottom: 1px solid $borderWeightColor;
                 color: $fontWeightColor;
                 padding: 20px;
-                .stream-user {
+                > img {
                     width: 34px;
                     height: 34px;
-                    font-size: 22px;
-                    line-height: 34px;
                 }
                 > span {
                     padding-left: 15px;

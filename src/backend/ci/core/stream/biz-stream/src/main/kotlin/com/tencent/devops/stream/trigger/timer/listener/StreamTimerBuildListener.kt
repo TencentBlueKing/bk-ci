@@ -42,6 +42,7 @@ import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimerBranch
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerBranchService
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -66,7 +67,11 @@ class StreamTimerBuildListener @Autowired constructor(
     override fun run(event: StreamTimerBuildEvent) {
         with(event) {
             try {
-                val record = streamBasicSettingDao.getSettingByProjectCode(dslContext, projectId)
+                val record = streamBasicSettingDao.getSetting(
+                    dslContext = dslContext,
+                    gitProjectId = GitCommonUtils.getGitProjectId(projectId),
+                    hasLastInfo = false
+                )
                 if (record == null) {
                     logger.warn("[$pipelineId]|git config not exist")
                     return
