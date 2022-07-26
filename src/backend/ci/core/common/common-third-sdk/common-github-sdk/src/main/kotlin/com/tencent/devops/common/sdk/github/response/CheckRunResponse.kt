@@ -20,7 +20,7 @@ data class CheckRunResponse(
     val headSha: String,
     @JsonProperty("html_url")
     val htmlUrl: String,
-    val id: Int,
+    val id: Long,
     val name: String,
     @JsonProperty("node_id")
     val nodeId: String,

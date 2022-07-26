@@ -370,7 +370,7 @@ class StreamUserMessageService @Autowired constructor(
                 event.objectKind
             )
         } catch (e: Exception) {
-            logger.error("get message getYamlUrl error : ${e.message}")
+            logger.warn("get message getYamlUrl error : ${e.message}")
             return null
         }
         if (filePath == null) {
