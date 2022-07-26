@@ -7,7 +7,7 @@ data class CheckRunOutput(
     val annotationsCount: Int,
     @JsonProperty("annotations_url")
     val annotationsUrl: String,
-    val summary: String,
+    val summary: String?,
     val text: String,
     val title: String
 )
