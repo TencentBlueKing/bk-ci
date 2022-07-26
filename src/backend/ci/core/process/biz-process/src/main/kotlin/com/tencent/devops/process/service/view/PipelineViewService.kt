@@ -636,23 +636,25 @@ class PipelineViewService @Autowired constructor(
                         hits = mutableListOf(
                             PipelineViewHitFilters.FilterInfo.Hit(
                                 hit = pipelineInfo.pipelineName.contains(filter.pipelineName),
-                                value = pipelineInfo.pipelineName
+                                value = filter.pipelineName
                             )
                         )
                     )
                 )
             } else if (filter is PipelineViewFilterByCreator) {
-                hitFilters.filters.add(
-                    PipelineViewHitFilters.FilterInfo(
-                        key = "创建人",
-                        hits = mutableListOf(
-                            PipelineViewHitFilters.FilterInfo.Hit(
-                                hit = filter.userIds.contains(pipelineInfo.creator),
-                                value = pipelineInfo.creator
+                filter.userIds.forEach {
+                    hitFilters.filters.add(
+                        PipelineViewHitFilters.FilterInfo(
+                            key = "创建人",
+                            hits = mutableListOf(
+                                PipelineViewHitFilters.FilterInfo.Hit(
+                                    hit = it == pipelineInfo.creator,
+                                    value = it
+                                )
                             )
                         )
                     )
-                )
+                }
             } else if (filter is PipelineViewFilterByLabel) {
                 val group = pipelineGroupDao.get(dslContext, decode(filter.groupId)) ?: continue
                 val labels =
