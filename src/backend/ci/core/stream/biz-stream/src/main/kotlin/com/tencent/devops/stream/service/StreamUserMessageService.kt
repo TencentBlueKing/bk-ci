@@ -204,21 +204,21 @@ class StreamUserMessageService @Autowired constructor(
     fun readMessage(
         userId: String,
         id: Int,
-        projectId: String?
+        projectCode: String?
     ): Boolean {
-        websocketService.pushNotifyWebsocket(userId, projectId)
+        websocketService.pushNotifyWebsocket(userId, projectCode)
         return streamUserMessageDao.readMessage(dslContext, id) >= 0
     }
 
     fun readAllMessage(
-        projectId: String?,
+        projectCode: String?,
         userId: String
     ): Boolean {
-        websocketService.pushNotifyWebsocket(userId, projectId)
-        return if (projectId != null) {
+        websocketService.pushNotifyWebsocket(userId, projectCode)
+        return if (projectCode != null) {
             streamUserMessageDao.readAllMessage(
                 dslContext = dslContext,
-                projectId = projectId,
+                projectCode = projectCode,
                 userId = null
             ) >= 0
         } else {

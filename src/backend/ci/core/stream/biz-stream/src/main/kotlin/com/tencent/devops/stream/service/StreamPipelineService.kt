@@ -235,7 +235,11 @@ class StreamPipelineService @Autowired constructor(
                 "gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled" +
                     ", edit timerTrigger with $edited"
             )
-            websocketService.pushPipelineWebSocket(gitProjectId.toString(), pipelineId, userId)
+            websocketService.pushPipelineWebSocket(
+                GitCommonUtils.getCiProjectId(gitProjectId, gitConfig.getScmType()),
+                pipelineId,
+                userId
+            )
             return gitPipelineResourceDao.enablePipelineById(
                 dslContext = dslContext,
                 pipelineId = pipelineId,

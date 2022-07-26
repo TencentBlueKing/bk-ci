@@ -31,8 +31,6 @@ import com.tencent.devops.common.api.util.UUIDUtil
 
 object StreamPipelineUtils {
 
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
-
     fun genBKPipelineName(projectCode: String) = projectCode + "_" + UUIDUtil.generate()
 
     fun genStreamV2BuildUrl(

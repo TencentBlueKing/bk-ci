@@ -5,6 +5,7 @@ import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
@@ -21,6 +22,7 @@ import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.util.CommonCredentialUtils
+import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 
@@ -28,7 +30,8 @@ import org.slf4j.LoggerFactory
 class StreamRepoTriggerAction(
     // 可能会包含stream action事件类似删除
     private val baseAction: BaseAction,
-    private val client: Client
+    private val client: Client,
+    private val streamGitConfig: StreamGitConfig
 ) : BaseAction {
 
     companion object {
@@ -175,7 +178,10 @@ class StreamRepoTriggerAction(
                 try {
                     CommonCredentialUtils.getCredential(
                         client = client,
-                        projectId = "git_${this.data.getGitProjectId()}",
+                        projectId = GitCommonUtils.getCiProjectId(
+                            this.data.getGitProjectId(),
+                            streamGitConfig.getScmType()
+                        ),
                         credentialId = repoHook.credentialsForTicketId!!,
                         type = CredentialType.ACCESSTOKEN
                     )["v1"] ?: return Pair(false, null)

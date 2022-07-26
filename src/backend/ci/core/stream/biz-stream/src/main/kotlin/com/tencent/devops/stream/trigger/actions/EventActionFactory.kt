@@ -146,7 +146,7 @@ class EventActionFactory @Autowired constructor(
             action.data.setting = actionSetting
         }
         return if (actionContext.repoTrigger != null) {
-            StreamRepoTriggerAction(action, client)
+            StreamRepoTriggerAction(action, client, streamGitConfig)
         } else action
     }
 

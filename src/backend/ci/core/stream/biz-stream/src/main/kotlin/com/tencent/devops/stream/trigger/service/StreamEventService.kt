@@ -195,7 +195,10 @@ class StreamEventService @Autowired constructor(
                     messageId = event.id.toString(),
                     messageTitle = messageTitle
                 )
-                websocketService.pushNotifyWebsocket(userId, gitProjectId.toString())
+                websocketService.pushNotifyWebsocket(
+                    userId,
+                    GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType())
+                )
             }
         }
         return messageId
