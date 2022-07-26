@@ -24,31 +24,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.resources
+
+package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.NotifyContext
-import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.notify.service.NotifyMessageTemplateService
+import com.tencent.devops.process.pojo.pipeline.ExtServiceMoaWorkItemReq
+import com.tencent.devops.process.service.TXPipelineMoaService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceNotifyMessageTemplateResourceImpl @Autowired constructor(
-    private val notifyMessageTemplateService: NotifyMessageTemplateService
-) : ServiceNotifyMessageTemplateResource {
+class ServiceTXMoaCallBackResourceImpl @Autowired constructor(
+    private val txPipelineMoaService: TXPipelineMoaService
+) : ServiceTXMoaCallBackResource {
 
-    override fun sendNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
-        return notifyMessageTemplateService.sendNotifyMessageByTemplate(request)
-    }
-
-    override fun getNotifyMessageByTemplate(request: NotifyMessageContextRequest): Result<NotifyContext?> {
-        return notifyMessageTemplateService.getNotifyMessageByTemplate(request)
-    }
-
-    override fun completeNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
-        return notifyMessageTemplateService.completeNotifyMessageByTemplate(request)
+    override fun manualReviewCallBack(extServiceMoaWorkItemReq: ExtServiceMoaWorkItemReq): Result<Boolean> {
+        return txPipelineMoaService.manualReviewMoaApprove(extServiceMoaWorkItemReq)
     }
 }

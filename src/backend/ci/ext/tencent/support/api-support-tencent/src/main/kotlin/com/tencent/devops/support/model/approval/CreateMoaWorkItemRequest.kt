@@ -24,31 +24,22 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.resources
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.NotifyContext
-import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.notify.service.NotifyMessageTemplateService
-import org.springframework.beans.factory.annotation.Autowired
+package com.tencent.devops.support.model.approval
 
-@RestResource
-class ServiceNotifyMessageTemplateResourceImpl @Autowired constructor(
-    private val notifyMessageTemplateService: NotifyMessageTemplateService
-) : ServiceNotifyMessageTemplateResource {
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    override fun sendNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
-        return notifyMessageTemplateService.sendNotifyMessageByTemplate(request)
-    }
-
-    override fun getNotifyMessageByTemplate(request: NotifyMessageContextRequest): Result<NotifyContext?> {
-        return notifyMessageTemplateService.getNotifyMessageByTemplate(request)
-    }
-
-    override fun completeNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
-        return notifyMessageTemplateService.completeNotifyMessageByTemplate(request)
-    }
-}
+@ApiModel("创建审批单请求报文体")
+data class CreateMoaWorkItemRequest(
+    @ApiModelProperty("审批人，多个以逗号分隔", required = true)
+    val verifier: String,
+    @ApiModelProperty("标题", required = true)
+    val title: String,
+    @ApiModelProperty("任务ID", required = true)
+    val taskId: String,
+    @ApiModelProperty("回调URL", required = true)
+    val backUrl: String,
+    @ApiModelProperty("系统URL，用于用户审核时跳转系统查看", required = false)
+    val sysUrl: String? = null
+)

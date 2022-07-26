@@ -24,31 +24,20 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.resources
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.NotifyContext
-import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.notify.service.NotifyMessageTemplateService
-import org.springframework.beans.factory.annotation.Autowired
+package com.tencent.devops.common.notify.init
 
-@RestResource
-class ServiceNotifyMessageTemplateResourceImpl @Autowired constructor(
-    private val notifyMessageTemplateService: NotifyMessageTemplateService
-) : ServiceNotifyMessageTemplateResource {
+import com.tencent.devops.common.api.enums.EnumModifier
+import com.tencent.devops.common.api.util.EnumUtil
+import com.tencent.devops.common.notify.enums.NotifyType
 
-    override fun sendNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
-        return notifyMessageTemplateService.sendNotifyMessageByTemplate(request)
-    }
+class NotifyTypeEnumModifier : EnumModifier {
 
-    override fun getNotifyMessageByTemplate(request: NotifyMessageContextRequest): Result<NotifyContext?> {
-        return notifyMessageTemplateService.getNotifyMessageByTemplate(request)
-    }
-
-    override fun completeNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
-        return notifyMessageTemplateService.completeNotifyMessageByTemplate(request)
+    override fun modified() {
+        EnumUtil.addEnum(
+            enumType = NotifyType::class.java,
+            enumName = "MOA",
+            additionalValues = arrayOf()
+        )
     }
 }
