@@ -27,10 +27,13 @@
 
 package com.tencent.devops.stream.resources.user
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserStreamTriggerResource
+import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.ManualTriggerInfo
 import com.tencent.devops.stream.pojo.ManualTriggerReq
@@ -44,6 +47,7 @@ import com.tencent.devops.stream.trigger.ManualTriggerService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("NestedBlockDepth", "ComplexCondition")
 @RestResource
 class UserStreamTriggerResourceImpl @Autowired constructor(
     private val manualTriggerService: ManualTriggerService,
@@ -88,16 +92,39 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
 
-        val yaml = streamPipelineService.getYamlByPipeline(
-            gitProjectId, pipelineId,
-            if (commitId.isNullOrBlank()) {
-                branchName
+        val yaml = try {
+            streamPipelineService.getYamlByPipeline(
+                gitProjectId, pipelineId,
+                if (commitId.isNullOrBlank()) {
+                    branchName
+                } else {
+                    commitId
+                }
+            )
+        } catch (e: RemoteServiceException) {
+            if (e.httpStatus == 404) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.errorCode.toString(),
+                    defaultMessage = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.formatErrorMessage
+                )
             } else {
-                commitId
+                throw e
             }
-        )
+        }
         if (yaml.isNullOrBlank()) {
-            return Result(ManualTriggerInfo(yaml = null, schema = null))
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.errorCode.toString(),
+                defaultMessage = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.formatErrorMessage
+            )
+        }
+
+        // 进行读取yaml对象之前对yaml做校验
+        val (message, ok) = streamYamlService.checkYaml(userId, StreamGitYamlString(yaml))
+        if (!ok) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.MANUAL_TRIGGER_USER_ERROR.errorCode.toString(),
+                defaultMessage = message.message
+            )
         }
 
         return Result(
@@ -113,7 +140,7 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
     }
 
     override fun checkYaml(userId: String, yaml: StreamGitYamlString): Result<String> {
-        return streamYamlService.checkYaml(userId, yaml)
+        return streamYamlService.checkYaml(userId, yaml).first
     }
 
     override fun getYamlByBuildId(userId: String, projectId: String, buildId: String): Result<V2BuildYaml?> {
