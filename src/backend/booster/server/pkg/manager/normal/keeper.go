@@ -33,7 +33,7 @@ type Keeper interface {
 }
 
 // NewKeeper get a new keeper with given layer. If debug mode set, it will skip all checks during keeper process.
-func NewKeeper(layer TaskBasicLayer, debugMode bool, conf conf.TimeoutConfig) Keeper {
+func NewKeeper(layer TaskBasicLayer, debugMode bool, conf conf.CommonEngineConfig) Keeper {
 	return &keeper{
 		layer:     layer,
 		debugMode: debugMode,
@@ -44,7 +44,7 @@ func NewKeeper(layer TaskBasicLayer, debugMode bool, conf conf.TimeoutConfig) Ke
 type keeper struct {
 	ctx       context.Context
 	layer     TaskBasicLayer
-	conf      conf.TimeoutConfig
+	conf      conf.CommonEngineConfig
 	debugMode bool
 }
 

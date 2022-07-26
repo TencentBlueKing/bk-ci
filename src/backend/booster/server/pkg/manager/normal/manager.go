@@ -66,7 +66,7 @@ func NewManager(
 		roleEvent: roleEvent,
 		engines:   engines,
 		layer:     layer,
-		keeper:    NewKeeper(layer, debug, serverConf.TimeoutConfig),
+		keeper:    NewKeeper(layer, debug, serverConf.CommonEngineConfig),
 		cleaner:   NewCleaner(layer),
 	}
 	selector := NewSelector(layer, &mgr, queueBriefInfoList...)
