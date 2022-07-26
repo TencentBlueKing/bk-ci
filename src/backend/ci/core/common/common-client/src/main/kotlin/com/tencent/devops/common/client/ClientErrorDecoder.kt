@@ -53,7 +53,7 @@ class ClientErrorDecoder @Autowired constructor(val objectMapper: ObjectMapper) 
         try {
             result = objectMapper.readValue(responseStream)
         } catch (ignore: IOException) {
-            val content = responseStream.bufferedReader().use(BufferedReader::readText)
+            val content = response.body().asReader(Charsets.UTF_8).buffered().use(BufferedReader::readText)
             return ClientException("内部服务返回结果无法解析 status:${response.status()} body:$content")
         }
         return RemoteServiceException(
