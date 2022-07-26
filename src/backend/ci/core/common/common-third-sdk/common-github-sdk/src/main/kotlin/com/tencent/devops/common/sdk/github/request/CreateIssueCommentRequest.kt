@@ -35,11 +35,11 @@ import com.tencent.devops.common.sdk.github.response.CreateIssueCommentResponse
 data class CreateIssueCommentRequest(
     // val owner: String,
     // val repo: String,
-    val id: Long,
+    val repoId: Long,
     val issueNumber: Long,
     val body: String
 ) : GithubRequest<CreateIssueCommentResponse>() {
     override fun getHttpMethod() = HttpMethod.POST
 
-    override fun getApiPath() = "repositories/$id/issues/$issueNumber/comments"
+    override fun getApiPath() = "repositories/$repoId/issues/$issueNumber/comments"
 }

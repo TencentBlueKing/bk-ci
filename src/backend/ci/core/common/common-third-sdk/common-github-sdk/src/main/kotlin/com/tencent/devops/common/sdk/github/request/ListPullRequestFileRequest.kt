@@ -8,7 +8,7 @@ import com.tencent.devops.common.sdk.github.response.PullRequestFileResponse
 data class ListPullRequestFileRequest(
     // val owner: String,
     // val repo: String,
-    val id: Long,
+    val repoId: Long,
     val pullNumber: String,
     @JsonProperty("per_page")
     val perPage: Int = 30,
@@ -16,5 +16,5 @@ data class ListPullRequestFileRequest(
 ) : GithubRequest<List<PullRequestFileResponse>>() {
     override fun getHttpMethod() = HttpMethod.GET
 
-    override fun getApiPath() = "repositories/$id/pulls/$pullNumber/files"
+    override fun getApiPath() = "repositories/$repoId/pulls/$pullNumber/files"
 }

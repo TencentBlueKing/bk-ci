@@ -30,14 +30,15 @@ package com.tencent.devops.stream.service.transfer
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.sdk.github.pojo.GithubRepo
 import com.tencent.devops.common.sdk.github.request.CreateOrUpdateFileContentsRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
 import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.common.sdk.github.request.ListBranchesRequest
 import com.tencent.devops.common.sdk.github.request.ListCommitRequest
 import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
+import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
-import com.tencent.devops.common.sdk.github.request.SearchRepositoriesRequest
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.github.ServiceGithubBranchResource
 import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
@@ -58,11 +59,11 @@ import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
 import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.service.StreamGitTransferService
+import java.util.Base64
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.Base64
 
 @Service
 class StreamGithubTransferService @Autowired constructor(
@@ -84,7 +85,7 @@ class StreamGithubTransferService @Autowired constructor(
     ): StreamGitProjectBaseInfoCache {
         return client.get(ServiceGithubRepositoryResource::class).getRepository(
             request = GetRepositoryRequest(
-               id = gitProjectId.toLong()
+               repoId = gitProjectId.toLong()
             ),
             userId = userId!!
         ).data?.let {
@@ -108,7 +109,7 @@ class StreamGithubTransferService @Autowired constructor(
         }
         return client.get(ServiceGithubRepositoryResource::class).getRepository(
             request = GetRepositoryRequest(
-                id = gitProjectId.toLong()
+                repoId = gitProjectId.toLong()
             ),
             userId = realUserId
         ).data?.let {
@@ -137,7 +138,7 @@ class StreamGithubTransferService @Autowired constructor(
     ): String {
         return client.get(ServiceGithubRepositoryResource::class).getRepositoryContent(
             request = GetRepositoryContentRequest(
-                id = gitProjectId.toLong(),
+                repoId = gitProjectId.toLong(),
                 path = fileName,
                 ref = ref
             ),
@@ -147,8 +148,8 @@ class StreamGithubTransferService @Autowired constructor(
 
     override fun getProjectList(
         userId: String,
-        page: Int?,
-        pageSize: Int?,
+        page: Int,
+        pageSize: Int,
         search: String?,
         orderBy: StreamProjectsOrder?,
         sort: StreamSortAscOrDesc?,
@@ -156,20 +157,50 @@ class StreamGithubTransferService @Autowired constructor(
         minAccessLevel: GitAccessLevelEnum?
     ): List<StreamProjectGitInfo>? {
         // search  owned  minAccessLevel 参数暂时没使用
-        val request = SearchRepositoriesRequest(
-            page = page ?: 1,
-            perPage = pageSize ?: 30,
-            sort = sort?.value
-        )
-        if (!search.isNullOrBlank()) {
-            request.name(search)
+        var githubPage = 1
+        val repos = mutableListOf<StreamProjectGitInfo>()
+        // github查询有权限列表不支持名称搜索，需要自实现搜索
+        run outside@{
+            while (repos.size < pageSize) {
+                val request = ListRepositoriesRequest(
+                    page = githubPage,
+                    perPage = pageSize
+                )
+                val githubRepos = client.get(ServiceGithubRepositoryResource::class).listRepositories(
+                    request = request,
+                    userId = userId
+                ).data!!
+                if (githubRepos.size < pageSize) {
+                    return@outside
+                }
+                val filterGithubRepos = githubRepos.filter {
+                    isGithubOrgWhite(it) && search(search, it)
+                }.map { StreamProjectGitInfo(it) }
+                val remainSize = pageSize - repos.size
+                if (filterGithubRepos.size <= remainSize) {
+                    repos.addAll(filterGithubRepos)
+                } else {
+                    repos.addAll(filterGithubRepos.subList(0, remainSize))
+                }
+                githubPage++
+            }
         }
-        request.org(githubOrgWhite)
+        return repos
+    }
 
-        return client.get(ServiceGithubRepositoryResource::class).searchRepositories(
-            request = request,
-            userId = userId
-        ).data?.map { StreamProjectGitInfo(it) }
+    private fun isGithubOrgWhite(githubRepo: GithubRepo): Boolean {
+        if (githubOrgWhite.isBlank()) {
+            return true
+        }
+        val org = githubRepo.fullName.split("/").first()
+        return githubOrgWhite.split(",").contains(org)
+    }
+
+    private fun search(search: String?, githubRepo: GithubRepo): Boolean {
+        if (search.isNullOrBlank()) {
+            return true
+        }
+        return githubRepo.fullName.contains(search)
     }
 
     override fun getProjectMember(
@@ -180,7 +211,7 @@ class StreamGithubTransferService @Autowired constructor(
         search: String?
     ): List<StreamGitMember> {
         val request = ListRepositoryCollaboratorsRequest(
-            id = gitProjectId.toLong(),
+            repoId = gitProjectId.toLong(),
             page = page ?: 1,
             perPage = pageSize ?: 30
         )
@@ -226,7 +257,7 @@ class StreamGithubTransferService @Autowired constructor(
     ): List<StreamCommitInfo>? {
         return client.get(ServiceGithubCommitsResource::class).listCommits(
             request = ListCommitRequest(
-                id = gitProjectId,
+                repoId = gitProjectId,
                 page = page ?: 1,
                 perPage = perPage ?: 30
             ),
@@ -243,7 +274,7 @@ class StreamGithubTransferService @Autowired constructor(
         client.get(ServiceGithubRepositoryResource::class).createOrUpdateFile(
             request = with(streamCreateFile) {
                 CreateOrUpdateFileContentsRequest(
-                    id = gitProjectId.toLong(),
+                    repoId = gitProjectId.toLong(),
                     message = commitMessage,
                     content = Base64.getEncoder().encodeToString(content.toByteArray()),
                     path = filePath,
@@ -266,7 +297,7 @@ class StreamGithubTransferService @Autowired constructor(
     ): List<String>? {
         return client.get(ServiceGithubBranchResource::class).listBranch(
             request = ListBranchesRequest(
-                id = gitProjectId.toLong(),
+                repoId = gitProjectId.toLong(),
                 page = page ?: 1,
                 perPage = pageSize ?: 30
             ),

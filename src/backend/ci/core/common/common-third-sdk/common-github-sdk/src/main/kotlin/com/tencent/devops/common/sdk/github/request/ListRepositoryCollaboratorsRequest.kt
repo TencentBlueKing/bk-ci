@@ -36,7 +36,7 @@ import com.tencent.devops.common.sdk.github.pojo.GithubUser
 class ListRepositoryCollaboratorsRequest(
     // val owner: String,
     // val repo: String,
-    val id: Long,
+    val repoId: Long,
     // Comma-separated list of values. Can include:
     // * owner: Repositories that are owned by the authenticated user.
     // * collaborator: Repositories that the user has been added to as a collaborator.
@@ -53,6 +53,6 @@ class ListRepositoryCollaboratorsRequest(
     }
 
     override fun getApiPath(): String {
-        return "repositories/$id/collaborators"
+        return "repositories/$repoId/collaborators"
     }
 }

@@ -7,10 +7,10 @@ import com.tencent.devops.common.sdk.github.response.PullRequestResponse
 data class GetPullRequestRequest(
     // val owner: String,
     // val repo: String,
-    val id: Long,
+    val repoId: Long,
     val pullNumber: String
 ) : GithubRequest<PullRequestResponse>() {
     override fun getHttpMethod() = HttpMethod.GET
 
-    override fun getApiPath() = "repositories/$id/pulls/$pullNumber"
+    override fun getApiPath() = "repositories/$repoId/pulls/$pullNumber"
 }

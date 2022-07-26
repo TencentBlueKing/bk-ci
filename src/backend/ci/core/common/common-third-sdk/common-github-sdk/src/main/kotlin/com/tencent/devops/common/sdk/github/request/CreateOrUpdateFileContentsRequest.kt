@@ -35,7 +35,7 @@ import com.tencent.devops.common.sdk.github.response.CreateOrUpdateFileContentsR
 class CreateOrUpdateFileContentsRequest(
     // val owner: String,
     // val repo: String,
-    val id: Long,
+    val repoId: Long,
     val path: String,
     // The commit message
     val message: String,
@@ -54,6 +54,6 @@ class CreateOrUpdateFileContentsRequest(
     }
 
     override fun getApiPath(): String {
-        return "repositories/$id/contents/$path"
+        return "repositories/$repoId/contents/$path"
     }
 }

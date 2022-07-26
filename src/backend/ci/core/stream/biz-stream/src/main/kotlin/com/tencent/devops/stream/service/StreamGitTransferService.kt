@@ -81,8 +81,8 @@ interface StreamGitTransferService {
      */
     fun getProjectList(
         userId: String,
-        page: Int?,
-        pageSize: Int?,
+        page: Int,
+        pageSize: Int,
         search: String?,
         orderBy: StreamProjectsOrder?,
         sort: StreamSortAscOrDesc?,

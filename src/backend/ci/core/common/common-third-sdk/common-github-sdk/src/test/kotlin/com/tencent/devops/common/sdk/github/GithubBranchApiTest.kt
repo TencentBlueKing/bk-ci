@@ -37,7 +37,7 @@ class GithubBranchApiTest : GithubApiTest() {
     @Test
     fun listBranches() {
         val request = ListBranchesRequest(
-            id = repoId
+            repoId = repoId
         )
         val response = client.execute(
             oauthToken = token,
@@ -49,7 +49,7 @@ class GithubBranchApiTest : GithubApiTest() {
     @Test
     fun getBranch() {
         val request = GetBranchRequest(
-            id = repoId,
+            repoId = repoId,
             branch = "master"
         )
         val response = client.execute(

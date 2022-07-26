@@ -7,12 +7,12 @@ import com.tencent.devops.common.sdk.github.response.GetTreeResponse
 data class GetTreeRequest(
     // val owner: String,
     // val repo: String,
-    val id: Long,
+    val repoId: Long,
     val treeSha: String,
     val recursive: String? = null
 ) : GithubRequest<GetTreeResponse>() {
 
     override fun getHttpMethod() = HttpMethod.GET
 
-    override fun getApiPath() = "repositories/$id/git/trees/$treeSha"
+    override fun getApiPath() = "repositories/$repoId/git/trees/$treeSha"
 }

@@ -8,7 +8,7 @@ import com.tencent.devops.common.sdk.github.response.CommitResponse
 data class GetCommitRequest(
     // val owner: String,
     // val repo: String,
-    val id: Long,
+    val repoId: Long,
     val ref: String,
     val page: Int = 1,
     @JsonProperty("per_page")
@@ -16,5 +16,5 @@ data class GetCommitRequest(
 ) : GithubRequest<CommitResponse>() {
     override fun getHttpMethod() = HttpMethod.GET
 
-    override fun getApiPath() = "repositories/$id/commits/$ref"
+    override fun getApiPath() = "repositories/$repoId/commits/$ref"
 }

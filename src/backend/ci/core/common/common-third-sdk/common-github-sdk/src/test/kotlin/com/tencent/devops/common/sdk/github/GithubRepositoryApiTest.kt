@@ -43,7 +43,7 @@ class GithubRepositoryApiTest : GithubApiTest() {
     @Test
     fun getRepository() {
         val request = GetRepositoryRequest(
-            id = repoId
+            repoId = repoId
         )
         val response = client.execute(
             oauthToken = token,
@@ -55,7 +55,7 @@ class GithubRepositoryApiTest : GithubApiTest() {
     @Test
     fun getRepositoryContent() {
         val request = GetRepositoryContentRequest(
-            id = repoId,
+            repoId = repoId,
             ref = "master",
             path = "README.md"
         )
@@ -96,7 +96,7 @@ class GithubRepositoryApiTest : GithubApiTest() {
 //        println(createResponse)
         // update
         val updateRequest = CreateOrUpdateFileContentsRequest(
-            id = repoId,
+            repoId = repoId,
             path = "README5555.md",
             message = "update",
             // (update in new file) encoding by base64
@@ -115,7 +115,7 @@ class GithubRepositoryApiTest : GithubApiTest() {
     @Test
     fun listRepositoryCollaborators() {
         val request = ListRepositoryCollaboratorsRequest(
-            id = repoId
+            repoId = repoId
         )
 
         val response = client.execute(
@@ -138,7 +138,7 @@ class GithubRepositoryApiTest : GithubApiTest() {
     @Test
     fun getRepositoryPermissionsForAUser() {
         val request = GetRepositoryPermissionsRequest(
-            id = repoId,
+            repoId = repoId,
             username = "mingshewhe"
         )
         val response = client.execute(

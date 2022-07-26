@@ -10,7 +10,7 @@ import com.tencent.devops.common.sdk.github.response.CheckRunResponse
 data class CreateCheckRunRequest(
     // val owner: String,
     // val repo: String,
-    val id: Long,
+    val repoId: Long,
     val name: String,
     @JsonProperty("head_sha")
     val headSha: String,
@@ -29,5 +29,5 @@ data class CreateCheckRunRequest(
 ) : GithubRequest<CheckRunResponse>() {
     override fun getHttpMethod() = HttpMethod.POST
 
-    override fun getApiPath() = "repositories/$id/check-runs"
+    override fun getApiPath() = "repositories/$repoId/check-runs"
 }
