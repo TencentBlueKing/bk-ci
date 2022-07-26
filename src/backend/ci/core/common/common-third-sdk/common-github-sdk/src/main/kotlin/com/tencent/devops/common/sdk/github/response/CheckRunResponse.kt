@@ -10,8 +10,8 @@ data class CheckRunResponse(
     @JsonProperty("check_suite")
     val checkSuite: CheckSuite,
     @JsonProperty("completed_at")
-    val completedAt: String,
-    val conclusion: Any,
+    val completedAt: String?,
+    val conclusion: Any?,
     @JsonProperty("details_url")
     val detailsUrl: String,
     @JsonProperty("external_id")
