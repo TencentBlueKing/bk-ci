@@ -51,6 +51,7 @@ var (
 		"Module.LuaTools.cpp",
 		"Module.Client.1_of_4.cpp",
 		"Module.HoloLensTargetPlatform.cpp",
+		"msado15.cpp",
 	}
 	// ForceLocalCppFileKeys force some cpp to compile locally
 	DefaultForceLocalCppFileKeys = []string{
@@ -61,6 +62,7 @@ var (
 		"Module.LuaTools.cpp",
 		"Module.Client.1_of_4.cpp",
 		"Module.HoloLensTargetPlatform.cpp",
+		"msado15.cpp",
 	}
 	// DisabledWarnings for ue4 ,disable some warnings
 	DisabledWarnings = []string{"/wd4828"}
