@@ -30,7 +30,6 @@ package com.tencent.devops.stream.trigger.actions.github
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.webhook.enums.code.github.GithubPrEventAction
-import com.tencent.devops.common.webhook.pojo.code.git.isMrForkEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.isPrForkEvent
 import com.tencent.devops.common.webhook.pojo.code.github.isPrForkNotMergeEvent
@@ -61,7 +60,6 @@ import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GithubRequestEventHandle
@@ -74,7 +72,6 @@ import com.tencent.devops.stream.trigger.service.StreamTriggerTokenService
 import com.tencent.devops.stream.util.StreamCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import java.util.Base64
 
 class GithubPRActionGit(
     private val apiService: GithubApiService,
@@ -172,7 +169,8 @@ class GithubPRActionGit(
                 getForkGitCred()
             } else {
                 GithubCred(event.sender.login)
-            }, gitProjectId = getGitProjectIdOrName(event.pullRequest.head.repo.id.toString()),
+            },
+            gitProjectId = getGitProjectIdOrName(event.pullRequest.head.repo.id.toString()),
             sha = event.pullRequest.head.sha,
             retry = ApiRequestRetryInfo(retry = true)
         )
@@ -296,7 +294,8 @@ class GithubPRActionGit(
         val event = event()
         if (event.pullRequest.merged == true) {
             return Pair(
-                data.eventCommon.branch, api.getFileContent(
+                data.eventCommon.branch,
+                api.getFileContent(
                     cred = this.getGitCred(),
                     gitProjectId = getGitProjectIdOrName(),
                     fileName = fileName,
@@ -380,7 +379,7 @@ class GithubPRActionGit(
         val mergeRequest = apiService.getMrInfo(
             cred = getGitCred(),
             gitProjectId = getGitProjectIdOrName(event.pullRequest.base.repo.id.toString()),
-            mrId =  this.getMrId().toString(),
+            mrId = this.getMrId().toString(),
             retry = ApiRequestRetryInfo(true)
         )!!
         val baseTargetFile = getFileInfo(
