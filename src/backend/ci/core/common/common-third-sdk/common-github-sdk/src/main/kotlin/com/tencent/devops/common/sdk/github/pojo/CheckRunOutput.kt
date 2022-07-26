@@ -8,6 +8,6 @@ data class CheckRunOutput(
     @JsonProperty("annotations_url")
     val annotationsUrl: String,
     val summary: String?,
-    val text: String,
-    val title: String
+    val text: String?,
+    val title: String?
 )
