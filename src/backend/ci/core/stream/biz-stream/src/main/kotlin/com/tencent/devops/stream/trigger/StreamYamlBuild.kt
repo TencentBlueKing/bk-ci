@@ -113,7 +113,14 @@ class StreamYamlBuild @Autowired constructor(
                     throw RuntimeException("variable $key not allow modify at startup")
                 }
 
-                result[key] = inputsData[key]!!
+                // stream的用户变量会被默认填入 variables.
+                val realKey = if (key.startsWith(ModelParameters.VARIABLE_PREFIX)) {
+                    key
+                } else {
+                    ModelParameters.VARIABLE_PREFIX.plus(key)
+                }
+
+                result[realKey] = inputsData[key]!!
             }
 
             return result
