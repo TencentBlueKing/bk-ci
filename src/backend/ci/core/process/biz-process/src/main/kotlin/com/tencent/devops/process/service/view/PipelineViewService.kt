@@ -42,8 +42,11 @@ import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineViewUserLastViewDao
 import com.tencent.devops.process.dao.PipelineViewUserSettingsDao
+import com.tencent.devops.process.dao.label.PipelineGroupDao
+import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
@@ -76,6 +79,9 @@ class PipelineViewService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val pipelineViewDao: PipelineViewDao,
+    private val pipelineInfoDao: PipelineInfoDao,
+    private val pipelineLabelDao: PipelineLabelDao,
+    private val pipelineGrouyDao: PipelineGroupDao,
     private val pipelineViewTopDao: PipelineViewTopDao,
     private val pipelineViewUserSettingDao: PipelineViewUserSettingsDao,
     private val pipelineViewLastViewDao: PipelineViewUserLastViewDao,
@@ -606,7 +612,67 @@ class PipelineViewService @Autowired constructor(
     }
 
     fun getHitFilters(userId: String, projectId: String, pipelineId: String, viewId: String): PipelineViewHitFilters {
-        TODO("Not yet implemented")
+        val pipelineView = pipelineViewDao.get(dslContext, projectId, decode(viewId))
+        if (null == pipelineView || pipelineView.viewType == PipelineViewType.STATIC) {
+            return PipelineViewHitFilters.EMPTY
+        }
+        val pipelineInfo = pipelineInfoDao.getPipelineId(dslContext, projectId, pipelineId)
+            ?: return PipelineViewHitFilters.EMPTY
+
+        val filters = getFilters(
+            filterByName = pipelineView.filterByPipeineName,
+            filterByCreator = pipelineView.filterByCreator,
+            filters = pipelineView.filters
+        )
+        val hitFilters = PipelineViewHitFilters(filters = mutableListOf(), logic = pipelineView.logic)
+
+        for (filter in filters) {
+            if (filter is PipelineViewFilterByName) {
+                hitFilters.filters.add(
+                    PipelineViewHitFilters.FilterInfo(
+                        key = "流水线名称",
+                        hits = mutableListOf(
+                            PipelineViewHitFilters.FilterInfo.Hit(
+                                hit = pipelineInfo.pipelineName.contains(filter.pipelineName),
+                                value = pipelineInfo.pipelineName
+                            )
+                        )
+                    )
+                )
+            } else if (filter is PipelineViewFilterByCreator) {
+                hitFilters.filters.add(
+                    PipelineViewHitFilters.FilterInfo(
+                        key = "创建人",
+                        hits = mutableListOf(
+                            PipelineViewHitFilters.FilterInfo.Hit(
+                                hit = filter.userIds.contains(pipelineInfo.creator),
+                                value = pipelineInfo.creator
+                            )
+                        )
+                    )
+                )
+            } else if (filter is PipelineViewFilterByLabel) {
+                val labelGroup = pipelineGrouyDao.get(dslContext, decode(filter.groupId)) ?: continue
+                val labels = pipelineLabelDao.getByGroupIds(dslContext, projectId, setOf(decode(filter.groupId)))
+                labels.forEach {
+                    hitFilters.filters.add(
+                        PipelineViewHitFilters.FilterInfo(
+                            key = labelGroup.name,
+                            hits = mutableListOf(
+                                PipelineViewHitFilters.FilterInfo.Hit(
+                                    hit = filter.labelIds.contains(encode(it.id)),
+                                    value = it.name
+                                )
+                            )
+                        )
+                    )
+                }
+            } else {
+                continue
+            }
+
+        }
+        return hitFilters
     }
 
     companion object {
