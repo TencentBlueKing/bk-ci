@@ -741,7 +741,7 @@ func (de *disttaskEngine) launchDirectDone(task *distTask) (bool, error) {
 	task.Stats.CPUTotal = cpuTotal
 	task.Stats.MemTotal = memTotal
 
-	blog.Infof("task(%s) now has workers(%d),CPU(%f),Mem(%f)", task.Stats.WorkerCount, cpuTotal, memTotal)
+	blog.Infof("task(%s) now has workers(%d),CPU(%f),Mem(%f)", task.ID, task.Stats.WorkerCount, cpuTotal, memTotal)
 	if err = de.updateTask(task); err != nil {
 		blog.Errorf("engine(%s) try checking service info, update direct task(%s) failed: %v",
 			EngineName, task.ID, err)

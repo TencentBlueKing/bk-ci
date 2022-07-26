@@ -33,18 +33,24 @@ type Keeper interface {
 }
 
 // NewKeeper get a new keeper with given layer. If debug mode set, it will skip all checks during keeper process.
-func NewKeeper(layer TaskBasicLayer, debugMode bool, conf conf.CommonEngineConfig) Keeper {
+func NewKeeper(layer TaskBasicLayer, debugMode bool, config conf.CommonEngineConfig) Keeper {
 	return &keeper{
 		layer:     layer,
 		debugMode: debugMode,
-		conf:      conf,
+		conf: commonEngineConfig{
+			KeepStartingTimeout: time.Duration(config.KeeperStartingTimeout) * time.Second,
+		},
 	}
+}
+
+type commonEngineConfig struct {
+	KeepStartingTimeout time.Duration
 }
 
 type keeper struct {
 	ctx       context.Context
 	layer     TaskBasicLayer
-	conf      conf.CommonEngineConfig
+	conf      commonEngineConfig
 	debugMode bool
 }
 
@@ -173,7 +179,7 @@ func (k *keeper) checkTaskBasic(taskID string, wg *sync.WaitGroup) {
 		}
 
 	case engine.TaskStatusStarting:
-		if tb.Status.StatusChangeTime.Add(time.Duration(k.conf.KeeperStartingTimeout) * time.Second).Before(nowTime) {
+		if tb.Status.StatusChangeTime.Add(k.conf.KeepStartingTimeout).Before(nowTime) {
 			task, err := egn.GetTaskExtension(taskID)
 			if err != nil {
 				blog.Errorf("keeper: get task extension failed: (%v)", err)
@@ -182,7 +188,7 @@ func (k *keeper) checkTaskBasic(taskID string, wg *sync.WaitGroup) {
 
 			// 拉起资源超时，此时若有足够的资源，则先启动任务
 			blog.Errorf("keeper: check and find task(%s) starting timeout(%s) since(%s), check if it can be running",
-				tb.ID, (time.Duration(k.conf.KeeperStartingTimeout) * time.Second).String(), tb.Status.LaunchTime.String())
+				tb.ID, k.conf.KeepStartingTimeout.String(), tb.Status.LaunchTime.String())
 			if task.EnoughAvailableResource() {
 				tb.Status.Ready()
 				tb.Status.Start()
@@ -193,7 +199,7 @@ func (k *keeper) checkTaskBasic(taskID string, wg *sync.WaitGroup) {
 			}
 
 			blog.Errorf("keeper: check and find task(%s) starting timeout(%s) since(%s), will be canceled",
-				tb.ID, (time.Duration(k.conf.KeeperStartingTimeout) * time.Second).String(), tb.Status.LaunchTime.String())
+				tb.ID, k.conf.KeepStartingTimeout.String(), tb.Status.LaunchTime.String())
 
 			tb.Status.FailWithServerDown()
 			tb.Status.Message = messageTaskStartingTimeout
