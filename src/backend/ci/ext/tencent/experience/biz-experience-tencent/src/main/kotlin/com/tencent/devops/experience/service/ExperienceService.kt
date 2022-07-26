@@ -828,7 +828,7 @@ class ExperienceService @Autowired constructor(
     /**
      * 发给外部人员
      */
-    private fun sendMessageToOuterReceivers(
+    fun sendMessageToOuterReceivers(
         outerReceivers: MutableSet<String>,
         experienceRecord: TExperienceRecord
     ) {
@@ -866,7 +866,7 @@ class ExperienceService @Autowired constructor(
     /**
      * 发给内部人员
      */
-    private fun sendMessageToInnerReceivers(
+    fun sendMessageToInnerReceivers(
         notifyTypeList: Set<NotifyType>,
         projectName: String,
         innerReceivers: MutableSet<String>,
@@ -944,13 +944,13 @@ class ExperienceService @Autowired constructor(
         return ShaUtils.sha1((artifactoryType.name + path).toByteArray())
     }
 
-    private fun getPcUrl(projectId: String, experienceId: Long): String {
+    fun getPcUrl(projectId: String, experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         return HomeHostUtil.innerServerHost() +
                 "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
     }
 
-    private fun getShortExternalUrl(experienceId: Long): String {
+    fun getShortExternalUrl(experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         val url =
             HomeHostUtil.outerServerHost() +

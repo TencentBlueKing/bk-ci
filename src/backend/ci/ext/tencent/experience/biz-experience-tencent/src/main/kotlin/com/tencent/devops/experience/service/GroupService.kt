@@ -51,6 +51,7 @@ import com.tencent.devops.experience.pojo.GroupCreate
 import com.tencent.devops.experience.pojo.GroupPermission
 import com.tencent.devops.experience.pojo.GroupSummaryWithPermission
 import com.tencent.devops.experience.pojo.GroupUpdate
+import com.tencent.devops.experience.pojo.NotifyType
 import com.tencent.devops.experience.pojo.GroupUsers
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.enums.ProjectGroup
