@@ -112,6 +112,11 @@ enum class ErrorCodeEnum(
         errorCode = 2129027,
         formatErrorMessage = "分支上没有此流水线，或者流水线未允许手动触发"
     ),
+    MANUAL_TRIGGER_YAML_INVALID(
+        errorType = ErrorType.USER,
+        errorCode = 2129028,
+        formatErrorMessage = "手动触发YAML SCHEMA校验错误"
+    ),
     ;
 
     companion object {
