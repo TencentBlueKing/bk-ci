@@ -109,12 +109,12 @@ enum class ErrorCodeEnum(
     ),
     MANUAL_TRIGGER_YAML_NULL(
         errorType = ErrorType.USER,
-        errorCode = 2129027,
+        errorCode = 2129028,
         formatErrorMessage = "分支上没有此流水线，或者流水线未允许手动触发"
     ),
     MANUAL_TRIGGER_YAML_INVALID(
         errorType = ErrorType.USER,
-        errorCode = 2129028,
+        errorCode = 2129029,
         formatErrorMessage = "手动触发YAML SCHEMA校验错误"
     ),
     ;
