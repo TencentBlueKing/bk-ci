@@ -61,6 +61,7 @@ import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.service.StreamGitTransferService
 import java.util.Base64
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -75,6 +76,10 @@ class StreamGithubTransferService @Autowired constructor(
     // github 组织白名单列表
     @Value("\${github.orgWhite:}")
     private var githubOrgWhite: String = ""
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(StreamGithubTransferService::class.java)
+    }
 
     // gitProjectId在github中必须为项目名字
     override fun getGitProjectCache(
@@ -176,6 +181,7 @@ class StreamGithubTransferService @Autowired constructor(
                 val filterGithubRepos = githubRepos.filter {
                     isGithubOrgWhite(it) && search(search, it)
                 }.map { StreamProjectGitInfo(it) }
+                logger.info("githubRepos size:${githubRepos.size}, filterGithubRepos:${filterGithubRepos.size}")
                 val remainSize = pageSize - repos.size
                 if (filterGithubRepos.size <= remainSize) {
                     repos.addAll(filterGithubRepos)
