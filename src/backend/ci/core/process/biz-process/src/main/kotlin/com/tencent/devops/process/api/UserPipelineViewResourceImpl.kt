@@ -74,14 +74,6 @@ class UserPipelineViewResourceImpl @Autowired constructor(
         return Result(PipelineViewId(pipelineViewGroupService.addViewGroup(projectId, userId, pipelineView)))
     }
 
-    override fun getProjectViews(userId: String, projectId: String): Result<List<PipelineNewViewSummary>> {
-        return Result(pipelineViewService.getProjectViews(userId, projectId))
-    }
-
-    override fun getPersonalViews(userId: String, projectId: String): Result<List<PipelineNewViewSummary>> {
-        return Result(pipelineViewService.getPersonalViews(userId, projectId))
-    }
-
     override fun topView(
         userId: String,
         projectId: String,
@@ -119,6 +111,15 @@ class UserPipelineViewResourceImpl @Autowired constructor(
         pipelineViewMatchDynamic: PipelineViewMatchDynamic
     ): Result<List<String>> {
         return Result(pipelineViewService.matchDynamicView(userId, projectId, pipelineViewMatchDynamic))
+    }
+
+    override fun listView(
+        userId: String,
+        projectId: String,
+        projected: Boolean?,
+        viewType: Int?
+    ): Result<List<PipelineNewViewSummary>> {
+        return Result(pipelineViewService.listView(userId, projectId, projected, viewType))
     }
 
     override fun deleteView(userId: String, projectId: String, viewId: String): Result<Boolean> {

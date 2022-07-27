@@ -97,28 +97,20 @@ interface UserPipelineViewResource {
         projectId: String
     ): Result<List<PipelineNewViewSummary>>
 
-    @ApiOperation("获取项目视图")
+    @ApiOperation("获取视图列表")
     @GET
-    @Path("/projects/{projectId}/projectViews")
-    fun getProjectViews(
+    @Path("/projects/{projectId}/list")
+    fun listView(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
-        projectId: String
-    ): Result<List<PipelineNewViewSummary>>
-
-    @ApiOperation("获取个人视图")
-    @GET
-    @Path("/projects/{projectId}/personalViews")
-    fun getPersonalViews(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @QueryParam("是否为项目流水线组 , 为空时不区分")
+        projected: Boolean? = null,
+        @QueryParam("流水线组类型 , 1--动态, 2--静态 , 为空时不区分")
+        viewType: Int? = null
     ): Result<List<PipelineNewViewSummary>>
 
     @ApiOperation("添加视图")

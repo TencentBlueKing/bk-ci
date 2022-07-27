@@ -69,7 +69,6 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
@@ -552,25 +551,6 @@ class PipelineViewService @Autowired constructor(
     private fun encode(id: Long) = HashUtil.encodeLongId(id)
 
     private fun decode(id: String) = HashUtil.decodeIdToLong(id)
-    fun getProjectViews(userId: String, projectId: String): List<PipelineNewViewSummary> {
-        val views = pipelineViewDao.listProjectOrUser(
-            dslContext = dslContext,
-            projectId = projectId,
-            isProject = true,
-            userId = userId
-        )
-        return sortViews2Summary(projectId, userId, views)
-    }
-
-    fun getPersonalViews(userId: String, projectId: String): List<PipelineNewViewSummary> {
-        val views = pipelineViewDao.listProjectOrUser(
-            dslContext = dslContext,
-            projectId = projectId,
-            isProject = false,
-            userId = userId
-        )
-        return sortViews2Summary(projectId, userId, views)
-    }
 
     fun topView(userId: String, projectId: String, viewId: String, enabled: Boolean): Boolean {
         if (enabled) {
@@ -594,7 +574,7 @@ class PipelineViewService @Autowired constructor(
     private fun sortViews2Summary(
         projectId: String,
         userId: String,
-        views: Result<TPipelineViewRecord>
+        views: List<TPipelineViewRecord>
     ): List<PipelineNewViewSummary> {
         var score = 1
         val viewScoreMap = pipelineViewTopDao.list(dslContext, projectId, userId).associate { it.viewId to score++ }
@@ -733,6 +713,11 @@ class PipelineViewService @Autowired constructor(
             }
         }
         return result
+    }
+
+    fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
+        val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
+        return sortViews2Summary(projectId, userId, views)
     }
 
     companion object {

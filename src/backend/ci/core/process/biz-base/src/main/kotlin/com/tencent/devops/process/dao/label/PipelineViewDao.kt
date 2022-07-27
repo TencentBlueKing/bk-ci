@@ -238,6 +238,36 @@ class PipelineViewDao {
 
     fun list(
         dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        isProject: Boolean? = null,
+        viewType: Int? = null
+    ): List<TPipelineViewRecord> {
+        with(TPipelineView.T_PIPELINE_VIEW) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .let {
+                    if (isProject == null) {
+                        it.and(IS_PROJECT.eq(true).or(CREATE_USER.eq(userId)))
+                    } else {
+                        if (isProject) {
+                            it.and(IS_PROJECT.eq(true))
+                        } else {
+                            it.and(CREATE_USER.eq(userId)).and(IS_PROJECT.eq(false))
+                        }
+                    }
+                }.let {
+                    if (viewType == null) {
+                        it
+                    } else {
+                        it.and(VIEW_TYPE.eq(viewType))
+                    }
+                }.fetch()
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext,
         projectId: String,
         viewIds: Set<Long>
     ): Result<TPipelineViewRecord> {
