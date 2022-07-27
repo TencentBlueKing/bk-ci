@@ -25,30 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service.gray
+package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.pipeline.ExtServiceMoaWorkItemReq
+import com.tencent.devops.process.service.TXPipelineMoaService
+import org.springframework.beans.factory.annotation.Autowired
 
-class MacOSGray {
-    companion object {
-        const val repoGrayRedisKey = "project:setting:macosGray"
+@RestResource
+class ServiceTXMoaCallBackResourceImpl @Autowired constructor(
+    private val txPipelineMoaService: TXPipelineMoaService
+) : ServiceTXMoaCallBackResource {
+
+    override fun manualReviewCallBack(extServiceMoaWorkItemReq: ExtServiceMoaWorkItemReq): Result<Boolean> {
+        return txPipelineMoaService.manualReviewMoaApprove(extServiceMoaWorkItemReq)
     }
-
-    fun addGrayProject(projectId: String, redisOperation: RedisOperation) {
-        redisOperation.addSetValue(getRepoGrayRedisKey(), projectId) // 添加项目为灰度项目
-    }
-
-    fun removeGrayProject(projectId: String, redisOperation: RedisOperation) {
-        redisOperation.removeSetMember(getRepoGrayRedisKey(), projectId) // 取消项目为灰度项目
-    }
-
-    fun isGray(projectId: String, redisOperation: RedisOperation): Boolean {
-        return redisOperation.isMember(getRepoGrayRedisKey(), projectId)
-//        return grayProjectSet(redisOperation).contains(projectId)
-    }
-
-    fun grayProjectSet(redisOperation: RedisOperation) =
-        (redisOperation.getSetMembers(repoGrayRedisKey) ?: emptySet()).filter { !it.isBlank() }.toSet()
-
-    fun getRepoGrayRedisKey() = repoGrayRedisKey
 }

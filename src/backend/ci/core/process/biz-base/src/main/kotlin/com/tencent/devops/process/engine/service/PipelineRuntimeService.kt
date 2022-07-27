@@ -1204,7 +1204,8 @@ class PipelineRuntimeService @Autowired constructor(
                             containerType = containerType,
                             taskId = taskId,
                             taskParam = taskParam,
-                            actionType = ActionType.REFRESH
+                            actionType = ActionType.REFRESH,
+                            executeCount = executeCount
                         )
                     )
                 }

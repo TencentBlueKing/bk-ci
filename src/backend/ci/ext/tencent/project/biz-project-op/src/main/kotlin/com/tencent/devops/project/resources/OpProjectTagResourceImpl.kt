@@ -40,16 +40,16 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpProjectTagResourceImpl @Autowired constructor(
     val projectTagService: ProjectTagService
 ) : OpProjectTagResource {
-    override fun setTagByProject(opProjectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
-        return projectTagService.updateTagByProject(opProjectTagUpdateDTO)
+    override fun setTagByProject(projectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
+        return projectTagService.updateTagByProject(projectTagUpdateDTO)
     }
 
-    override fun setTagByOrg(opProjectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
-        return projectTagService.updateTagByOrg(opProjectTagUpdateDTO)
+    override fun setTagByOrg(projectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
+        return projectTagService.updateTagByOrg(projectTagUpdateDTO)
     }
 
-    override fun setTagByChannel(opProjectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
-        return projectTagService.updateTagByChannel(opProjectTagUpdateDTO)
+    override fun setTagByChannel(projectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
+        return projectTagService.updateTagByChannel(projectTagUpdateDTO)
     }
 
     override fun setExtSystemTagByProject(extSystemTagDTO: ProjectExtSystemTagDTO): Result<Boolean> {
