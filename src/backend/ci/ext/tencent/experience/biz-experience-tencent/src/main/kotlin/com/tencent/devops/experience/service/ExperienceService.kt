@@ -593,38 +593,6 @@ class ExperienceService @Autowired constructor(
         sendNotification(experienceRecord.id)
     }
 
-    private fun sendNotificationToNewAddUser(
-            newAddUsers: MutableSet<String>,
-            userType: String,
-            experienceId: Long,
-    ) {
-        val experienceRecord = experienceDao.get(dslContext, experienceId)
-        when (userType) {
-            "newAddOuterUsers" -> {
-                sendMessageToOuterReceivers(
-                        outerReceivers = newAddUsers,
-                        experienceRecord = experienceRecord
-                )
-            }
-            "newAddInnerUsers" -> {
-                val notifyTypeList = objectMapper.readValue<Set<NotifyType>>(experienceRecord.notifyTypes)
-                val pcUrl = getPcUrl(experienceRecord.projectId, experienceId)
-                val appUrl = getShortExternalUrl(experienceId)
-                val projectName =
-                        client.get(ServiceProjectResource::class).get(experienceRecord.projectId).data!!.projectName
-                sendMessageToInnerReceivers(
-                        notifyTypeList = notifyTypeList,
-                        projectName = projectName,
-                        innerReceivers = newAddUsers,
-                        experienceRecord = experienceRecord,
-                        pcUrl = pcUrl,
-                        appUrl = appUrl
-                )
-            }
-
-        }
-    }
-
     fun getCreatorById(experienceHashId: String): String {
         return experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId)).creator
     }
