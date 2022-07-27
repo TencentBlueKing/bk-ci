@@ -27,11 +27,13 @@
 
 package com.tencent.devops.stream.resources.user
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.api.user.UserStreamTriggerResource
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.permission.StreamPermissionService
@@ -103,33 +105,55 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
             )
         } catch (e: RemoteServiceException) {
             if (e.httpStatus == 404) {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.errorCode.toString(),
-                    defaultMessage = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.formatErrorMessage
+                return Result(
+                    status = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.errorCode,
+                    message = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.formatErrorMessage
                 )
             } else {
                 throw e
             }
         }
         if (yaml.isNullOrBlank()) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.errorCode.toString(),
-                defaultMessage = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.formatErrorMessage
+            return Result(
+                status = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.errorCode,
+                message = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.formatErrorMessage
             )
         }
 
         // 进行读取yaml对象之前对yaml做校验
         val (message, ok) = streamYamlService.checkYaml(userId, StreamGitYamlString(yaml))
         if (!ok) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.MANUAL_TRIGGER_USER_ERROR.errorCode.toString(),
-                defaultMessage = message.message
+            return Result(
+                status = ErrorCodeEnum.MANUAL_TRIGGER_YAML_INVALID.errorCode,
+                message = message.message
+            )
+        }
+
+        // 获取yaml对象，除了需要替换的 variables和一些信息剩余全部设置为空
+        val preYaml = try {
+            YamlUtil.getObjectMapper().readValue(
+                ScriptYmlUtils.formatYaml(yaml),
+                PreTemplateScriptBuildYaml::class.java
+            ).copy(
+                stages = null,
+                jobs = null,
+                steps = null,
+                extends = null,
+                notices = null,
+                finally = null,
+                concurrency = null
+            )
+        } catch (e: Exception) {
+            return Result(
+                status = ErrorCodeEnum.MANUAL_TRIGGER_YAML_INVALID.errorCode,
+                message = message.message
             )
         }
 
         return Result(
             manualTriggerService.getManualTriggerInfo(
                 yaml = yaml,
+                preYaml = preYaml,
                 userId = userId,
                 pipelineId = pipelineId,
                 projectId = projectId,

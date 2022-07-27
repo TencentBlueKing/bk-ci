@@ -28,7 +28,6 @@
 package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.form.FormBuilder
 import com.tencent.devops.common.web.form.data.CheckboxPropData
 import com.tencent.devops.common.web.form.data.CompanyStaffPropData
@@ -49,7 +48,6 @@ import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.VariablePropType
 import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
-import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -99,30 +97,13 @@ class ManualTriggerService @Autowired constructor(
 
     fun getManualTriggerInfo(
         yaml: String,
+        preYaml: PreTemplateScriptBuildYaml,
         userId: String,
         pipelineId: String,
         projectId: String,
         branchName: String,
         commitId: String?
     ): ManualTriggerInfo {
-        // 获取yaml对象，除了需要替换的 variables和一些信息剩余全部设置为空
-        val preYaml = try {
-            YamlUtil.getObjectMapper().readValue(
-                ScriptYmlUtils.formatYaml(yaml),
-                PreTemplateScriptBuildYaml::class.java
-            ).copy(
-                stages = null,
-                jobs = null,
-                steps = null,
-                extends = null,
-                notices = null,
-                finally = null,
-                concurrency = null
-            )
-        } catch (e: Exception) {
-            throw CustomException(Response.Status.BAD_REQUEST, "YAML is invalid ${e.message}")
-        }
-
         // 关闭了手动触发的直接返回
         if (preYaml.triggerOn?.manual == EnableType.FALSE.value) {
             return ManualTriggerInfo(yaml = yaml, schema = null, enable = false)
