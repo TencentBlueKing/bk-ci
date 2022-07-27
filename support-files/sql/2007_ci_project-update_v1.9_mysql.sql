@@ -90,6 +90,15 @@ BEGIN
 		ALTER TABLE T_SHARDING_ROUTING_RULE DROP INDEX `uni_inx_tsrr_routting_name`;
 	END IF;
 
+	IF EXISTS(SELECT 1
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PROJECT'
+                        AND COLUMN_NAME = 'other_router_tags'
+	                    AND COLUMN_TYPE = 'varchar(128)') THEN
+        UPDATE T_PROJECT SET other_router_tags = NULL WHERE other_router_tags = '';
+        ALTER TABLE T_PROJECT CHANGE `other_router_tags` `other_router_tags` JSON DEFAULT NULL COMMENT '网关路由tags';
+    END IF;
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

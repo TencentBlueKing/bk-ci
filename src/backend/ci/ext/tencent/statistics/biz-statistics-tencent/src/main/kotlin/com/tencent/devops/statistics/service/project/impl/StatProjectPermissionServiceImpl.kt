@@ -27,47 +27,19 @@
 
 package com.tencent.devops.statistics.service.project.impl
 
-import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.statistics.dao.project.ProjectDao
-import com.tencent.devops.statistics.jmx.api.project.ProjectJmxApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.statistics.service.project.ProjectPermissionService
-import com.tencent.devops.statistics.service.project.ProjectService
-import com.tencent.devops.statistics.util.project.ProjectUtils
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class TxProjectServiceImpl @Autowired constructor(
-    private val projectPermissionService: ProjectPermissionService,
-    private val dslContext: DSLContext,
-    private val projectDao: ProjectDao,
-    private val projectJmxApi: ProjectJmxApi
-) : ProjectService {
-    /**
-     * 获取所有项目信息
-     */
-    override fun list(userId: String): List<ProjectVO> {
-        val startEpoch = System.currentTimeMillis()
-        var success = false
-        try {
+class StatProjectPermissionServiceImpl @Autowired constructor(
+    private val authProjectApi: AuthProjectApi,
+    private val bsProjectAuthServiceCode: BSProjectServiceCodec
+) : ProjectPermissionService {
 
-            val projects = projectPermissionService.getUserProjects(userId)
-            logger.info("项目列表：$projects")
-            val list = ArrayList<ProjectVO>()
-            projectDao.listByEnglishName(dslContext, projects).map {
-                list.add(ProjectUtils.packagingBean(it))
-            }
-            success = true
-            return list
-        } finally {
-            projectJmxApi.execute(ProjectJmxApi.PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
-            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
-        }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(TxProjectServiceImpl::class.java)!!
+    override fun getUserProjects(userId: String): List<String> {
+        return authProjectApi.getUserProjects(bsProjectAuthServiceCode, userId, null)
     }
 }
