@@ -30,6 +30,7 @@ package com.tencent.devops.worker.common.utils
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
+import com.tencent.devops.worker.common.COMMON_ENV_CONTEXT
 import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.env.AgentEnv
@@ -41,7 +42,7 @@ import java.io.IOException
 @Suppress("TooManyFunctions")
 object WorkspaceUtils {
 
-    private val commonEnvDir = File()
+    var commonDirMap: MutableMap<String, File> = mutableMapOf()
 
     fun getLandun() = File(".")
 
@@ -70,6 +71,9 @@ object WorkspaceUtils {
                     File(dockerWorkspace)
                 }
                 workspaceDir.mkdirs()
+
+                initCommonEnvDir(workspaceDir)
+
                 return workspaceDir
             }
             BuildType.AGENT -> {
@@ -92,6 +96,8 @@ object WorkspaceUtils {
                 if (!workspaceDir.exists() && !workspaceDir.mkdirs()) { // #5555 第三方构建机工作空间校验
                     throw FileNotFoundException("无法创建工作空间(illegal workspace): [$workspaceDir]")
                 }
+
+                initCommonEnvDir(workspaceDir)
 
                 return workspaceDir
             }
@@ -121,7 +127,7 @@ object WorkspaceUtils {
     }
 
     fun getCommonEnvDir(): File {
-
+        return commonDirMap[COMMON_ENV_CONTEXT] ?: throw FileNotFoundException("无法创建commonEnv目录")
     }
 
     @Suppress("LongParameterList")
@@ -146,4 +152,10 @@ object WorkspaceUtils {
         elementId: String,
         executeCount: Int
     ) = "/$pipelineId/$buildId/$elementId/$executeCount.log"
+
+    private fun initCommonEnvDir(workspaceDir: File) {
+        val commonEnvDir = File(workspaceDir.parentFile, COMMON_ENV_CONTEXT)
+        commonEnvDir.mkdir()
+        commonDirMap[COMMON_ENV_CONTEXT] = commonEnvDir
+    }
 }
