@@ -107,9 +107,11 @@ interface UserPipelineViewResource {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @QueryParam("是否为项目流水线组 , 为空时不区分")
+        @QueryParam("projected")
+        @ApiParam(value = "是否为项目流水线组 , 为空时不区分", required = false)
         projected: Boolean? = null,
-        @QueryParam("流水线组类型 , 1--动态, 2--静态 , 为空时不区分")
+        @QueryParam("viewType")
+        @ApiParam(value = "流水线组类型 , 1--动态, 2--静态 , 为空时不区分", required = false)
         viewType: Int? = null
     ): Result<List<PipelineNewViewSummary>>
 
