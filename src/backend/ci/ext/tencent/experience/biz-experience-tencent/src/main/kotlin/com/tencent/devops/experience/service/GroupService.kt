@@ -46,7 +46,6 @@ import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.GroupDao
-import com.tencent.devops.experience.job.ExperienceHotJob
 import com.tencent.devops.experience.pojo.Group
 import com.tencent.devops.experience.pojo.GroupCreate
 import com.tencent.devops.experience.pojo.GroupPermission
@@ -58,7 +57,6 @@ import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.enums.ProjectGroup
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
@@ -201,7 +199,6 @@ class GroupService @Autowired constructor(
             groupId = groupId,
             groupName = group.name
         )
-
     }
 
     fun get(userId: String, projectId: String, groupHashId: String): Group {
@@ -279,7 +276,6 @@ class GroupService @Autowired constructor(
         val oldOuterUsers = experienceGroupOuterDao.listByGroupIds(dslContext, setOf(groupId)).map { it.outer }.toSet()
         val latestOldOuterUsers = group.outerUsers
         val newAddOuterUsers = latestOldOuterUsers.subtract(oldOuterUsers).toMutableSet()
-        logger.info("newAddInnerUsers:"+newAddInnerUsers+"and"+"newAddOuterUsers:"+newAddOuterUsers)
         // 向新增人员发送最新版本体验信息
         if (newAddOuterUsers.isNotEmpty()) {
             sendNotificationToNewAddUser(
@@ -314,9 +310,9 @@ class GroupService @Autowired constructor(
     }
 
     private fun sendNotificationToNewAddUser(
-            newAddUsers: MutableSet<String>,
-            userType: String,
-            groupId: Long
+        newAddUsers: MutableSet<String>,
+        userType: String,
+        groupId: Long
     ) {
         val experienceIds = mutableSetOf<Long>()
         val groupIds = mutableSetOf<Long>()
@@ -366,8 +362,5 @@ class GroupService @Autowired constructor(
         experienceGroupDao.deleteByGroupId(dslContext, groupId)
         experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
         experienceGroupOuterDao.deleteByGroupId(dslContext, groupId)
-    }
-    companion object {
-        private val logger = LoggerFactory.getLogger(ExperienceHotJob::class.java)
     }
 }
