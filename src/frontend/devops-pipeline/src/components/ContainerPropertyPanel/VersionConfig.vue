@@ -4,7 +4,7 @@
             <li :class="{ 'param-item': true, 'diff-param-item': isDefaultDiff(param) }" v-for="param in buildParams" :key="param.key">
                 <vuex-input class="inner-item" :disabled="true" name="key" :value="param.key" />
                 <span>=</span>
-                <vuex-textarea class="inner-item" :click-unfold="true" v-if="param.valueType === 'TEXTAREA'" :disabled="true" name="key" :value="param.value"></vuex-textarea>
+                <vuex-textarea class="inner-item" :click-unfold="true" :hover-unfold="true" v-if="param.valueType === 'TEXTAREA'" :disabled="true" name="key" :value="param.value"></vuex-textarea>
                 <vuex-input class="inner-item" v-else :disabled="true" name="value" :value="param.value" />
             </li>
         </ul>
@@ -381,6 +381,7 @@
         .inner-item {
             width: 49%;
             right: 0;
+            top: 0;
         }
     }
 </style>
