@@ -283,14 +283,14 @@ class GroupService @Autowired constructor(
         val newAddOuterUsers = latestOldOuterUsers.subtract(oldOuterUsers).toMutableSet()
         logger.info("newAddInnerUsers:"+newAddInnerUsers+"and"+"newAddOuterUsers:"+newAddOuterUsers)
         // 向新增人员发送最新版本体验信息
-        if (newAddOuterUsers != null) {
+        if (newAddOuterUsers.isNotEmpty()) {
             sendNotificationToNewAddUser(
                     newAddUsers = newAddOuterUsers,
                     userType = "newAddOuterUsers",
                     groupId = groupId
             )
         }
-        if (newAddInnerUsers != null) {
+        if (newAddInnerUsers.isNotEmpty()) {
             sendNotificationToNewAddUser(
                     newAddUsers = newAddInnerUsers,
                     userType = "newAddInnerUsers",

@@ -561,16 +561,16 @@ class ExperienceService @Autowired constructor(
         val latestOldOuterUsers = experience.outerUsers
         val newAddOuterUsers = latestOldOuterUsers?.subtract(oldOuterUsers)?.toMutableSet()
         // 向新增人员发送最新版本体验信息
-        if (newAddOuterUsers != null) {
+        if (newAddOuterUsers != null && newAddOuterUsers.isNotEmpty()) {
             sendNotificationToNewAddUser(
-                    newAddUsers = newAddOuterUsers,
+                    newAddUsers = newAddOuterUsers!!,
                     userType = "newAddOuterUsers",
                     experienceId = experienceRecord.id
             )
         }
-        if (newAddInnerUsers != null) {
+        if (newAddOuterUsers != null && newAddOuterUsers.isNotEmpty()) {
             sendNotificationToNewAddUser(
-                    newAddUsers = newAddInnerUsers,
+                    newAddUsers = newAddInnerUsers!!,
                     userType = "newAddInnerUsers",
                     experienceId = experienceRecord.id
             )
