@@ -246,7 +246,8 @@
     "createTime": "创建时间",
     "restoreSuc": "恢复成功",
     "emptyTitle": "暂无可恢复的流水线",
-    "emptyDesc": "30天内被删除的流水线可在此页面恢复"
+    "emptyDesc": "30天内被删除的流水线可在此页面恢复",
+    "restoreSearchTips": "请输入流水线名称搜索"
   },
   "atomManage": {
     "installedAtom": "已安装插件",
@@ -542,7 +543,10 @@
     "fileUnit": "{0}个文件",
     "completedLog": "完整日志",
     "artifactList": "构件列表",
-    "showAll": "显示全部"
+    "showAll": "显示全部",
+    "copyToCustomArtifactory": "复制至自定义仓库",
+    "downloading": "正在下载",
+    "copySuc": "复制{0}至自定义仓库成功"
   },
   "preview": {
     "build": "构建",

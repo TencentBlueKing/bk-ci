@@ -244,7 +244,8 @@
     "createTime": "Create time",
     "restoreSuc": "Restored successfully",
     "emptyTitle": "No pipeline can be restored",
-    "emptyDesc": "You can restore the pipeline deleted in last a month"
+    "emptyDesc": "You can restore the pipeline deleted in last a month",
+    "restoreSearchTips": "Enter pipeline name to search"
   },
   "atomManage": {
     "installedAtom": "Installed plugins",
@@ -538,7 +539,10 @@
     "fileUnit": "{0} files",
     "completedLog": "full-log",
     "artifactList": "Artifacts",
-    "showAll": "Show all"
+    "showAll": "Show all",
+    "copyToCustomArtifactory": "Copy to custom artifactory",
+    "downloading": "Downloading ",
+    "copySuc": " Copy {0} to custom artifactory successfully"
   },
   "preview": {
     "build": "Build",
