@@ -830,7 +830,7 @@
     "githubAppTips": "Need to install xxx before enabling this plugin",
     "paramInputTips": " Please enter parameters",
     "paramEmptyTips": " No parameters exist in this sub-pipeline",
-    "remoteCurlTips": " After this plugin is added, the current pipeline can be triggered for building through specific URL ( the person who activate it is the one who last edited the pipeline) ",
+    "remoteCurlTips": " After this plugin is added, the current pipeline can be triggered for building through specific URL ( the person who activate it is the one who last edited the pipeline, the trigger person can be passed in via X-DEVOPS-UID ) ",
     "example": "Example",
     "confirmMsg": " If leave, the data of new edition will be lost",
     "confirmTitle": "Confirm exit",

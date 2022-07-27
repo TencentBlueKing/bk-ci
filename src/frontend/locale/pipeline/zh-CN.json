@@ -834,7 +834,7 @@
     "githubAppTips": "启用本插件需安装对应",
     "paramInputTips": "请输入参数",
     "paramEmptyTips": "该子流水线没有任何参数",
-    "remoteCurlTips": "添加本插件后，当前流水线可通过特定的URL触发构建（启动人是流水线的最后编辑人）",
+    "remoteCurlTips": "添加本插件后，当前流水线可通过特定的URL触发构建（启动人是流水线的最后编辑人，可通过 X-DEVOPS-UID 传入触发人）",
     "example": "示例",
     "confirmMsg": "离开后，新编辑的数据将会丢失",
     "confirmTitle": "确认要离开",
