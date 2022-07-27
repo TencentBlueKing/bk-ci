@@ -258,12 +258,21 @@ class StreamBasicSettingService @Autowired constructor(
             nameWithNamespace = projectInfo.nameWithNamespace
         )
 
+        var newProjectName = projectInfo.nameWithNamespace
+        var needToUpdate = false
         if (oldData.name != projectInfo.name) {
+            needToUpdate = true
+        } else if (oldData.pathWithNamespace != projectInfo.pathWithNamespace) {
+            needToUpdate = true
+            newProjectName = projectInfo.pathWithNamespace.toString()
+        }
+
+        if (needToUpdate) {
             try {
                 client.get(ServiceProjectResource::class).updateProjectName(
                     userId = userId,
                     projectCode = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId),
-                    projectName = projectInfo.name
+                    projectName = newProjectName
                 )
             } catch (e: Throwable) {
                 logger.error("update bkci project name error :${e.message}")
@@ -342,11 +351,16 @@ class StreamBasicSettingService @Autowired constructor(
         // 如果stream 存在该项目信息
         if (null != gitProjectResult) {
             // sp3:比对gitProjectinfo的project_name跟入参的gitProjectName对比是否同名，注意gitProjectName这里包含了group信息，拆解开。
+            // 可能存在用户：只改项目名称，不改路径；只改路径，不改项目名称。
             val projectNameFromGit = gitProjectResult.name
+            val pathWithNamespace = gitProjectResult.pathWithNamespace
             val projectNameFromPara = projectName.substring(projectName.lastIndexOf("/") + 1)
 
-            if (projectNameFromGit.isNotEmpty() && projectNameFromPara.isNotEmpty() &&
+            if ((
+                projectNameFromGit.isNotEmpty() && projectNameFromPara.isNotEmpty() &&
                 projectNameFromPara != projectNameFromGit
+            ) ||
+                (!pathWithNamespace.isNullOrEmpty() && pathWithNamespace != projectName)
             ) {
                 // 项目已修改名称，更新项目信息，包含setting + project表
                 refreshSetting(userId, projectId)
