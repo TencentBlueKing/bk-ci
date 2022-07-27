@@ -105,8 +105,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
 
     fun shutdown(event: PipelineBuildLessShutdownDispatchEvent) {
         try {
-            LOG.info("${event.buildId}|${event.vmSeqId} " +
-                         "Start to finish the pipeline build($event)")
+            LOG.info("${event.buildId}|${event.vmSeqId} Start to finish the pipeline build($event)")
             val executeCount = event.executeCount
             if (event.vmSeqId.isNullOrBlank()) {
                 val records = pipelineDockerBuildDao
