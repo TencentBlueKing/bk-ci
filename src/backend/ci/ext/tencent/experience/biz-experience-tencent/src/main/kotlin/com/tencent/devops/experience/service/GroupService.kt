@@ -165,7 +165,7 @@ class GroupService @Autowired constructor(
         }
     }
 
-    fun create(projectId: String, userId: String, group: GroupCreate) :String{
+    fun create(projectId: String, userId: String, group: GroupCreate) {
         if (groupDao.has(dslContext, projectId, group.name)) {
             throw ErrorCodeException(
                 defaultMessage = "体验组(${group.name})已存在",
@@ -202,7 +202,6 @@ class GroupService @Autowired constructor(
             groupName = group.name
         )
 
-        return HashUtil.encodeLongId(groupId)
     }
 
     fun get(userId: String, projectId: String, groupHashId: String): Group {
