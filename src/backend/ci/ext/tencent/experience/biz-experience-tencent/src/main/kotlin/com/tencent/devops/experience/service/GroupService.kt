@@ -316,7 +316,7 @@ class GroupService @Autowired constructor(
     private fun sendNotificationToNewAddUser(
             newAddUsers: MutableSet<String>,
             userType: String,
-            groupId: Long,
+            groupId: Long
     ) {
         val experienceIds = mutableSetOf<Long>()
         val groupIds = mutableSetOf<Long>()
