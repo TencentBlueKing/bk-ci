@@ -174,7 +174,8 @@
         "options": "选项",
         "defaultValue": "默认值",
         "required": "必填",
-        "disableManual": "当前流水线已禁止手动触发"
+        "yamError": "YAML 解析失败",
+        "noYamlOrDisable": "分支上没有此流水线，或者流水线为允许手动触发"
     },
     "exception": {
         "systemErrTips": "'系统异常，请稍后再试!'",

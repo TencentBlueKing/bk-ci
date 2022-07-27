@@ -174,7 +174,8 @@
         "options": "Options",
         "defaultValue": "Default value",
         "required": "Required",
-        "disableManual": "The current pipeline has disabled manual triggering"
+        "yamError": "YAML parse failed",
+        "noYamlOrDisable": "Pipeline does not exist or dose not have a manual trigger in this branch"
     },
     "exception": {
         "systemErrTips": "'System error, please try again later!'",

@@ -162,57 +162,68 @@
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item v-if="disableManual">
-                    <bk-alert type="warning" :title="t('pipeline.disableManual')"></bk-alert>
-                </bk-form-item>
-                <bk-form-item class="mt15">
-                    <bk-checkbox v-model="formData.useCommitId" @change="getPipelineBranchYaml">{{$t('pipeline.commitTriggerTips')}}</bk-checkbox>
-                </bk-form-item>
-                <bk-form-item :label="$t('pipeline.commit')" :required="true" :rules="[requireRule($t('pipeline.commit'))]" property="commitId" error-display-type="normal" v-if="formData.useCommitId">
-                    <bk-tag-input :placeholder="$t('pipeline.commitPlaceholder')"
-                        v-model="formData.commitId"
-                        @change="getPipelineBranchYaml"
-                        :max-data="1"
-                        :loading="isLoadingCommit"
-                        :list="triggerCommits"
-                        :tpl="renderCommitList"
-                        tooltip-key="message"
-                        allow-create
-                        save-key="id"
-                        display-key="message"
-                        search-key="message"
-                        trigger="focus"
+                <template v-if="disableManual">
+                    <bk-alert
+                        v-if="yamlErrorMessage"
+                        type="warning"
+                        :title="`${t('pipeline.yamError')}：<br>${yamlErrorMessage}`"
+                    ></bk-alert>
+                    <bk-alert
+                        v-else
+                        type="error"
+                        :title="t('pipeline.noYamlOrDisable')"
+                    ></bk-alert>
+                </template>
+                <template v-else>
+                    <bk-form-item class="mt15">
+                        <bk-checkbox v-model="formData.useCommitId" @change="getPipelineBranchYaml">{{$t('pipeline.commitTriggerTips')}}</bk-checkbox>
+                    </bk-form-item>
+                    <bk-form-item :label="$t('pipeline.commit')" :required="true" :rules="[requireRule($t('pipeline.commit'))]" property="commitId" error-display-type="normal" v-if="formData.useCommitId">
+                        <bk-tag-input :placeholder="$t('pipeline.commitPlaceholder')"
+                            v-model="formData.commitId"
+                            @change="getPipelineBranchYaml"
+                            :max-data="1"
+                            :loading="isLoadingCommit"
+                            :list="triggerCommits"
+                            :tpl="renderCommitList"
+                            tooltip-key="message"
+                            allow-create
+                            save-key="id"
+                            display-key="message"
+                            search-key="message"
+                            trigger="focus"
+                        >
+                        </bk-tag-input>
+                    </bk-form-item>
+                    <bk-form-item :label="$t('pipeline.buildMsg')" :required="true" :rules="[requireRule($t('pipeline.buildMsg'))]" property="customCommitMsg" :desc="$t('pipeline.buildMsgTips')" error-display-type="normal">
+                        <bk-input v-model="formData.customCommitMsg" :placeholder="$t('pipeline.buildMsgPlaceholder')"></bk-input>
+                    </bk-form-item>
+                    <!-- <bk-form-item
+                        label="Yaml"
+                        ref="codeSection"
+                        property="yaml"
+                        error-display-type="normal"
+                        class="mb8"
+                        :required="true"
+                        :rules="[requireRule('yaml'), checkYaml]"
+                        v-bkloading="{ isLoading: isLoadingYaml }"
                     >
-                    </bk-tag-input>
-                </bk-form-item>
-                <bk-form-item :label="$t('pipeline.buildMsg')" :required="true" :rules="[requireRule($t('pipeline.buildMsg'))]" property="customCommitMsg" :desc="$t('pipeline.buildMsgTips')" error-display-type="normal">
-                    <bk-input v-model="formData.customCommitMsg" :placeholder="$t('pipeline.buildMsgPlaceholder')"></bk-input>
-                </bk-form-item>
-                <bk-form-item
-                    label="Yaml"
-                    ref="codeSection"
-                    property="yaml"
-                    error-display-type="normal"
-                    class="mb8"
-                    :required="true"
-                    :rules="[requireRule('yaml'), checkYaml]"
-                    v-bkloading="{ isLoading: isLoadingYaml }"
-                >
-                    <code-section @blur="$refs.codeSection.validate('blur')"
-                        @focus="$refs.codeSection.clearValidator()"
-                        :code.sync="formData.yaml"
-                        :cursor-blink-rate="530"
-                        :read-only="false"
-                        ref="codeEditor"
+                        <code-section @blur="$refs.codeSection.validate('blur')"
+                            @focus="$refs.codeSection.clearValidator()"
+                            :code.sync="formData.yaml"
+                            :cursor-blink-rate="530"
+                            :read-only="false"
+                            ref="codeEditor"
+                        />
+                    </bk-form-item> -->
+                    <bk-ui-form
+                        v-bkloading="{ isLoading: isLoadingSchema }"
+                        v-model="formData.inputs"
+                        ref="bkUiForm"
+                        :schema="uiFormSchema"
+                        :layout="uiFormLayout"
                     />
-                </bk-form-item>
-                <bk-ui-form
-                    v-bkloading="{ isLoading: isLoadingSchema }"
-                    v-model="formData.inputs"
-                    ref="bkUiForm"
-                    :schema="uiFormSchema"
-                    :layout="uiFormLayout"
-                />
+                </template>
                 <bk-form-item>
                     <bk-button
                         ext-cls="mr5"
@@ -330,7 +341,9 @@
                     container: {
                         gap: '8px'
                     }
-                }
+                },
+                emptyYaml: false,
+                yamlErrorMessage: ''
             }
         },
 
@@ -562,7 +575,7 @@
 
             selectBranch () {
                 this.getBranchCommits()
-                this.getPipelineBranchYaml()
+                // this.getPipelineBranchYaml()
                 this.getPipelineParams()
             },
 
@@ -608,9 +621,18 @@
                 this.isLoadingSchema = true
                 return pipelines.getPipelineParamJson(this.projectId, this.curPipeline.pipelineId, { branchName, commitId }).then((res) => {
                     this.uiFormSchema = res.schema || {}
+                    this.formData.yaml = res.yaml || ''
                     this.disableManual = res.enable === false
                 }).catch((err) => {
-                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                    if (err.code === 2129028) {
+                        this.emptyYaml = true
+                        this.disableManual = true
+                    } else if (err.code === 2129029) {
+                        this.yamlErrorMessage = err.message
+                        this.disableManual = true
+                    } else {
+                        this.$bkMessage({ theme: 'error', message: err.message || err })
+                    }
                 }).finally(() => {
                     this.isLoadingSchema = false
                 })
