@@ -119,7 +119,6 @@ class ExperienceService @Autowired constructor(
     private val experienceBaseService: ExperienceBaseService,
     private val experiencePermissionService: ExperiencePermissionService,
     private val experiencePushService: ExperiencePushService,
-    private val experienceService: ExperienceService,
     private val experiencePushSubscribeDao: ExperiencePushSubscribeDao
 ) {
     private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
@@ -626,18 +625,18 @@ class ExperienceService @Autowired constructor(
         val experienceRecord = experienceDao.get(dslContext, experienceId)
         when (userType) {
             "newAddOuterUsers" -> {
-                experienceService.sendMessageToOuterReceivers(
+                sendMessageToOuterReceivers(
                         outerReceivers = newAddUsers,
                         experienceRecord = experienceRecord
                 )
             }
             "newAddInnerUsers" -> {
                 val notifyTypeList = objectMapper.readValue<Set<NotifyType>>(experienceRecord.notifyTypes)
-                val pcUrl = experienceService.getPcUrl(experienceRecord.projectId, experienceId)
-                val appUrl = experienceService.getShortExternalUrl(experienceId)
+                val pcUrl = getPcUrl(experienceRecord.projectId, experienceId)
+                val appUrl = getShortExternalUrl(experienceId)
                 val projectName =
                         client.get(ServiceProjectResource::class).get(experienceRecord.projectId).data!!.projectName
-                experienceService.sendMessageToInnerReceivers(
+                sendMessageToInnerReceivers(
                         notifyTypeList = notifyTypeList,
                         projectName = projectName,
                         innerReceivers = newAddUsers,
