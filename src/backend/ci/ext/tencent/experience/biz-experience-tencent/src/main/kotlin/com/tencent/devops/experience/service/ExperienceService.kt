@@ -568,7 +568,7 @@ class ExperienceService @Autowired constructor(
                     experienceId = experienceRecord.id
             )
         }
-        if (newAddOuterUsers != null && newAddOuterUsers.isNotEmpty()) {
+        if (newAddInnerUsers != null && newAddInnerUsers.isNotEmpty()) {
             sendNotificationToNewAddUser(
                     newAddUsers = newAddInnerUsers!!,
                     userType = "newAddInnerUsers",
