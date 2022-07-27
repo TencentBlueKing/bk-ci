@@ -552,29 +552,6 @@ class ExperienceService @Autowired constructor(
         experience.experienceGroups?.forEach {
             experienceGroupDao.create(dslContext, experienceRecord.id, HashUtil.decodeIdToLong(it))
         }
-        // 新增内部人员
-        val oldInnerUsers = experienceInnerDao.listUserIdsByRecordId(dslContext, experienceRecord.id).map { it.value1() }.toSet()
-        val latestInnerUsers = experience.innerUsers
-        val newAddInnerUsers = latestInnerUsers?.subtract(oldInnerUsers)?.toMutableSet()
-        // 新增外部人员
-        val oldOuterUsers = experienceOuterDao.listUserIdsByRecordId(dslContext, experienceRecord.id).map { it.value1() }.toSet()
-        val latestOldOuterUsers = experience.outerUsers
-        val newAddOuterUsers = latestOldOuterUsers?.subtract(oldOuterUsers)?.toMutableSet()
-        // 向新增人员发送最新版本体验信息
-        if (newAddOuterUsers != null && newAddOuterUsers.isNotEmpty()) {
-            sendNotificationToNewAddUser(
-                    newAddUsers = newAddOuterUsers!!,
-                    userType = "newAddOuterUsers",
-                    experienceId = experienceRecord.id
-            )
-        }
-        if (newAddInnerUsers != null && newAddInnerUsers.isNotEmpty()) {
-            sendNotificationToNewAddUser(
-                    newAddUsers = newAddInnerUsers!!,
-                    userType = "newAddInnerUsers",
-                    experienceId = experienceRecord.id
-            )
-        }
 
         // 更新内部成员
         experience.innerUsers?.let { experienceInnerDao.deleteByRecordId(dslContext, experienceRecord.id, it) }
@@ -621,7 +598,6 @@ class ExperienceService @Autowired constructor(
             userType: String,
             experienceId: Long,
     ) {
-        // todo 是否需要判断体验是否过期？
         val experienceRecord = experienceDao.get(dslContext, experienceId)
         when (userType) {
             "newAddOuterUsers" -> {

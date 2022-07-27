@@ -273,7 +273,6 @@ class GroupService @Autowired constructor(
             updator = userId
         )
         // 新增内部人员
-        // todo 是否为空
         val oldInnerUsers = experienceGroupInnerDao.listByGroupIds(dslContext, setOf(groupId)).map { it.userId }.toSet()
         val latestInnerUsers = group.innerUsers
         val newAddInnerUsers = latestInnerUsers.subtract(oldInnerUsers).toMutableSet()
