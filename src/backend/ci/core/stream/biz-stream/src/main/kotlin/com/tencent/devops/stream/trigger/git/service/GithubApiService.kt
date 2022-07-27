@@ -48,6 +48,7 @@ import com.tencent.devops.repository.api.github.ServiceGithubPRResource
 import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
 import com.tencent.devops.repository.api.github.ServiceGithubUserResource
 import com.tencent.devops.repository.pojo.enums.GithubAccessLevelEnum
+import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_COMPLETED
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.CommitCheckRequest
@@ -384,6 +385,7 @@ class GithubApiService @Autowired constructor(
                     )
                 )
             } else {
+                val status = if (block) GITHUB_CHECK_RUNS_STATUS_COMPLETED else GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
                 client.get(ServiceGithubCheckResource::class).createCheckRunByToken(
                     token = token!!,
                     request = CreateCheckRunRequest(
@@ -391,7 +393,7 @@ class GithubApiService @Autowired constructor(
                         name = context,
                         headSha = commitId,
                         detailsUrl = targetUrl,
-                        status = GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS,
+                        status = status,
                         completedAt = now,
                         conclusion = state
                     )
