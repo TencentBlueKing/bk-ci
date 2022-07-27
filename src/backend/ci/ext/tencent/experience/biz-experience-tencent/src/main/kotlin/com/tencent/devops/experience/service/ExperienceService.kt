@@ -112,7 +112,6 @@ class ExperienceService @Autowired constructor(
     private val experienceInnerDao: ExperienceInnerDao,
     private val experienceOuterDao: ExperienceOuterDao,
     private val groupDao: GroupDao,
-    private val groupService: GroupService,
     private val experienceDownloadService: ExperienceDownloadService,
     private val wechatWorkService: WechatWorkService,
     private val client: Client,
@@ -299,7 +298,7 @@ class ExperienceService @Autowired constructor(
             if (HashUtil.decodeIdToLong(it) == ExperienceConstant.PUBLIC_GROUP) {
                 isPublic = true
             } else {
-                if (!groupService.serviceCheck(it)) {
+                if (!serviceCheck(it)) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.NOT_FOUND.statusCode,
                         defaultMessage = "体验组($it)不存在",
@@ -311,7 +310,9 @@ class ExperienceService @Autowired constructor(
         }
         return isPublic
     }
-
+    private fun serviceCheck(groupHashId: String): Boolean {
+        return groupDao.getOrNull(dslContext, HashUtil.decodeIdToLong(groupHashId)) != null
+    }
     private fun getArtifactoryPropertiesMap(
         userId: String,
         projectId: String,

@@ -165,10 +165,6 @@ class GroupService @Autowired constructor(
         }
     }
 
-    fun serviceCheck(groupHashId: String): Boolean {
-        return groupDao.getOrNull(dslContext, HashUtil.decodeIdToLong(groupHashId)) != null
-    }
-
     fun create(projectId: String, userId: String, group: GroupCreate) {
         if (groupDao.has(dslContext, projectId, group.name)) {
             throw ErrorCodeException(
