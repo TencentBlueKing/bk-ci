@@ -621,6 +621,9 @@
                 if (!branchName && !commitId) return
 
                 this.isLoadingSchema = true
+                this.yamlErrorMessage = false
+                this.emptyYaml = false
+                this.disableManual = false
                 return pipelines.getPipelineParamJson(this.projectId, this.curPipeline.pipelineId, { branchName, commitId }).then((res) => {
                     this.uiFormSchema = res.schema || {}
                     this.formData.yaml = res.yaml || ''
