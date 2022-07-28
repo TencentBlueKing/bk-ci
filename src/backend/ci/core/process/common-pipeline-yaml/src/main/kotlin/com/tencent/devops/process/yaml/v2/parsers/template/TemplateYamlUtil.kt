@@ -50,11 +50,14 @@ import com.tencent.devops.process.yaml.v2.parameter.ParametersType
 import com.tencent.devops.process.yaml.v2.parsers.template.models.NoReplaceTemplate
 import org.apache.commons.text.StringEscapeUtils
 import org.apache.tools.ant.filters.StringInputStream
+import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 
 object TemplateYamlUtil {
+
+    private val logger = LoggerFactory.getLogger(TemplateYamlUtil::class.java)
 
     // 检查是否具有重复的ID，job，variable中使用
     fun checkDuplicateKey(
@@ -136,6 +139,7 @@ object TemplateYamlUtil {
         // 模板替换 先替换调用模板传入的参数，再替换模板的默认参数
         templateParameters.forEachIndexed { index, param ->
             if (param.name.contains(".")) {
+                logger.error("PARAMETERS|NAME|WARNING|${param.name}")
                 throw error(
                     Constants.PARAMETER_FORMAT_ERROR.format(path, "parameter name ${param.name} not allow contains '.'")
                 )

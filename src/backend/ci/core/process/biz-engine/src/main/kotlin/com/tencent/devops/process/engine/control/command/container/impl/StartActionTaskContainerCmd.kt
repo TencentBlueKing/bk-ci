@@ -579,7 +579,8 @@ class StartActionTaskContainerCmd(
                 actionType = event.actionType,
                 reason = event.reason,
                 errorCode = event.errorCode,
-                errorTypeName = event.errorTypeName
+                errorTypeName = event.errorTypeName,
+                executeCount = task.executeCount ?: 1
             )
         )
     }

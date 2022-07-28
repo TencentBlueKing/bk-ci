@@ -39,6 +39,7 @@ import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
@@ -386,6 +387,32 @@ class TGitApiService @Autowired constructor(
             mrBody = QualityUtils.getQualityReport(mrBody.reportData.first, mrBody.reportData.second),
             tokenType = cred.toTokenType()
         )
+    }
+
+    @SuppressWarnings("LongParameterList")
+    fun getMrCommitList(
+        cred: TGitCred,
+        gitUrl: String,
+        mrId: Long,
+        page: Int,
+        pageSize: Int,
+        retry: ApiRequestRetryInfo
+    ): List<GitCommit> {
+        return doRetryFun(
+            retry = retry,
+            log = "$gitUrl|$mrId|$page|get mr commit list error",
+            apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR
+        ) {
+            client.get(ServiceScmOauthResource::class).getMrCommitList(
+                projectName = GitUtils.getProjectName(gitUrl),
+                url = gitUrl,
+                type = ScmType.CODE_GIT,
+                token = cred.toToken(),
+                mrId = mrId,
+                page = page,
+                size = pageSize
+            ).data ?: emptyList()
+        }
     }
 
     protected fun StreamGitCred.toToken(): String {

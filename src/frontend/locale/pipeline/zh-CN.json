@@ -246,7 +246,8 @@
     "createTime": "创建时间",
     "restoreSuc": "恢复成功",
     "emptyTitle": "暂无可恢复的流水线",
-    "emptyDesc": "30天内被删除的流水线可在此页面恢复"
+    "emptyDesc": "30天内被删除的流水线可在此页面恢复",
+    "restoreSearchTips": "请输入流水线名称搜索"
   },
   "atomManage": {
     "installedAtom": "已安装插件",
@@ -542,7 +543,10 @@
     "fileUnit": "{0}个文件",
     "completedLog": "完整日志",
     "artifactList": "构件列表",
-    "showAll": "显示全部"
+    "showAll": "显示全部",
+    "copyToCustomArtifactory": "复制至自定义仓库",
+    "downloading": "正在下载",
+    "copySuc": "复制{0}至自定义仓库成功"
   },
   "preview": {
     "build": "构建",
@@ -834,7 +838,7 @@
     "githubAppTips": "启用本插件需安装对应",
     "paramInputTips": "请输入参数",
     "paramEmptyTips": "该子流水线没有任何参数",
-    "remoteCurlTips": "添加本插件后，当前流水线可通过特定的URL触发构建（启动人是流水线的最后编辑人）",
+    "remoteCurlTips": "添加本插件后，当前流水线可通过特定的URL触发构建（启动人是流水线的最后编辑人，可通过 X-DEVOPS-UID 传入触发人）",
     "example": "示例",
     "confirmMsg": "离开后，新编辑的数据将会丢失",
     "confirmTitle": "确认要离开",

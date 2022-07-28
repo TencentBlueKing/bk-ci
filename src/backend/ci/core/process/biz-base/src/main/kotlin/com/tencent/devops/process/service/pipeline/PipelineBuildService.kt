@@ -62,6 +62,7 @@ import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
 import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
@@ -117,10 +118,20 @@ class PipelineBuildService(
         val projectId = pipeline.projectId
         val pipelineSetting = pipelineRepositoryService.getSetting(projectId, pipelineId)
         val bucketSize = pipelineSetting!!.maxConRunningQueueSize
+        val projectVO = projectCacheService.getProject(projectId)
+        if (projectVO?.enabled == false) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_START_BUILD_PROJECT_UNENABLE,
+                defaultMessage = "Project [${projectVO.englishName}] has disabled",
+                params = arrayOf(projectVO.englishName)
+            )
+        }
         val lockKey = "PipelineRateLimit:$pipelineId"
         try {
             if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL) {
-                acquire = simpleRateLimiter.acquire(bucketSize, lockKey = lockKey)
+                acquire = simpleRateLimiter.acquire(
+                    bucketSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT, lockKey = lockKey
+                )
                 if (!acquire) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_START_BUILD_FREQUENT_LIMIT,
@@ -164,7 +175,7 @@ class PipelineBuildService(
             // 项目名称也是可能变化
             pipelineParamMap[PROJECT_NAME_CHINESE] = BuildParameters(
                 key = PROJECT_NAME_CHINESE,
-                value = projectCacheService.getProjectName(projectId) ?: "",
+                value = projectVO?.projectName ?: "",
                 valueType = BuildFormPropertyType.STRING
             )
 

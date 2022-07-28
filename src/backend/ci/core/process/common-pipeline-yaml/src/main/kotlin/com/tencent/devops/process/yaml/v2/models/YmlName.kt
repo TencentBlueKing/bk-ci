@@ -25,24 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.process.yaml.v2.models
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 
-data class StreamProjectSimpleInfo(
-    @JsonProperty("id")
-    @ApiModelProperty(name = "id")
-    val id: Long?,
-    @JsonProperty("path_with_namespace")
-    @ApiModelProperty(name = "path_with_namespace")
-    val pathWithNamespace: String?,
-    @JsonProperty("description")
-    @ApiModelProperty(name = "description")
-    val description: String?,
-    @JsonProperty("avatar_url")
-    @ApiModelProperty(name = "avatar_url")
-    val avatarUrl: String?,
-    val enabledCi: Boolean?,
-    val projectCode: String?
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class YmlName(
+    val name: String?
 )
