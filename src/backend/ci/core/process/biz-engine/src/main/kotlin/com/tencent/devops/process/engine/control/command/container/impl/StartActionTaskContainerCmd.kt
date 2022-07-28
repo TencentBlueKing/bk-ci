@@ -362,6 +362,14 @@ class StartActionTaskContainerCmd(
                 message.insert(0, "[$taskName]").append(" | summary=${containerContext.latestSummary}")
             }
             parseException != null -> { // 如果执行条件判断是出错则直接将插件设为失败
+                taskBuildDetailService.updateTaskStatus(
+                    projectId = projectId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    taskStatus = BuildStatus.FAILED,
+                    buildStatus = BuildStatus.RUNNING,
+                    operation = "taskConditionInvalid"
+                )
                 pipelineTaskService.updateTaskStatus(
                     task = this,
                     userId = starter,
