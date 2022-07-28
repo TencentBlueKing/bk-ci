@@ -91,6 +91,32 @@ class ParamFacadeService @Autowired constructor(
         return filterParams
     }
 
+    fun filterOptions(
+        userId: String?,
+        projectId: String,
+        pipelineId: String?,
+        property: BuildFormProperty
+    ): List<BuildFormValue> {
+        val filterParams =
+            if (property.type == BuildFormPropertyType.SVN_TAG && (!property.repoHashId.isNullOrBlank())) {
+                addSvnTagDirectories(projectId, property)
+            } else if (property.type == BuildFormPropertyType.GIT_REF && (!property.repoHashId.isNullOrBlank())) {
+                addGitRefs(projectId, property)
+            } else if (property.type == BuildFormPropertyType.CODE_LIB && property.scmType != null) {
+                addCodelibProperties(userId, projectId, property)
+            } else if (property.type == BuildFormPropertyType.CONTAINER_TYPE && property.containerType != null) {
+                addContainerTypeProperties(userId, projectId, property)
+            } else if (property.type == BuildFormPropertyType.ARTIFACTORY) {
+                addArtifactoryProperties(userId, projectId, property)
+            } else if (property.type == BuildFormPropertyType.SUB_PIPELINE) {
+                addSubPipelineProperties(userId, projectId, pipelineId, property)
+            } else {
+                property
+            }
+
+        return filterParams.options ?: emptyList()
+    }
+
     private fun addGitRefs(projectId: String, formProperty: BuildFormProperty): BuildFormProperty {
         val refs = try {
             codeService.getGitRefs(projectId, formProperty.repoHashId)
@@ -150,8 +176,8 @@ class ParamFacadeService @Autowired constructor(
             codeAliasName.map { BuildFormValue(it.aliasName, it.aliasName) }
         }
         val searchUrl = "/process/api/user/buildParam/repository/$projectId/aliasName?" +
-            "repositoryType=${codelibFormProperty.scmType!!}&permission=${Permission.LIST.name}" +
-            "&aliasName={words}&page=1&pageSize=100"
+                "repositoryType=${codelibFormProperty.scmType!!}&permission=${Permission.LIST.name}" +
+                "&aliasName={words}&page=1&pageSize=100"
         val replaceKey = "{words}"
         return copyFormProperty(
             property = codelibFormProperty,
