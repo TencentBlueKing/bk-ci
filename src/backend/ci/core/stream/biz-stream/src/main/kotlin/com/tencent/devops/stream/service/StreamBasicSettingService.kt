@@ -355,10 +355,9 @@ class StreamBasicSettingService @Autowired constructor(
             val projectNameFromGit = gitProjectResult.name
             val pathWithNamespace = gitProjectResult.pathWithNamespace
             val projectNameFromPara = projectName.substring(projectName.lastIndexOf("/") + 1)
-
             if (projectNameFromPara != projectNameFromGit ||
                 pathWithNamespace != projectName) {
-                // 项目已修改名称，更新项目信息，包含setting + project表
+                // 项目已修改名称或修改路径，更新项目信息，包含setting + project表
                 refreshSetting(userId, projectId)
             }
             return
