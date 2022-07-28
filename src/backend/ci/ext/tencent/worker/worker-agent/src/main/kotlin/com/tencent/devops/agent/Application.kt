@@ -74,7 +74,10 @@ fun main(args: Array<String>) {
                     variables: Map<String, String>,
                     pipelineId: String
                 ): Pair<File, File> {
-                    val workspaceDir = WorkspaceUtils.getWorkspaceDir(BuildType.DOCKER)
+                    val workspaceDir = WorkspaceUtils.getWorkspaceDir(
+                        buildType = BuildType.DOCKER,
+                        workspace = "/data/landun/workspace"
+                    )
                     val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
                     return Pair(workspaceDir, logPathDir)
                 }
