@@ -39,6 +39,7 @@ import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.trigger.StreamTriggerRequestService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
@@ -111,7 +112,7 @@ class GithubPRActionGit(
         if (!event().isPrForkEvent()) return true
         val checkUserAccessLevel = try {
             val accessLevel = this.api.getProjectUserInfo(
-                cred = (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as TGitCred,
+                cred = (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as GithubCred,
                 gitProjectId = this.data.eventCommon.gitProjectId,
                 userId = this.data.eventCommon.userId
             ).accessLevel
@@ -213,6 +214,18 @@ class GithubPRActionGit(
     }
 
     override fun skipStream(): Boolean {
+        // fork触发进行权限校验
+        if (!this.checkMrForkReview()) {
+            logger.warn(
+                "check mr fork review false, return, gitProjectId: ${this.data.getGitProjectId()}, " +
+                    "eventId: ${this.data.context.requestEventId}"
+            )
+            throw StreamTriggerException(
+                this,
+                TriggerReason.TRIGGER_NOT_MATCH,
+                reasonParams = listOf("current trigger user(${this.data.eventCommon.userId}) not in whitelist")
+            )
+        }
         // 目前先把不支持的action全部过滤不触发
         return GithubPrEventAction.get(event()) == GithubPrEventAction.STREAM_NOT_SUPPORT
     }

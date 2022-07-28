@@ -47,6 +47,7 @@ import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
+import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
@@ -122,10 +123,17 @@ class StreamTriggerRequestService @Autowired constructor(
             logger.warn("request event not support: $event")
             return false
         }
+        val eventCommon = action.data.eventCommon
+
+        // 初始化setting
+        if (!action.data.isSettingInitialized) {
+            val gitCIBasicSetting = streamSettingDao.getSetting(dslContext, eventCommon.gitProjectId.toLong())
+            if (null != gitCIBasicSetting) {
+                action.data.setting = StreamTriggerSetting(gitCIBasicSetting)
+            }
+        }
         // 获取前端展示相关的requestEvent
         val requestEvent = action.buildRequestEvent(event) ?: return false
-
-        val eventCommon = action.data.eventCommon
 
         val repoTriggerPipelineList = repoTriggerEventService.getTargetPipelines(
             eventCommon.gitProjectName
@@ -153,18 +161,12 @@ class StreamTriggerRequestService @Autowired constructor(
             }
         }
 
-        // 没开启stream的就不存event事件信息
-        if (!action.data.isSettingInitialized) {
-            val gitCIBasicSetting = streamSettingDao.getSetting(dslContext, eventCommon.gitProjectId.toLong())
-
-            if (null == gitCIBasicSetting || !gitCIBasicSetting.enableCi) {
-                logger.info(
-                    "git ci is not enabled, but it has repo trigger, git project id: ${action.data.getGitProjectId()}"
-                )
-                return null
-            }
-
-            action.data.setting = StreamTriggerSetting(gitCIBasicSetting)
+        // 上方已尝试初始化setting，在这还未初始化setting的说明没有开启过ci
+        if (!action.data.isSettingInitialized || !action.data.setting.enableCi) {
+            logger.info(
+                "git ci is not enabled, but it has repo trigger, git project id: ${action.data.getGitProjectId()}"
+            )
+            return null
         }
 
         if (action.data.context.requestEventId == null) {
