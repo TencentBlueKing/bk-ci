@@ -60,4 +60,15 @@ data class StreamProjectGitInfo(
         avatarUrl = p.avatarUrl,
         description = p.description
     )
+
+    constructor(streamProjectSimpleInfo: StreamProjectSimpleInfo) : this(
+        id = streamProjectSimpleInfo.id,
+        public = streamProjectSimpleInfo.public,
+        name = streamProjectSimpleInfo.name,
+        pathWithNamespace = streamProjectSimpleInfo.pathWithNamespace,
+        httpsUrlToRepo = streamProjectSimpleInfo.httpsUrlToRepo,
+        webUrl = streamProjectSimpleInfo.webUrl,
+        avatarUrl = streamProjectSimpleInfo.avatarUrl,
+        description = streamProjectSimpleInfo.description
+    )
 }

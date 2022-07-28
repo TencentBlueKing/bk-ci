@@ -25,24 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.openapi
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
-
-data class StreamProjectSimpleInfo(
-    @JsonProperty("id")
-    @ApiModelProperty(name = "id")
-    val id: Long?,
-    @JsonProperty("path_with_namespace")
-    @ApiModelProperty(name = "path_with_namespace")
-    val pathWithNamespace: String?,
-    @JsonProperty("description")
-    @ApiModelProperty(name = "description")
-    val description: String?,
-    @JsonProperty("avatar_url")
-    @ApiModelProperty(name = "avatar_url")
-    val avatarUrl: String?,
-    val enabledCi: Boolean?,
-    val projectCode: String?
+@Target(AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
+@kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
+@Suppress("LongParameterList")
+annotation class IgnoreProjectId(
+    val ignore: Boolean = true // 是否忽略项目ID
 )

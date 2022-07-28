@@ -97,6 +97,7 @@ import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -453,7 +454,7 @@ class PipelineBuildFacadeService(
 
             logger.info(
                 "ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
-                    "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
+                        "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
             )
 
             paramMap[PIPELINE_RETRY_COUNT] = BuildParameters(PIPELINE_RETRY_COUNT, retryCount)
@@ -1281,12 +1282,6 @@ class PipelineBuildFacadeService(
                 arrayOf(buildId)
             )
 
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
-                ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
-                arrayOf(buildId)
-            )
-
         val allVariable = buildVariableService.getAllVariable(projectId, buildId)
 
         return Result(
@@ -1294,7 +1289,7 @@ class PipelineBuildFacadeService(
                 id = buildHistory.id,
                 userId = buildHistory.userId,
                 trigger = buildHistory.trigger,
-                pipelineName = pipelineInfo.pipelineName,
+                pipelineName = allVariable[PIPELINE_NAME] ?: "",
                 buildNum = buildHistory.buildNum ?: 1,
                 pipelineVersion = buildHistory.pipelineVersion,
                 status = buildHistory.status,
