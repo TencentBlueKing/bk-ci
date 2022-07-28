@@ -25,24 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.process.api.service
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.pipeline.ExtServiceMoaWorkItemReq
+import com.tencent.devops.process.service.TXPipelineMoaService
+import org.springframework.beans.factory.annotation.Autowired
 
-data class StreamProjectSimpleInfo(
-    @JsonProperty("id")
-    @ApiModelProperty(name = "id")
-    val id: Long?,
-    @JsonProperty("path_with_namespace")
-    @ApiModelProperty(name = "path_with_namespace")
-    val pathWithNamespace: String?,
-    @JsonProperty("description")
-    @ApiModelProperty(name = "description")
-    val description: String?,
-    @JsonProperty("avatar_url")
-    @ApiModelProperty(name = "avatar_url")
-    val avatarUrl: String?,
-    val enabledCi: Boolean?,
-    val projectCode: String?
-)
+@RestResource
+class ServiceTXMoaCallBackResourceImpl @Autowired constructor(
+    private val txPipelineMoaService: TXPipelineMoaService
+) : ServiceTXMoaCallBackResource {
+
+    override fun manualReviewCallBack(extServiceMoaWorkItemReq: ExtServiceMoaWorkItemReq): Result<Boolean> {
+        return txPipelineMoaService.manualReviewMoaApprove(extServiceMoaWorkItemReq)
+    }
+}

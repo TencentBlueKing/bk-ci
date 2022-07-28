@@ -30,4 +30,5 @@ dependencies {
     api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
     api(project(":ext:tencent:process:api-process-tencent"))
+    api(project(":ext:tencent:common:common-notify-tencent"))
 }

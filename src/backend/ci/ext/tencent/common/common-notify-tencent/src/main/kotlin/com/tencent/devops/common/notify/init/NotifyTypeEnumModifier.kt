@@ -25,30 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service.gray
+package com.tencent.devops.common.notify.init
 
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.api.enums.EnumModifier
+import com.tencent.devops.common.api.util.EnumUtil
+import com.tencent.devops.common.notify.enums.NotifyType
 
-class MacOSGray {
-    companion object {
-        const val repoGrayRedisKey = "project:setting:macosGray"
+class NotifyTypeEnumModifier : EnumModifier {
+
+    override fun modified() {
+        EnumUtil.addEnum(
+            enumType = NotifyType::class.java,
+            enumName = "MOA",
+            additionalValues = arrayOf()
+        )
     }
-
-    fun addGrayProject(projectId: String, redisOperation: RedisOperation) {
-        redisOperation.addSetValue(getRepoGrayRedisKey(), projectId) // 添加项目为灰度项目
-    }
-
-    fun removeGrayProject(projectId: String, redisOperation: RedisOperation) {
-        redisOperation.removeSetMember(getRepoGrayRedisKey(), projectId) // 取消项目为灰度项目
-    }
-
-    fun isGray(projectId: String, redisOperation: RedisOperation): Boolean {
-        return redisOperation.isMember(getRepoGrayRedisKey(), projectId)
-//        return grayProjectSet(redisOperation).contains(projectId)
-    }
-
-    fun grayProjectSet(redisOperation: RedisOperation) =
-        (redisOperation.getSetMembers(repoGrayRedisKey) ?: emptySet()).filter { !it.isBlank() }.toSet()
-
-    fun getRepoGrayRedisKey() = repoGrayRedisKey
 }
