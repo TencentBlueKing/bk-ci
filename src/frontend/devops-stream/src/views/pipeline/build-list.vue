@@ -165,13 +165,13 @@
                 <template v-if="disableManual">
                     <bk-form-item v-if="yamlErrorMessage">
                         <bk-alert
-                            type="warning"
+                            type="error"
                             :title="yamlErrorMessage"
                         ></bk-alert>
                     </bk-form-item>
                     <bk-form-item v-else>
                         <bk-alert
-                            type="error"
+                            type="warning"
                             :title="$t('pipeline.noYamlOrDisable')"
                         ></bk-alert>
                     </bk-form-item>
