@@ -63,7 +63,7 @@
             },
 
             logout () {
-                common.logout()
+                common.logout(this.user.username)
             }
         }
     })

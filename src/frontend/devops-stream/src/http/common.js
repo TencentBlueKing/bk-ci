@@ -39,7 +39,14 @@ export default {
         return api.get(`${STREAM_PERFIX}/external/stream/login/url?type=${type}`)
     },
 
-    logout () {
-        return api.delete(`${AUTH_PERFIX}/external/third/login/out`)
+    logout (userId) {
+        return api.delete(
+            `${AUTH_PERFIX}/external/third/login/out`,
+            {
+                headers: {
+                    userId
+                }
+            }
+        )
     }
 }
