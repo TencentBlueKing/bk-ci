@@ -40,13 +40,6 @@ export default {
     },
 
     logout (userId) {
-        return api.delete(
-            `${AUTH_PERFIX}/external/third/login/out`,
-            {
-                headers: {
-                    userId
-                }
-            }
-        )
+        return api.delete(`${AUTH_PERFIX}/user/third/login/out`)
     }
 }
