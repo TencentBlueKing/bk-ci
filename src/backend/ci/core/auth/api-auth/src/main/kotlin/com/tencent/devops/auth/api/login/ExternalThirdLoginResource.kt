@@ -25,20 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.api.login
 
-import com.tencent.devops.auth.api.login.UserThirdLoginResource
-import com.tencent.devops.auth.service.ThirdLoginService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
-@RestResource
-class UserThirdLoginResourceImpl @Autowired constructor(
-    val loginService: ThirdLoginService
-) : UserThirdLoginResource {
+@Api(tags = ["AUTH_THIRD_LOGIN"], description = "权限-第三方登陆")
+@Path("/external/third/login")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ExternalThirdLoginResource {
 
-    override fun thirdLoginOut(userId: String): Result<Boolean> {
-        return Result(loginService.thirdLoginOut(userId))
-    }
+    @Path("/")
+    @GET
+    fun thirdLogin(
+        @QueryParam("code")
+        @ApiParam("验证code")
+        code: String,
+        @QueryParam("userId")
+        @ApiParam("用户ID")
+        userId: String,
+        @QueryParam("type")
+        @ApiParam("登陆类型")
+        type: String,
+        @QueryParam("email")
+        @ApiParam("邮箱")
+        email: String? = null
+    ): Response
 }
