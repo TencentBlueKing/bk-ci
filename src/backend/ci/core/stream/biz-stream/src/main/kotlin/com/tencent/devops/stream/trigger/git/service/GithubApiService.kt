@@ -172,7 +172,7 @@ class GithubApiService @Autowired constructor(
                 repoId = gitProjectId.toLong(),
                 username = userId
             ),
-            userId = userId
+            userId = cred.getUserId()
         ).data?.let {
             GithubProjectUserInfo(GithubAccessLevelEnum.getGithubAccessLevel(it.permission).level)
         } ?: GithubProjectUserInfo(GithubAccessLevelEnum.GUEST.level)
