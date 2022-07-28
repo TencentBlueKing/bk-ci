@@ -144,11 +144,10 @@ class StreamTriggerRequestService @Autowired constructor(
             val requestEventId = gitRequestEventDao.saveGitRequest(dslContext, requestEvent)
             action.data.context.requestEventId = requestEventId
 
-            if (action.skipStream()) {
-                return true
-            }
-
             try {
+                if (action.skipStream()) {
+                    return true
+                }
                 // 为了不影响主逻辑对action进行深拷贝
                 streamTriggerRequestRepoService.repoTriggerBuild(
                     triggerPipelineList = repoTriggerPipelineList,
@@ -174,11 +173,12 @@ class StreamTriggerRequestService @Autowired constructor(
             action.data.context.requestEventId = requestEventId
         }
 
-        if (action.skipStream()) {
-            return true
+        return exHandler.handle(action) {
+            if (action.skipStream()) {
+                return@handle true
+            }
+            checkRequest(action)
         }
-
-        return exHandler.handle(action) { checkRequest(action) }
     }
 
     private fun checkRequest(
