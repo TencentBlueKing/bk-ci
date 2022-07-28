@@ -221,6 +221,9 @@ class StreamProjectService @Autowired constructor(
                 }
                 page += 1
             } while (list.isNotEmpty() && page < 3)
+            if (projectList.isEmpty()) {
+                return emptyList()
+            }
             val updateLock = RedisLock(redisOperation, getProjectListLockKey(userId), 10)
             updateLock.lock()
             try {
