@@ -146,7 +146,7 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
         } catch (e: Exception) {
             return Result(
                 status = ErrorCodeEnum.MANUAL_TRIGGER_YAML_INVALID.errorCode,
-                message = message.message
+                message = "Invalid yaml: ${e.message}"
             )
         }
 
