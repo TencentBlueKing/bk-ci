@@ -93,7 +93,10 @@ class TaskBuildDetailService(
                 override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
                     if (c.id.equals(containerId)) {
                         if (e.id.equals(taskId)) {
-                            logger.info("ENGINE|$buildId|pauseTask|$stageId|j($containerId)|t($taskId)|${buildStatus.name}")
+                            logger.info(
+                                "ENGINE|$buildId|pauseTask|$stageId|j($containerId)|" +
+                                    "t($taskId)|${buildStatus.name}"
+                            )
                             update = true
                             e.status = buildStatus.name
                             return Traverse.BREAK
