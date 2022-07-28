@@ -37,6 +37,8 @@ const val AGENT_SECRET_KEY = "devops_agent_secret_key"
 
 const val WORKSPACE_ENV = "WORKSPACE"
 
+const val COMMON_ENV_CONTEXT = "common_env"
+
 const val WORKSPACE_CONTEXT = "ci.workspace"
 
 const val CI_TOKEN_CONTEXT = "ci.token"

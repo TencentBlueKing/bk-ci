@@ -74,15 +74,10 @@ fun main(args: Array<String>) {
                     variables: Map<String, String>,
                     pipelineId: String
                 ): Pair<File, File> {
-                    val workspace = System.getProperty("devops_workspace")
-
-                    val workspaceDir = if (workspace.isNullOrBlank()) {
-                        File("/data/landun/workspace") // v1 内部版用的/data/landun/workspace 保持一致
-                    } else {
-                        File(workspace)
-                    }
-                    workspaceDir.mkdirs()
-
+                    val workspaceDir = WorkspaceUtils.getWorkspaceDir(
+                        buildType = BuildType.DOCKER,
+                        workspace = "/data/landun/workspace"
+                    )
                     val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
                     return Pair(workspaceDir, logPathDir)
                 }

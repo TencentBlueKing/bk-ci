@@ -41,6 +41,7 @@ import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.env.AgentEnv
+import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
@@ -71,25 +72,12 @@ object WorkRunner {
                     variables: Map<String, String>,
                     pipelineId: String
                 ): Pair<File, File> {
-                    val replaceWorkspace = if (workspace.isNotBlank()) {
-                        ReplacementUtils.replace(
-                            workspace, object : ReplacementUtils.KeyReplacement {
-                            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
-                                return variables[key]
-                                    ?: throw IllegalArgumentException("工作空间未定义变量(undefined variable): $workspace")
-                            }
-                        }, mapOf(
-                            WORKSPACE_CONTEXT to workspace,
-                            JOB_OS_CONTEXT to AgentEnv.getOS().name
-                        )
-                        )
-                    } else {
-                        workspace
-                    }
-                    val workspaceDir = WorkspaceUtils.getPipelineWorkspace(pipelineId, replaceWorkspace)
-                    if (!workspaceDir.exists() && !workspaceDir.mkdirs()) { // #5555 第三方构建机工作空间校验
-                        throw FileNotFoundException("无法创建工作空间(illegal workspace): [$workspaceDir]")
-                    }
+                    val workspaceDir = WorkspaceUtils.getWorkspaceDir(
+                        workspace = workspace,
+                        buildType = BuildType.AGENT,
+                        pipelineId = pipelineId,
+                        variables = variables
+                    )
                     val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
                     return Pair(workspaceDir, logPathDir)
                 }
