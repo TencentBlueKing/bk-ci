@@ -61,6 +61,7 @@ import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.service.StreamGitTransferService
 import java.util.Base64
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -75,6 +76,11 @@ class StreamGithubTransferService @Autowired constructor(
     // github 组织白名单列表
     @Value("\${github.orgWhite:}")
     private var githubOrgWhite: String = ""
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(StreamGithubTransferService::class.java)
+        private const val DEFAULT_GITHUB_PER_PAGE = 100
+    }
 
     // gitProjectId在github中必须为项目名字
     override fun getGitProjectCache(
@@ -160,32 +166,34 @@ class StreamGithubTransferService @Autowired constructor(
         var githubPage = 1
         val repos = mutableListOf<StreamProjectGitInfo>()
         // github查询有权限列表不支持名称搜索，需要自实现搜索
+        // TODO 目前先全部查出来然后再分页,后面需要改造
         run outside@{
-            while (repos.size < pageSize) {
+            while (true) {
                 val request = ListRepositoriesRequest(
                     page = githubPage,
-                    perPage = pageSize
+                    perPage = DEFAULT_GITHUB_PER_PAGE
                 )
                 val githubRepos = client.get(ServiceGithubRepositoryResource::class).listRepositories(
                     request = request,
                     userId = userId
                 ).data!!
-                if (githubRepos.size < pageSize) {
-                    return@outside
-                }
                 val filterGithubRepos = githubRepos.filter {
                     isGithubOrgWhite(it) && search(search, it)
                 }.map { StreamProjectGitInfo(it) }
-                val remainSize = pageSize - repos.size
-                if (filterGithubRepos.size <= remainSize) {
-                    repos.addAll(filterGithubRepos)
-                } else {
-                    repos.addAll(filterGithubRepos.subList(0, remainSize))
+                repos.addAll(filterGithubRepos)
+                if (githubRepos.size < DEFAULT_GITHUB_PER_PAGE) {
+                    return@outside
                 }
                 githubPage++
             }
         }
-        return repos
+        val start = (page - 1) * pageSize
+        val end = (start + pageSize).coerceAtMost(repos.size)
+        return if (start >= repos.size) {
+            emptyList()
+        } else {
+            repos.subList(start, end)
+        }
     }
 
     private fun isGithubOrgWhite(githubRepo: GithubRepo): Boolean {
