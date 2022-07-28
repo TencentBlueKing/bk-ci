@@ -66,7 +66,7 @@ object WorkspaceUtils {
             BuildType.DOCKER -> {
                 val dockerWorkspace = System.getProperty("devops_workspace")
                 val workspaceDir = if (dockerWorkspace.isNullOrBlank()) {
-                    File("/data/devops/workspace")
+                    File(workspace)
                 } else {
                     File(dockerWorkspace)
                 }
