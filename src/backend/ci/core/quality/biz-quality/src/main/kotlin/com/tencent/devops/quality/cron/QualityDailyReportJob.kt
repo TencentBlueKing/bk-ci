@@ -28,6 +28,8 @@
 package com.tencent.devops.quality.cron
 
 import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
+import com.tencent.devops.common.service.PROFILE_AUTO
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.quality.config.QualityDailyDispatch
 import com.tencent.devops.quality.dao.HistoryDao
 import org.jooq.DSLContext
@@ -49,6 +51,9 @@ class QualityDailyReportJob @Autowired constructor(
 
     @Scheduled(cron = "0 0 0 * * ?")
     fun send() {
+        if (CommonUtils.getDbClusterName() == PROFILE_AUTO) {
+            return
+        }
         val startTime = LocalDateTime.now().minusDays(1)
         val endTime = LocalDateTime.now()
         val result = historyDao.batchDailyTotalCount(
