@@ -166,12 +166,12 @@
                     <bk-alert
                         v-if="yamlErrorMessage"
                         type="warning"
-                        :title="`${t('pipeline.yamError')}：<br>${yamlErrorMessage}`"
+                        :title="yamlErrorMessage"
                     ></bk-alert>
                     <bk-alert
                         v-else
                         type="error"
-                        :title="t('pipeline.noYamlOrDisable')"
+                        :title="$t('pipeline.noYamlOrDisable')"
                     ></bk-alert>
                 </template>
                 <template v-else>
