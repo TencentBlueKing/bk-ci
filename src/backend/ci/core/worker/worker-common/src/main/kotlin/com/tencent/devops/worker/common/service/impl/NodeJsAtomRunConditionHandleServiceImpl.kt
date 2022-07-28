@@ -42,6 +42,7 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.AtomRunConditionHandleService
+import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -72,31 +73,34 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             )
         }
         val storePkgRunEnvInfo = storePkgRunEnvInfoResult.data
-        logger.info("prepareRunEnv param:[$osType,$language,$runtimeVersion,$workspace,$storePkgRunEnvInfo]")
+        val envDir = WorkspaceUtils.getCommonEnvDir() ?: workspace
+        logger.info("prepareRunEnv param:[$osType,$language,$runtimeVersion,$envDir,$storePkgRunEnvInfo]")
         storePkgRunEnvInfo?.let {
-            // 判断nodejs安装包是否已经存在工作空间下
+            // 判断nodejs安装包是否已经存在构建机上
             val pkgName = storePkgRunEnvInfo.pkgName
             val pkgFileFolderName = if (osType == OSType.WINDOWS) {
                 pkgName.removeSuffix(".zip")
             } else {
                 pkgName.removeSuffix(".tar.gz")
             }
-            val pkgFileDir = File(workspace, "$NODEJS/$pkgFileFolderName")
+            val pkgFileDir = File(envDir, "$NODEJS/$pkgFileFolderName")
             if (pkgFileDir.exists() && pkgFileDir.listFiles()?.isEmpty() == true) {
                 // 空文件夹需要删除
                 pkgFileDir.delete()
             }
             if (!pkgFileDir.exists()) {
-                // 把指定的nodejs安装包下载到工作空间
-                val pkgFile = File(workspace, "$NODEJS/$pkgName")
+                // 把指定的nodejs安装包下载到构建机上
+                val pkgFile = File(envDir, "$NODEJS/$pkgName")
                 OkhttpUtils.downloadFile(storePkgRunEnvInfo.pkgDownloadPath, pkgFile)
                 logger.info("prepareRunEnv download [$pkgName] success")
-                // 把nodejs安装包解压到工作空间下
+                // 把nodejs安装包解压到构建机上
                 if (osType == OSType.WINDOWS) {
                     ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
                 } else {
-                    CommandLineUtils.execute("tar -xzf $pkgName", File(workspace, NODEJS), true)
+                    CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
                 }
+                // 删除安装包
+                pkgFile.delete()
                 logger.info("prepareRunEnv decompress [$pkgName] success")
             }
             // 把nodejs执行路径写入系统变量
