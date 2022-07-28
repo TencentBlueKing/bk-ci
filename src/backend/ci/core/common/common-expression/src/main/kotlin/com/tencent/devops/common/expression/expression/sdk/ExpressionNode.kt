@@ -43,6 +43,7 @@ import com.tencent.devops.common.expression.expression.ITraceWriter
 import com.tencent.devops.common.expression.expression.ValueKind
 import com.tencent.devops.common.expression.utils.ExpressionJsonUtil
 
+@Suppress("ComplexMethod", "ReturnCount")
 abstract class ExpressionNode : IExpressionNode {
 
     var container: Container? = null

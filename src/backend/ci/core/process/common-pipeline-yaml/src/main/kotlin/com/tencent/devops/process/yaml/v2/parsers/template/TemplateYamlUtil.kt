@@ -55,6 +55,7 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 
+@Suppress("ALL")
 object TemplateYamlUtil {
 
     private val logger = LoggerFactory.getLogger(TemplateYamlUtil::class.java)
