@@ -40,6 +40,6 @@ export default {
     },
 
     logout () {
-        return api.get(`${AUTH_PERFIX}/external/third/login/out`)
+        return api.delete(`${AUTH_PERFIX}/external/third/login/out`)
     }
 }
