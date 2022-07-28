@@ -40,6 +40,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
@@ -768,10 +769,10 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.desc = pipelineInfo.pipelineDesc
             model.pipelineCreator = pipelineInfo.creator
 
-            val defaultTagIds by lazy { listOf(stageTagService.getDefaultStageTag().data?.id) } // 优化
+            val defaultTagId by lazy { stageTagService.getDefaultStageTag().data?.id } // 优化
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
-                if (it.tag == null) it.tag = defaultTagIds
+                if (it.tag == null) it.tag = defaultTagId?.let { self -> listOf(self) }
                 it.resetBuildOption()
             }
 
@@ -888,6 +889,35 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineChannelCache.put(pipelineId, channelCode)
         }
         return channelCode
+    }
+
+    fun batchUpdateModelName(modelUpdateList: List<ModelUpdate>): List<ModelUpdate> {
+        val failUpdateModels = mutableListOf<ModelUpdate>()
+        modelUpdateList.forEach {
+            try {
+                val pipelineExist = isPipelineExist(
+                    projectId = it.projectId,
+                    name = it.name,
+                    channelCode = ChannelCode.GIT,
+                    pipelineId = it.pipelineId
+                )
+                if (!pipelineExist) {
+                    pipelineRepositoryService.updateModelName(
+                        pipelineId = it.pipelineId,
+                        projectId = it.projectId,
+                        modelName = it.name,
+                        userId = it.updateUserId
+                    )
+                } else {
+                    it.updateResultMessage = "pipeline name exist"
+                    failUpdateModels.add(it)
+                }
+            } catch (e: Exception) {
+                it.updateResultMessage = "some wrong happen in dao update,error message:${e.message}"
+                failUpdateModels.add(it)
+            }
+        }
+        return failUpdateModels
     }
 
     companion object {

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
+import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
@@ -301,6 +302,15 @@ class StreamBasicSettingService @Autowired constructor(
             }
             idList
         }
+    }
+
+    fun getBasicSettingRecordList(
+        gitProjectIdList: List<Long>? = null
+    ): List<TGitBasicSettingRecord> {
+        return streamBasicSettingDao.getBasicSettingList(
+            dslContext = dslContext,
+            gitProjectIdList = gitProjectIdList
+        )
     }
 
     protected fun requestGitProjectInfo(gitProjectId: Long): StreamGitProjectInfoWithProject? {

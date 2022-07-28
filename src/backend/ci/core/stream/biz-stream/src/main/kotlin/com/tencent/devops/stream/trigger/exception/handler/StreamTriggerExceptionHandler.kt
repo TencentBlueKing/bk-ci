@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.streamActions.StreamRepoTriggerAction
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
@@ -135,7 +136,7 @@ class StreamTriggerExceptionHandler @Autowired constructor(
                 action = action,
                 reason = realReason,
                 reasonDetail = realReasonDetail,
-                sendCommitCheck = commitCheck != null,
+                sendCommitCheck = commitCheck != null && action !is StreamRepoTriggerAction,
                 commitCheckBlock = commitCheck?.block ?: false,
                 version = "v2.0"
             )
