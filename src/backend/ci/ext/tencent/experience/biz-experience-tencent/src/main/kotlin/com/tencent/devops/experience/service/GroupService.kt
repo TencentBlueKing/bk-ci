@@ -353,8 +353,8 @@ class GroupService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             groupId = groupId,
-                authPermission = AuthPermission.DELETE,
-                message = "用户在项目($projectId)没有体验组($groupHashId)的删除权限"
+            authPermission = AuthPermission.DELETE,
+            message = "用户在项目($projectId)没有体验组($groupHashId)的删除权限"
         )
 
         experiencePermissionService.deleteGroupResource(projectId, groupId)
