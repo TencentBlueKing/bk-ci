@@ -57,7 +57,7 @@ enum class GitHubMrStatus(val value: String) {
             return when (value) {
                 "dirty" -> TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED
                 "unknown" -> TGitMrStatus.MERGE_STATUS_UNCHECKED
-                "blocked" -> TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED
+                "blocked" -> TGitMrStatus.MERGE_STATUS_CAN_BE_MERGED
                 "behind" -> TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED
                 "unstable" -> TGitMrStatus.MERGE_STATUS_CAN_BE_MERGED
                 "has_hooks" -> TGitMrStatus.MERGE_STATUS_CAN_BE_MERGED
