@@ -203,7 +203,7 @@ steps:
             " \${{parameters.xxx == xxxx => []",
             "parameters.xxx == xxxx }} => []",
             "parameters.xxx == xxxx => []",
-            "aaa: xx == \${{ parameters.xxx == xxxx}} == \${{xxxx }} !\${xx}}=> [11, 38, 43, 52]",
+            "aaa: xx == \${{ parameters.xxx == xxxx}} == \${{xxxx }} !\${xx}}=> [11, 38, 43, 52]"
         ]
     )
     fun findExpressionsTest(findCondition: String) {
