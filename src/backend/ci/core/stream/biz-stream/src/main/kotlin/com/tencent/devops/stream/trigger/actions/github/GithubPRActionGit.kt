@@ -190,7 +190,7 @@ class GithubPRActionGit(
                 commitAuthorName = event.pullRequest.head.user.login,
                 commitTimeStamp = lastCommit?.commitDate
             ),
-            userId = event.sender.login,
+            userId = event.pullRequest.user.login,
             gitProjectName = event.pullRequest.base.repo.fullName,
             eventType = GithubPullRequestEvent.classType
         )
