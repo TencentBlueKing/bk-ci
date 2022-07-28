@@ -62,7 +62,7 @@ class TXStreamYamlService @Autowired constructor(
         val ymlVersion = ScriptYmlUtils.parseVersion(yaml.yaml)
         return when {
             ymlVersion == null -> {
-                Pair(Result(1, "Invalid yaml"), false)
+                Pair(Result(1, "Invalid yaml version is null"), false)
             }
             ymlVersion.version != "v2.0" -> {
                 try {
