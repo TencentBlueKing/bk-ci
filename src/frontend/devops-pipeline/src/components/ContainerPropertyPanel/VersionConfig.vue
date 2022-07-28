@@ -363,6 +363,7 @@
     }
 
     .param-item {
+        position: relative;
         display: flex;
         justify-content: space-between;
         align-items: center;
