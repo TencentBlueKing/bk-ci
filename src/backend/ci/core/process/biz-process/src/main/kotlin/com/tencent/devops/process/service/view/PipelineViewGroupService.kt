@@ -43,7 +43,8 @@ import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
 import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewFilter
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
@@ -466,6 +467,80 @@ class PipelineViewGroupService @Autowired constructor(
             hasNext = subPipelineInfos.size == step
         }
         return pipelineInfos
+    }
+
+    fun bulkAdd(userId: String, projectId: String, bulkAdd: PipelineViewBulkAdd): Boolean {
+        val isProjectManager = pipelinePermissionService.checkProjectManager(userId, projectId)
+        val viewIds = pipelineViewDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            viewIds = bulkAdd.viewIds.map { HashUtil.decodeIdToLong(it) }.toSet()
+        ).asSequence()
+            .filter { it.viewType == PipelineViewType.STATIC }
+            .filter {
+                if (isProjectManager) {
+                    it.isProject || it.createUser == userId
+                } else {
+                    !it.isProject && it.createUser == userId
+                }
+            }.map { it.id }.toList()
+        if (viewIds.isEmpty()) {
+            logger.warn("bulkAdd , empty viewIds")
+            return false
+        }
+        val pipelineIds = pipelineInfoDao.listInfoByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = bulkAdd.pipelineIds.toSet()
+        ).map { it.pipelineId }
+        if (pipelineIds.isEmpty()) {
+            logger.warn("bulkAdd , empty pipelineIds")
+            return false
+        }
+        PipelineViewGroupLock(redisOperation, projectId).lockAround {
+            for (viewId in viewIds) {
+                val existPipelineIds =
+                    pipelineViewGroupDao.listByViewId(dslContext, projectId, viewId).map { it.pipelineId }.toSet()
+                pipelineIds.filterNot { existPipelineIds.contains(it) }.forEach {
+                    try {
+                        pipelineViewGroupDao.create(
+                            dslContext = dslContext,
+                            projectId = projectId,
+                            pipelineId = it,
+                            viewId = viewId,
+                            userId = userId
+                        )
+                    } catch (e: Exception) {
+                        logger.info("bulkAdd , ignore exception, viewId:$viewId , pipelineId:$it")
+                    }
+                }
+            }
+        }
+        return true
+    }
+
+    fun bulkRemove(userId: String, projectId: String, bulkRemove: PipelineViewBulkRemove): Boolean {
+        val isProjectManager = pipelinePermissionService.checkProjectManager(userId, projectId)
+        val viewId = HashUtil.decodeIdToLong(bulkRemove.viewId)
+        val view = pipelineViewDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            viewId = viewId
+        ) ?: return false
+        if (view.viewType == PipelineViewType.DYNAMIC) {
+            logger.warn("bulkRemove , view:$viewId")
+            return false
+        }
+        if (isProjectManager && !view.isProject && view.createUser != userId) {
+            logger.warn("bulkRemove , $userId is ProjectManager , but can`t remove other view")
+            return false
+        }
+        if (!isProjectManager && (view.isProject || view.createUser != userId)) {
+            logger.warn("bulkRemove , $userId isn`t ProjectManager , just can remove self view")
+            return false
+        }
+        pipelineViewGroupDao.batchRemove(dslContext, projectId, viewId, bulkRemove.pipelineIds)
+        return true
     }
 
     companion object {

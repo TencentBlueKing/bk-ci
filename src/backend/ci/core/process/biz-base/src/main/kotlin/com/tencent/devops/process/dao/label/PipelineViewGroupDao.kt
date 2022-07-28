@@ -148,4 +148,19 @@ class PipelineViewGroupDao {
                 .execute()
         }
     }
+
+    fun batchRemove(
+        dslContext: DSLContext,
+        projectId: String,
+        viewId: Long,
+        pipelineIds: List<String>
+    ) {
+        with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(VIEW_ID.eq(viewId))
+                .and(PIPELINE_ID.`in`(pipelineIds))
+                .execute()
+        }
+    }
 }

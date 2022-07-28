@@ -32,6 +32,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
 import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewHitFilters
@@ -120,6 +122,14 @@ class UserPipelineViewResourceImpl @Autowired constructor(
         viewType: Int?
     ): Result<List<PipelineNewViewSummary>> {
         return Result(pipelineViewService.listView(userId, projectId, projected, viewType))
+    }
+
+    override fun bulkAdd(userId: String, projectId: String, bulkAdd: PipelineViewBulkAdd): Result<Boolean> {
+        return Result(pipelineViewGroupService.bulkAdd(userId, projectId, bulkAdd))
+    }
+
+    override fun bulkRemove(userId: String, projectId: String, bulkRemove: PipelineViewBulkRemove): Result<Boolean> {
+        return Result(pipelineViewGroupService.bulkRemove(userId, projectId, bulkRemove))
     }
 
     override fun deleteView(userId: String, projectId: String, viewId: String): Result<Boolean> {

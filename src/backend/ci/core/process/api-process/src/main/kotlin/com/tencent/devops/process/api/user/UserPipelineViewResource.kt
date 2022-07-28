@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
 import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewHitFilters
@@ -239,4 +241,28 @@ interface UserPipelineViewResource {
         projectId: String,
         pipelineViewMatchDynamic: PipelineViewMatchDynamic
     ): Result<List<String>>
+
+    @ApiOperation("批量添加")
+    @POST
+    @Path("/projects/{projectId}/bulkAdd")
+    fun bulkAdd(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        bulkAdd: PipelineViewBulkAdd
+    ): Result<Boolean>
+
+    @ApiOperation("批量移除")
+    @POST
+    @Path("/projects/{projectId}/bulkRemove")
+    fun bulkRemove(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        bulkRemove: PipelineViewBulkRemove
+    ): Result<Boolean>
 }

@@ -553,18 +553,24 @@ class PipelineViewService @Autowired constructor(
     private fun decode(id: String) = HashUtil.decodeIdToLong(id)
 
     fun topView(userId: String, projectId: String, viewId: String, enabled: Boolean): Boolean {
+        val viewIdLong = decode(viewId)
+        val view = pipelineViewDao.get(dslContext, projectId, viewIdLong) ?: return false
+        if (!view.isProject && view.createUser != userId) {
+            logger.info("top view failed because no permission")
+            return false
+        }
         if (enabled) {
             pipelineViewTopDao.add(
                 dslContext = dslContext,
                 projectId = projectId,
-                viewId = decode(viewId),
+                viewId = viewIdLong,
                 userId = userId
             )
         } else {
             pipelineViewTopDao.remove(
                 dslContext = dslContext,
                 projectId = projectId,
-                viewId = decode(viewId),
+                viewId = viewIdLong,
                 userId = userId
             )
         }
