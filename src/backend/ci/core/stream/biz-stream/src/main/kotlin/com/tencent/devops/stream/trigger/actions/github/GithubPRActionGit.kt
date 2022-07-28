@@ -137,7 +137,7 @@ class GithubPRActionGit(
 
     // 获取Fork库的凭证数据
     private fun getForkGitCred(): GithubCred {
-        return streamTriggerTokenService.getGitProjectToken(data.eventCommon.sourceGitProjectId)?.let {
+        return streamTriggerTokenService.getGitProjectToken(event().pullRequest.head.repo.id.toString())?.let {
             GithubCred(
                 accessToken = it,
                 useAccessToken = true,
