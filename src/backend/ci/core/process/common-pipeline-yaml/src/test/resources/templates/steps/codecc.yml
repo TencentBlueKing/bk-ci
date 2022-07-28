@@ -63,7 +63,7 @@ parameters:
     type: string
     default: ''
   - name: script
-    type: string
+    type: String
     default: |-
       # Coverity/Klocwork将通过调用编译脚本来编译您的代码，以追踪深层次的缺陷
       # 请使用依赖的构建工具如maven/cmake等写一个编译脚本build.sh
@@ -95,43 +95,43 @@ steps:
     id: "check"
     name: 腾讯代码分析(官方-代码分析工作组)
     with:
-        beAutoLang: false # 不自动检测项目语言
-        checkerSetType: "normal" # 规则集类型，normal对应自主配置规则集，openScan对应按开源治理要求配置，epcScan对应按PCG EPC要求配置。选了openScan或epcScan则不需要填写后面的内容
-        toolScanType: "1" # 扫描方式。0是全量扫描，1是快速全量扫描
-        languages: ${{ parameters.languages }} # 工程语言, 必选, 可取值："C_CPP", "JAVA", "C_SHARP", "JS", "OC", "PYTHON", "PHP", "RUBY", "GOLANG", "SWIFT", "TYPESCRIPT", "KOTLIN", "LUA", "OTHERS"
-        tools: ${{ parameters.tools }}
-        languageRuleSetMap:
-          C_CPP_RULE: ${{ parameters.C_CPP_RULE }}
-          JAVA_RULE: ${{ parameters.JAVA_RULE }}
-          C_SHARP_RULE: ${{ parameters.C_SHARP_RULE }}
-          JS_RULE: ${{ parameters.JS_RULE }}
-          OC_RULE: ${{ parameters.OC_RULE }}
-          OTHERS_RULE: ${{ parameters.OTHERS_RULE }}
-          PYTHON_RULE: ${{ parameters.PYTHON_RULE }}
-          PHP_RULE: ${{ parameters.PHP_RULE }}
-          RUBY_RULE: ${{ parameters.RUBY_RULE }}
-          GOLANG_RULE: ${{ parameters.GOLANG_RULE }}
-          SWIFT_RULE: ${{ parameters.SWIFT_RULE }}
-          TYPESCRIPT_RULE: ${{ parameters.TYPESCRIPT_RULE }}
-          KOTLIN_RULE: ${{ parameters.KOTLIN_RULE }}
-          LUA_RULE: ${{ parameters.LUA_RULE }}
-          DART_RULE: ${{ parameters.DART_RULE }}
-          SOLIDITY_RULE: ${{ parameters.SOLIDITY_RULE }}
-        pyVersion: ${{ parameters.pyVersion }}
-        goPath: ${{ parameters.goPath }}
-        scriptType: "SHELL"
-        script: ${{ parameters.script }}
-        newDefectJudgeFromDate: ${{ parameters.newDefectJudgeFromDate }}
-        # newDefectJudgeFromDate: ${{ parameters.newDefectJudgeFromDate }}
-        # 接收人, 默认: 1, single, options: 4[遗留问题处理人] | 0[所有人员] | 1[仅管理员] | 2[自定义] | 3[无（不发送）]
-        rtxReceiverType: 4
-        # 自定义接收人, 默认: [], 当 [rtxReceiverType] = [2] 时必选
-        rtxReceiverList: []
-        # 即时报告, 默认: 2, options: 启用[1] | 停用[2]
-        instantReportStatus: 1
-        # 接收人, 默认: 1, single, options: 4[遗留问题处理人] | 0[所有人员] | 1[仅管理员] | 2[自定义] | 3[无（不发送）]
-        emailReceiverType: 4
-        # 自定义接收人, 默认: [], 当 [emailReceiverType] = [2] 时必选
-        emailReceiverList: []
-        # 抄送人, 默认: []
-        emailCCReceiverList: []
+      beAutoLang: false # 不自动检测项目语言
+      checkerSetType: "normal" # 规则集类型，normal对应自主配置规则集，openScan对应按开源治理要求配置，epcScan对应按PCG EPC要求配置。选了openScan或epcScan则不需要填写后面的内容
+      toolScanType: "1" # 扫描方式。0是全量扫描，1是快速全量扫描
+      languages: ${{ parameters.languages }} # 工程语言, 必选, 可取值："C_CPP", "JAVA", "C_SHARP", "JS", "OC", "PYTHON", "PHP", "RUBY", "GOLANG", "SWIFT", "TYPESCRIPT", "KOTLIN", "LUA", "OTHERS"
+      tools: ${{ parameters.tools }}
+      languageRuleSetMap:
+        C_CPP_RULE: ${{ parameters.C_CPP_RULE }}
+        JAVA_RULE: ${{ parameters.JAVA_RULE }}
+        C_SHARP_RULE: ${{ parameters.C_SHARP_RULE }}
+        JS_RULE: ${{ parameters.JS_RULE }}
+        OC_RULE: ${{ parameters.OC_RULE }}
+        OTHERS_RULE: ${{ parameters.OTHERS_RULE }}
+        PYTHON_RULE: ${{ parameters.PYTHON_RULE }}
+        PHP_RULE: ${{ parameters.PHP_RULE }}
+        RUBY_RULE: ${{ parameters.RUBY_RULE }}
+        GOLANG_RULE: ${{ parameters.GOLANG_RULE }}
+        SWIFT_RULE: ${{ parameters.SWIFT_RULE }}
+        TYPESCRIPT_RULE: ${{ parameters.TYPESCRIPT_RULE }}
+        KOTLIN_RULE: ${{ parameters.KOTLIN_RULE }}
+        LUA_RULE: ${{ parameters.LUA_RULE }}
+        DART_RULE: ${{ parameters.DART_RULE }}
+        SOLIDITY_RULE: ${{ parameters.SOLIDITY_RULE }}
+      pyVersion: ${{ parameters.pyVersion }}
+      goPath: ${{ parameters.goPath }}
+      scriptType: "SHELL"
+      script: ${{ parameters.script }}
+      newDefectJudgeFromDate: ${{ parameters.newDefectJudgeFromDate }}
+      # newDefectJudgeFromDate: ${{ parameters.newDefectJudgeFromDate }}
+      # 接收人, 默认: 1, single, options: 4[遗留问题处理人] | 0[所有人员] | 1[仅管理员] | 2[自定义] | 3[无（不发送）]
+      rtxReceiverType: 4
+      # 自定义接收人, 默认: [], 当 [rtxReceiverType] = [2] 时必选
+      rtxReceiverList: [ ]
+      # 即时报告, 默认: 2, options: 启用[1] | 停用[2]
+      instantReportStatus: 1
+      # 接收人, 默认: 1, single, options: 4[遗留问题处理人] | 0[所有人员] | 1[仅管理员] | 2[自定义] | 3[无（不发送）]
+      emailReceiverType: 4
+      # 自定义接收人, 默认: [], 当 [emailReceiverType] = [2] 时必选
+      emailReceiverList: [ ]
+      # 抄送人, 默认: []
+      emailCCReceiverList: [ ]

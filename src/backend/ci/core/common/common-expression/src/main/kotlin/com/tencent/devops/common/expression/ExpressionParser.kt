@@ -117,6 +117,24 @@ object ExpressionParser {
         return createTreeByContext(context)
     }
 
+    fun createSubNameValueEvaluateTree(
+        expression: String,
+        trace: ITraceWriter?,
+        namedValues: Iterable<INamedValueInfo>?,
+        functions: Iterable<IFunctionInfo>?,
+        subNameValueEvaluateInfo: SubNameValueEvaluateInfo
+    ): IExpressionNode? {
+        val context = ParseContext(
+            expression = expression,
+            trace = trace,
+            namedValues = namedValues,
+            functions = functions,
+            subNameValueEvaluateInfo = subNameValueEvaluateInfo
+        )
+        context.trace.info("SubNameValue Parsing expression: <$expression>")
+        return createTreeByContext(context)
+    }
+
     fun validateSyntax(
         expression: String,
         trace: ITraceWriter?
@@ -237,6 +255,10 @@ object ExpressionParser {
                 } else if (context.allowUnknownKeywords) {
                     node = NoOperationNamedValue()
                     node.name = name ?: ""
+                } else if (context.subNameValueEvaluateInfo?.enableSubNameValueEvaluate == true) {
+                    node = ContextValueNode()
+                    node.name = name ?: ""
+                    context.subNameValueEvaluateInfo.hasOtherNameValue = true
                 } else {
                     throw ExpressionParseException(
                         ParseExceptionKind.UnrecognizedNamedValue,

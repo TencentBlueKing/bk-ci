@@ -58,4 +58,7 @@ class Or(override val traceFullyRealized: Boolean = false) : Container() {
 
         return Pair(null, result?.value)
     }
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext) =
+        "(${parameters.joinToString(" || ") { it.subNameValueEvaluate(context) }})"
 }

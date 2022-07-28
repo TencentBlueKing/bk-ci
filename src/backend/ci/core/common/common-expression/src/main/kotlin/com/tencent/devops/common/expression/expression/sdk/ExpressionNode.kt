@@ -27,12 +27,21 @@
 
 package com.tencent.devops.common.expression.expression.sdk
 
+import com.tencent.devops.common.expression.DistinguishType
 import com.tencent.devops.common.expression.NotSupportedException
+import com.tencent.devops.common.expression.SubNameValueEvaluateInfo
+import com.tencent.devops.common.expression.context.ArrayContextData
+import com.tencent.devops.common.expression.context.BooleanContextData
+import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.NumberContextData
+import com.tencent.devops.common.expression.context.PipelineContextData
+import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.EvaluationOptions
 import com.tencent.devops.common.expression.expression.EvaluationResult
 import com.tencent.devops.common.expression.expression.IExpressionNode
 import com.tencent.devops.common.expression.expression.ITraceWriter
 import com.tencent.devops.common.expression.expression.ValueKind
+import com.tencent.devops.common.expression.utils.ExpressionJsonUtil
 
 abstract class ExpressionNode : IExpressionNode {
 
@@ -117,6 +126,82 @@ abstract class ExpressionNode : IExpressionNode {
     abstract fun convertToRealizedExpression(context: EvaluationContext): String
 
     protected abstract fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?>
+
+    override fun subNameValueEvaluate(
+        trace: ITraceWriter?,
+        state: Any?,
+        options: EvaluationOptions?,
+        subInfo: SubNameValueEvaluateInfo
+    ): Pair<String, Boolean> {
+        if (subInfo.hasOtherNameValue) {
+            // 目前部分计算不涉及内存计算，未来启用内存计算时需要修改此处
+            if (container != null) {
+                throw NotSupportedException("Expected IExpressionNode.Evaluate to be called on root node only.")
+            }
+            val eTrace = EvaluationTraceWriter(trace)
+            val context = EvaluationContext(eTrace, state, options, this)
+
+            return Pair(subNameValueEvaluate(context), false)
+        }
+
+        val re = evaluate(null, state, null).value
+        // 计算结果是流水线上下文
+        if (re is PipelineContextData) {
+            val res = when (re) {
+                is StringContextData -> DistinguishType.STRING.distinguishByType(
+                    re.getString(), subInfo.distinguishTypes
+                )
+                is BooleanContextData -> DistinguishType.BOOL.distinguishByType(
+                    re.getBoolean().toString(), subInfo.distinguishTypes
+                )
+                is NumberContextData -> DistinguishType.NUMBER.distinguishByType(
+                    re.getNumber().toString(), subInfo.distinguishTypes
+                )
+                is ArrayContextData -> DistinguishType.ARRAY.distinguishByType(
+                    ExpressionJsonUtil.getObjectMapper().writeValueAsString(re.toJson()), subInfo.distinguishTypes
+                )
+                is DictionaryContextData -> DistinguishType.DICT.distinguishByType(
+                    ExpressionJsonUtil.getObjectMapper().writeValueAsString(re.toJson()), subInfo.distinguishTypes
+                )
+                else -> ExpressionJsonUtil.getObjectMapper().writeValueAsString(re.toJson())
+            }
+            return Pair(res, true)
+        }
+        val res = when (re) {
+            is Char, is String -> DistinguishType.STRING.distinguishByType(re.toString(), subInfo.distinguishTypes)
+            is Number -> DistinguishType.NUMBER.distinguishByType(re.toString(), subInfo.distinguishTypes)
+            is Boolean -> DistinguishType.BOOL.distinguishByType(re.toString(), subInfo.distinguishTypes)
+            else -> re?.toString() ?: ""
+        }
+        return Pair(res, true)
+    }
+
+    private fun DistinguishType.distinguishByType(
+        value: String,
+        distinguishTypes: Set<DistinguishType>?
+    ): String {
+        if (distinguishTypes == null) {
+            return value
+        }
+        if (this in distinguishTypes) {
+            return "'$value'"
+        }
+        return value
+    }
+
+    fun subNameValueEvaluate(context: EvaluationContext): String {
+        val result = subNameValueEvaluateCore(context) ?: return "''"
+        // 在subNameValue的情况下只有指定的nameValued才可能返回这个
+        if (result is PipelineContextData) {
+            if (result is BooleanContextData || result is NumberContextData) {
+                return ExpressionJsonUtil.getObjectMapper().writeValueAsString(result.toJson())
+            }
+            return "'${ExpressionJsonUtil.getObjectMapper().writeValueAsString(result.toJson())}'"
+        }
+        return result.toString()
+    }
+
+    protected abstract fun subNameValueEvaluateCore(context: EvaluationContext): Any?
 
     private fun traceTreeResult(
         context: EvaluationContext,

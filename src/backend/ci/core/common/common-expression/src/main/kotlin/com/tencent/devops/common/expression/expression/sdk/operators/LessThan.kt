@@ -53,4 +53,7 @@ class LessThan : Container() {
         val right = parameters[1].evaluate(context)
         return Pair(null, left.abstractLessThan(right))
     }
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext) =
+        "(${parameters[0].subNameValueEvaluate(context)} < ${parameters[1].subNameValueEvaluate(context)})"
 }

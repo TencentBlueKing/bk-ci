@@ -40,4 +40,8 @@ class ContextValueNode : NamedValue() {
     override fun createNode(): NamedValue {
         return ContextValueNode()
     }
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext): Any {
+        return (context.state as ExecutionContext).expressionValues[name] ?: name
+    }
 }

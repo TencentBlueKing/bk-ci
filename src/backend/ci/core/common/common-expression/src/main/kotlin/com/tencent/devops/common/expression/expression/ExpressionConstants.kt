@@ -40,11 +40,11 @@ object ExpressionConstants {
         TreeMap<String, IFunctionInfo>(String.CASE_INSENSITIVE_ORDER)
 
     init {
-        addFunction("contains", 2, 2, Contains())
-        addFunction("endsWith", 2, 2, EndsWith())
-        addFunction("startsWith", 2, 2, StartsWith())
-        addFunction("fromJson", 1, 1, FromJson())
-        addFunction("join", 1, 2, Join())
+        addFunction(Contains.name, 2, 2, Contains())
+        addFunction(EndsWith.name, 2, 2, EndsWith())
+        addFunction(StartsWith.name, 2, 2, StartsWith())
+        addFunction(FromJson.name, 1, 1, FromJson())
+        addFunction(Join.name, 1, 2, Join())
     }
 
     private fun addFunction(name: String, minParameters: Int, maxParameters: Int, f: Function) {

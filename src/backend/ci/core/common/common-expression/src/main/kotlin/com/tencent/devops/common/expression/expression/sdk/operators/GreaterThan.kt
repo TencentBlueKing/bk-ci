@@ -53,4 +53,7 @@ class GreaterThan : Container() {
         val right = parameters[1].evaluate(context)
         return Pair(null, left.abstractGreaterThan(right))
     }
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext) =
+        "(${parameters[0].subNameValueEvaluate(context)} > ${parameters[1].subNameValueEvaluate(context)})"
 }

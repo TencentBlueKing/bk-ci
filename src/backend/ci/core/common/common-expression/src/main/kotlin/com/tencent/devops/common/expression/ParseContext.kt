@@ -42,7 +42,9 @@ class ParseContext(
     trace: ITraceWriter?,
     namedValues: Iterable<INamedValueInfo>?,
     functions: Iterable<IFunctionInfo>?,
-    val allowUnknownKeywords: Boolean = false
+    val allowUnknownKeywords: Boolean = false,
+    // 针对部分替换的选项，会有一些特殊处理
+    val subNameValueEvaluateInfo: SubNameValueEvaluateInfo? = null
 ) {
     val extensionFunctions = TreeMap<String, IFunctionInfo>(String.CASE_INSENSITIVE_ORDER)
     val extensionNamedValues = TreeMap<String, INamedValueInfo>(String.CASE_INSENSITIVE_ORDER)

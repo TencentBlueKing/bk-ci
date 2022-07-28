@@ -44,4 +44,6 @@ object ExpressionJsonUtil {
     fun read(jsonReader: Reader): JsonNode {
         return objectMapper.readTree(jsonReader)
     }
+
+    fun getObjectMapper() = objectMapper
 }

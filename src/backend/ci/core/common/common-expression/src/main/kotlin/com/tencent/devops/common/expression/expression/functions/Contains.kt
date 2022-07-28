@@ -35,6 +35,10 @@ import com.tencent.devops.common.expression.expression.sdk.ResultMemory
 
 @Suppress("NestedBlockDepth", "ReturnCount")
 class Contains : Function() {
+    companion object {
+        const val name = "contains"
+    }
+
     override val traceFullyRealized: Boolean
         get() = false
 
@@ -65,4 +69,7 @@ class Contains : Function() {
 
         return Pair(null, false)
     }
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext) =
+        "$name(${parameters[0].subNameValueEvaluate(context)}, ${parameters[1].subNameValueEvaluate(context)})"
 }
