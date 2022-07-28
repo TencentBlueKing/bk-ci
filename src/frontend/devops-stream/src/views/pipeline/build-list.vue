@@ -624,10 +624,10 @@
                     this.formData.yaml = res.yaml || ''
                     this.disableManual = res.enable === false
                 }).catch((err) => {
-                    if (err.status === 2129028) {
+                    if (err.code === 2129028) {
                         this.emptyYaml = true
                         this.disableManual = true
-                    } else if (err.status === 2129029) {
+                    } else if (err.code === 2129029) {
                         this.yamlErrorMessage = err.message
                         this.disableManual = true
                     } else {
