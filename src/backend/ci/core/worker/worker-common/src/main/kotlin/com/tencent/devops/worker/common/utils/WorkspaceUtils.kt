@@ -126,8 +126,8 @@ object WorkspaceUtils {
         throw IOException("$tmpDir: $errorMsg")
     }
 
-    fun getCommonEnvDir(): File {
-        return commonDirMap[COMMON_ENV_CONTEXT] ?: throw FileNotFoundException("无法创建commonEnv目录")
+    fun getCommonEnvDir(): File? {
+        return commonDirMap[COMMON_ENV_CONTEXT]
     }
 
     @Suppress("LongParameterList")
