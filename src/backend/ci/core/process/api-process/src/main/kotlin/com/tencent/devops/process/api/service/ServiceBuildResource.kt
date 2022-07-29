@@ -160,8 +160,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("搜索流水线参数")
     @GET
-    @Path("/{projectId}/{pipelineId}/buildManualSearchProperty")
-    fun buildManualSearchProperty(
+    @Path("/{projectId}/{pipelineId}/manualSearchProperty")
+    fun manualSearchProperty(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -172,8 +172,8 @@ interface ServiceBuildResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam("流水线参数", required = false)
-        @QueryParam("property")
-        property: BuildFormProperty
+        @QueryParam("buildFormProperty")
+        buildFormProperty: BuildFormProperty
     ): Result<List<BuildFormValue>>
 
     @Deprecated(message = "do not use", replaceWith = ReplaceWith("@see ServiceBuildResource.manualStartupNew"))
