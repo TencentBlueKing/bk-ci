@@ -51,7 +51,7 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         atomCode: String,
         userId: String
     ): Result<AtomVersion?> {
-        logger.info("get Atom By Code, atomCode($atomCode),userId($userId)")
+        logger.info("OPENAPI_ATOM_V4|$appCode|$userId|$atomCode|get Atom By Code")
         return client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode, userId)
     }
 
@@ -61,7 +61,7 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         atomCode: String,
         userId: String
     ): Result<StoreStatistic> {
-        logger.info("get Atom Statistic By Code, atomCode($atomCode),userId($userId)")
+        logger.info("OPENAPI_ATOM_V4|$appCode|$userId|$atomCode|get Atom Statistic By Code")
         return client.get(ServiceStoreStatisticResource::class).getStatisticByCode(
             userId = userId,
             storeType = StoreTypeEnum.ATOM,
@@ -77,7 +77,7 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         page: Int?,
         pageSize: Int?
     ): Result<Page<AtomPipeline>> {
-        logger.info("get Atom Pipelines By Code, atomCode($atomCode),userId($userId),page($page),pageSize($pageSize)")
+        logger.info("OPENAPI_ATOM_V4|$appCode|$userId|$atomCode|get Atom Pipelines By Code,$page,$pageSize")
         return client.get(ServiceMarketAtomResource::class).getAtomPipelinesByCode(
             atomCode = atomCode,
             username = userId,
@@ -93,7 +93,7 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         channelCode: ChannelCode?,
         installAtomReq: InstallAtomReq
     ): Result<Boolean> {
-        logger.info("install Atom: userId[$userId] channelCode[$channelCode] installAtomReq[$installAtomReq]")
+        logger.info("OPENAPI_ATOM_V4|$appCode|$userId|install Atom: $channelCode, $installAtomReq")
         return client.get(ServiceMarketAtomResource::class).installAtom(userId, channelCode, installAtomReq)
     }
 
