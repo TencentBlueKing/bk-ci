@@ -65,9 +65,9 @@ const columns = [
                 }
             } else if (row.channelCode === 'GIT') {
                 if (indexMap.length === 3) {
-                window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#${projectId.split('_')[1]}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&elementIndex=${elementIndex}`, '_blank')
+                window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1&stageIndex=${stageIndex}&containerIndex=${containerIndex}&elementIndex=${elementIndex}#${projectId.split('_')[1]}`, '_blank')
                 } else {
-                window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#${projectId.split('_')[1]}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&containerGroupIndex=${containerGroupIndex}&elementIndex=${elementIndex}`, '_blank')
+                window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1&stageIndex=${stageIndex}&containerIndex=${containerIndex}&containerGroupIndex=${containerGroupIndex}&elementIndex=${elementIndex}#${projectId.split('_')[1]}`, '_blank')
                 }
             }
           },
