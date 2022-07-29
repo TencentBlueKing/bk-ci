@@ -776,7 +776,6 @@ class PipelineBuildFacadeService(
                         }
                         if (!reviewUser.contains(userId)) {
                             throw ErrorCodeException(
-                                statusCode = Response.Status.NOT_FOUND.statusCode,
                                 errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
                                 defaultMessage = "用户($userId)不在审核人员名单中",
                                 params = arrayOf(userId)
@@ -842,7 +841,6 @@ class PipelineBuildFacadeService(
             )
 
         if (buildStage.status.name != BuildStatus.PAUSE.name) throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
             defaultMessage = "Stage($stageId)未处于暂停状态",
             params = arrayOf(stageId)
@@ -882,7 +880,6 @@ class PipelineBuildFacadeService(
                 // 发送排队失败的事件
                 logger.warn("[$pipelineId]|START_PIPELINE_MANUAL|流水线启动失败:[${interceptResult.message}]")
                 throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = interceptResult.status.toString(),
                     defaultMessage = "Stage启动失败![${interceptResult.message}]"
                 )
@@ -957,7 +954,6 @@ class PipelineBuildFacadeService(
             }
         }
         if (check?.status != BuildStatus.QUALITY_CHECK_WAIT.name) throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
             defaultMessage = "Stage($stageId)未处于质量红线带把关状态",
             params = arrayOf(stageId)
@@ -1024,7 +1020,6 @@ class PipelineBuildFacadeService(
                         el.desc = buildVariableService.replaceTemplate(projectId, buildId, el.desc)
                         if (!reviewUser.contains(userId)) {
                             throw ErrorCodeException(
-                                statusCode = Response.Status.NOT_FOUND.statusCode,
                                 errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
                                 defaultMessage = "用户($userId)不在审核人员名单中",
                                 params = arrayOf(userId)

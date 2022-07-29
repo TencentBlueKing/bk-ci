@@ -243,8 +243,10 @@ class DefaultModelCheckPluginTest : TestBase() {
         }
 
         val fulModel = genModel(stageSize = 3, jobSize = 2, elementSize = 2)
+        val expectSize = 1 /* TriggerStage */ + (3 /* stageSize */ * 2 /* JobSize */ * 2 /* elementSize */)
         try {
-            checkPlugin.checkModelIntegrity(fulModel, projectId)
+            val actualSize = checkPlugin.checkModelIntegrity(fulModel, projectId)
+            Assertions.assertEquals(expectSize, actualSize)
         } catch (actual: ErrorCodeException) {
             Assertions.assertEquals(ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID, actual.errorCode)
         }
