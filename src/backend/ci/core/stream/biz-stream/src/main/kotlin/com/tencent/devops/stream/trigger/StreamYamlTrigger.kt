@@ -90,13 +90,14 @@ class StreamYamlTrigger @Autowired constructor(
     ): Boolean {
         logger.info("|${action.data.context.requestEventId}|triggerBuild|action|${action.format()}")
         var pipeline = action.data.context.pipeline!!
+
         // 提前创建新流水线，保证git提交后 stream上能看到
         if (pipeline.pipelineId.isBlank()) {
             pipeline = StreamTriggerPipeline(
                 gitProjectId = action.data.getGitProjectId(),
                 pipelineId = "",
                 filePath = pipeline.filePath,
-                displayName = pipeline.filePath,
+                displayName = getDisplayName(action),
                 enabled = true,
                 creator = action.data.getUserId(),
                 lastUpdateBranch = action.data.eventCommon.branch
@@ -229,6 +230,17 @@ class StreamYamlTrigger @Autowired constructor(
             )
         }
         return true
+    }
+
+    private fun getDisplayName(action: BaseAction): String {
+        val originYaml = action.data.context.originYaml!!
+        val ymlName = ScriptYmlUtils.parseName(originYaml)?.name
+        val pipeline = action.data.context.pipeline!!
+        return if (!ymlName.isNullOrBlank()) {
+            ymlName
+        } else {
+            pipeline.filePath
+        }
     }
 
     private fun needUpdateLastBuildBranch(action: BaseAction): Boolean {
