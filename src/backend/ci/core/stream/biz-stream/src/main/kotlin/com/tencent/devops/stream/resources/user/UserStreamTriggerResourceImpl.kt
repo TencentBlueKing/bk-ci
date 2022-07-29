@@ -130,8 +130,8 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
         }
 
         // 获取yaml对象，除了需要替换的 variables和一些信息剩余全部设置为空
-        val preYaml = try {
-            YamlUtil.getObjectMapper().readValue(
+        try {
+            val preYaml = YamlUtil.getObjectMapper().readValue(
                 ScriptYmlUtils.formatYaml(yaml),
                 PreTemplateScriptBuildYaml::class.java
             ).copy(
@@ -143,24 +143,25 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
                 finally = null,
                 concurrency = null
             )
+
+            return Result(
+                manualTriggerService.getManualTriggerInfo(
+                    yaml = yaml,
+                    preYaml = preYaml,
+                    userId = userId,
+                    pipelineId = pipelineId,
+                    projectId = projectId,
+                    branchName = branchName,
+                    commitId = commitId
+                )
+            )
+
         } catch (e: Exception) {
             return Result(
                 status = ErrorCodeEnum.MANUAL_TRIGGER_YAML_INVALID.errorCode,
                 message = message.message
             )
         }
-
-        return Result(
-            manualTriggerService.getManualTriggerInfo(
-                yaml = yaml,
-                preYaml = preYaml,
-                userId = userId,
-                pipelineId = pipelineId,
-                projectId = projectId,
-                branchName = branchName,
-                commitId = commitId
-            )
-        )
     }
 
     override fun checkYaml(userId: String, yaml: StreamGitYamlString): Result<String> {
