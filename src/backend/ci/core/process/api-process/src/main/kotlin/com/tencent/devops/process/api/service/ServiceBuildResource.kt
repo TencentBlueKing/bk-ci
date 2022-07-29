@@ -174,7 +174,7 @@ interface ServiceBuildResource {
         @ApiParam("流水线参数", required = false)
         @QueryParam("buildFormProperty")
         buildFormProperty: BuildFormProperty
-    ): Result<List<BuildFormValue>>
+    ): Result<List<BuildFormValue>> = Result(emptyList())
 
     @Deprecated(message = "do not use", replaceWith = ReplaceWith("@see ServiceBuildResource.manualStartupNew"))
     @ApiOperation("手动启动流水线")
