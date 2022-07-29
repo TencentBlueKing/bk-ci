@@ -131,7 +131,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                property = property
+                property = buildFormProperty
             )
         )
     }
