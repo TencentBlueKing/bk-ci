@@ -278,19 +278,19 @@ class PipelineBuildFacadeService(
         )
     }
 
-//    fun buildManualSearchProperty(
-//        userId: String?,
-//        projectId: String,
-//        pipelineId: String,
-//        property: BuildFormProperty
-//    ): List<BuildFormValue> {
-//        return paramFacadeService.filterOptions(
-//            userId = userId,
-//            projectId = projectId,
-//            pipelineId = pipelineId,
-//            property = property
-//        )
-//    }
+    fun buildManualSearchProperty(
+        userId: String?,
+        projectId: String,
+        pipelineId: String,
+        property: BuildFormProperty
+    ): List<BuildFormValue> {
+        return paramFacadeService.filterOptions(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            property = property
+        )
+    }
 
     fun getBuildParameters(
         userId: String,

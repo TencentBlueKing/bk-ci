@@ -127,13 +127,12 @@ class ServiceBuildResourceImpl @Autowired constructor(
 //        property: BuildFormProperty
 //    ): Result<List<BuildFormValue>> {
 //        return Result(
-//            emptyList()
-////            pipelineBuildFacadeService.buildManualSearchProperty(
-////                userId = userId,
-////                projectId = projectId,
-////                pipelineId = pipelineId,
-////                property = property
-////            )
+//            pipelineBuildFacadeService.buildManualSearchProperty(
+//                userId = userId,
+//                projectId = projectId,
+//                pipelineId = pipelineId,
+//                property = property
+//            )
 //        )
 //    }
 
