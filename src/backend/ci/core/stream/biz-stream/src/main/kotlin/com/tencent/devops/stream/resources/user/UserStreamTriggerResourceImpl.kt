@@ -155,7 +155,6 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
                     commitId = commitId
                 )
             )
-
         } catch (e: Exception) {
             return Result(
                 status = ErrorCodeEnum.MANUAL_TRIGGER_YAML_INVALID.errorCode,
