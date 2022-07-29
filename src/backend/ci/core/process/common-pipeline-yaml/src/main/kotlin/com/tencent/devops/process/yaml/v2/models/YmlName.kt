@@ -25,30 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service.gray
+package com.tencent.devops.process.yaml.v2.models
 
-import com.tencent.devops.common.redis.RedisOperation
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 
-class MacOSGray {
-    companion object {
-        const val repoGrayRedisKey = "project:setting:macosGray"
-    }
-
-    fun addGrayProject(projectId: String, redisOperation: RedisOperation) {
-        redisOperation.addSetValue(getRepoGrayRedisKey(), projectId) // 添加项目为灰度项目
-    }
-
-    fun removeGrayProject(projectId: String, redisOperation: RedisOperation) {
-        redisOperation.removeSetMember(getRepoGrayRedisKey(), projectId) // 取消项目为灰度项目
-    }
-
-    fun isGray(projectId: String, redisOperation: RedisOperation): Boolean {
-        return redisOperation.isMember(getRepoGrayRedisKey(), projectId)
-//        return grayProjectSet(redisOperation).contains(projectId)
-    }
-
-    fun grayProjectSet(redisOperation: RedisOperation) =
-        (redisOperation.getSetMembers(repoGrayRedisKey) ?: emptySet()).filter { !it.isBlank() }.toSet()
-
-    fun getRepoGrayRedisKey() = repoGrayRedisKey
-}
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class YmlName(
+    val name: String?
+)

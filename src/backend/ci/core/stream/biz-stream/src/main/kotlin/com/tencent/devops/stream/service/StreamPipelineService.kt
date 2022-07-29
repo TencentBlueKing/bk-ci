@@ -37,6 +37,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -332,7 +333,7 @@ class StreamPipelineService @Autowired constructor(
             gitProjectId = gitProjectId,
             pipelineId = "",
             filePath = file.filePath,
-            displayName = file.filePath,
+            displayName = getDisplayName(file),
             enabled = true,
             creator = userId,
             lastUpdateBranch = file.branch
@@ -362,6 +363,16 @@ class StreamPipelineService @Autowired constructor(
                     branch = branch
                 )
             }
+        }
+    }
+
+    private fun getDisplayName(file: StreamCreateFileInfo): String {
+        val originYaml = file.content
+        val ymlName = ScriptYmlUtils.parseName(originYaml)?.name
+        return if (!ymlName.isNullOrBlank()) {
+            ymlName
+        } else {
+            file.filePath
         }
     }
 
