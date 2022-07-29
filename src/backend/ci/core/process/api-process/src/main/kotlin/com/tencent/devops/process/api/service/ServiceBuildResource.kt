@@ -160,7 +160,6 @@ interface ServiceBuildResource {
 
     @ApiOperation("搜索流水线参数")
     @GET
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartupInfo")
     @Path("/{projectId}/{pipelineId}/buildManualSearchProperty")
     fun buildManualSearchProperty(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
