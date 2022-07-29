@@ -34,8 +34,11 @@ import com.tencent.devops.process.yaml.v2.parameter.Parameters
 import com.tencent.devops.process.yaml.v2.parameter.ParametersType
 import com.tencent.devops.process.yaml.v2.parsers.template.models.NoReplaceTemplate
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import org.slf4j.LoggerFactory
 
 object TemplateYamlUtil {
+
+    private val logger = LoggerFactory.getLogger(TemplateYamlUtil::class.java)
 
     // 检查是否具有重复的ID，job，variable中使用
     fun checkDuplicateKey(
@@ -115,6 +118,11 @@ object TemplateYamlUtil {
             templateParameters.forEachIndexed { index, param ->
                 if (parameters != null) {
                     val valueName = param.name
+
+                    if (param.name.contains(".")) {
+                        logger.info("PARAMETERS|NAME|WARNING|${param.name}")
+                    }
+
                     val newValue = parameters[param.name]
                     if (parameters.keys.contains(valueName)) {
                         if (!param.values.isNullOrEmpty() && !param.values!!.contains(newValue)) {

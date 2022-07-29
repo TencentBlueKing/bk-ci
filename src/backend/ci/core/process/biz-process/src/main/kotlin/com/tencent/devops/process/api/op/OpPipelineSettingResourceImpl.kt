@@ -27,10 +27,13 @@
 
 package com.tencent.devops.process.api.op
 
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -47,5 +50,21 @@ class OpPipelineSettingResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         ))
+    }
+
+    override fun updateMaxConRunningQueueSize(pipelineId: String, maxConRunningQueueSize: Int): Result<String> {
+        checkMaxConRunningQueueSize(maxConRunningQueueSize)
+        return Result(pipelineSettingFacadeService.updateMaxConRunningQueueSize(
+            pipelineId = pipelineId,
+            maxConRunningQueueSize = maxConRunningQueueSize
+        ))
+    }
+
+    private fun checkMaxConRunningQueueSize(maxConRunningQueueSize: Int) {
+        if (maxConRunningQueueSize <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
+            maxConRunningQueueSize > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+        ) {
+            throw InvalidParamException("最大并发数量非法", params = arrayOf("maxConRunningQueueSize"))
+        }
     }
 }

@@ -115,7 +115,7 @@ export default defineComponent({
                   <Option
                     key={project.id}
                     value={project.id}
-                    label={project.displayName}
+                    label={project.displayName as string}
                   />
                 ))
               }

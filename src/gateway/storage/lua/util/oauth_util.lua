@@ -128,6 +128,9 @@ function _M:verify_bkrepo_token(access_token)
         local httpc = http.new()
         local addr = "http://" .. hostUtil:get_addr("auth")
         local path = "/api/user/verify?bkrepo_ticket=" .. access_token
+        if config.service_name ~= nil and config.service_name ~= "" then
+            path = "/auth" .. path
+        end
         --- 开始连接
         httpc:set_timeout(3000)
         httpc:connect(addr)

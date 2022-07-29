@@ -19,8 +19,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 
 local service_name = ngx.var.service
-if config.service_name ~= nil and config.service_name ~= "" then
-    service_name = config.service_name
+if service_name == "docker" then
+    service_name = "oci"
 end
 
 if not service_name then
@@ -50,5 +50,8 @@ end
 
 ngx.var.target = hostUtil:get_addr(service_name)
 
+if ngx.var.assembly then
+   ngx.var.target = ngx.var.target .. "/" .. service_name
+end
 
 

@@ -453,7 +453,6 @@ class PipelineContainerService @Autowired constructor(
                 // Rebuild/Stage-Retry/Fail-Task-Retry  重跑/Stage重试/失败的插件重试
                 val taskRecord = retryDetailModelStatus(
                     lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
-                    stage = stage,
                     container = container,
                     retryStartTaskId = atomElement.id!!,
                     executeCount = context.executeCount,
@@ -470,8 +469,6 @@ class PipelineContainerService @Autowired constructor(
                             setRetryBuildTask(
                                 target = pair.first,
                                 executeCount = context.executeCount,
-                                stage = stage,
-                                container = container,
                                 atomElement = pair.second
                             )
                             updateTaskExistsRecord.add(pair.first)
@@ -480,7 +477,6 @@ class PipelineContainerService @Autowired constructor(
                     needUpdateContainer = true
                 } else if (container.matrixGroupFlag == true && BuildStatus.parse(container.status).isFinish()) {
                     // 构建矩阵没有对应的重试插件，单独进行重试判断
-                    setRetryBuildContainer(container, context.executeCount)
                     needUpdateContainer = true
                 }
             }
@@ -508,15 +504,18 @@ class PipelineContainerService @Autowired constructor(
             )
         }
         if (needUpdateContainer) {
+            container.resetBuildOption(context.executeCount)
             if (lastTimeBuildContainerRecords.isNotEmpty()) {
                 run findHistoryContainer@{
-                    lastTimeBuildContainerRecords.forEach {
-                        if (it.containerId == container.id) { // #958 在Element.initStatus 位置确认重试插件
-                            it.status = BuildStatus.QUEUE.ordinal
-                            it.startTime = null
-                            it.endTime = null
-                            it.executeCount = context.executeCount
-                            updateContainerExistsRecord.add(it)
+                    lastTimeBuildContainerRecords.forEach { dbRecord ->
+                        if (dbRecord.containerId == container.id) { // #958 在Element.initStatus 位置确认重试插件
+                            dbRecord.run {
+                                status = BuildStatus.QUEUE.ordinal
+                                startTime = null
+                                endTime = null
+                                executeCount = context.executeCount
+                                updateContainerExistsRecord.add(this)
+                            }
                             return@findHistoryContainer
                         }
                     }
@@ -631,7 +630,6 @@ class PipelineContainerService @Autowired constructor(
             val startTaskVMId = VMUtils.genStartVMTaskId(container.id!!)
             var taskRecord = retryDetailModelStatus(
                 lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
-                stage = stage,
                 container = container,
                 executeCount = executeCount,
                 retryStartTaskId = startTaskVMId
@@ -647,7 +645,6 @@ class PipelineContainerService @Autowired constructor(
             )
             taskRecord = retryDetailModelStatus(
                 lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
-                stage = stage,
                 container = container,
                 executeCount = executeCount,
                 retryStartTaskId = endPointTaskId
@@ -657,7 +654,6 @@ class PipelineContainerService @Autowired constructor(
                 val stopVmTaskId = VMUtils.genStopVMTaskId(VMUtils.genVMTaskSeq(containerSeq, taskSeq = startVMTaskSeq))
                 taskRecord = retryDetailModelStatus(
                     lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
-                    stage = stage,
                     container = container,
                     executeCount = executeCount,
                     retryStartTaskId = stopVmTaskId
@@ -683,7 +679,6 @@ class PipelineContainerService @Autowired constructor(
      */
     private fun retryDetailModelStatus(
         lastTimeBuildTaskRecords: Collection<TPipelineBuildTaskRecord>,
-        stage: Stage,
         container: Container,
         retryStartTaskId: String,
         executeCount: Int,
@@ -700,8 +695,6 @@ class PipelineContainerService @Autowired constructor(
             setRetryBuildTask(
                 target = target,
                 executeCount = executeCount,
-                stage = stage,
-                container = container,
                 atomElement = atomElement,
                 initialStatus = initialStatus
             )
@@ -712,8 +705,6 @@ class PipelineContainerService @Autowired constructor(
     private fun setRetryBuildTask(
         target: TPipelineBuildTaskRecord,
         executeCount: Int,
-        stage: Stage,
-        container: Container,
         atomElement: Element?,
         initialStatus: BuildStatus? = null
     ) {
@@ -728,10 +719,6 @@ class PipelineContainerService @Autowired constructor(
         } else { // 跳过的需要保留下跳过的信息
             target.errorMsg = "被手动跳过 Manually skipped"
         }
-        stage.status = null
-        stage.startEpoch = null
-        stage.elapsed = null
-        setRetryBuildContainer(container, target.executeCount)
         if (atomElement != null) { // 将原子状态重置
             if (initialStatus == null) { // 未指定状态的，将重新运行
                 atomElement.status = null
@@ -743,17 +730,12 @@ class PipelineContainerService @Autowired constructor(
             atomElement.elapsed = null
             atomElement.startEpoch = null
             atomElement.canRetry = false
+            val originVersion = JsonUtil.toMutableMap(target.taskParams)["version"] as String
+            if (originVersion.contains("*")) {
+                atomElement.version = originVersion
+            }
             target.taskParams = JsonUtil.toJson(atomElement.genTaskParams(), formatted = false) // 更新参数
         }
-    }
-
-    private fun setRetryBuildContainer(container: Container, executeCount: Int) {
-        container.status = null // 重置状态为空
-        container.startEpoch = null
-        container.elementElapsed = null
-        container.systemElapsed = null
-        container.startVMStatus = null
-        container.executeCount = executeCount
     }
 
     private fun findPostTask(

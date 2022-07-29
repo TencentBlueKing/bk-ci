@@ -2,6 +2,7 @@ package distcc
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -37,12 +38,13 @@ type EngineConfig struct {
 	engine.MySQLConf
 	Rd rd.RegisterDiscover
 
-	ClusterID           string
-	CPUPerInstance      float64
-	MemPerInstance      float64
-	LeastJobServer      int
-	JobServerTimesToCPU float64
-	Brokers             []config.EngineDistCCBrokerConfig
+	ClusterID              string
+	CPUPerInstance         float64
+	MemPerInstance         float64
+	LeastJobServer         int
+	JobServerTimesToCPU    float64
+	Brokers                []config.EngineDistCCBrokerConfig
+	QueueResourceAllocater map[string]config.ResourceAllocater
 }
 
 const distCCRunningLongestTime = 6 * time.Hour
@@ -71,6 +73,8 @@ func NewDistccEngine(conf EngineConfig, mgr crm.HandlerWithUser) (engine.Engine,
 		blog.Errorf("engine(%s) init brokers failed: %v", EngineName, err)
 		return nil, err
 	}
+
+	_ = egn.parseAllocateConf()
 
 	return egn, nil
 }
@@ -199,6 +203,47 @@ func (de *distccEngine) getClient(timeoutSecond int) *httpclient.HTTPClient {
 	return client
 }
 
+// cheack AllocateMap map ,make sure the key is the format of xx:xx:xx-xx:xx:xx and smaller time is ahead
+func (de *distccEngine) parseAllocateConf() bool {
+	time_fmt := regexp.MustCompile(`[0-9]+[0-9]+:+[0-9]+[0-9]+:+[0-9]+[0-9]`)
+
+	for queue, allocater := range de.conf.QueueResourceAllocater {
+		for k, v := range allocater.AllocateByTimeMap {
+			mid := strings.Index(k, "-")
+			if mid == -1 || !time_fmt.MatchString(k[:mid]) || !time_fmt.MatchString(k[mid+1:]) || k[:mid] > k[:mid+1] {
+				blog.Errorf("wrong time format:(%s) in [%s] allocate config, expect format like 12:30:00-14:00:00,smaller time ahead", k, queue)
+				return false
+			}
+			allocater.TimeSlot = append(allocater.TimeSlot, config.TimeSlot{
+				StartTime: k[:mid],
+				EndTime:   k[mid+1:],
+				Value:     v,
+			},
+			)
+		}
+		de.conf.QueueResourceAllocater[queue] = allocater
+	}
+	return true
+}
+
+func (de *distccEngine) allocate(queueName string) float64 {
+	return de.allocateByCurrentTime(queueName)
+}
+
+func (de *distccEngine) allocateByCurrentTime(queueName string) float64 {
+	if allocater, ok := de.conf.QueueResourceAllocater[queueName]; !ok {
+		return 1.0
+	} else {
+		now := time.Now().Format("15:04:05")
+		for _, slot := range allocater.TimeSlot {
+			if now >= slot.StartTime && now < slot.EndTime {
+				return slot.Value
+			}
+		}
+	}
+	return 1.0
+}
+
 func (de *distccEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 	project, err := de.mysql.GetProjectSetting(tb.Client.ProjectID)
 	if err != nil {
@@ -249,7 +294,13 @@ func (de *distccEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 	task.Client.Extra.MaxJobs = ev.ExtraVars.MaxJobs
 	// if ban resources, then request and least cpu is 0
 	if !task.Client.BanAllBooster && !task.Client.BanDistCC {
-		task.Client.RequestCPU = project.RequestCPU
+		task.Client.RequestCPU = project.RequestCPU * de.allocate(tb.Client.QueueName)
+		blog.Info("distcc: queue:[%s] project:[%s] request cpu: [%f],actual request cpu:[%f]",
+			tb.Client.QueueName,
+			project.ProjectID,
+			project.RequestCPU,
+			task.Client.RequestCPU)
+
 		task.Client.LeastCPU = project.LeastCPU
 		if task.Client.LeastCPU > task.Client.RequestCPU {
 			task.Client.LeastCPU = task.Client.RequestCPU
