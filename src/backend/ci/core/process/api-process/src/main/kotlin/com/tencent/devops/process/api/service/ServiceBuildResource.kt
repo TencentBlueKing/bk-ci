@@ -158,23 +158,23 @@ interface ServiceBuildResource {
         channelCode: ChannelCode
     ): Result<BuildManualStartupInfo>
 
-    @ApiOperation("搜索流水线参数")
-    @GET
-    @Path("/{projectId}/{pipelineId}/buildManualSearchProperty")
-    fun buildManualSearchProperty(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("流水线参数", required = false)
-        @QueryParam("property")
-        property: BuildFormProperty
-    ): Result<List<BuildFormValue>>
+//    @ApiOperation("搜索流水线参数")
+//    @GET
+//    @Path("/{projectId}/{pipelineId}/buildManualSearchProperty")
+//    fun buildManualSearchProperty(
+//        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+//        @HeaderParam(AUTH_HEADER_USER_ID)
+//        userId: String,
+//        @ApiParam("项目ID", required = true)
+//        @PathParam("projectId")
+//        projectId: String,
+//        @ApiParam("流水线ID", required = true)
+//        @PathParam("pipelineId")
+//        pipelineId: String,
+//        @ApiParam("流水线参数", required = false)
+//        @QueryParam("property")
+//        property: BuildFormProperty
+//    ): Result<List<BuildFormValue>>
 
     @Deprecated(message = "do not use", replaceWith = ReplaceWith("@see ServiceBuildResource.manualStartupNew"))
     @ApiOperation("手动启动流水线")
