@@ -57,7 +57,10 @@ class ApigwTurboResourceV4Impl @Autowired constructor(
         pageSize: Int?,
         userId: String
     ): Response<Page<TurboPlanStatRowVO>> {
-        logger.info("getTurboPlan: userId[$userId] projectId[$projectId]")
+        logger.info(
+            "OPENAPI_TURBO_V4|$userId|get turbo plan by project id and created date|$projectId|$startTime" +
+                "|$endTime|$pageNum|$pageSize"
+        )
         return client.getSpringMvc(IServiceTurboController::class).getTurboPlanByProjectIdAndCreatedDate(
             projectId = projectId,
             startTime = DateTimeUtil.stringToLocalDate(startTime),
@@ -77,7 +80,10 @@ class ApigwTurboResourceV4Impl @Autowired constructor(
         projectId: String,
         userId: String
     ): Response<Page<TurboRecordHistoryVO>> {
-        logger.info("getTurboRecordHistoryList: userId[$userId] projectId[$projectId] reqModel: $turboRecordModel")
+        logger.info(
+            "OPENAPI_TURBO_V4|$userId|get turbo record history list|$projectId|$pageNum|$pageSize|$sortField" +
+                "|$sortType|$turboRecordModel|$"
+        )
         return client.getSpringMvc(IServiceTurboController::class).getTurboRecordHistoryList(
             pageNum = pageNum,
             pageSize = pageSize,
@@ -94,6 +100,9 @@ class ApigwTurboResourceV4Impl @Autowired constructor(
         projectId: String,
         userId: String
     ): Response<TurboPlanDetailVO> {
+        logger.info(
+            "OPENAPI_TURBO_V4|$userId|get turbo plan detail by plan id|$projectId|$planId"
+        )
         logger.info("getTurboPlanDetail: userId[$userId] projectId[$projectId] planId[$planId]")
         return client.getSpringMvc(IServiceTurboController::class).getTurboPlanDetailByPlanId(
             planId = planId,
