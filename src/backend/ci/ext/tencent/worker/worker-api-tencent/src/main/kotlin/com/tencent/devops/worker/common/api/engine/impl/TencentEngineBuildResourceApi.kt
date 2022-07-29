@@ -86,6 +86,6 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
         } catch (e: Exception) {
             logger.error("get context failed: ", e)
         }
-        return workerEnd(retryCount)
+        return super.endTask(buildVariables, retryCount)
     }
 }
