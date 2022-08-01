@@ -197,7 +197,7 @@ class StreamPipelineService @Autowired constructor(
     fun getPipelineById(
         pipelineId: String
     ): StreamGitProjectPipeline? {
-        logger.info("get pipeline: $pipelineId")
+        logger.info("StreamPipelineService|getPipelineById|pipeline|$pipelineId")
         val pipeline = gitPipelineResourceDao.getPipelinesInIds(
             dslContext = dslContext,
             gitProjectId = null,
@@ -254,7 +254,7 @@ class StreamPipelineService @Autowired constructor(
         pipelineId: String,
         ref: String
     ): String? {
-        logger.info("get yaml by pipelineId:($pipelineId), ref: $ref")
+        logger.info("StreamPipelineService|getYamlByPipeline|pipelineId|$pipelineId|ref|$ref")
         val conf = streamBasicSettingService.getStreamConf(gitProjectId) ?: return null
 
         val filePath =
@@ -280,7 +280,7 @@ class StreamPipelineService @Autowired constructor(
         val processClient = client.get(ServicePipelineResource::class)
         if (pipeline.pipelineId.isBlank()) {
             // 直接新建
-            logger.info("create newpipeline: $pipeline")
+            logger.info("StreamPipelineService|savePipeline|newpipeline|$pipeline")
 
             pipeline.pipelineId = processClient.create(
                 userId = userId,

@@ -72,8 +72,8 @@ class StreamGitProjectInfoCache @Autowired constructor(
         } catch (ignored: Throwable) {
             logger.warn(
                 "StreamGitProjectInfoCache|getAndSaveGitProjectInfo" +
-                "|update cache error",
-                    ignored
+                    "|update cache error",
+                ignored
             )
             return null
         }
@@ -112,8 +112,8 @@ class StreamGitProjectInfoCache @Autowired constructor(
         } catch (ignore: Exception) {
             logger.warn(
                 "StreamGitProjectInfoCache|getRequestGitProjectInfo" +
-                "$gitProjectName|error",
-                    ignore
+                    "$gitProjectName|error",
+                ignore
             )
             null
         }

@@ -74,7 +74,7 @@ class StreamPermissionService @Autowired constructor(
     }
 
     fun checkWebPermission(userId: String, projectId: String): Boolean {
-        logger.info("stream EnvironmentPermission user:$userId projectId: $projectId ")
+        logger.info("StreamPermissionService|checkWebPermission|user|$userId|projectId|$projectId ")
 
         val result = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
@@ -112,7 +112,7 @@ class StreamPermissionService @Autowired constructor(
     fun checkCommonUser(userId: String) {}
 
     private fun checkPermissionAndOauth(userId: String, projectId: String, permission: AuthPermission) {
-        logger.info("stream EnvironmentPermission user:$userId projectId: $projectId ")
+        logger.info("StreamPermissionService|checkPermissionAndOauth|user|$userId|projectId|$projectId ")
         val result = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenCheckService.getSystemToken(null) ?: "",

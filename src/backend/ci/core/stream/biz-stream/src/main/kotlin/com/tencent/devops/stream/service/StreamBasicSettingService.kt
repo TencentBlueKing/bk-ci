@@ -79,7 +79,7 @@ class StreamBasicSettingService @Autowired constructor(
         if (agentBuilds.isNotOk()) {
             logger.warn(
                 "StreamBasicSettingService|listAgentBuilds|" +
-                "errors=${agentBuilds.message}"
+                    "errors=${agentBuilds.message}"
             )
             throw RuntimeException("get agent builds list in devops failed, msg: ${agentBuilds.message}")
         }
@@ -378,7 +378,7 @@ class StreamBasicSettingService @Autowired constructor(
         } catch (e: Throwable) {
             logger.warn(
                 "StreamBasicSettingService|checkSameGitProjectName " +
-                "|update bkci project name error :${e.message}"
+                    "|update bkci project name error :${e.message}"
             )
         }
     }

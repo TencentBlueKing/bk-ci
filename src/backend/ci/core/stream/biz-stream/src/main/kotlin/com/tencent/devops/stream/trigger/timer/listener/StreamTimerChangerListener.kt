@@ -58,7 +58,10 @@ class StreamTimerChangerListener @Autowired constructor(
             try {
                 JsonUtil.to(event.crontabExpressionJson, object : TypeReference<List<String>>() {})
             } catch (ignored: Throwable) { // 兼容旧数据
-                logger.warn("[$pipelineId]|Old Timer Crontab=${event.crontabExpressionJson}| ${ignored.message}")
+                logger.warn(
+                    "StreamTimerChangerListener|run" +
+                        "|pipelineId|$pipelineId|Old Timer Crontab=${event.crontabExpressionJson}| ${ignored.message}"
+                )
                 listOf(event.crontabExpressionJson)
             }
         try {
@@ -70,7 +73,10 @@ class StreamTimerChangerListener @Autowired constructor(
                 }
                 if (ActionType.REFRESH == (event.actionType)) {
                     val success = schedulerManager.addJob(comboKey, crontab, jobBeanClass)
-                    logger.info("[$pipelineId]|TimerChange|crontab=$crontab|success=$success")
+                    logger.info(
+                        "StreamTimerChangerListener|run" +
+                            "|pipelineId|$pipelineId|crontab|$crontab|success|$success"
+                    )
                 }
             }
         } catch (ignored: Throwable) {

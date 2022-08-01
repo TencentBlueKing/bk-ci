@@ -166,7 +166,10 @@ class ScheduleTriggerService @Autowired constructor(
         action: StreamScheduleAction,
         originYaml: String
     ): BuildId? {
-        logger.info("|${action.data.context.requestEventId}|handleTrigger|action|${action.format()}")
+        logger.info(
+            "ScheduleTriggerService|handleTrigger" +
+                "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
+        )
         return exHandler.handle(action) {
             trigger(action, originYaml)
         }

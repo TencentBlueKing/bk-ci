@@ -72,7 +72,7 @@ class StreamTriggerListener @Autowired constructor(
         }
         logger.info(
             "StreamTriggerListener|${action.data.context.requestEventId} " +
-            "|listenStreamTriggerEvent|action|${action.format()}"
+                "|listenStreamTriggerEvent|action|${action.format()}"
         )
 
         // 针对每个流水线处理异常

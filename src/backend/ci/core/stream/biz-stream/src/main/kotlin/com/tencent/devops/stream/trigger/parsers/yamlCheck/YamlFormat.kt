@@ -58,7 +58,7 @@ object YamlFormat {
                 PreTemplateScriptBuildYaml::class.java
             )
         } catch (e: Throwable) {
-            logger.info("gitRequestEvent ${action.data.context.requestEventId} git ci yaml is invalid", e)
+            logger.info("YamlFormat|formatYaml|git ci yaml is invalid|eventId|${action.data.context.requestEventId}", e)
             val (block, message, reason) = when (e) {
                 is YamlFormatException, is CustomException -> {
                     Triple(action.metaData.isStreamMr(), e.message, TriggerReason.CI_YAML_INVALID)

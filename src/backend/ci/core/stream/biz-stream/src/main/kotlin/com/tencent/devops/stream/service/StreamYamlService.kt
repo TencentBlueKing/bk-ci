@@ -29,7 +29,6 @@ package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -55,7 +54,7 @@ class StreamYamlService @Autowired constructor(
     }
 
     fun getYamlV2(gitProjectId: Long, buildId: String): V2BuildYaml? {
-        logger.info("get yaml by buildId:($buildId), gitProjectId: $gitProjectId")
+        logger.info("StreamYamlService|getYamlV2|buildId|$buildId|gitProjectId|$gitProjectId")
         streamSettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启Stream，无法查询"

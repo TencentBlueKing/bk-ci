@@ -66,7 +66,7 @@ abstract class SchedulerManager {
         val jobDetail = newJob(jobBeanClass).withIdentity(jobKey).build()
         return try {
             val nextFireTime = trigger.getFireTimeAfter(Date()) ?: throw InvalidTimerException()
-            logger.info("[$key]|nextFireTime=$nextFireTime")
+            logger.info("SchedulerManager|addJob|[$key]|nextFireTime=$nextFireTime")
             getScheduler().scheduleJob(jobDetail, trigger)
             true
         } catch (ignore: ObjectAlreadyExistsException) {
