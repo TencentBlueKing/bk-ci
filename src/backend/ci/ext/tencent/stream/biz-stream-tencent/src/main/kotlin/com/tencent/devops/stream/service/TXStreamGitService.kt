@@ -74,7 +74,7 @@ class TXStreamGitService @Autowired constructor(
         } catch (e: Exception) {
             logger.info(
                 "TXStreamGitService|getProjectInfo" +
-                "|stream scm service is unavailable.|gitProjectId=$gitProjectId"
+                    "|stream scm service is unavailable.|gitProjectId=$gitProjectId"
             )
             val setting = try {
                 streamBasicSettingDao.getSetting(dslContext, gitProjectId.toLong())

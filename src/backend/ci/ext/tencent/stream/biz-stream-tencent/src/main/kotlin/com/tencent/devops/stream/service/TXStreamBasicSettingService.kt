@@ -222,8 +222,10 @@ class TXStreamBasicSettingService @Autowired constructor(
                 refresh(it)
                 count++
             }
-            logger.info("TXStreamBasicSettingService|fixProjectInfo"+
-                "|project|${currProjects.map { it.id }.toList()}|fixed count|$count")
+            logger.info(
+                "TXStreamBasicSettingService|fixProjectInfo" +
+                    "|project|${currProjects.map { it.id }.toList()}|fixed count|$count"
+            )
             Thread.sleep(100)
             currProjects = streamBasicSettingDao.getProjectNoHttpUrl(dslContext)
         }
@@ -239,8 +241,10 @@ class TXStreamBasicSettingService @Autowired constructor(
                 refreshNameSpace(it)
                 count++
             }
-            logger.info("TXStreamBasicSettingService|fixProjectNameSpace"+
-                "|project|${currProjects.map { it.id }.toList()}|fixed count|$count")
+            logger.info(
+                "TXStreamBasicSettingService|fixProjectNameSpace" +
+                    "|project|${currProjects.map { it.id }.toList()}|fixed count|$count"
+            )
             Thread.sleep(100)
             currProjects = streamBasicSettingDao.getProjectNoNameSpace(dslContext)
         }

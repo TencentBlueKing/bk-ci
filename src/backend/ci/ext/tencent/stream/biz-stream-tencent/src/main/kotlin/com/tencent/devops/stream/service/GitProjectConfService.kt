@@ -136,8 +136,10 @@ class GitProjectConfService @Autowired constructor(
                 startId = it.id
             }
             gitRequestEventBuildDao.batchUpdateBuild(dslContext, currBuilds)
-            logger.info("GitProjectConfService|fixBuildVersion" +
-                "|project|${currBuilds.map { it.id }.toList()}|fixed count|$count")
+            logger.info(
+                "GitProjectConfService|fixBuildVersion" +
+                    "|project|${currBuilds.map { it.id }.toList()}|fixed count|$count"
+            )
             Thread.sleep(100)
             currBuilds = gitRequestEventBuildDao.getProjectAfterId(dslContext, startId, limitCount)
         }
@@ -161,7 +163,7 @@ class GitProjectConfService @Autowired constructor(
             gitRequestEventNotBuildDao.batchUpdateBuild(dslContext, currBuilds)
             logger.info(
                 "GitProjectConfService|fixNotBuildVersion" +
-                "|project|${currBuilds.map { it.id }.toList()}|count|$count"
+                    "|project|${currBuilds.map { it.id }.toList()}|count|$count"
             )
             Thread.sleep(100)
             currBuilds = gitRequestEventNotBuildDao.getProjectAfterId(dslContext, startId, limitCount)

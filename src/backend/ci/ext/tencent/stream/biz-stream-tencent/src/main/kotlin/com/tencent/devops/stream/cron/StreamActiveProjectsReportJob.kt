@@ -151,8 +151,11 @@ class StreamActiveProjectsReportJob @Autowired constructor(
                     "content-type" to "application/json;charset=UTF-8"
                 )
             )
-            logger.info("StreamActiveProjectsReportJob|oteamStatus" +
-                "|oteam status , id:{} , resp:{}", timestamp, response.body()!!.string())
+            logger.info(
+                "StreamActiveProjectsReportJob|oteamStatus" +
+                    "|oteam status , id:{} , resp:{}",
+                timestamp, response.body()!!.string()
+            )
         } catch (e: Exception) {
             logger.warn("StreamActiveProjectsReportJob|oteamStatus|error", e)
         }

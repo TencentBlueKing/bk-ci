@@ -139,7 +139,7 @@ class TXManualTriggerService @Autowired constructor(
     ): TriggerBuildResult {
         logger.info(
             "TXManualTriggerService|triggerBuild" +
-            "|userId|$userId|pipeline|$pipelineId|v1TriggerBuildReq|$v1TriggerBuildReq"
+                "|userId|$userId|pipeline|$pipelineId|v1TriggerBuildReq|$v1TriggerBuildReq"
         )
 
         val originYaml = v1TriggerBuildReq.yaml
