@@ -120,21 +120,21 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
-//    override fun manualSearchProperty(
-//        userId: String,
-//        projectId: String,
-//        pipelineId: String,
-//        buildFormProperty: BuildFormProperty
-//    ): Result<List<BuildFormValue>> {
-//        return Result(
-//            pipelineBuildFacadeService.buildManualSearchProperty(
-//                userId = userId,
-//                projectId = projectId,
-//                pipelineId = pipelineId,
-//                property = buildFormProperty
-//            )
-//        )
-//    }
+    override fun manualSearchProperty(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildFormProperty: BuildFormProperty
+    ): Result<List<BuildFormValue>> {
+        return Result(
+            pipelineBuildFacadeService.buildManualSearchProperty(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                property = buildFormProperty
+            )
+        )
+    }
 
     override fun manualStartup(
         userId: String,
