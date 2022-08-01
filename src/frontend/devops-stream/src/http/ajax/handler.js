@@ -13,8 +13,7 @@ function successHandler (response) {
     const { data: { code, data, message, status }, status: httpStatus } = response
     const errorMsg = { httpStatus, message, code: code || status }
     if (httpStatus === 401) {
-        store.dispatch('setShowLoginDialog', true)
-        return
+        location.href = window.getLoginUrl()
     } else if ([503, 403, 418, 419].includes(httpStatus)) {
         store.dispatch('setExceptionInfo', { type: httpStatus, message })
         return

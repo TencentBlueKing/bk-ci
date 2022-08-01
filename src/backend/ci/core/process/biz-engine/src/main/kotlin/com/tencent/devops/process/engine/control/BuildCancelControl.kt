@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
@@ -84,7 +85,7 @@ class BuildCancelControl @Autowired constructor(
     companion object {
         private val LOG = LoggerFactory.getLogger(BuildCancelControl::class.java)
     }
-
+    @BkTimed
     fun handle(event: PipelineBuildCancelEvent) {
         val watcher = Watcher(id = "ENGINE|BuildCancel|${event.traceId}|${event.buildId}|${event.status}")
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = event.buildId)

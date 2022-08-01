@@ -70,4 +70,9 @@ interface OpStreamPipelineResource {
         @QueryParam("endTime")
         endTime: Long?
     ): Result<Int>
+
+    @ApiOperation("批量更新modelName")
+    @POST
+    @Path("/updateModelNames")
+    fun batchUpdateModelName(): String
 }

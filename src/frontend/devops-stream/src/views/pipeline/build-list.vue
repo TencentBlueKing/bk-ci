@@ -30,7 +30,7 @@
         <section class="main-body section-box">
             <section class="build-filter">
                 <bk-input v-model="filterData.commitMsg" class="filter-item w300" :placeholder="$t('pipeline.commitMsg')"></bk-input>
-                <bk-input :value="filterData.triggerUser.join(',')" class="filter-item w300" :placeholder="$t('pipeline.actor')"></bk-input>
+                <bk-user-selector v-model="filterData.triggerUser" class="filter-item" :placeholder="$t('pipeline.actor')" api="https://api.open.woa.com/api/c/compapi/v2/usermanage/fs_list_users/"></bk-user-selector>
                 <bk-select v-model="filterData.branch"
                     class="filter-item"
                     :placeholder="$t('pipeline.branch')"
@@ -99,7 +99,12 @@
                 <bk-table-column :label="$t('pipeline.commitMsg')">
                     <template slot-scope="props">
                         <section class="commit-message">
-                            <i :class="getIconClass(props.row.buildHistory.status)"></i>
+                            <i
+                                :class="getIconClass(props.row.buildHistory.status)"
+                                v-bk-tooltips="{
+                                    content: props.row.buildHistory.stageStatus && props.row.buildHistory.stageStatus[0] && props.row.buildHistory.stageStatus[0].showMsg
+                                }"
+                            ></i>
                             <p>
                                 <span class="message">{{ props.row.gitRequestEvent.buildTitle }}</span>
                                 <span class="info">{{ props.row.displayName }} #{{ props.row.buildHistory.buildNum }}：{{ props.row.reason }}</span>
@@ -216,13 +221,15 @@
     import optMenu from '@/components/opt-menu'
     import codeSection from '@/components/code-section'
     import { getPipelineStatusClass, getPipelineStatusCircleIconCls } from '@/components/status'
+    import BkUserSelector from '@blueking/user-selector'
     import register from '@/utils/websocket-register'
     import validateRule from '@/utils/validate-rule'
 
     export default {
         components: {
             optMenu,
-            codeSection
+            codeSection,
+            BkUserSelector
         },
 
         filters: {
@@ -483,7 +490,7 @@
             getPipelineBranchApi (query = {}) {
                 const params = {
                     page: 1,
-                    perPage: 100,
+                    pageSize: 100,
                     projectId: this.projectId,
                     ...query
                 }
@@ -518,7 +525,7 @@
             getBranchCommits (value, options, query = {}) {
                 const params = {
                     page: 1,
-                    perPage: 100,
+                    pageSize: 100,
                     projectId: this.projectId,
                     branch: this.formData.branch,
                     ...query
@@ -743,7 +750,7 @@
                 &.executing {
                     font-size: 14px;
                 }
-                &.icon-exclamation, &.icon-exclamation-triangle, &.icon-clock {
+                &.icon-exclamation, &.icon-exclamation-triangle, &.icon-clock, &.stream-reviewing-2 {
                     font-size: 24px;
                 }
                 &.running {

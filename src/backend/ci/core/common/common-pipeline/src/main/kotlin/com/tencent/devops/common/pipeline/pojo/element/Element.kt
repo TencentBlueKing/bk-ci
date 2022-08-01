@@ -111,7 +111,9 @@ abstract class Element(
     open var elapsed: Long? = null,
     @ApiModelProperty("启动时间", required = false)
     open var startEpoch: Long? = null,
-    @ApiModelProperty("插件版本", required = false)
+    @ApiModelProperty("插件原始版本", required = false)
+    open var originVersion: String? = null,
+    @ApiModelProperty("插件版本", required = true)
     open var version: String = "1.*",
     @ApiModelProperty("模板对比的时候是不是有变更", required = false)
     open var templateModify: Boolean? = null, // 模板对比的时候是不是又变更
@@ -124,7 +126,13 @@ abstract class Element(
     @ApiModelProperty("错误代码", required = false)
     open var errorCode: Int? = null,
     @ApiModelProperty("错误信息", required = false)
-    open var errorMsg: String? = null
+    open var errorMsg: String? = null,
+    @ApiModelProperty("插件名称,构建结束后的快照名称", required = false)
+    open var atomName: String? = null,
+    @ApiModelProperty("所属插件分类代码", required = false)
+    open var classifyCode: String? = null,
+    @ApiModelProperty("所属插件分类名称", required = false)
+    open var classifyName: String? = null
 ) {
 
     open fun getAtomCode() = getClassType()

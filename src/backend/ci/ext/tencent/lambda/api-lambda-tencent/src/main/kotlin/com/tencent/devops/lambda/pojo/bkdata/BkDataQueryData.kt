@@ -37,7 +37,7 @@ data class BkDataQueryData(
     @ApiModelProperty("耗费时间", required = true)
     val timetaken: Double,
     @ApiModelProperty("数据集合", required = false)
-    val list: List<Map<String, String>>?,
+    val list: List<Map<String, String?>>?,
     @JsonProperty("select_fields_order")
     @ApiModelProperty("查询字段集合", required = true)
     val selectFieldsOrder: List<String>

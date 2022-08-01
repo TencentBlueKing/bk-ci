@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import java.time.LocalDateTime
 
 /**
  * 最后一次运行中的构建信息
@@ -40,6 +41,7 @@ data class LatestRunningBuild(
     val userId: String, // 最后一次运行中的构建信息
     val status: BuildStatus = BuildStatus.RUNNING,
     val taskCount: Int = 0,
+    val endTime: LocalDateTime? = null,
     val currentTaskId: String? = null,
     val currentTaskName: String? = null
 )

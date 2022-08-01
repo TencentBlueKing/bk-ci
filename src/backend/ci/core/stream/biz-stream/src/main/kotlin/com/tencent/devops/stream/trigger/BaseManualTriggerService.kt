@@ -51,6 +51,7 @@ import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.service.StreamEventService
+import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -76,9 +77,10 @@ abstract class BaseManualTriggerService @Autowired constructor(
     open fun triggerBuild(userId: String, pipelineId: String, triggerBuildReq: TriggerBuildReq): TriggerBuildResult {
         logger.info("Trigger build, userId: $userId, pipeline: $pipelineId, triggerBuildReq: $triggerBuildReq")
 
-        val streamTriggerSetting = streamBasicSettingDao.getSettingByProjectCode(
+        val streamTriggerSetting = streamBasicSettingDao.getSetting(
             dslContext = dslContext,
-            projectCode = triggerBuildReq.projectId
+            gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId),
+            hasLastInfo = false
         )?.let {
             StreamTriggerSetting(
                 enableCi = it.enableCi,
@@ -91,7 +93,7 @@ abstract class BaseManualTriggerService @Autowired constructor(
                 enableMrBlock = it.enableMrBlock,
                 name = it.name,
                 enableMrComment = it.enableMrComment,
-                homepage = it.homePage
+                homepage = it.homepage
             )
         } ?: throw CustomException(Response.Status.FORBIDDEN, message = TriggerReason.CI_DISABLED.detail)
 
