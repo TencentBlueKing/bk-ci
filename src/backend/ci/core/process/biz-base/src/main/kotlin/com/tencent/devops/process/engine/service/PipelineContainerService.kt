@@ -40,14 +40,11 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
-import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.MatrixBuildContext
 import com.tencent.devops.process.engine.context.StartBuildContext
@@ -103,17 +100,13 @@ class PipelineContainerService @Autowired constructor(
         containerId: String
     ): PipelineBuildContainer? {
         // #4518 防止出错暂时保留两个字段的兼容查询
-        val result = pipelineBuildContainerDao.getByContainerId(
+        return pipelineBuildContainerDao.getByContainerId(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
             stageId = stageId,
             containerId = containerId
         )
-        if (result != null) {
-            return pipelineBuildContainerDao.convert(result)
-        }
-        return null
     }
 
     fun listContainers(
@@ -123,7 +116,7 @@ class PipelineContainerService @Autowired constructor(
         containsMatrix: Boolean? = true,
         statusSet: Set<BuildStatus>? = null
     ): List<PipelineBuildContainer> {
-        val list = pipelineBuildContainerDao.listByBuildId(
+        return pipelineBuildContainerDao.listByBuildId(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
@@ -131,13 +124,6 @@ class PipelineContainerService @Autowired constructor(
             containsMatrix = containsMatrix,
             statusSet = statusSet
         )
-        val result = mutableListOf<PipelineBuildContainer>()
-        if (list.isNotEmpty()) {
-            list.forEach {
-                result.add(pipelineBuildContainerDao.convert(it)!!)
-            }
-        }
-        return result
     }
 
     fun countStageContainers(
@@ -161,26 +147,15 @@ class PipelineContainerService @Autowired constructor(
         buildId: String,
         matrixGroupId: String
     ): List<PipelineBuildContainer> {
-        val list = pipelineBuildContainerDao.listByMatrixGroupId(
+        return pipelineBuildContainerDao.listByMatrixGroupId(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
             matrixGroupId = matrixGroupId
         )
-        val result = mutableListOf<PipelineBuildContainer>()
-        if (list.isNotEmpty()) {
-            list.forEach {
-                result.add(pipelineBuildContainerDao.convert(it)!!)
-            }
-        }
-        return result
     }
 
-    fun listByBuildId(
-        projectId: String,
-        buildId: String,
-        stageId: String? = null
-    ): Collection<TPipelineBuildContainerRecord> {
+    fun listByBuildId(projectId: String, buildId: String, stageId: String? = null): List<PipelineBuildContainer> {
         return pipelineBuildContainerDao.listByBuildId(dslContext, projectId, buildId, stageId)
     }
 
@@ -188,7 +163,7 @@ class PipelineContainerService @Autowired constructor(
         return pipelineBuildContainerDao.batchSave(transactionContext ?: dslContext, containerList)
     }
 
-    fun batchUpdate(transactionContext: DSLContext?, containerList: List<TPipelineBuildContainerRecord>) {
+    fun batchUpdate(transactionContext: DSLContext?, containerList: List<PipelineBuildContainer>) {
         return pipelineBuildContainerDao.batchUpdate(transactionContext ?: dslContext, containerList)
     }
 
@@ -258,7 +233,7 @@ class PipelineContainerService @Autowired constructor(
         buildId: String,
         matrixGroupId: String
     ) {
-        val groupContainers = pipelineBuildContainerDao.listBuildContainerInMatrixGroup(
+        val groupContainers = pipelineBuildContainerDao.listBuildContainerIdsInMatrixGroup(
             dslContext = transactionContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -267,13 +242,13 @@ class PipelineContainerService @Autowired constructor(
         )
         logger.info("[$buildId]|cleanContainersInMatrixGroup|groupContainers=$groupContainers")
         var taskCount = 0
-        groupContainers.forEach {
+        groupContainers.forEach { containerId ->
             taskCount += pipelineTaskService.deleteTasksByContainerSeqId(
                 dslContext = transactionContext ?: dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                containerId = it.containerId
+                containerId = containerId
             )
         }
         val containerCount = pipelineBuildContainerDao.deleteBuildContainerInMatrixGroup(
@@ -377,10 +352,10 @@ class PipelineContainerService @Autowired constructor(
         context: StartBuildContext,
         buildTaskList: MutableList<PipelineBuildTask>,
         buildContainers: MutableList<PipelineBuildContainer>,
-        updateTaskExistsRecord: MutableList<TPipelineBuildTaskRecord>,
-        updateContainerExistsRecord: MutableList<TPipelineBuildContainerRecord>,
-        lastTimeBuildContainerRecords: Collection<TPipelineBuildContainerRecord>,
-        lastTimeBuildTaskRecords: Collection<TPipelineBuildTaskRecord>
+        updateTaskExistsRecord: MutableList<PipelineBuildTask>,
+        updateContainerExistsRecord: MutableList<PipelineBuildContainer>,
+        lastTimeBuildContainerRecords: Collection<PipelineBuildContainer>,
+        lastTimeBuildTaskRecords: Collection<PipelineBuildTask>
     ) {
         var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
         var needStartVM = false // 是否需要启动构建
@@ -441,7 +416,7 @@ class PipelineContainerService @Autowired constructor(
                     // 插件任务在历史中找不到，则跳过当前插件
                     // 如果插件任务之前已经是完成状态，则跳过当前插件
                     try {
-                        if (target == null || BuildStatus.values()[target.status].isFinish()) {
+                        if (target == null || target.status.isFinish()) {
                             return@nextElement
                         }
                     } catch (ignored: Exception) { // 如果存在异常的ordinal
@@ -510,7 +485,7 @@ class PipelineContainerService @Autowired constructor(
                     lastTimeBuildContainerRecords.forEach { dbRecord ->
                         if (dbRecord.containerId == container.id) { // #958 在Element.initStatus 位置确认重试插件
                             dbRecord.run {
-                                status = BuildStatus.QUEUE.ordinal
+                                status = BuildStatus.QUEUE
                                 startTime = null
                                 endTime = null
                                 executeCount = context.executeCount
@@ -565,11 +540,11 @@ class PipelineContainerService @Autowired constructor(
     }
 
     fun findTaskRecord(
-        lastTimeBuildTaskRecords: Collection<TPipelineBuildTaskRecord>,
+        lastTimeBuildTaskRecords: Collection<PipelineBuildTask>,
         container: Container,
         retryStartTaskId: String?
-    ): TPipelineBuildTaskRecord? {
-        var target: TPipelineBuildTaskRecord? = null
+    ): PipelineBuildTask? {
+        var target: PipelineBuildTask? = null
         run findOutRetryTask@{
             lastTimeBuildTaskRecords.forEach {
                 if (it.containerId == container.id && retryStartTaskId == it.taskId) {
@@ -591,8 +566,8 @@ class PipelineContainerService @Autowired constructor(
         container: Container,
         containerSeq: Int,
         startVMTaskSeq: Int,
-        lastTimeBuildTaskRecords: Collection<TPipelineBuildTaskRecord>,
-        updateExistsRecord: MutableList<TPipelineBuildTaskRecord>,
+        lastTimeBuildTaskRecords: Collection<PipelineBuildTask>,
+        updateExistsRecord: MutableList<PipelineBuildTask>,
         buildTaskList: MutableList<PipelineBuildTask>,
         executeCount: Int
     ) {
@@ -678,14 +653,14 @@ class PipelineContainerService @Autowired constructor(
      * @param initialStatus 插件在重试时的初始状态，默认是QUEUE，也可以指定
      */
     private fun retryDetailModelStatus(
-        lastTimeBuildTaskRecords: Collection<TPipelineBuildTaskRecord>,
+        lastTimeBuildTaskRecords: Collection<PipelineBuildTask>,
         container: Container,
         retryStartTaskId: String,
         executeCount: Int,
         atomElement: Element? = null,
         initialStatus: BuildStatus? = null
-    ): TPipelineBuildTaskRecord? {
-        val target: TPipelineBuildTaskRecord? = findTaskRecord(
+    ): PipelineBuildTask? {
+        val target: PipelineBuildTask? = findTaskRecord(
             lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
             container = container,
             retryStartTaskId = retryStartTaskId
@@ -703,7 +678,7 @@ class PipelineContainerService @Autowired constructor(
     }
 
     private fun setRetryBuildTask(
-        target: TPipelineBuildTaskRecord,
+        target: PipelineBuildTask,
         executeCount: Int,
         atomElement: Element?,
         initialStatus: BuildStatus? = null
@@ -711,8 +686,8 @@ class PipelineContainerService @Autowired constructor(
         target.startTime = null
         target.endTime = null
         target.executeCount = executeCount
-        target.status = initialStatus?.ordinal ?: BuildStatus.QUEUE.ordinal // 如未指定状态，则默认进入排队状态
-        if (target.status != BuildStatus.SKIP.ordinal) { // 排队要准备执行，要清除掉上次失败状态
+        target.status = initialStatus ?: BuildStatus.QUEUE // 如未指定状态，则默认进入排队状态
+        if (target.status != BuildStatus.SKIP) { // 排队要准备执行，要清除掉上次失败状态
             target.errorMsg = null
             target.errorCode = null
             target.errorType = null
@@ -726,7 +701,7 @@ class PipelineContainerService @Autowired constructor(
                 atomElement.additionalOptions =
                     atomElement.additionalOptions?.copy(manualSkip = false, manualRetry = false)
             }
-            atomElement.executeCount = target.executeCount
+            atomElement.executeCount = executeCount
             atomElement.elapsed = null
             atomElement.startEpoch = null
             atomElement.canRetry = false
@@ -734,19 +709,18 @@ class PipelineContainerService @Autowired constructor(
             if (originVersion.contains("*")) {
                 atomElement.version = originVersion
             }
-            target.taskParams = JsonUtil.toJson(atomElement.genTaskParams(), formatted = false) // 更新参数
+            target.taskParams = atomElement.genTaskParams() // 更新参数
         }
     }
 
     private fun findPostTask(
-        lastTimeBuildTaskRecords: Collection<TPipelineBuildTaskRecord>,
+        lastTimeBuildTaskRecords: Collection<PipelineBuildTask>,
         atomElement: Element,
         containerElements: List<Element>
-    ): Pair<TPipelineBuildTaskRecord, Element>? {
+    ): Pair<PipelineBuildTask, Element>? {
         lastTimeBuildTaskRecords.forEach { buildTaskRecord ->
-            val additionalOptionsStr = buildTaskRecord.additionalOptions
-            if (!additionalOptionsStr.isNullOrBlank() && additionalOptionsStr != "null") {
-                val additionalOptions = JsonUtil.to(additionalOptionsStr, ElementAdditionalOptions::class.java)
+            val additionalOptions = buildTaskRecord.additionalOptions
+            if (additionalOptions != null) {
                 val elementPostInfo = additionalOptions.elementPostInfo
                 if (elementPostInfo != null && elementPostInfo.parentElementId == atomElement.id) {
                     containerElements.forEach { element ->
