@@ -172,7 +172,6 @@ interface ServiceBuildResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam("流水线参数", required = false)
-        @QueryParam("buildFormProperty")
         buildFormProperty: BuildFormProperty
     ): Result<List<BuildFormValue>>
 
