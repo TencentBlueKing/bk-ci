@@ -24,7 +24,6 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package com.tencent.devops.experience.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -317,7 +316,8 @@ class GroupService @Autowired constructor(
         val experienceIds = mutableSetOf<Long>()
         val groupIds = mutableSetOf<Long>()
         groupIds.add(groupId)
-        experienceIds.addAll(experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds).map { it.value1() }.toSet())
+        experienceIds.addAll(experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds)
+                .map { it.value1() }.toSet())
         experienceIds.forEach { experienceId ->
             // todo 是否需要判断体验是否过期？
             val experienceRecord = experienceDao.get(dslContext, experienceId)
