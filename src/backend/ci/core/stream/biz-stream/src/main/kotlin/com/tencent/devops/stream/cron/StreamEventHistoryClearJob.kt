@@ -149,7 +149,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
                 }
             }
         } catch (t: Throwable) {
-            logger.warn("streamEventHistoryClear failed", t)
+            logger.warn("StreamEventHistoryClearJob|streamEventHistoryClear|failed", t)
         } finally {
             lock.unlock()
         }
@@ -216,7 +216,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
                         isDistinguishCluster = true
                     )
                 } catch (ignore: Exception) {
-                    logger.warn("streamEventHistoryClear doClearBus failed", ignore)
+                    logger.warn("StreamEventHistoryClearJob|streamEventHistoryClear|doClearBus|failed", ignore)
                 } finally {
                     // 释放redis集合中的线程编号
                     redisOperation.sremove(

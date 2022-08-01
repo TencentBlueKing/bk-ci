@@ -148,7 +148,10 @@ class StreamTriggerRequestRepoService @Autowired constructor(
                     getProjectInfo = action.api::getGitProjectInfo
                 )
             } catch (error: ErrorCodeException) {
-                logger.warn("project[${pipeline.gitProjectId}] may be deleted, repo trigger error")
+                logger.warn(
+                    "StreamTriggerRequestRepoService|triggerPerPipeline" +
+                        "|may be deleted, repo trigger error|project[${pipeline.gitProjectId}]"
+                )
                 return false
             }
 

@@ -135,7 +135,10 @@ abstract class BaseManualTriggerService @Autowired constructor(
         val originYaml = triggerBuildReq.yaml
         // 如果当前文件没有内容直接不触发
         if (originYaml.isNullOrBlank()) {
-            logger.warn("Matcher is false, event: ${action.data.context.requestEventId} yaml is null")
+            logger.warn(
+                "BaseManualTriggerService|triggerBuild" +
+                    "|yaml is null|event|${action.data.context.requestEventId}"
+            )
             streamEventService.saveBuildNotBuildEvent(
                 action = action,
                 reason = TriggerReason.CI_YAML_CONTENT_NULL.name,

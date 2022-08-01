@@ -104,7 +104,10 @@ class ScheduleTriggerService @Autowired constructor(
             )
         }
         if (streamTriggerSetting == null || !streamTriggerSetting.enableCi) {
-            logger.warn("project ${streamTimerEvent.projectId} not enable ci no trigger schedule")
+            logger.warn(
+                "ScheduleTriggerService|triggerBuild" +
+                    "|not enable ci no trigger schedule|project|${streamTimerEvent.projectId}"
+            )
             return null
         }
 

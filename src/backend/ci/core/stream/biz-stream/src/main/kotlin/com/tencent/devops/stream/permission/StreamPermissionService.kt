@@ -84,7 +84,7 @@ class StreamPermissionService @Autowired constructor(
             resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
         ).data ?: false
         if (!result) {
-            logger.warn("$projectId $userId checkWebPermission fail")
+            logger.warn("StreamPermissionService|checkWebPermission|fail|projectId|$projectId|userId|$userId")
         }
         return result
     }

@@ -85,7 +85,10 @@ class StreamTriggerRequestService @Autowired constructor(
         val eventObject = try {
             objectMapper.readValue<GitEvent>(event)
         } catch (ignore: Exception) {
-            logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
+            logger.warn(
+                "StreamTriggerRequestService|externalCodeGitBuild" +
+                    "|Fail to parse the git web hook commit event|errMsg|${ignore.message}"
+            )
             return false
         }
 
@@ -98,7 +101,7 @@ class StreamTriggerRequestService @Autowired constructor(
         // 加载不同源的action
         val action = actionFactory.load(eventObject)
         if (action == null) {
-            logger.warn("request event not support: $event")
+            logger.warn("StreamTriggerRequestService|start|request event not support|$event")
             return false
         }
 

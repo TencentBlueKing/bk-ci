@@ -73,7 +73,7 @@ class StreamTimerBuildListener @Autowired constructor(
                     hasLastInfo = false
                 )
                 if (record == null) {
-                    logger.warn("[$pipelineId]|git config not exist")
+                    logger.warn("StreamTimerBuildListener|run|git config not exist|pipelineiId|$pipelineId")
                     return
                 }
 
