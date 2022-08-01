@@ -93,4 +93,9 @@ class QualityDailyReportJob @Autowired constructor(
             logger.info("finish to send quality daily data.")
         }
     }
+
+    @Scheduled(cron = "0 0/30 * * * ?")
+    fun test() {
+        logger.info("reportEnable: $reportEnable, cluster: $clusterName")
+    }
 }
