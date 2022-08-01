@@ -62,7 +62,8 @@
             },
             {
               "id": "true",
-              "name": "true"
+              "name": "true",
+              "description": "第三个"
             }
           ],
           "optionsConf": {

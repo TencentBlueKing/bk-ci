@@ -45,7 +45,7 @@ internal class StreamYamlBuildTest {
             "test" to Variable(value = "123")
         )
         val testData = mapOf("string" to "456")
-        val resultData = listOf(BuildParameters("variables.string","456",BuildFormPropertyType.STRING))
+        val resultData = listOf(BuildParameters("variables.string", "456", BuildFormPropertyType.STRING))
         Assertions.assertEquals(resultData, StreamYamlBuild.getInputParams(originData, testData))
     }
 
