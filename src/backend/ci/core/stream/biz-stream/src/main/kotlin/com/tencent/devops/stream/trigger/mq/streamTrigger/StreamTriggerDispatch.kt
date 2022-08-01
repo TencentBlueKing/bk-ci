@@ -41,7 +41,7 @@ object StreamTriggerDispatch {
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
         } catch (e: Throwable) {
-            logger.error("Fail to dispatch the event($event)", e)
+            logger.error("BKSystemErrorMonitor|StreamTriggerDispatch|$event|error=${e.message}", e)
         }
     }
 
