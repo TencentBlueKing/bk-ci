@@ -454,7 +454,6 @@ interface ApigwBuildResourceV4 {
         @QueryParam("pipelineId")
         pipelineId: String,
         @ApiParam("请求参数", required = true)
-        @QueryParam("property")
         property: BuildFormProperty
     ): Result<List<BuildFormValue>>
 }
