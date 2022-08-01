@@ -47,6 +47,10 @@ scm:
       appUrl: https://github.com/apps/__BK_CI_REPOSITORY_GITHUB_APP__
       signSecret: __BK_CI_REPOSITORY_GITHUB_SIGN_SECRET__
       apiUrl: https://api.github.com
+      serverUrl: https://github.com
+      appId: __BK_CI_REPOSITORY_GITHUB_APPID__
+      privateKey: __BK_CI_REPOSITORY_GITHUB_PRIVATEKEY__
+      appName: __BK_CI_REPOSITORY_GITHUB_APPNAME__
     tGit:
       apiUrl: https://git.tencent.com/api/v3
       tGitHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/codetgit/commit
