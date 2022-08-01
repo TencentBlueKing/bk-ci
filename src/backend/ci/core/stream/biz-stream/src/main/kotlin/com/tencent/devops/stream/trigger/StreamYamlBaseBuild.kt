@@ -34,6 +34,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEv
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.api.service.ServicePipelineBuildCommitResource
@@ -240,7 +241,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         yamlTransferData: YamlTransferData? = null,
         updateLastModifyUser: Boolean,
         modelParameters: ModelParametersData,
-        manualValues: Map<String, String>
+        manualValues: List<BuildParameters>?
     ): BuildId? {
         logger.info("|${action.data.context.requestEventId}|startBuild|action|${action.format()}")
 
@@ -278,7 +279,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                 projectId = action.getProjectCode(),
                 pipelineId = pipeline.pipelineId,
                 params = WebhookTriggerParams(
-                    params = pipelineParams.also { it.putAll(manualValues) },
+                    params = pipelineParams,
+                    userParams = manualValues,
                     startValues = mutableMapOf(PIPELINE_NAME to pipeline.displayName)
                 ),
                 channelCode = channelCode,

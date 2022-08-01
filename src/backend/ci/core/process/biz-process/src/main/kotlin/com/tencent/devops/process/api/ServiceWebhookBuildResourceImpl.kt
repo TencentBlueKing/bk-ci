@@ -30,7 +30,8 @@ class ServiceWebhookBuildResourceImpl @Autowired constructor(
             parameters = params.params,
             checkPermission = ChannelCode.isNeedAuth(channelCode),
             startType = startType,
-            startValues = params.startValues
+            startValues = params.startValues,
+            userParameters = params.userParams
         )
 
         return Result(buildId)

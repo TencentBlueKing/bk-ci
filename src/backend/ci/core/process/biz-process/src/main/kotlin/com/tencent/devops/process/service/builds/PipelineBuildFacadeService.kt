@@ -628,7 +628,8 @@ class PipelineBuildFacadeService(
         parameters: Map<String, Any> = emptyMap(),
         checkPermission: Boolean = true,
         startType: StartType = StartType.WEB_HOOK,
-        startValues: Map<String, String>? = null
+        startValues: Map<String, String>? = null,
+        userParameters: List<BuildParameters>? = null
     ): String? {
 
         if (checkPermission) {
@@ -656,6 +657,12 @@ class PipelineBuildFacadeService(
             parameters.forEach { (key, value) ->
                 pipelineParamMap[key] = BuildParameters(key, value)
             }
+
+            // 添加用户自定义参数
+            userParameters?.forEach { param ->
+                pipelineParamMap[param.key] = param
+            }
+
             triggerContainer.params.forEach {
                 if (pipelineParamMap.contains(it.id)) {
                     return@forEach

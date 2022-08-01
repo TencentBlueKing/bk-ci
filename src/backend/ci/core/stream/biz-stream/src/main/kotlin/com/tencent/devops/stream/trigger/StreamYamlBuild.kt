@@ -31,7 +31,9 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
@@ -97,12 +99,12 @@ class StreamYamlBuild @Autowired constructor(
         fun getInputParams(
             userVariables: Map<String, Variable>?,
             inputsData: Map<String, String>?
-        ): Map<String, String> {
+        ): List<BuildParameters>? {
             if (userVariables.isNullOrEmpty() || inputsData.isNullOrEmpty()) {
-                return emptyMap()
+                return null
             }
 
-            val result = mutableMapOf<String, String>()
+            val result = mutableListOf<BuildParameters>()
             userVariables.forEach manualEach@{ (key, value) ->
                 if (!inputsData.containsKey(key)) {
                     return@manualEach
@@ -120,10 +122,17 @@ class StreamYamlBuild @Autowired constructor(
                     ModelParameters.VARIABLE_PREFIX.plus(key)
                 }
 
-                result[realKey] = inputsData[key]!!
+                result.add(
+                    BuildParameters(
+                        key = realKey,
+                        value = inputsData[key]!!,
+                        valueType = BuildFormPropertyType.STRING,
+                        readOnly = value.readonly
+                    )
+                )
             }
 
-            return result
+            return result.ifEmpty { null }
         }
     }
 
