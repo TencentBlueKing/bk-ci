@@ -43,8 +43,5 @@ data class GithubProperties(
     val redirectUrl: String = "",
     val appId: String = "",
     val privateKey: String = "",
-    // 组织安装github app url
-    val orgAppUrl: String = "",
-    // 仓库安装github app url
-    val repoAppUrl: String = ""
+    val appName: String = ""
 )

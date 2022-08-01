@@ -48,9 +48,18 @@ class ServiceGithubAppResourceImpl @Autowired constructor(
                 request = GetAppInstallationForOrgRequest(org = githubRepo.owner.login)
             )
             if (orgInstallInfo == null) {
-                AppInstallationResult(false, String.format(githubProperties.orgAppUrl, githubRepo.owner.id))
+                AppInstallationResult(
+                    false,
+                    "${githubProperties.serverUrl}/apps/${githubProperties.appName}/installations" +
+                        "/new/permissions?target_id=${githubRepo.owner.id}"
+                )
             } else {
-                AppInstallationResult(false, String.format(githubProperties.repoAppUrl, orgInstallInfo.id))
+
+                AppInstallationResult(
+                    false,
+                    "${githubProperties.serverUrl}/organizations/${githubProperties.appName}/" +
+                        "settings/installations/${orgInstallInfo.id}"
+                )
             }
         } else {
             AppInstallationResult(true)
