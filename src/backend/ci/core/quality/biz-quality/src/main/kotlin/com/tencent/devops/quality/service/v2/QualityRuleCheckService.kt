@@ -413,7 +413,7 @@ class QualityRuleCheckService @Autowired constructor(
                             )
                         }
                     } catch (ignored: Throwable) {
-                        logger.error("send notification fail", ignored)
+                        logger.error("QUALITY|checkPostHandle|send notification fail|$buildId|error=${ignored.message}")
                     }
                 }
                 countService.countIntercept(projectId, pipelineId, ruleId, interceptResult)
