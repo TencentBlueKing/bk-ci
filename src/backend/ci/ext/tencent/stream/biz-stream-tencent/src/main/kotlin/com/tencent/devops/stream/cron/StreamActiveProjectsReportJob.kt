@@ -116,7 +116,10 @@ class StreamActiveProjectsReportJob @Autowired constructor(
         startTime: Long
     ) {
         if (null == streamSlaConfig.oteamUrl) {
-            logger.warn("null oteamUrl , can not oteam status , targetId: $targetId , data: $data")
+            logger.warn(
+                "StreamActiveProjectsReportJob|oteamStatus" +
+                    "|null oteamUrl , can not oteam status , targetId: $targetId , data: $data"
+            )
             return
         }
         try {

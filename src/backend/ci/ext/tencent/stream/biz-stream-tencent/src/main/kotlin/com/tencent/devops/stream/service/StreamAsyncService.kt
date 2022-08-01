@@ -78,7 +78,7 @@ class StreamAsyncService @Autowired constructor(
         val token = try {
             scmService.getToken(gitProjectId.toString())
         } catch (e: Throwable) {
-            logger.warn("checkBranch $gitProjectId get token error ${e.message}")
+            logger.warn("StreamAsyncService|checkBranch|get token error|gitProjectId|$gitProjectId|error| ${e.message}")
             return
         }.accessToken
 
@@ -92,7 +92,7 @@ class StreamAsyncService @Autowired constructor(
                     pageSize = 100
                 )
             } catch (e: Throwable) {
-                logger.warn("checkBranch gitBranches $gitProjectId get branches error ${e.message}")
+                logger.warn("StreamAsyncService|checkBranch|get branches error|projectId|$gitProjectId |${e.message}")
                 return
             }?.toSet()
             if (gitBranches.isNullOrEmpty() && page == 1) {

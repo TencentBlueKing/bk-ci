@@ -192,8 +192,8 @@ abstract class V1YamlBaseBuild<T> @Autowired constructor(
             return BuildId(buildId)
         } catch (e: Exception) {
             logger.warn(
-                "GitCI Build failed, gitProjectId[${gitProjectConf.gitProjectId}], " +
-                    "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
+                "V1YamlBaseBuild|startBuild|GitCI Build failed|gitProjectId|${gitProjectConf.gitProjectId}|" +
+                    "pipelineId|${pipeline.pipelineId}|gitBuildId|$gitBuildId",
                 e
             )
             val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)

@@ -104,7 +104,10 @@ class TXStreamTriggerRequestService @Autowired constructor(
         val eventObject = try {
             objectMapper.readValue<GitEvent>(event)
         } catch (ignore: Exception) {
-            logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
+            logger.warn(
+                "TXStreamTriggerRequestService|externalCodeGitBuild" +
+                    "|Fail to parse the git web hook commit event, errMsg: ${ignore.message}"
+            )
             return false
         }
 

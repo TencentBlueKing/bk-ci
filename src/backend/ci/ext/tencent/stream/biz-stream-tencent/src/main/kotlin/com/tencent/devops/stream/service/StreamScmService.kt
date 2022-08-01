@@ -234,7 +234,7 @@ class StreamScmService @Autowired constructor(
             return result.data
         } catch (e: RemoteServiceException) {
             logger.warn(
-                "getProjectInfo RemoteServiceException|" +
+                "StreamScmService|getProjectInfo|RemoteServiceException|" +
                     "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
             )
             when (e.httpStatus) {
@@ -267,7 +267,7 @@ class StreamScmService @Autowired constructor(
             }
             throw e
         } catch (e: Exception) {
-            logger.warn("getProjectInfo Exception: $e")
+            logger.warn("StreamScmService|getProjectInfo|Exception", e)
             error(" getProjectInfo error ${e.message}", ErrorCodeEnum.GET_PROJECT_INFO_ERROR)
         }
         return null
@@ -328,7 +328,7 @@ class StreamScmService @Autowired constructor(
             ).data!!
         } catch (e: RemoteServiceException) {
             logger.warn(
-                "createNewFile RemoteServiceException|" +
+                "StreamScmService|createNewFile|RemoteServiceException|" +
                     "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
             )
             if (GitCodeApiStatus.getStatus(e.httpStatus) != null) {
@@ -352,7 +352,7 @@ class StreamScmService @Autowired constructor(
             }
             throw e
         } catch (e: Exception) {
-            logger.warn("createNewFile Exception: $e")
+            logger.warn("StreamScmService|createNewFile|Exception", e)
             error(" createNewFile error ${e.message}", ErrorCodeEnum.CREATE_NEW_FILE_ERROR)
         }
         return false
@@ -830,20 +830,20 @@ class StreamScmService @Autowired constructor(
                 action()
             }
         } catch (e: ClientException) {
-            logger.warn("retry 5 times $log: ${e.message} ")
+            logger.warn("StreamScmService|retryFun|retry 5 times $log: ${e.message} ")
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
                 defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
             )
         } catch (e: RemoteServiceException) {
-            logger.warn("GIT_API_ERROR $log: ${e.message} ")
+            logger.warn("StreamScmService|retryFun|GIT_API_ERROR $log: ${e.message} ")
             throw ErrorCodeException(
                 statusCode = e.httpStatus,
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = "$log: ${e.errorMessage}"
             )
         } catch (e: CustomException) {
-            logger.warn("GIT_SCM_ERROR $log: ${e.message} ")
+            logger.warn("StreamScmService|retryFun|GIT_SCM_ERROR $log: ${e.message} ")
             throw ErrorCodeException(
                 statusCode = e.status.statusCode,
                 errorCode = apiErrorCode.errorCode.toString(),
@@ -864,7 +864,7 @@ class StreamScmService @Autowired constructor(
 
     // 返回给前端错误码异常
     private fun error(logMessage: String, errorCode: ErrorCodeEnum, exceptionMessage: String? = null) {
-        logger.warn(logMessage)
+        logger.warn("StreamScmService|error|$logMessage")
         throw ErrorCodeException(
             statusCode = 200,
             errorCode = errorCode.errorCode.toString(),

@@ -78,7 +78,7 @@ class TXStreamYamlService @Autowired constructor(
 
                     Result("OK")
                 } catch (e: Throwable) {
-                    logger.warn("Check yaml failed, error: ${e.message}, yaml: $yaml")
+                    logger.warn("TXStreamYamlService|checkYaml|error|${e.message}|yaml|$yaml")
                     Result(1, "Invalid yaml", e.message)
                 }
             }
@@ -87,7 +87,7 @@ class TXStreamYamlService @Autowired constructor(
                     yamlSchemaCheck.check(yaml.yaml, null, true)
                     Result("OK")
                 } catch (e: Exception) {
-                    logger.warn("Check yaml schema failed.", e)
+                    logger.warn("TXStreamYamlService|checkYaml|failed", e)
                     Result(1, "Invalid yaml: ${e.message}")
                 }
             }

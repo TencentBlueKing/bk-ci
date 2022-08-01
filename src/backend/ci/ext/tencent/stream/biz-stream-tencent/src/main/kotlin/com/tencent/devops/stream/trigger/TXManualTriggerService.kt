@@ -324,7 +324,7 @@ class TXManualTriggerService @Autowired constructor(
         val yamlObject = try {
             streamYamlService.createCIBuildYaml(originYaml, gitRequestEvent.gitProjectId)
         } catch (e: Throwable) {
-            logger.warn("v1 git ci yaml is invalid", e)
+            logger.warn("TXManualTriggerService|prepareCIBuildYaml|v1 git ci yaml is invalid", e)
             // 手动触发不发送commitCheck
             gitCIEventService.saveBuildNotBuildEvent(
                 userId = gitRequestEvent.userId,
