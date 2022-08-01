@@ -110,7 +110,7 @@ abstract class V1YamlBaseBuild<T> @Autowired constructor(
                 gitPipelineResourceDao.deleteByPipelineId(dslContext, oldPipelineId)
                 processClient.delete(event.userId, gitProjectConf.projectCode!!, oldPipelineId, channelCode)
             } catch (e: Exception) {
-                logger.error("failed to delete pipeline resource gitBuildId:$gitBuildId, pipeline: $pipeline", e)
+                logger.warn("V1YamlBaseBuild|gitBuildId|$gitBuildId|pipeline|$pipeline|error", e)
             }
             // 再次新建
             pipeline.pipelineId = processClient.create(
@@ -191,7 +191,7 @@ abstract class V1YamlBaseBuild<T> @Autowired constructor(
             }
             return BuildId(buildId)
         } catch (e: Exception) {
-            logger.error(
+            logger.warn(
                 "GitCI Build failed, gitProjectId[${gitProjectConf.gitProjectId}], " +
                     "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
                 e
@@ -257,11 +257,11 @@ abstract class V1YamlBaseBuild<T> @Autowired constructor(
                 channelCode
             )
             if (response.isNotOk()) {
-                logger.error("get pipeline failed, msg: ${response.message}")
+                logger.warn("get pipeline failed, msg: ${response.message}")
                 return true
             }
         } catch (e: Exception) {
-            logger.error(
+            logger.warn(
                 "get pipeline failed, pipelineId: ${pipeline.pipelineId}, " +
                     "projectCode: ${gitProjectConf.projectCode}, error msg: ${e.message}"
             )

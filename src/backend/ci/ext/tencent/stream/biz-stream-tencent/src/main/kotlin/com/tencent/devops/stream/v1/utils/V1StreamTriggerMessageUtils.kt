@@ -51,7 +51,7 @@ class V1StreamTriggerMessageUtils @Autowired constructor(
                     val eventMap = try {
                         objectMapper.readValue<GitPushEvent>(event.event)
                     } catch (e: Exception) {
-                        logger.error("event as GitTagPushEvent error ${e.message}")
+                        logger.warn("event as GitTagPushEvent error ${e.message}")
                         null
                     }
                     if (eventMap?.create_and_update != null) {

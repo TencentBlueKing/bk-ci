@@ -84,7 +84,7 @@ class TXPreTrigger @Autowired constructor(
                 enabled = true
             )
         } catch (e: Throwable) {
-            logger.error("create from store atom error: ${e.message}")
+            logger.warn("TXPreTrigger|enableAtomCi|error=${e.message}")
         }
     }
 

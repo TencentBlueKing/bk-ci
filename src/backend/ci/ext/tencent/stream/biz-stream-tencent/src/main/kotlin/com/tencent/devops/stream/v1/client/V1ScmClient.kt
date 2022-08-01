@@ -91,7 +91,7 @@ class V1ScmClient @Autowired constructor(
         logger.info("user $userId buildId $buildId pushCommitCheck: $request")
         client.getScm(ServiceGitResource::class).addCommitCheck(request)
     } catch (e: Exception) {
-        logger.error("user $userId buildId $buildId pushCommitCheck error.", e)
+        logger.warn("user $userId buildId $buildId pushCommitCheck error.", e)
     }
 
     // 用来进行锁定提交的CommitCheck，无回填信息
@@ -137,7 +137,7 @@ class V1ScmClient @Autowired constructor(
         logger.info("user $userId pushCommitCheckWithBlock: $request")
         client.getScm(ServiceGitResource::class).addCommitCheck(request)
     } catch (e: Exception) {
-        logger.error("user $userId pushCommitCheckWithBlock error.", e)
+        logger.warn("user $userId pushCommitCheckWithBlock error.", e)
     }
 
     fun getAccessToken(gitProjectId: Long): Pair<String, String?> {
