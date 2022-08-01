@@ -70,9 +70,9 @@ import com.tencent.devops.stream.trigger.service.GitCheckService
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.util.StreamCommonUtils
-import java.util.Date
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import java.util.Date
 
 @Suppress("ALL")
 class TGitPushActionGit(

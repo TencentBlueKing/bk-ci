@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
@@ -69,6 +70,7 @@ import com.tencent.devops.stream.trigger.pojo.StreamBuildLock
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerLock
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.StreamEventService
+import com.tencent.devops.stream.util.StreamCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -108,6 +110,8 @@ class StreamYamlBaseBuild @Autowired constructor(
         modelAndSetting: PipelineModelAndSetting,
         updateLastModifyUser: Boolean
     ) {
+        // 计算model的md值，缓存逻辑使用
+        val md5 = StreamCommonUtils.getMD5(JsonUtil.toJson(modelAndSetting.model))
         val processClient = client.get(ServicePipelineResource::class)
         if (pipeline.pipelineId.isBlank()) {
             // 直接新建
@@ -123,7 +127,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                 dslContext = dslContext,
                 gitProjectId = gitProjectId,
                 pipeline = pipeline.toGitPipeline(),
-                version = ymlVersion
+                version = ymlVersion,
+                md5 = md5
             )
             websocketService.pushPipelineWebSocket(
                 projectId = projectCode,
@@ -131,24 +136,39 @@ class StreamYamlBaseBuild @Autowired constructor(
                 userId = userId
             )
         } else {
-            // 编辑流水线model
-            processClient.edit(
-                userId = userId,
-                projectId = projectCode,
-                pipelineId = pipeline.pipelineId,
-                pipeline = modelAndSetting.model,
-                channelCode = channelCode,
-                updateLastModifyUser = updateLastModifyUser
-            )
-            // 已有的流水线需要更新下Stream这里的状态
-            logger.info("update gitPipeline pipeline: $pipeline")
-            gitPipelineResourceDao.updatePipeline(
+            val (oldMd5, displayName, version) = gitPipelineResourceDao.getLastEditMd5ById(
                 dslContext = dslContext,
                 gitProjectId = gitProjectId,
-                pipelineId = pipeline.pipelineId,
-                displayName = pipeline.displayName,
-                version = ymlVersion
+                pipelineId = pipeline.pipelineId
             )
+
+            // md5不一致时更新蓝盾的model
+            if (oldMd5 != md5) {
+                // 编辑流水线model
+                processClient.edit(
+                    userId = userId,
+                    projectId = projectCode,
+                    pipelineId = pipeline.pipelineId,
+                    pipeline = modelAndSetting.model,
+                    channelCode = channelCode,
+                    updateLastModifyUser = updateLastModifyUser
+                )
+            } else {
+                logger.info("${pipeline.pipelineId} use md5 cache")
+            }
+
+            // 已有的流水线需要更新下Stream这里的状态
+            if (oldMd5 != md5 || displayName != pipeline.displayName || version != ymlVersion) {
+                logger.info("update gitPipeline pipeline: $pipeline")
+                gitPipelineResourceDao.updatePipeline(
+                    dslContext = dslContext,
+                    gitProjectId = gitProjectId,
+                    pipelineId = pipeline.pipelineId,
+                    displayName = pipeline.displayName,
+                    version = ymlVersion,
+                    md5 = md5
+                )
+            }
         }
         processClient.saveSetting(
             userId = userId,
