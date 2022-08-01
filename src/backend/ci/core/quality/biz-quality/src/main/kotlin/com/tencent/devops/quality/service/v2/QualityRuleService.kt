@@ -564,11 +564,11 @@ class QualityRuleService @Autowired constructor(
             else ruleDetail.indicatorIds.split(",").map { it.toLong() }
 
             // get rule indicator map
-            var indicators = listOf<QualityIndicator>()
-            try {
-                indicators = ruleIndicators.map { indicatorsMap[it]!! }
-            } catch (e: Exception) {
-                logger.error("QUALITY|get rule indicator error", e)
+            var indicators = mutableListOf<QualityIndicator>()
+            ruleIndicators.forEach {
+                if (indicatorsMap.containsKey(it)) {
+                    indicators.add(indicatorsMap[it]!!)
+                }
             }
             logger.info("serviceList rule indicator ids for project($projectId): ${indicators.map { it.enName }}")
             val indicatorOperations = ruleDetail?.indicatorOperations?.split(",") ?: listOf()
