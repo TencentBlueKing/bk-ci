@@ -30,18 +30,38 @@ package com.tencent.devops.support.resources.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.support.api.service.ServiceMessageApproveResource
+import com.tencent.devops.support.model.approval.CompleteMoaWorkItemRequest
 import com.tencent.devops.support.model.approval.CreateMoaApproveRequest
+import com.tencent.devops.support.model.approval.MoaWorkItemElement
 import com.tencent.devops.support.services.MessageApproveService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceMessageApproveResourceImpl @Autowired constructor(private val messageApproveService: MessageApproveService) : ServiceMessageApproveResource {
+class ServiceMessageApproveResourceImpl @Autowired constructor(
+    private val messageApproveService: MessageApproveService
+) :
+    ServiceMessageApproveResource {
 
     override fun moaComplete(taskId: String): Result<Boolean> {
         return messageApproveService.moaComplete(taskId)
     }
 
-    override fun createMoaMessageApproval(userId: String, createMoaApproveRequest: CreateMoaApproveRequest): Result<Boolean> {
+    override fun createMoaMessageApproval(
+        userId: String,
+        createMoaApproveRequest: CreateMoaApproveRequest
+    ): Result<Boolean> {
         return messageApproveService.createMoaMessageApproval(userId, createMoaApproveRequest)
+    }
+
+    override fun createMoaWorkItemMessageApproval(
+        moaWorkItemElementList: List<MoaWorkItemElement>
+    ): Result<Boolean> {
+        return messageApproveService.createMoaWorkItem(moaWorkItemElementList)
+    }
+
+    override fun createMoaWorkItemMessageComplete(
+        completeMoaWorkItemRequest: CompleteMoaWorkItemRequest
+    ): Result<Boolean> {
+        return messageApproveService.completeMoaWorkItem(completeMoaWorkItemRequest)
     }
 }
