@@ -28,7 +28,6 @@
 package com.tencent.devops.quality.cron
 
 import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
-import com.tencent.devops.common.service.PROFILE_AUTO
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.quality.config.QualityDailyDispatch
 import com.tencent.devops.quality.dao.HistoryDao
