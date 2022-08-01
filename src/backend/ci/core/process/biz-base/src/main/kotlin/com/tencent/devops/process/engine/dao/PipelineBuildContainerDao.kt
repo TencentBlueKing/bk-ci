@@ -156,7 +156,7 @@ class PipelineBuildContainerDao {
     ): PipelineBuildContainer? {
         return with(T_PIPELINE_BUILD_CONTAINER) {
             val query = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
-            if (stageId.isNullOrBlank()) {
+            if (!stageId.isNullOrBlank()) {
                 query.and(STAGE_ID.eq(stageId))
             }
             query.and(CONTAINER_ID.eq(containerId)).fetchAny(mapper)
