@@ -42,7 +42,7 @@ object StreamMrConflictCheckDispatcher {
                 message
             }
         } catch (e: Throwable) {
-            logger.error("Fail to dispatch the event($event)", e)
+            logger.error("BKSystemErrorMonitor|StreamMrConflictCheckDispatcher|error", e)
         }
     }
 

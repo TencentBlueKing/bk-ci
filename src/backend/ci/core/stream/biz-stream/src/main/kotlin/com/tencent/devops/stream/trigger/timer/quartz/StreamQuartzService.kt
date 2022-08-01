@@ -107,7 +107,7 @@ class StreamQuartzService @Autowired constructor(
                 jobBeanClass
             )
         } catch (ignore: Exception) {
-            logger.error("TIMER_RELOAD| add job error|pipelineId=$pipelineId|crontab=$crontab", ignore)
+            logger.warn("TIMER_RELOAD| add job error|pipelineId=$pipelineId|crontab=$crontab", ignore)
         }
     }
 
@@ -193,7 +193,7 @@ class StreamJobBean(
                 )
             } catch (ignored: Exception) {
                 logger.error(
-                    "[$comboKey]|STREAM_TIMER|scheduledFireTime=$scheduledFireTime|Dispatch event fail, e=$ignored"
+                    "BKSystemErrorMonitor|StreamQuartzService|execute|$comboKey|$scheduledFireTime|error", ignored
                 )
             }
         } else {

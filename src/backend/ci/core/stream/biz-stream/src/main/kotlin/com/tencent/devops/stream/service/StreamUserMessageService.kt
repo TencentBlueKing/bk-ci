@@ -362,7 +362,7 @@ class StreamUserMessageService @Autowired constructor(
             try {
                 objectMapper.readValue<GitEvent>(event)
             } catch (e: Exception) {
-                logger.error("get message getYamlUrl error : ${e.message}")
+                logger.warn("StreamUserMessageService|getYamlUrl|error", e)
                 return null
             }
         val homepageAndBranch = when (gitEvent) {

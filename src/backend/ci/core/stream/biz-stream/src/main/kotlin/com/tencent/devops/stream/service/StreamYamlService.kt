@@ -78,20 +78,10 @@ class StreamYamlService @Autowired constructor(
                     yamlSchemaCheck.check(yaml.yaml, null, true)
                     Result("OK")
                 } catch (e: Exception) {
-                    logger.error("Check yaml schema failed.", e)
+                    logger.warn("StreamYamlService|checkYaml|failed", e)
                     Result(1, "Invalid yaml: ${e.message}")
                 }
             }
-        }
-    }
-
-    fun checkYaml(originYaml: String, templateType: TemplateType?, isCiFile: Boolean): Result<String> {
-        return try {
-            yamlSchemaCheck.check(originYaml, templateType, isCiFile)
-            Result("OK")
-        } catch (e: Exception) {
-            logger.error("Check yaml schema failed.", e)
-            Result(1, "Invalid yaml: ${e.message}")
         }
     }
 }

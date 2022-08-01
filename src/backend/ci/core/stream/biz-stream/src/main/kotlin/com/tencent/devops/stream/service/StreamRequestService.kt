@@ -141,9 +141,9 @@ class StreamRequestService @Autowired constructor(
                             )
                         )
                     } catch (e: Exception) {
-                        logger.error(
-                            "Load gitProjectId: ${it.gitProjectId}, eventId: ${it.eventId}, pipelineId:" +
-                                " ${it.pipelineId} failed with error: ",
+                        logger.warn(
+                            "StreamRequestService|getRequestList|${it.gitProjectId}|${it.eventId}|" +
+                                "${it.pipelineId}|error",
                             e
                         )
                         return@nextBuild

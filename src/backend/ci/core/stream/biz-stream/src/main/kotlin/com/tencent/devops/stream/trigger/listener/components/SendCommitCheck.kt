@@ -81,7 +81,7 @@ class SendCommitCheck @Autowired constructor(
                 sendCommitCheckV2(action)
             }
         } catch (e: Throwable) {
-            logger.error("sendCommitCheck error: ${action.format()}")
+            logger.warn("SendCommitCheck|error=${action.format()}")
         }
     }
 

@@ -71,7 +71,7 @@ object YamlFormat {
                     throw e
                 }
                 else -> {
-                    logger.error("YamlFormat event: ${action.data.context.requestEventId} unknow error", e)
+                    logger.warn("YamlFormat|requestEventId|${action.data.context.requestEventId}|error", e)
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }

@@ -195,7 +195,7 @@ class StreamYamlBuild @Autowired constructor(
                     throw e
                 }
                 else -> {
-                    logger.error("gitStartBuild|event: ${action.data.context.requestEventId} unknow error", e)
+                    logger.warn("StreamYamlBuild|gitStartBuild|${action.data.context.requestEventId}|error", e)
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }
@@ -487,7 +487,7 @@ class StreamYamlBuild @Autowired constructor(
                     logger.info("Get envName from Resource.pools success. envName: $result")
                     return result
                 } catch (e: Exception) {
-                    logger.error("Get projectInfo from git failed, envName: $poolName. exception:", e)
+                    logger.warn("StreamYamlBuild|getEnvName|$poolName|error", e)
                     return poolName
                 }
             }

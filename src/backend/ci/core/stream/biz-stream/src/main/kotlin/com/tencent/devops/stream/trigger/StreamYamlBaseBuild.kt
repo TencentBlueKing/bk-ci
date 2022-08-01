@@ -351,9 +351,9 @@ class StreamYamlBaseBuild @Autowired constructor(
         ignore: Throwable,
         yamlTransferData: YamlTransferData?
     ) {
-        logger.error(
-            "Stream Build failed, gitProjectId[${action.data.getGitProjectId()}], " +
-                "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
+        logger.warn(
+            "StreamYamlBaseBuild|errorStartBuild|${action.data.getGitProjectId()}|" +
+                "${pipeline.pipelineId}|$gitBuildId",
             ignore
         )
         // 清除已经保存的构建记录
@@ -441,9 +441,9 @@ class StreamYamlBaseBuild @Autowired constructor(
 
             savePipelineBuildCommit(action = action, pipeline = pipeline, buildId = buildId)
         } catch (ignore: Exception) {
-            logger.error(
-                "Stream after Build failed, gitProjectId[${action.data.getGitProjectId()}], " +
-                    "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
+            logger.warn(
+                "StreamYamlBaseBuild|afterStartBuild|${action.data.getGitProjectId()}|" +
+                    "${pipeline.pipelineId}|$gitBuildId",
                 ignore
             )
         }
@@ -544,7 +544,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 )
             )
         } catch (ignore: Throwable) {
-            logger.error("save build info err", ignore)
+            logger.warn("StreamYamlBaseBuild|savePipelineBuildCommit|error", ignore)
         }
     }
 }

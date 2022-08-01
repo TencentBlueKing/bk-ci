@@ -319,7 +319,7 @@ class StreamYamlTrigger @Autowired constructor(
                     throw e
                 }
                 else -> {
-                    logger.error("prepareCIBuildYaml|event: ${action.data.context.requestEventId} unknow error", e)
+                    logger.warn("StreamYamlTrigger|prepareCIBuildYaml|${action.data.context.requestEventId}|error", e)
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }

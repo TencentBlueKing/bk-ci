@@ -489,7 +489,7 @@ class TGitApiService @Autowired constructor(
                 defaultMessage = "$log: ${e.message}"
             )
         } catch (e: Throwable) {
-            logger.error("retryFun error $log", e)
+            logger.warn("retryFun error $log", e)
             throw ErrorCodeException(
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = if (e.message.isNullOrBlank()) {

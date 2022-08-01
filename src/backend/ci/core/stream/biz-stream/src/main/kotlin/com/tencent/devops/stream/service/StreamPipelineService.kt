@@ -233,8 +233,7 @@ class StreamPipelineService @Autowired constructor(
                 .forEach { it.additionalOptions?.enable = enabled }
             val edited = saveModel(processClient, userId, gitProjectId, pipelineId, model)
             logger.info(
-                "gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled" +
-                    ", edit timerTrigger with $edited"
+                "StreamPipelineService|enablePipeline|$gitProjectId|$pipelineId|$enabled|$edited"
             )
             websocketService.pushPipelineWebSocket(gitProjectId.toString(), pipelineId, userId)
             return gitPipelineResourceDao.enablePipelineById(
@@ -243,7 +242,7 @@ class StreamPipelineService @Autowired constructor(
                 enabled = enabled
             ) == 1
         } catch (e: Exception) {
-            logger.error("gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled error ${e.message}")
+            logger.warn("StreamPipelineService|enablePipeline|error=${e.message}")
             return false
         } finally {
             lock.unlock()
@@ -490,15 +489,12 @@ class StreamPipelineService @Autowired constructor(
                 channelCode = channelCode
             )
             if (response.isNotOk()) {
-                logger.error("get pipeline failed, msg: ${response.message}")
+                logger.warn("StreamPipelineService|getModel|msg: ${response.message}")
                 return null
             }
             return response.data
         } catch (e: Exception) {
-            logger.error(
-                "get pipeline failed, pipelineId: " +
-                    "$pipelineId, projectCode: $gitProjectId, error msg: ${e.message}"
-            )
+            logger.error("BKSystemErrorMonitor|getModel|$pipelineId|$gitProjectId|error", e)
             return null
         }
     }
@@ -519,15 +515,12 @@ class StreamPipelineService @Autowired constructor(
                 channelCode = channelCode
             )
             if (response.isNotOk()) {
-                logger.error("edit pipeline failed, msg: ${response.message}")
+                logger.warn("StreamPipelineService|saveModel|msg=${response.message}")
                 return null
             }
             return response.data
         } catch (e: Exception) {
-            logger.error(
-                "edit pipeline failed, pipelineId: " +
-                    "$pipelineId, projectCode: $gitProjectId, error msg: ${e.message}"
-            )
+            logger.error("BKSystemErrorMonitor|StreamPipelineService|saveModel|error", e)
             return null
         }
     }

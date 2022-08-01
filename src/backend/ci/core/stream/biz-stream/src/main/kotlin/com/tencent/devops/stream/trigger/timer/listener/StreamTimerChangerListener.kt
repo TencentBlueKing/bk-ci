@@ -74,7 +74,7 @@ class StreamTimerChangerListener @Autowired constructor(
                 }
             }
         } catch (ignored: Throwable) {
-            logger.error("[$pipelineId]|TimerChange fail event=$event| error=${ignored.message}")
+            logger.error("BKSystemErrorMonitor|StreamTimerChangerListener|$pipelineId|error=${ignored.message}")
         }
     }
 }
