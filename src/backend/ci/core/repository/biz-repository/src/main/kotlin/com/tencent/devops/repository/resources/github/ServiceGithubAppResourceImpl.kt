@@ -57,7 +57,7 @@ class ServiceGithubAppResourceImpl @Autowired constructor(
 
                 AppInstallationResult(
                     false,
-                    "${githubProperties.serverUrl}/organizations/${githubProperties.appName}/" +
+                    "${githubProperties.serverUrl}/organizations/${githubRepo.owner.login}/" +
                         "settings/installations/${orgInstallInfo.id}"
                 )
             }
