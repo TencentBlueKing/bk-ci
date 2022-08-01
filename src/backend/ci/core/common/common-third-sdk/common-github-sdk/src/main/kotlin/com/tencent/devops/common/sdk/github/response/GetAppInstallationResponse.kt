@@ -29,9 +29,9 @@ data class GetAppInstallationResponse(
     @JsonProperty("single_file_paths")
     val singleFilePaths: List<String>,
     @JsonProperty("suspended_at")
-    val suspendedAt: Any,
+    val suspendedAt: String?,
     @JsonProperty("suspended_by")
-    val suspendedBy: Any,
+    val suspendedBy: String?,
     @JsonProperty("target_id")
     val targetId: Int,
     @JsonProperty("target_type")
