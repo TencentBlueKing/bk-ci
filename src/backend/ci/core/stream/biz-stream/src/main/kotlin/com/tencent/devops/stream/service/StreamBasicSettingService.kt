@@ -268,6 +268,13 @@ class StreamBasicSettingService @Autowired constructor(
         }
 
         if (needToUpdate) {
+            if (newProjectName.length > StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
+                newProjectName = newProjectName.substring(
+                    newProjectName.length -
+                        StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH,
+                    newProjectName.length
+                )
+            }
             try {
                 client.get(ServiceProjectResource::class).updateProjectName(
                     userId = userId,
