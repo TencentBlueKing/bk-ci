@@ -408,7 +408,7 @@ class QualityRuleService @Autowired constructor(
         // 查询rule map
         val ruleId = record.id
         val mapRecord = ruleMapDao.get(dslContext, ruleId)
-        logger.info("get rule data for ruleId($ruleId): $mapRecord")
+        logger.info("QUALITY|get rule data for ruleId($ruleId)")
 
         // 顺序遍历rule map生成每个指标实际的operation和threshold
         val indicatorIds = mapRecord.indicatorIds.split(",")
@@ -557,7 +557,7 @@ class QualityRuleService @Autowired constructor(
         val list = ruleRecordList?.map { rule ->
             // 获取所有流水线
             val ruleDetail = ruleDetailMap[rule.id]
-            logger.info("serviceList rule detail ids for project($projectId): $ruleDetail")
+            logger.info("serviceList rule detail ids for project($projectId): ${ruleDetail?.id}")
 
             val controlPoint = controlPointMap[rule.controlPoint]
             val ruleIndicators = if (ruleDetail == null || ruleDetail.indicatorIds.isNullOrBlank()) listOf()

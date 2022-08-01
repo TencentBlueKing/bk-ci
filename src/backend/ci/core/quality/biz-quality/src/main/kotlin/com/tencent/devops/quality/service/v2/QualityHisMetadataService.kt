@@ -55,7 +55,7 @@ class QualityHisMetadataService @Autowired constructor(
 
     fun saveHisMetadata(projectId: String, pipelineId: String, buildId: String, callback: MetadataCallback): String {
         logger.info("save history metadata for build: $buildId")
-        logger.info("save history metadata data:\n$callback")
+        logger.info("save history metadata data:\n${callback.elementType}|${callback.taskId}|${callback.taskName}")
 
         val buildNo = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(
             buildIds = setOf(buildId),
