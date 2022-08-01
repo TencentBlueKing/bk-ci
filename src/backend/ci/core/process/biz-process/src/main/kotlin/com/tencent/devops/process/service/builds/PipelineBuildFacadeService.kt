@@ -347,9 +347,8 @@ class PipelineBuildFacadeService(
                 ) {
                     return buildId
                 }
-            }
 
-            if (!buildInfo.isFinish()) { // 拦截运行中的重试，防止重复提交
+                // 对不合法的重试进行拦截，防止重复提交
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
                     defaultMessage = "重试已经启动，忽略重复的请求"
@@ -454,7 +453,7 @@ class PipelineBuildFacadeService(
 
             logger.info(
                 "ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
-                        "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
+                    "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
             )
 
             paramMap[PIPELINE_RETRY_COUNT] = BuildParameters(PIPELINE_RETRY_COUNT, retryCount)
@@ -1821,10 +1820,10 @@ class PipelineBuildFacadeService(
 
         if (!nodeHashId.isNullOrBlank()) {
             msg = "${
-            MessageCodeUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
-                params = arrayOf(projectCode, nodeHashId)
-            )
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
+                    params = arrayOf(projectCode, nodeHashId)
+                )
             } $msg"
         }
         // #5046 worker-agent.jar进程意外退出，经由devopsAgent转达
