@@ -72,8 +72,7 @@ object YamlObjects {
         ) {
             if (!va.value.isNullOrBlank() && va.props.options.isNullOrEmpty()) {
                 throw YamlFormatException(
-                    "$fromPath variable $key format error: " +
-                            "value ${va.value} not in variable options"
+                    "$fromPath variable $key format error: value ${va.value} not in variable options"
                 )
             }
             val expectValues =
@@ -82,10 +81,16 @@ object YamlObjects {
             // 说明默认值没有匹配到选项值，报错
             if (expectValues?.subtract(resultValues)?.isEmpty() == false) {
                 throw YamlFormatException(
-                    "$fromPath variable $key format error: " +
-                            "value ${va.value} not in variable options"
+                    "$fromPath variable $key format error: value ${va.value} not in variable options"
                 )
             }
+        }
+
+        // 校验bool
+        if (va.props?.type == VariablePropType.BOOLEAN.value && (va.value != "true" && va.value != "false")) {
+            throw YamlFormatException(
+                "$fromPath variable $key format error: bool value ${va.value} not true / false"
+            )
         }
 
         return va
