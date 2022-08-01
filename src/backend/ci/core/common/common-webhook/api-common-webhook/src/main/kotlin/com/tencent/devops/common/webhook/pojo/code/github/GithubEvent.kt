@@ -312,7 +312,7 @@ data class GithubAuthor(
     @JsonProperty("name")
     val name: String, // yongyiduan
     @JsonProperty("username")
-    val username: String // yongyiduan
+    val username: String? // yongyiduan
 )
 
 @Suppress("ALL")
