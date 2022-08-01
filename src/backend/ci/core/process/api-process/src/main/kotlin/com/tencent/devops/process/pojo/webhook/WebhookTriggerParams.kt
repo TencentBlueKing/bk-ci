@@ -27,13 +27,16 @@
 
 package com.tencent.devops.process.pojo.webhook
 
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("参数")
 data class WebhookTriggerParams(
-    @ApiModelProperty("启动参数", required = true)
+    @ApiModelProperty("启动参数(webhook之类的预置参数)", required = true)
     val params: Map<String, String>,
+    @ApiModelProperty("启动参数(用户自定义参数)", required = false)
+    val userParams: List<BuildParameters>? = null,
     @ApiModelProperty("手动触发参数", required = false)
     val startValues: Map<String, String>? = null
 )

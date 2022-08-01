@@ -27,6 +27,8 @@
 
 package com.tencent.devops.stream.trigger
 
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.yaml.v2.models.Variable
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
@@ -43,7 +45,8 @@ internal class StreamYamlBuildTest {
             "test" to Variable(value = "123")
         )
         val testData = mapOf("string" to "456")
-        Assertions.assertEquals(testData, StreamYamlBuild.getInputParams(originData, testData))
+        val resultData = listOf(BuildParameters("variables.string","456",BuildFormPropertyType.STRING))
+        Assertions.assertEquals(resultData, StreamYamlBuild.getInputParams(originData, testData))
     }
 
     @DisplayName("手动触发参数获取测试(异常报错)")
