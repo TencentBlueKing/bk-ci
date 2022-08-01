@@ -62,7 +62,7 @@ class QualityDailyReportJob @Autowired constructor(
             return
         }
 
-        if (!clusterName.contains(CommonUtils.getDbClusterName())) {
+        if (!clusterName.split(",").contains(CommonUtils.getDbClusterName())) {
             return
         } else {
             val startTime = LocalDateTime.now().minusDays(1)
