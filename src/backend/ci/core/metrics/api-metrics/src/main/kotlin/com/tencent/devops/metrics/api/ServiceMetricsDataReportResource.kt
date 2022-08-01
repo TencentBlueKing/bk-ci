@@ -25,38 +25,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.service
+package com.tencent.devops.metrics.api
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.metrics.pojo.dto.CodeccDataReportDTO
 import com.tencent.devops.metrics.pojo.dto.QualityDataReportDTO
 import com.tencent.devops.metrics.pojo.dto.TurboDataReportDTO
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-interface MetricsThirdPlatformDataReportService {
+@Api(tags = ["SERVICE_METRICS_DATAS"], description = "METRICS-数据上报")
+@Path("/service/metrics/datas")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceMetricsDataReportResource {
 
-    /**
-     * 上报codecc指标数据
-     * @param codeccDataReportDTO codecc数据上报传输对象
-     * @return 布尔值
-     */
-    fun metricsCodeccDataReport(
-        codeccDataReportDTO: CodeccDataReportDTO
-    ): Boolean
-
-    /**
-     * 上报编译加速指标数据
-     * @param turboDataReportDTO 编译加速数据上报传输对象
-     * @return 布尔值
-     */
-    fun metricsTurboDataReport(
-        turboDataReportDTO: TurboDataReportDTO
-    ): Boolean
-
-    /**
-     * 上报质量红线指标数据
-     * @param qualityDataReportDTO 质量红线数据上报传输对象
-     * @return 布尔值
-     */
+    @ApiOperation("质量红线数据上报")
+    @Path("/quality/data/report")
+    @POST
     fun metricsQualityDataReport(
+        @ApiParam(value = "质量红线数据上报传输对象", required = true)
         qualityDataReportDTO: QualityDataReportDTO
-    ): Boolean
+    ): Result<Boolean>
+
+    @ApiOperation("codecc数据上报")
+    @Path("/codecc/data/report")
+    @POST
+    fun metricsCodeccDataReport(
+        @ApiParam(value = "codecc数据上报传输对象", required = true)
+        codeccDataReportDTO: CodeccDataReportDTO
+    ): Result<Boolean>
+
+    @ApiOperation("编译加速数据上报")
+    @Path("/turbo/data/report")
+    @POST
+    fun metricsTurboDataReport(
+        @ApiParam(value = "编译加速数据上报传输对象", required = true)
+        turboDataReportDTO: TurboDataReportDTO
+    ): Result<Boolean>
 }

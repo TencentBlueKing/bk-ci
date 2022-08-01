@@ -25,35 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.listener
+package com.tencent.devops.metrics.resources
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.event.listener.Listener
-import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
-import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportFacadeService
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.metrics.api.ServiceMetricsDataReportResource
+import com.tencent.devops.metrics.pojo.dto.CodeccDataReportDTO
+import com.tencent.devops.metrics.pojo.dto.QualityDataReportDTO
+import com.tencent.devops.metrics.pojo.dto.TurboDataReportDTO
+import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportService
 
-@Component
-class QualityReportDailyMessageListener @Autowired constructor(
-    private val metricsThirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
-) : Listener<QualityReportEvent> {
+@RestResource
+class ServiceMetricsDataReportResourceImpl constructor(
+    private val metricsThirdPlatformDataReportService: MetricsThirdPlatformDataReportService
+) : ServiceMetricsDataReportResource {
 
-    override fun execute(event: QualityReportEvent) {
-        try {
-            metricsThirdPlatformDataReportFacadeService.metricsQualityDataReport(event)
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to insert the metrics QualityReport data", ignored)
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.SYSTEM_ERROR,
-                defaultMessage = "Fail to insert the metrics QualityReport data"
-            )
-        }
+    override fun metricsQualityDataReport(qualityDataReportDTO: QualityDataReportDTO): Result<Boolean> {
+        return Result(metricsThirdPlatformDataReportService.metricsQualityDataReport(qualityDataReportDTO))
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(QualityReportDailyMessageListener::class.java)
+    override fun metricsCodeccDataReport(codeccDataReportDTO: CodeccDataReportDTO): Result<Boolean> {
+        return Result(metricsThirdPlatformDataReportService.metricsCodeccDataReport(codeccDataReportDTO))
+    }
+
+    override fun metricsTurboDataReport(turboDataReportDTO: TurboDataReportDTO): Result<Boolean> {
+        return Result(metricsThirdPlatformDataReportService.metricsTurboDataReport(turboDataReportDTO))
     }
 }
