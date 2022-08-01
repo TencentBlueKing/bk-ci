@@ -58,6 +58,7 @@ class QualityDailyReportJob @Autowired constructor(
     @Scheduled(cron = "0 0 0 * * ?")
     fun send() {
         if (!reportEnable) {
+            logger.info("quality daily report disabled.")
             return
         }
 
