@@ -132,38 +132,38 @@ class TriggerMatcher @Autowired constructor(
         ): TriggerBody {
             // 如果没有配置push，默认未匹配
             if (triggerOn.push == null) {
-                return TriggerBody().triggerFail("on.push", "does not currently exist")
+                return TriggerBody().triggerFail("on.push", "not exist")
             }
 
             val pushRule = triggerOn.push!!
             // 1、check branchIgnore，满足屏蔽条件直接返回不匹配
             if (BranchMatchUtils.isIgnoreBranchMatch(pushRule.branchesIgnore, eventBranch)
             ) {
-                return TriggerBody().triggerFail("on.push.branches-ignore", "current branch($eventBranch) ignore match")
+                return TriggerBody().triggerFail("on.push.branches-ignore", "branch($eventBranch) match")
             }
 
             // 2、check pathIgnore，满足屏蔽条件直接返回不匹配
             if (PathMatchUtils.isIgnorePathMatch(pushRule.pathsIgnore, changeSet)) {
                 val path = changeSet?.find { it in (pushRule.pathsIgnore ?: emptyList()) }
-                return TriggerBody().triggerFail("on.push.paths-ignore", "current change path($path) ignore match")
+                return TriggerBody().triggerFail("on.push.paths-ignore", "change path($path) match")
             }
 
             // 3、check userIgnore,满足屏蔽条件直接返回不匹配
             if (UserMatchUtils.isIgnoreUserMatch(pushRule.usersIgnore, userId)) {
-                return TriggerBody().triggerFail("on.push.users-ignore", "current trigger user($userId) ignore match")
+                return TriggerBody().triggerFail("on.push.users-ignore", "trigger user($userId) match")
             }
 
             // include
             if (!BranchMatchUtils.isBranchMatch(pushRule.branches, eventBranch)) {
-                return TriggerBody().triggerFail("on.push.branches", "current branch($eventBranch) not match")
+                return TriggerBody().triggerFail("on.push.branches", "branch($eventBranch) not match")
             }
             // include
             if (!PathMatchUtils.isIncludePathMatch(pushRule.paths, changeSet)) {
-                return TriggerBody().triggerFail("on.push.paths", "current change path($changeSet) not match")
+                return TriggerBody().triggerFail("on.push.paths", "change path($changeSet) not match")
             }
             // include
             if (!UserMatchUtils.isUserMatch(pushRule.users, userId)) {
-                return TriggerBody().triggerFail("on.push.users", "current trigger user($userId) not match")
+                return TriggerBody().triggerFail("on.push.users", "trigger user($userId) not match")
             }
             // action
             if (!checkActionMatch(pushRule.action, checkCreateAndUpdate)) {
@@ -172,7 +172,7 @@ class TriggerMatcher @Autowired constructor(
                     false -> TGitPushActionType.NEW_BRANCH.value
                     true -> TGitPushActionType.NEW_BRANCH_AND_PUSH_FILE.value
                 }
-                return TriggerBody().triggerFail("on.push.action", "current trigger action($action) not match")
+                return TriggerBody().triggerFail("on.push.action", "trigger action($action) not match")
             }
             logger.info("Git trigger branch($eventBranch) is included and path(${pushRule.paths}) is included")
             return TriggerBody(true)
@@ -187,7 +187,7 @@ class TriggerMatcher @Autowired constructor(
             mrAction: Any
         ): TriggerBody {
             if (triggerOn.mr == null) {
-                return TriggerBody().triggerFail("on.mr", "does not currently exist")
+                return TriggerBody().triggerFail("on.mr", "not exist")
             }
 
             val mrRule = triggerOn.mr!!
@@ -195,39 +195,39 @@ class TriggerMatcher @Autowired constructor(
             if (BranchMatchUtils.isIgnoreBranchMatch(mrRule.sourceBranchesIgnore, sourceBranch)) {
                 return TriggerBody().triggerFail(
                     "on.mr.source-branches-ignore",
-                    "current source branch($sourceBranch) ignore match"
+                    "source branch($sourceBranch) match"
                 )
             }
 
             // 2、check pathIgnore，满足屏蔽条件直接返回不匹配
             if (PathMatchUtils.isIgnorePathMatch(mrRule.pathsIgnore, changeSet)) {
                 val path = changeSet?.find { it in (mrRule.pathsIgnore ?: emptyList()) }
-                return TriggerBody().triggerFail("on.mr.paths-ignore", "current change path($path) ignore match")
+                return TriggerBody().triggerFail("on.mr.paths-ignore", "change path($path) match")
             }
 
             // 3、check userIgnore,满足屏蔽条件直接返回不匹配
             if (UserMatchUtils.isIgnoreUserMatch(mrRule.usersIgnore, userId)) {
-                return TriggerBody().triggerFail("on.mr.users-ignore", "current trigger user($userId) ignore match")
+                return TriggerBody().triggerFail("on.mr.users-ignore", "trigger user($userId) match")
             }
 
             // include
             if (!BranchMatchUtils.isBranchMatch(mrRule.targetBranches, targetBranch)) {
                 return TriggerBody().triggerFail(
                     "on.mr.target-branches",
-                    "current target branch($targetBranch) not match"
+                    "target branch($targetBranch) not match"
                 )
             }
             // include
             if (!PathMatchUtils.isIncludePathMatch(mrRule.paths, changeSet)) {
-                return TriggerBody().triggerFail("on.mr.paths", "current change path($changeSet) not match")
+                return TriggerBody().triggerFail("on.mr.paths", "change path($changeSet) not match")
             }
             // include
             if (!UserMatchUtils.isUserMatch(mrRule.users, userId)) {
-                return TriggerBody().triggerFail("on.mr.users", "current trigger user($userId) not match")
+                return TriggerBody().triggerFail("on.mr.users", "trigger user($userId) not match")
             }
             // include
             if (!isMrActionMatch(mrRule.action, mrAction)) {
-                return TriggerBody().triggerFail("on.mr.action", "current action($mrAction) not match")
+                return TriggerBody().triggerFail("on.mr.action", "action($mrAction) not match")
             }
             return TriggerBody(true)
         }
@@ -239,32 +239,32 @@ class TriggerMatcher @Autowired constructor(
             fromBranch: String?
         ): TriggerBody {
             if (triggerOn.tag == null) {
-                return TriggerBody().triggerFail("on.tag", "does not currently exist")
+                return TriggerBody().triggerFail("on.tag", "not exist")
             }
 
             val tagRule = triggerOn.tag!!
             // ignore
             if (BranchMatchUtils.isIgnoreBranchMatch(tagRule.tagsIgnore, eventTag)) {
-                return TriggerBody().triggerFail("on.tag.tags-ignore", "current tag($eventTag) ignore match")
+                return TriggerBody().triggerFail("on.tag.tags-ignore", "tag($eventTag) match")
             }
 
             if (UserMatchUtils.isIgnoreUserMatch(tagRule.usersIgnore, userId)) {
-                return TriggerBody().triggerFail("on.tag.users-ignore", "current trigger user($userId) ignore match")
+                return TriggerBody().triggerFail("on.tag.users-ignore", "trigger user($userId) match")
             }
 
             if (fromBranch != null && !BranchMatchUtils.isBranchMatch(tagRule.fromBranches, fromBranch)) {
                 return TriggerBody().triggerFail(
                     "on.tag.from-branches",
-                    "current tag from branch($fromBranch) not match"
+                    "tag from branch($fromBranch) not match"
                 )
             }
 
             // include
             if (!BranchMatchUtils.isBranchMatch(tagRule.tags, eventTag)) {
-                return TriggerBody().triggerFail("on.tag.tags", "current tag($eventTag) not match")
+                return TriggerBody().triggerFail("on.tag.tags", "tag($eventTag) not match")
             }
             if (!UserMatchUtils.isUserMatch(tagRule.users, userId)) {
-                return TriggerBody().triggerFail("on.tag.users", "current trigger user($userId) not match")
+                return TriggerBody().triggerFail("on.tag.users", "trigger user($userId) not match")
             }
             logger.info(
                 "Git trigger tags($eventTag) is included path(${tagRule.tags}) is included,and fromBranch($fromBranch)"
