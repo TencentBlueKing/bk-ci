@@ -37,10 +37,14 @@ data class GithubProperties(
     val apiUrl: String = "",
     val clientId: String = "",
     val clientSecret: String = "",
-    // tapd回调地址
+    // github回调地址
     val callbackUrl: String = "",
-    // tapd授权后跳转页面
+    // github授权后跳转页面
     val redirectUrl: String = "",
     val appId: String = "",
-    val privateKey: String = ""
+    val privateKey: String = "",
+    // 组织安装github app url
+    val orgAppUrl: String = "",
+    // 仓库安装github app url
+    val repoAppUrl: String = ""
 )

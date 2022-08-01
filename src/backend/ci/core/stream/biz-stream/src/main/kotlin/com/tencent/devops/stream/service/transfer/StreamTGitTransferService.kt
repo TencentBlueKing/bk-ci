@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
+import com.tencent.devops.repository.pojo.AppInstallationResult
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.GitCodeFileEncoding
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -284,5 +285,10 @@ class StreamTGitTransferService @Autowired constructor(
         ).data?.ifEmpty { null }?.map {
             StreamGitGroup(it)
         }
+    }
+
+    override fun isInstallApp(userId: String, gitProjectId: Long): AppInstallationResult {
+        // 工蜂没有app，默认都已经安装
+        return AppInstallationResult(true)
     }
 }

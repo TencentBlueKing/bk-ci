@@ -40,10 +40,12 @@ import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.github.ServiceGithubAppResource
 import com.tencent.devops.repository.api.github.ServiceGithubBranchResource
 import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
 import com.tencent.devops.repository.api.github.ServiceGithubOrganizationResource
 import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
+import com.tencent.devops.repository.pojo.AppInstallationResult
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
@@ -327,5 +329,12 @@ class StreamGithubTransferService @Autowired constructor(
         ).data?.ifEmpty { null }?.map {
             StreamGitGroup(it)
         }
+    }
+
+    override fun isInstallApp(userId: String, gitProjectId: Long): AppInstallationResult {
+        return client.get(ServiceGithubAppResource::class).isInstallApp(
+            userId = userId,
+            repoId = gitProjectId
+        ).data!!
     }
 }

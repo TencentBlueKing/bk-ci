@@ -4,12 +4,15 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.sdk.github.request.GetAppInstallationForOrgRequest
 import com.tencent.devops.common.sdk.github.request.GetAppInstallationForRepoRequest
 import com.tencent.devops.common.sdk.github.response.GetAppInstallationResponse
+import com.tencent.devops.repository.pojo.AppInstallationResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_APP_GITHUB"], description = "服务-github-app")
@@ -27,4 +30,16 @@ interface ServiceGithubAppResource {
     @POST
     @Path("/org")
     fun getAppInstallationForOrg(request: GetAppInstallationForOrgRequest): Result<GetAppInstallationResponse?>
+
+    @ApiOperation("判断仓库是否安装github app")
+    @POST
+    @Path("/isInstallApp")
+    fun isInstallApp(
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam(value = "仓库Id")
+        @QueryParam("repoId")
+        repoId: Long
+    ): Result<AppInstallationResult>
 }

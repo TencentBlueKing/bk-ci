@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
+import com.tencent.devops.repository.pojo.AppInstallationResult
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.stream.pojo.StreamBasicSetting
@@ -167,4 +168,16 @@ interface UserGitBasicSettingResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<AgentBuildDetail>>
+
+    @ApiOperation("判断仓库app是否安装")
+    @GET
+    @Path("/isInstallApp")
+    fun isInstallApp(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "stream 项目Id", required = false)
+        @QueryParam("gitProjectId")
+        gitProjectId: Long
+    ): Result<AppInstallationResult>
 }

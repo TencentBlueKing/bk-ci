@@ -39,7 +39,8 @@ class StreamLoginService @Autowired constructor(
             streamLoginConfig.githubRedirectUrl,
             authCode,
             githubCallback.userId,
-            StreamLoginType.GITHUB.value
+            StreamLoginType.GITHUB.value,
+            githubCallback.email
         )
     }
 

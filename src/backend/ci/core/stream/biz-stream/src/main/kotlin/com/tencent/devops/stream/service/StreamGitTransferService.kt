@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.AppInstallationResult
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
@@ -156,4 +157,12 @@ interface StreamGitTransferService {
         page: Int,
         pageSize: Int
     ): List<StreamGitGroup>?
+
+    /**
+     * app是否安装
+     */
+    fun isInstallApp(
+        userId: String,
+        gitProjectId: Long
+    ): AppInstallationResult
 }

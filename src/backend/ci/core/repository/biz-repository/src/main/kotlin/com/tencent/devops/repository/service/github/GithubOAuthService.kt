@@ -124,6 +124,7 @@ class GithubOAuthService @Autowired constructor(
         }
         return GithubOauthCallback(
             userId = userResponse.login,
+            email = userResponse.email,
             redirectUrl = redirectUrl
         )
     }
@@ -141,8 +142,10 @@ class GithubOAuthService @Autowired constructor(
             val data = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.info("Github get code(${response.code()}) and response($data)")
-                throw CustomException(Response.Status.fromStatusCode(response.code())
-                    ?: Response.Status.BAD_REQUEST, "获取Github access_token失败: $data")
+                throw CustomException(
+                    Response.Status.fromStatusCode(response.code())
+                        ?: Response.Status.BAD_REQUEST, "获取Github access_token失败: $data"
+                )
             }
             return objectMapper.readValue(data)
         }

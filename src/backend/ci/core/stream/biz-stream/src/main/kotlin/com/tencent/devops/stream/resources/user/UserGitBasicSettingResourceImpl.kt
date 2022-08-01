@@ -37,6 +37,7 @@ import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
+import com.tencent.devops.repository.pojo.AppInstallationResult
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.stream.api.user.UserGitBasicSettingResource
@@ -198,6 +199,10 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
         return Result(streamBasicSettingService.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize))
+    }
+
+    override fun isInstallApp(userId: String, gitProjectId: Long): Result<AppInstallationResult> {
+        return Result(streamGitTransferService.isInstallApp(userId = userId, gitProjectId = gitProjectId))
     }
 
     private fun checkNodeId(nodeHashId: String) {
