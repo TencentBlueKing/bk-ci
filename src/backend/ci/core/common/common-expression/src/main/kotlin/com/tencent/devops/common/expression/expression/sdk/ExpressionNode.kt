@@ -42,6 +42,7 @@ import com.tencent.devops.common.expression.expression.IExpressionNode
 import com.tencent.devops.common.expression.expression.ITraceWriter
 import com.tencent.devops.common.expression.expression.ValueKind
 import com.tencent.devops.common.expression.utils.ExpressionJsonUtil
+import kotlin.math.floor
 
 @Suppress("ComplexMethod", "ReturnCount")
 abstract class ExpressionNode : IExpressionNode {
@@ -156,7 +157,7 @@ abstract class ExpressionNode : IExpressionNode {
                     re.getBoolean().toString(), subInfo.distinguishTypes
                 )
                 is NumberContextData -> DistinguishType.NUMBER.distinguishByType(
-                    re.getNumber().toString(), subInfo.distinguishTypes
+                    numberToString(re.value), subInfo.distinguishTypes
                 )
                 is ArrayContextData -> DistinguishType.ARRAY.distinguishByType(
                     ExpressionJsonUtil.getObjectMapper().writeValueAsString(re.toJson()), subInfo.distinguishTypes
@@ -170,7 +171,7 @@ abstract class ExpressionNode : IExpressionNode {
         }
         val res = when (re) {
             is Char, is String -> DistinguishType.STRING.distinguishByType(re.toString(), subInfo.distinguishTypes)
-            is Number -> DistinguishType.NUMBER.distinguishByType(re.toString(), subInfo.distinguishTypes)
+            is Number -> DistinguishType.NUMBER.distinguishByType(numberToString(re), subInfo.distinguishTypes)
             is Boolean -> DistinguishType.BOOL.distinguishByType(re.toString(), subInfo.distinguishTypes)
             else -> re?.toString() ?: ""
         }
@@ -230,6 +231,24 @@ abstract class ExpressionNode : IExpressionNode {
     }
 
     companion object {
+        private fun numberToString(v: Number): String {
+            val value = v.toDouble()
+            if (value.isNaN() || value == Double.POSITIVE_INFINITY || value == Double.NEGATIVE_INFINITY) {
+                return value.toString()
+            }
+
+            val floored = floor(value)
+            return if (value == floored && value <= Int.MAX_VALUE && value >= Int.MIN_VALUE) {
+                val flooredInt = floored.toInt()
+                flooredInt.toString()
+            } else if (value == floored && value <= Long.MAX_VALUE && value >= Long.MIN_VALUE) {
+                val flooredInt = floored.toLong()
+                flooredInt.toString()
+            } else {
+                value.toString()
+            }
+        }
+
         private fun traceVerbose(context: EvaluationContext, level: Int, message: String?) {
             context.trace?.verbose("".padStart(level * 2, '.') + (message ?: ""))
         }

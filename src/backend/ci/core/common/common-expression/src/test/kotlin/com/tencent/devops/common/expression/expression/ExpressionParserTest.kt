@@ -411,11 +411,12 @@ class ExpressionParserTest {
     @ParameterizedTest
     @ValueSource(
         strings = [
-            "parameters => {\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"str\":\"12138\"}}}",
+            "parameters => {\"int\":123,\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"str\":\"12138\"}}}",
             "parameters.arry => [12312.12,false,\"12138\",[\"12138\"]]",
             "fromJSON(parameters['arry']) == variables.arry => (fromJSON('[12312.12,false,\"12138\",[\"12138\"]]') == variables.arry) => false",
             "fromJSON(parameters['arry'])[0] == variables.arry[0] => (fromJSON('[12312.12,false,\"12138\",[\"12138\"]]')[0] == variables.arry[0]) => true",
             "parameters.doub => 12312.12",
+            "parameters.int => 123",
             "parameters.bool => false",
             "parameters.str => 12138",
             "startsWith(parameters.str, '121') => true"
@@ -439,11 +440,12 @@ class ExpressionParserTest {
     @ParameterizedTest
     @ValueSource(
         strings = [
-            "parameters => '{\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"str\":\"12138\"}}}'",
+            "parameters => '{\"int\":123,\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"str\":\"12138\"}}}'",
             "parameters.arry => '[12312.12,false,\"12138\",[\"12138\"]]'",
             "fromJSON(parameters['arry']) == variables.arry => (fromJSON('[12312.12,false,\"12138\",[\"12138\"]]') == variables.arry) => false",
             "fromJSON(parameters['arry'])[0] == variables.arry[0] => (fromJSON('[12312.12,false,\"12138\",[\"12138\"]]')[0] == variables.arry[0]) => true",
             "parameters.doub => '12312.12'",
+            "parameters.int => '123'",
             "parameters.bool => 'false'",
             "parameters.str => '12138'",
             "startsWith(parameters.str, '121') => 'true'"
@@ -579,6 +581,7 @@ class ExpressionParserTest {
             // 初始化部分参数替换测试数据
             parametersNameValue.add(NamedValueInfo("parameters", ContextValueNode()))
             val parametersData = DictionaryContextData().apply {
+                add("int", NumberContextData(123.0))
                 add("doub", NumberContextData(12312.12))
                 add("bool", BooleanContextData(false))
                 add("str", StringContextData("12138"))

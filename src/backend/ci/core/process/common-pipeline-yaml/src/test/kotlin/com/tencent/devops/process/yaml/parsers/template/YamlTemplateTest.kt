@@ -42,6 +42,7 @@ import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.StringReader
+import org.junit.jupiter.api.Assertions
 
 @Suppress("LoopWithTooManyJumpStatements")
 class YamlTemplateTest {
@@ -153,7 +154,7 @@ class YamlTemplateTest {
             line = sample.readLine()
             lineCompare = compared.readLine()
         }
-        assert(flag)
+        Assertions.assertTrue(flag)
     }
 
     private fun replace(testYaml: String, resourceExt: MutableMap<String, ResourcesPools>? = null): String {
