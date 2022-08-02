@@ -46,7 +46,8 @@ const handlePageLimitChange = (limit) => {
 
 const getData = () => {
   isLoading.value = true;
-  http.getAtomStatisticsDetail(
+  http.
+    getAtomStatisticsDetail(
       props.status,
       pagination.value.current,
       pagination.value.limit,
@@ -54,8 +55,8 @@ const getData = () => {
     .then((data) => {
       Object.entries(data.headerInfo).forEach(([field, label]) => {
         const column = {
-            label,
-            field,
+          label,
+          field,
         }
         if (field === 'atomCode') {
           column.field = 'atomName'
@@ -64,8 +65,8 @@ const getData = () => {
               'span',
               {
                 style: {
-                  cursor: 'pointer',
-                  color: '#3a84ff',
+                    cursor: 'pointer',
+                    color: '#3a84ff',
                 }, 
                 onClick () {
                   router.push({
@@ -89,7 +90,7 @@ const getData = () => {
       });
       tableData.value = data.records?.map(record => {
         if (!record.classifyCode) {
-          record.classifyCode = '--'
+            record.classifyCode = '--'
         }
         record.successRate += '%'
         return {
@@ -105,14 +106,12 @@ const getData = () => {
       handleChange(false)
     });
 };
-
 watch(
   () => props.status, () => {
     columns.value = []
     tableData.value = []
     getData()
-  }
-  ,
+  },
 );
 </script>
 
