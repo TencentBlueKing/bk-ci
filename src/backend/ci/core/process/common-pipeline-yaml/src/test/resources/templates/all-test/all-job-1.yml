@@ -19,6 +19,8 @@ jobs:
     name: 互斥组放弃测试
     mutex:
       label: ${{parameters.mutex-label}}
+      # queue-length: ${{parameters.mutex-label}}     # [非必填]队列长度，默认为0（若资源已被占用，执行失败）
+      # timeout-minutes: 10 # [非必填]排队超时时间，默认为10分钟，不超过 480 分钟
     steps:
     - run: |
           echo 123

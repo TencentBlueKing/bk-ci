@@ -325,6 +325,12 @@ object TemplateYamlUtil {
         try {
             var line = bufferReader.readLine()
             while (line != null) {
+                // 跳过注释行，如果一行除空格外最左是 # 那一定是注释
+                if (line.trimStart().startsWith("#")) {
+                    newValue.append(line).append("\n")
+                    line = bufferReader.readLine()
+                    continue
+                }
 
                 val lineString = line.trim().replace("\\s".toRegex(), "")
                 // if 表达式替换
