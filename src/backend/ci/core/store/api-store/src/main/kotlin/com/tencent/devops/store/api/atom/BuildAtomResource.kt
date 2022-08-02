@@ -25,35 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.utils
+package com.tencent.devops.store.api.atom
 
-object VersionUtils {
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.VersionInfo
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-    fun convertLatestVersion(version: String): String {
-        val versionPrefix = version.substring(0, version.indexOf(".") + 1)
-        return "$versionPrefix*"
-    }
+@Api(tags = ["BUILD_PIPELINE_ATOM"], description = "流水线-插件")
+@Path("/service/pipeline/atoms")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildAtomResource {
 
-    fun convertLatestVersionName(version: String): String {
-        val versionPrefix = version.substring(0, version.indexOf(".") + 1)
-        return "${versionPrefix}latest"
-    }
-
-    /**
-     * 生成查询版本号
-     * @param version 版本号
-     */
-    fun generateQueryVersion(version: String): String {
-        return if (isLatestVersion(version)) {
-            version.replace("*", "") + "%"
-        } else {
-            version
-        }
-    }
-
-    /**
-     * 是否是x.latest这种最新版本号
-     * @param version 版本号
-     */
-    fun isLatestVersion(version: String) = version.contains("*")
+    @ApiOperation("获取插件默认本号信息")
+    @GET
+    @Path("/projects/{projectCode}/codes/{atomCode}/default/version")
+    fun getAtomDefaultVersion(
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String
+    ): Result<VersionInfo?>
 }
