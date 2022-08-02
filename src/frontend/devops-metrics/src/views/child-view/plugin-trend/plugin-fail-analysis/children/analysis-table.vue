@@ -47,28 +47,28 @@ const columns = [
             let stageIndex, containerIndex, containerGroupIndex, elementIndex
 
             if (indexMap.length === 3) {
-                stageIndex = indexMap[0]
-                containerIndex = indexMap[1]
-                elementIndex = indexMap[2]
+              stageIndex = indexMap[0]
+              containerIndex = indexMap[1]
+              elementIndex = indexMap[2]
             } else if (indexMap.length === 4) {
-                stageIndex = indexMap[0]
-                containerIndex = indexMap[1]
-                containerGroupIndex = indexMap[2]
-                elementIndex = indexMap[3]
+              stageIndex = indexMap[0]
+              containerIndex = indexMap[1]
+              containerGroupIndex = indexMap[2]
+              elementIndex = indexMap[3]
             }
             
             if (row.channelCode === 'BS') {
-                if (indexMap.length === 3) {
+              if (indexMap.length === 3) {
                 window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&elementIndex=${elementIndex}`, '_blank')
-                } else {
+              } else {
                 window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}?stageIndex=${stageIndex}&containerIndex=${containerIndex}&containerGroupIndex=${containerGroupIndex}&elementIndex=${elementIndex}`, '_blank')
-                }
+              }
             } else if (row.channelCode === 'GIT') {
-                if (indexMap.length === 3) {
+              if (indexMap.length === 3) {
                 window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1&stageIndex=${stageIndex}&containerIndex=${containerIndex}&elementIndex=${elementIndex}#${projectId.split('_')[1]}`, '_blank')
-                } else {
+              } else {
                 window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1&stageIndex=${stageIndex}&containerIndex=${containerIndex}&containerGroupIndex=${containerGroupIndex}&elementIndex=${elementIndex}#${projectId.split('_')[1]}`, '_blank')
-                }
+              }
             }
           },
         },

@@ -45,7 +45,7 @@ const columns = [
               pipelineId
             }).then(res => {
               if (res.channelCode === 'BS') {
-              window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}`, '_blank')
+                window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}`, '_blank')
               }
               window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#${projectId.split('_')[1]}`, '_blank')
             })
@@ -111,21 +111,6 @@ const handlePageChange = (current) => {
   pagination.value.current = current;
   getData();
 };
-
-const handleRowClick = (e, row) => {
-  const projectId = row.projectId
-  const pipelineId = row.pipelineId
-  const buildId = row.buildId
-  http.getPipelineType({
-    projectId,
-    pipelineId
-  }).then(res => {
-    if (res.channelCode === 'BS') {
-      window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}`, '_blank')
-    }
-    window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#${projectId.split('_')[1]}`, '_blank')
-  })
-}
 
 const handlePageLimitChange = (limit) => {
   pagination.value.limit = limit;
