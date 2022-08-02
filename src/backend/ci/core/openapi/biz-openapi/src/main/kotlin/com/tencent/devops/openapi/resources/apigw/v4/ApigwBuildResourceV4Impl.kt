@@ -346,7 +346,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             search = search,
-            buildFormProperty = property,
+            buildFormProperty = property
         )
     }
 
