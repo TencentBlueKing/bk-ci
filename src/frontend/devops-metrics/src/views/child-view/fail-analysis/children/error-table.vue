@@ -165,7 +165,7 @@ onMounted(getData);
     class="overview-card mt20"
     :loading="isLoading"
   >
-    <h3 class="g-card-title">{{ t('Details1') }}</h3>
+    <h3 class="g-card-title">{{ t('Details') }}</h3>
     <bk-table
       class="error-table"
       :columns="columns"

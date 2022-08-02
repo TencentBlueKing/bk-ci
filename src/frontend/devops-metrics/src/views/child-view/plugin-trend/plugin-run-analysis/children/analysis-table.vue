@@ -47,63 +47,63 @@ const handlePageLimitChange = (limit) => {
 const getData = () => {
   isLoading.value = true;
   http.getAtomStatisticsDetail(
-      props.status,
-      pagination.value.current,
-      pagination.value.limit,
-    )
-    .then((data) => {
-      Object.entries(data.headerInfo).forEach(([field, label]) => {
-        const column = {
-            label,
-            field,
-        }
-        if (field === 'atomCode') {
-          column.field = 'atomName'
-          column['render'] = ({ cell, row }) => {
-            return h(
-              'span',
-              {
-                style: {
-                  cursor: 'pointer',
-                  color: '#3a84ff',
-                }, 
-                onClick () {
-                  router.push({
-                    name: 'PluginFailAnalysis',
-                    query: {
-                      pipelineId: row.pipelineId,
-                      atomCode: row.atomCode,
-                    },
-                  })
-                },
+    props.status,
+    pagination.value.current,
+    pagination.value.limit,
+  )
+  .then((data) => {
+    Object.entries(data.headerInfo).forEach(([field, label]) => {
+      const column = {
+        label,
+        field,
+      }
+      if (field === 'atomCode') {
+        column.field = 'atomName'
+        column['render'] = ({ cell, row }) => {
+          return h(
+            'span',
+            {
+              style: {
+                cursor: 'pointer',
+                color: '#3a84ff',
+              }, 
+              onClick () {
+                router.push({
+                  name: 'PluginFailAnalysis',
+                  query: {
+                    pipelineId: row.pipelineId,
+                    atomCode: row.atomCode,
+                  },
+                })
               },
-              [
-                cell,
-                ' #',
-                row.buildNum,
-              ]
-            );
-          }
+            },
+            [
+              cell,
+              ' #',
+              row.buildNum,
+            ]
+          );
         }
-        columns.value.push(column);
-      });
-      tableData.value = data.records?.map(record => {
-        if (!record.classifyCode) {
-          record.classifyCode = '--'
-        }
-        record.successRate += '%'
-        return {
-          ...record,
-          ...record.atomBaseInfo,
-          ...record.atomFailInfos,
-        }
-      });
-      pagination.value.count = data.count;
-    })
-    .finally(() => {
-      isLoading.value = false;
-      handleChange(false)
+      }
+      columns.value.push(column);
     });
+    tableData.value = data.records?.map(record => {
+      if (!record.classifyCode) {
+        record.classifyCode = '--'
+      }
+      record.successRate += '%'
+      return {
+        ...record,
+        ...record.atomBaseInfo,
+        ...record.atomFailInfos,
+      }
+    });
+    pagination.value.count = data.count;
+  })
+  .finally(() => {
+    isLoading.value = false;
+    handleChange(false)
+  });
 };
 
 watch(
