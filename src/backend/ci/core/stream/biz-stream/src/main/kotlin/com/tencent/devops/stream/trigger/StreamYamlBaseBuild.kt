@@ -96,6 +96,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StreamYamlBaseBuild::class.java)
         private const val ymlVersion = "v2.0"
         private const val BUILD_COMMIT_PAGE_SIZE = 200
+        private const val STREAM_MODEL_MD5_CACHE_PROJECTS_KEY = "stream:model.md5.cache:project:list"
     }
 
     private val channelCode = ChannelCode.GIT
@@ -135,7 +136,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                 pipelineId = pipeline.pipelineId,
                 userId = userId
             )
-        } else {
+        } else if (confirmProjectUseModelMd5Cache(projectCode)) {
+            // 开启了md5缓存的项目
             val (oldMd5, displayName, version) = gitPipelineResourceDao.getLastEditMd5ById(
                 dslContext = dslContext,
                 gitProjectId = gitProjectId,
@@ -169,6 +171,26 @@ class StreamYamlBaseBuild @Autowired constructor(
                     md5 = md5
                 )
             }
+        } else {
+            // 编辑流水线model
+            processClient.edit(
+                userId = userId,
+                projectId = projectCode,
+                pipelineId = pipeline.pipelineId,
+                pipeline = modelAndSetting.model,
+                channelCode = channelCode,
+                updateLastModifyUser = updateLastModifyUser
+            )
+            // 已有的流水线需要更新下Stream这里的状态
+            logger.info("update gitPipeline pipeline: $pipeline")
+            gitPipelineResourceDao.updatePipeline(
+                dslContext = dslContext,
+                gitProjectId = gitProjectId,
+                pipelineId = pipeline.pipelineId,
+                displayName = pipeline.displayName,
+                version = ymlVersion,
+                md5 = md5
+            )
         }
         processClient.saveSetting(
             userId = userId,
@@ -566,5 +588,9 @@ class StreamYamlBaseBuild @Autowired constructor(
         } catch (ignore: Throwable) {
             logger.error("save build info err", ignore)
         }
+    }
+
+    fun confirmProjectUseModelMd5Cache(projectId: String): Boolean {
+        return redisOperation.isMember(STREAM_MODEL_MD5_CACHE_PROJECTS_KEY, projectId)
     }
 }
