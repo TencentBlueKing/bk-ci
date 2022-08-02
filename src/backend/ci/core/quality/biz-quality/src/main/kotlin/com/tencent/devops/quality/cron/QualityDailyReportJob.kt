@@ -28,11 +28,13 @@
 package com.tencent.devops.quality.cron
 
 import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.quality.config.QualityDailyDispatch
 import com.tencent.devops.quality.dao.HistoryDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
@@ -47,33 +49,48 @@ class QualityDailyReportJob @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(QualityDailyReportJob::class.java)
 
+    @Value("\${quality.dailyReport.enable:#{false}}")
+    val reportEnable: Boolean = false
+
+    @Value("\${quality.dailyReport.cluster:}")
+    val clusterName = ""
+
     @Scheduled(cron = "0 0 0 * * ?")
     fun send() {
-        val startTime = LocalDateTime.now().minusDays(1)
-        val endTime = LocalDateTime.now()
-        val result = historyDao.batchDailyTotalCount(
-            dslContext = dslContext,
-            startTime = startTime,
-            endTime = endTime
-        )
-        result.forEach {
-            val interceptCount = historyDao.countIntercept(
+        if (!reportEnable) {
+            logger.info("quality daily report disabled.")
+            return
+        }
+
+        if (!clusterName.split(",").contains(CommonUtils.getDbClusterName())) {
+            return
+        } else {
+            val startTime = LocalDateTime.now().minusDays(1)
+            val endTime = LocalDateTime.now()
+            val result = historyDao.batchDailyTotalCount(
                 dslContext = dslContext,
-                projectId = it.value1(),
-                pipelineId = null,
-                ruleId = null,
                 startTime = startTime,
                 endTime = endTime
             )
-            qualityDailyDispatch.dispatch(
-                QualityReportEvent(
-                    statisticsTime = startTime.format(DateTimeFormatter.ISO_DATE),
+            result.forEach {
+                val interceptCount = historyDao.countIntercept(
+                    dslContext = dslContext,
                     projectId = it.value1(),
-                    interceptedCount = interceptCount.toInt(),
-                    totalCount = it.value2()
+                    pipelineId = null,
+                    ruleId = null,
+                    startTime = startTime,
+                    endTime = endTime
                 )
-            )
+                qualityDailyDispatch.dispatch(
+                    QualityReportEvent(
+                        statisticsTime = startTime.format(DateTimeFormatter.ISO_DATE),
+                        projectId = it.value1(),
+                        interceptedCount = interceptCount.toInt(),
+                        totalCount = it.value2()
+                    )
+                )
+            }
+            logger.info("finish to send quality daily data.")
         }
-        logger.info("finish to send quality daily data.")
     }
 }
