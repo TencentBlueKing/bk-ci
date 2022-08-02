@@ -124,6 +124,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        search: String?,
         buildFormProperty: BuildFormProperty
     ): Result<List<BuildFormValue>> {
         return Result(
@@ -131,6 +132,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                search = search,
                 property = buildFormProperty
             )
         )

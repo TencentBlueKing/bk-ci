@@ -95,15 +95,16 @@ class ParamFacadeService @Autowired constructor(
         userId: String?,
         projectId: String,
         pipelineId: String?,
+        search: String? = null,
         property: BuildFormProperty
     ): List<BuildFormValue> {
         val filterParams =
             if (property.type == BuildFormPropertyType.SVN_TAG && (!property.repoHashId.isNullOrBlank())) {
                 addSvnTagDirectories(projectId, property)
             } else if (property.type == BuildFormPropertyType.GIT_REF && (!property.repoHashId.isNullOrBlank())) {
-                addGitRefs(projectId, property)
+                addGitRefs(projectId, property, search)
             } else if (property.type == BuildFormPropertyType.CODE_LIB && property.scmType != null) {
-                addCodelibProperties(userId, projectId, property)
+                addCodelibProperties(userId, projectId, property, search)
             } else if (property.type == BuildFormPropertyType.CONTAINER_TYPE && property.containerType != null) {
                 addContainerTypeProperties(userId, projectId, property)
             } else if (property.type == BuildFormPropertyType.ARTIFACTORY) {
@@ -117,9 +118,13 @@ class ParamFacadeService @Autowired constructor(
         return filterParams.options ?: emptyList()
     }
 
-    private fun addGitRefs(projectId: String, formProperty: BuildFormProperty): BuildFormProperty {
+    private fun addGitRefs(
+        projectId: String,
+        formProperty: BuildFormProperty,
+        search: String? = null
+    ): BuildFormProperty {
         val refs = try {
-            codeService.getGitRefs(projectId, formProperty.repoHashId)
+            codeService.getGitRefs(projectId, formProperty.repoHashId, search)
         } catch (e: Exception) {
             logger.error("projectId:$projectId,repoHashId:${formProperty.repoHashId} add git refs error", e)
             listOf<String>()
@@ -163,15 +168,18 @@ class ParamFacadeService @Autowired constructor(
     private fun addCodelibProperties(
         userId: String?,
         projectId: String,
-        codelibFormProperty: BuildFormProperty
+        codelibFormProperty: BuildFormProperty,
+        aliasName: String? = null
     ): BuildFormProperty {
 
         val aliasNames = if ((!userId.isNullOrBlank())) {
             // 检查代码库的权限， 只返回用户有权限代码库
-            val hasPermissionCodelibs = getPermissionCodelibList(userId, projectId, codelibFormProperty.scmType!!)
+            val hasPermissionCodelibs =
+                getPermissionCodelibList(userId, projectId, codelibFormProperty.scmType!!, aliasName)
             logger.info("[$userId|$projectId] Get the permission code lib list ($hasPermissionCodelibs)")
             hasPermissionCodelibs.map { BuildFormValue(it.aliasName, it.aliasName) }
         } else {
+            // 该接口没有搜索字段
             val codeAliasName = codeService.listRepository(projectId, codelibFormProperty.scmType!!)
             codeAliasName.map { BuildFormValue(it.aliasName, it.aliasName) }
         }
@@ -297,7 +305,12 @@ class ParamFacadeService @Autowired constructor(
         )
     }
 
-    private fun getPermissionCodelibList(userId: String, projectId: String, scmType: ScmType?): List<RepositoryInfo> {
+    private fun getPermissionCodelibList(
+        userId: String,
+        projectId: String,
+        scmType: ScmType?,
+        aliasName: String? = null
+    ): List<RepositoryInfo> {
         val watcher = Watcher("getPermissionCodelibList_${userId}_${projectId}_${scmType?.name}")
         return try {
             client.get(ServiceRepositoryResource::class).hasPermissionList(
@@ -306,7 +319,8 @@ class ParamFacadeService @Autowired constructor(
                 permission = Permission.LIST,
                 repositoryType = scmType?.name,
                 page = 1,
-                pageSize = 100
+                pageSize = 100,
+                aliasName = aliasName
             ).data?.records ?: emptyList()
         } catch (e: RuntimeException) {
             logger.warn("[$userId|$projectId] Fail to get the permission code lib list", e)

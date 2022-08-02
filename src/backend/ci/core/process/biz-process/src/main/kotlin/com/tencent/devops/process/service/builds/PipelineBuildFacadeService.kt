@@ -282,12 +282,14 @@ class PipelineBuildFacadeService(
         userId: String?,
         projectId: String,
         pipelineId: String,
+        search: String? = null,
         property: BuildFormProperty
     ): List<BuildFormValue> {
         return paramFacadeService.filterOptions(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
+            search = search,
             property = property
         )
     }

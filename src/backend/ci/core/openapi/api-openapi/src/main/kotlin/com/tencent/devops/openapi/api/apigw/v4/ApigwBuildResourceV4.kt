@@ -453,6 +453,9 @@ interface ApigwBuildResourceV4 {
         @ApiParam("流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
+        @ApiParam("搜索参数", required = false)
+        @QueryParam("search")
+        search: String? = null,
         @ApiParam("请求参数", required = true)
         property: BuildFormProperty
     ): Result<List<BuildFormValue>>

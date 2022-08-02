@@ -338,12 +338,14 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        search: String?,
         property: BuildFormProperty,
     ): Result<List<BuildFormValue>> {
         return client.get(ServiceBuildResource::class).manualSearchProperty(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
+            search = search,
             buildFormProperty = property,
         )
     }

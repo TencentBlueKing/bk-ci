@@ -171,6 +171,9 @@ interface ServiceBuildResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
+        @ApiParam("搜索参数", required = false)
+        @QueryParam("search")
+        search: String? = null,
         @ApiParam("流水线参数", required = false)
         buildFormProperty: BuildFormProperty
     ): Result<List<BuildFormValue>>
