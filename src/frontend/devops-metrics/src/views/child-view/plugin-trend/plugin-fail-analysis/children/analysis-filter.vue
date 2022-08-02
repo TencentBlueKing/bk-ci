@@ -23,7 +23,6 @@ const clearStatus = () => {
     errorCodes: [],
   });
 };
-
 const disableDate = (time) => time && time.getTime() > Date.now()
 </script>
 

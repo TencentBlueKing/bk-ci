@@ -24,7 +24,6 @@ const clearStatus = () => {
     endTime: '',
   });
 };
-
 const disableDate = (time) => time && time.getTime() > Date.now()
 </script>
 
