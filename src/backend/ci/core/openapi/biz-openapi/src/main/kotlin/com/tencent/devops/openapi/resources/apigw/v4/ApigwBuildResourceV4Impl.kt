@@ -350,7 +350,6 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         )
     }
 
-
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {
         val pipelineIdFormDB = indexService.getHandle(buildId) {
             client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
