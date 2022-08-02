@@ -51,6 +51,7 @@ import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
+import com.tencent.devops.process.yaml.v2.models.YmlName
 import com.tencent.devops.process.yaml.v2.models.YmlVersion
 import com.tencent.devops.process.yaml.v2.models.add
 import com.tencent.devops.process.yaml.v2.models.job.Container
@@ -118,7 +119,6 @@ object ScriptYmlUtils {
         val obj = yaml.load(yamlNormal) as Any
         return YamlUtil.toYaml(obj)
     }
-
     fun parseVersion(yamlStr: String?): YmlVersion? {
         if (yamlStr == null) {
             return null
@@ -130,6 +130,21 @@ object ScriptYmlUtils {
             YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
         } catch (e: Exception) {
             logger.warn("Check yaml version failed. return null")
+            null
+        }
+    }
+
+    fun parseName(yamlStr: String?): YmlName? {
+        if (yamlStr.isNullOrBlank()) {
+            return null
+        }
+
+        return try {
+            val yaml = Yaml()
+            val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+            YamlUtil.getObjectMapper().readValue(obj, YmlName::class.java)
+        } catch (e: Exception) {
+            logger.warn("get yaml name failed. return null")
             null
         }
     }

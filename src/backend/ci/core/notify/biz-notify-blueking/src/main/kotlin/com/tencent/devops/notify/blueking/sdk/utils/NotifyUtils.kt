@@ -87,14 +87,14 @@ class NotifyUtils constructor(
                 logger.info("notify response: $responseStr")
                 resultBean = ObjectMapper().readValue(responseStr, ApiResp::class.java)
             } else {
-                logger.error("notify request failed, response: ($response)")
+                logger.error("NOTIFY_REQUEST_FAILED|url=${request.url().url()}|response=($response)")
             }
             if (!resultBean.result!!) {
-                logger.error("notify send msg failed , message: ${resultBean.message}")
+                logger.error("NOTIFY_SEND_MSG_FAILED|url=${request.url().url()}|message=${resultBean.message}")
             }
             return resultBean
         } catch (ignore: Exception) {
-            logger.error("notify send msg failed , message: ${ignore.message}")
+            logger.error("NOTIFY_SEND_MSG_FAILED|url=${request.url().url()}|message=${ignore.message}", ignore)
             throw ErrorCodeException(
                 errorCode = ERROR_NOTIFY_SEND_FAIL,
                 defaultMessage = "notify send msg failed: ${ignore.message}"
