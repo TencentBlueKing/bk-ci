@@ -276,7 +276,6 @@ class PipelineRepositoryService constructor(
             if (e.id.isNullOrBlank()) {
                 e.id = modelTaskIdGenerator.getNextId()
             }
-
             ElementBizRegistrar.getPlugin(e)?.afterCreate(
                 element = e,
                 projectId = projectId,
@@ -386,7 +385,6 @@ class PipelineRepositoryService constructor(
                 if (e.id.isNullOrBlank()) {
                     e.id = modelTaskIdGenerator.getNextId()
                 }
-
                 when (e) {
                     is SubPipelineCallElement -> { // 子流水线循环依赖检查
                         val existPipelines = HashSet<String>()
@@ -1175,6 +1173,39 @@ class PipelineRepositoryService constructor(
             projectId = projectId,
             channelCode = channelCode,
             pipelineIds = pipelineIds
+        )
+    }
+
+    fun updateModelName(
+        pipelineId: String,
+        projectId: String,
+        modelName: String,
+        userId: String
+    ) {
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            // 1、update pipelineInf
+            pipelineInfoDao.update(
+                dslContext = transactionContext,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                pipelineName = modelName,
+                userId = null
+            )
+            // 2、update settingName
+            pipelineSettingDao.updateSettingName(
+                dslContext = transactionContext,
+                pipelineIdList = listOf(pipelineId),
+                name = modelName
+            )
+        }
+    }
+
+    fun updateMaxConRunningQueueSize(pipelineId: String, maxConRunningQueueSize: Int): Int {
+        return pipelineSettingDao.updateMaxConRunningQueueSize(
+            dslContext = dslContext,
+            pipelineIdList = listOf(pipelineId),
+            maxConRunningQueueSize = maxConRunningQueueSize
         )
     }
 

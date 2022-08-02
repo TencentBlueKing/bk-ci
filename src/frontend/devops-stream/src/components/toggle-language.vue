@@ -18,7 +18,8 @@
         getCurrentInstance
     } from '@vue/composition-api'
     import {
-        setCookie
+        setCookie,
+        getSubdomain
     } from '@/utils'
 
     export default defineComponent({
@@ -33,7 +34,7 @@
                     // catch
                 }
                 instance.proxy.$i18n.locale = locale
-                setCookie('blueking_language', locale, location.hostname)
+                setCookie('blueking_language', locale, getSubdomain())
                 location.reload()
             }
 

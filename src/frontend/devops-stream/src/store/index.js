@@ -30,7 +30,8 @@ const store = new Vuex.Store({
             stage: {},
             type: ''
         },
-        messageNum: 0
+        messageNum: 0,
+        showLoginDialog: false
     },
     getters: {},
     mutations: {
@@ -66,6 +67,9 @@ const store = new Vuex.Store({
         },
         updateMessageNum (state, num) {
             state.messageNum = num
+        },
+        updateShowLoginDialog (state, showLoginDialog) {
+            state.showLoginDialog = showLoginDialog
         }
     },
     actions: {
@@ -98,6 +102,9 @@ const store = new Vuex.Store({
         },
         setMessageNum ({ commit }, num) {
             commit('updateMessageNum', num)
+        },
+        setShowLoginDialog ({ commit }, isShow) {
+            commit('updateShowLoginDialog', isShow)
         }
     }
 })

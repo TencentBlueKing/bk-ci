@@ -28,7 +28,6 @@
 package com.tencent.devops.dispatch.docker.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -231,7 +230,6 @@ class DockerHostBuildService @Autowired constructor(
     private fun finishBuild(
         record: TDispatchPipelineDockerBuildRecord,
         success: Boolean,
-        buildLessFlag: Boolean = false,
         executeCount: Int? = null
     ) {
         LOG.info("Finish the docker build(${record.buildId}) with result($success)")
@@ -249,11 +247,6 @@ class DockerHostBuildService @Autowired constructor(
                 record.vmSeqId,
                 if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
             redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString(), executeCount)
-
-            // 无编译环境清除redisAuth
-            if (buildLessFlag) {
-                redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
-            }
         } catch (e: Exception) {
             LOG.warn("Finish the docker build(${record.buildId}) error.", e)
         }

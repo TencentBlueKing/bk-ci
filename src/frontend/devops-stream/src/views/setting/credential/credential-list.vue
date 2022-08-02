@@ -161,7 +161,7 @@
 <style lang="postcss" scoped>
     .credential-home {
         padding: 16px;
-        height: calc(100vh - 60px);
+        height: calc(100vh - 61px);
         overflow: auto;
     }
     .home-header {

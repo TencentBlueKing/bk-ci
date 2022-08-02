@@ -67,8 +67,8 @@ const actions: ActionTree<RootState, any> = {
         console.log(services)
         commit(SET_SERVICES, { services })
     },
-    async getProjects ({ dispatch }: ActionContext<RootState, any>, includeDisable = false) {
-        const res: any = await Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/?includeDisable=${includeDisable}`)
+    async getProjects ({ dispatch }: ActionContext<RootState, any>) {
+        const res: any = await Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/`)
         const projectList: Project[] = res
         if (Array.isArray(projectList)) {
             dispatch('setProjectList', projectList)

@@ -27,7 +27,10 @@
 
 package com.tencent.devops.stream.trigger.actions.tgit
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeExtensionActionKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
@@ -38,6 +41,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.isMrMergeEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
@@ -68,8 +72,9 @@ import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.GitCheckService
 import com.tencent.devops.stream.trigger.service.StreamTriggerTokenService
 import com.tencent.devops.stream.util.StreamCommonUtils
-import org.slf4j.LoggerFactory
 import java.util.Base64
+import java.util.Date
+import org.slf4j.LoggerFactory
 
 class TGitMrActionGit(
     private val apiService: TGitApiService,
@@ -90,6 +95,8 @@ class TGitMrActionGit(
 
     override val mrIId: String
         get() = event().object_attributes.iid.toString()
+
+    override fun checkMrForkAction() = event().isMrForkEvent()
 
     override fun addMrComment(body: MrCommentBody) {
         apiService.addMrComment(
@@ -236,7 +243,8 @@ class TGitMrActionGit(
         val event = event()
         if (event.isMrMergeEvent()) {
             return Pair(
-                data.eventCommon.branch, api.getFileContent(
+                data.eventCommon.branch,
+                api.getFileContent(
                     cred = this.getGitCred(),
                     gitProjectId = data.getGitProjectId(),
                     fileName = fileName,
@@ -481,6 +489,29 @@ class TGitMrActionGit(
                 mrId = event().object_attributes.id,
                 // 解锁延迟5s，确保在commit check发送后再发送webhook锁解锁
                 delayMills = 5000
+            )
+        }
+    }
+
+    override fun getWebhookCommitList(page: Int, pageSize: Int): List<WebhookCommit> {
+        return apiService.getMrCommitList(
+            cred = getGitCred(),
+            gitUrl = data.setting.gitHttpUrl,
+            mrId = event().object_attributes.id,
+            page = page,
+            pageSize = pageSize,
+            retry = ApiRequestRetryInfo(true)
+        ).map {
+            val commitTime =
+                DateTimeUtil.convertDateToLocalDateTime(Date(DateTimeUtil.zoneDateToTimestamp(it.committed_date)))
+            WebhookCommit(
+                commitId = it.id,
+                authorName = it.author_name,
+                message = it.message,
+                repoType = ScmType.CODE_TGIT.name,
+                commitTime = commitTime,
+                eventType = CodeEventType.MERGE_REQUEST.name,
+                mrId = event().object_attributes.id.toString()
             )
         }
     }

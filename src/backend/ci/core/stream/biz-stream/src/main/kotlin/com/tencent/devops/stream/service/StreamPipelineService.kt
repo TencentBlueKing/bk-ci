@@ -42,6 +42,7 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -54,7 +55,6 @@ import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerLock
 import com.tencent.devops.stream.util.GitCommonUtils
-import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -313,9 +313,11 @@ class StreamPipelineService @Autowired constructor(
             setting = modelAndSetting.setting.copy(
                 projectId = projectCode,
                 pipelineId = pipeline.pipelineId,
-                pipelineName = modelAndSetting.model.name
+                pipelineName = modelAndSetting.model.name,
+                maxConRunningQueueSize = null
             ),
-            updateLastModifyUser = updateLastModifyUser
+            updateLastModifyUser = updateLastModifyUser,
+            channelCode = channelCode
         )
     }
 
@@ -335,7 +337,7 @@ class StreamPipelineService @Autowired constructor(
             gitProjectId = gitProjectId,
             pipelineId = "",
             filePath = file.filePath,
-            displayName = file.filePath,
+            displayName = getDisplayName(file),
             enabled = true,
             creator = userId,
             lastUpdateBranch = file.branch
@@ -360,11 +362,21 @@ class StreamPipelineService @Autowired constructor(
                     userId = userId,
                     gitProjectId = gitProjectId.toLong(),
                     projectCode = gitProjectCode,
-                    modelAndSetting = createTriggerModel(gitProjectCode),
+                    modelAndSetting = createTriggerModel(realPipeline.displayName),
                     updateLastModifyUser = true,
                     branch = branch
                 )
             }
+        }
+    }
+
+    private fun getDisplayName(file: StreamCreateFileInfo): String {
+        val originYaml = file.content
+        val ymlName = ScriptYmlUtils.parseName(originYaml)?.name
+        return if (!ymlName.isNullOrBlank()) {
+            ymlName
+        } else {
+            file.filePath
         }
     }
 
@@ -380,9 +392,9 @@ class StreamPipelineService @Autowired constructor(
         return "git_$gitProjectId"
     }
 
-    private fun createTriggerModel(projectCode: String) = PipelineModelAndSetting(
+    private fun createTriggerModel(displayName: String) = PipelineModelAndSetting(
         model = Model(
-            name = StreamPipelineUtils.genBKPipelineName(projectCode),
+            name = displayName,
             desc = "",
             stages = listOf(
                 Stage(
@@ -418,7 +430,8 @@ class StreamPipelineService @Autowired constructor(
             gitProjectId = gitProjectId,
             pipelineIds = pipelineIds
         ).associate { it.value1() to it.value2() }
-        val pipelineBuild = gitRequestEventBuildDao.getPipelinesLastBuild(dslContext, gitProjectId, pipelineIds)
+        val lastEventIds = gitRequestEventBuildDao.getLastEventBuildIds(dslContext, pipelineIds)
+        val pipelineBuild = gitRequestEventBuildDao.getPipelinesLastBuild(dslContext, gitProjectId, lastEventIds)
             ?.associate { it.pipelineId to it.branch }
         // 获取没有构建记录的流水线的未构建成功的分支
         val noBuildPipelines = (pipelineIds - pipelineBuild?.keys).map { it.toString() }.toSet()
