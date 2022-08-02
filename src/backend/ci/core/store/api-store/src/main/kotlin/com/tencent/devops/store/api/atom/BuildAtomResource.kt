@@ -45,10 +45,10 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildAtomResource {
 
-    @ApiOperation("获取插件默认本号信息")
+    @ApiOperation("获取插件默认可用版本号信息")
     @GET
-    @Path("/projects/{projectCode}/codes/{atomCode}/default/version")
-    fun getAtomDefaultVersion(
+    @Path("/projects/{projectCode}/atoms/{atomCode}/default/valid/version")
+    fun getAtomDefaultValidVersion(
         @ApiParam("项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,

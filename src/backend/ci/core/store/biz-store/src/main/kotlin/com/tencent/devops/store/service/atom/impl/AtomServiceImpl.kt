@@ -1151,7 +1151,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         }
     }
 
-    override fun getAtomDefaultVersion(projectCode: String, atomCode: String): Result<VersionInfo?> {
+    override fun getAtomDefaultValidVersion(projectCode: String, atomCode: String): Result<VersionInfo?> {
         val defaultFlag = marketAtomCommonService.isPublicAtom(atomCode)
         val defaultVersionRecord = atomDao.getVersionsByAtomCode(
             dslContext = dslContext,
@@ -1160,7 +1160,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             defaultFlag = defaultFlag,
             atomStatusList = generateAtomStatusList(atomCode, projectCode),
             limitNum = 1
-        )?.get(0)
+        )?.getOrNull(0)
         val versionInfo = defaultVersionRecord?.let {
             val version = it[KEY_VERSION] as String
             VersionInfo(

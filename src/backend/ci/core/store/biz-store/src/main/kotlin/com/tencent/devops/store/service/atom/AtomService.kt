@@ -205,10 +205,10 @@ interface AtomService {
     fun getAtomRealVersion(projectCode: String, atomCode: String, version: String): Result<String?>
 
     /**
-     * 获取插件默认版本号
+     * 获取插件默认可用版本号
      * @param projectCode 项目代码
      * @param atomCode 插件代码
      * @return 插件默认版本号
      */
-    fun getAtomDefaultVersion(projectCode: String, atomCode: String): Result<VersionInfo?>
+    fun getAtomDefaultValidVersion(projectCode: String, atomCode: String): Result<VersionInfo?>
 }

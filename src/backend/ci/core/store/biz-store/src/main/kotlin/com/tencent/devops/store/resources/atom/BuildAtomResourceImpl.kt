@@ -38,7 +38,7 @@ class BuildAtomResourceImpl @Autowired constructor(
     private val atomService: AtomService
 ) : BuildAtomResource {
 
-    override fun getAtomDefaultVersion(projectCode: String, atomCode: String): Result<VersionInfo?> {
-        return atomService.getAtomDefaultVersion(projectCode, atomCode)
+    override fun getAtomDefaultValidVersion(projectCode: String, atomCode: String): Result<VersionInfo?> {
+        return atomService.getAtomDefaultValidVersion(projectCode, atomCode)
     }
 }
