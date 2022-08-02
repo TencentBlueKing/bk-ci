@@ -106,7 +106,7 @@ class BkRepoClient constructor(
             createGenericRepo(userId, projectId, REPO_LOG, logRepoCredentialsKey)
             true
         } catch (e: Exception) {
-            logger.error("create repo resource error", e)
+            logger.error("BKSystemErrorMonitor|BK_REPO|create repo resource error", e)
             false
         }
     }
