@@ -27,7 +27,6 @@
 
 package com.tencent.devops.artifactory.resources.builds
 
-import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.devops.artifactory.api.builds.BuildCustomDirResource
 import com.tencent.devops.artifactory.pojo.CombinationPath
 import com.tencent.devops.artifactory.pojo.FileInfo
