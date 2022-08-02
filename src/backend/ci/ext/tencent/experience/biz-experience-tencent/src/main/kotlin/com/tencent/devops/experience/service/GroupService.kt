@@ -278,14 +278,14 @@ class GroupService @Autowired constructor(
         if (newAddOuterUsers.isNotEmpty()) {
             sendNotificationToNewAddUser(
                     newAddUsers = newAddOuterUsers,
-                    userType = "newAddOuterUsers",
+                    userType = NEW_ADD_OUTER_USERS,
                     groupId = groupId
             )
         }
         if (newAddInnerUsers.isNotEmpty()) {
             sendNotificationToNewAddUser(
                     newAddUsers = newAddInnerUsers,
-                    userType = "newAddInnerUsers",
+                    userType = NEW_ADD_INNER_USERS,
                     groupId = groupId
             )
         }
@@ -318,16 +318,15 @@ class GroupService @Autowired constructor(
         experienceIds.addAll(experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds)
                 .map { it.value1() }.toSet())
         experienceIds.forEach { experienceId ->
-            // todo 是否需要判断体验是否过期？
             val experienceRecord = experienceDao.get(dslContext, experienceId)
             when (userType) {
-                "newAddOuterUsers" -> {
+                NEW_ADD_OUTER_USERS -> {
                     experienceService.sendMessageToOuterReceivers(
                             outerReceivers = newAddUsers,
                             experienceRecord = experienceRecord
                     )
                 }
-                "newAddInnerUsers" -> {
+                NEW_ADD_INNER_USERS -> {
                     val notifyTypeList = objectMapper.readValue<Set<NotifyType>>(experienceRecord.notifyTypes)
                     val pcUrl = experienceService.getPcUrl(experienceRecord.projectId, experienceId)
                     val appUrl = experienceService.getShortExternalUrl(experienceId)
@@ -361,5 +360,10 @@ class GroupService @Autowired constructor(
         experienceGroupDao.deleteByGroupId(dslContext, groupId)
         experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
         experienceGroupOuterDao.deleteByGroupId(dslContext, groupId)
+    }
+
+    companion object {
+        const val NEW_ADD_OUTER_USERS = "new_add_outer_users"
+        const val NEW_ADD_INNER_USERS = "new_add_inner_users"
     }
 }
