@@ -25,17 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.process.yaml.v2.models
 
-import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
-import com.tencent.devops.project.pojo.Result
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 
-@Suppress("ALL")
-interface OpProjectService {
-
-    fun updateProjectFromOp(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Int
-
-    fun synProject(projectCode: String, isRefresh: Boolean? = true): Result<Boolean>
-
-    fun synProjectInit(isRefresh: Boolean? = true): Result<List<String>>
-}
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class YmlName(
+    val name: String?
+)
