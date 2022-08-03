@@ -39,6 +39,7 @@ import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
@@ -388,6 +389,32 @@ class TGitApiService @Autowired constructor(
         )
     }
 
+    @SuppressWarnings("LongParameterList")
+    fun getMrCommitList(
+        cred: TGitCred,
+        gitUrl: String,
+        mrId: Long,
+        page: Int,
+        pageSize: Int,
+        retry: ApiRequestRetryInfo
+    ): List<GitCommit> {
+        return doRetryFun(
+            retry = retry,
+            log = "$gitUrl|$mrId|$page|get mr commit list error",
+            apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR
+        ) {
+            client.get(ServiceScmOauthResource::class).getMrCommitList(
+                projectName = GitUtils.getProjectName(gitUrl),
+                url = gitUrl,
+                type = ScmType.CODE_GIT,
+                token = cred.toToken(),
+                mrId = mrId,
+                page = page,
+                size = pageSize
+            ).data ?: emptyList()
+        }
+    }
+
     protected fun StreamGitCred.toToken(): String {
         this as TGitCred
         if (this.accessToken != null) {
@@ -442,27 +469,27 @@ class TGitApiService @Autowired constructor(
                 action()
             }
         } catch (e: ClientException) {
-            logger.warn("retry 5 times $log", e)
+            logger.warn("TGitApiService|retryFun|retry 5 times $log", e)
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
                 defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
             )
         } catch (e: RemoteServiceException) {
-            logger.warn("GIT_API_ERROR $log", e)
+            logger.warn("TGitApiService|retryFun|GIT_API_ERROR $log", e)
             throw ErrorCodeException(
                 statusCode = e.httpStatus,
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = "$log: ${e.errorMessage}"
             )
         } catch (e: CustomException) {
-            logger.warn("GIT_SCM_ERROR $log", e)
+            logger.warn("TGitApiService|retryFun|GIT_SCM_ERROR $log", e)
             throw ErrorCodeException(
                 statusCode = e.status.statusCode,
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = "$log: ${e.message}"
             )
         } catch (e: Throwable) {
-            logger.error("retryFun error $log", e)
+            logger.warn("TGitApiService|retryFun|error $log", e)
             throw ErrorCodeException(
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = if (e.message.isNullOrBlank()) {

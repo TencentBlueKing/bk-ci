@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.engine.service.detail
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.INIT_VERSION
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
@@ -38,20 +38,23 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
-import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
+import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
-import com.tencent.devops.process.util.TaskUtils
+import com.tencent.devops.store.api.atom.ServiceAtomResource
+import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions", "ComplexCondition")
 @Service
@@ -174,16 +177,15 @@ class TaskBuildDetailService(
                             c.status = BuildStatus.RUNNING.name
                             e.status = BuildStatus.RUNNING.name
                         }
-                        // 如果是自动重试则不重置task和job的时间
-                        val retryCount = redisOperation.get(
-                            TaskUtils.getFailRetryTaskRedisKey(buildId = buildId, taskId = taskId)
-                        )?.toInt() ?: 0
-                        if (retryCount < 1) {
-                            e.startEpoch = System.currentTimeMillis()
+
+                        if (e.startEpoch == null) { // 自动重试，startEpoch 不会为null，所以不需要查redis来确认
+                            val currentTimeMillis = System.currentTimeMillis()
+                            e.startEpoch = currentTimeMillis
                             if (c.startEpoch == null) {
                                 c.startEpoch = e.startEpoch
                             }
                         }
+                        e.elapsed = null
                         e.errorType = null
                         e.errorCode = null
                         e.errorMsg = null
@@ -231,16 +233,13 @@ class TaskBuildDetailService(
         )
     }
 
-    fun taskEnd(
-        projectId: String,
-        buildId: String,
-        taskId: String,
-        buildStatus: BuildStatus,
-        taskVersion: String? = null,
-        errorType: ErrorType? = null,
-        errorCode: Int? = null,
-        errorMsg: String? = null
-    ): List<PipelineTaskStatusInfo> {
+    fun taskEnd(taskBuildEndParam: TaskBuildEndParam): List<PipelineTaskStatusInfo> {
+        val projectId = taskBuildEndParam.projectId
+        val buildId = taskBuildEndParam.buildId
+        val taskId = taskBuildEndParam.taskId
+        val buildStatus = taskBuildEndParam.buildStatus
+        val atomVersion = taskBuildEndParam.atomVersion
+        val errorType = taskBuildEndParam.errorType
         val updateTaskStatusInfos = mutableListOf<PipelineTaskStatusInfo>()
         update(projectId, buildId, object : ModelInterface {
 
@@ -257,22 +256,26 @@ class TaskBuildDetailService(
                     }
                     if (errorType != null) {
                         e.errorType = errorType.name
-                        e.errorCode = errorCode
-                        e.errorMsg = errorMsg
+                        e.errorCode = taskBuildEndParam.errorCode
+                        e.errorMsg = taskBuildEndParam.errorMsg
                     }
-                    if (taskVersion != null) {
+                    if (atomVersion != null) {
                         when (e) {
                             is MarketBuildAtomElement -> {
-                                e.version = taskVersion
+                                e.version = atomVersion
                             }
                             is MarketBuildLessAtomElement -> {
-                                e.version = taskVersion
+                                e.version = atomVersion
                             }
                             else -> {
                                 e.version = INIT_VERSION
                             }
                         }
                     }
+                    val atomClassify = getAtomClassify(e.getAtomCode())
+                    e.atomName = atomClassify?.atomName
+                    e.classifyCode = atomClassify?.classifyCode
+                    e.classifyName = atomClassify?.classifyName
                     var elementElapsed = 0L
                     run lit@{
                         val elements = c.elements
@@ -310,6 +313,20 @@ class TaskBuildDetailService(
             operation = "taskEnd#$taskId"
         )
         return updateTaskStatusInfos
+    }
+
+    private val atomClassifyCache = Caffeine.newBuilder()
+        .maximumSize(5000)
+        .expireAfterAccess(6, TimeUnit.HOURS)
+        .build<String, AtomClassifyInfo>()
+
+    fun getAtomClassify(atomCode: String): AtomClassifyInfo? {
+        var atomClassify = atomClassifyCache.getIfPresent(atomCode)
+        if (atomClassify == null) {
+            atomClassify = client.get(ServiceAtomResource::class).getAtomClassifyInfo(atomCode).data
+        }
+        atomClassify?.let { atomClassifyCache.put(atomCode, it) }
+        return atomClassify
     }
 
     private fun handleUpdateTaskStatusInfos(

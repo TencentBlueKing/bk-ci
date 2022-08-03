@@ -208,7 +208,13 @@ open class MarketAtomTask : ITask() {
         )
         buildTask.stepId?.let { variables = variables.plus(PIPELINE_STEP_ID to it) }
 
-        writeInputFile(atomTmpSpace, variables.plus(inputParams).plus(getAtomSensitiveConfMap(atomCode)))
+        val inputVariables = variables.plus(inputParams).toMutableMap<String, Any>()
+        val atomSensitiveConfWriteSwitch = System.getProperty("BK_CI_ATOM_PRIVATE_CONFIG_WRITE_SWITCH")?.toBoolean()
+        if (atomSensitiveConfWriteSwitch != false) {
+            // 开关关闭则不再写入插件私有配置到input.json中
+            inputVariables.putAll(getAtomSensitiveConfMap(atomCode))
+        }
+        writeInputFile(atomTmpSpace, inputVariables)
         writeSdkEnv(atomTmpSpace, buildTask, buildVariables)
         writeParamEnv(atomCode, atomTmpSpace, workspace, buildTask, buildVariables)
 

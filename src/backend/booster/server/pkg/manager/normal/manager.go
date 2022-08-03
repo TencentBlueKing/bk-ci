@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
 	"github.com/Tencent/bk-ci/src/booster/common/util"
+	"github.com/Tencent/bk-ci/src/booster/server/config"
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
 	mgr "github.com/Tencent/bk-ci/src/booster/server/pkg/manager"
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/types"
@@ -50,6 +51,7 @@ func NewManager(
 	roleEvent types.RoleChangeEvent,
 	debug bool,
 	queueBriefInfoList []engine.QueueBriefInfo,
+	serverConf config.ServerConfig,
 	engineList ...engine.Engine) mgr.Manager {
 	engines := make(map[engine.TypeName]engine.Engine, 10)
 	enl := make([]string, 0, 10)
@@ -64,7 +66,7 @@ func NewManager(
 		roleEvent: roleEvent,
 		engines:   engines,
 		layer:     layer,
-		keeper:    NewKeeper(layer, debug),
+		keeper:    NewKeeper(layer, debug, serverConf.CommonEngineConfig),
 		cleaner:   NewCleaner(layer),
 	}
 	selector := NewSelector(layer, &mgr, queueBriefInfoList...)

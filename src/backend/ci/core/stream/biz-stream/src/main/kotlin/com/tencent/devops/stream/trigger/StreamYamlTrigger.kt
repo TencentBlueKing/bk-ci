@@ -44,6 +44,7 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.exception.CommitCheck
@@ -58,7 +59,6 @@ import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
-import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -88,15 +88,19 @@ class StreamYamlTrigger @Autowired constructor(
     fun triggerBuild(
         action: BaseAction
     ): Boolean {
-        logger.info("|${action.data.context.requestEventId}|triggerBuild|action|${action.format()}")
+        logger.info(
+            "StreamYamlTrigger|triggerBuild|requestEventId" +
+                "|${action.data.context.requestEventId}|action|${action.format()}"
+        )
         var pipeline = action.data.context.pipeline!!
+
         // 提前创建新流水线，保证git提交后 stream上能看到
         if (pipeline.pipelineId.isBlank()) {
             pipeline = StreamTriggerPipeline(
                 gitProjectId = action.data.getGitProjectId(),
                 pipelineId = "",
                 filePath = pipeline.filePath,
-                displayName = pipeline.filePath,
+                displayName = getDisplayName(action),
                 enabled = true,
                 creator = action.data.getUserId(),
                 lastUpdateBranch = action.data.eventCommon.branch
@@ -125,16 +129,18 @@ class StreamYamlTrigger @Autowired constructor(
         val triggerResult = triggerMatcher.isMatch(action)
         val (isTrigger, _, isTiming, isDelete, repoHookName) = triggerResult
         logger.info(
-            "${pipeline.pipelineId}|Match return|isTrigger=$isTrigger|" +
+            "StreamYamlTrigger|triggerBuild|pipelineId|" +
+                "${pipeline.pipelineId}|Match return|isTrigger=$isTrigger|" +
                 "isTiming=$isTiming|isDelete=$isDelete|repoHookName=$repoHookName"
         )
 
         val noNeedTrigger = !isTrigger && !isTiming && !isDelete && repoHookName.isNullOrEmpty()
         if (noNeedTrigger) {
             logger.warn(
-                "${pipeline.pipelineId}|" +
-                    "Matcher is false, return, gitProjectId: ${action.data.getGitProjectId()}, " +
-                    "eventId: ${action.data.context.requestEventId}"
+                "StreamYamlTrigger|triggerBuild|pipelineId|" +
+                    "${pipeline.pipelineId}|" +
+                    "Matcher is false|gitProjectId|${action.data.getGitProjectId()}|" +
+                    "eventId|${action.data.context.requestEventId}"
             )
             throw StreamTriggerException(action, TriggerReason.TRIGGER_NOT_MATCH)
         }
@@ -146,8 +152,10 @@ class StreamYamlTrigger @Autowired constructor(
         val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlReplaceResult.preYaml)
         action.data.context.parsedYaml = parsedYaml
         action.data.context.normalizedYaml = normalizedYaml
-        logger.info("${pipeline.pipelineId} parsedYaml: $parsedYaml normalize yaml: $normalizedYaml")
-
+        logger.info(
+            "StreamYamlTrigger|triggerBuild|pipelineId|${pipeline.pipelineId}" +
+                "|parsedYaml|$parsedYaml|normalize yaml|$normalizedYaml"
+        )
         // 除了新建的流水线，若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称，只在当前yml文件变更时进行
         if (needChangePipelineDisplayName(action)) {
             pipeline.displayName = yamlObject.name?.ifBlank {
@@ -163,8 +171,8 @@ class StreamYamlTrigger @Autowired constructor(
         if (isTiming) {
             // 定时注册事件
             logger.warn(
-                "special job register timer: $isTiming " +
-                    "gitProjectId: ${action.data.getGitProjectId()}, eventId: ${action.data.context.requestEventId!!}"
+                "StreamYamlTrigger|triggerBuild|special job register|timer|$isTiming" +
+                    "|gitProjectId|${action.data.getGitProjectId()}|eventId|${action.data.context.requestEventId!!}"
             )
             yamlBuild.gitStartBuild(
                 action = action,
@@ -180,9 +188,9 @@ class StreamYamlTrigger @Autowired constructor(
         if (isDelete || !repoHookName.isNullOrEmpty()) {
             // 有特殊任务的注册事件
             logger.warn(
-                "special job register delete: $isDelete，repoHookName：$repoHookName" +
-                        "gitProjectId: ${action.data.getGitProjectId()}, " +
-                        "eventId: ${action.data.context.requestEventId!!}"
+                "StreamYamlTrigger|triggerBuild|special job register|delete|$isDelete|repoHookName|$repoHookName" +
+                    "|gitProjectId|${action.data.getGitProjectId()}" +
+                    "|eventId|${action.data.context.requestEventId!!}"
             )
             yamlBuild.gitStartBuild(
                 action = action,
@@ -198,8 +206,8 @@ class StreamYamlTrigger @Autowired constructor(
         if (isTrigger) {
             // 正常匹配仓库操作触发
             logger.info(
-                "Matcher is true, display the event, gitProjectId: ${action.data.getGitProjectId()}, " +
-                    "eventId: ${action.data.context.requestEventId!!}, dispatched pipeline: $pipeline"
+                "StreamYamlTrigger|triggerBuild|Matcher|gitProjectId|${action.data.getGitProjectId()}|" +
+                    "eventId|${action.data.context.requestEventId!!}|pipeline|$pipeline"
             )
 
             val gitBuildId = gitRequestEventBuildDao.save(
@@ -229,11 +237,22 @@ class StreamYamlTrigger @Autowired constructor(
         return true
     }
 
+    private fun getDisplayName(action: BaseAction): String {
+        val originYaml = action.data.context.originYaml!!
+        val ymlName = ScriptYmlUtils.parseName(originYaml)?.name
+        val pipeline = action.data.context.pipeline!!
+        return if (!ymlName.isNullOrBlank()) {
+            ymlName
+        } else {
+            pipeline.filePath
+        }
+    }
+
     private fun needUpdateLastBuildBranch(action: BaseAction): Boolean {
         return action.data.context.pipeline!!.pipelineId.isBlank() ||
             (
                 action is GitBaseAction &&
-                        !action.getChangeSet().isNullOrEmpty() &&
+                    !action.getChangeSet().isNullOrEmpty() &&
                     action.getChangeSet()!!.toSet()
                         .contains(action.data.context.pipeline!!.filePath)
                 )
@@ -243,7 +262,10 @@ class StreamYamlTrigger @Autowired constructor(
     fun prepareCIBuildYaml(
         action: BaseAction
     ): YamlReplaceResult? {
-        logger.info("|${action.data.context.requestEventId}|prepareCIBuildYaml|action|${action.format()}")
+        logger.info(
+            "StreamYamlTrigger|prepareCIBuildYaml" +
+                "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
+        )
 
         if (action.data.context.originYaml.isNullOrBlank()) {
             return null
@@ -288,7 +310,11 @@ class StreamYamlTrigger @Autowired constructor(
                 }
             )
         } catch (e: Throwable) {
-            logger.info("event ${action.data.context.requestEventId} yaml template replace error", e)
+            logger.info(
+                "StreamYamlTrigger|prepareCIBuildYaml" +
+                    "|event|${action.data.context.requestEventId}|error",
+                e
+            )
             val isMr = action.metaData.isStreamMr()
             val (block, message, reason) = when (e) {
                 is YamlBlankException -> {
@@ -308,7 +334,7 @@ class StreamYamlTrigger @Autowired constructor(
                     throw e
                 }
                 else -> {
-                    logger.error("prepareCIBuildYaml|event: ${action.data.context.requestEventId} unknow error", e)
+                    logger.warn("StreamYamlTrigger|prepareCIBuildYaml|${action.data.context.requestEventId}|error", e)
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }

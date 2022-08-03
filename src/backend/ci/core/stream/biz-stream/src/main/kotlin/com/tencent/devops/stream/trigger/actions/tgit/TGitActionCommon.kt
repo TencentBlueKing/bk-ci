@@ -7,7 +7,6 @@ import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.Constansts
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
@@ -40,7 +39,7 @@ object TGitActionCommon {
         triggerOn: TriggerOn?,
         needMatch: Boolean = true
     ): Pair<Boolean, Map<String, String>> {
-        logger.info("match and start params|triggerOn:$triggerOn")
+        logger.info("TGitActionCommon|matchAndStartParams|match and start params|triggerOn|$triggerOn")
 
         val gitEvent = action.data.event as GitEvent
 
@@ -52,15 +51,17 @@ object TGitActionCommon {
             element = element,
             variables = mapOf()
         )!!
-        logger.info("match and start params, element:$element, webHookParams:$webHookParams")
+        logger.info(
+            "TGitActionCommon|matchAndStartParams" +
+                "|match and start params|element|$element|webHookParams|$webHookParams"
+        )
 
         val matcher = TriggerBuilder.buildGitWebHookMatcher(gitEvent)
         val repository = if (action.data.context.repoTrigger != null) {
-            val projectName = action.data.eventCommon.gitProjectName
-                ?: GitUtils.getProjectName(action.data.setting.gitHttpUrl)
+            val projectName = action.data.eventCommon.gitProjectName ?: ""
             CodeGitRepository(
                 aliasName = projectName,
-                url = action.data.setting.gitHttpUrl,
+                url = action.data.context.repoTrigger?.triggerGitHttpUrl ?: "",
                 credentialId = "",
                 projectName = projectName,
                 userName = action.data.getUserId(),

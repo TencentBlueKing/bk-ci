@@ -97,6 +97,7 @@ import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -346,9 +347,8 @@ class PipelineBuildFacadeService(
                 ) {
                     return buildId
                 }
-            }
 
-            if (!buildInfo.isFinish()) { // 拦截运行中的重试，防止重复提交
+                // 对不合法的重试进行拦截，防止重复提交
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
                     defaultMessage = "重试已经启动，忽略重复的请求"
@@ -382,6 +382,9 @@ class PipelineBuildFacadeService(
             }
             val startType = StartType.toStartType(buildInfo.trigger)
             if (!taskId.isNullOrBlank()) {
+                buildInfo.buildParameters?.associateBy { it.key }?.get(PIPELINE_RETRY_COUNT)?.let { param ->
+                    paramMap[param.key] = param
+                }
                 // stage/job/task级重试
                 run {
                     model.stages.forEach { s ->
@@ -772,7 +775,6 @@ class PipelineBuildFacadeService(
                         }
                         if (!reviewUser.contains(userId)) {
                             throw ErrorCodeException(
-                                statusCode = Response.Status.NOT_FOUND.statusCode,
                                 errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
                                 defaultMessage = "用户($userId)不在审核人员名单中",
                                 params = arrayOf(userId)
@@ -838,7 +840,6 @@ class PipelineBuildFacadeService(
             )
 
         if (buildStage.status.name != BuildStatus.PAUSE.name) throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
             defaultMessage = "Stage($stageId)未处于暂停状态",
             params = arrayOf(stageId)
@@ -878,7 +879,6 @@ class PipelineBuildFacadeService(
                 // 发送排队失败的事件
                 logger.warn("[$pipelineId]|START_PIPELINE_MANUAL|流水线启动失败:[${interceptResult.message}]")
                 throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = interceptResult.status.toString(),
                     defaultMessage = "Stage启动失败![${interceptResult.message}]"
                 )
@@ -953,7 +953,6 @@ class PipelineBuildFacadeService(
             }
         }
         if (check?.status != BuildStatus.QUALITY_CHECK_WAIT.name) throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
             defaultMessage = "Stage($stageId)未处于质量红线带把关状态",
             params = arrayOf(stageId)
@@ -1020,7 +1019,6 @@ class PipelineBuildFacadeService(
                         el.desc = buildVariableService.replaceTemplate(projectId, buildId, el.desc)
                         if (!reviewUser.contains(userId)) {
                             throw ErrorCodeException(
-                                statusCode = Response.Status.NOT_FOUND.statusCode,
                                 errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
                                 defaultMessage = "用户($userId)不在审核人员名单中",
                                 params = arrayOf(userId)
@@ -1278,12 +1276,6 @@ class PipelineBuildFacadeService(
                 arrayOf(buildId)
             )
 
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
-                ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
-                arrayOf(buildId)
-            )
-
         val allVariable = buildVariableService.getAllVariable(projectId, buildId)
 
         return Result(
@@ -1291,7 +1283,7 @@ class PipelineBuildFacadeService(
                 id = buildHistory.id,
                 userId = buildHistory.userId,
                 trigger = buildHistory.trigger,
-                pipelineName = pipelineInfo.pipelineName,
+                pipelineName = allVariable[PIPELINE_NAME] ?: "",
                 buildNum = buildHistory.buildNum ?: 1,
                 pipelineVersion = buildHistory.pipelineVersion,
                 status = buildHistory.status,
@@ -1446,7 +1438,10 @@ class PipelineBuildFacadeService(
         remark: String?,
         buildNoStart: Int?,
         buildNoEnd: Int?,
-        buildMsg: String? = null
+        buildMsg: String? = null,
+        checkPermission: Boolean = true,
+        startUser: List<String>? = null,
+        updateTimeDesc: Boolean? = null
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         var pageSizeNotNull = pageSize ?: 50
@@ -1470,14 +1465,15 @@ class PipelineBuildFacadeService(
 
         val apiStartEpoch = System.currentTimeMillis()
         try {
-            pipelinePermissionService.validPipelinePermission(
-                userId = userId!!,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = AuthPermission.VIEW,
-                message = "用户（$userId) 无权限获取流水线($pipelineId)历史构建"
-            )
-
+            if (checkPermission) {
+                pipelinePermissionService.validPipelinePermission(
+                    userId = userId!!,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    permission = AuthPermission.VIEW,
+                    message = "用户（$userId) 无权限获取流水线($pipelineId)历史构建"
+                )
+            }
             val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -1499,7 +1495,8 @@ class PipelineBuildFacadeService(
                 remark = remark,
                 buildNoStart = buildNoStart,
                 buildNoEnd = buildNoEnd,
-                buildMsg = buildMsg
+                buildMsg = buildMsg,
+                startUser = startUser
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
@@ -1525,7 +1522,9 @@ class PipelineBuildFacadeService(
                 remark = remark,
                 buildNoStart = buildNoStart,
                 buildNoEnd = buildNoEnd,
-                buildMsg = buildMsg
+                buildMsg = buildMsg,
+                startUser = startUser,
+                updateTimeDesc = updateTimeDesc
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
@@ -1533,8 +1532,8 @@ class PipelineBuildFacadeService(
             // 获取流水线版本号
             val result = BuildHistoryWithPipelineVersion(
                 history = SQLPage(count, buildHistories),
-                hasDownloadPermission = pipelinePermissionService.checkPipelinePermission(
-                    userId = userId,
+                hasDownloadPermission = checkPermission || pipelinePermissionService.checkPipelinePermission(
+                    userId = userId!!,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     permission = AuthPermission.EXECUTE
@@ -1821,10 +1820,10 @@ class PipelineBuildFacadeService(
 
         if (!nodeHashId.isNullOrBlank()) {
             msg = "${
-            MessageCodeUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
-                params = arrayOf(projectCode, nodeHashId)
-            )
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
+                    params = arrayOf(projectCode, nodeHashId)
+                )
             } $msg"
         }
         // #5046 worker-agent.jar进程意外退出，经由devopsAgent转达

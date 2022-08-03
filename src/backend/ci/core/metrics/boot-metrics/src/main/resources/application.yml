@@ -1,0 +1,11 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: metrics{service-suffix}
+    desc: DevOps Metrics Service
+    version: 4.0.0
+    packageName: com.tencent.devops.metrics
+
+server:
+  port: 21990
