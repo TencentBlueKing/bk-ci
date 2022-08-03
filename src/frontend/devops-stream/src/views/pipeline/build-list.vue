@@ -224,6 +224,7 @@
                         ref="bkUiForm"
                         :schema="uiFormSchema"
                         :layout="uiFormLayout"
+                        :rules="uiFormRules"
                     />
                 </template>
                 <bk-form-item>
@@ -342,6 +343,12 @@
                 uiFormLayout: {
                     container: {
                         gap: '8px'
+                    }
+                },
+                uiFormRules: {
+                    required: {
+                        validator: "{{ $self.value !== '' }}",
+                        message: this.$t('pipeline.required')
                     }
                 },
                 emptyYaml: false,
@@ -680,7 +687,7 @@
             submitData () {
                 Promise.all([
                     this.$refs.triggleForm.validate(),
-                    this.$refs.bkUiForm?.validateForm()
+                    this.$refs.bkUiForm?.validate()
                 ]).then(() => {
                     const postData = {
                         ...this.formData,
@@ -698,7 +705,8 @@
                         this.isTriggering = false
                     })
                 }, (err) => {
-                    this.$bkMessage({ theme: 'error', message: err.content || err.message || err })
+                    const message = Array.isArray(err) ? `${err[0].path}是${err[0].message}` : (err.content || err.message || err)
+                    this.$bkMessage({ theme: 'error', message })
                 })
             },
 
