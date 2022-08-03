@@ -81,8 +81,8 @@ import okhttp3.RequestBody
 import okio.BufferedSink
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.io.IOException
 import java.io.InputStream
-import java.net.SocketTimeoutException
 import java.net.URLEncoder
 import java.nio.file.FileSystems
 import java.nio.file.Paths
@@ -1015,8 +1015,8 @@ class BkRepoClient constructor(
     private fun doRequest(request: Request): okhttp3.Response {
         try {
             return OkhttpUtils.doHttp(request)
-        } catch (e: SocketTimeoutException) {
-            throw RemoteServiceException(e.localizedMessage)
+        } catch (e: IOException) {
+            throw RemoteServiceException("request api[${request.url().url()}] error: ${e.localizedMessage}")
         }
     }
 
