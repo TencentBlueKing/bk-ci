@@ -1063,7 +1063,6 @@ class RepositoryService @Autowired constructor(
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)
     }
 
-
     fun hasPermissionList(
         userId: String,
         projectId: String,
