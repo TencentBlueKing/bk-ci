@@ -146,12 +146,13 @@
             autoOpenLog () {
                 if (this.$route.query.stageIndex) {
                     const { stageIndex, elementIndex, containerGroupIndex, containerIndex } = this.$route.query
-                    this.handlePipelineClick({
+                    const params = {
                         stageIndex: Number(stageIndex),
                         elementIndex: Number(elementIndex),
-                        containerGroupIndex: Number(containerGroupIndex),
                         containerIndex: Number(containerIndex)
-                    })
+                    }
+                    if (containerGroupIndex) params.containerGroupIndex = Number(containerGroupIndex)
+                    this.handlePipelineClick(params)
                 }
             },
 
