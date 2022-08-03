@@ -192,7 +192,10 @@ private fun GitTagPushEvent.tagPushEventFilter(): Boolean {
         return true
     }
     if (total_commits_count <= 0) {
-        TGitTagPushActionGit.logger.info("Git tag web hook no commit($total_commits_count)")
+        TGitTagPushActionGit.logger.info(
+            "TGitTagPushActionGit|tagPushEventFilter" +
+                "|Git tag web hook no commit($total_commits_count)"
+        )
         return false
     }
     return true

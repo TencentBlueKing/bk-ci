@@ -347,9 +347,8 @@ class PipelineBuildFacadeService(
                 ) {
                     return buildId
                 }
-            }
 
-            if (!buildInfo.isFinish()) { // 拦截运行中的重试，防止重复提交
+                // 对不合法的重试进行拦截，防止重复提交
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
                     defaultMessage = "重试已经启动，忽略重复的请求"
@@ -454,7 +453,7 @@ class PipelineBuildFacadeService(
 
             logger.info(
                 "ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
-                        "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
+                    "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
             )
 
             paramMap[PIPELINE_RETRY_COUNT] = BuildParameters(PIPELINE_RETRY_COUNT, retryCount)
@@ -786,7 +785,6 @@ class PipelineBuildFacadeService(
                         }
                         if (!reviewUser.contains(userId)) {
                             throw ErrorCodeException(
-                                statusCode = Response.Status.NOT_FOUND.statusCode,
                                 errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
                                 defaultMessage = "用户($userId)不在审核人员名单中",
                                 params = arrayOf(userId)
@@ -852,7 +850,6 @@ class PipelineBuildFacadeService(
             )
 
         if (buildStage.status.name != BuildStatus.PAUSE.name) throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
             defaultMessage = "Stage($stageId)未处于暂停状态",
             params = arrayOf(stageId)
@@ -892,7 +889,6 @@ class PipelineBuildFacadeService(
                 // 发送排队失败的事件
                 logger.warn("[$pipelineId]|START_PIPELINE_MANUAL|流水线启动失败:[${interceptResult.message}]")
                 throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = interceptResult.status.toString(),
                     defaultMessage = "Stage启动失败![${interceptResult.message}]"
                 )
@@ -967,7 +963,6 @@ class PipelineBuildFacadeService(
             }
         }
         if (check?.status != BuildStatus.QUALITY_CHECK_WAIT.name) throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
             defaultMessage = "Stage($stageId)未处于质量红线带把关状态",
             params = arrayOf(stageId)
@@ -1034,7 +1029,6 @@ class PipelineBuildFacadeService(
                         el.desc = buildVariableService.replaceTemplate(projectId, buildId, el.desc)
                         if (!reviewUser.contains(userId)) {
                             throw ErrorCodeException(
-                                statusCode = Response.Status.NOT_FOUND.statusCode,
                                 errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
                                 defaultMessage = "用户($userId)不在审核人员名单中",
                                 params = arrayOf(userId)
@@ -1836,10 +1830,10 @@ class PipelineBuildFacadeService(
 
         if (!nodeHashId.isNullOrBlank()) {
             msg = "${
-            MessageCodeUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
-                params = arrayOf(projectCode, nodeHashId)
-            )
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
+                    params = arrayOf(projectCode, nodeHashId)
+                )
             } $msg"
         }
         // #5046 worker-agent.jar进程意外退出，经由devopsAgent转达
