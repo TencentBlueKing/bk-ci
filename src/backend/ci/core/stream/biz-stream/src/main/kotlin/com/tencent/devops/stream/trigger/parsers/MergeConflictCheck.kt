@@ -110,7 +110,10 @@ class MergeConflictCheck @Autowired constructor(
                 return false
             }
             TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {
-                logger.warn("git ci mr request has conflict , git project id: $projectId, mr request id: $mrRequestId")
+                logger.warn(
+                    "MergeConflictCheck|checkMrConflict|git ci mr request has conflict" +
+                        "|git project id|$projectId|mr request id|$mrRequestId"
+                )
                 throw StreamTriggerException(action, TriggerReason.CI_MERGE_CONFLICT)
             }
             // 没有冲突则触发流水线
@@ -171,7 +174,10 @@ class MergeConflictCheck @Autowired constructor(
                 }
             }
             TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {
-                logger.warn("git ci mr request has conflict , git project id: $projectId, mr request id: $mrRequestId")
+                logger.warn(
+                    "MergeConflictCheck|checkMrConflictByListener|git ci mr request has conflict" +
+                        "|git project id|$projectId|mr request id|$mrRequestId"
+                )
                 gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
                     dslContext = dslContext,
                     recordId = notBuildRecordId,

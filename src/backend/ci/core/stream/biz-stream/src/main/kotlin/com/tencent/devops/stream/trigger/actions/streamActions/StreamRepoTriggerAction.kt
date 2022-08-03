@@ -164,7 +164,10 @@ class StreamRepoTriggerAction(
         }
         // 增加远程仓库时所使用权限的userId
         this.data.context.repoTrigger?.buildUserID = repoTriggerUserId
-        logger.info("after check repoTrigger credentials |repoTrigger=${this.data.context.repoTrigger}")
+        logger.info(
+            "StreamRepoTriggerActionafter|triggerCheckRepoTriggerCredentials" +
+                "|check repoTrigger credentials|repoTrigger|${this.data.context.repoTrigger}"
+        )
         return repoTriggerUserId
     }
 

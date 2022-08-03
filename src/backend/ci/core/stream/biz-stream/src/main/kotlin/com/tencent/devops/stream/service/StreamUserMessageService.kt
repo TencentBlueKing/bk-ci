@@ -119,9 +119,6 @@ class StreamUserMessageService @Autowired constructor(
                 records = listOf()
             )
         }
-
-        logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get messageCount")
-
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page = page, pageSize = pageSize)
         // 后台单独做项目级别的信息获取兼容
         val messageRecords = if (projectId != null) {
@@ -146,13 +143,8 @@ class StreamUserMessageService @Autowired constructor(
             )!!
         }
 
-        logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get messageRecords")
-
         val requestIds = messageRecords.map { it.messageId.toInt() }.toSet()
         val eventMap = getRequestMap(userId, gitProjectId, requestIds)
-
-        logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get eventMap")
-
         val resultMap = mutableMapOf<String, MutableList<UserMessage>>()
         messageRecords.forEach { message ->
             val eventId = message.messageId.toLong()
@@ -183,9 +175,6 @@ class StreamUserMessageService @Autowired constructor(
                 resultMap[time]!!.add(userMassage)
             }
         }
-
-        logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get result")
-
         return Page(
             page = page,
             pageSize = pageSize,
@@ -362,7 +351,7 @@ class StreamUserMessageService @Autowired constructor(
             try {
                 objectMapper.readValue<GitEvent>(event)
             } catch (e: Exception) {
-                logger.error("get message getYamlUrl error : ${e.message}")
+                logger.warn("StreamUserMessageService|getYamlUrl|error", e)
                 return null
             }
         val homepageAndBranch = when (gitEvent) {
