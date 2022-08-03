@@ -181,7 +181,7 @@ func (s *Sandbox) ExecCommand(name string, arg ...string) (int, error) {
 
 	// 错误等到stdout和stderr都初始化完, 再处理
 	if err != nil {
-		_, _ = s.Stderr.Write([]byte(fmt.Sprintf("run command failed: %v\n", err.Error())))
+		_, _ = s.Stderr.Write([]byte(fmt.Sprintf("run command failed: %v ,try relative path cmd\n", err.Error())))
 		//return -1, err
 	}
 
@@ -193,7 +193,6 @@ func (s *Sandbox) ExecCommand(name string, arg ...string) (int, error) {
 		}
 		return ExitErrorCode, err
 	}
-
 	return 0, nil
 }
 
