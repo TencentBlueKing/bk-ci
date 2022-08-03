@@ -454,7 +454,7 @@ class PipelineStageService @Autowired constructor(
      * 如果不存在则返回null
      */
     fun getPrevStage(projectId: String, buildId: String, currentStageSeq: Int): PipelineBuildStage? {
-        return pipelineBuildStageDao.getNextStage(dslContext, projectId, buildId, currentStageSeq, sortAsc = false)
+        return pipelineBuildStageDao.getAdjacentStage(dslContext, projectId, buildId, currentStageSeq, sortAsc = false)
     }
 
     /**
@@ -462,7 +462,7 @@ class PipelineStageService @Autowired constructor(
      * 如果不存在则返回null
      */
     fun getNextStage(projectId: String, buildId: String, currentStageSeq: Int): PipelineBuildStage? {
-        return pipelineBuildStageDao.getNextStage(dslContext, projectId, buildId, currentStageSeq, sortAsc = true)
+        return pipelineBuildStageDao.getAdjacentStage(dslContext, projectId, buildId, currentStageSeq, sortAsc = true)
     }
 
     /**

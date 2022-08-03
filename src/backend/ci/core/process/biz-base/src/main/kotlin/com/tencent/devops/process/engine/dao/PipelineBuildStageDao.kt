@@ -149,11 +149,11 @@ class PipelineBuildStageDao {
     }
 
     /**
-     * 取大于或小于[currentStageSeq]序号的Stage：
-     * 当[sortAsc] = true 时，取[currentStageSeq]之后的第一个Stage
-     * 当[sortAsc] = false 时，取[currentStageSeq]之前的第一个Stage
+     * 取相邻的，大于或小于[currentStageSeq]序号的Stage：
+     * 当[sortAsc] = true 时，取[currentStageSeq]之后相邻的第一个Stage
+     * 当[sortAsc] = false 时，取[currentStageSeq]之前相邻的第一个Stage
      */
-    fun getNextStage(
+    fun getAdjacentStage(
         dslContext: DSLContext,
         projectId: String,
         buildId: String,

@@ -208,10 +208,9 @@ open class DefaultModelCheckPlugin constructor(
     ): Int /* MetaSize*/ {
         var metaSize = 0
         stage.containers.forEach { c ->
-            val tasks = c.elements
             // 判断job下task数量是否超过系统限制
-            metaSize += tasks.size
-            if (metaSize > jobCommonSettingConfig.maxTaskNum) {
+            metaSize += c.elements.size
+            if (c.elements.size > jobCommonSettingConfig.maxTaskNum) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE,
                     params = arrayOf(c.name, KEY_TASK, jobCommonSettingConfig.maxTaskNum.toString())
