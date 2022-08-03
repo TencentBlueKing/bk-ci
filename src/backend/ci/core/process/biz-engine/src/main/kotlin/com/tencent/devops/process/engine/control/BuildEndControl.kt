@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
@@ -41,10 +42,10 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.enum.RefreshType
@@ -64,12 +65,10 @@ import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.measure.MetricsService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
-import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
 import com.tencent.devops.process.utils.PIPELINE_TIME_END
@@ -78,6 +77,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 构建控制器
@@ -94,13 +94,18 @@ class BuildEndControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineRedisService: PipelineRedisService,
     private val meterRegistry: MeterRegistry,
+    private val metricsService: MetricsService,
     private val buildVariableService: BuildVariableService
 ) {
 
     companion object {
+        private const val FAIL_PIPELINE_COUNT = "fail_pipeline_count"
+        private const val SUCCESS_PIPELINE_COUNT = "success_pipeline_count"
+        private const val FINISH_PIPELINE_COUNT = "finish_pipeline_count"
         private val LOG = LoggerFactory.getLogger(BuildEndControl::class.java)
     }
 
+    @BkTimed
     fun handle(event: PipelineBuildFinishEvent) {
         val watcher = Watcher(id = "ENGINE|BuildEnd|${event.traceId}|${event.buildId}|Job#${event.status}")
         try {
@@ -152,11 +157,12 @@ class BuildEndControl @Autowired constructor(
         fixTask(buildInfo)
 
         // 记录本流水线最后一次构建的状态
+        val endTime = LocalDateTime.now()
         pipelineRuntimeService.finishLatestRunningBuild(
             latestRunningBuild = LatestRunningBuild(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 userId = buildInfo.startUser, status = buildStatus, taskCount = buildInfo.taskCount,
-                buildNum = buildInfo.buildNum
+                endTime = endTime, buildNum = buildInfo.buildNum
             ),
             currentBuildStatus = buildInfo.status,
             errorInfoList = buildInfo.errorInfoList
@@ -168,7 +174,7 @@ class BuildEndControl @Autowired constructor(
         }
 
         // 设置状态
-        val allStageStatus = pipelineBuildDetailService.buildEnd(
+        val (model, allStageStatus) = pipelineBuildDetailService.buildEnd(
             projectId = projectId,
             buildId = buildId,
             buildStatus = buildStatus,
@@ -179,13 +185,15 @@ class BuildEndControl @Autowired constructor(
 
         // 上报SLA数据
         if (buildStatus.isSuccess() || buildStatus == BuildStatus.STAGE_SUCCESS) {
-            successPipelineCount()
+            metricsIncrement(SUCCESS_PIPELINE_COUNT)
         } else if (buildStatus.isFailure()) {
-            failPipelineCount()
+            metricsIncrement(FAIL_PIPELINE_COUNT)
         }
+        buildInfo.endTime = endTime.timestampmilli()
+        buildInfo.status = buildStatus
 
         buildDurationTime(buildInfo.startTime!!)
-        callBackParentPipeline(projectId, buildId)
+        callBackParentPipeline(buildInfo)
 
         // 广播结束事件
         pipelineEventDispatcher.dispatch(
@@ -215,6 +223,8 @@ class BuildEndControl @Autowired constructor(
             )
         )
 
+        // 发送metrics统计数据消息
+        metricsService.postMetricsData(buildInfo, model)
         // 记录日志
         buildLogPrinter.stopLog(buildId = buildId, tag = "", jobId = null)
         return buildInfo
@@ -274,7 +284,8 @@ class BuildEndControl @Autowired constructor(
                             projectId = projectId, pipelineId = pipelineId, userId = it.starter,
                             stageId = it.stageId, buildId = it.buildId, containerId = it.containerId,
                             containerHashId = it.containerHashId, containerType = it.containerType,
-                            taskId = it.taskId, taskParam = it.taskParams, actionType = ActionType.TERMINATE
+                            taskId = it.taskId, taskParam = it.taskParams, actionType = ActionType.TERMINATE,
+                            executeCount = it.executeCount ?: 1
                         )
                     )
                 }
@@ -378,63 +389,45 @@ class BuildEndControl @Autowired constructor(
     }
 
     // 子流水线回调父流水线
-    private fun callBackParentPipeline(
-        projectId: String,
-        buildId: String
-    ) {
-        val vars = buildVariableService.getAllVariable(projectId, buildId)
-        val startType = vars[PIPELINE_START_TYPE]
-        if (startType != StartType.PIPELINE.name) {
-            return
-        }
-        val parentTaskId = vars[PIPELINE_START_PARENT_BUILD_TASK_ID] ?: return
-        val parentBuildId = vars[PIPELINE_START_PARENT_BUILD_ID] ?: return
-        val parentProjectId = vars[PIPELINE_START_PARENT_PROJECT_ID] ?: return
+    private fun callBackParentPipeline(buildInfo: BuildInfo) {
+        val parentBuildId = buildInfo.parentBuildId ?: return
+        val parentTaskId = buildInfo.parentTaskId ?: return
+        val parentProjectId = buildVariableService.getVariable(
+            projectId = buildInfo.projectId,
+            buildId = buildInfo.buildId,
+            varName = PIPELINE_START_PARENT_PROJECT_ID
+        ) ?: return
+
         val parentBuildTask = pipelineTaskService.getBuildTask(parentProjectId, parentBuildId, parentTaskId)
-        LOG.info("$buildId callback parent build $parentBuildId")
+
         if (parentBuildTask == null) {
             LOG.warn("The parent build($parentBuildId) task($parentTaskId) not exist ")
             return
         }
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildAtomTaskEvent(
-                source = "sub_pipeline_build_$buildId", // 来源
-                projectId = parentBuildTask.projectId,
-                pipelineId = parentBuildTask.pipelineId,
-                userId = parentBuildTask.starter,
-                buildId = parentBuildTask.buildId,
-                stageId = parentBuildTask.stageId,
-                containerId = parentBuildTask.containerId,
-                containerHashId = parentBuildTask.containerHashId,
-                containerType = parentBuildTask.containerType,
-                taskId = parentBuildTask.taskId,
-                taskParam = parentBuildTask.taskParams,
-                actionType = ActionType.REFRESH
+
+        if (!parentBuildTask.status.isFinish()) {
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildAtomTaskEvent(
+                    source = "from_sub_pipeline_build_${buildInfo.buildId}", // 来源
+                    projectId = parentBuildTask.projectId,
+                    pipelineId = parentBuildTask.pipelineId,
+                    userId = parentBuildTask.starter,
+                    buildId = parentBuildTask.buildId,
+                    stageId = parentBuildTask.stageId,
+                    containerId = parentBuildTask.containerId,
+                    containerHashId = parentBuildTask.containerHashId,
+                    containerType = parentBuildTask.containerType,
+                    taskId = parentBuildTask.taskId,
+                    taskParam = parentBuildTask.taskParams,
+                    actionType = ActionType.REFRESH,
+                    executeCount = parentBuildTask.executeCount ?: 1
+                )
             )
-        )
+        }
     }
 
-    private fun successPipelineCount() {
-        Counter
-            .builder("success_pipeline_count")
-            .register(meterRegistry)
-            .increment()
-
-        finishPipelineCount()
-    }
-
-    private fun failPipelineCount() {
-        Counter
-            .builder("fail_pipeline_count")
-            .register(meterRegistry)
-            .increment()
-        finishPipelineCount()
-    }
-
-    private fun finishPipelineCount() {
-        Counter
-            .builder("finish_pipeline_count")
-            .register(meterRegistry)
-            .increment()
+    private fun metricsIncrement(name: String) {
+        Counter.builder(name).register(meterRegistry).increment()
+        Counter.builder(FINISH_PIPELINE_COUNT).register(meterRegistry).increment()
     }
 }

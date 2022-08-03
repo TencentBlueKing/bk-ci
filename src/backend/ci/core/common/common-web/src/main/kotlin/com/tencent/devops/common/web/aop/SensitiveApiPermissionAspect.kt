@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.web.aop
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -55,6 +56,10 @@ class SensitiveApiPermissionAspect constructor(
     @Pointcut("@annotation(com.tencent.devops.common.web.annotation.SensitiveApiPermission)")
     fun pointCut() = Unit
 
+    private val apiPermissionCache = Caffeine.newBuilder()
+        .maximumSize(CACHE_MAX_SIZE)
+        .build<String/*atomCode:apiName*/, Boolean>()
+
     @Before("pointCut()")
     fun doBefore(jp: JoinPoint) {
         val request = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).request
@@ -71,23 +76,35 @@ class SensitiveApiPermissionAspect constructor(
 
         if (apiName != null && atomCode != null) {
             logger.info("$buildId|$vmSeqId|$atomCode|$apiName|using sensitive api")
-            if (enableSensitiveApi &&
-                client.get(ServiceSensitiveApiPermissionResource::class).verifyApi(
-                    atomCode = atomCode,
-                    apiName = apiName
-                ).data != true
-            ) {
+            if (enableSensitiveApi && !verifyApi(atomCode, apiName)) {
                 logger.warn("$buildId|$vmSeqId|$atomCode|$apiName|verify sensitive api failed")
                 throw ErrorCodeException(
                     statusCode = 401,
                     errorCode = CommonMessageCode.ERROR_SENSITIVE_API_NO_AUTH,
+                    params = arrayOf(apiName, atomCode),
                     defaultMessage = "Unauthorized: sensitive api $apiName cannot be used by $atomCode"
                 )
             }
         }
     }
 
+    private fun verifyApi(atomCode: String, apiName: String): Boolean {
+        val cacheKey = "$atomCode:$apiName"
+        return apiPermissionCache.getIfPresent(cacheKey) ?: run {
+            val apiPermission = client.get(ServiceSensitiveApiPermissionResource::class).verifyApi(
+                atomCode = atomCode,
+                apiName = apiName
+            ).data == true
+            // 只有验证通过的插件才缓存,没有验证通过的插件状态是动态的
+            if (apiPermission) {
+                apiPermissionCache.put(cacheKey, true)
+            }
+            apiPermission
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(SensitiveApiPermissionAspect::class.java)
+        private const val CACHE_MAX_SIZE = 1000L
     }
 }

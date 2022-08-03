@@ -93,8 +93,8 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = "",
                 userId = userId,
-                gitProjectId = setting!!.gitProjectId,
-                gitProjectUrl = setting.url,
+                gitProjectId = projectInfo.gitProjectId,
+                gitProjectUrl = projectInfo.gitHttpsUrl ?: "",
                 enable = enabled
             )
         )

@@ -235,6 +235,12 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId)
             params[PIPELINE_START_PARENT_BUILD_TASK_ID] =
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_TASK_ID, value = parentTaskId)
+            // 兼容子流水线插件按照名称调用,传递的参数没有在子流水线变量中声明，仍然可以传递
+            parameters.forEach {
+                if (!params.containsKey(it.key)) {
+                    params[it.key] = BuildParameters(key = it.key, value = it.value)
+                }
+            }
 
             // 子流水线的调用不受频率限制
             val subBuildId = pipelineBuildService.startPipeline(
@@ -430,17 +436,14 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
     }
 
     fun getSubVar(projectId: String, buildId: String, taskId: String): Result<Map<String, String>> {
-        logger.info("getSubVar | $buildId | $taskId")
-        val taskRecord = pipelineBuildTaskDao.get(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId
-        ) ?: return Result(emptyMap())
-        logger.info("getSubVar sub buildId :${taskRecord.subBuildId}")
+        val task = pipelineBuildTaskDao.get(dslContext, projectId = projectId, buildId = buildId, taskId = taskId)
+            ?: return Result(emptyMap())
 
-        val subBuildId = taskRecord.subBuildId
-        return Result(buildVariableService.getAllVariable(taskRecord.subProjectId, subBuildId))
+        logger.info("getSubVar sub build :${task.subBuildId}|${task.subProjectId}")
+
+        val subBuildId = task.subBuildId ?: return Result(emptyMap())
+        val subProjectId = task.subProjectId ?: return Result(emptyMap())
+        return Result(buildVariableService.getAllVariable(subProjectId, subBuildId))
     }
 
     fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {
@@ -449,13 +452,7 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         val data: MutableList<PipelineId?> = mutableListOf()
         if (pipelines.isNotEmpty()) {
             pipelines.forEach { (k, v) ->
-                if (k == pipelineName) {
-                    data.add(
-                        PipelineId(
-                            id = v
-                        )
-                    )
-                }
+                if (k == pipelineName) data.add(PipelineId(id = v))
             }
         }
 
