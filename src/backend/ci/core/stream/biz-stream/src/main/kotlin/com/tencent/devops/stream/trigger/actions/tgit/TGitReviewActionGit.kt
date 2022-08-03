@@ -78,7 +78,8 @@ class TGitReviewActionGit(
         val setting = basicSettingDao.getSetting(dslContext, event().projectId)
         if (null == setting || !setting.enableCi) {
             logger.info(
-                "git ci is not enabled, but it has repo trigger , git project id: ${event().projectId}"
+                "TGitReviewActionGit|init" +
+                    "|not enabled, buttrigger|projectId|${event().projectId}"
             )
             return null
         }

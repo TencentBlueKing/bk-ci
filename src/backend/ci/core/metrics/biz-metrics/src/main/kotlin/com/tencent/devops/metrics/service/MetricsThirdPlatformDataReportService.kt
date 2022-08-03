@@ -27,36 +27,36 @@
 
 package com.tencent.devops.metrics.service
 
-import com.tencent.devops.metrics.pojo.message.CodeCheckReportEvent
-import com.tencent.devops.metrics.pojo.message.QualityReportMessage
-import com.tencent.devops.metrics.pojo.message.TurboReportEvent
+import com.tencent.devops.metrics.pojo.dto.CodeccDataReportDTO
+import com.tencent.devops.metrics.pojo.dto.QualityDataReportDTO
+import com.tencent.devops.metrics.pojo.dto.TurboDataReportDTO
 
 interface MetricsThirdPlatformDataReportService {
 
     /**
-     * 上报Codecc指标数据
-     * @param codeCheckReportEvent Codecc指标数据
+     * 上报codecc指标数据
+     * @param codeccDataReportDTO codecc数据上报传输对象
      * @return 布尔值
      */
-    fun metricsCodeCheckDataReport(
-        codeCheckReportEvent: CodeCheckReportEvent
+    fun metricsCodeccDataReport(
+        codeccDataReportDTO: CodeccDataReportDTO
     ): Boolean
 
     /**
-     * 上报Turbo指标数据
-     * @param turboReportMessage Turbo指标数据
+     * 上报编译加速指标数据
+     * @param turboDataReportDTO 编译加速数据上报传输对象
      * @return 布尔值
      */
     fun metricsTurboDataReport(
-        turboReportMessage: TurboReportEvent
+        turboDataReportDTO: TurboDataReportDTO
     ): Boolean
 
     /**
-     * 上报Quality指标数据
-     * @param qualityReportMessage Quality指标数据
+     * 上报质量红线指标数据
+     * @param qualityDataReportDTO 质量红线数据上报传输对象
      * @return 布尔值
      */
     fun metricsQualityDataReport(
-        qualityReportMessage: QualityReportMessage
+        qualityDataReportDTO: QualityDataReportDTO
     ): Boolean
 }

@@ -133,7 +133,11 @@ class YamlSchemaCheck @Autowired constructor() {
         try {
             f()
         } catch (e: Throwable) {
-            logger.info("gitRequestEvent ${action.data.context.requestEventId} git ci yaml is invalid", e)
+            logger.info(
+                "YamlSchemaCheck|schemaExceptionHandle" +
+                    "|git ci yaml is invalid|requestEventId|${action.data.context.requestEventId}",
+                e
+            )
             val (block, message, reason) = when (e) {
                 is YamlFormatException, is CustomException -> {
                     Triple(action.metaData.isStreamMr(), e.message, TriggerReason.CI_YAML_INVALID)
@@ -146,7 +150,7 @@ class YamlSchemaCheck @Autowired constructor() {
                     throw e
                 }
                 else -> {
-                    logger.error("YamlSchemaCheck event: ${action.data.context.requestEventId}unknow error", e)
+                    logger.warn("YamlSchemaCheck|requestEventId|${action.data.context.requestEventId}|error", e)
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }

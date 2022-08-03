@@ -109,7 +109,10 @@ class StreamYamlBuild @Autowired constructor(
         onlySavePipeline: Boolean,
         yamlTransferData: YamlTransferData?
     ): BuildId? {
-        logger.info("|${action.data.context.requestEventId}|gitStartBuild|action|${action.format()}")
+        logger.info(
+            "StreamYamlBuild|gitStartBuild" +
+                "|eventId|${action.data.context.requestEventId}|action|${action.format()}"
+        )
 
         val pipeline = action.data.context.pipeline!!
         // pipelineId可能为blank所以使用filePath为key
@@ -174,7 +177,7 @@ class StreamYamlBuild @Autowired constructor(
                 null
             }
         } catch (e: Throwable) {
-            logger.warn("Fail to start the stream build(${action.format()})", e)
+            logger.warn("StreamYamlBuild|gitStartBuild|Fail to start the stream build(${action.format()})", e)
             val (block, message, reason) = when (e) {
                 is JsonProcessingException, is ParamBlankException, is CustomException -> {
                     Triple(
@@ -195,7 +198,7 @@ class StreamYamlBuild @Autowired constructor(
                     throw e
                 }
                 else -> {
-                    logger.error("gitStartBuild|event: ${action.data.context.requestEventId} unknow error", e)
+                    logger.warn("StreamYamlBuild|gitStartBuild|${action.data.context.requestEventId}|error", e)
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }
@@ -293,12 +296,16 @@ class StreamYamlBuild @Autowired constructor(
         params: Map<String, String> = mapOf(),
         yamlTransferData: YamlTransferData?
     ): BuildId? {
-        logger.info("|${action.data.context.requestEventId}|startBuildPipeline|action|${action.format()}")
+        logger.info(
+            "StreamYamlBuild|startBuildPipeline" +
+                "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
+        )
 
         val pipeline = action.data.context.pipeline!!
         logger.info(
-            "Git request gitBuildId:$gitBuildId, pipeline:${pipeline.pipelineId}," +
-                " event: ${action.data.context.requestEventId}"
+            "StreamYamlBuild|startBuildPipeline" +
+                "|gitBuildId|$gitBuildId|pipeline|${pipeline.pipelineId}" +
+                "|event|${action.data.context.requestEventId}"
         )
 
         val (modelCreateEvent, modelParams) = getModelCreateEventAndParams(
@@ -315,8 +322,6 @@ class StreamYamlBuild @Autowired constructor(
             yaml = replaceYamlPoolName(yaml, action),
             pipelineParams = modelParams
         )
-        logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, modelAndSetting: $modelAndSetting")
-
         // 判断是否更新最后修改人
         val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
         val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath) &&
@@ -336,7 +341,10 @@ class StreamYamlBuild @Autowired constructor(
         action: BaseAction,
         yaml: ScriptBuildYaml
     ) {
-        logger.info("|${action.data.context.requestEventId}|savePipeline|action|${action.format()}")
+        logger.info(
+            "StreamYamlBuild|savePipeline|requestEventId" +
+                "|${action.data.context.requestEventId}|action|${action.format()}"
+        )
 
         val (modelCreateEvent, modelParams) = getModelCreateEventAndParams(
             action = action,
@@ -351,7 +359,10 @@ class StreamYamlBuild @Autowired constructor(
             yaml = replaceYamlPoolName(yaml, action),
             pipelineParams = modelParams
         )
-        logger.info("savePipeline pipeline:${action.data.context.pipeline}, modelAndSetting: $modelAndSetting")
+        logger.info(
+            "StreamYamlBuild|savePipeline" +
+                "|pipeline|${action.data.context.pipeline}|modelAndSetting|$modelAndSetting"
+        )
 
         // 判断是否更新最后修改人
         val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
@@ -484,15 +495,15 @@ class StreamYamlBuild @Autowired constructor(
 
                     val result = "git_${gitProjectInfo.gitProjectId}@${repoNameAndPool[1]}"
 
-                    logger.info("Get envName from Resource.pools success. envName: $result")
+                    logger.info("StreamYamlBuild|getEnvName|envName|$result")
                     return result
                 } catch (e: Exception) {
-                    logger.error("Get projectInfo from git failed, envName: $poolName. exception:", e)
+                    logger.warn("StreamYamlBuild|getEnvName|$poolName|error", e)
                     return poolName
                 }
             }
         }
-        logger.info("Get envName from Resource.pools no match. envName: $poolName")
+        logger.info("StreamYamlBuild|getEnvName|no match. envName|$poolName")
         return poolName
     }
 }
