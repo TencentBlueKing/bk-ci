@@ -37,7 +37,6 @@ import com.tencent.devops.common.web.form.models.ui.props.UiProps
  * @param type 必需，表单组件value的数据类型
  * @param title 必需，表单组件的label
  * @param default 可选，表单组件的默认值
- * @param required 可选，是否为必填项，默认为false
  * @param description 可选，描述
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -45,7 +44,6 @@ data class FormProp(
     val type: String,
     val title: String,
     val default: Any? = null,
-    val required: Boolean? = null,
     val description: String? = null,
     @JsonProperty("ui:component")
     val uiComponent: UiComponent,

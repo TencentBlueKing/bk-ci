@@ -37,7 +37,7 @@ import com.tencent.devops.common.web.form.models.FormProp
  * 表单对象的建造者类
  */
 class FormBuilder {
-    private val form = Form("", properties = mutableMapOf())
+    private val form = Form("", required = mutableListOf(), properties = mutableMapOf())
 
     fun setTitle(title: String): FormBuilder {
         form.title = title
@@ -61,11 +61,15 @@ class FormBuilder {
             type = type,
             title = prop.title,
             default = prop.default,
-            required = prop.required,
             description = prop.description,
             uiComponent = prop.buildComponent(),
             uiProps = prop.buildUiProps()
         )
+
+        // 添加必填选项
+        if (prop.required == true) {
+            form.required.add(prop.id)
+        }
 
         return this
     }
