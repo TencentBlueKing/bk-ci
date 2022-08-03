@@ -123,6 +123,7 @@ class StageControl @Autowired constructor(
                 ?.let { prevStage ->
                     if (!prevStage.status.isFinish()) { // 打回前一个未完成的Stage重走流程
                         pipelineEventDispatcher.dispatch(this.copy(stageId = prevStage.stageId))
+                        return // 不再往下运行
                     }
                 }
         }
