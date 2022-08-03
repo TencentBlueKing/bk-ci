@@ -48,5 +48,7 @@ data class FormProp(
     @JsonProperty("ui:component")
     val uiComponent: UiComponent,
     @JsonProperty("ui:props")
-    val uiProps: UiProps
+    val uiProps: UiProps,
+    @JsonProperty("ui:rules")
+    val uiRules: List<String>?
 )

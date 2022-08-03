@@ -63,7 +63,12 @@ class FormBuilder {
             default = prop.default,
             description = prop.description,
             uiComponent = prop.buildComponent(),
-            uiProps = prop.buildUiProps()
+            uiProps = prop.buildUiProps(),
+            uiRules = if (prop.required == true) {
+                listOf("required")
+            } else {
+                null
+            }
         )
 
         // 添加必填选项

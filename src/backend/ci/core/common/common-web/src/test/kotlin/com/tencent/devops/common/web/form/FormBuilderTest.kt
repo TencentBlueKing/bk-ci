@@ -162,7 +162,8 @@ internal class FormBuilderTest {
             },
             "ui:props": {
                 "labelWidth": 500
-            }
+            },
+            "ui:rules": ["required"]
         }
     }
 }
