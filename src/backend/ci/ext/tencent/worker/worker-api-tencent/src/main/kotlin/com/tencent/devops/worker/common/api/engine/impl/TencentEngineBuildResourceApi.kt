@@ -34,7 +34,6 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
-import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.env.AgentEnv
 
 @Suppress("UNUSED")
