@@ -189,7 +189,7 @@ interface UserRepositoryResource {
         sortBy: String? = null,
         @ApiParam("排序方式，升序降序", required = false)
         @QueryParam("sortType")
-        sortType: String? = null,
+        sortType: String? = null
     ): Result<RepositoryPage<RepositoryInfoWithPermission>>
 
     @ApiOperation("代码库列表")
