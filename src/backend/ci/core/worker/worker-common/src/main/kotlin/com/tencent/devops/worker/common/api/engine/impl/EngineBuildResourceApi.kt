@@ -44,7 +44,7 @@ import okhttp3.RequestBody
 @ApiPriority(priority = 1)
 open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKApi {
 
-    private var buildId: String? = null
+    protected var buildId: String? = null
 
     override fun getRequestUrl(path: String, retryCount: Int, executeCount: Int): String {
         return "/ms/process/$path?retryCount=$retryCount&executeCount=$executeCount&buildId=$buildId"
