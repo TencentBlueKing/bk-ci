@@ -25,32 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.timer.quartz
+package com.tencent.devops.metrics.resources
 
-import com.tencent.devops.common.service.trace.TraceTag
-import org.quartz.JobExecutionContext
-import org.quartz.JobExecutionException
-import org.quartz.listeners.JobListenerSupport
-import org.slf4j.MDC
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.metrics.api.ServiceMetricsDataReportResource
+import com.tencent.devops.metrics.pojo.dto.CodeccDataReportDTO
+import com.tencent.devops.metrics.pojo.dto.QualityDataReportDTO
+import com.tencent.devops.metrics.pojo.dto.TurboDataReportDTO
+import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportService
 
-class QuartzTraceJobListener : JobListenerSupport() {
-    override fun getName(): String {
-        return "quartz-trace"
+@RestResource
+class ServiceMetricsDataReportResourceImpl constructor(
+    private val metricsThirdPlatformDataReportService: MetricsThirdPlatformDataReportService
+) : ServiceMetricsDataReportResource {
+
+    override fun metricsQualityDataReport(qualityDataReportDTO: QualityDataReportDTO): Result<Boolean> {
+        return Result(metricsThirdPlatformDataReportService.metricsQualityDataReport(qualityDataReportDTO))
     }
 
-    override fun jobToBeExecuted(context: JobExecutionContext) {
-        MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-        log.info(
-            "QuartzTraceJobListener|jobToBeExecuted" +
-                "|STREAM_TIMER|${context.jobDetail.key.name}|bizId|${MDC.get(TraceTag.BIZID)}"
-        )
+    override fun metricsCodeccDataReport(codeccDataReportDTO: CodeccDataReportDTO): Result<Boolean> {
+        return Result(metricsThirdPlatformDataReportService.metricsCodeccDataReport(codeccDataReportDTO))
     }
 
-    override fun jobExecutionVetoed(context: JobExecutionContext?) {
-        MDC.remove(TraceTag.BIZID)
-    }
-
-    override fun jobWasExecuted(context: JobExecutionContext?, jobException: JobExecutionException?) {
-        MDC.remove(TraceTag.BIZID)
+    override fun metricsTurboDataReport(turboDataReportDTO: TurboDataReportDTO): Result<Boolean> {
+        return Result(metricsThirdPlatformDataReportService.metricsTurboDataReport(turboDataReportDTO))
     }
 }

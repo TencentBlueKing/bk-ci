@@ -25,29 +25,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.common.exception.handler
+package com.tencent.devops.metrics.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import com.tencent.devops.stream.common.exception.StreamCustomException
-import org.slf4j.LoggerFactory
+import com.tencent.devops.metrics.pojo.dto.CodeccDataReportDTO
+import com.tencent.devops.metrics.pojo.dto.QualityDataReportDTO
+import com.tencent.devops.metrics.pojo.dto.TurboDataReportDTO
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
 
-/**
- * 针对stream的一些特殊返回定制的 custom response
- */
-@BkExceptionMapper
-class StreamCustomExceptionMapper : ExceptionMapper<StreamCustomException> {
-    companion object {
-        val logger = LoggerFactory.getLogger(StreamCustomExceptionMapper::class.java)!!
-    }
+@Api(tags = ["SERVICE_METRICS_DATAS"], description = "METRICS-数据上报")
+@Path("/service/metrics/datas")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceMetricsDataReportResource {
 
-    override fun toResponse(exception: StreamCustomException): Response {
-        logger.warn("StreamCustomExceptionMapper|toResponse|Failed|exception|$exception")
-        return Response.status(exception.status)
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(exception.status, exception.message ?: "Internal Exception")).build()
-    }
+    @ApiOperation("质量红线数据上报")
+    @Path("/quality/data/report")
+    @POST
+    fun metricsQualityDataReport(
+        @ApiParam(value = "质量红线数据上报传输对象", required = true)
+        qualityDataReportDTO: QualityDataReportDTO
+    ): Result<Boolean>
+
+    @ApiOperation("codecc数据上报")
+    @Path("/codecc/data/report")
+    @POST
+    fun metricsCodeccDataReport(
+        @ApiParam(value = "codecc数据上报传输对象", required = true)
+        codeccDataReportDTO: CodeccDataReportDTO
+    ): Result<Boolean>
+
+    @ApiOperation("编译加速数据上报")
+    @Path("/turbo/data/report")
+    @POST
+    fun metricsTurboDataReport(
+        @ApiParam(value = "编译加速数据上报传输对象", required = true)
+        turboDataReportDTO: TurboDataReportDTO
+    ): Result<Boolean>
 }

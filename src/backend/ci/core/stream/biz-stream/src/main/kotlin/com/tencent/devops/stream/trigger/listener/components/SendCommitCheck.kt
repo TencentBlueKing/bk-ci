@@ -81,7 +81,7 @@ class SendCommitCheck @Autowired constructor(
                 sendCommitCheckV2(action)
             }
         } catch (e: Throwable) {
-            logger.error("sendCommitCheck error: ${action.format()}")
+            logger.warn("SendCommitCheck|error=${action.format()}")
         }
     }
 
@@ -140,7 +140,7 @@ class SendCommitCheck @Autowired constructor(
             }
             // 这里先这么写，未来如果这么枚举扩展代码编译时可以第一时间感知，防止漏过事件
             BuildReviewType.TASK_REVIEW -> {
-                logger.warn("buildReviewListener event not match: ${finishData.reviewType}")
+                logger.warn("SendCommitCheck|getStageReviewDesc|event not match|${finishData.reviewType}")
                 BUILD_RUNNING_DESC
             }
             BuildReviewType.QUALITY_TASK_REVIEW_PASS, BuildReviewType.QUALITY_TASK_REVIEW_ABORT -> {
@@ -209,7 +209,7 @@ class SendCommitCheck @Autowired constructor(
                 channelCode = ChannelCode.GIT
             ).data!!.model
         } catch (e: Exception) {
-            logger.warn("get build finish model info error: ${e.message}")
+            logger.warn("SendCommitCheck|getReviewInfo|get build finish model info error|${e.message}")
             return Pair(" ", " ")
         }
         model.stages.forEach { stage ->

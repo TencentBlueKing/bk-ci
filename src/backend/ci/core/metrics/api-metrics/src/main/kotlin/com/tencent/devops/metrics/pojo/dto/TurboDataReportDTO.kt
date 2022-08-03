@@ -25,32 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.timer.quartz
+package com.tencent.devops.metrics.pojo.dto
 
-import com.tencent.devops.common.service.trace.TraceTag
-import org.quartz.JobExecutionContext
-import org.quartz.JobExecutionException
-import org.quartz.listeners.JobListenerSupport
-import org.slf4j.MDC
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class QuartzTraceJobListener : JobListenerSupport() {
-    override fun getName(): String {
-        return "quartz-trace"
-    }
-
-    override fun jobToBeExecuted(context: JobExecutionContext) {
-        MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-        log.info(
-            "QuartzTraceJobListener|jobToBeExecuted" +
-                "|STREAM_TIMER|${context.jobDetail.key.name}|bizId|${MDC.get(TraceTag.BIZID)}"
-        )
-    }
-
-    override fun jobExecutionVetoed(context: JobExecutionContext?) {
-        MDC.remove(TraceTag.BIZID)
-    }
-
-    override fun jobWasExecuted(context: JobExecutionContext?, jobException: JobExecutionException?) {
-        MDC.remove(TraceTag.BIZID)
-    }
-}
+@ApiModel("编译加速数据上报传输对象")
+data class TurboDataReportDTO(
+    @ApiModelProperty("统计日期")
+    val statisticsTime: String,
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("编译加速节省时间，单位：秒")
+    val turboSaveTime: Double
+)
