@@ -8,7 +8,7 @@
         v-bkloading="{ isLoading }"
     >
         <bk-table-column type="index" :label="$t('codelib.index')" align="center" width="60"></bk-table-column>
-        <bk-table-column :label="$t('codelib.aliasName')" sortable="custom" prop="aliasName"></bk-table-column>
+        <bk-table-column :label="$t('codelib.aliasName')" sortable prop="aliasName"></bk-table-column>
         <bk-table-column :label="$t('codelib.address')" sortable prop="url"></bk-table-column>
         <bk-table-column :label="$t('codelib.type')" sortable prop="type" :formatter="typeFormatter"></bk-table-column>
         <bk-table-column :label="$t('codelib.authIdentity')">
