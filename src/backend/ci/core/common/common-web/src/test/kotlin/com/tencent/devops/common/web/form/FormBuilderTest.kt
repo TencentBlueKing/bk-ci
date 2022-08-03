@@ -53,12 +53,12 @@ internal class FormBuilderTest {
     "title": "input-test",
     "description": "input-desc-test",
     "type": "object",
+    "required": [],
     "properties": {
         "input-test-id": {
             "type": "string",
             "title": "input表单测试",
             "default": "123",
-            "required": false,
             "description": "456",
             "ui:component": {
                 "name": "input"
@@ -93,12 +93,12 @@ internal class FormBuilderTest {
     "title": "input-test",
     "description": "input-desc-test",
     "type": "object",
+    "required": [],
     "properties": {
         "input-test-id": {
             "type": "string",
             "title": "input表单测试",
             "default": "123",
-            "required": false,
             "ui:component": {
                 "name": "input",
                 "props": {
@@ -136,12 +136,12 @@ internal class FormBuilderTest {
     "title": "select-test",
     "description": "select-desc-test",
     "type": "object",
+    "required": ["select-test-id"],
     "properties": {
         "select-test-id": {
             "type": "string",
             "title": "select表单测试",
             "default": "official",
-            "required": true,
             "ui:component": {
                 "name": "selector",
                 "props": {
@@ -184,9 +184,9 @@ internal class FormBuilderTest {
                     option = SelectPropOption(
                         items = listOf(
                             SelectPropOptionItem(
-                                "official", "官方插件"
+                                "official", "官方插件", null
                             ), SelectPropOptionItem(
-                                "external", "第三方插件"
+                                "external", "第三方插件", null
                             )
                         ),
                         conf = SelectPropOptionConf(multiple = false)
@@ -202,12 +202,12 @@ internal class FormBuilderTest {
     "title": "checkbox-test",
     "description": "checkbox-desc-test",
     "type": "object",
+    "required": [],
     "properties": {
         "checkbox-test-id": {
             "type": "array",
             "title": "checkbox表单测试",
             "default": "official",
-            "required" : false,
             "ui:component": {
                 "name": "checkbox",
                 "props": {
@@ -257,12 +257,12 @@ internal class FormBuilderTest {
     "title": "radio-test",
     "description": "radio-desc-test",
     "type": "object",
+    "required": [],
     "properties": {
         "radio-test-id": {
             "type": "boolean",
             "title": "radio表单测试",
             "default": true,
-            "required" : false,
             "ui:component": {
                 "name": "radio",
                 "props": {
@@ -312,11 +312,11 @@ internal class FormBuilderTest {
     "title": "time-test",
     "description": "time-desc-test",
     "type": "object",
+    "required": [],
     "properties": {
         "time-test-id": {
             "type": "string",
             "title": "time表单测试",
-            "required" : false,
             "ui:component": {
                 "name": "bk-time-picker",
                 "props" : {
@@ -352,12 +352,12 @@ internal class FormBuilderTest {
     "title": "tips-test",
     "description": "tips-desc-test",
     "type": "object",
+    "required": [],
     "properties": {
         "tips-test-id": {
             "type": "string",
             "title": "tips表单测试",
             "default": "tips",
-            "required" : false,
             "ui:component": {
                 "name": "tips",
                 "props" : {
@@ -393,13 +393,13 @@ internal class FormBuilderTest {
     "title": "companyStaff-test",
     "description": "companyStaff-desc-test",
     "type": "object",
+    "required": [],
     "properties": {
         "companyStaff-test-id": {
             "type": "array",
             "title": "companyStaff表单测试",
-            "required" : false,
             "ui:component": {
-                "name": "company-staff-input"
+                "name": "companyStaff"
             },
             "ui:props": {
                 "labelWidth": 500

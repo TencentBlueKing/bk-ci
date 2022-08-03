@@ -43,5 +43,6 @@ data class Form(
     var title: String,
     var description: String? = null,
     val type: String = "object",
+    val required: MutableList<String>,
     val properties: MutableMap<String, FormProp>
 )
