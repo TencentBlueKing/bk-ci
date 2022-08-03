@@ -40,6 +40,10 @@ import com.tencent.devops.worker.common.env.AgentEnv
 @ApiPriority(priority = 9)
 class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKApi {
 
+    override fun getRequestUrl(path: String, retryCount: Int, executeCount: Int): String {
+        return "/ms/engine/$path?retryCount=$retryCount&executeCount=$executeCount&buildId=$buildId"
+    }
+
     override fun getJobContext(): Map<String, String> {
         // 在此方法累加需要传入的上下文变量，可以调多处接口获取并累加
         val context = mutableMapOf<String, String>()
