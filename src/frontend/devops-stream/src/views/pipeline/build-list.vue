@@ -679,8 +679,8 @@
 
             submitData () {
                 Promise.all([
-                    this.$refs.triggleForm.validate()
-                    // this.$refs.bkUiForm?.validateForm(),
+                    this.$refs.triggleForm.validate(),
+                    this.$refs.bkUiForm?.validate()
                 ]).then(() => {
                     const postData = {
                         ...this.formData,
@@ -698,7 +698,7 @@
                         this.isTriggering = false
                     })
                 }, (err) => {
-                    this.$bkMessage({ theme: 'error', message: err.content || err })
+                    this.$bkMessage({ theme: 'error', message: err.content || err.message || err })
                 })
             },
 
