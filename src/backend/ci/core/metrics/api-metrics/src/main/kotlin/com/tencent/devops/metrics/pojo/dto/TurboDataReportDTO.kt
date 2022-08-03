@@ -25,35 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.listener
+package com.tencent.devops.metrics.pojo.dto
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.event.listener.Listener
-import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
-import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportFacadeService
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Component
-class QualityReportDailyMessageListener @Autowired constructor(
-    private val metricsThirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
-) : Listener<QualityReportEvent> {
-
-    override fun execute(event: QualityReportEvent) {
-        try {
-            metricsThirdPlatformDataReportFacadeService.metricsQualityDataReport(event)
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to insert the metrics QualityReport data", ignored)
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.SYSTEM_ERROR,
-                defaultMessage = "Fail to insert the metrics QualityReport data"
-            )
-        }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(QualityReportDailyMessageListener::class.java)
-    }
-}
+@ApiModel("编译加速数据上报传输对象")
+data class TurboDataReportDTO(
+    @ApiModelProperty("统计日期")
+    val statisticsTime: String,
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("编译加速节省时间，单位：秒")
+    val turboSaveTime: Double
+)
