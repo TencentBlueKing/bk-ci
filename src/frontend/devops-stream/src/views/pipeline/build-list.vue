@@ -680,7 +680,7 @@
             submitData () {
                 Promise.all([
                     this.$refs.triggleForm.validate(),
-                    this.$refs.bkUiForm?.validate()
+                    this.$refs.bkUiForm?.validateForm()
                 ]).then(() => {
                     const postData = {
                         ...this.formData,
