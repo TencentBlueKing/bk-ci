@@ -180,7 +180,7 @@ class StreamDetailService @Autowired constructor(
         gitProjectId: Long,
         pipelineId: String
     ): StreamGitProjectPipeline? {
-        logger.info("get pipeline with pipelineId: $pipelineId, gitProjectId: $gitProjectId")
+        logger.info("StreamDetailService|getPipelineWithId|pipelineId|$pipelineId|gitProjectId|$gitProjectId")
         val pipeline = pipelineResourceDao.getPipelineById(
             dslContext = dslContext,
             gitProjectId = gitProjectId,

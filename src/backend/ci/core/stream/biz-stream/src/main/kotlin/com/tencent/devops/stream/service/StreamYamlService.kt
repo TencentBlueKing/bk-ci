@@ -55,7 +55,7 @@ class StreamYamlService @Autowired constructor(
     }
 
     fun getYamlV2(gitProjectId: Long, buildId: String): V2BuildYaml? {
-        logger.info("get yaml by buildId:($buildId), gitProjectId: $gitProjectId")
+        logger.info("StreamYamlService|getYamlV2|buildId|$buildId|gitProjectId|$gitProjectId")
         streamSettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启Stream，无法查询"
@@ -78,7 +78,7 @@ class StreamYamlService @Autowired constructor(
                     yamlSchemaCheck.check(yaml.yaml, null, true)
                     Pair(Result("OK"), true)
                 } catch (e: Exception) {
-                    logger.error("Check yaml schema failed.", e)
+                    logger.warn("StreamYamlService|checkYaml|failed", e)
                     Pair(Result(1, "Invalid yaml: ${e.message}"), false)
                 }
             }

@@ -160,7 +160,10 @@ class TGitPushActionGit(
         if (!event().skipStream()) {
             return false
         }
-        logger.info("project: ${data.eventCommon.gitProjectId} commit: ${data.eventCommon.commit.commitId} skip ci")
+        logger.info(
+            "TGitPushActionGit|skipStream" +
+                "|project|${data.eventCommon.gitProjectId}|commit|${data.eventCommon.commit.commitId}"
+        )
         streamEventService.saveTriggerNotBuildEvent(
             action = this,
             reason = TriggerReason.USER_SKIPED.name,
