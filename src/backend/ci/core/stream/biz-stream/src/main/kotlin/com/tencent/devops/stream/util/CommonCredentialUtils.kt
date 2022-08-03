@@ -54,21 +54,20 @@ object CommonCredentialUtils {
             encoder.encodeToString(pair.publicKey)
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
-            logger.error(
-                "Fail to get the credential($credentialId) of project($projectId) " +
-                    "because of ${credentialResult.message}"
+            logger.warn(
+                "CommonCredentialUtils|getCredential|$credentialId|$projectId|msg=${credentialResult.message}"
             )
             throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
         }
 
         val credential = credentialResult.data!!
         if (type != credential.credentialType) {
-            logger.error("CredentialId is invalid, expect:${type.name}, but real:${credential.credentialType.name}")
+            logger.warn("CommonCredentialUtils|getCredential|${type.name}|${credential.credentialType.name}")
             throw ParamBlankException("Fail to get the credential($credentialId) of project($projectId)")
         }
 
         if (acrossProject && !credential.allowAcrossProject) {
-            logger.warn("project $projectId credential $credentialId not allow across project use")
+            logger.warn("CommonCredentialUtils|getCredential|$projectId|$credentialId")
             throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
         }
 
