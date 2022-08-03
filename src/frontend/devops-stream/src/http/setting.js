@@ -105,17 +105,24 @@ export default {
     },
 
     toggleEnableCi (enabled, projectInfo) {
-        return api
-            .get(`${STREAM_PERFIX}/user/basic/setting/isInstallApp`, {
-                gitProjectId: projectInfo.id
-            })
-            .then((res) => {
-                if (res.status) {
-                    return api.post(`${STREAM_PERFIX}/user/basic/setting/enable?enabled=${enabled}`, projectInfo)
-                } else {
-                    location = res.url
-                }
-            })
+        const ensureInstallApp = () => {
+            if (enabled) {
+                return api.get(`${STREAM_PERFIX}/user/basic/setting/isInstallApp`, {
+                    params: {
+                        gitProjectId: projectInfo.id
+                    }
+                })
+            } else {
+                return Promise.resolve()
+            }
+        }
+        return ensureInstallApp().then((res) => {
+            if (res.status) {
+                return api.post(`${STREAM_PERFIX}/user/basic/setting/enable?enabled=${enabled}`, projectInfo)
+            } else {
+                location = res.url
+            }
+        })
     },
 
     resetAuthorization (gitProjectId) {
