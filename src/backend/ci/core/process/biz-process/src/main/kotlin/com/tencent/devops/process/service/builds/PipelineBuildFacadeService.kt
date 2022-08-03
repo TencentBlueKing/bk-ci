@@ -278,7 +278,7 @@ class PipelineBuildFacadeService(
         )
     }
 
-    fun buildManualSearchProperty(
+    fun buildManualSearchOptions(
         userId: String?,
         projectId: String,
         pipelineId: String,

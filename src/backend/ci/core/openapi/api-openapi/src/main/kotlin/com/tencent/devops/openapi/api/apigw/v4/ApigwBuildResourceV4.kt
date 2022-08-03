@@ -437,7 +437,7 @@ interface ApigwBuildResourceV4 {
     @ApiOperation("获取流水线手动启动分页的参数", tags = ["v4_app_build_startParams", "v4_user_build_startParams"])
     @POST
     @Path("/build_manual_startup_options")
-    fun manualStartupoptions(
+    fun manualStartupOptions(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,

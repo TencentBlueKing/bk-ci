@@ -329,7 +329,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         )
     }
 
-    override fun manualStartupParams(
+    override fun manualStartupOptions(
         appCode: String?,
         apigwType: String?,
         userId: String,
@@ -338,7 +338,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         search: String?,
         property: BuildFormProperty
     ): Result<List<BuildFormValue>> {
-        return client.get(ServiceBuildResource::class).manualSearchProperty(
+        return client.get(ServiceBuildResource::class).manualSearchOptions(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
