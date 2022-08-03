@@ -68,7 +68,7 @@ class StreamHistoryService @Autowired constructor(
         gitProjectId: Long,
         search: StreamBuildHistorySearch?
     ): Page<StreamBuildHistory> {
-        logger.info("get history build list, gitProjectId: $gitProjectId")
+        logger.info("StreamHistoryService|getHistoryBuildList|gitProjectId|$gitProjectId")
         val pageNotNull = search?.page ?: 1
         val pageSizeNotNull = search?.pageSize ?: 10
         val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
@@ -108,11 +108,11 @@ class StreamHistoryService @Autowired constructor(
             pipelineIds = search?.pipelineIds
         )
         val builds = gitRequestBuildList.map { it.buildId }.toSet()
-        logger.info("get history build list, build ids: $builds")
+        logger.info("StreamHistoryService|getHistoryBuildList|builds|$builds")
         val buildHistoryList =
             client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
         if (null == buildHistoryList) {
-            logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
+            logger.info("StreamHistoryService|getHistoryBuildList|empty|gitProjectId|$gitProjectId")
             return Page(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
@@ -177,7 +177,7 @@ class StreamHistoryService @Autowired constructor(
         pageSize: Int?,
         keyword: String?
     ): Page<StreamBuildBranch> {
-        logger.info("get all branch build list, gitProjectId: $gitProjectId")
+        logger.info("StreamHistoryService|getAllBuildBranchList|gitProjectId|$gitProjectId")
         val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
@@ -189,7 +189,7 @@ class StreamHistoryService @Autowired constructor(
             keyword = keyword
         )
         if (buildBranchList.isEmpty()) {
-            logger.info("Get build branch list return empty, gitProjectId: $gitProjectId")
+            logger.info("StreamHistoryService|getAllBuildBranchList|empty|gitProjectId|$gitProjectId")
             return Page(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
