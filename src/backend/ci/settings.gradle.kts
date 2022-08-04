@@ -491,6 +491,7 @@ include(":ext:tencent:sign")
 include(":ext:tencent:sign:api-sign-tencent")
 include(":ext:tencent:sign:biz-sign-tencent")
 include(":ext:tencent:sign:boot-sign-tencent")
+include(":ext:tencent:sign:model-sign-tencent")
 
 include(":ext:tencent:statistics")
 include(":ext:tencent:statistics:api-statistics-tencent")
