@@ -92,7 +92,11 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
                 )
             ).data!!
         } catch (ignore: RemoteServiceException) {
-            logger.info("[$pipelineId|$buildId] get parent pipeline vars failed: ${ignore.errorMessage}")
+            if (ignore.httpStatus >= 500) {
+                logger.error("BKSystemErrorMonitor|getBuildVariableValue|$pipelineId-$buildId|${ignore.errorMessage}")
+            } else {
+                logger.info("getBuildVariableValue|$pipelineId-$buildId|${ignore.errorMessage}")
+            }
             return Triple("", "", "")
         }
         logger.info("[$pipelineId|$buildId] get parent pipeline vars: $parentPipelineVars")
@@ -111,7 +115,7 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
         val artifactList: List<FileInfo> = try {
             pipelineBuildArtifactoryService.getArtifactList(userId, projectId, pipelineId, buildId)
         } catch (ignored: Throwable) {
-            logger.error("[$pipelineId]|getArtifactList-$buildId exception:", ignored)
+            logger.error("BKSystemErrorMonitor|getArtifactList|$pipelineId-$buildId|error=${ignored.message}", ignored)
             emptyList()
         }
         logger.info("[$pipelineId]|getArtifactList-$buildId artifact: ${JsonUtil.toJson(artifactList)}")
@@ -131,7 +135,7 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
 
             logger.info("[$buildId]|update artifact result: ${result.status} ${result.message}")
         } catch (e: Exception) {
-            logger.error("[$buildId| update artifact list fail: ${e.localizedMessage}", e)
+            logger.error("BKSystemErrorMonitor|updateArtifactList|$buildId|error=${e.localizedMessage}", e)
             // rollback
             client.get(ServicePipelineRuntimeResource::class).updateArtifactList(
                 userId = userId,
