@@ -83,7 +83,7 @@ class EmailServiceImpl @Autowired constructor(
         }
 
         if (emailNotifyMessageWithOperation.getReceivers().isEmpty()) {
-            logger.warn("email receivers is empty");
+            logger.warn("email receivers is empty")
             return
         }
 
