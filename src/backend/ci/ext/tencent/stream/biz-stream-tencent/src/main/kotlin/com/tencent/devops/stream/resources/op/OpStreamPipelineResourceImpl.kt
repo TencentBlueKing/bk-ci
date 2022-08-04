@@ -97,11 +97,14 @@ class OpStreamPipelineResourceImpl @Autowired constructor(
     override fun batchUpdateModelName(): String {
         val allPipeline = pipelineResourceDao.getAllPipeline(dslContext = dslContext).toMutableList()
         val gitProjectIdToBasicSetting = streamBasicSettingService.getBasicSettingRecordList(
-            allPipeline.map { it.gitProjectId }).associateBy { it.id }
+            allPipeline.map { it.gitProjectId }
+        ).associateBy { it.id }
         val failModelUpdates = mutableListOf<ModelUpdate>()
         val modelUpdateList = mutableListOf<ModelUpdate>()
-        logger.info("allPipelineCount:${allPipeline.size}," +
-                        "gitProjectIdToBasicSettingCount:${gitProjectIdToBasicSetting.size}")
+        logger.info(
+            "allPipelineCount:${allPipeline.size}," +
+                "gitProjectIdToBasicSettingCount:${gitProjectIdToBasicSetting.size}"
+        )
         while (allPipeline.isNotEmpty()) {
             while (allPipeline.isNotEmpty() && modelUpdateList.size < 100) {
                 val first = allPipeline.removeFirst()
