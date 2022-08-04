@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Deprecated("已作废")
 @ApiModel("世纪天游企业证书签名并归档", description = IosSJTYSignElement.classType)
 data class IosSJTYSignElement(
     @ApiModelProperty("任务名称", required = true)
