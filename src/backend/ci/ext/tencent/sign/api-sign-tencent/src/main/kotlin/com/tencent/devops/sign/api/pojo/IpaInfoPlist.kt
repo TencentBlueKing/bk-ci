@@ -25,11 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-}
+package com.tencent.devops.sign.api.pojo
 
-plugins {
-    `task-deploy-to-maven`
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("IPA Info Plist内容信息")
+data class IpaInfoPlist(
+    @ApiModelProperty("bundleId", required = true)
+    var bundleIdentifier: String = "",
+    @ApiModelProperty("应用标题", required = true)
+    var appTitle: String = "",
+    @ApiModelProperty("应用版本", required = true)
+    var bundleVersion: String = "",
+    @ApiModelProperty("应用构建版本", required = true)
+    var bundleVersionFull: String = "",
+    @ApiModelProperty("应用scheme", required = true)
+    var scheme: String = "",
+    @ApiModelProperty("应用名称", required = true)
+    var appName: String = ""
+)

@@ -25,11 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-}
+package com.tencent.devops.sign.service
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.sign.api.enums.EnumResignStatus
+import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.api.pojo.SignDetail
+import java.io.File
+import java.io.InputStream
+
+interface SignService {
+
+    /*
+    * 接受文件上传并解码签名信息
+    * */
+    fun uploadIpaAndDecodeInfo(
+        resignId: String,
+        ipaSignInfo: IpaSignInfo,
+        ipaSignInfoHeader: String,
+        ipaInputStream: InputStream,
+        md5Check: Boolean = true
+    ): Pair<File, Int>
+
+    /*
+    * 对ipa文件进行签名，并归档
+    * */
+    fun signIpaAndArchive(
+        resignId: String,
+        ipaSignInfo: IpaSignInfo,
+        ipaFile: File,
+        taskExecuteCount: Int
+    ): Boolean
+
+    /*
+    * 查询某次签名任务是否完成
+    * */
+    fun getSignStatus(resignId: String): EnumResignStatus
+
+    /*
+    * 查询某次签名任务的详情
+    * */
+    fun getSignDetail(resignId: String): SignDetail
 }

@@ -25,11 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-}
+package com.tencent.devops.sign.api.pojo
 
-plugins {
-    `task-deploy-to-maven`
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("APPEX拓展信息")
+data class AppexSignInfo(
+    @ApiModelProperty("appex拓展应用名", required = true)
+    val appexName: String,
+    @ApiModelProperty("扩展App对应描述文件ID", required = true)
+    val mobileProvisionId: String
+)

@@ -25,11 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-}
+package com.tencent.devops.sign.service
 
-plugins {
-    `task-deploy-to-maven`
+interface DownloadService {
+    /*
+    * 获取下载连接
+    * */
+    fun getDownloadUrl(
+        userId: String,
+        resignId: String,
+        downloadType: String
+    ): String
 }

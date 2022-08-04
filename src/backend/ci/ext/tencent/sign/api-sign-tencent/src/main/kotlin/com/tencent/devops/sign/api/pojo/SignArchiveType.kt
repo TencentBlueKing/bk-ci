@@ -25,11 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-}
+package com.tencent.devops.sign.api.pojo
 
-plugins {
-    `task-deploy-to-maven`
+/**
+ * 事件动作
+ * @version 1.0
+ */
+enum class SignArchiveType {
+    PIPELINE, // 流水线仓库
+    CUSTOM, // 自定义仓库
+    OTHERS // 其他
+    ;
+
+    companion object {
+        fun isInner(signArchiveType: SignArchiveType) = PIPELINE == signArchiveType || CUSTOM == signArchiveType
+    }
 }

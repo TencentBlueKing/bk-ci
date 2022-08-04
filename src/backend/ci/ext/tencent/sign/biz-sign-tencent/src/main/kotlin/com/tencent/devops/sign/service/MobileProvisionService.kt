@@ -25,11 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-}
+package com.tencent.devops.sign.service
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import java.io.File
+
+interface MobileProvisionService {
+
+    companion object {
+        const val TEAM_IDENTIFIER_KEY = "com.apple.developer.team-identifier"
+        const val KEYCHAIN_ACCESS_GROUPS_KEY = "keychain-access-groups"
+    }
+
+    fun downloadMobileProvision(
+        mobileProvisionDir: File,
+        projectId: String,
+        mobileProvisionId: String
+    ): File
+
+    fun handleEntitlement(
+        entitlementFile: File,
+        keyChainGroupsList: List<String>?
+    )
+
+    fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): File?
 }

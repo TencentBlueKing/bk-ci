@@ -58,7 +58,8 @@ import java.time.Instant
 
 @Suppress("NestedBlockDepth")
 @Service
-class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvisionService {
+class
+KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvisionService {
     @Value("\${keystore.url:}")
     private val keyStoreUrl = ""
 

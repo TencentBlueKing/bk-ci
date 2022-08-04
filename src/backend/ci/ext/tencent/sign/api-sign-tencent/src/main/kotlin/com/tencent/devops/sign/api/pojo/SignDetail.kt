@@ -25,11 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-}
+package com.tencent.devops.sign.api.pojo
 
-plugins {
-    `task-deploy-to-maven`
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("签名状态查询结果")
+data class SignDetail(
+    @ApiModelProperty("签名ID", required = true)
+    val resignId: String,
+    @ApiModelProperty("是否完成", required = true)
+    val status: String,
+    @ApiModelProperty("描述信息", required = true)
+    val message: String
+)

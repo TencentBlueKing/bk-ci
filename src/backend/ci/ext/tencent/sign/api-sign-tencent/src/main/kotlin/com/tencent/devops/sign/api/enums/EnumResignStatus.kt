@@ -25,11 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-}
+package com.tencent.devops.sign.api.enums
 
-plugins {
-    `task-deploy-to-maven`
+import com.fasterxml.jackson.annotation.JsonValue
+
+enum class EnumResignStatus(private val status: String) {
+    RUNNING("RUNNING"),
+    FAIL("FAIL"),
+    SUCCESS("SUCCESS");
+
+    @JsonValue
+    fun getValue(): String {
+        return status
+    }
+
+    companion object {
+        fun parse(status: String?): EnumResignStatus {
+            values().forEach { type ->
+                if (type.getValue() == status) {
+                    return type
+                }
+            }
+            return RUNNING
+        }
+    }
 }

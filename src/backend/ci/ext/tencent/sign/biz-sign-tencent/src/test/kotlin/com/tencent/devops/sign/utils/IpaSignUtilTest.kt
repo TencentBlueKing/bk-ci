@@ -25,11 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-}
+package com.tencent.devops.sign.utils
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.common.api.util.FileUtil
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
+import java.io.File
+
+class IpaSignUtilTest {
+
+    private val inputStreamFile = "./test.ipa"
+    private val outputStreamStreamFile = "./test_md5.ipa"
+
+    /*
+    * 复制流到目标文件，并计算md5
+    * */
+    @Test
+    fun copyInputStreamToFile() {
+        val testFile = File(inputStreamFile)
+        val exists = testFile.exists()
+        if (!exists) {
+            testFile.parentFile.mkdirs()
+            testFile.writeText("Just for test!!!")
+        }
+        val inputStream = File(inputStreamFile).inputStream()
+        val outputStreamFile = File(outputStreamStreamFile)
+        val md5 = IpaFileUtil.copyInputStreamToFile(inputStream, outputStreamFile)
+        Assertions.assertEquals(FileUtil.getMD5(testFile), md5)
+        if (!exists) {
+            testFile.delete()
+        }
+        outputStreamFile.delete()
+    }
 }

@@ -25,11 +25,52 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-}
+package com.tencent.devops.sign.utils
 
-plugins {
-    `task-deploy-to-maven`
+import org.apache.commons.codec.binary.Hex
+import org.apache.commons.codec.digest.DigestUtils
+import java.io.File
+import java.io.InputStream
+import java.security.MessageDigest
+
+object IpaFileUtil {
+    private const val bufferSize = 8 * 1024
+
+    /*
+    * 复制流到目标文件，并计算md5
+    * */
+    fun copyInputStreamToFile(
+        inputStream: InputStream,
+        target: File
+    ): String? {
+        // 如果文件存在，则删除
+        if (target.exists()) {
+            target.delete()
+        }
+        target.outputStream().use { out ->
+            val md5 = MessageDigest.getInstance("MD5")
+            var bytesCopied: Long = 0
+            val buffer = ByteArray(bufferSize)
+            var bytes = inputStream.read(buffer)
+            while (bytes >= 0) {
+                out.write(buffer, 0, bytes)
+                md5.update(buffer, 0, bytes)
+                bytesCopied += bytes
+                bytes = inputStream.read(buffer)
+            }
+            return Hex.encodeHexString(md5.digest())
+        }
+    }
+
+    /**
+     * 获取文件MD5值
+     * @param file 文件对象
+     * @return 文件MD5值
+     */
+    fun getMD5(file: File): String {
+        if (!file.exists()) return ""
+        return file.inputStream().use {
+            DigestUtils.md5Hex(it)
+        }
+    }
 }

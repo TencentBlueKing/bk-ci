@@ -25,11 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-}
+package com.tencent.devops.sign.service
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import java.io.File
+import java.net.SocketTimeoutException
+import kotlin.jvm.Throws
+
+interface ArchiveService {
+
+    @Throws(SocketTimeoutException::class)
+    fun archive(
+        signedIpaFile: File,
+        ipaSignInfo: IpaSignInfo,
+        properties: MutableMap<String, String>? = null
+    ): Boolean
 }

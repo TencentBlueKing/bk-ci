@@ -25,11 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-}
+package com.tencent.devops.sign.api.pojo
 
-plugins {
-    `task-deploy-to-maven`
-}
+import java.io.File
+
+data class MobileProvisionInfo(
+    val mobileProvisionFile: File,
+    val plistFile: File,
+    val entitlementFile: File,
+    val bundleId: String
+)

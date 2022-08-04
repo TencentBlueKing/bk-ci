@@ -25,11 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-}
+package com.tencent.devops.sign.service
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import java.io.File
+import java.io.InputStream
+
+interface FileService {
+
+    fun copyToTargetFile(
+        ipaInputStream: InputStream,
+        ipaSignInfo: IpaSignInfo,
+        md5Check: Boolean = true,
+        resignId: String? = null
+    ): File
+
+    fun getIpaFile(
+        ipaSignInfo: IpaSignInfo,
+        resignId: String? = null
+    ): File
+
+    fun getIpaUnzipDir(
+        ipaSignInfo: IpaSignInfo,
+        resignId: String? = null
+    ): File
+
+    fun getMobileProvisionDir(
+        ipaSignInfo: IpaSignInfo,
+        resignId: String? = null
+    ): File
+
+    fun getIpaTmpDir(
+        ipaSignInfo: IpaSignInfo,
+        resignId: String? = null
+    ): File
 }

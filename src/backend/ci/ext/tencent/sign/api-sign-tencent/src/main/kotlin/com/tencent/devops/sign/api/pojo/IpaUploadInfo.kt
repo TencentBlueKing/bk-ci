@@ -25,11 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-}
+package com.tencent.devops.sign.api.pojo
 
-plugins {
-    `task-deploy-to-maven`
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("IPA包签名信息")
+data class IpaUploadInfo(
+    @ApiModelProperty("项目ID", required = true)
+    var projectId: String = "",
+    @ApiModelProperty("流水线ID", required = true)
+    var pipelineId: String = "",
+    @ApiModelProperty("构建ID", required = true)
+    var buildId: String = "",
+    @ApiModelProperty("鉴权token", required = true)
+    var token: String = ""
+)

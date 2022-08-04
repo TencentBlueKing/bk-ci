@@ -25,11 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-}
+package com.tencent.devops.sign.resources
 
-plugins {
-    `task-deploy-to-maven`
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.api.service.ServiceIpaSignInfoResource
+import com.tencent.devops.sign.service.SignInfoService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceIpaSignInfoResourceImpl @Autowired constructor(
+    private val signInfoService: SignInfoService,
+    private val objectMapper: ObjectMapper
+) : ServiceIpaSignInfoResource {
+
+    override fun base64Encode(ipaSignInfo: IpaSignInfo): Result<String> {
+        val ipaSignInfoEncode = signInfoService.encodeIpaSignInfo(ipaSignInfo)
+        return Result(ipaSignInfoEncode)
+    }
+
+    override fun base64Decode(ipaSignInfoEncode: String): Result<IpaSignInfo> {
+        val ipaSignInfo = signInfoService.decodeIpaSignInfo(ipaSignInfoEncode, objectMapper)
+        return Result(ipaSignInfo)
+    }
 }
