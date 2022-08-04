@@ -641,7 +641,7 @@ class PipelineListFacadeService @Autowired constructor(
             permissionFlag = permissionFlag,
             page = page,
             pageSize = pageSize,
-            offsetNum = offsetNum
+            pageOffsetNum = offsetNum
         )
         pipelineList.addAll(
             buildPipelines(
