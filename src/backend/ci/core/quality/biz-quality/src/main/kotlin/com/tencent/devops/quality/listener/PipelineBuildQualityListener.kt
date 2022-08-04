@@ -224,7 +224,7 @@ class PipelineBuildQualityListener @Autowired constructor(
             }
             logger.info("QUALITY|[${event.buildId}]save reviewer info done.")
         } catch (e: Exception) {
-            logger.error("QUALITY|listenPipelineQualityReviewBroadCastEvent|${event.buildId}|error=${e.message}")
+            logger.warn("QUALITY|listenPipelineQualityReviewBroadCastEvent|${event.buildId}|warn=${e.message}")
         }
     }
 
