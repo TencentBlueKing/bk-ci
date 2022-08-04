@@ -77,7 +77,10 @@ class StreamBasicSettingService @Autowired constructor(
                 pageSize = pageSize
             )
         if (agentBuilds.isNotOk()) {
-            logger.error("get agent builds list in devops failed, msg: ${agentBuilds.message}")
+            logger.warn(
+                "StreamBasicSettingService|listAgentBuilds|" +
+                    "errors=${agentBuilds.message}"
+            )
             throw RuntimeException("get agent builds list in devops failed, msg: ${agentBuilds.message}")
         }
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
@@ -105,7 +108,7 @@ class StreamBasicSettingService @Autowired constructor(
     ): Boolean {
         val setting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
         if (setting == null) {
-            logger.info("git repo not exists.")
+            logger.info("StreamBasicSettingService|updateProjectSetting|git repo not exists")
             return false
         }
         streamBasicSettingDao.updateProjectSetting(
@@ -174,12 +177,12 @@ class StreamBasicSettingService @Autowired constructor(
                 )
             )
         }
-        logger.warn("init stream Conf: $gitProjectId  info: $projectInfo")
+        logger.warn("StreamBasicSettingService|initStreamConf|$gitProjectId|$projectInfo")
         throw RuntimeException("Create git ci project in devops failed, msg: get project info from git error")
     }
 
     fun saveStreamConf(userId: String, setting: StreamBasicSetting): Boolean {
-        logger.info("save git ci conf, repositoryConf: $setting")
+        logger.info("StreamBasicSettingService|saveStreamConf|$setting")
         val gitRepoConf = streamBasicSettingDao.getSetting(dslContext, setting.gitProjectId)
         if (gitRepoConf?.projectCode == null) {
 
@@ -220,6 +223,7 @@ class StreamBasicSettingService @Autowired constructor(
                 channel = ProjectChannelCode.GITCI
             )
             if (projectResult.isNotOk()) {
+                logger.warn("StreamBasicSettingService|saveStreamConf|error=${projectResult.message}")
                 throw RuntimeException("Create git ci project in devops failed, msg: ${projectResult.message}")
             }
             val projectInfo = projectResult.data!!
@@ -282,7 +286,7 @@ class StreamBasicSettingService @Autowired constructor(
                     projectName = newProjectName
                 )
             } catch (e: Throwable) {
-                logger.error("update bkci project name error :${e.message}")
+                logger.warn("StreamBasicSettingService|updateProjectInfo|error", e)
                 return false
             }
         }
@@ -333,7 +337,7 @@ class StreamBasicSettingService @Autowired constructor(
         return try {
             streamGitTransferService.getGitProjectInfo(gitProjectId.toString(), null)
         } catch (e: Throwable) {
-            logger.error("requestGitProjectInfo, msg: ${e.message}")
+            logger.warn("StreamBasicSettingService|requestGitProjectInfo|error", e)
             return null
         }
     }
@@ -355,6 +359,7 @@ class StreamBasicSettingService @Autowired constructor(
         // sp2:如果已有同名项目，则根据project_id 调用scm接口获取git上的项目信息
         val projectId = GitCommonUtils.getGitProjectId(bkProjectResult.projectId)
         val gitProjectResult = requestGitProjectInfo(projectId)
+        logger.info("StreamBasicSettingService|checkSameGitProjectName|$gitProjectResult|$projectName")
         // 如果stream 存在该项目信息
         if (null != gitProjectResult) {
             // sp3:比对gitProjectinfo的project_name跟入参的gitProjectName对比是否同名，注意gitProjectName这里包含了group信息，拆解开。
@@ -387,7 +392,10 @@ class StreamBasicSettingService @Autowired constructor(
                 projectName = deletedProjectName
             )
         } catch (e: Throwable) {
-            logger.error("update bkci project name error :${e.message}")
+            logger.warn(
+                "StreamBasicSettingService|checkSameGitProjectName " +
+                    "|update bkci project name error :${e.message}"
+            )
         }
     }
 }

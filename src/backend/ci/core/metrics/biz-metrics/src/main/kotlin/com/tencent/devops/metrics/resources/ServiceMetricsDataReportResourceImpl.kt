@@ -25,17 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.sign.api.pojo
+package com.tencent.devops.metrics.resources
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.metrics.api.ServiceMetricsDataReportResource
+import com.tencent.devops.metrics.pojo.dto.CodeccDataReportDTO
+import com.tencent.devops.metrics.pojo.dto.QualityDataReportDTO
+import com.tencent.devops.metrics.pojo.dto.TurboDataReportDTO
+import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportService
 
-@ApiModel("签名状态查询结果")
-data class SignDetail(
-    @ApiModelProperty("签名ID", required = true)
-    val resignId: String,
-    @ApiModelProperty("是否完成", required = true)
-    val status: String,
-    @ApiModelProperty("描述信息", required = true)
-    val message: String
-)
+@RestResource
+class ServiceMetricsDataReportResourceImpl constructor(
+    private val metricsThirdPlatformDataReportService: MetricsThirdPlatformDataReportService
+) : ServiceMetricsDataReportResource {
+
+    override fun metricsQualityDataReport(qualityDataReportDTO: QualityDataReportDTO): Result<Boolean> {
+        return Result(metricsThirdPlatformDataReportService.metricsQualityDataReport(qualityDataReportDTO))
+    }
+
+    override fun metricsCodeccDataReport(codeccDataReportDTO: CodeccDataReportDTO): Result<Boolean> {
+        return Result(metricsThirdPlatformDataReportService.metricsCodeccDataReport(codeccDataReportDTO))
+    }
+
+    override fun metricsTurboDataReport(turboDataReportDTO: TurboDataReportDTO): Result<Boolean> {
+        return Result(metricsThirdPlatformDataReportService.metricsTurboDataReport(turboDataReportDTO))
+    }
+}

@@ -25,19 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.sign.api.pojo
+package com.tencent.devops.metrics.service
 
-/**
- * 事件动作
- * @version 1.0
- */
-enum class SignArchiveType {
-    PIPELINE, // 流水线仓库
-    CUSTOM, // 自定义仓库
-    OTHERS // 其他
-    ;
+import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
+import com.tencent.devops.metrics.pojo.message.CodeCheckReportEvent
+import com.tencent.devops.metrics.pojo.message.TurboReportEvent
 
-    companion object {
-        fun isInner(signArchiveType: SignArchiveType) = PIPELINE == signArchiveType || CUSTOM == signArchiveType
-    }
+interface MetricsThirdPlatformDataReportFacadeService {
+
+    /**
+     * 上报codecc指标数据
+     * @param codeCheckReportEvent codecc指标数据
+     * @return 布尔值
+     */
+    fun metricsCodeCheckDataReport(
+        codeCheckReportEvent: CodeCheckReportEvent
+    ): Boolean
+
+    /**
+     * 上报编译加速指标数据
+     * @param turboReportEvent 编译加速指标数据
+     * @return 布尔值
+     */
+    fun metricsTurboDataReport(
+        turboReportEvent: TurboReportEvent
+    ): Boolean
+
+    /**
+     * 上报质量红线指标数据
+     * @param qualityReportEvent 质量红线指标数据
+     * @return 布尔值
+     */
+    fun metricsQualityDataReport(
+        qualityReportEvent: QualityReportEvent
+    ): Boolean
 }

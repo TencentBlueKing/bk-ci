@@ -25,13 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.sign.api.pojo
+package com.tencent.devops.metrics.pojo.dto
 
-import java.io.File
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-data class MobileProvisionInfo(
-    val mobileProvisionFile: File,
-    val plistFile: File,
-    val entitlementFile: File,
-    val bundleId: String
+@ApiModel("编译加速数据上报传输对象")
+data class TurboDataReportDTO(
+    @ApiModelProperty("统计日期")
+    val statisticsTime: String,
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("编译加速节省时间，单位：秒")
+    val turboSaveTime: Double
 )

@@ -25,40 +25,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.sign.api.external
+package com.tencent.devops.metrics.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.metrics.pojo.dto.CodeccDataReportDTO
+import com.tencent.devops.metrics.pojo.dto.QualityDataReportDTO
+import com.tencent.devops.metrics.pojo.dto.TurboDataReportDTO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import java.io.InputStream
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.QueryParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXTERNAL_IPA"], description = "拓展接口-IPA包")
-@Path("/external/ipa")
+@Api(tags = ["SERVICE_METRICS_DATAS"], description = "METRICS-数据上报")
+@Path("/service/metrics/datas")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ExternalIpaResource {
+interface ServiceMetricsDataReportResource {
 
-    @ApiOperation("IPA包上传并开始签名")
+    @ApiOperation("质量红线数据上报")
+    @Path("/quality/data/report")
     @POST
-    @Path("/upload")
-    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
-    fun ipaUpload(
-        @ApiParam("Base64编码的签名信息", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
-        ipaSignInfoHeader: String,
-        @ApiParam("IPA包文件", required = true)
-        ipaInputStream: InputStream,
-        @ApiParam("鉴权token", required = true)
-        @QueryParam("token")
-        token: String
-    ): Result<String>
+    fun metricsQualityDataReport(
+        @ApiParam(value = "质量红线数据上报传输对象", required = true)
+        qualityDataReportDTO: QualityDataReportDTO
+    ): Result<Boolean>
+
+    @ApiOperation("codecc数据上报")
+    @Path("/codecc/data/report")
+    @POST
+    fun metricsCodeccDataReport(
+        @ApiParam(value = "codecc数据上报传输对象", required = true)
+        codeccDataReportDTO: CodeccDataReportDTO
+    ): Result<Boolean>
+
+    @ApiOperation("编译加速数据上报")
+    @Path("/turbo/data/report")
+    @POST
+    fun metricsTurboDataReport(
+        @ApiParam(value = "编译加速数据上报传输对象", required = true)
+        turboDataReportDTO: TurboDataReportDTO
+    ): Result<Boolean>
 }

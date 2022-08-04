@@ -28,7 +28,6 @@
 package com.tencent.devops.process.service.builds
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -45,7 +44,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class PipelineRetryFacadeService @Autowired constructor(
@@ -55,6 +53,12 @@ class PipelineRetryFacadeService @Autowired constructor(
     val pipelineContainerService: PipelineContainerService,
     private val buildLogPrinter: BuildLogPrinter
 ) {
+
+    /**
+     * 对处于运行中的构建[buildId]，对指定的已经失败的插件任务[taskId]进行重试，
+     * [skipFailedTask]表示是否在重试时直接设置为跳过，并继续流转执行后续的其他插件任务。
+     * 当[taskId]参数不正确或其他原因导致找不到具体的构建任务时，返回false.
+     */
     fun runningBuildTaskRetry(
         userId: String,
         projectId: String,
@@ -65,27 +69,17 @@ class PipelineRetryFacadeService @Autowired constructor(
     ): Boolean {
         logger.info("runningBuildTaskRetry $userId|$projectId|$pipelineId|$buildId|$taskId}")
         if (taskId.isNullOrEmpty()) {
-            // 抛异常
-            throw ParamBlankException("Invalid taskId")
+            return false
         }
-        val taskInfo = pipelineTaskService.getBuildTask(projectId, buildId, taskId)
-        if (taskInfo == null) {
-            logger.warn("runningBuild task retry task empty $projectId|$pipelineId|$buildId|$taskId")
-            // 抛异常
-            throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}不存在",
-                params = arrayOf(buildId)
-            )
-        }
+        val taskInfo = pipelineTaskService.getBuildTask(projectId, buildId, taskId) ?: return false
+
         // 判断待重试task所属job是否为终态。 非终态判断是否是关机未完成。其他task直接报错
         // 此处请求可能早于关机到达。 若还未关机就点击重试，提示用户稍后再试
         val containerInfo = pipelineContainerService.getContainer(
             projectId = projectId,
             buildId = buildId,
             containerId = taskInfo.containerId,
-            stageId = null
+            stageId = taskInfo.stageId
         )
 
         // 校验当前job的关机事件是否有完成

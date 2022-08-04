@@ -104,6 +104,14 @@ class PipelinePauseBuildFacadeService(
             )
         }
 
+        if (buildInfo.isFinish()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.OPERATE_PIPELINE_FAIL,
+                defaultMessage = "Fail to execute pause atom",
+                params = arrayOf("构建已结束，禁止暂停请求(Build Finished And Deny Pause)")
+            )
+        }
+
         val taskRecord = pipelineTaskService.getBuildTask(projectId, buildId, taskId)
 
         if (taskRecord?.status != BuildStatus.PAUSE) {

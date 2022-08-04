@@ -162,7 +162,10 @@ class OpenApiTriggerService @Autowired constructor(
             ScmType.CODE_GIT -> try {
                 objectMapper.readValue<GitEvent>(triggerBuildReq.payload!!)
             } catch (ignore: Exception) {
-                logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
+                logger.warn(
+                    "OpenApiTriggerService|mockWebhookTrigger" +
+                        "|Fail to parse the git web hook commit event|errMsg|${ignore.message}"
+                )
                 throw CustomException(
                     status = Response.Status.BAD_REQUEST,
                     message = "Fail to parse the git web hook commit event, errMsg: ${ignore.message}"
