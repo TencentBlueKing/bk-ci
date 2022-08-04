@@ -89,6 +89,13 @@ class ThirdLoginService @Autowired constructor(
             .build()
     }
 
+    fun verifyToken(token: String): String {
+        return redisOperation.get("$LOGIN_REDIS_KEY$token") ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.LOGIN_TOKEN_VERIFY_FAILED,
+            defaultMessage = "token verify failed , token:$token"
+        )
+    }
+
     fun thirdLoginOut(userId: String): Boolean {
         logger.info("$userId loginOut")
         redisOperation.delete(LOGIN_REDIS_KEY + userId)

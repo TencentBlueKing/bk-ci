@@ -79,4 +79,5 @@ object AuthMessageCode {
     const val LOGIN_THIRD_CODE_INVALID = "2121501" // 权限系统： 第三方登陆code校验失败
     const val LOGIN_USER_INFO_EXIST = "2121502" // 权限系统： 用户已存在，无需重复创建
     const val LOGIN_USER_FREEZE = "212503" // 账号冻结中
+    const val LOGIN_TOKEN_VERIFY_FAILED = "2121504" // 权限系统: token验证失败
 }
