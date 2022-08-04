@@ -24,7 +24,7 @@ if user_cache_value == nil then
     local httpc = http.new()
     --- 开始连接
     httpc:set_timeout(3000)
-    httpc:connect(config.bkci.ip, config.bkci.port)
+    httpc:connect(config.bkci.host, config.bkci.port)
     local res, err = httpc:request({
         path = '/auth/api/external/third/login/verifyToken',
         method = "GET",
