@@ -77,7 +77,7 @@ object SignUtils {
         codesignExternalStr: String?
     ): Boolean {
         if (!appDir.isDirectory || !appDir.extension.contains("app")) {
-            logger.error("App directory $appDir is invalid.")
+            logger.warn("App directory $appDir is invalid.")
             return false
         }
         return try {
@@ -131,7 +131,7 @@ object SignUtils {
             )
             true
         } catch (ignore: Throwable) {
-            logger.error("WildcardResign app <$appDir> directory with exception:", ignore)
+            logger.warn("WildcardResign app <$appDir> directory with exception:", ignore)
             false
         }
     }
@@ -161,11 +161,11 @@ object SignUtils {
     ): Boolean {
         val info = infoMap[appName]
         if (info == null) {
-            logger.error("Not found $appName MobileProvisionInfo from IpaSignInfo, please check request.")
+            logger.warn("Not found $appName MobileProvisionInfo from IpaSignInfo, please check request.")
             return false
         }
         if (!appDir.isDirectory || !appDir.extension.contains("app")) {
-            logger.error("The app directory $appDir is invalid.")
+            logger.warn("The app directory $appDir is invalid.")
             return false
         }
         return try {
@@ -229,7 +229,7 @@ object SignUtils {
             )
             true
         } catch (ignore: Throwable) {
-            logger.error("Resign app <$appName> directory with exception.", ignore)
+            logger.warn("Resign app <$appName> directory with exception.", ignore)
             false
         }
     }
@@ -252,7 +252,7 @@ object SignUtils {
         codesignExternalStr: String?
     ): Boolean {
         if (!frameworkDir.isDirectory || !frameworkDir.extension.contains("framework")) {
-            logger.error("The framework directory $frameworkDir is invalid.")
+            logger.warn("The framework directory $frameworkDir is invalid.")
             return false
         }
         return try {
@@ -270,7 +270,7 @@ object SignUtils {
             codesignFile(certId, frameworkDir.absolutePath, codeSignPath, codesignExternalStr)
             true
         } catch (ignore: Throwable) {
-            logger.error("Resign framework <${frameworkDir.name}> directory with exception.", ignore)
+            logger.warn("Resign framework <${frameworkDir.name}> directory with exception.", ignore)
             false
         }
     }
@@ -433,7 +433,7 @@ object SignUtils {
                 logger.info("[add UniversalLink in entitlements] $removeCmd")
                 runtimeExec(removeCmd)
             } catch (ignore: Throwable) {
-                logger.error(
+                logger.warn(
                     "entitlement <$entitlementsFile> does not have com.apple.developer.associated-domains",
                     ignore
                 )
@@ -465,7 +465,7 @@ object SignUtils {
                 logger.info("[add UniversalLink in entitlements] $removeCmd")
                 runtimeExec(removeCmd)
             } catch (ignore: Throwable) {
-                logger.error(
+                logger.warn(
                     "entitlement <$entitlementsFile> does not have com.apple.developer.associated-domains",
                     ignore
                 )
@@ -505,7 +505,7 @@ object SignUtils {
         return try {
             nsObject.objectForKey(key) as NSDictionary
         } catch (ignore: Throwable) {
-            logger.error("[getSubDictionary] Fail to find key[$key] subDictionary in NSObject", ignore)
+            logger.warn("[getSubDictionary] Fail to find key[$key] subDictionary in NSObject", ignore)
             null
         }
     }
