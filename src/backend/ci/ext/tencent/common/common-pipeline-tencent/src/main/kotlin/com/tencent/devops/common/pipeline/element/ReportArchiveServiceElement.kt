@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Deprecated("已作废 目前早已没有使用")
 @ApiModel("自定义产出物报告-非构建机", description = ReportArchiveServiceElement.classType)
 data class ReportArchiveServiceElement(
     @ApiModelProperty("任务名称", required = true)
