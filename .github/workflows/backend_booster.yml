@@ -33,9 +33,10 @@ jobs:
       run: |
         go mod download
         go get -u github.com/gobuffalo/packr/v2/packr2
-        go mod tidy
     - name: GO Build 
       working-directory: src/backend/booster
-      run: make -j buildbooster dist
+      run: |
+        go mod download
+        make -j buildbooster dist
       env:
         GITTAG: ${{ github.ref }}
