@@ -434,7 +434,7 @@ interface ApigwBuildResourceV4 {
         params: ReviewParam
     ): Result<Boolean>
 
-    @ApiOperation("获取流水线手动启动分页的参数", tags = ["v4_app_build_startParams", "v4_user_build_startParams"])
+    @ApiOperation("获取流水线手动启动分页的参数", tags = ["v4_app_build_startOptions", "v4_user_build_startOptions"])
     @POST
     @Path("/build_manual_startup_options")
     fun manualStartupOptions(
