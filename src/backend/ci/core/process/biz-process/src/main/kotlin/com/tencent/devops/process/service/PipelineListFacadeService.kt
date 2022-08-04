@@ -1408,7 +1408,7 @@ class PipelineListFacadeService @Autowired constructor(
         keyword: String?,
         page: Int,
         pageSize: Int,
-        channelCodes: List<ChannelCode>?
+        channelCodes: List<ChannelCode>
     ): Page<PipelineIdAndName> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val pipelineRecords =
