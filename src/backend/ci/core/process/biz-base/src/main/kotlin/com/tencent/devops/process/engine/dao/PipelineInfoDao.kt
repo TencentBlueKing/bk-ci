@@ -548,7 +548,7 @@ class PipelineInfoDao {
         projectCode: String,
         limit: Int,
         offset: Int,
-        channelCodes: List<ChannelCode>?
+        channelCodes: List<ChannelCode>
     ): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
@@ -558,9 +558,7 @@ class PipelineInfoDao {
             if (!pipelineName.isNullOrEmpty()) {
                 conditions.add(PIPELINE_NAME.like("%$pipelineName%"))
             }
-            if (!channelCodes.isNullOrEmpty()) {
-                conditions.add(CHANNEL.`in`(channelCodes))
-            }
+            conditions.add(CHANNEL.`in`(channelCodes))
             dslContext.selectFrom(this)
                 .where(conditions)
                 .orderBy(CREATE_TIME.desc())
