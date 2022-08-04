@@ -113,7 +113,9 @@ export default {
                     }
                 })
             } else {
-                return Promise.resolve()
+                return Promise.resolve({
+                    status: true
+                })
             }
         }
         return ensureInstallApp().then((res) => {
