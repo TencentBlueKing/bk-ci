@@ -61,13 +61,7 @@ import com.tencent.devops.lambda.dao.process.LambdaPipelineBuildDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineLabelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineModelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineTemplateDao
-import com.tencent.devops.lambda.pojo.DataPlatBuildCommits
-import com.tencent.devops.lambda.pojo.DataPlatBuildDetail
-import com.tencent.devops.lambda.pojo.DataPlatBuildHistory
-import com.tencent.devops.lambda.pojo.DataPlatJobDetail
-import com.tencent.devops.lambda.pojo.DataPlatTaskDetail
-import com.tencent.devops.lambda.pojo.MakeUpBuildVO
-import com.tencent.devops.lambda.pojo.ProjectOrganize
+import com.tencent.devops.lambda.pojo.*
 import com.tencent.devops.lambda.pojo.project.DataPlatProjectInfo
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -120,6 +114,7 @@ class LambdaDataService @Autowired constructor(
             )
             return
         }
+
         val projectInfo = projectCache.get(history.projectId)
         pushBuildHistory(projectInfo, history)
         pushBuildDetail(projectInfo, event.pipelineId, model)
@@ -139,6 +134,25 @@ class LambdaDataService @Autowired constructor(
             return
         }
         val projectInfo = projectCache.get(event.projectId)
+//        val projectName = ""
+//        val dataPlatprojectInfo = DataPlatProjectInfo(
+//            projectName = projectName,
+//            projectType = 0,
+//            bgId = 0,
+//            bgName = "",
+//            centerId = 0,
+//            centerName = "",
+//            deptId = 0,
+//            deptName = "",
+//            description = "",
+//            englishName = "",
+//            ccAppId = 0,
+//            ccAppName = "",
+//            kind = 0,
+//            secrecy = false,
+//            washTime = ""
+//        )
+
         pushTaskDetail(projectInfo, task)
     }
 
@@ -215,9 +229,9 @@ class LambdaDataService @Autowired constructor(
         }
     }
 
-    private fun pushTaskDetail(dataPlatprojectInfo:DataPlatProjectInfo,projectInfo: ProjectOrganize, task: TPipelineBuildTaskRecord) {
+    private fun pushTaskDetail(projectInfo: ProjectOrganize, task: TPipelineBuildTaskRecord) {
         try {
-            val isSecrecy = dataPlatprojectInfo.secrecy
+            val isSecrecy = projectInfo.secrecy
             val startTime = task.startTime?.timestampmilli() ?: 0
             val endTime = task.endTime?.timestampmilli() ?: 0
             val taskAtom = task.taskAtom
@@ -490,6 +504,7 @@ class LambdaDataService @Autowired constructor(
                     }
                     return ProjectOrganize(
                         projectId = projectId,
+                        secrecy = projectInfo.secrecy,
                         bgName = projectInfo.bgName ?: "",
                         deptName = projectInfo.deptName ?: "",
                         centerName = projectInfo.centerName ?: "",
@@ -516,14 +531,13 @@ class LambdaDataService @Autowired constructor(
         )
 
     private fun genBuildDetail(
-        dataPlatprojectInfo:DataPlatProjectInfo,
         projectInfo: ProjectOrganize,
         pipelineId: String,
         buildDetailRecord: TPipelineBuildDetailRecord
     ): DataPlatBuildDetail {
         return with(buildDetailRecord) {
             val projectId = projectInfo.projectId
-            val isSecrecy = dataPlatprojectInfo.secrecy
+            val isSecrecy = projectInfo.secrecy
             DataPlatBuildDetail(
                 washTime = LocalDateTime.now().format(dateTimeFormatter),
                 buildId = buildId,
@@ -580,7 +594,6 @@ class LambdaDataService @Autowired constructor(
     }
 
     private fun genBuildHistory(
-        dataPlatprojectInfo:DataPlatProjectInfo,
         projectInfo: ProjectOrganize,
         tPipelineBuildHistoryRecord: TPipelineBuildHistoryRecord,
         buildStatus: Array<BuildStatus>,
@@ -595,7 +608,7 @@ class LambdaDataService @Autowired constructor(
 
             val labelList = mutableListOf<String>()
             val projectId = projectInfo.projectId
-            val isSecrecy = dataPlatprojectInfo.secrecy
+            val isSecrecy = projectInfo.secrecy
             lambdaPipelineLabelDao.getLables(dslContext, projectId, pipelineId)?.forEach { label ->
                 labelList.add(label["name"] as String)
             }

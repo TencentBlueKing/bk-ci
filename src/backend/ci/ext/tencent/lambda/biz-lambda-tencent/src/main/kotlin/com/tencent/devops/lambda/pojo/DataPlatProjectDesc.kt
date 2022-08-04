@@ -26,13 +26,19 @@
  */
 package com.tencent.devops.lambda.pojo
 
-data class ProjectOrganize(
+data class DataPlatProjectDesc(
     val projectId: String,
+    val projectName: String,
+    val projectCode: String,
+    val projectType: Int?,
+    val approvalStatus: Int?,
+    val creator: String?,
+    val deployType: String?,
+    val description: String?,
+    val englishName: String,
+    val offlined: Boolean?,
     val secrecy: Boolean?,
-    val bgName: String,
-    val deptName: String,
-    val centerName: String,
-    val bgId: String,
-    val deptId: String,
-    val centerId: String
+    val remark: String?,
+    val enabled: Boolean?,
+    val gray: Boolean
 )
