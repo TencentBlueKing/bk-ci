@@ -279,13 +279,6 @@ include(":core:auth:biz-auth-blueking")
 include(":core:auth:boot-auth")
 include(":core:auth:model-auth")
 
-include(":core:sign")
-include(":core:sign:api-sign")
-include(":core:sign:biz-sign")
-include(":core:sign:biz-sign-sample")
-include(":core:sign:boot-sign")
-include(":core:sign:model-sign")
-
 include(":core:metrics")
 include(":core:metrics:api-metrics")
 include(":core:metrics:biz-metrics")
