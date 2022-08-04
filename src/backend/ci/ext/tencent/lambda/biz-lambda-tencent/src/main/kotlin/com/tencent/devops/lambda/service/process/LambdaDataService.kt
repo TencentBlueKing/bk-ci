@@ -134,25 +134,6 @@ class LambdaDataService @Autowired constructor(
             return
         }
         val projectInfo = projectCache.get(event.projectId)
-//        val projectName = ""
-//        val dataPlatprojectInfo = DataPlatProjectInfo(
-//            projectName = projectName,
-//            projectType = 0,
-//            bgId = 0,
-//            bgName = "",
-//            centerId = 0,
-//            centerName = "",
-//            deptId = 0,
-//            deptName = "",
-//            description = "",
-//            englishName = "",
-//            ccAppId = 0,
-//            ccAppName = "",
-//            kind = 0,
-//            secrecy = false,
-//            washTime = ""
-//        )
-
         pushTaskDetail(projectInfo, task)
     }
 
