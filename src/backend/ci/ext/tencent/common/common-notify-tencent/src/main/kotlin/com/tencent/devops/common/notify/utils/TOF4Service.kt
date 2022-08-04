@@ -133,6 +133,10 @@ class TOF4Service @Autowired constructor(
         tofToken: String,
         host: String
     ): TOFResult {
+        if (postData.to.isBlank()) {
+            return TOFResult("TOF error, email receivers is empty")
+        }
+
         val headers = generateHeaders(tofPassId, tofToken)
         if (headers == null) {
             logger.error(String.format("TOF error, generate signature failure, url: %s", url))
