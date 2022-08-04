@@ -25,49 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.metrics.resources
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import com.tencent.devops.common.api.pojo.ErrorType
-import java.time.LocalDateTime
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.metrics.api.ServiceMetricsDataReportResource
+import com.tencent.devops.metrics.pojo.dto.CodeccDataReportDTO
+import com.tencent.devops.metrics.pojo.dto.QualityDataReportDTO
+import com.tencent.devops.metrics.pojo.dto.TurboDataReportDTO
+import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportService
 
-data class PipelineBuildTask(
-    val projectId: String,
-    val pipelineId: String,
-    val templateId: String? = null,
-    val buildId: String,
-    val stageId: String,
-    val containerId: String,
-    val containerHashId: String?,
-    val containerType: String,
-    val taskSeq: Int,
-    val taskId: String,
-    val taskName: String,
-    val taskType: String,
-    val taskAtom: String,
-    var status: BuildStatus,
-    var taskParams: MutableMap<String, Any>,
-    val additionalOptions: ElementAdditionalOptions?,
-    var executeCount: Int? = 1,
-    var starter: String,
-    val approver: String?,
-    var subProjectId: String?,
-    var subBuildId: String?,
-    var startTime: LocalDateTime? = null,
-    var endTime: LocalDateTime? = null,
-    var errorType: ErrorType? = null,
-    var errorCode: Int? = null,
-    var errorMsg: String? = null,
-    val atomCode: String? = null,
-    val stepId: String? = null,
-    var totalTime: Long? = null
-) {
-    fun getTaskParam(paramName: String): String {
-        return if (taskParams[paramName] != null) {
-            taskParams[paramName].toString().trim()
-        } else {
-            ""
-        }
+@RestResource
+class ServiceMetricsDataReportResourceImpl constructor(
+    private val metricsThirdPlatformDataReportService: MetricsThirdPlatformDataReportService
+) : ServiceMetricsDataReportResource {
+
+    override fun metricsQualityDataReport(qualityDataReportDTO: QualityDataReportDTO): Result<Boolean> {
+        return Result(metricsThirdPlatformDataReportService.metricsQualityDataReport(qualityDataReportDTO))
+    }
+
+    override fun metricsCodeccDataReport(codeccDataReportDTO: CodeccDataReportDTO): Result<Boolean> {
+        return Result(metricsThirdPlatformDataReportService.metricsCodeccDataReport(codeccDataReportDTO))
+    }
+
+    override fun metricsTurboDataReport(turboDataReportDTO: TurboDataReportDTO): Result<Boolean> {
+        return Result(metricsThirdPlatformDataReportService.metricsTurboDataReport(turboDataReportDTO))
     }
 }

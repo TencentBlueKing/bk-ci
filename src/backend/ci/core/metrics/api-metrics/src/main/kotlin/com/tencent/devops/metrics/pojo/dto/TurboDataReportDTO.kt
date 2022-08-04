@@ -25,49 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.metrics.pojo.dto
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import com.tencent.devops.common.api.pojo.ErrorType
-import java.time.LocalDateTime
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-data class PipelineBuildTask(
+@ApiModel("编译加速数据上报传输对象")
+data class TurboDataReportDTO(
+    @ApiModelProperty("统计日期")
+    val statisticsTime: String,
+    @ApiModelProperty("项目ID")
     val projectId: String,
-    val pipelineId: String,
-    val templateId: String? = null,
-    val buildId: String,
-    val stageId: String,
-    val containerId: String,
-    val containerHashId: String?,
-    val containerType: String,
-    val taskSeq: Int,
-    val taskId: String,
-    val taskName: String,
-    val taskType: String,
-    val taskAtom: String,
-    var status: BuildStatus,
-    var taskParams: MutableMap<String, Any>,
-    val additionalOptions: ElementAdditionalOptions?,
-    var executeCount: Int? = 1,
-    var starter: String,
-    val approver: String?,
-    var subProjectId: String?,
-    var subBuildId: String?,
-    var startTime: LocalDateTime? = null,
-    var endTime: LocalDateTime? = null,
-    var errorType: ErrorType? = null,
-    var errorCode: Int? = null,
-    var errorMsg: String? = null,
-    val atomCode: String? = null,
-    val stepId: String? = null,
-    var totalTime: Long? = null
-) {
-    fun getTaskParam(paramName: String): String {
-        return if (taskParams[paramName] != null) {
-            taskParams[paramName].toString().trim()
-        } else {
-            ""
-        }
-    }
-}
+    @ApiModelProperty("编译加速节省时间，单位：秒")
+    val turboSaveTime: Double
+)

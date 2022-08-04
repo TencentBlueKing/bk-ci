@@ -39,7 +39,6 @@ import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.websocket.enum.RefreshType
-import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_PASS_STAGE
@@ -89,23 +88,7 @@ class PipelineStageService @Autowired constructor(
     }
 
     fun getStage(projectId: String, buildId: String, stageId: String?): PipelineBuildStage? {
-        val result = pipelineBuildStageDao.get(dslContext, projectId, buildId, stageId)
-        if (result != null) {
-            return pipelineBuildStageDao.convert(result)
-        }
-        return null
-    }
-
-    /**
-     * 取构建[buildId]当前序号为[currentStageSeq]的下一个[PipelineBuildStage]
-     * 如果不存在则返回null
-     */
-    fun getNextStage(projectId: String, buildId: String, currentStageSeq: Int): PipelineBuildStage? {
-        val result = pipelineBuildStageDao.getNextStage(dslContext, projectId, buildId, currentStageSeq)
-        if (result != null) {
-            return pipelineBuildStageDao.convert(result)
-        }
-        return null
+        return pipelineBuildStageDao.get(dslContext, projectId, buildId, stageId)
     }
 
     fun updateStageStatus(
@@ -125,25 +108,14 @@ class PipelineStageService @Autowired constructor(
     }
 
     fun listStages(projectId: String, buildId: String): List<PipelineBuildStage> {
-        val list = pipelineBuildStageDao.listByBuildId(dslContext, projectId, buildId)
-        val result = mutableListOf<PipelineBuildStage>()
-        if (list.isNotEmpty()) {
-            list.forEach {
-                result.add(pipelineBuildStageDao.convert(it)!!)
-            }
-        }
-        return result
-    }
-
-    fun listByBuildId(projectId: String, buildId: String): Collection<TPipelineBuildStageRecord> {
-        return pipelineBuildStageDao.listByBuildId(dslContext, projectId, buildId)
+        return pipelineBuildStageDao.listBuildStages(dslContext, projectId, buildId)
     }
 
     fun batchSave(transactionContext: DSLContext?, stageList: Collection<PipelineBuildStage>) {
         return pipelineBuildStageDao.batchSave(transactionContext ?: dslContext, stageList)
     }
 
-    fun batchUpdate(transactionContext: DSLContext?, stageList: List<TPipelineBuildStageRecord>) {
+    fun batchUpdate(transactionContext: DSLContext?, stageList: Collection<PipelineBuildStage>) {
         return pipelineBuildStageDao.batchUpdate(transactionContext ?: dslContext, stageList)
     }
 
@@ -436,8 +408,10 @@ class PipelineStageService @Autowired constructor(
         timeout: Boolean? = false
     ) {
         with(buildStage) {
-            logger.info("ENGINE|$buildId|STAGE_QUALITY_TRIGGER|$stageId|" +
-                "inOrOut=$inOrOut|request=$qualityRequest|timeout=$timeout")
+            logger.info(
+                "ENGINE|$buildId|STAGE_QUALITY_TRIGGER|$stageId|" +
+                    "inOrOut=$inOrOut|request=$qualityRequest|timeout=$timeout"
+            )
             val (stageNextStatus, reviewType) = if (inOrOut) {
                 Pair(BuildStatus.QUEUE, BuildReviewType.QUALITY_CHECK_IN)
             } else {
@@ -475,23 +449,38 @@ class PipelineStageService @Autowired constructor(
         }
     }
 
-    fun getLastStage(projectId: String, buildId: String): PipelineBuildStage? {
-        val result = pipelineBuildStageDao.getMaxStage(dslContext, projectId, buildId)
-        if (result != null) {
-            return pipelineBuildStageDao.convert(result)
-        }
-        return null
+    /**
+     * 取构建[buildId]当前序号为[currentStageSeq]的上一个[PipelineBuildStage]
+     * 如果不存在则返回null
+     */
+    fun getPrevStage(projectId: String, buildId: String, currentStageSeq: Int): PipelineBuildStage? {
+        return pipelineBuildStageDao.getAdjacentStage(dslContext, projectId, buildId, currentStageSeq, sortAsc = false)
     }
 
+    /**
+     * 取构建[buildId]当前序号为[currentStageSeq]的下一个[PipelineBuildStage]
+     * 如果不存在则返回null
+     */
+    fun getNextStage(projectId: String, buildId: String, currentStageSeq: Int): PipelineBuildStage? {
+        return pipelineBuildStageDao.getAdjacentStage(dslContext, projectId, buildId, currentStageSeq, sortAsc = true)
+    }
+
+    /**
+     * 取构建[buildId]的最后一个[PipelineBuildStage]
+     * 如果不存在则返回null
+     */
+    fun getLastStage(projectId: String, buildId: String): PipelineBuildStage? {
+        return pipelineBuildStageDao.getMaxStage(dslContext, projectId, buildId)
+    }
+
+    private val pendingStatusSet = setOf(BuildStatus.RUNNING, BuildStatus.PAUSE, BuildStatus.QUEUE)
+
+    /**
+     * 取构建[buildId]处于[BuildStatus.RUNNING] [BuildStatus.PAUSE] [BuildStatus.QUEUE]
+     * 状态的Stage列表，并按stage序号递增排序的第一个最小的Stage， 如果是一个全部完成的构建，则将会返回null
+     */
     fun getPendingStage(projectId: String, buildId: String): PipelineBuildStage? {
-        var pendingStage = pipelineBuildStageDao.getByStatus(dslContext, projectId, buildId, BuildStatus.RUNNING)
-        if (pendingStage == null) {
-            pendingStage = pipelineBuildStageDao.getByStatus(dslContext, projectId, buildId, BuildStatus.PAUSE)
-        }
-        if (pendingStage == null) {
-            pendingStage = pipelineBuildStageDao.getByStatus(dslContext, projectId, buildId, BuildStatus.QUEUE)
-        }
-        return pendingStage
+        return pipelineBuildStageDao.getOneByStatus(dslContext, projectId, buildId, pendingStatusSet)
     }
 
     fun pauseStageNotify(
@@ -567,11 +556,15 @@ class PipelineStageService @Autowired constructor(
                 stageId = stage.stageId,
                 runtimeVariable = buildContext
             )
-            logger.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_REQUEST|${event.stageId}|" +
-                "inOrOut=$inOrOut|request=$request|ruleIds=${check.ruleIds}")
+            logger.info(
+                "ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_REQUEST|${event.stageId}|" +
+                    "inOrOut=$inOrOut|request=$request|ruleIds=${check.ruleIds}"
+            )
             val result = client.get(ServiceQualityRuleResource::class).check(request).data!!
-            logger.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_RESPONSE|${event.stageId}|" +
-                "inOrOut=$inOrOut|response=$result|ruleIds=${check.ruleIds}")
+            logger.info(
+                "ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_RESPONSE|${event.stageId}|" +
+                    "inOrOut=$inOrOut|response=$result|ruleIds=${check.ruleIds}"
+            )
             check.checkTimes = result.checkTimes
 
             // #5246 如果红线通过则直接成功，否则判断是否需要等待把关
@@ -604,8 +597,10 @@ class PipelineStageService @Autowired constructor(
             )
             return qualityStatus
         } catch (ignore: Throwable) {
-            logger.error("ENGINE|${event.buildId}|${event.source}|inOrOut=$inOrOut|" +
-                "STAGE_QUALITY_CHECK_ERROR|${event.stageId}", ignore)
+            logger.error(
+                "ENGINE|${event.buildId}|${event.source}|inOrOut=$inOrOut|STAGE_QUALITY_CHECK_ERROR|${event.stageId}",
+                ignore
+            )
             BuildStatus.QUALITY_CHECK_FAIL
         }
     }

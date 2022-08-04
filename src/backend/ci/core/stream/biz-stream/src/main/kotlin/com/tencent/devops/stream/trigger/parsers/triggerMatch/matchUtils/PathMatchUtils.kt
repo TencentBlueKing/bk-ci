@@ -12,7 +12,7 @@ object PathMatchUtils {
             return false
         }
 
-        logger.info("Exclude path set ($pathIgnoreList)")
+        logger.info("PathMatchUtils|isIgnorePathMatch|Exclude path set ($pathIgnoreList)")
 
         fileChangeSet?.forEach eventPath@{ path ->
             pathIgnoreList.forEach userPath@{ excludePath ->
@@ -20,7 +20,10 @@ object PathMatchUtils {
                     return@eventPath
                 }
             }
-            logger.info("excluded event path($fileChangeSet) not match the user path($pathIgnoreList)")
+            logger.info(
+                "PathMatchUtils|isIgnorePathMatch" +
+                    "|excluded event path($fileChangeSet) not match the user path($pathIgnoreList)"
+            )
             return false
         }
         return true
@@ -28,15 +31,18 @@ object PathMatchUtils {
 
     fun isIncludePathMatch(pathList: List<String>?, fileChangeSet: Set<String>?): Boolean {
         if (pathList.isNullOrEmpty()) {
-            logger.info("trigger path include is empty.")
+            logger.info("PathMatchUtils|isIncludePathMatch|trigger path include is empty")
             return true
         }
 
-        logger.info("Include path set($pathList)")
+        logger.info("PathMatchUtils|isIncludePathMatch|Include path set($pathList)")
         fileChangeSet?.forEach { path ->
             pathList.forEach { includePath ->
                 if (isPathMatch(path, includePath)) {
-                    logger.info("The include path($includePath) include the git update one($path)")
+                    logger.info(
+                        "PathMatchUtils|isIncludePathMatch" +
+                            "|The include path($includePath) include the git update one($path)"
+                    )
                     return true
                 }
             }
@@ -51,7 +57,7 @@ object PathMatchUtils {
      * prefixPath: a/
      */
     private fun isPathMatch(fullPath: String, prefixPath: String): Boolean {
-        logger.info("fullPath: $fullPath, prefixPath: $prefixPath")
+        logger.info("PathMatchUtils|isPathMatch|fullPath|$fullPath|prefixPath|$prefixPath")
         val fullPathList = fullPath.removePrefix("/").split("/")
         val prefixPathList = prefixPath.removePrefix("/").split("/")
         if (fullPathList.size < prefixPathList.size) {
