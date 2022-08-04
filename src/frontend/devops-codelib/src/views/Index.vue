@@ -60,7 +60,9 @@
                 startPage: 1,
                 showCodelibDialog: false,
                 aliasName: '',
-                projectList: []
+                projectList: [],
+                sortBy: '',
+                sortType: ''
             }
         },
 
@@ -127,8 +129,8 @@
                 page = this.startPage,
                 pageSize = this.defaultPagesize,
                 aliasName = this.aliasName,
-                sortBy = '',
-                sortType = ''
+                sortBy = this.sortBy,
+                sortType = this.sortType
             ) {
                 this.isLoading = true
                 this.requestList({
@@ -195,7 +197,9 @@
 
             handleSortChange (payload) {
                 const { sortBy, sortType } = payload
-                this.refreshCodelibList(this.projectId, this.startPage, this.defaultPagesize, this.aliasName, sortBy, sortType)
+                this.sortBy = sortBy
+                this.sortType = sortType
+                this.refreshCodelibList()
             }
         }
     }
