@@ -1099,14 +1099,14 @@ class PipelineListFacadeService @Autowired constructor(
         ).map { it.get(TPipelineSetting.T_PIPELINE_SETTING.PIPELINE_ID) to it }.toMap()
 
         // 获取summary信息
-        val lastBuilds = mutableListOf<String>()
+        val lastBuildMap = mutableMapOf<String/*buildId*/, String/*pipelineId*/>()
         val pipelineBuildSummaryMap = pipelineBuildSummaryDao.listSummaryByPipelineIds(
             dslContext = dslContext,
             pipelineIds = pipelineIds,
             projectId = projectId
         ).map {
             if (null != it.latestBuildId) {
-                lastBuilds.add(it.latestBuildId)
+                lastBuildMap[it.latestBuildId]=it.pipelineId
             }
             it.pipelineId to it
         }.toMap()
@@ -1115,16 +1115,16 @@ class PipelineListFacadeService @Autowired constructor(
         val pipelineBuildMap = pipelineBuildDao.listBuildInfoByBuildIds(
             dslContext = dslContext,
             projectId = projectId,
-            buildIds = lastBuilds
+            buildIds = lastBuildMap.keys
         ).map { it.pipelineId to it }.toMap()
 
         // 根据LastBuild获取运行中的构建任务个数
         val buildTaskCountMap = pipelineBuildTaskDao.countGroupByBuildId(
             dslContext = dslContext,
             projectId = projectId,
-            buildIds = lastBuilds,
+            buildIds = lastBuildMap.keys,
             statusSet = setOf(BuildStatus.SUCCEED, BuildStatus.SKIP)
-        )
+        ).filter { lastBuildMap.containsKey(it.key) }.map { lastBuildMap[it.key]!! to it.value }.toMap()
 
         // 获取template信息
         val tTemplate = TTemplatePipeline.T_TEMPLATE_PIPELINE
