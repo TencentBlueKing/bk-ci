@@ -101,7 +101,7 @@ class TriggerMatcher @Autowired constructor(
                 object : TypeReference<List<PreRepositoryHook>>() {}
             )
         } catch (e: MismatchedInputException) {
-            logger.error("Format triggerOn repoHook failed.", e)
+            logger.warn("TriggerMatcher|checkRepoHook|failed", e)
             return emptyList()
         }
         val repoHookList = mutableListOf<String>()

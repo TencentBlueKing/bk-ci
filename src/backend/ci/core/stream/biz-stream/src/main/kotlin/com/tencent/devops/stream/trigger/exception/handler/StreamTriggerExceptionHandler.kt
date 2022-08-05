@@ -69,7 +69,7 @@ class StreamTriggerExceptionHandler @Autowired constructor(
                     is ErrorCodeException -> handleErrorCodeException(action, e)
                     is StreamTriggerBaseException -> handleStreamTriggerException(e)
                     else -> {
-                        logger.error("StreamTriggerExceptionHandler|Unknown error|action|${action.format()}", e)
+                        logger.warn("StreamTriggerExceptionHandler|Unknown error|action|${action.format()}", e)
                         // 非已知触发异常只保存
                         streamEventService.saveTriggerNotBuildEvent(
                             action = action,
@@ -81,7 +81,7 @@ class StreamTriggerExceptionHandler @Autowired constructor(
                 }
             } catch (e: Throwable) {
                 // 防止Hanlder处理过程中报错，兜底
-                logger.error("StreamTriggerExceptionHandler|Handler error|action|${action.format()}", e)
+                logger.error("BKSystemErrorMonitor|StreamTriggerExceptionHandler|action|${action.format()}", e)
                 return null
             }
         }
@@ -112,7 +112,7 @@ class StreamTriggerExceptionHandler @Autowired constructor(
     private fun handleStreamTriggerException(e: StreamTriggerBaseException): Nothing? {
         if (e is StreamTriggerException && e.triggerReason == TriggerReason.UNKNOWN_ERROR) {
             // 对Unknow error 打印日志方便排查
-            logger.error("StreamTriggerExceptionHandler|Unknown error|action|${e.action.format()}", e)
+            logger.warn("StreamTriggerExceptionHandler|Unknown error|action|${e.action.format()}", e)
         }
         val action = e.action
         val commitCheck = e.commitCheck

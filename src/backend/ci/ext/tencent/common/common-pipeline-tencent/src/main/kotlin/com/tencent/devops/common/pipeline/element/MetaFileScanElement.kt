@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Deprecated("已作废")
 @ApiModel("meta文件扫描任务", description = MetaFileScanElement.classType)
 data class MetaFileScanElement(
     @ApiModelProperty("任务名称", required = true)

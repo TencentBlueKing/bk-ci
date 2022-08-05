@@ -7,15 +7,16 @@
             <div class="restore-list-content">
                 <div class="info-header">
                     <p>{{ $t('restore.title') }}</p>
+                    <bk-input v-model="searchVal" :placeholder="$t('restore.restoreSearchTips')" class="search-input"></bk-input>
                 </div>
                 <div class="restore-table-wrapper">
                     <bk-table
-                        :data="recycleList"
+                        :data="curRecycleList"
                         size="small">
                         <bk-table-column :label="$t('pipelineName')" prop="pipelineName"></bk-table-column>
-                        <bk-table-column :label="$t('restore.deleter')" prop="lastModifyUser"></bk-table-column>
-                        <bk-table-column :label="$t('restore.deleteTime')" prop="updateTime" :formatter="formatTime"></bk-table-column>
-                        <bk-table-column :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime"></bk-table-column>
+                        <bk-table-column :label="$t('restore.deleter')" prop="lastModifyUser" width="150"></bk-table-column>
+                        <bk-table-column :label="$t('restore.deleteTime')" prop="updateTime" :formatter="formatTime" width="180"></bk-table-column>
+                        <bk-table-column :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime" width="180"></bk-table-column>
                         <bk-table-column :label="$t('operate')" width="150">
                             <template slot-scope="props">
                                 <bk-button theme="primary" text @click="restore(props.row)">{{ $t('restore.restore') }}</bk-button>
@@ -54,12 +55,16 @@
                     title: this.$t('restore.emptyTitle'),
                     desc: this.$t('restore.emptyDesc'),
                     btns: []
-                }
+                },
+                searchVal: ''
             }
         },
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            curRecycleList () {
+                return this.recycleList.filter(i => i.pipelineName.includes(this.searchVal))
             }
         },
         async mounted () {
@@ -135,6 +140,14 @@
         }
         .restore-table-wrapper {
             margin-top: 16px;
+        }
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .search-input {
+            width: 280px;
         }
     }
 </style>

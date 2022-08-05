@@ -25,12 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.esb
+package com.tencent.devops.process.api.service
 
-/**
- * SourceIp
- */
-data class SourceIp(
-    val ip: String,
-    val source: Int = 1
-)
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.pipeline.ExtServiceMoaWorkItemReq
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["SERVICE_PIPELINE"], description = "服务-流水线moa审批资源")
+@Path("/service/pipelines/moa")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceTXMoaCallBackResource {
+
+    @ApiOperation("人工审核插件moa回调")
+    @POST
+    @Path("/manual_review_call_back")
+    fun manualReviewCallBack(
+        @ApiParam("MyOA返回的审批结果结构", required = true)
+        extServiceMoaWorkItemReq: ExtServiceMoaWorkItemReq
+    ): Result<Boolean>
+}

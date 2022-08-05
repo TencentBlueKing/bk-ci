@@ -81,11 +81,14 @@ class StreamTriggerRequestService @Autowired constructor(
     }
 
     fun externalCodeGitBuild(eventType: String?, event: String): Boolean? {
-        logger.info("Trigger code git build($event, $eventType)")
+        logger.info("StreamTriggerRequestService|externalCodeGitBuild|event|$event|type|$eventType")
         val eventObject = try {
             objectMapper.readValue<GitEvent>(event)
         } catch (ignore: Exception) {
-            logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
+            logger.warn(
+                "StreamTriggerRequestService|externalCodeGitBuild" +
+                    "|Fail to parse the git web hook commit event|errMsg|${ignore.message}"
+            )
             return false
         }
 
@@ -98,7 +101,7 @@ class StreamTriggerRequestService @Autowired constructor(
         // 加载不同源的action
         val action = actionFactory.load(eventObject)
         if (action == null) {
-            logger.warn("request event not support: $event")
+            logger.warn("StreamTriggerRequestService|start|request event not support|$event")
             return false
         }
 
@@ -129,7 +132,7 @@ class StreamTriggerRequestService @Autowired constructor(
                     actionContext = objectMapper.writeValueAsString(action.data.context)
                 )
             } catch (ignore: Throwable) {
-                logger.error("Fail to start repo trigger (${action.data.eventCommon.gitProjectName})", ignore)
+                logger.warn("StreamTriggerRequestService|start|${action.data.eventCommon.gitProjectName}|error", ignore)
             }
         }
 
@@ -139,7 +142,8 @@ class StreamTriggerRequestService @Autowired constructor(
 
             if (null == gitCIBasicSetting || !gitCIBasicSetting.enableCi) {
                 logger.info(
-                    "git ci is not enabled , but it has repo trigger , git project id: ${action.data.getGitProjectId()}"
+                    "StreamTriggerRequestService|start" +
+                        "|git ci is not enabled , but it has repo trigger|project_id|${action.data.getGitProjectId()}"
                 )
                 return null
             }
@@ -162,7 +166,10 @@ class StreamTriggerRequestService @Autowired constructor(
     private fun checkRequest(
         action: BaseAction
     ): Boolean {
-        logger.info("|${action.data.context.requestEventId}|checkRequest|action|${action.format()}")
+        logger.info(
+            "StreamTriggerRequestService|checkRequest" +
+                "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
+        )
 
         CheckStreamSetting.checkGitProjectConf(action)
 
@@ -192,7 +199,10 @@ class StreamTriggerRequestService @Autowired constructor(
         action: BaseAction,
         path2PipelineExists: Map<String, StreamTriggerPipeline>
     ): Boolean {
-        logger.info("|${action.data.context.requestEventId}|matchAndTriggerPipeline|action|${action.format()}")
+        logger.info(
+            "StreamTriggerRequestService|matchAndTriggerPipeline" +
+                "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
+        )
 
         // 判断本次mr/push提交是否需要删除流水线, fork不用
         // 远程触发不存在删除流水线的情况
@@ -210,13 +220,17 @@ class StreamTriggerRequestService @Autowired constructor(
         val yamlPathList = action.getYamlPathList()
 
         logger.info(
-            "matchAndTriggerPipeline in gitProjectId:${action.data.eventCommon.gitProjectId}," +
-                "yamlPathList: $yamlPathList, path2PipelineExists: $path2PipelineExists, "
+            "StreamTriggerRequestService|matchAndTriggerPipeline" +
+                "|gitProjectId|${action.data.eventCommon.gitProjectId}|" +
+                "yamlPathList|$yamlPathList|path2PipelineExists|$path2PipelineExists"
         )
 
         // 如果没有Yaml文件则直接不触发
         if (yamlPathList.isEmpty()) {
-            logger.warn("event: ${action.data.context.requestEventId} cannot found ci yaml from git")
+            logger.warn(
+                "StreamTriggerRequestService|matchAndTriggerPipeline" +
+                    "|event|${action.data.context.requestEventId}|cannot found ci yaml from git"
+            )
             throw StreamTriggerException(action, TriggerReason.CI_YAML_NOT_FOUND)
         }
 
@@ -261,14 +275,18 @@ class StreamTriggerRequestService @Autowired constructor(
         buildPipeline: StreamTriggerPipeline,
         action: BaseAction
     ) {
-        logger.info("|${action.data.context.requestEventId}|checkAndTrigger|action|${action.format()}")
+        logger.info(
+            "StreamTriggerRequestService|checkAndTrigger" +
+                "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
+        )
 
         val filePath = buildPipeline.filePath
         // 流水线未启用则跳过
         if (!buildPipeline.enabled) {
             logger.warn(
-                "Pipeline $filePath is not enabled, gitProjectId: ${action.data.eventCommon.gitProjectId}, " +
-                    "eventId: ${action.data.context.requestEventId}"
+                "StreamTriggerRequestService|checkAndTrigger" +
+                    "|Pipeline $filePath is not enabled|gitProjectId|${action.data.eventCommon.gitProjectId}|" +
+                    "eventId|${action.data.context.requestEventId}"
             )
             throw StreamTriggerException(action, TriggerReason.PIPELINE_DISABLE)
         }

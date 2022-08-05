@@ -75,7 +75,10 @@ abstract class BaseManualTriggerService @Autowired constructor(
     }
 
     open fun triggerBuild(userId: String, pipelineId: String, triggerBuildReq: TriggerBuildReq): TriggerBuildResult {
-        logger.info("Trigger build, userId: $userId, pipeline: $pipelineId, triggerBuildReq: $triggerBuildReq")
+        logger.info(
+            "BaseManualTriggerService|triggerBuild" +
+                "|userId|$userId|pipeline|$pipelineId|triggerBuildReq|$triggerBuildReq"
+        )
 
         val streamTriggerSetting = streamBasicSettingDao.getSetting(
             dslContext = dslContext,
@@ -132,7 +135,10 @@ abstract class BaseManualTriggerService @Autowired constructor(
         val originYaml = triggerBuildReq.yaml
         // 如果当前文件没有内容直接不触发
         if (originYaml.isNullOrBlank()) {
-            logger.warn("Matcher is false, event: ${action.data.context.requestEventId} yaml is null")
+            logger.warn(
+                "BaseManualTriggerService|triggerBuild" +
+                    "|yaml is null|event|${action.data.context.requestEventId}"
+            )
             streamEventService.saveBuildNotBuildEvent(
                 action = action,
                 reason = TriggerReason.CI_YAML_CONTENT_NULL.name,
@@ -188,7 +194,10 @@ abstract class BaseManualTriggerService @Autowired constructor(
         originYaml: String,
         triggerBuildReq: TriggerBuildReq
     ): BuildId? {
-        logger.info("|${action.data.context.requestEventId}|handleTrigger|action|${action.format()}")
+        logger.info(
+            "BaseManualTriggerService|handleTrigger" +
+                "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
+        )
 
         var buildId: BuildId? = null
         StreamTriggerExceptionHandlerUtil.handleManualTrigger {

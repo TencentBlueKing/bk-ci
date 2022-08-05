@@ -307,26 +307,30 @@ class ExperienceDownloadService @Autowired constructor(
     }
 
     fun addDownloadRecord(experienceRecord: TExperienceRecord, userId: String) {
-        // 新增下载次数
-        addUserDownloadTime(experienceRecord, userId)
-        experienceDownloadDetailDao.create(
-            dslContext = dslContext,
-            userId = userId,
-            recordId = experienceRecord.id,
-            projectId = experienceRecord.projectId,
-            bundleIdentifier = experienceRecord.bundleIdentifier,
-            platform = experienceRecord.platform
-        )
+        try {
+            // 新增下载次数
+            addUserDownloadTime(experienceRecord, userId)
+            experienceDownloadDetailDao.create(
+                dslContext = dslContext,
+                userId = userId,
+                recordId = experienceRecord.id,
+                projectId = experienceRecord.projectId,
+                bundleIdentifier = experienceRecord.bundleIdentifier,
+                platform = experienceRecord.platform
+            )
 
-        // 更新最近下载记录
-        experienceLastDownloadDao.upset(
-            dslContext = dslContext,
-            userId = userId,
-            bundleId = experienceRecord.bundleIdentifier,
-            projectId = experienceRecord.projectId,
-            platform = experienceRecord.platform,
-            recordId = experienceRecord.id
-        )
+            // 更新最近下载记录
+            experienceLastDownloadDao.upset(
+                dslContext = dslContext,
+                userId = userId,
+                bundleId = experienceRecord.bundleIdentifier,
+                projectId = experienceRecord.projectId,
+                platform = experienceRecord.platform,
+                recordId = experienceRecord.id
+            )
+        } catch (e: Exception) {
+            logger.warn("addDownloadRecord error", e)
+        }
     }
 
     fun downloadCount(experienceHashId: String): ExperienceCount {

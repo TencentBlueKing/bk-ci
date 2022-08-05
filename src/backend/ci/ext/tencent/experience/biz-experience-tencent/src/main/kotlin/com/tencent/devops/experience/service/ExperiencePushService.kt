@@ -41,6 +41,7 @@ import com.tencent.devops.model.experience.tables.records.TExperiencePushTokenRe
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 
 @Service
@@ -83,12 +84,16 @@ class ExperiencePushService @Autowired constructor(
                     token = token
                 )
             }
-            experiencePushTokenDao.createUserToken(
-                dslContext = dslContext,
-                userId = userId,
-                token = token,
-                platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
-            )
+            try {
+                experiencePushTokenDao.createUserToken(
+                    dslContext = dslContext,
+                    userId = userId,
+                    token = token,
+                    platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
+                )
+            } catch (e: DuplicateKeyException) {
+                logger.warn("user token is exist , token:$token")
+            }
             return Result("用户绑定设备成功！", true)
         }
     }

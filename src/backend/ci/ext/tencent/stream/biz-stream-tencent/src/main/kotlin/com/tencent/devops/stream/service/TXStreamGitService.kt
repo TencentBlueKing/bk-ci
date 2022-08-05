@@ -72,13 +72,16 @@ class TXStreamGitService @Autowired constructor(
                 )
             }
         } catch (e: Exception) {
-            logger.info("getGitCodeProjectInfo|stream scm service is unavailable.|gitProjectId=$gitProjectId")
+            logger.info(
+                "TXStreamGitService|getProjectInfo" +
+                    "|stream scm service is unavailable.|gitProjectId=$gitProjectId"
+            )
             val setting = try {
                 streamBasicSettingDao.getSetting(dslContext, gitProjectId.toLong())
             } catch (e: NumberFormatException) {
                 streamBasicSettingDao.getSettingByPathWithNameSpace(dslContext, gitProjectId)
             } ?: return null
-            logger.info("getGitCodeProjectInfo|get from DB|gitProjectId=$gitProjectId")
+            logger.info("TXStreamGitService|getProjectInfo|get from DB|gitProjectId|$gitProjectId")
             StreamGitProjectInfoWithProject(
                 gitProjectId = setting.gitProjectId,
                 name = setting.name,

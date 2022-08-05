@@ -58,7 +58,7 @@ class JobClient @Autowired constructor(
         val taskInstanceId = sendTaskRequest(requestBody, url)
         if (taskInstanceId <= 0) {
             // 失败处理
-            logger.error("start jobDevOpsFastExecuteScript failed")
+            logger.info("start jobDevOpsFastExecuteScript failed")
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -74,7 +74,7 @@ class JobClient @Autowired constructor(
         val taskInstanceId = sendTaskRequest(requestBody, url)
         if (taskInstanceId <= 0) {
             // 失败处理
-            logger.error("start jobDevOpsFastPushfile failed")
+            logger.info("start jobDevOpsFastPushfile failed")
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -90,7 +90,7 @@ class JobClient @Autowired constructor(
         val taskInstanceId = sendTaskRequest(requestBody, url)
         if (taskInstanceId <= 0) {
             // 失败处理
-            logger.error("start openStateFastPushFileDevops failed")
+            logger.info("start openStateFastPushFileDevops failed")
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -106,7 +106,7 @@ class JobClient @Autowired constructor(
         val taskInstanceId = sendTaskRequest(requestBody, url)
         if (taskInstanceId <= 0) {
             // 失败处理
-            logger.error("start jobDevOpsFastPushfile failed")
+            logger.info("start jobDevOpsFastPushfile failed")
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -122,7 +122,6 @@ class JobClient @Autowired constructor(
             logger.info("Get request url: $url")
             OkhttpUtils.doGet(url).use { resp ->
                 val responseStr = resp.body()!!.string()
-//            val responseStr = HttpUtils.get(url)
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 if (response["status"] == 0) {
@@ -130,7 +129,7 @@ class JobClient @Autowired constructor(
                     return responseData["lastModifyUser"] as String
                 } else {
                     val msg = response["message"] as String
-                    logger.error("Get job lastModifyUser failed, msg: $msg")
+                    logger.info("Get job lastModifyUser failed, msg: $msg")
                     throw TaskExecuteException(
                         errorType = ErrorType.USER,
                         errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
@@ -139,7 +138,7 @@ class JobClient @Autowired constructor(
                 }
             }
         } catch (e: Exception) {
-            logger.error("Get job lastModifyUser error", e)
+            logger.warn("Get job lastModifyUser error", e)
             throw RuntimeException("Get job lastModifyUser error: ${e.message}")
         }
     }
@@ -150,7 +149,6 @@ class JobClient @Autowired constructor(
             logger.info("Get request url: $url")
             OkhttpUtils.doGet(url).use { resp ->
                 val responseStr = resp.body()!!.string()
-//            val responseStr = HttpUtils.get(url)
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 if (response["status"] == 0) {
@@ -159,20 +157,20 @@ class JobClient @Autowired constructor(
                     return when (status) {
                         3 -> {
                             logger.info("Job execute task finished and success")
-                            TaskResult(true, true, "Success")
+                            TaskResult(isFinish = true, success = true, msg = "Success")
                         }
                         4 -> {
-                            logger.error("Job execute task failed")
-                            TaskResult(true, false, "Job failed")
+                            logger.info("Job execute task failed")
+                            TaskResult(isFinish = true, success = false, msg = "Job failed")
                         }
                         else -> {
                             logger.info("Job execute task running")
-                            TaskResult(false, false, "Job Running")
+                            TaskResult(isFinish = false, success = false, msg = "Job Running")
                         }
                     }
                 } else {
                     val msg = response["message"] as String
-                    logger.error("job execute failed, msg: $msg")
+                    logger.info("job execute failed, msg: $msg")
                     throw TaskExecuteException(
                         errorType = ErrorType.USER,
                         errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -181,7 +179,7 @@ class JobClient @Autowired constructor(
                 }
             }
         } catch (e: Exception) {
-            logger.error("execute job error", e)
+            logger.warn("execute job error", e)
             throw RuntimeException("execute job error: ${e.message}")
         }
     }
@@ -195,7 +193,6 @@ class JobClient @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(httpReq).use { resp ->
             val responseStr = resp.body()!!.string()
-//        val responseStr = HttpUtils.postJson(url, requestBody)
             logger.info("response body: $responseStr")
 
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
@@ -206,7 +203,7 @@ class JobClient @Autowired constructor(
                 return taskInstanceId
             } else {
                 val msg = response["message"] as String
-                logger.error("start job failed, msg: $msg")
+                logger.info("start job failed, msg: $msg")
                 throw TaskExecuteException(
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -217,7 +214,8 @@ class JobClient @Autowired constructor(
     }
 
     fun getDetailUrl(projectId: String, taskInstanceId: Long): String {
-        return "<a target='_blank' href='${jobProperties.linkUrl}/$projectId/?taskInstanceList&projectId=$projectId#taskInstanceId=$taskInstanceId'>查看详情</a>"
+        return "<a target='_blank' href='${jobProperties.linkUrl}/$projectId/?taskInstanceList" +
+            "&projectId=$projectId#taskInstanceId=$taskInstanceId'>查看详情</a>"
     }
 
     companion object {

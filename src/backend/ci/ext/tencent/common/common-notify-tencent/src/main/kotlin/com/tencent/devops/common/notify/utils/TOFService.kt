@@ -109,6 +109,11 @@ class TOFService @Autowired constructor(
     }
 
     fun postCodeccEmailFormData(url: String, postData: EmailNotifyPost, tofConf: Map<String, String>): TOFResult {
+        if (postData.to.isBlank()) {
+            logger.warn("TOF invalid argument, email receivers is empty")
+            return TOFResult("TOF invalid argument, email receivers is empty")
+        }
+
         val headers = generateHeaders(tofConf["sys-id"] ?: "", tofConf["app-key"] ?: "")
         if (headers == null) {
             logger.error(String.format("TOF error, generate signature failure, url: %s", url))
