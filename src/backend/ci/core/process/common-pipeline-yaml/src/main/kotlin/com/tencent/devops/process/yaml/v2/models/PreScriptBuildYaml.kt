@@ -38,7 +38,7 @@ import com.tencent.devops.process.yaml.v2.models.step.PreStep
  * PreScriptBuildYamlI 是PreScriptBuildYaml的拓展，方便再既不修改data class的特性情况下，其他类可以在继承新增字段
  * 注：PreScriptBuildYaml 新增的字段需要在这里新增
  */
-interface PreScriptBuildYamlI{
+interface PreScriptBuildYamlI {
     var version: String?
     var name: String?
     var label: List<String>?
@@ -75,4 +75,4 @@ data class PreScriptBuildYaml(
     override var notices: List<GitNotices>?,
     override var finally: Map<String, PreJob>? = null,
     override val concurrency: Concurrency? = null
-): PreScriptBuildYamlI
+) : PreScriptBuildYamlI

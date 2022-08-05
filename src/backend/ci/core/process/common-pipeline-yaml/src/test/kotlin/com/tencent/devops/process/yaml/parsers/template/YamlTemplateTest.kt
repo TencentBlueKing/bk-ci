@@ -43,14 +43,14 @@ import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.StringReader
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.DisplayName
 
 @Suppress("LoopWithTooManyJumpStatements")
 class YamlTemplateTest {
@@ -181,7 +181,8 @@ class YamlTemplateTest {
                     allowModifyAtStartup = null
                 ),
                 "RES_REPOA_VAR2_USERNAME" to Variable(value = "aaa", readonly = null, allowModifyAtStartup = null)
-            ), (vars as PreScriptBuildYaml).variables
+            ),
+            (vars as PreScriptBuildYaml).variables
         )
     }
 
