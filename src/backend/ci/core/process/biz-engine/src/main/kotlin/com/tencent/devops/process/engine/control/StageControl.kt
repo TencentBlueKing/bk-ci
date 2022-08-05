@@ -31,6 +31,7 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
@@ -62,6 +63,7 @@ import org.springframework.stereotype.Service
  */
 @Service
 class StageControl @Autowired constructor(
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineContainerService: PipelineContainerService,
@@ -115,6 +117,17 @@ class StageControl @Autowired constructor(
                 LOG.warn("ENGINE|$buildId|$source|BAD_STAGE|$stageId|${buildInfo.status}")
                 return
             }
+
+        if (stage.status.isReadyToRun()) { // #5048 首次运行时，先检查之前的Stage是否已经结束，防止串流
+            pipelineStageService.getPrevStage(projectId, buildId, stage.seq)
+                ?.let { prevStage ->
+                    if (!prevStage.status.isFinish()) { // 打回前一个未完成的Stage重走流程
+                        pipelineEventDispatcher.dispatch(this.copy(stageId = prevStage.stageId))
+                        return // 不再往下运行
+                    }
+                }
+        }
+
         val variables = buildVariableService.getAllVariable(projectId, buildId)
         val containers = pipelineContainerService.listContainers(
             projectId = projectId,

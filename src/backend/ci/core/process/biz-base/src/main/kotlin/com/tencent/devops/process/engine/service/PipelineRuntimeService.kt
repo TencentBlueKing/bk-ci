@@ -83,11 +83,8 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.common.websocket.enum.RefreshType
-import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
-import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
-import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.dao.BuildDetailDao
@@ -134,7 +131,6 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
@@ -148,8 +144,8 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM_ALIAS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import org.jooq.DSLContext
@@ -192,7 +188,6 @@ class PipelineRuntimeService @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val pipelineSettingService: PipelineSettingService,
     private val pipelineRuleService: PipelineRuleService,
-    private val projectCacheService: ProjectCacheService,
     private val pipelineUrlBean: PipelineUrlBean,
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation
@@ -721,23 +716,24 @@ class PipelineRuntimeService @Autowired constructor(
         val detailUrl = pipelineUrlBean.genBuildDetailUrl(
             projectId, pipelineId, buildId, null, null, false
         )
-        val projectName = projectCacheService.getProjectName(projectId) ?: ""
         val context = StartBuildContext.init(projectId, pipelineId, buildId, startParamMap)
         buildLogPrinter.startLog(buildId, null, null, context.executeCount)
-        val updateTaskExistsRecord: MutableList<TPipelineBuildTaskRecord> = mutableListOf()
+
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
+
         val lastTimeBuildTaskRecords = pipelineTaskService.listByBuildId(projectId, buildId)
         val lastTimeBuildContainerRecords = pipelineContainerService.listByBuildId(projectId, buildId)
-        val lastTimeBuildStageRecords = pipelineStageService.listByBuildId(projectId, buildId)
+        val lastTimeBuildStages = pipelineStageService.listStages(projectId, buildId)
 
         val buildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
 
         val buildTaskList = mutableListOf<PipelineBuildTask>()
         val buildContainers = mutableListOf<PipelineBuildContainer>()
-        val buildStages = mutableListOf<PipelineBuildStage>()
+        val buildStages = ArrayList<PipelineBuildStage>(fullModel.stages.size)
 
-        val updateStageExistsRecord: MutableList<TPipelineBuildStageRecord> = mutableListOf()
-        val updateContainerExistsRecord: MutableList<TPipelineBuildContainerRecord> = mutableListOf()
+        val updateTaskExistsRecord: MutableList<PipelineBuildTask> = mutableListOf()
+        val updateStageExistsRecord: MutableList<PipelineBuildStage> = ArrayList(fullModel.stages.size)
+        val updateContainerExistsRecord: MutableList<PipelineBuildContainer> = mutableListOf()
 
         context.currentBuildNo = buildNo
 //        var buildNoType: BuildNoType? = null
@@ -863,18 +859,18 @@ class PipelineRuntimeService @Autowired constructor(
                 stageStartTime = now
             }
 
-            if (lastTimeBuildStageRecords.isNotEmpty()) {
+            if (lastTimeBuildStages.isNotEmpty()) {
                 if (context.needUpdateStage) {
                     stage.resetBuildOption(true)
                     run findHistoryStage@{
-                        lastTimeBuildStageRecords.forEach {
+                        lastTimeBuildStages.forEach {
                             if (it.stageId == stage.id!!) {
-                                it.status = stageStatus.ordinal
+                                it.status = stageStatus
                                 it.startTime = stageStartTime
                                 it.endTime = null
                                 it.executeCount = context.executeCount
-                                it.checkIn = stage.checkIn?.let { self -> JsonUtil.toJson(self, formatted = false) }
-                                it.checkOut = stage.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) }
+                                it.checkIn = stage.checkIn
+                                it.checkOut = stage.checkOut
                                 updateStageExistsRecord.add(it)
                                 return@findHistoryStage
                             }
@@ -1166,16 +1162,15 @@ class PipelineRuntimeService @Autowired constructor(
      */
     fun manualDealReview(taskId: String, userId: String, params: ReviewParam) {
         // # 5108 消除了人工审核非必要的事务，防止在发送MQ挂住时，导致的长时间锁定
-        pipelineTaskService.getTaskRecord(projectId = params.projectId, buildId = params.buildId, taskId = taskId)
+        pipelineTaskService.getByTaskId(projectId = params.projectId, buildId = params.buildId, taskId = taskId)
             ?.run {
-                if (BuildStatus.values()[status].isRunning()) {
-                    val taskParam = JsonUtil.toMutableMap(taskParams)
-                    taskParam[BS_MANUAL_ACTION] = params.status.toString()
-                    taskParam[BS_MANUAL_ACTION_USERID] = userId
-                    params.desc?.let { self -> taskParam[BS_MANUAL_ACTION_DESC] = self }
-                    params.suggest?.let { self -> taskParam[BS_MANUAL_ACTION_SUGGEST] = self }
+                if (status.isRunning()) {
+                    taskParams[BS_MANUAL_ACTION] = params.status.toString()
+                    taskParams[BS_MANUAL_ACTION_USERID] = userId
+                    params.desc?.let { self -> taskParams[BS_MANUAL_ACTION_DESC] = self }
+                    params.suggest?.let { self -> taskParams[BS_MANUAL_ACTION_SUGGEST] = self }
                     if (params.params.isNotEmpty()) {
-                        taskParam[BS_MANUAL_ACTION_PARAMS] = JsonUtil.toJson(params.params, formatted = false)
+                        taskParams[BS_MANUAL_ACTION_PARAMS] = JsonUtil.toJson(params.params, formatted = false)
                         buildVariableService.batchUpdateVariable(
                             projectId = projectId,
                             pipelineId = pipelineId,
@@ -1188,7 +1183,7 @@ class PipelineRuntimeService @Autowired constructor(
                         projectId = projectId,
                         buildId = buildId,
                         taskId = taskId,
-                        taskParam = JsonUtil.toJson(taskParam, formatted = false)
+                        taskParam = JsonUtil.toJson(taskParams, formatted = false)
                     )
 
                     pipelineEventDispatcher.dispatch(
@@ -1203,9 +1198,9 @@ class PipelineRuntimeService @Autowired constructor(
                             containerHashId = containerHashId,
                             containerType = containerType,
                             taskId = taskId,
-                            taskParam = taskParam,
+                            taskParam = taskParams,
                             actionType = ActionType.REFRESH,
-                            executeCount = executeCount
+                            executeCount = executeCount ?: 1
                         )
                     )
                 }

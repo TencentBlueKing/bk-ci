@@ -80,7 +80,7 @@ class TGitIssueActionGit(
         val setting = basicSettingDao.getSetting(dslContext, event().objectAttributes.projectId)
         if (null == setting || !setting.enableCi) {
             logger.info(
-                "git ci is not enabled, but it has repo trigger , git project id: ${event().objectAttributes.projectId}"
+                "TGitIssueActionGit|init|not enabled, but trigger|git project id|${event().objectAttributes.projectId}"
             )
             return null
         }

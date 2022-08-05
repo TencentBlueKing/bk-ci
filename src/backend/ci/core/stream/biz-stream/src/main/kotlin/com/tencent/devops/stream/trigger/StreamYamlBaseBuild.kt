@@ -116,7 +116,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         val processClient = client.get(ServicePipelineResource::class)
         if (pipeline.pipelineId.isBlank()) {
             // 直接新建
-            logger.info("create newpipeline: $pipeline")
+            logger.info("StreamYamlBaseBuild|savePipeline|create newpipeline|$pipeline")
 
             pipeline.pipelineId = processClient.create(
                 userId = userId,
@@ -182,7 +182,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 updateLastModifyUser = updateLastModifyUser
             )
             // 已有的流水线需要更新下Stream这里的状态
-            logger.info("update gitPipeline pipeline: $pipeline")
+            logger.info("StreamYamlBaseBuild|savePipeline|update pipeline|$pipeline")
             gitPipelineResourceDao.updatePipeline(
                 dslContext = dslContext,
                 gitProjectId = gitProjectId,
@@ -315,7 +315,10 @@ class StreamYamlBaseBuild @Autowired constructor(
         yamlTransferData: YamlTransferData? = null,
         updateLastModifyUser: Boolean
     ): BuildId? {
-        logger.info("|${action.data.context.requestEventId}|startBuild|action|${action.format()}")
+        logger.info(
+            "StreamYamlBaseBuild|startBuild" +
+                "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
+        )
 
         preStartBuild(
             action = action,
@@ -334,8 +337,8 @@ class StreamYamlBaseBuild @Autowired constructor(
         try {
             buildLock.lock()
             logger.info(
-                "Stream Build start, gitProjectId[${action.data.getGitProjectId()}], " +
-                    "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]"
+                "StreamYamlBaseBuild|startBuild|start|gitProjectId|${action.data.getGitProjectId()}|" +
+                    "pipelineId|${pipeline.pipelineId}|gitBuildId|$gitBuildId"
             )
             savePipeline(
                 pipeline = pipeline,
@@ -354,8 +357,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                 startType = StartType.SERVICE
             ).data!!.id
             logger.info(
-                "Stream Build success, gitProjectId[${action.data.getGitProjectId()}], " +
-                    "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]"
+                "StreamYamlBaseBuild|startBuild|success|gitProjectId|${action.data.getGitProjectId()}|" +
+                    "pipelineId|${pipeline.pipelineId}|gitBuildId|$gitBuildId|buildId|$buildId"
             )
         } catch (ignore: Throwable) {
             errorStartBuild(
@@ -393,9 +396,9 @@ class StreamYamlBaseBuild @Autowired constructor(
         ignore: Throwable,
         yamlTransferData: YamlTransferData?
     ) {
-        logger.error(
-            "Stream Build failed, gitProjectId[${action.data.getGitProjectId()}], " +
-                "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
+        logger.warn(
+            "StreamYamlBaseBuild|errorStartBuild|${action.data.getGitProjectId()}|" +
+                "${pipeline.pipelineId}|$gitBuildId",
             ignore
         )
         // 清除已经保存的构建记录
@@ -483,9 +486,9 @@ class StreamYamlBaseBuild @Autowired constructor(
 
             savePipelineBuildCommit(action = action, pipeline = pipeline, buildId = buildId)
         } catch (ignore: Exception) {
-            logger.error(
-                "Stream after Build failed, gitProjectId[${action.data.getGitProjectId()}], " +
-                    "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
+            logger.warn(
+                "StreamYamlBaseBuild|afterStartBuild|${action.data.getGitProjectId()}|" +
+                    "${pipeline.pipelineId}|$gitBuildId",
                 ignore
             )
         }
@@ -586,7 +589,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 )
             )
         } catch (ignore: Throwable) {
-            logger.error("save build info err", ignore)
+            logger.warn("StreamYamlBaseBuild|savePipelineBuildCommit|error", ignore)
         }
     }
 

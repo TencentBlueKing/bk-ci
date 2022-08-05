@@ -128,7 +128,11 @@ class StreamTriggerCache @Autowired constructor(
                 null
             }
         } catch (ignore: Exception) {
-            logger.warn("stream request gitProjectInfo cache get $gitRequestEventId|$gitProjectKey error", ignore)
+            logger.warn(
+                "StreamTriggerCache|getRequestGitProjectInfo|error" +
+                    "|eventId|$gitRequestEventId|projectKey|$gitProjectKey",
+                ignore
+            )
             null
         }
     }
