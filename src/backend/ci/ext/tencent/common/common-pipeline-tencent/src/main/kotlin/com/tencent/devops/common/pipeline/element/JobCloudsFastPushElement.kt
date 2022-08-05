@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Deprecated("已作废, 替代品插件ID：OverSeaCloudStoneTest")
 @ApiModel("分发至海外蓝鲸", description = JobCloudsFastPushElement.classType)
 data class JobCloudsFastPushElement(
     @ApiModelProperty("任务名称", required = true)

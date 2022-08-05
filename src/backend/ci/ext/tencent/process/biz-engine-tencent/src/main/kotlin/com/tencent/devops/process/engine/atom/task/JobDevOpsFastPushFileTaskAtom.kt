@@ -148,7 +148,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                 remotePush(task, param, runVariables)
             }
             else -> {
-                logger.error("unknown srcType($srcType), terminate!")
+                logger.warn("unknown srcType($srcType), terminate!")
                 BuildStatus.FAILED
             }
         }
@@ -605,7 +605,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseBody = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.error("get jfrog files($url) fail:\n $responseBody")
+                logger.warn("get jfrog files($url) fail:\n $responseBody")
                 throw TaskExecuteException(
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -615,7 +615,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             try {
                 return JsonUtil.getObjectMapper().readValue(responseBody, JfrogFilesData::class.java)
             } catch (e: Exception) {
-                logger.error("get jfrog files($url) fail\n$responseBody")
+                logger.warn("get jfrog files($url) fail\n$responseBody")
                 throw TaskExecuteException(
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,

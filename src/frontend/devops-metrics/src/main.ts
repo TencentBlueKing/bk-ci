@@ -17,6 +17,7 @@ import EnUS from '../../locale/metrics/en-US.json'
 
 const i18nLocale = getCookie('blueking_language') || ''
 const i18n = createI18n({
+  legacy: false,
   locale: ['en', 'en-us', 'en_us'].includes(i18nLocale.toLowerCase()) ? 'en-US' : 'zh-CN',
   fallbackLocale: 'zh-CN',
   messages: {

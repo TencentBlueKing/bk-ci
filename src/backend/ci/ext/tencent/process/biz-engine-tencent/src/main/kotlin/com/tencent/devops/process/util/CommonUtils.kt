@@ -89,7 +89,7 @@ object CommonUtils {
                 }
             }
         } catch (ignore: Exception) {
-            logger.error("获取网卡失败", ignore)
+            logger.warn("获取网卡失败", ignore)
         }
 
         return allIp

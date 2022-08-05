@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Deprecated("已作废 jobv2下线而关闭")
 @ApiModel("构件分发-openstate(IEG专用)", description = OpenStatePushFileElement.classType)
 data class OpenStatePushFileElement(
     @ApiModelProperty("任务名称", required = true)

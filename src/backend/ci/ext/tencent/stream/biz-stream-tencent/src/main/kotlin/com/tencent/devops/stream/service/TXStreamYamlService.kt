@@ -71,14 +71,14 @@ class TXStreamYamlService @Autowired constructor(
 
                     val (validate, message) = v1streamYamlService.validateCIBuildYaml(yamlStr)
                     if (!validate) {
-                        logger.error("Check yaml failed, error: $message")
+                        logger.warn("TXStreamYamlService|checkYaml|error=$message")
                         Result(1, "Invalid yaml: $message", message)
                     }
                     v1streamYamlService.createCIBuildYaml(yaml.yaml)
 
                     Pair(Result("OK"), true)
                 } catch (e: Throwable) {
-                    logger.error("Check yaml failed, error: ${e.message}, yaml: $yaml")
+                    logger.warn("TXStreamYamlService|checkYaml|error|${e.message}|yaml|$yaml")
                     Pair(Result(1, "Invalid yaml", e.message), false)
                 }
             }
@@ -87,7 +87,7 @@ class TXStreamYamlService @Autowired constructor(
                     yamlSchemaCheck.check(yaml.yaml, null, true)
                     Pair(Result("OK"), true)
                 } catch (e: Exception) {
-                    logger.warn("Check yaml schema failed.", e)
+                    logger.warn("TXStreamYamlService|checkYaml|failed", e)
                     Pair(Result(1, "Invalid yaml: ${e.message}"), false)
                 }
             }

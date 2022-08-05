@@ -142,7 +142,10 @@ class TXManualTriggerService @Autowired constructor(
         v1TriggerBuildReq: V1TriggerBuildReq,
         inputs: Map<String, String>?
     ): TriggerBuildResult {
-        logger.info("Trigger build, userId: $userId, pipeline: $pipelineId, v1TriggerBuildReq: $v1TriggerBuildReq")
+        logger.info(
+            "TXManualTriggerService|triggerBuild" +
+                "|userId|$userId|pipeline|$pipelineId|v1TriggerBuildReq|$v1TriggerBuildReq"
+        )
 
         val originYaml = v1TriggerBuildReq.yaml
         // 如果当前文件没有内容直接不触发
@@ -327,7 +330,7 @@ class TXManualTriggerService @Autowired constructor(
         val yamlObject = try {
             streamYamlService.createCIBuildYaml(originYaml, gitRequestEvent.gitProjectId)
         } catch (e: Throwable) {
-            logger.warn("v1 git ci yaml is invalid", e)
+            logger.warn("TXManualTriggerService|prepareCIBuildYaml|v1 git ci yaml is invalid", e)
             // 手动触发不发送commitCheck
             gitCIEventService.saveBuildNotBuildEvent(
                 userId = gitRequestEvent.userId,
@@ -349,7 +352,7 @@ class TXManualTriggerService @Autowired constructor(
         }
 
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
-        logger.info("normalize yaml: $normalizedYaml")
+        logger.info("TXManualTriggerService|prepareCIBuildYaml|normalize yaml|$normalizedYaml")
         return Pair(yamlObject, normalizedYaml)
     }
 }

@@ -94,7 +94,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             )
         }
         if (param.category.isNullOrBlank()) {
-            logger.error("[${task.buildId}]|TASK_BcsContainerOpAtom| category is not init")
+            logger.warn("[${task.buildId}]|TASK_BcsContainerOpAtom| category is not init")
             buildLogPrinter.addRedLine(task.buildId, "category is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -126,7 +126,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
 
         // 公共的参数校验
         if (param.bcsAppInstName.isNullOrBlank()) {
-            logger.error("[${task.buildId}]|TASK_BcsContainerOpAtom| bcsAppInstName is not init")
+            logger.warn("[${task.buildId}]|TASK_BcsContainerOpAtom| bcsAppInstName is not init")
             buildLogPrinter.addRedLine(task.buildId, "bcsAppInstName is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -136,7 +136,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             )
         }
         if (param.namespace.isNullOrBlank()) {
-            logger.error("[${task.buildId}]|TASK_BcsContainerOpAtom| namespace is not init")
+            logger.warn("[${task.buildId}]|TASK_BcsContainerOpAtom| namespace is not init")
             buildLogPrinter.addRedLine(task.buildId, "namespace is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -175,7 +175,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             }
             BcsOperation.SCALE -> {
                 if (param.bcsInstNum.isNullOrBlank()) {
-                    logger.error("[${task.buildId}]|TASK_BcsContainerOpAtom| bcsInstNum is not init")
+                    logger.warn("[${task.buildId}]|TASK_BcsContainerOpAtom| bcsInstNum is not init")
                     buildLogPrinter.addRedLine(task.buildId, "bcsInstNum is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
                     return AtomResponse(
                         buildStatus = BuildStatus.FAILED,
@@ -196,7 +196,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             }
             BcsOperation.ROLLINGUPDATE -> {
                 if (param.instVersionName.isNullOrBlank()) {
-                    logger.error("[${task.buildId}]|TASK_BcsContainerOpAtom| instVersionName is not init")
+                    logger.warn("[${task.buildId}]|TASK_BcsContainerOpAtom| instVersionName is not init")
                     buildLogPrinter.addRedLine(task.buildId, "instVersionName is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
                     return AtomResponse(
                         buildStatus = BuildStatus.FAILED,
@@ -221,7 +221,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                     }
                     else -> {
                         if (param.bcsInstNum.isNullOrBlank()) {
-                            logger.error("[${task.buildId}]|TASK_BcsContainerOpAtom| bcsInstNum is not init")
+                            logger.warn("[${task.buildId}]|TASK_BcsContainerOpAtom| bcsInstNum is not init")
                             buildLogPrinter.addRedLine(task.buildId, "bcsInstNum is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
                             return AtomResponse(
                                 buildStatus = BuildStatus.FAILED,
@@ -249,7 +249,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             }
             BcsOperation.SIGNAL -> {
                 if (param.signal.isNullOrBlank()) {
-                    logger.error("[${task.buildId}]|TASK_BcsContainerOpAtom| signal is not init")
+                    logger.warn("[${task.buildId}]|TASK_BcsContainerOpAtom| signal is not init")
                     buildLogPrinter.addRedLine(task.buildId, "signal is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
                     return AtomResponse(
                         buildStatus = BuildStatus.FAILED,
@@ -259,7 +259,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                     )
                 }
                 if (param.processName.isNullOrBlank()) {
-                    logger.error("[${task.buildId}]|TASK_BcsContainerOpAtom| processName is not init")
+                    logger.warn("[${task.buildId}]|TASK_BcsContainerOpAtom| processName is not init")
                     buildLogPrinter.addRedLine(task.buildId, "processName is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
                     return AtomResponse(
                         buildStatus = BuildStatus.FAILED,
@@ -303,7 +303,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                         sendSignal("deployments", appIdStr, projectId, bcsAppInstId, signalInfoObj)
                     }
                     else -> {
-                        logger.error("BCS signal operate failed msg: BCS $category signal Type is illegal")
+                        logger.warn("BCS signal operate failed msg: BCS $category signal Type is illegal")
                         buildLogPrinter.addRedLine(
                                 task.buildId,
                                 "BCS operate result: BCS $category signal Type is illegal",
@@ -342,7 +342,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             }
         }
         if (result.first != 0) {
-            logger.error("BCS operate failed msg: ${result.second}")
+            logger.warn("BCS operate failed msg: ${result.second}")
             buildLogPrinter.addRedLine(task.buildId, "BCS operate result:${result.second}", task.taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -399,7 +399,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val code = responseData["code"] as Int
             if (code != 0) {
                 val message = responseData["code"] as String
-                logger.error("Get instVersionId failed, message : $message")
+                logger.warn("Get instVersionId failed, message : $message")
                 throw TaskExecuteException(
                     errorCode = USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
@@ -410,7 +410,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val responseDataData: List<Map<String, Any>> = responseData["data"] as List<Map<String, Any>>
             val instVersionObjs = responseDataData.filter { (it["name"] as String).equals(instVersionName, true) }
             if (instVersionObjs.isEmpty()) {
-                logger.error("Get instVersionId failed , instVersionName is mismatching. instVersionName : $instVersionName")
+                logger.warn("Get instVersionId failed , instVersionName is mismatching. instVersionName : $instVersionName")
                 throw TaskExecuteException(
                     errorCode = USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
@@ -432,7 +432,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > timeout * 60 * 1000) {
-                logger.error("waiting for bcsApp running timeout")
+                logger.warn("waiting for bcsApp running timeout")
                 return Pair(false, "Waiting for bcs app running timeout")
             }
 
@@ -443,7 +443,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                     continue@loop
                 }
                 !success -> {
-                    logger.error("Waiting for bcs app running failed, msg: $msg")
+                    logger.warn("Waiting for bcs app running failed, msg: $msg")
                     Pair(false, "Waiting for bcs app running failed, msg: $msg")
                 }
                 else -> Pair(true, "Success!")
@@ -499,7 +499,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
 
         val timeout = param.timeout
         if (param.namespaceVar == null) {
-            logger.error("namespaceVar is not init of build(${task.buildId})")
+            logger.warn("namespaceVar is not init of build(${task.buildId})")
             buildLogPrinter.addRedLine(task.buildId, "命名空间没有被赋值", task.taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -511,7 +511,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
         val variableInfo = param.namespaceVar!!
 
         if (param.templateName.isNullOrBlank()) {
-            logger.error("instanceEntity is not init of build(${task.buildId})")
+            logger.warn("instanceEntity is not init of build(${task.buildId})")
             buildLogPrinter.addRedLine(task.buildId, "instanceEntity is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -521,7 +521,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             )
         }
         if (param.showVersionName.isNullOrBlank()) {
-            logger.error("showVersionName is not init of build(${task.buildId})")
+            logger.warn("showVersionName is not init of build(${task.buildId})")
             buildLogPrinter.addRedLine(task.buildId, "showVersionName is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -571,7 +571,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Create instance, response: $data")
             if (!response.isSuccessful) {
-                logger.error("Create instance failed, msg: $data")
+                logger.warn("Create instance failed, msg: $data")
                 buildLogPrinter.addRedLine(task.buildId, "创建实例失败，详情： $data", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
@@ -584,7 +584,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val code = responseData["code"] as Int
             if (code != 0) {
                 val message = responseData["message"].toString()
-                logger.error("Create instance failed, msg:$message")
+                logger.warn("Create instance failed, msg:$message")
                 buildLogPrinter.addRedLine(task.buildId, "创建实例失败，详情：$message", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
@@ -708,7 +708,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Get bcsAppInstId by bcsAppInstName, response: $data")
             if (!response.isSuccessful) {
-                logger.error("Get bcsAppInstId by bcsAppInstName($bcsAppInstName) failed, msg:$data")
+                logger.warn("Get bcsAppInstId by bcsAppInstName($bcsAppInstName) failed, msg:$data")
                 throw TaskExecuteException(
                     errorCode = USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
@@ -720,7 +720,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val code = responseData["code"] as Int
             if (0 != code) {
                 val message = responseData["message"].toString()
-                logger.error("Get bcsAppInstId by bcsAppInstName($bcsAppInstName) failed, msg:$message")
+                logger.warn("Get bcsAppInstId by bcsAppInstName($bcsAppInstName) failed, msg:$message")
                 throw TaskExecuteException(
                     errorCode = USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
@@ -729,7 +729,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             }
             dataMap = responseData["data"] as Map<String, Any>
             if (dataMap["id"] == null || dataMap["id"] == "") {
-                logger.error("Get bcsAppInstId by bcsAppInstName($bcsAppInstName) failed, msg:$data")
+                logger.warn("Get bcsAppInstId by bcsAppInstName($bcsAppInstName) failed, msg:$data")
                 buildLogPrinter.addRedLine(task.buildId, "实例名称或命名空间错误", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 throw TaskExecuteException(
                     errorCode = USER_RESOURCE_NOT_FOUND,
@@ -855,7 +855,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val code = responseData["code"] as Int
             if (0 != code) {
                 val message = responseData["message"].toString()
-                logger.error("SendCommand($commandVar) failed, msg:$message")
+                logger.warn("SendCommand($commandVar) failed, msg:$message")
                 throw throw TaskExecuteException(
                     errorCode = USER_TASK_OPERATE_FAIL,
                     errorType = ErrorType.USER,
@@ -863,7 +863,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             }
             val dataMap = responseData["data"] as Map<*, *>
             if (null == dataMap["task_id"]) {
-                logger.error("SendCommand($commandVar) failed, response:$data")
+                logger.warn("SendCommand($commandVar) failed, response:$data")
                 throw throw TaskExecuteException(
                     errorCode = USER_TASK_OPERATE_FAIL,
                     errorType = ErrorType.USER,
@@ -903,7 +903,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val responseObj: BcsCommandStatus = jacksonObjectMapper().readValue(data)
             if (0 != responseObj.code) {
                 val message = responseObj.message
-                logger.error("Get Command Status, task_id($taskId) failed, msg:$message")
+                logger.warn("Get Command Status, task_id($taskId) failed, msg:$message")
                 throw throw TaskExecuteException(
                     errorCode = USER_TASK_OPERATE_FAIL,
                     errorType = ErrorType.USER,
@@ -912,7 +912,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
 
             val taskgroups = responseObj.data.status.taskgroups
             if (null == taskgroups || taskgroups.isEmpty()) {
-                logger.error("Get Command Status, taskgroups is null, msg:${responseObj.message}")
+                logger.warn("Get Command Status, taskgroups is null, msg:${responseObj.message}")
                 return TaskResult(false, false, "Query the command state again")
             }
 
@@ -920,14 +920,14 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             taskgroups.forEach { taskgroup ->
                 val tasks = taskgroup.tasks
                 if (null == tasks || tasks.isEmpty()) {
-                    logger.error("Get Command Status, tasks is null, msg:${responseObj.message}")
+                    logger.warn("Get Command Status, tasks is null, msg:${responseObj.message}")
                     return TaskResult(false, false, "Query the command state again")
                 }
 
                 tasks.forEach { task ->
                     val commInspect = task.commInspect
                     if (null == commInspect) {
-                        logger.error("Get Command Status, commInspect is null, msg:${task.message}")
+                        logger.warn("Get Command Status, commInspect is null, msg:${task.message}")
                         return TaskResult(false, false, "command is running , status: ${task.status}")
                     }
 
@@ -971,7 +971,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > timeout * 60 * 1000) {
-                logger.error("Send Command for bcsApp running timeout, taskId:($taskId)")
+                logger.warn("Send Command for bcsApp running timeout, taskId:($taskId)")
                 return Pair(400, "Send Command for bcsApp running timeout, taskId:($taskId)")
             }
 
@@ -982,7 +982,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                     continue@loop
                 }
                 !success -> {
-                    logger.error("Send Command for bcsApp running failed, msg: $msg")
+                    logger.warn("Send Command for bcsApp running failed, msg: $msg")
                     buildLogPrinter.addRedLine(pipelintTask.buildId, "命令执行失败，详情： $msg", pipelintTask.taskId, null, pipelintTask.executeCount ?: 1
                     )
                     Pair(400, "Send Command for bcsApp running failed, msg: $msg")
