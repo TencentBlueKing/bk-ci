@@ -49,8 +49,8 @@ open class AbsPermissionGradeServiceImpl @Autowired constructor(
 
         if (managerProject == null || !managerProject.contains(projectId)) {
             logger.warn(
-                "User has no grade Manager permission: userId($userId)" +
-                    "|projectId($projectId)|managerProject($managerProject)"
+                "User has no grade manager permission: userId = $userId " +
+                    "| projectId = $projectId | managerProject = $managerProject"
             )
             throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GRADE_CHECK_FAIL))
         }

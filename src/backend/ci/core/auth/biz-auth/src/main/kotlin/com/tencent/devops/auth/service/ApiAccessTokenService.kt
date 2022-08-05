@@ -67,7 +67,7 @@ class ApiAccessTokenService @Autowired constructor(
             throw ErrorCodeException(
                 errorCode = PARAMETER_EXPIRED_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
-                defaultMessage = "Access token expired in: ${tokenInfo.expirationTime}",
+                defaultMessage = "Access token expired  in: ${tokenInfo.expirationTime}",
                 params = arrayOf("token", "Access token expired in: ${tokenInfo.expirationTime}")
             )
         }
@@ -75,9 +75,9 @@ class ApiAccessTokenService @Autowired constructor(
     }
 
     fun generateUserToken(userDetails: String): TokenInfo {
-        logger.info("AUTH|generateUserToken| userId=$userDetails")
+        logger.info("AUTH | generateUserToken | userId = $userDetails")
         if (secret.isNullOrBlank()) {
-            logger.error("AUTH| generateUserToken failed, " +
+            logger.error("AUTH | generateUserToken failed, " +
                 "because config[auth.accessToken.secret] is not found")
             throw ErrorCodeException(
                 errorCode = PARAMETER_SECRET_ERROR,
@@ -99,7 +99,7 @@ class ApiAccessTokenService @Autowired constructor(
                 JsonUtil.toJson(tokenInfo, formatted = false)
             ), "UTF-8")
         } catch (ignore: Throwable) {
-            logger.error("AUTH| generateUserToken failed because $ignore ")
+            logger.error("AUTH | generateUserToken failed because $ignore ")
             throw ErrorCodeException(
                 errorCode = PARAMETER_SECRET_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
@@ -117,7 +117,8 @@ class ApiAccessTokenService @Autowired constructor(
         val result = try {
             AESUtil.decrypt(secret!!, token)
         } catch (ignore: Throwable) {
-            logger.error("AUTH|getTokenInfo Access token illegal,secret=$secret,token=$token,error=$ignore")
+            logger.error("AUTH|getTokenInfo Access token illegal : secret = $secret |" +
+                             " token = $token | error=$ignore")
             throw ErrorCodeException(
                 errorCode = PARAMETER_ILLEGAL_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
