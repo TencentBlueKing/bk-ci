@@ -2,6 +2,9 @@
   "title": "",
   "description": "",
   "type": "object",
+  "required": [
+    "select类型-url"
+  ],
   "properties": {
     "默认展示的，无特殊类型": {
       "type": "string",
@@ -18,7 +21,6 @@
       "type": "string",
       "title": "input类型",
       "default": "input类型-v",
-      "required": false,
       "ui:component": {
         "name": "input"
       },
@@ -30,7 +32,6 @@
       "type": "string",
       "title": "input类型-text",
       "default": "input类型-text-v",
-      "required": false,
       "ui:component": {
         "name": "input",
         "props": {
@@ -47,7 +48,6 @@
       "default": [
         "select类型-v"
       ],
-      "required": false,
       "ui:component": {
         "name": "selector",
         "props": {
@@ -82,7 +82,6 @@
       "default": [
         "select类型-v"
       ],
-      "required": true,
       "ui:component": {
         "name": "selector",
         "props": {
@@ -101,7 +100,10 @@
       },
       "ui:props": {
         "labelWidth": 500
-      }
+      },
+      "ui:rules": [
+        "required"
+      ]
     },
     "checkBox类型": {
       "type": "array",
@@ -109,7 +111,6 @@
       "default": [
         "checkBox类型-v"
       ],
-      "required": false,
       "ui:component": {
         "name": "checkbox",
         "props": {
@@ -137,7 +138,6 @@
       "type": "boolean",
       "title": "boolean类型",
       "default": false,
-      "required": false,
       "ui:component": {
         "name": "radio",
         "props": {
@@ -161,7 +161,6 @@
       "type": "string",
       "title": "time类型",
       "default": "time类型-v",
-      "required": false,
       "ui:component": {
         "name": "bk-time-picker",
         "props": {
@@ -178,7 +177,6 @@
       "default": [
         "company-staff-input类型-v"
       ],
-      "required": false,
       "ui:component": {
         "name": "companyStaff"
       },
@@ -190,7 +188,6 @@
       "type": "string",
       "title": "tips类型",
       "default": "tips类型-v",
-      "required": false,
       "ui:component": {
         "name": "tips",
         "props": {
