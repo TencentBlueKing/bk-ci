@@ -29,8 +29,8 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.login.UserThirdLoginResource
 import com.tencent.devops.auth.service.ThirdLoginService
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import javax.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -38,7 +38,7 @@ class UserThirdLoginResourceImpl @Autowired constructor(
     val loginService: ThirdLoginService
 ) : UserThirdLoginResource {
 
-    override fun thirdLoginOut(userId: String): Result<Boolean> {
-        return Result(loginService.thirdLoginOut(userId))
+    override fun thirdLoginOut(userId: String): Response {
+        return loginService.thirdLoginOut(userId)
     }
 }

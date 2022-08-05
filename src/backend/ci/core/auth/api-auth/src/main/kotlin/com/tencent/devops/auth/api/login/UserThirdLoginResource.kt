@@ -28,7 +28,6 @@
 package com.tencent.devops.auth.api.login
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
@@ -37,6 +36,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @Api(tags = ["AUTH_THIRD_LOGIN_OUT"], description = "权限-第三方登陆")
 @Path("/user/third/login")
@@ -50,5 +50,5 @@ interface UserThirdLoginResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         @ApiParam("登出用户id")
         userId: String
-    ): Result<Boolean>
+    ): Response
 }

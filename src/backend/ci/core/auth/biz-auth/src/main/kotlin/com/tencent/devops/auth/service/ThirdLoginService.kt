@@ -96,10 +96,13 @@ class ThirdLoginService @Autowired constructor(
         )
     }
 
-    fun thirdLoginOut(userId: String): Boolean {
+    fun thirdLoginOut(userId: String): Response {
         logger.info("$userId loginOut")
         redisOperation.delete(LOGIN_REDIS_KEY + userId)
-        return true
+        val cookie = Cookie(AUTH_HEADER_BK_CI_LOGIN_TOKEN, null, "/", domain)
+        return Response.temporaryRedirect(UriBuilder.fromUri(callbackUrl).build())
+            .cookie(NewCookie(cookie, "", LOGIN_EXPIRE_TIME.toInt(), false))
+            .build()
     }
 
     private fun checkCode(code: String, userId: String, type: String): Boolean {
@@ -116,7 +119,7 @@ class ThirdLoginService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdLoginService::class.java)
-        const val LOGIN_EXPIRE_TIME = 7 * 24 * 3600L// 登陆7天有效
+        const val LOGIN_EXPIRE_TIME = 7 * 24 * 3600L // 登陆7天有效
         const val LOGIN_REDIS_KEY = "bk:login:third:key:"
         const val LOGIN_CODE_REDIS_KEY = "bk:login:third:%s:code:%s"
     }
