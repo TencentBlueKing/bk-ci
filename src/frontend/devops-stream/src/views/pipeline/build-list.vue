@@ -347,7 +347,7 @@
                 },
                 uiFormRules: {
                     required: {
-                        validator: "{{ $self.value !== undefined && String($self.value).length }}",
+                        validator: "{{ $self.value !== undefined && !!String($self.value).length }}",
                         message: this.$t('pipeline.required')
                     }
                 },
