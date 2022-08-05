@@ -31,11 +31,14 @@ import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.pojo.GithubCommitUser
 import com.tencent.devops.common.sdk.github.response.CreateOrUpdateFileContentsResponse
+import com.tencent.devops.common.sdk.json.JsonIgnorePath
+import org.apache.commons.lang3.StringUtils
 
 class CreateOrUpdateFileContentsRequest(
-    // val owner: String,
-    // val repo: String,
-    val repoId: Long,
+    // id或owner/repo
+    @JsonIgnorePath
+    val repoName: String,
+    @JsonIgnorePath
     val path: String,
     // The commit message
     val message: String,
@@ -53,7 +56,9 @@ class CreateOrUpdateFileContentsRequest(
         return HttpMethod.PUT
     }
 
-    override fun getApiPath(): String {
-        return "repositories/$repoId/contents/$path"
+    override fun getApiPath() = if (StringUtils.isNumeric(repoName)) {
+        "repositories/$repoName/contents/$path"
+    } else {
+        "repos/$repoName/contents/$path"
     }
 }

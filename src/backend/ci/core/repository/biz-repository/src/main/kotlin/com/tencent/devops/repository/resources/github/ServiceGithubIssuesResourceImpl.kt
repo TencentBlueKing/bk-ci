@@ -34,22 +34,20 @@ import com.tencent.devops.common.sdk.github.response.CreateIssueCommentResponse
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubIssuesResource
 import com.tencent.devops.repository.github.service.GithubIssueService
-import com.tencent.devops.repository.service.github.GithubTokenService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGithubIssuesResourceImpl @Autowired constructor(
-    private val githubTokenService: GithubTokenService,
     private val githubIssueService: GithubIssueService
 ) : ServiceGithubIssuesResource {
 
     override fun createIssueComment(
-        userId: String,
+        token: String,
         request: CreateIssueCommentRequest
     ): Result<CreateIssueCommentResponse?> {
         return Result(
             githubIssueService.createIssueComment(
-                token = githubTokenService.getAccessTokenMustExist(userId).accessToken,
+                token = token,
                 request = request
             )
         )

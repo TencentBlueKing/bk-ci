@@ -23,9 +23,9 @@ interface ServiceGithubDatabaseResource {
     @POST
     @Path("/getTree")
     fun getTree(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: GetTreeRequest
     ): Result<GetTreeResponse?>
 }

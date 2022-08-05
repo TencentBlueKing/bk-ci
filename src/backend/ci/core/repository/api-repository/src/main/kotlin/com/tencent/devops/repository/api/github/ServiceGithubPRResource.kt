@@ -25,9 +25,9 @@ interface ServiceGithubPRResource {
     @POST
     @Path("/getPullRequest")
     fun getPullRequest(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: GetPullRequestRequest
     ): Result<PullRequestResponse?>
 
@@ -35,9 +35,9 @@ interface ServiceGithubPRResource {
     @POST
     @Path("/listPullRequestFiles")
     fun listPullRequestFiles(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: ListPullRequestFileRequest
     ): Result<List<PullRequestFileResponse>>
 }

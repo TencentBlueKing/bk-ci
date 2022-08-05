@@ -6,11 +6,13 @@ import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.pojo.GithubAction
 import com.tencent.devops.common.sdk.github.pojo.GithubOutput
 import com.tencent.devops.common.sdk.github.response.CheckRunResponse
+import com.tencent.devops.common.sdk.json.JsonIgnorePath
+import org.apache.commons.lang3.StringUtils
 
 data class CreateCheckRunRequest(
-    // val owner: String,
-    // val repo: String,
-    val repoId: Long,
+    // id或owner/repo
+    @JsonIgnorePath
+    val repoName: String,
     val name: String,
     @JsonProperty("head_sha")
     val headSha: String,
@@ -29,5 +31,9 @@ data class CreateCheckRunRequest(
 ) : GithubRequest<CheckRunResponse>() {
     override fun getHttpMethod() = HttpMethod.POST
 
-    override fun getApiPath() = "repositories/$repoId/check-runs"
+    override fun getApiPath() = if (StringUtils.isNumeric(repoName)) {
+        "repositories/$repoName/check-runs"
+    } else {
+        "repos/$repoName/check-runs"
+    }
 }

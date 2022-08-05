@@ -32,21 +32,17 @@ import com.tencent.devops.common.sdk.github.response.GetUserResponse
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubUserResource
 import com.tencent.devops.repository.github.service.GithubUserService
-import com.tencent.devops.repository.service.github.GithubTokenService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 
 class ServiceGithubUserResourceImpl @Autowired constructor(
-    val githubTokenService: GithubTokenService,
     val githubUserService: GithubUserService
 ) : ServiceGithubUserResource {
 
-    override fun getUser(userId: String): Result<GetUserResponse?> {
+    override fun getUser(token: String): Result<GetUserResponse?> {
         return Result(
-            githubUserService.getUser(
-                githubTokenService.getAccessTokenMustExist(userId = userId).accessToken
-            )
+            githubUserService.getUser(token)
         )
     }
 }

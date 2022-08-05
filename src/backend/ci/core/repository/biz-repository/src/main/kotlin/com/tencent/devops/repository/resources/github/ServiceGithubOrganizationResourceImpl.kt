@@ -33,23 +33,21 @@ import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubOrganizationResource
 import com.tencent.devops.repository.github.service.GithubOrganizationService
-import com.tencent.devops.repository.service.github.GithubTokenService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGithubOrganizationResourceImpl @Autowired constructor(
-    val githubTokenService: GithubTokenService,
     val organizationService: GithubOrganizationService
 ) : ServiceGithubOrganizationResource {
 
     override fun listOrganizations(
-        userId: String,
+        token: String,
         request: ListOrganizationsRequest
     ): Result<List<Organization>> {
         return Result(
             organizationService.listOrganizations(
                 request = request,
-                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+                token = token
             )
         )
     }

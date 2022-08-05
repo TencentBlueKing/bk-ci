@@ -26,9 +26,9 @@ interface ServiceGithubCommitsResource {
     @POST
     @Path("/listCommits")
     fun listCommits(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: ListCommitRequest
     ): Result<List<CommitResponse>>
 
@@ -36,9 +36,9 @@ interface ServiceGithubCommitsResource {
     @POST
     @Path("/getCommit")
     fun getCommit(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: GetCommitRequest
     ): Result<CommitResponse?>
 
@@ -46,9 +46,9 @@ interface ServiceGithubCommitsResource {
     @POST
     @Path("/compareTwoCommits")
     fun compareTwoCommits(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: CompareTwoCommitsRequest
     ): Result<CompareTwoCommitsResponse?>
 }

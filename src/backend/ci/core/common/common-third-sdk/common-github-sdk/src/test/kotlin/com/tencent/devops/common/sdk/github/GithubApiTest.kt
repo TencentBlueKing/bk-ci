@@ -34,6 +34,7 @@ open class GithubApiTest {
         apiUrl = "https://api.github.com/"
     )
 
-    protected val token = "d501d306428d8d34656c726a0c8980c08f5caa55"
-    protected val repoId = 189153491L
+    protected val token = "ghu_zzAXkg8erBW9xsMeo1aHpGAPnndxZ519ZBrZ"
+    protected val repoId = 520728348L
+    protected val repoName = "ci-stream-test/ming-test"
 }

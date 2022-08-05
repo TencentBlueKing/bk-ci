@@ -9,40 +9,38 @@ import com.tencent.devops.common.sdk.github.response.CompareTwoCommitsResponse
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
 import com.tencent.devops.repository.github.service.GithubCommitsService
-import com.tencent.devops.repository.service.github.GithubTokenService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGithubCommitsResourceImpl @Autowired constructor(
-    val githubTokenService: GithubTokenService,
     val githubCommitsService: GithubCommitsService
 ) : ServiceGithubCommitsResource {
 
-    override fun listCommits(userId: String, request: ListCommitRequest): Result<List<CommitResponse>> {
+    override fun listCommits(token: String, request: ListCommitRequest): Result<List<CommitResponse>> {
         return Result(
             githubCommitsService.listCommits(
                 request = request,
-                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+                token = token
             )
         )
     }
 
-    override fun getCommit(userId: String, request: GetCommitRequest): Result<CommitResponse?> {
+    override fun getCommit(token: String, request: GetCommitRequest): Result<CommitResponse?> {
         return Result(
             githubCommitsService.getCommit(
                 request = request,
-                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+                token = token
             )
         )
     }
 
     override fun compareTwoCommits(
-        userId: String,
+        token: String,
         request: CompareTwoCommitsRequest
     ): Result<CompareTwoCommitsResponse?> {
         return Result(
             githubCommitsService.compareTwoCommits(
-                token = githubTokenService.getAccessTokenMustExist(userId).accessToken,
+                token = token,
                 request = request
             )
         )

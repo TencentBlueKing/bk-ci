@@ -7,20 +7,18 @@ import com.tencent.devops.common.sdk.github.response.CheckRunResponse
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubCheckResource
 import com.tencent.devops.repository.github.service.GithubCheckService
-import com.tencent.devops.repository.service.github.GithubTokenService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGithubCheckResourceImpl @Autowired constructor(
-    val githubTokenService: GithubTokenService,
     val githubCheckService: GithubCheckService
 ) : ServiceGithubCheckResource {
 
-    override fun createCheckRun(userId: String, request: CreateCheckRunRequest): Result<CheckRunResponse> {
+    override fun createCheckRun(token: String, request: CreateCheckRunRequest): Result<CheckRunResponse> {
         return Result(
             githubCheckService.createCheckRun(
                 request = request,
-                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+                token = token
             )
         )
     }
@@ -34,11 +32,11 @@ class ServiceGithubCheckResourceImpl @Autowired constructor(
         )
     }
 
-    override fun updateCheckRun(userId: String, request: UpdateCheckRunRequest): Result<CheckRunResponse> {
+    override fun updateCheckRun(token: String, request: UpdateCheckRunRequest): Result<CheckRunResponse> {
         return Result(
             githubCheckService.updateCheckRun(
                 request = request,
-                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+                token = token
             )
         )
     }

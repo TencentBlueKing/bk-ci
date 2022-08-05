@@ -31,12 +31,14 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.pojo.GithubUser
+import com.tencent.devops.common.sdk.json.JsonIgnorePath
+import org.apache.commons.lang3.StringUtils
 
 @Suppress("all")
 class ListRepositoryCollaboratorsRequest(
-    // val owner: String,
-    // val repo: String,
-    val repoId: Long,
+    // id或owner/repo
+    @JsonIgnorePath
+    val repoName: String,
     // Comma-separated list of values. Can include:
     // * owner: Repositories that are owned by the authenticated user.
     // * collaborator: Repositories that the user has been added to as a collaborator.
@@ -52,7 +54,9 @@ class ListRepositoryCollaboratorsRequest(
         return HttpMethod.GET
     }
 
-    override fun getApiPath(): String {
-        return "repositories/$repoId/collaborators"
+    override fun getApiPath() = if (StringUtils.isNumeric(repoName)) {
+        "repositories/$repoName/collaborators"
+    } else {
+        "repos/$repoName/collaborators"
     }
 }

@@ -24,9 +24,9 @@ interface ServiceGithubCheckResource {
     @POST
     @Path("/createCheckRun")
     fun createCheckRun(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: CreateCheckRunRequest
     ): Result<CheckRunResponse>
 
@@ -44,9 +44,9 @@ interface ServiceGithubCheckResource {
     @POST
     @Path("/updateCheckRun")
     fun updateCheckRun(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: UpdateCheckRunRequest
     ): Result<CheckRunResponse>
 }

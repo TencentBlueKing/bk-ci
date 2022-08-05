@@ -115,9 +115,9 @@ class GithubApiService @Autowired constructor(
         ) {
             client.get(ServiceGithubRepositoryResource::class).getRepository(
                 request = GetRepositoryRequest(
-                    repoId = gitProjectId.toLong()
+                    repoName = gitProjectId
                 ),
-                userId = cred.getUserId()
+                token = cred.toToken()
             ).data
         }?.let {
             GithubProjectInfo(it)
@@ -138,10 +138,10 @@ class GithubApiService @Autowired constructor(
         ) {
             client.get(ServiceGithubCommitsResource::class).getCommit(
                 request = GetCommitRequest(
-                    repoId = gitProjectId.toLong(),
+                    repoName = gitProjectId,
                     ref = sha
                 ),
-                userId = cred.getUserId()
+                token = cred.toToken()
             ).data
         }?.let { GithubCommitInfo(it) }
     }
@@ -158,7 +158,7 @@ class GithubApiService @Autowired constructor(
 
     override fun getUserInfoByToken(cred: StreamGitCred): GithubUserInfo? {
         return client.get(ServiceGithubUserResource::class).getUser(
-            userId = cred.getUserId()
+            token = cred.toToken()
         ).data?.let { GithubUserInfo(id = it.id.toString(), username = it.login) }
     }
 
@@ -169,10 +169,10 @@ class GithubApiService @Autowired constructor(
     ): GithubProjectUserInfo {
         return client.get(ServiceGithubRepositoryResource::class).getRepositoryPermissions(
             request = GetRepositoryPermissionsRequest(
-                repoId = gitProjectId.toLong(),
+                repoName = gitProjectId,
                 username = userId
             ),
-            userId = cred.getUserId()
+            token = cred.toToken()
         ).data?.let {
             GithubProjectUserInfo(GithubAccessLevelEnum.getGithubAccessLevel(it.permission).level)
         } ?: GithubProjectUserInfo(GithubAccessLevelEnum.GUEST.level)
@@ -191,9 +191,9 @@ class GithubApiService @Autowired constructor(
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_INFO
         ) {
             client.get(ServiceGithubPRResource::class).getPullRequest(
-                userId = cred.getUserId(),
+                token = cred.toToken(),
                 request = GetPullRequestRequest(
-                    repoId = gitProjectId.toLong(),
+                    repoName = gitProjectId,
                     pullNumber = mrId
                 )
             )
@@ -218,9 +218,9 @@ class GithubApiService @Autowired constructor(
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_CHANGE_INFO
         ) {
             client.get(ServiceGithubPRResource::class).listPullRequestFiles(
-                userId = cred.getUserId(),
+                token = cred.toToken(),
                 request = ListPullRequestFileRequest(
-                    repoId = gitProjectId.toLong(),
+                    repoName = gitProjectId,
                     pullNumber = mrId
                 )
             )
@@ -248,9 +248,9 @@ class GithubApiService @Autowired constructor(
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR
         ) {
             client.get(ServiceGithubDatabaseResource::class).getTree(
-                userId = cred.getUserId(),
+                token = cred.toToken(),
                 request = GetTreeRequest(
-                    repoId = gitProjectId.toLong(),
+                    repoName = gitProjectId,
                     treeSha = "${ref!!}:$path",
                     recursive = recursive.toString()
                 )
@@ -274,11 +274,11 @@ class GithubApiService @Autowired constructor(
         ) {
             client.get(ServiceGithubRepositoryResource::class).getRepositoryContent(
                 request = GetRepositoryContentRequest(
-                    repoId = gitProjectId.toLong(),
+                    repoName = gitProjectId,
                     path = fileName,
                     ref = ref
                 ),
-                userId = cred.getUserId()
+                token = cred.toToken()
             ).data?.getDecodedContentAsString() ?: ""
         }
     }
@@ -298,11 +298,11 @@ class GithubApiService @Autowired constructor(
         ) {
             client.get(ServiceGithubRepositoryResource::class).getRepositoryContent(
                 request = GetRepositoryContentRequest(
-                    repoId = gitProjectId.toLong(),
+                    repoName = gitProjectId,
                     path = fileName,
                     ref = ref!!
                 ),
-                userId = cred.getUserId()
+                token = cred.toToken()
             )
         }.data?.let { GithubFileInfo(content = it.content ?: "", blobId = it.sha) }
     }
@@ -332,9 +332,9 @@ class GithubApiService @Autowired constructor(
             apiErrorCode = ErrorCodeEnum.GET_GIT_LATEST_REVISION_ERROR
         ) {
             client.get(ServiceGithubCommitsResource::class).getCommit(
-                userId = userName,
+                token = GithubCred(userId = enableUserId).toToken(),
                 request = GetCommitRequest(
-                    repoId = projectName.toLong(),
+                    repoName = projectName,
                     ref = branch
                 )
             )
@@ -358,9 +358,9 @@ class GithubApiService @Autowired constructor(
         mrBody: MrCommentBody
     ) {
         client.get(ServiceGithubIssuesResource::class).createIssueComment(
-            userId = cred.getUserId(),
+            token = cred.toToken(),
             request = CreateIssueCommentRequest(
-                repoId = gitProjectId.toLong(),
+                repoName = gitProjectId,
                 issueNumber = mrId,
                 body = QualityUtils.getQualityReport(mrBody.reportData.first, mrBody.reportData.second)
             )
@@ -376,7 +376,7 @@ class GithubApiService @Autowired constructor(
                 client.get(ServiceGithubCheckResource::class).createCheckRunByToken(
                     token = token!!,
                     request = CreateCheckRunRequest(
-                        repoId = projectName.toLong(),
+                        repoName = projectName,
                         name = context,
                         headSha = commitId,
                         detailsUrl = targetUrl,
@@ -389,7 +389,7 @@ class GithubApiService @Autowired constructor(
                 client.get(ServiceGithubCheckResource::class).createCheckRunByToken(
                     token = token!!,
                     request = CreateCheckRunRequest(
-                        repoId = projectName.toLong(),
+                        repoName = projectName,
                         name = context,
                         headSha = commitId,
                         detailsUrl = targetUrl,
@@ -428,9 +428,9 @@ class GithubApiService @Autowired constructor(
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR
         ) {
             client.get(ServiceGithubCommitsResource::class).compareTwoCommits(
-                userId = cred.getUserId(),
+                token = cred.toToken(),
                 request = CompareTwoCommitsRequest(
-                    repoId = gitProjectId.toLong(),
+                    repoName = gitProjectId,
                     base = from,
                     head = to,
                     page = page,

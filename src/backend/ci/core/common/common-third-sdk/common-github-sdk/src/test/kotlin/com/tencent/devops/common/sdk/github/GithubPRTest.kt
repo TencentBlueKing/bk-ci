@@ -37,7 +37,7 @@ class GithubPRTest : GithubApiTest() {
     @Test
     fun getPullRequest() {
         val request = GetPullRequestRequest(
-            repoId = repoId,
+            repoName = repoId.toString(),
             pullNumber = "7100"
         )
         val response = client.execute(
@@ -50,7 +50,7 @@ class GithubPRTest : GithubApiTest() {
     @Test
     fun listPullRequestFile() {
         val request = ListPullRequestFileRequest(
-            repoId = repoId,
+            repoName = repoId.toString(),
             pullNumber = "7100"
         )
         val response = client.execute(

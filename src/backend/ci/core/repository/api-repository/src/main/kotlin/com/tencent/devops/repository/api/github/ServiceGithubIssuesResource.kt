@@ -51,9 +51,9 @@ interface ServiceGithubIssuesResource {
     @POST
     @Path("/createIssueComment")
     fun createIssueComment(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: CreateIssueCommentRequest
     ): Result<CreateIssueCommentResponse?>
 }

@@ -30,17 +30,23 @@ package com.tencent.devops.common.sdk.github.request
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.pojo.GithubRepo
+import com.tencent.devops.common.sdk.json.JsonIgnorePath
+import org.apache.commons.lang3.StringUtils
 
 class GetRepositoryRequest(
-    // val owner: String,
-    // val repo: String,
-    val repoId: Long,
+    // id或owner/repo
+    @JsonIgnorePath
+    val repoName: String
 ) : GithubRequest<GithubRepo>() {
     override fun getHttpMethod(): HttpMethod {
         return HttpMethod.GET
     }
 
     override fun getApiPath(): String {
-        return "repositories/$repoId"
+        return if (StringUtils.isNumeric(repoName)) {
+            "repositories/$repoName"
+        } else {
+            "repos/$repoName"
+        }
     }
 }

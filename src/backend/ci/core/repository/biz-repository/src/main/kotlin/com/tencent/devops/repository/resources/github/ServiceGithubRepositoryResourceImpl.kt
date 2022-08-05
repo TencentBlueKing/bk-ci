@@ -43,93 +43,91 @@ import com.tencent.devops.common.sdk.github.response.CreateOrUpdateFileContentsR
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
 import com.tencent.devops.repository.github.service.GithubRepositoryService
-import com.tencent.devops.repository.service.github.GithubTokenService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGithubRepositoryResourceImpl @Autowired constructor(
-    val githubTokenService: GithubTokenService,
     val githubRepositoryService: GithubRepositoryService,
 ) : ServiceGithubRepositoryResource {
     override fun createOrUpdateFile(
-        userId: String,
+        token: String,
         request: CreateOrUpdateFileContentsRequest
     ): Result<CreateOrUpdateFileContentsResponse> {
         return Result(
             githubRepositoryService.createOrUpdateFile(
                 request = request,
-                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+                token = token
             )
         )
     }
 
     override fun getRepositoryContent(
-        userId: String,
+        token: String,
         request: GetRepositoryContentRequest
     ): Result<RepositoryContent?> {
         return Result(
             githubRepositoryService.getRepositoryContent(
                 request = request,
-                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+                token = token
             )
         )
     }
 
     override fun getRepositoryPermissions(
-        userId: String,
+        token: String,
         request: GetRepositoryPermissionsRequest
     ): Result<RepositoryPermissions?> {
         return Result(
             githubRepositoryService.getRepositoryPermissions(
                 request = request,
-                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+                token = token
             )
         )
     }
 
     override fun getRepository(
-        userId: String,
+        token: String,
         request: GetRepositoryRequest
     ): Result<GithubRepo?> {
         return Result(
             githubRepositoryService.getRepository(
                 request = request,
-                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+                token = token
             )
         )
     }
 
     override fun listRepositories(
-        userId: String,
+        token: String,
         request: ListRepositoriesRequest
     ): Result<List<GithubRepo>> {
         return Result(
             githubRepositoryService.listRepositories(
                 request = request,
-                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+                token = token
             )
         )
     }
 
     override fun listRepositoryCollaborators(
-        userId: String,
+        token: String,
         request: ListRepositoryCollaboratorsRequest
     ): Result<List<GithubUser>> {
         return Result(
             githubRepositoryService.listRepositoryCollaborators(
                 request = request,
-                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+                token = token
             )
         )
     }
 
     override fun searchRepositories(
-        userId: String,
+        token: String,
         request: SearchRepositoriesRequest
     ): Result<List<GithubRepo>> {
         return Result(
             githubRepositoryService.searchRepositories(
-                token = githubTokenService.getAccessTokenMustExist(userId).accessToken,
+                token = token,
                 request = request
             )
         )

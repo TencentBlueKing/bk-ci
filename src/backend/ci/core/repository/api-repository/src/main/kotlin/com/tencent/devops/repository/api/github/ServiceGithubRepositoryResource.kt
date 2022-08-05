@@ -59,9 +59,9 @@ interface ServiceGithubRepositoryResource {
     @POST
     @Path("/createOrUpdateFile")
     fun createOrUpdateFile(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: CreateOrUpdateFileContentsRequest
     ): Result<CreateOrUpdateFileContentsResponse>
 
@@ -69,9 +69,9 @@ interface ServiceGithubRepositoryResource {
     @POST
     @Path("/getRepositoryContent")
     fun getRepositoryContent(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: GetRepositoryContentRequest
     ): Result<RepositoryContent?>
 
@@ -79,9 +79,9 @@ interface ServiceGithubRepositoryResource {
     @POST
     @Path("/getRepositoryPermissions")
     fun getRepositoryPermissions(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: GetRepositoryPermissionsRequest
     ): Result<RepositoryPermissions?>
 
@@ -89,9 +89,9 @@ interface ServiceGithubRepositoryResource {
     @POST
     @Path("/getRepository")
     fun getRepository(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: GetRepositoryRequest
     ): Result<GithubRepo?>
 
@@ -99,9 +99,9 @@ interface ServiceGithubRepositoryResource {
     @POST
     @Path("/listRepositories")
     fun listRepositories(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: ListRepositoriesRequest
     ): Result<List<GithubRepo>>
 
@@ -109,9 +109,9 @@ interface ServiceGithubRepositoryResource {
     @POST
     @Path("/listRepositoryCollaborators")
     fun listRepositoryCollaborators(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: ListRepositoryCollaboratorsRequest
     ): Result<List<GithubUser>>
 
@@ -119,9 +119,9 @@ interface ServiceGithubRepositoryResource {
     @POST
     @Path("/searchRepositories")
     fun searchRepositories(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: SearchRepositoriesRequest
     ): Result<List<GithubRepo>>
 }

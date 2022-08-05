@@ -41,9 +41,21 @@ import org.junit.jupiter.api.Test
 class GithubRepositoryApiTest : GithubApiTest() {
 
     @Test
-    fun getRepository() {
+    fun getRepositoryByName() {
         val request = GetRepositoryRequest(
-            repoId = repoId
+            repoName = repoName
+        )
+        val response = client.execute(
+            oauthToken = token,
+            request = request
+        )
+        println(SdkJsonUtil.toJson(response))
+    }
+
+    @Test
+    fun getRepositoryById() {
+        val request = GetRepositoryRequest(
+            repoName = repoId.toString()
         )
         val response = client.execute(
             oauthToken = token,
@@ -55,7 +67,7 @@ class GithubRepositoryApiTest : GithubApiTest() {
     @Test
     fun getRepositoryContent() {
         val request = GetRepositoryContentRequest(
-            repoId = repoId,
+            repoName = repoId.toString(),
             ref = "master",
             path = "README.md"
         )
@@ -96,7 +108,7 @@ class GithubRepositoryApiTest : GithubApiTest() {
 //        println(createResponse)
         // update
         val updateRequest = CreateOrUpdateFileContentsRequest(
-            repoId = repoId,
+            repoName = repoId.toString(),
             path = "README5555.md",
             message = "update",
             // (update in new file) encoding by base64
@@ -115,7 +127,7 @@ class GithubRepositoryApiTest : GithubApiTest() {
     @Test
     fun listRepositoryCollaborators() {
         val request = ListRepositoryCollaboratorsRequest(
-            repoId = repoId
+            repoName = repoId.toString()
         )
 
         val response = client.execute(
@@ -138,7 +150,7 @@ class GithubRepositoryApiTest : GithubApiTest() {
     @Test
     fun getRepositoryPermissionsForAUser() {
         val request = GetRepositoryPermissionsRequest(
-            repoId = repoId,
+            repoName = repoId.toString(),
             username = "mingshewhe"
         )
         val response = client.execute(

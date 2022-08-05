@@ -11,14 +11,12 @@ import com.tencent.devops.repository.github.config.GithubProperties
 import com.tencent.devops.repository.github.service.GithubAppService
 import com.tencent.devops.repository.github.service.GithubRepositoryService
 import com.tencent.devops.repository.pojo.AppInstallationResult
-import com.tencent.devops.repository.service.github.GithubTokenService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGithubAppResourceImpl @Autowired constructor(
     private val githubAppService: GithubAppService,
     private val githubProperties: GithubProperties,
-    private val githubTokenService: GithubTokenService,
     private val githubRepositoryService: GithubRepositoryService
 ) : ServiceGithubAppResource {
 
@@ -34,14 +32,14 @@ class ServiceGithubAppResourceImpl @Autowired constructor(
         return Result(githubAppService.getAppInstallationForOrg(request = request))
     }
 
-    override fun isInstallApp(userId: String, repoId: Long): Result<AppInstallationResult> {
+    override fun isInstallApp(token: String, repoName: String): Result<AppInstallationResult> {
         val githubRepo = githubRepositoryService.getRepository(
-            request = GetRepositoryRequest(repoId = repoId),
-            token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+            request = GetRepositoryRequest(repoName = repoName),
+            token = token
         )
         // 先检查repo是否安装了app
         val repoInstallInfo =
-            githubAppService.getAppInstallationForRepo(request = GetAppInstallationForRepoRequest(repoId = repoId))
+            githubAppService.getAppInstallationForRepo(request = GetAppInstallationForRepoRequest(repoName = repoName))
         val appInstallResult = if (repoInstallInfo == null) {
             // 如果仓库没有安装，再检查组织是否安装app
             val orgInstallInfo = githubAppService.getAppInstallationForOrg(

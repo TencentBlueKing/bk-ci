@@ -39,6 +39,7 @@ import com.tencent.devops.common.sdk.github.request.ListCommitRequest
 import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
+import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.github.ServiceGithubAppResource
 import com.tencent.devops.repository.api.github.ServiceGithubBranchResource
@@ -48,6 +49,7 @@ import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
 import com.tencent.devops.repository.pojo.AppInstallationResult
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCommitInfo
@@ -93,9 +95,9 @@ class StreamGithubTransferService @Autowired constructor(
     ): StreamGitProjectBaseInfoCache {
         return client.get(ServiceGithubRepositoryResource::class).getRepository(
             request = GetRepositoryRequest(
-               repoId = gitProjectId.toLong()
+               repoName = gitProjectId
             ),
-            userId = userId!!
+            token = accessToken ?: getAndCheckOauthToken(userId!!).accessToken,
         ).data?.let {
             StreamGitProjectBaseInfoCache(
                 gitProjectId = it.id.toString(),
@@ -117,9 +119,9 @@ class StreamGithubTransferService @Autowired constructor(
         }
         return client.get(ServiceGithubRepositoryResource::class).getRepository(
             request = GetRepositoryRequest(
-                repoId = gitProjectId.toLong()
+                repoName = gitProjectId
             ),
-            userId = realUserId
+            token = getAndCheckOauthToken(realUserId).accessToken
         ).data?.let {
             StreamGitProjectInfoWithProject(
                 gitProjectId = it.id,
@@ -146,11 +148,11 @@ class StreamGithubTransferService @Autowired constructor(
     ): String {
         return client.get(ServiceGithubRepositoryResource::class).getRepositoryContent(
             request = GetRepositoryContentRequest(
-                repoId = gitProjectId.toLong(),
+                repoName = gitProjectId,
                 path = fileName,
                 ref = ref
             ),
-            userId = userId
+            token = getAndCheckOauthToken(userId).accessToken
         ).data?.getDecodedContentAsString() ?: ""
     }
 
@@ -177,7 +179,7 @@ class StreamGithubTransferService @Autowired constructor(
                 )
                 val githubRepos = client.get(ServiceGithubRepositoryResource::class).listRepositories(
                     request = request,
-                    userId = userId
+                    token = getAndCheckOauthToken(userId).accessToken
                 ).data!!
                 val filterGithubRepos = githubRepos.filter {
                     isGithubOrgWhite(it) && search(search, it)
@@ -221,13 +223,13 @@ class StreamGithubTransferService @Autowired constructor(
         search: String?
     ): List<StreamGitMember> {
         val request = ListRepositoryCollaboratorsRequest(
-            repoId = gitProjectId.toLong(),
+            repoName = gitProjectId,
             page = page ?: 1,
             perPage = pageSize ?: 30
         )
         return client.get(ServiceGithubRepositoryResource::class).listRepositoryCollaborators(
             request = request,
-            userId = userId
+            token = getAndCheckOauthToken(userId).accessToken
         ).data!!.map {
             // state 属性无
             StreamGitMember(
@@ -267,11 +269,11 @@ class StreamGithubTransferService @Autowired constructor(
     ): List<StreamCommitInfo>? {
         return client.get(ServiceGithubCommitsResource::class).listCommits(
             request = ListCommitRequest(
-                repoId = gitProjectId,
+                repoName = gitProjectId.toString(),
                 page = page ?: 1,
                 perPage = perPage ?: 30
             ),
-            userId = userId
+            token = getAndCheckOauthToken(userId).accessToken
         // todo commit 信息严重不足
         ).data?.map { StreamCommitInfo(it) }
     }
@@ -284,14 +286,14 @@ class StreamGithubTransferService @Autowired constructor(
         client.get(ServiceGithubRepositoryResource::class).createOrUpdateFile(
             request = with(streamCreateFile) {
                 CreateOrUpdateFileContentsRequest(
-                    repoId = gitProjectId.toLong(),
+                    repoName = gitProjectId,
                     message = commitMessage,
                     content = Base64.getEncoder().encodeToString(content.toByteArray()),
                     path = filePath,
                     branch = branch
                 )
             },
-            userId = userId
+            token = getAndCheckOauthToken(userId).accessToken
         )
         return true
     }
@@ -307,11 +309,11 @@ class StreamGithubTransferService @Autowired constructor(
     ): List<String>? {
         return client.get(ServiceGithubBranchResource::class).listBranch(
             request = ListBranchesRequest(
-                repoId = gitProjectId.toLong(),
+                repoName = gitProjectId,
                 page = page ?: 1,
                 perPage = pageSize ?: 30
             ),
-            userId = userId
+            token = getAndCheckOauthToken(userId).accessToken
         ).data?.map { it.name }
     }
 
@@ -325,7 +327,7 @@ class StreamGithubTransferService @Autowired constructor(
                 page = page,
                 perPage = pageSize
             ),
-            userId = userId
+            token = getAndCheckOauthToken(userId).accessToken
         ).data?.ifEmpty { null }?.map {
             StreamGitGroup(it)
         }
@@ -333,8 +335,16 @@ class StreamGithubTransferService @Autowired constructor(
 
     override fun isInstallApp(userId: String, gitProjectId: Long): AppInstallationResult {
         return client.get(ServiceGithubAppResource::class).isInstallApp(
-            userId = userId,
-            repoId = gitProjectId
+            token = getAndCheckOauthToken(userId).accessToken,
+            repoName = gitProjectId.toString()
         ).data!!
+    }
+
+    fun getAndCheckOauthToken(
+        userId: String
+    ): GithubToken {
+        return client.get(ServiceGithubResource::class).getAccessToken(userId).data ?: throw OauthForbiddenException(
+            message = "用户[$userId]尚未进行OAUTH授权，请先授权。"
+        )
     }
 }

@@ -32,13 +32,17 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.response.CompareTwoCommitsResponse
+import com.tencent.devops.common.sdk.json.JsonIgnorePath
+import org.apache.commons.lang3.StringUtils
 
 data class CompareTwoCommitsRequest(
-    // val owner: String,
-    // val repo: String,
-    val repoId: Long,
+    // id或owner/repo
+    @JsonIgnorePath
+    val repoName: String,
     // The base branch and head branch to compare. This parameter expects the format {base}...{head}
+    @JsonIgnorePath
     val base: String,
+    @JsonIgnorePath
     val head: String,
     @JsonProperty("per_page")
     var perPage: Int = 30,
@@ -46,5 +50,9 @@ data class CompareTwoCommitsRequest(
 ) : GithubRequest<CompareTwoCommitsResponse>() {
     override fun getHttpMethod() = HttpMethod.GET
 
-    override fun getApiPath() = "repositories/$repoId/compare/$base...$head"
+    override fun getApiPath() = if (StringUtils.isNumeric(repoName)) {
+        "repositories/$repoName/compare/$base...$head"
+    } else {
+        "repos/$repoName/compare/$base...$head"
+    }
 }

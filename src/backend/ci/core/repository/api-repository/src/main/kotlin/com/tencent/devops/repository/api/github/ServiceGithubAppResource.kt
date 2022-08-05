@@ -35,11 +35,11 @@ interface ServiceGithubAppResource {
     @POST
     @Path("/isInstallApp")
     fun isInstallApp(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         @ApiParam(value = "仓库Id")
-        @QueryParam("repoId")
-        repoId: Long
+        @QueryParam("repoName")
+        repoName: String
     ): Result<AppInstallationResult>
 }

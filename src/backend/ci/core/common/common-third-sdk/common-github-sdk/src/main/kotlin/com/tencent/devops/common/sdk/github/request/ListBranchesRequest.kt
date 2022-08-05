@@ -31,11 +31,13 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.response.BranchResponse
+import com.tencent.devops.common.sdk.json.JsonIgnorePath
+import org.apache.commons.lang3.StringUtils
 
 data class ListBranchesRequest(
-    // val owner: String,
-    // val repo: String,
-    val repoId: Long,
+    // id或owner/repo
+    @JsonIgnorePath
+    val repoName: String,
     val protected: Boolean? = null,
     @JsonProperty("per_page")
     val perPage: Int = 30,
@@ -43,5 +45,9 @@ data class ListBranchesRequest(
 ) : GithubRequest<List<BranchResponse>>() {
     override fun getHttpMethod() = HttpMethod.GET
 
-    override fun getApiPath() = "repositories/$repoId/branches"
+    override fun getApiPath() = if (StringUtils.isNumeric(repoName)) {
+        "repositories/$repoName/branches"
+    } else {
+        "repos/$repoName/branches"
+    }
 }

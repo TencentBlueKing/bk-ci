@@ -24,9 +24,9 @@ interface ServiceGithubBranchResource {
     @POST
     @Path("/listBranch")
     fun listBranch(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: ListBranchesRequest
     ): Result<List<BranchResponse>>
 
@@ -34,9 +34,9 @@ interface ServiceGithubBranchResource {
     @POST
     @Path("/getBranch")
     fun getBranch(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
         request: GetBranchRequest
     ): Result<BranchResponse>
 }

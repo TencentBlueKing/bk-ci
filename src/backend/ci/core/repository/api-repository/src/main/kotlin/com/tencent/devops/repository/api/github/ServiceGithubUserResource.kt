@@ -49,8 +49,8 @@ interface ServiceGithubUserResource {
     @GET
     @Path("/getUser")
     fun getUser(
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
+        @ApiParam("授权token", required = true)
+        @QueryParam("token")
+        token: String,
     ): Result<GetUserResponse?>
 }

@@ -4,11 +4,14 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.response.CommitResponse
+import com.tencent.devops.common.sdk.json.JsonIgnorePath
+import org.apache.commons.lang3.StringUtils
 
 data class GetCommitRequest(
-    // val owner: String,
-    // val repo: String,
-    val repoId: Long,
+    // id或owner/repo
+    @JsonIgnorePath
+    val repoName: String,
+    @JsonIgnorePath
     val ref: String,
     val page: Int = 1,
     @JsonProperty("per_page")
@@ -16,5 +19,9 @@ data class GetCommitRequest(
 ) : GithubRequest<CommitResponse>() {
     override fun getHttpMethod() = HttpMethod.GET
 
-    override fun getApiPath() = "repositories/$repoId/commits/$ref"
+    override fun getApiPath() = if (StringUtils.isNumeric(repoName)) {
+        "repositories/$repoName/commits/$ref"
+    } else {
+        "repos/$repoName/commits/$ref"
+    }
 }

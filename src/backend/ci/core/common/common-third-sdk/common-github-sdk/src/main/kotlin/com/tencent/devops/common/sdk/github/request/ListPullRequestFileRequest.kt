@@ -4,11 +4,14 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.response.PullRequestFileResponse
+import com.tencent.devops.common.sdk.json.JsonIgnorePath
+import org.apache.commons.lang3.StringUtils
 
 data class ListPullRequestFileRequest(
-    // val owner: String,
-    // val repo: String,
-    val repoId: Long,
+    // id或owner/repo
+    @JsonIgnorePath
+    val repoName: String,
+    @JsonIgnorePath
     val pullNumber: String,
     @JsonProperty("per_page")
     val perPage: Int = 30,
@@ -16,5 +19,9 @@ data class ListPullRequestFileRequest(
 ) : GithubRequest<List<PullRequestFileResponse>>() {
     override fun getHttpMethod() = HttpMethod.GET
 
-    override fun getApiPath() = "repositories/$repoId/pulls/$pullNumber/files"
+    override fun getApiPath() = if (StringUtils.isNumeric(repoName)) {
+        "repositories/$repoName/pulls/$pullNumber/files"
+    } else {
+        "repos/$repoName/pulls/$pullNumber/files"
+    }
 }

@@ -8,32 +8,30 @@ import com.tencent.devops.common.sdk.github.response.PullRequestResponse
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubPRResource
 import com.tencent.devops.repository.github.service.GithubPRService
-import com.tencent.devops.repository.service.github.GithubTokenService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGithubPRResourceImpl @Autowired constructor(
-    val githubTokenService: GithubTokenService,
     val githubPRService: GithubPRService
 ) : ServiceGithubPRResource {
 
-    override fun getPullRequest(userId: String, request: GetPullRequestRequest): Result<PullRequestResponse?> {
+    override fun getPullRequest(token: String, request: GetPullRequestRequest): Result<PullRequestResponse?> {
         return Result(
             githubPRService.getPullRequest(
                 request = request,
-                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+                token = token
             )
         )
     }
 
     override fun listPullRequestFiles(
-        userId: String,
+        token: String,
         request: ListPullRequestFileRequest
     ): Result<List<PullRequestFileResponse>> {
         return Result(
             githubPRService.listPullRequestFiles(
                 request = request,
-                token = githubTokenService.getAccessTokenMustExist(userId).accessToken
+                token = token
             )
         )
     }
