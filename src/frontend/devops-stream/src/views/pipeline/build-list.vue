@@ -178,12 +178,12 @@
                 </template>
                 <template v-else>
                     <bk-form-item class="mt15">
-                        <bk-checkbox v-model="formData.useCommitId" @change="getPipelineBranchYaml">{{$t('pipeline.commitTriggerTips')}}</bk-checkbox>
+                        <bk-checkbox v-model="formData.useCommitId" @change="getPipelineParams">{{$t('pipeline.commitTriggerTips')}}</bk-checkbox>
                     </bk-form-item>
                     <bk-form-item :label="$t('pipeline.commit')" :required="true" :rules="[requireRule($t('pipeline.commit'))]" property="commitId" error-display-type="normal" v-if="formData.useCommitId">
                         <bk-tag-input :placeholder="$t('pipeline.commitPlaceholder')"
                             v-model="formData.commitId"
-                            @change="getPipelineBranchYaml"
+                            @change="getPipelineParams"
                             :max-data="1"
                             :loading="isLoadingCommit"
                             :list="triggerCommits"
