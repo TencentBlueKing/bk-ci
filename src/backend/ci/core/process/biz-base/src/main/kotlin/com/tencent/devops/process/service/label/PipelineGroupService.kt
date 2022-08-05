@@ -29,9 +29,12 @@ package com.tencent.devops.process.service.label
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.event.enums.PipelineLabelChangeTypeEnum
+import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.pojo.measure.LabelChangeMetricsBroadCastEvent
 import com.tencent.devops.model.process.tables.records.TPipelineFavorRecord
 import com.tencent.devops.model.process.tables.records.TPipelineGroupRecord
 import com.tencent.devops.model.process.tables.records.TPipelineLabelRecord
@@ -50,6 +53,7 @@ import com.tencent.devops.process.pojo.classify.PipelineGroupWithLabels
 import com.tencent.devops.process.pojo.classify.PipelineLabel
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelUpdate
+import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -58,6 +62,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Service
@@ -67,7 +72,8 @@ class PipelineGroupService @Autowired constructor(
     private val pipelineLabelDao: PipelineLabelDao,
     private val pipelineFavorDao: PipelineFavorDao,
     private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
-    private val client: Client
+    private val client: Client,
+    private val measureEventDispatcher: MeasureEventDispatcher
 ) {
 
     fun getGroups(userId: String, projectId: String): List<PipelineGroup> {
@@ -235,6 +241,19 @@ class PipelineGroupService @Autowired constructor(
                 labelId = id,
                 userId = userId
             )
+            measureEventDispatcher.dispatch(
+                LabelChangeMetricsBroadCastEvent(
+                    projectId = projectId,
+                    type = PipelineLabelChangeTypeEnum.DELETE,
+                    pipelineLabelRelateInfos = listOf(
+                        PipelineLabelRelateInfo(
+                            projectId = projectId,
+                            labelId = id
+                        )
+                    )
+                )
+            )
+            logger.info("LableChangeMetricsBroadCastEvent： deleteLabel $projectId|$id")
             result
         }
     }
@@ -247,13 +266,32 @@ class PipelineGroupService @Autowired constructor(
                     defaultMessage = "label name cannot exceed $MAX_LABEL_NAME_LENGTH characters"
                 )
             }
-            return pipelineLabelDao.update(
+            val result = pipelineLabelDao.update(
                 dslContext = dslContext,
                 projectId = projectId,
                 labelId = decode(pipelineLabel.id),
                 name = pipelineLabel.name,
                 userId = userId
             )
+            if (result) {
+                measureEventDispatcher.dispatch(
+                    LabelChangeMetricsBroadCastEvent(
+                        projectId = projectId,
+                        userId = userId,
+                        type = PipelineLabelChangeTypeEnum.UPDATE,
+                        statisticsTime = LocalDateTime.now(),
+                        pipelineLabelRelateInfos = listOf(
+                            PipelineLabelRelateInfo(
+                                projectId = projectId,
+                                labelId = decode(pipelineLabel.id),
+                                name = pipelineLabel.name
+                            )
+                        )
+                    )
+                )
+                logger.info("LableChangeMetricsBroadCastEvent： updateLabel $projectId|${decode(pipelineLabel.id)}")
+            }
+            return result
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to update the label $pipelineLabel by userId $userId")
             throw OperationException("The label is already exist")
@@ -270,6 +308,20 @@ class PipelineGroupService @Autowired constructor(
                 userId = userId
             )
         }
+        measureEventDispatcher.dispatch(
+            LabelChangeMetricsBroadCastEvent(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                type = PipelineLabelChangeTypeEnum.DELETE,
+                pipelineLabelRelateInfos = listOf(
+                    PipelineLabelRelateInfo(
+                        projectId = projectId,
+                        pipelineId = pipelineId
+                    )
+                )
+            )
+        )
+        logger.info("LableChangeMetricsBroadCastEvent： deletePipelineLabel $projectId|$pipelineId")
     }
 
     fun addPipelineLabel(userId: String, projectId: String, pipelineId: String, labelIds: List<String>) {
@@ -290,6 +342,27 @@ class PipelineGroupService @Autowired constructor(
                 pipelineId = pipelineId,
                 pipelineLabelRels = pipelineLabelRels,
                 userId = userId)
+
+            val createData = pipelineLabelDao.getByIds(dslContext, projectId, labelIdArr)
+            measureEventDispatcher.dispatch(
+                LabelChangeMetricsBroadCastEvent(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    type = PipelineLabelChangeTypeEnum.CREATE,
+                    pipelineLabelRelateInfos = createData.map {
+                        PipelineLabelRelateInfo(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            labelId = it.id,
+                            name = it.name,
+                            createUser = userId,
+                            createTime = it.createTime
+                        )
+                    }
+                )
+            )
+            logger.info("LableChangeMetricsBroadCastEvent： addPipelineLabel $projectId|$labelIds")
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to add the pipeline $pipelineId label $labelIds by userId $userId")
             throw OperationException("The label is already exist")
@@ -325,6 +398,39 @@ class PipelineGroupService @Autowired constructor(
             logger.warn("Fail to update the pipeline $pipelineId label $labelIds by userId $userId")
             throw OperationException("The label is already exist")
         }
+        val deleteData = PipelineLabelRelateInfo(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        val createData = pipelineLabelDao.getByIds(dslContext, projectId, labelIdArr)
+        measureEventDispatcher.dispatch(
+            LabelChangeMetricsBroadCastEvent(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                type = PipelineLabelChangeTypeEnum.DELETE,
+                pipelineLabelRelateInfos = listOf(deleteData)
+            )
+        )
+        logger.info("LableChangeMetricsBroadCastEvent： updatePipelineLabel-delete $projectId|$pipelineId")
+        measureEventDispatcher.dispatch(
+            LabelChangeMetricsBroadCastEvent(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                type = PipelineLabelChangeTypeEnum.CREATE,
+                pipelineLabelRelateInfos = createData.map {
+                    PipelineLabelRelateInfo(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        labelId = it.id,
+                        name = it.name,
+                        createUser = userId,
+                        createTime = it.createTime
+                    )
+                }
+            )
+        )
+        logger.info("LableChangeMetricsBroadCastEvent： updatePipelineLabel-create $projectId|$pipelineId|$labelIdArr|$labelIds")
     }
 
     fun getViewLabelToPipelinesMap(projectId: String, labels: List<String>): Map<String, List<String>> {

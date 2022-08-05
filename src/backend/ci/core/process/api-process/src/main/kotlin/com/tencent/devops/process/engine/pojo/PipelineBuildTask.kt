@@ -47,20 +47,21 @@ data class PipelineBuildTask(
     val taskType: String,
     val taskAtom: String,
     var status: BuildStatus,
-    val taskParams: MutableMap<String, Any>,
+    var taskParams: MutableMap<String, Any>,
     val additionalOptions: ElementAdditionalOptions?,
-    val executeCount: Int? = 1,
+    var executeCount: Int? = 1,
     var starter: String,
     val approver: String?,
     var subProjectId: String?,
     var subBuildId: String?,
-    val startTime: LocalDateTime? = null,
-    val endTime: LocalDateTime? = null,
+    var startTime: LocalDateTime? = null,
+    var endTime: LocalDateTime? = null,
     var errorType: ErrorType? = null,
     var errorCode: Int? = null,
     var errorMsg: String? = null,
     val atomCode: String? = null,
-    val stepId: String? = null
+    val stepId: String? = null,
+    var totalTime: Long? = null
 ) {
     fun getTaskParam(paramName: String): String {
         return if (taskParams[paramName] != null) {

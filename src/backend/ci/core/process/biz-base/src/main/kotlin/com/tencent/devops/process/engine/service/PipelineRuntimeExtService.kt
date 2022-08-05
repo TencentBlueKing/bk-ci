@@ -109,6 +109,7 @@ class PipelineRuntimeExtService @Autowired constructor(
     fun popNextConcurrencyGroupQueueCanPend2Start(
         projectId: String,
         concurrencyGroup: String,
+        buildId: String? = null,
         buildStatus: BuildStatus = BuildStatus.QUEUE_CACHE
     ): BuildInfo? {
         val buildInfo = pipelineBuildDao.convert(
@@ -118,7 +119,8 @@ class PipelineRuntimeExtService @Autowired constructor(
                 concurrencyGroup = concurrencyGroup
             )
         )
-        if (buildInfo != null) {
+        val updateBuildId = buildId ?: buildInfo?.buildId
+        if (buildInfo != null && updateBuildId == buildInfo.buildId) {
             pipelineBuildDao.updateStatus(
                 dslContext = dslContext,
                 projectId = projectId,

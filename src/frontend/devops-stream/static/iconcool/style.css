@@ -38,6 +38,12 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .stream-right-shape:before {
 	content: "\e15e";
 }
+.stream-github-logo:before {
+	content: "\e169";
+}
+.stream-notify:before {
+	content: "\e168";
+}
 .stream-open-api:before {
 	content: "\e163";
 }
@@ -274,4 +280,7 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 }
 .stream-locale:before {
 	content: "\e167";
+}
+.stream-login-bottom:before {
+	content: "\e16e";
 }

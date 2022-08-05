@@ -98,21 +98,18 @@ class TGitTagPushActionGit(
     private fun getLatestCommit(
         event: GitTagPushEvent
     ): GitCommit? {
-        val commitId = event.after
-        val commits = event.commits
-        if (commitId == null) {
-            return if (commits.isNullOrEmpty()) {
-                null
-            } else {
-                commits.last()
-            }
+        var commit = if (event.commits.isNullOrEmpty()) {
+            null
+        } else {
+            event.commits!!.first()
         }
-        commits?.forEach {
-            if (it.id == commitId) {
-                return it
-            }
+
+        // 2022/7/1   外面的message不为空，为附录tag，取外面的
+        if (event.message != null) {
+            commit = commit?.copy(message = event.message!!)
         }
-        return null
+
+        return commit
     }
 
     override fun isStreamDeleteAction() = event().isDeleteEvent()
@@ -198,7 +195,10 @@ private fun GitTagPushEvent.tagPushEventFilter(): Boolean {
         return true
     }
     if (total_commits_count <= 0) {
-        TGitTagPushActionGit.logger.info("Git tag web hook no commit($total_commits_count)")
+        TGitTagPushActionGit.logger.info(
+            "TGitTagPushActionGit|tagPushEventFilter" +
+                "|Git tag web hook no commit($total_commits_count)"
+        )
         return false
     }
     return true

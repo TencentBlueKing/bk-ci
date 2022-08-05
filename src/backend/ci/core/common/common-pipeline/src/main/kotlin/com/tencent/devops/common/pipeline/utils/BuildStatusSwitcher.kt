@@ -195,7 +195,6 @@ object BuildStatusSwitcher {
             BuildStatus.CANCELED,
             BuildStatus.SUCCEED,
             BuildStatus.FAILED,
-            BuildStatus.TERMINATE,
             BuildStatus.QUEUE_TIMEOUT,
             BuildStatus.STAGE_SUCCESS
         )
@@ -214,7 +213,6 @@ object BuildStatusSwitcher {
             BuildStatus.CANCELED,
             BuildStatus.SUCCEED,
             BuildStatus.FAILED,
-            BuildStatus.TERMINATE,
             BuildStatus.SKIP,
             BuildStatus.UNEXEC,
             BuildStatus.QUEUE_TIMEOUT,
@@ -236,7 +234,6 @@ object BuildStatusSwitcher {
             BuildStatus.CANCELED,
             BuildStatus.SUCCEED,
             BuildStatus.FAILED,
-            BuildStatus.TERMINATE,
             BuildStatus.SKIP,
             BuildStatus.UNEXEC,
             BuildStatus.QUEUE_TIMEOUT,

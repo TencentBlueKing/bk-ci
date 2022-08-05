@@ -17,20 +17,20 @@ class ApigwPermissionMoveResourceV3Impl @Autowired constructor(
     override fun relationProject(
         appCode: String?,
         apigwType: String?,
-        projectCode: String,
+        projectId: String,
         relationId: String
     ): com.tencent.devops.project.pojo.Result<Boolean> {
-        logger.info("relationProject $projectCode| $relationId")
-        return client.get(ServiceMoveProjectResource::class).relationIamProject(projectCode, relationId)
+        logger.info("OPENAPI_PERMISSION_MOVE_V3|$appCode|relation project|$projectId|$relationId")
+        return client.get(ServiceMoveProjectResource::class).relationIamProject(projectId, relationId)
     }
 
     override fun getProjectPipelineIds(
         appCode: String?,
         apigwType: String?,
-        projectCode: String
+        projectId: String
     ): Result<List<PipelineIdInfo>> {
-        logger.info("getProjectPipelineIds $projectCode")
-        return client.get(ServicePipelineResource::class).getProjectPipelineIds(projectCode)
+        logger.info("OPENAPI_PERMISSION_MOVE_V3|$appCode|get project pipeline ids|$projectId")
+        return client.get(ServicePipelineResource::class).getProjectPipelineIds(projectId)
     }
 
     companion object {

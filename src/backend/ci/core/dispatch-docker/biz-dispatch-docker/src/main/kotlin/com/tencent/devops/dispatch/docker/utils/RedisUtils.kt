@@ -33,6 +33,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
 @Component
 class RedisUtils @Autowired constructor(
@@ -40,19 +41,19 @@ class RedisUtils @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
     fun setDockerBuild(id: Long, secretKey: String, redisBuild: RedisBuild) =
-        redisOperation.set(dockerBuildKey(id, secretKey), objectMapper.writeValueAsString(redisBuild))
+        redisOperation.set(
+            key = dockerBuildKey(id, secretKey),
+            value = objectMapper.writeValueAsString(redisBuild),
+            expiredInSecond = TimeUnit.DAYS.toSeconds(7)
+        )
 
-    fun setDockerBuildLastHost(pipelineId: String, vmSeqId: String, hostIp: String) =
-        redisOperation.set(dockerBuildLastHostKey(pipelineId, vmSeqId), hostIp)
-
-    fun getDockerBuildLastHost(pipelineId: String, vmSeqId: String) =
-        redisOperation.get(dockerBuildLastHostKey(pipelineId, vmSeqId))
-
-    fun deleteDockerBuildLastHost(pipelineId: String, vmSeqId: String) =
+    fun deleteDockerBuildLastHost(pipelineId: String, vmSeqId: String) {
         redisOperation.delete(dockerBuildLastHostKey(pipelineId, vmSeqId))
+    }
 
-    fun deleteDockerBuild(id: Long, secretKey: String) =
+    fun deleteDockerBuild(id: Long, secretKey: String) {
         redisOperation.delete(dockerBuildKey(id, secretKey))
+    }
 
     fun deleteHeartBeat(buildId: String, vmSeqId: String, executeCount: Int? = null) {
         redisOperation.delete(HeartBeatUtils.genHeartBeatKey(buildId, vmSeqId, executeCount))
@@ -74,10 +75,6 @@ class RedisUtils @Autowired constructor(
 
     private fun dockerBuildLastHostKey(pipelineId: String, vmSeqId: String) =
         "dispatch_docker_build_last_host_key_${pipelineId}_$vmSeqId"
-
-    fun setRedisDebugMsg(pipelineId: String, vmSeqId: String, msg: String) {
-        redisOperation.set("docker_debug_msg_key_${pipelineId}_$vmSeqId", msg, 3600L)
-    }
 
     fun getRedisDebugMsg(pipelineId: String, vmSeqId: String): String? {
         return redisOperation.get("docker_debug_msg_key_${pipelineId}_$vmSeqId")

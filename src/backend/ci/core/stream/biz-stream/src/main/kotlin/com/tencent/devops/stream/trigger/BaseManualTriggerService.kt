@@ -51,6 +51,7 @@ import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.service.StreamEventService
+import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -74,11 +75,15 @@ abstract class BaseManualTriggerService @Autowired constructor(
     }
 
     open fun triggerBuild(userId: String, pipelineId: String, triggerBuildReq: TriggerBuildReq): TriggerBuildResult {
-        logger.info("Trigger build, userId: $userId, pipeline: $pipelineId, triggerBuildReq: $triggerBuildReq")
+        logger.info(
+            "BaseManualTriggerService|triggerBuild" +
+                "|userId|$userId|pipeline|$pipelineId|triggerBuildReq|$triggerBuildReq"
+        )
 
-        val streamTriggerSetting = streamBasicSettingDao.getSettingByProjectCode(
+        val streamTriggerSetting = streamBasicSettingDao.getSetting(
             dslContext = dslContext,
-            projectCode = triggerBuildReq.projectId
+            gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId),
+            hasLastInfo = false
         )?.let {
             StreamTriggerSetting(
                 enableCi = it.enableCi,
@@ -91,7 +96,7 @@ abstract class BaseManualTriggerService @Autowired constructor(
                 enableMrBlock = it.enableMrBlock,
                 name = it.name,
                 enableMrComment = it.enableMrComment,
-                homepage = it.homePage
+                homepage = it.homepage
             )
         } ?: throw CustomException(Response.Status.FORBIDDEN, message = TriggerReason.CI_DISABLED.detail)
 
@@ -130,7 +135,10 @@ abstract class BaseManualTriggerService @Autowired constructor(
         val originYaml = triggerBuildReq.yaml
         // 如果当前文件没有内容直接不触发
         if (originYaml.isNullOrBlank()) {
-            logger.warn("Matcher is false, event: ${action.data.context.requestEventId} yaml is null")
+            logger.warn(
+                "BaseManualTriggerService|triggerBuild" +
+                    "|yaml is null|event|${action.data.context.requestEventId}"
+            )
             streamEventService.saveBuildNotBuildEvent(
                 action = action,
                 reason = TriggerReason.CI_YAML_CONTENT_NULL.name,
@@ -186,7 +194,10 @@ abstract class BaseManualTriggerService @Autowired constructor(
         originYaml: String,
         triggerBuildReq: TriggerBuildReq
     ): BuildId? {
-        logger.info("|${action.data.context.requestEventId}|handleTrigger|action|${action.format()}")
+        logger.info(
+            "BaseManualTriggerService|handleTrigger" +
+                "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
+        )
 
         var buildId: BuildId? = null
         StreamTriggerExceptionHandlerUtil.handleManualTrigger {
