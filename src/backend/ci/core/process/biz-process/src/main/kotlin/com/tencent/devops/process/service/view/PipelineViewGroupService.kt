@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -43,6 +44,7 @@ import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
 import com.tencent.devops.process.pojo.classify.PipelineViewDict
@@ -541,6 +543,39 @@ class PipelineViewGroupService @Autowired constructor(
         }
         pipelineViewGroupDao.batchRemove(dslContext, projectId, viewId, bulkRemove.pipelineIds)
         return true
+    }
+
+    fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
+        val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
+        val countByViewId = pipelineViewGroupDao.countByViewId(dslContext, projectId, views.map { it.id })
+        return sortViews2Summary(projectId, userId, views, countByViewId)
+    }
+
+    private fun sortViews2Summary(
+        projectId: String,
+        userId: String,
+        views: List<TPipelineViewRecord>,
+        countByViewId: Map<Long, Int>
+    ): List<PipelineNewViewSummary> {
+        var score = 1
+        val viewScoreMap = pipelineViewTopDao.list(dslContext, projectId, userId).associate { it.viewId to score++ }
+
+        return views.sortedBy {
+            viewScoreMap[it.id] ?: Int.MAX_VALUE
+        }.map {
+            PipelineNewViewSummary(
+                id = HashUtil.encodeLongId(it.id),
+                projectId = it.projectId,
+                name = it.name,
+                projected = it.isProject,
+                createTime = it.createTime.timestamp(),
+                updateTime = it.updateTime.timestamp(),
+                creator = it.createUser,
+                top = viewScoreMap.containsKey(it.id),
+                viewType = it.viewType,
+                pipelineNum = countByViewId[it.id] ?: 0
+            )
+        }
     }
 
     companion object {

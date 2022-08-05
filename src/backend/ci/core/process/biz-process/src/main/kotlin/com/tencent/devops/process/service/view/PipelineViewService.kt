@@ -306,7 +306,8 @@ class PipelineViewService @Autowired constructor(
                 createTime = it.createTime.timestamp(),
                 updateTime = it.updateTime.timestamp(),
                 creator = it.createUser,
-                viewType = it.viewType
+                viewType = it.viewType,
+                pipelineNum = 0
             )
         }
     }
@@ -577,31 +578,6 @@ class PipelineViewService @Autowired constructor(
         return true
     }
 
-    private fun sortViews2Summary(
-        projectId: String,
-        userId: String,
-        views: List<TPipelineViewRecord>
-    ): List<PipelineNewViewSummary> {
-        var score = 1
-        val viewScoreMap = pipelineViewTopDao.list(dslContext, projectId, userId).associate { it.viewId to score++ }
-
-        return views.sortedBy {
-            viewScoreMap[it.id] ?: Int.MAX_VALUE
-        }.map {
-            PipelineNewViewSummary(
-                id = encode(it.id),
-                projectId = it.projectId,
-                name = it.name,
-                projected = it.isProject,
-                createTime = it.createTime.timestamp(),
-                updateTime = it.updateTime.timestamp(),
-                creator = it.createUser,
-                top = viewScoreMap.containsKey(it.id),
-                viewType = it.viewType
-            )
-        }
-    }
-
     fun getHitFilters(userId: String, projectId: String, pipelineId: String, viewId: String): PipelineViewHitFilters {
         val pipelineView = pipelineViewDao.get(dslContext, projectId, decode(viewId))
         if (null == pipelineView || pipelineView.viewType == PipelineViewType.STATIC) {
@@ -719,11 +695,6 @@ class PipelineViewService @Autowired constructor(
             }
         }
         return result
-    }
-
-    fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
-        val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
-        return sortViews2Summary(projectId, userId, views)
     }
 
     companion object {

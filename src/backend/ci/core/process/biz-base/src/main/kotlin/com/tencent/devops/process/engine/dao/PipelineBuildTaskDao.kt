@@ -396,7 +396,7 @@ class PipelineBuildTaskDao {
         projectId: String,
         buildIds: Collection<String>,
         statusSet: Collection<BuildStatus>
-    ): Result<Record2<String, Int>> {
+    ): Map<String, Int> {
         with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
             return dslContext.select(BUILD_ID, count())
                 .from(this)
@@ -404,7 +404,7 @@ class PipelineBuildTaskDao {
                 .and(BUILD_ID.`in`(buildIds))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
                 .groupBy(BUILD_ID)
-                .fetch()
+                .fetch().map { it.value1() to it.value2() }.toMap()
         }
     }
 

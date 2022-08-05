@@ -121,7 +121,7 @@ class UserPipelineViewResourceImpl @Autowired constructor(
         projected: Boolean?,
         viewType: Int?
     ): Result<List<PipelineNewViewSummary>> {
-        return Result(pipelineViewService.listView(userId, projectId, projected, viewType))
+        return Result(pipelineViewGroupService.listView(userId, projectId, projected, viewType))
     }
 
     override fun bulkAdd(userId: String, projectId: String, bulkAdd: PipelineViewBulkAdd): Result<Boolean> {

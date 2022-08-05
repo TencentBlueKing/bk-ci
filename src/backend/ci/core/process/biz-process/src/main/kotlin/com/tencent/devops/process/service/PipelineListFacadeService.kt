@@ -135,12 +135,15 @@ class PipelineListFacadeService @Autowired constructor(
                 PipelineSortType.NAME -> {
                     a.pipelineName.toLowerCase().compareTo(b.pipelineName.toLowerCase())
                 }
+
                 PipelineSortType.CREATE_TIME -> {
                     b.createTime.compareTo(a.createTime)
                 }
+
                 PipelineSortType.UPDATE_TIME -> {
                     b.deploymentTime.compareTo(a.deploymentTime)
                 }
+
                 PipelineSortType.LAST_EXEC_TIME -> {
                     b.deploymentTime.compareTo(a.latestBuildStartTime ?: 0)
                 }
@@ -1119,7 +1122,7 @@ class PipelineListFacadeService @Autowired constructor(
             projectId = projectId,
             buildIds = lastBuilds,
             statusSet = setOf(BuildStatus.SUCCEED, BuildStatus.SKIP)
-        ).map { it.value1() to it.value2() }.toMap()
+        )
 
         // 获取template信息
         val tTemplate = TTemplatePipeline.T_TEMPLATE_PIPELINE
@@ -1652,16 +1655,19 @@ class PipelineListFacadeService @Autowired constructor(
                         logger.info("User($userId) favorite pipeline ids($favorPipelines)")
                         allFilterPipelines.filter { favorPipelines.contains(it.pipelineId) }
                     }
+
                     PIPELINE_VIEW_MY_PIPELINES -> {
                         logger.info("User($userId) my pipelines")
                         allFilterPipelines.filter {
                             authPipelines.contains(it.pipelineId)
                         }
                     }
+
                     PIPELINE_VIEW_ALL_PIPELINES -> {
                         logger.info("User($userId) all pipelines")
                         allFilterPipelines
                     }
+
                     else -> {
                         logger.info("User($userId) filter view($viewId)")
                         filterViewPipelines(userId, projectId, allFilterPipelines, viewId)

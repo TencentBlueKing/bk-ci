@@ -30,6 +30,7 @@ package com.tencent.devops.process.dao.label
 import com.tencent.devops.model.process.tables.TPipelineViewGroup
 import com.tencent.devops.model.process.tables.records.TPipelineViewGroupRecord
 import org.jooq.DSLContext
+import org.jooq.impl.DSL.count
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -161,6 +162,20 @@ class PipelineViewGroupDao {
                 .and(VIEW_ID.eq(viewId))
                 .and(PIPELINE_ID.`in`(pipelineIds))
                 .execute()
+        }
+    }
+
+    fun countByViewId(
+        dslContext: DSLContext,
+        projectId: String,
+        viewIds: Collection<Long>
+    ): Map<Long, Int> {
+        with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+            return dslContext.select(VIEW_ID, count())
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(VIEW_ID.`in`(viewIds))
+                .fetch().map { it.value1() to it.value2() }.toMap()
         }
     }
 }
