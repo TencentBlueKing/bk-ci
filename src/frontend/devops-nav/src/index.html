@@ -59,7 +59,7 @@
         true
       )
       ajax.send()
-      ajax.onload = function(e) {
+      ajax.onload = function (e) {
         var div = document.createElement('div')
         div.setAttribute('style', 'position: absolute; width: 0; height: 0')
         div.innerHTML = ajax.responseText
@@ -67,7 +67,7 @@
       }
     </script>
     <div id="devops-root">
-      <div class="bk-loading" style="position: absolute;">
+      <div class="bk-loading" style="position: absolute">
         <div class="bk-loading-wrapper">
           <div class="bk-loading1">
             <div class="point point1"></div>
@@ -181,12 +181,9 @@
           ';'
       }
 
-      window.setProjectIdCookie = function(projectId) {
+      window.setProjectIdCookie = function (projectId) {
         try {
-          var topDomain = document.domain
-            .split('.')
-            .slice(-2)
-            .join('.')
+          var topDomain = document.domain.split('.').slice(-2).join('.')
           if (projectId) {
             removeCookie(X_DEVOPS_PROJECT_ID, topDomain)
             setCookie(X_DEVOPS_PROJECT_ID, projectId, location.hostname)
@@ -228,7 +225,7 @@
       window.setProjectIdCookie(pathPid)
     </script>
     <script>
-      window.getLoginUrl = function() {
+      window.getLoginUrl = function () {
         var loginUrlPlaceholder =
           location.hostname.indexOf('.woa.com') > -1
             ? WOA_LOGIN_SERVICE_URL
@@ -253,9 +250,9 @@
       }
 
       function asyncGet(url, pid) {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function (resolve, reject) {
           var xhr = new XMLHttpRequest()
-          xhr.onreadystatechange = function() {
+          xhr.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
               var res = JSON.parse(xhr.responseText)
               resolve(res && res.data ? res.data : res)
@@ -289,7 +286,9 @@
       }
 
       function fetchAllProjects() {
-        return asyncGet(API_URL_PREFIX + '/project/api/user/projects/')
+        return asyncGet(
+          API_URL_PREFIX + '/project/api/user/projects/?enabled=true'
+        )
       }
 
       function fetchProjectById(projectId) {
@@ -427,7 +426,7 @@
       }
 
       var CACHE_PREFIX = '_cache_'
-      window.setLsCacheItem = function(key, value) {
+      window.setLsCacheItem = function (key, value) {
         try {
           if (key && typeof key === 'string') {
             var cacheKey = CACHE_PREFIX + key
@@ -438,7 +437,7 @@
         }
       }
 
-      window.getLsCacheItem = function(key) {
+      window.getLsCacheItem = function (key) {
         if (key && typeof key === 'string') {
           var cacheKey = CACHE_PREFIX + key
           var cacheJson = localStorage.getItem(cacheKey)
@@ -515,7 +514,7 @@
         .then((response) => {
           init(...response)
         })
-        .catch(function(e) {
+        .catch(function (e) {
           console.log(e)
           printError(e.status)
         })
@@ -549,7 +548,7 @@
 
       // 接入mta统计
       var _mtac = {}
-      ;(function() {
+      ;(function () {
         var mta = document.createElement('script')
         mta.src = '//pingjs.qq.com/h5/stats.js?v2.0.4'
         mta.setAttribute('name', 'MTAH5')
@@ -563,7 +562,7 @@
         console.log(url)
         const cbId = 'jsonp_callback_' + Math.round(100000 * Math.random())
 
-        window[cbId] = function(data) {
+        window[cbId] = function (data) {
           delete window[cbId]
           document.body.removeChild(scriptNode)
           callback(data)
@@ -581,7 +580,7 @@
         }
       }
 
-      ;(function() {
+      ;(function () {
         document.addEventListener(
           'visibilitychange',
           handleVisibilityChange,
@@ -589,7 +588,7 @@
         )
       })()
 
-      window.onbeforeunload = function() {
+      window.onbeforeunload = function () {
         document.removeEventListener(
           'visibilitychange',
           handleVisibilityChange,

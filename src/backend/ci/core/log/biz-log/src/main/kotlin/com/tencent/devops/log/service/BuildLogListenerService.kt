@@ -44,8 +44,6 @@ class BuildLogListenerService @Autowired constructor(
     fun handleEvent(event: LogOriginEvent) {
         var result = false
         try {
-            // 通过一次获取创建记录以及缓存
-            indexService.getIndexName(event.buildId)
             logService.addLogEvent(event)
             result = true
         } catch (ignored: Throwable) {

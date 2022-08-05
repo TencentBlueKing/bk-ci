@@ -9,7 +9,7 @@
                 :style="{ width: param.width }"
             >
                 <section class="component-row">
-                    <component :is="param.component" v-validate="{ required: param.required }" :click-unfold="true" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;" :placeholder="param.placeholder"></component>
+                    <component :is="param.component" v-validate="{ required: param.required }" :click-unfold="true" :show-select-all="true" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;" :placeholder="param.placeholder"></component>
                     <span class="meta-data" v-show="showMetadata(param.type, param.value)">{{ $t('metaData') }}
                         <aside class="metadata-box">
                             <metadata-list :is-left-render="(index % 2) === 1" :path="isArtifactoryParam(param.type) ? param.value : ''"></metadata-list>
@@ -96,6 +96,18 @@
                             displayKey: 'value',
                             settingKey: 'key',
                             list: this.getParamOpt(param)
+                        }
+
+                        // codeLib 接口返回的数据没有匹配的默认值,导致回显失效，兼容加上默认值
+                        if (param.type === CODE_LIB) {
+                            const value = this.paramValues[param.id]
+                            const listItemIndex = restParam.list && restParam.list.findIndex(i => i.value === value)
+                            if (listItemIndex < 0 && value) {
+                                restParam.list.push({
+                                    key: value,
+                                    value: value
+                                })
+                            }
                         }
                     }
 

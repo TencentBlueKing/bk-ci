@@ -53,7 +53,7 @@
                 </group-id-selector>
                 <atom-checkbox
                     v-if="subscription.wechatGroupFlag"
-                    style="width: auto;margin-top: -45px;"
+                    style="width: auto;margin-top: 10px;"
                     name="wechatGroupMarkdownFlag"
                     :text="$t('settings.wechatGroupMarkdownFlag')"
                     :handle-change="updateSubscription"

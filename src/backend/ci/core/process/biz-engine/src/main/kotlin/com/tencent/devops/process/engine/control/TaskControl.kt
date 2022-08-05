@@ -107,16 +107,22 @@ class TaskControl @Autowired constructor(
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
 
         val buildTask = pipelineTaskService.getBuildTask(projectId, buildId, taskId)
-        // 检查构建状态,防止重复跑
-        if (buildInfo?.status?.isFinish() == true || buildTask?.status?.isFinish() == true) {
+        // 检查event的执行次数是否和当前执行次数是否一致
+        if (executeCount != buildTask?.executeCount) {
             LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)" +
-                "|build=${buildInfo?.status}|task=${buildTask?.status ?: "not exists"}")
+                "|executeCount=$executeCount|executeCount does not match the real value: ${buildTask?.executeCount}")
+            return
+        }
+        // 检查构建状态,防止重复跑
+        if (buildInfo?.status?.isFinish() == true || buildTask.status.isFinish()) {
+            LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)" +
+                "|build=${buildInfo?.status}|task=${buildTask.status}")
             // #5109 移除构建已经结束的，失效的消息，比如质量红线的延迟消息
             return
         }
 
         // 构建机的任务不在此运行
-        if (taskAtomService.runByVmTask(buildTask!!)) {
+        if (taskAtomService.runByVmTask(buildTask)) {
             // 构建机上运行中任务目前无法直接后台干预，便在此处设置状态，使流程继续
             val additionalOptions = buildTask.additionalOptions
             val runCondition = additionalOptions?.runCondition

@@ -72,6 +72,20 @@
             var PERM_URL_PREFIX = "__BK_PAAS_PUBLIC_URL__/o/bk_iam_app"; // EE PERM URL PREFIX
             var DOCS_URL_PREFIX = "__BK_CI_DOCS_URL__";
             var IWIKI_DOCS_URL = "__IWIKI_DOCS_URL__";
+            var DEPLOY_ENVIRONMENT = function (){
+                var host = location.host
+                if (host.startsWith('dev')) return 'dev'
+                else if (host.startsWith('test')) return 'test'
+                else return 'prod'
+            }()
+            var BK_REPO_URL_PREFIX = function () {
+                var hostMap = {
+                    dev: 'dev.bkrepo.woa.com',
+                    test: 'test.bkrepo.woa.com',
+                    prod: 'bkrepo.woa.com'
+                }
+                return hostMap[DEPLOY_ENVIRONMENT]
+            }()
         </script>
     </body>
 </html>

@@ -88,7 +88,7 @@ class GcloudTaskExecutor(
                 }
             }
         } catch (e: Exception) {
-            logger.error("start gcloud task error", e)
+            logger.warn("start gcloud task error", e)
             buildLogPrinter.addRedLine(buildId, "start gcloud task error: ${e.message}", elementId, containerId, executeCount)
             throw RuntimeException("start gcloud task error")
         }
@@ -147,7 +147,7 @@ class GcloudTaskExecutor(
                 }
             }
         } catch (e: Exception) {
-            logger.error("create gcloud task error", e)
+            logger.warn("create gcloud task error", e)
             buildLogPrinter.addRedLine(buildId, "create gcloud task error: ${e.message}", elementId, containerId, executeCount)
             throw RuntimeException("create gcloud task error: ${e.message}")
         }
@@ -220,12 +220,12 @@ class GcloudTaskExecutor(
                         }
                     }
                 } else {
-                    logger.error("get task result failed")
+                    logger.warn("get task result failed")
                     return CallResult(false, true, "get task result failed")
                 }
             }
         } catch (e: Exception) {
-            logger.error("execute gcloud task error", e)
+            logger.warn("execute gcloud task error", e)
             return CallResult(false, true, "execute gcloud task error: ${e.message}")
         }
     }

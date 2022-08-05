@@ -5,7 +5,7 @@
         </main>
 
         <section class="summary-tab">
-            <p :class="{ 'overflow': !hasShowAll }" ref="edit">
+            <p ref="edit">
                 <mavon-editor
                     :editable="false"
                     default-open="preview"
@@ -19,7 +19,6 @@
                 >
                 </mavon-editor>
             </p>
-            <span class="summary-all" @click="hasShowAll = true" v-if="isOverDes && !hasShowAll"> {{ $t('展开全部') }} </span>
             <p class="g-empty summary-empty" v-if="!detail.description"> {{ $t('发布者很懒，什么都没留下！') }} </p>
         </section>
 
@@ -79,8 +78,6 @@
                 pageSize: 10,
                 pageIndex: 1,
                 isLoading: true,
-                isOverDes: false,
-                hasShowAll: false,
                 methodsGenerator: {
                     comment: {
                         atom: (postData) => this.requestAtomComments(postData),
@@ -138,9 +135,6 @@
                     this.$bkMessage({ message: (err.message || err), theme: 'error' })
                 }).finally(() => {
                     this.isLoading = false
-                    this.$nextTick(() => {
-                        this.isOverDes = this.$refs.edit.scrollHeight > 65
-                    })
                 })
             },
 

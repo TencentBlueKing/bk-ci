@@ -149,15 +149,15 @@ export default {
         return api.post(`${DISPATCH_STREAM_PERFIX}/user/docker/debug/start`, params)
     },
 
-    stopDebugDocker (projectId, pipelineId, vmSeqId) {
-        return api.post(`${DISPATCH_STREAM_PERFIX}/user/docker/debug/stop/projects/${projectId}/pipelines/${pipelineId}/vmseqs/${vmSeqId}`).then(res => {
+    stopDebugDocker (projectId, pipelineId, vmSeqId, dispatchType) {
+        return api.post(`${DISPATCH_STREAM_PERFIX}/user/docker/debug/stop/projects/${projectId}/pipelines/${pipelineId}/vmseqs/${vmSeqId}?dispatchType=${dispatchType}`).then(res => {
             return res
         })
     },
 
     resizeTerm (resizeUrl, params) {
         const protocol = document.location.protocol || 'http:'
-        return api.post(`${protocol}//${DEVNET_HOST}/${resizeUrl}`, params).then(res => {
+        return api.post(`${protocol}//${PROXY_URL_PREFIX}/${resizeUrl}`, params).then(res => {
             return res && res.Id
         })
     },

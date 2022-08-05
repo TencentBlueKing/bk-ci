@@ -30,8 +30,12 @@ export default {
             return api.get(`${STREAM_PERFIX}/user/projects/${type}/list?page=${page}&pageSize=${limit}${querySearch}`)
         }
     },
-    
+
     getRecentProjects (size = 4) {
         return api.get(`${STREAM_PERFIX}/user/projects/history?size=${size}`)
+    },
+
+    getLoginUrl (type) {
+        return api.get(`${STREAM_PERFIX}/external/stream/login/url?type=${type}`)
     }
 }

@@ -5,6 +5,7 @@
             :editable="false"
             :is-exec-detail="true"
             :match-rules="[]"
+            :user-name="userName"
             :pipeline="pipeline"
             @click="handlePipelineClick"
             @stage-check="handleStageCheck"
@@ -28,7 +29,7 @@
         </bk-dialog>
         <template v-if="editingElementPos != null">
             <plugin-log
-                v-if="Number.isInteger(editingElementPos.pluginIndex)"
+                v-if="editingElementPos.logData"
                 v-bind="editingElementPos"
                 @close="closeLog"
             />
@@ -54,30 +55,41 @@
             stageReviewPanel,
             pluginLog,
             jobLog
-
         },
+
         props: {
             pipeline: {
                 type: Object,
                 required: true
             }
         },
+
         data () {
             return {
                 showRetryStageDialog: false,
                 failedContainer: false,
                 isRetrying: false,
                 taskId: null,
-                editingElementPos: null
+                editingElementPos: null,
+                firstIn: true
             }
         },
-        computed: {
-            ...mapState(['projectId', 'permission', 'curPipeline'])
-        },
-        mounted () {
-            this.autoOpenReview()
-        },
 
+        computed: {
+            ...mapState(['projectId', 'permission', 'curPipeline', 'user']),
+            userName () {
+                return this.user && this.user.username ? this.user.username : 'unknow'
+            }
+        },
+        watch: {
+            pipeline (val) {
+                if (val.stages?.length > 0 && this.firstIn) {
+                    this.firstIn = false
+                    this.autoOpenReview()
+                    this.autoOpenLog()
+                }
+            }
+        },
         methods: {
             ...mapActions([
                 'toggleStageReviewPanel',
@@ -106,13 +118,15 @@
                     stageIndex: stageIndex
                 }
                 const job = this.getJob(this.editingElementPos)
-                if (Number.isInteger(elementIndex)) {
+                if (!Reflect.has(args, 'containerGroupIndex')) {
+                    this.editingElementPos.logData = job
+                } else if (Number.isInteger(elementIndex)) {
                     this.editingElementPos.logData = job.elements[elementIndex]
                 } else if (Number.isInteger(containerIndex)) {
                     this.editingElementPos.job = job
                 }
-                console.log(this.editingElementPos)
             },
+
             closeLog () {
                 this.editingElementPos = null
             },
@@ -121,14 +135,23 @@
                 const query = this.$route.query || {}
                 const checkIn = query.checkIn
                 const checkOut = query.checkOut
-                this.pipeline.stages.every(stage => {
-                    if (stage.id === checkIn) {
-                        return this.handleStageCheck('checkIn')
-                    } else if (stage.id === checkOut) {
-                        return this.handleStageCheck('checkOut')
+                const checkId = checkIn ?? checkOut
+                if (checkId) {
+                    const type = checkIn ? 'checkIn' : 'checkOut'
+                    const stageIndex = this.pipeline.stages.findIndex(stage => checkId === stage.id)
+                    if (stageIndex > -1) {
+                        this.handleStageCheck({
+                            type,
+                            stageIndex
+                        })
                     }
-                    return true
-                })
+                }
+            },
+
+            autoOpenLog () {
+                if (this.$route.query.stageIndex) {
+                    this.handlePipelineClick(this.$route.query)
+                }
             },
 
             handleStageCheck ({ type, stageIndex }) {

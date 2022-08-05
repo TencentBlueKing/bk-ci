@@ -28,19 +28,14 @@
     import { mapActions, mapState } from 'vuex'
     import { common } from '@/http'
     import user from './user'
-    import LINK_CONFIG from '@/conf/link-config.js'
     import toggleLanguage from './toggle-language.vue'
+    import LINK_CONFIG from '@/conf/link-config.js'
 
     export default ({
         name: 'StreamHeader',
         components: {
             user,
             toggleLanguage
-        },
-        data () {
-            return {
-                LINK_CONFIG
-            }
         },
         computed: {
             ...mapState(['exceptionInfo', 'projectInfo', 'projectId', 'user', 'permission', 'messageNum']),
@@ -122,7 +117,7 @@
 
 <style lang="postcss" scoped>
     .stream-header {
-        height: 61px;
+        height: 60px;
         padding: 0 20px 0 10px;
         background: #182132;
         /* border-bottom: 1px solid #dde4eb; */

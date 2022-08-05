@@ -18,7 +18,7 @@
                     <span class="title-item">
                         <span v-if="buildDetail.objectKind === 'schedule'">{{$t('pipeline.system')}}</span>
                         <template v-else>
-                            <i class="stream-icon stream-user"></i>
+                            <img :src="`http://dayu.oa.com/avatars/${buildDetail.userId}/profile.jpg`">
                             <template v-if="buildDetail.objectKind === 'openApi'">
                                 {{$t('pipeline.openapi')}}（{{ buildDetail.userId }}）
                             </template>
@@ -119,7 +119,7 @@
 
             computedOptToolTip () {
                 return {
-                    content: !this.curPipeline.enabled ? this.$t('pipeline.pipelineDisabled') : this.$t('exception.pemissionDeny'),
+                    content: !this.curPipeline.enabled ? this.$t('pipeline.pipelineDisabled') : this.$t('exception.permissionDeny'),
                     disabled: this.curPipeline.enabled && this.permission
                 }
             },
@@ -257,7 +257,7 @@
             &.executing {
                 font-size: 14px;
             }
-            &.icon-exclamation, &.icon-exclamation-triangle, &.icon-clock {
+            &.icon-exclamation, &.icon-exclamation-triangle, &.icon-clock, &.stream-reviewing-2 {
                 font-size: 24px;
             }
             &.running {
@@ -302,11 +302,9 @@
                     &:last-child {
                         margin-left: 15px;
                     }
-                    .stream-user {
+                    img {
                         width: 20px;
                         height: 20px;
-                        line-height: 20px;
-                        font-size: 14px;
                         border-radius: 100%;
                         margin-right: 8px;
                     }

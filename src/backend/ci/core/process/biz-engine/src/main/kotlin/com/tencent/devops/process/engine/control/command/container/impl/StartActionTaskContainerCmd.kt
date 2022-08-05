@@ -51,6 +51,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
@@ -320,10 +321,12 @@ class StartActionTaskContainerCmd(
                 // 更新任务状态
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
                 val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
-                    projectId = projectId,
-                    buildId = buildId,
-                    taskId = taskId,
-                    buildStatus = taskStatus
+                    TaskBuildEndParam(
+                        projectId = projectId,
+                        buildId = buildId,
+                        taskId = taskId,
+                        buildStatus = taskStatus
+                    )
                 )
                 refreshTaskStatus(updateTaskStatusInfos, index, containerTasks)
                 message.insert(0, "[$taskName]").append(" | summary=${containerContext.latestSummary}")
@@ -526,7 +529,8 @@ class StartActionTaskContainerCmd(
                 actionType = event.actionType,
                 reason = event.reason,
                 errorCode = event.errorCode,
-                errorTypeName = event.errorTypeName
+                errorTypeName = event.errorTypeName,
+                executeCount = task.executeCount ?: 1
             )
         )
     }

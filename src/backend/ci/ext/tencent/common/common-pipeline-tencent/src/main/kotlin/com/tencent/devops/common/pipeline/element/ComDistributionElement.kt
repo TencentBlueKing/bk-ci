@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Deprecated("已作废")
 @ApiModel("部署-构件分发", description = ComDistributionElement.classType)
 data class ComDistributionElement(
     @ApiModelProperty("任务名称", required = true)

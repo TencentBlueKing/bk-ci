@@ -71,12 +71,12 @@ class GitCITriggerResourceImpl @Autowired constructor(
 
             val (validate, message) = streamYamlService.validateCIBuildYaml(yamlStr)
             if (!validate) {
-                logger.error("Validate yaml failed, message: $message")
+                logger.warn("GitCITriggerResourceImpl|Validate yaml failed, message: $message")
                 return Result(1, "Invalid yaml: $message", message)
             }
             streamYamlService.createCIBuildYaml(yaml.yaml)
         } catch (e: Throwable) {
-            logger.error("check yaml failed, error: ${e.message}, yaml: $yaml")
+            logger.warn("GitCITriggerResourceImpl|checkYaml|error=${e.message}")
             return Result(1, "Invalid yaml", e.message)
         }
 

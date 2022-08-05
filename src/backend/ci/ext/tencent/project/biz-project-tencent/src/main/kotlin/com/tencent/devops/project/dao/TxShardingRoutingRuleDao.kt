@@ -29,6 +29,7 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TShardingRoutingRule
 import com.tencent.devops.model.project.tables.records.TShardingRoutingRuleRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -38,11 +39,19 @@ class TxShardingRoutingRuleDao {
 
     fun getShardingRoutingRules(
         dslContext: DSLContext,
+        type: String,
+        clusterName: String? = null,
+        moduleCode: String? = null,
         limit: Int,
         offset: Int
     ): Result<TShardingRoutingRuleRecord>? {
         return with(TShardingRoutingRule.T_SHARDING_ROUTING_RULE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(TYPE.eq(type))
+            clusterName?.let { conditions.add(CLUSTER_NAME.eq(clusterName)) }
+            moduleCode?.let { conditions.add(MODULE_CODE.eq(moduleCode)) }
             dslContext.selectFrom(this)
+                .where(conditions)
                 .orderBy(CREATE_TIME.asc(), ID.asc())
                 .limit(limit).offset(offset)
                 .fetch()

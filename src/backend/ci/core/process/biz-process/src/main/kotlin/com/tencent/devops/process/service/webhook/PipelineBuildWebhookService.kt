@@ -492,10 +492,10 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
             if (newVarName == null) { // 为空表示该变量是新的，或者不需要兼容，直接加入，能会覆盖旧变量转换而来的新变量
                 params[it.key] = it.value
-                pipelineParamMap[it.key] = BuildParameters(key = it.key, value = it.value, readOnly = true)
+                pipelineParamMap[it.key] = BuildParameters(key = it.key, value = it.value)
             } else if (!params.contains(newVarName)) { // 新变量还不存在，加入
                 params[newVarName] = it.value
-                pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value, readOnly = true)
+                pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value)
             }
         }
 
@@ -521,7 +521,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             // #2958 webhook触发在触发原子上输出变量
             buildLogPrinter.addLines(buildId = buildId, logMessages = pipelineParamMap.map {
                 LogMessage(
-                    message = "${it.key}=${it.value}",
+                    message = "${it.key}=${it.value.value}",
                     timestamp = System.currentTimeMillis(),
                     tag = startParams[PIPELINE_START_TASK_ID]?.toString() ?: ""
                 )

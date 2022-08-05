@@ -89,6 +89,11 @@ class RtxServiceImpl @Autowired constructor(
             return
         }
 
+        if (rtxNotifyMessageWithOperation.getReceivers().isEmpty()) {
+            logger.warn("rtx receiver is empty")
+            return
+        }
+
         val tof4SecurityInfo = TOF4SecurityInfo.get(rtxNotifyMessageWithOperation, tof4EncryptKey)
         if (!tof4SecurityInfo.enable && !rtxNotifyMessageWithOperation.v2ExtInfo.isNullOrBlank()) {
             return

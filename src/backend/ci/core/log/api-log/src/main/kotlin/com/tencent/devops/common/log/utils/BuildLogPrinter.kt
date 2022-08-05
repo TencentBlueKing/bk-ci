@@ -252,6 +252,26 @@ class BuildLogPrinter(
         }
     }
 
+    fun startLog(
+        buildId: String,
+        tag: String?,
+        jobId: String?,
+        executeCount: Int? = null,
+        subTag: String? = null
+    ) {
+        try {
+            genLogPrintPrintResource().addLogStatus(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId ?: "",
+                executeCount = executeCount
+            )
+        } catch (ignore: Exception) {
+            logger.error("[$buildId]|stopLog fail", ignore)
+        }
+    }
+
     private fun genLogMessage(
         message: String,
         tag: String,

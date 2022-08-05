@@ -27,13 +27,16 @@
 
 package com.tencent.devops.project.api.service
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OP_PROJECT_SHARDING_ROUTING_RULE"], description = "OP-项目-分片路由规则")
@@ -42,13 +45,15 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface TxOpShardingRoutingRuleResource {
 
-    @ApiOperation("同步分片规则信息")
+    @ApiOperation("同步DB分片规则信息")
     @PUT
-    @Path("/syncShardingRoutingRuleInfo")
-    fun syncShardingRoutingRuleInfo(): Result<Boolean>
-
-    @ApiOperation("清理无效的分片规则redis缓存")
-    @PUT
-    @Path("/clearInvalidRuleRedisInfo")
-    fun clearInvalidRuleRedisInfo(): Result<Boolean>
+    @Path("/syncDbShardingRoutingRuleInfo")
+    fun syncDBShardingRoutingRuleInfo(
+        @ApiParam("模块代码", required = true)
+        @QueryParam("moduleCode")
+        moduleCode: SystemModuleEnum,
+        @ApiParam("集群名称", required = false)
+        @QueryParam("clusterName")
+        clusterName: String?
+    ): Result<Boolean>
 }
