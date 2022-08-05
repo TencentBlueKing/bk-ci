@@ -63,14 +63,14 @@ class FileServiceImpl : FileService {
         if (md5Check) {
             when {
                 md5 == null -> {
-                    logger.error("copy file and calculate file md5 is failed.")
+                    logger.warn("copy file and calculate file md5 is failed.")
                     throw ErrorCodeException(
                         errorCode = SignMessageCode.ERROR_COPY_FILE,
                         defaultMessage = "复制并计算文件md5失败。"
                     )
                 }
                 md5 != ipaSignInfo.md5 -> {
-                    logger.error("copy file success, but md5 is diff.")
+                    logger.warn("copy file success, but md5 is diff.")
                     throw ErrorCodeException(
                         errorCode = SignMessageCode.ERROR_COPY_FILE,
                         defaultMessage = "复制文件成功但md5不一致。"

@@ -215,7 +215,7 @@ class SignInfoService(
             val ipaSignInfoHeaderDecode = String(Base64Util.decode(ipaSignInfoHeader))
             return objectMapper.readValue(ipaSignInfoHeaderDecode, IpaSignInfo::class.java)
         } catch (ignore: Throwable) {
-            logger.error("解析签名信息失败：$ignore")
+            logger.warn("解析签名信息失败：$ignore")
             throw ErrorCodeException(
                 errorCode = SignMessageCode.ERROR_PARSE_SIGN_INFO_HEADER,
                 defaultMessage = "解析签名信息失败"
@@ -229,7 +229,7 @@ class SignInfoService(
             val ipaSignInfoJson = objectMapper.writeValueAsString(ipaSignInfo)
             return Base64Util.encode(ipaSignInfoJson.toByteArray())
         } catch (ignored: Throwable) {
-            logger.error("编码签名信息失败：$ignored")
+            logger.warn("编码签名信息失败：$ignored")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ENCODE_SIGN_INFO, defaultMessage = "编码签名信息失败")
         }
     }
