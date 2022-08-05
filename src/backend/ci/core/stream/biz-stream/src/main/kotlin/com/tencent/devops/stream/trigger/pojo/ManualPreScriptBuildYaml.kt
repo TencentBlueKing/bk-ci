@@ -25,47 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v2.models
+package com.tencent.devops.stream.trigger.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.tencent.devops.process.yaml.v2.models.Concurrency
+import com.tencent.devops.process.yaml.v2.models.Extends
+import com.tencent.devops.process.yaml.v2.models.GitNotices
+import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYamlI
+import com.tencent.devops.process.yaml.v2.models.Resources
+import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.job.PreJob
 import com.tencent.devops.process.yaml.v2.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v2.models.stage.PreStage
 import com.tencent.devops.process.yaml.v2.models.step.PreStep
 
 /**
- * PreScriptBuildYamlI 是PreScriptBuildYaml的拓展，方便再既不修改data class的特性情况下，其他类可以在继承新增字段
- * 注：PreScriptBuildYaml 新增的字段需要在这里新增
- */
-interface PreScriptBuildYamlI{
-    var version: String?
-    var name: String?
-    var label: List<String>?
-    var triggerOn: PreTriggerOn?
-    var variables: Map<String, Variable>?
-    var stages: List<PreStage>?
-    var jobs: Map<String, PreJob>?
-    var steps: List<PreStep>?
-    var extends: Extends?
-    var resources: Resources?
-    var notices: List<GitNotices>?
-    var finally: Map<String, PreJob>?
-    val concurrency: Concurrency?
-}
-
-/**
- * model
- *
- * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(stream,prebuild等)异常
+ * ManualPreScriptBuildYaml 针对手动触发会打印一些特殊字典使用的
+ * @param inputs 手动触发输入参数
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class PreScriptBuildYaml(
+class ManualPreScriptBuildYaml(
     override var version: String?,
     override var name: String?,
     override var label: List<String>? = null,
     override var triggerOn: PreTriggerOn?,
+    var inputs: Map<String, String>?,
     override var variables: Map<String, Variable>? = null,
     override var stages: List<PreStage>? = null,
     override var jobs: Map<String, PreJob>? = null,
@@ -75,4 +62,21 @@ data class PreScriptBuildYaml(
     override var notices: List<GitNotices>?,
     override var finally: Map<String, PreJob>? = null,
     override val concurrency: Concurrency? = null
-): PreScriptBuildYamlI
+) : PreScriptBuildYamlI {
+    constructor(pre: PreScriptBuildYaml, inputs: Map<String, String>?) : this(
+        version = pre.version,
+        name = pre.name,
+        label = pre.label,
+        triggerOn = pre.triggerOn,
+        inputs = inputs,
+        variables = pre.variables,
+        stages = pre.stages,
+        jobs = pre.jobs,
+        steps = pre.steps,
+        extends = pre.extends,
+        resources = pre.resources,
+        notices = pre.notices,
+        finally = pre.finally,
+        concurrency = pre.concurrency
+    )
+}
