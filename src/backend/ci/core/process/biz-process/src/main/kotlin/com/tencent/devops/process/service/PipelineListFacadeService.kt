@@ -1105,7 +1105,9 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineIds = pipelineIds,
             projectId = projectId
         ).map {
-            lastBuilds.add(it.latestBuildId)
+            if (null != it.latestBuildId) {
+                lastBuilds.add(it.latestBuildId)
+            }
             it.pipelineId to it
         }.toMap()
 
