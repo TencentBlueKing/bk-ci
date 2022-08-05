@@ -46,12 +46,15 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TTemplatePipeline
+import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineFavorDao
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
+import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineFilterByLabelInfo
@@ -111,6 +114,8 @@ class PipelineListFacadeService @Autowired constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
+    private val pipelineBuildDao: PipelineBuildDao,
+    private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val pipelineFavorDao: PipelineFavorDao
 ) {
 
@@ -1091,11 +1096,30 @@ class PipelineListFacadeService @Autowired constructor(
         ).map { it.get(TPipelineSetting.T_PIPELINE_SETTING.PIPELINE_ID) to it }.toMap()
 
         // 获取summary信息
+        val lastBuilds = mutableListOf<String>()
         val pipelineBuildSummaryMap = pipelineBuildSummaryDao.listSummaryByPipelineIds(
             dslContext = dslContext,
             pipelineIds = pipelineIds,
             projectId = projectId
+        ).map {
+            lastBuilds.add(it.latestBuildId)
+            it.pipelineId to it
+        }.toMap()
+
+        // 根据LastBuildId获取最新构建的信息
+        val pipelineBuildMap = pipelineBuildDao.listBuildInfoByBuildIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildIds = lastBuilds
         ).map { it.pipelineId to it }.toMap()
+
+        // 根据LastBuild获取运行中的构建任务个数
+        val buildTaskCountMap = pipelineBuildTaskDao.countGroupByBuildId(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildIds = lastBuilds,
+            statusSet = setOf(BuildStatus.SUCCEED, BuildStatus.SKIP)
+        ).map { it.value1() to it.value2() }.toMap()
 
         // 获取template信息
         val tTemplate = TTemplatePipeline.T_TEMPLATE_PIPELINE
@@ -1126,7 +1150,9 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineGroupLabel = pipelineGroupLabel,
             pipelineBuildSummaryMap = pipelineBuildSummaryMap,
             pipelineSettingMap = pipelineSettingMap,
-            pipelineViewNameMap = pipelineViewNameMap
+            pipelineViewNameMap = pipelineViewNameMap,
+            pipelineBuildMap = pipelineBuildMap,
+            buildTaskCountMap = buildTaskCountMap
         )
 
         return pipelines
@@ -1139,7 +1165,9 @@ class PipelineListFacadeService @Autowired constructor(
         pipelineGroupLabel: Map<String, List<PipelineGroupLabels>>,
         pipelineBuildSummaryMap: Map<String, TPipelineBuildSummaryRecord>,
         pipelineSettingMap: Map<String, Record4<String, String, Int, String>>,
-        pipelineViewNameMap: Map<String, MutableList<String>>
+        pipelineViewNameMap: Map<String, MutableList<String>>,
+        pipelineBuildMap: Map<String, TPipelineBuildHistoryRecord>,
+        buildTaskCountMap: Map<String, Int>
     ) {
         pipelines.forEach {
             val pipelineId = it.pipelineId
@@ -1165,6 +1193,12 @@ class PipelineListFacadeService @Autowired constructor(
                 it.latestBuildUserId = pipelineBuildSummaryRecord.latestStartUser ?: ""
                 it.latestBuildNumAlias = pipelineBuildSummaryRecord.buildNumAlias
                 it.viewNames = pipelineViewNameMap[it.pipelineId]
+            }
+            pipelineBuildMap[pipelineId]?.let { lastBuild ->
+                it.lastBuildMsg = lastBuild.buildMsg
+            }
+            buildTaskCountMap[pipelineId]?.let { buildTaskCount ->
+                it.lastBuildFinishCount = buildTaskCount
             }
             val pipelineSettingRecord = pipelineSettingMap[pipelineId]
             if (pipelineSettingRecord != null) {

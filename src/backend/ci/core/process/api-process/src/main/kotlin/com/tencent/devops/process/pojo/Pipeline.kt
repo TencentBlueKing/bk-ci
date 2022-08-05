@@ -100,5 +100,9 @@ data class Pipeline(
     @ApiModelProperty("编排详情", required = false)
     var model: Model? = null,
     @ApiModelProperty("流水线组名称列表", required = false)
-    var viewNames: List<String>? = null
+    var viewNames: List<String>? = null,
+    @ApiModelProperty("最后一次构建的构建信息", required = false)
+    var lastBuildMsg: String? = null,
+    @ApiModelProperty("最后一次构建已完成的任务个数", required = false)
+    var lastBuildFinishCount: Int? = null
 )
