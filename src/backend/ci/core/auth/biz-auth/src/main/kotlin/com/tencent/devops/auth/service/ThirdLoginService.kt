@@ -101,7 +101,7 @@ class ThirdLoginService @Autowired constructor(
         redisOperation.delete(LOGIN_REDIS_KEY + userId)
         val cookie = Cookie(AUTH_HEADER_BK_CI_LOGIN_TOKEN, null, "/", domain)
         return Response.temporaryRedirect(UriBuilder.fromUri(callbackUrl).build())
-            .cookie(NewCookie(cookie, "", LOGIN_EXPIRE_TIME.toInt(), false))
+            .cookie(NewCookie(cookie, "", 0, false))
             .build()
     }
 
