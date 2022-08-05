@@ -134,7 +134,8 @@ class TOF4Service @Autowired constructor(
         host: String
     ): TOFResult {
         if (postData.to.isBlank()) {
-            return TOFResult("TOF error, email receivers is empty")
+            logger.warn("TOF invalid argument, email receivers is empty")
+            return TOFResult("TOF invalid argument, email receivers is empty")
         }
 
         val headers = generateHeaders(tofPassId, tofToken)
