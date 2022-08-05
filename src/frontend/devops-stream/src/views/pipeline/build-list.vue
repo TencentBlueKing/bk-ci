@@ -347,7 +347,7 @@
                 },
                 uiFormRules: {
                     required: {
-                        validator: "{{ $self.value !== '' }}",
+                        validator: "{{ $self.value !== undefined && String($self.value).length }}",
                         message: this.$t('pipeline.required')
                     }
                 },
@@ -580,6 +580,9 @@
                     customCommitMsg: '',
                     yaml: ''
                 }
+                this.yamlErrorMessage = ''
+                this.emptyYaml = false
+                this.disableManual = false
             },
 
             selectBranch () {
@@ -628,7 +631,7 @@
                 if (!branchName && !commitId) return
 
                 this.isLoadingSchema = true
-                this.yamlErrorMessage = false
+                this.yamlErrorMessage = ''
                 this.emptyYaml = false
                 this.disableManual = false
                 return pipelines.getPipelineParamJson(this.projectId, this.curPipeline.pipelineId, { branchName, commitId }).then((res) => {
