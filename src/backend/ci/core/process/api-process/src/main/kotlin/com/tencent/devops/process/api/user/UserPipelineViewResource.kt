@@ -265,4 +265,15 @@ interface UserPipelineViewResource {
         projectId: String,
         bulkRemove: PipelineViewBulkRemove
     ): Result<Boolean>
+
+    @ApiOperation("是否有编辑项目流水线组权限")
+    @GET
+    @Path("/projects/{projectId}/checkPermission")
+    fun checkPermission(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String
+    ):Result<Boolean>
 }

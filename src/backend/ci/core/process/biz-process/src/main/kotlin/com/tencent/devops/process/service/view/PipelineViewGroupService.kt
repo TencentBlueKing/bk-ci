@@ -336,7 +336,7 @@ class PipelineViewGroupService @Autowired constructor(
 
     private fun checkPermission(userId: String, projectId: String, isProject: Boolean, creator: String? = null) {
         if (isProject) {
-            if (!pipelinePermissionService.checkProjectManager(userId, projectId)) {
+            if (!checkPermission(userId, projectId)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_VIEW_GROUP_NO_PERMISSION,
                     defaultMessage = "user:$userId has no permission to edit view group, project:$projectId"
@@ -472,7 +472,7 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun bulkAdd(userId: String, projectId: String, bulkAdd: PipelineViewBulkAdd): Boolean {
-        val isProjectManager = pipelinePermissionService.checkProjectManager(userId, projectId)
+        val isProjectManager = checkPermission(userId, projectId)
         val viewIds = pipelineViewDao.list(
             dslContext = dslContext,
             projectId = projectId,
@@ -522,7 +522,7 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun bulkRemove(userId: String, projectId: String, bulkRemove: PipelineViewBulkRemove): Boolean {
-        val isProjectManager = pipelinePermissionService.checkProjectManager(userId, projectId)
+        val isProjectManager = checkPermission(userId, projectId)
         val viewId = HashUtil.decodeIdToLong(bulkRemove.viewId)
         val view = pipelineViewDao.get(
             dslContext = dslContext,
@@ -544,6 +544,9 @@ class PipelineViewGroupService @Autowired constructor(
         pipelineViewGroupDao.batchRemove(dslContext, projectId, viewId, bulkRemove.pipelineIds)
         return true
     }
+
+    fun checkPermission(userId: String, projectId: String) =
+        pipelinePermissionService.checkProjectManager(userId, projectId)
 
     fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
         val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)

@@ -124,6 +124,10 @@ class UserPipelineViewResourceImpl @Autowired constructor(
         return Result(pipelineViewGroupService.listView(userId, projectId, projected, viewType))
     }
 
+    override fun checkPermission(userId: String, projectId: String): Result<Boolean> {
+        return Result(pipelineViewGroupService.checkPermission(userId, projectId))
+    }
+
     override fun bulkAdd(userId: String, projectId: String, bulkAdd: PipelineViewBulkAdd): Result<Boolean> {
         return Result(pipelineViewGroupService.bulkAdd(userId, projectId, bulkAdd))
     }
