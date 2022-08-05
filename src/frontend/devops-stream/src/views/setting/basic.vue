@@ -188,6 +188,7 @@
             }
             .desc {
                 color: #979BA5;
+                font-size: 12px;
             }
             .desc-padding {
                 padding-left: 22px;
