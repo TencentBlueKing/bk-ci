@@ -127,9 +127,9 @@ class SensitiveApiPermissionAspect constructor(
         val vmSeqId = request.getHeader(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         val method = request.method
         val url = if (request.queryString.isNullOrBlank()) {
-            "${request.requestURI}?${request.queryString}"
-        } else {
             request.requestURI
+        } else {
+            "${request.requestURI}?${request.queryString}"
         }
         // 如果没有签名头,则需要验证插件是否开通了接口权限
         if (
