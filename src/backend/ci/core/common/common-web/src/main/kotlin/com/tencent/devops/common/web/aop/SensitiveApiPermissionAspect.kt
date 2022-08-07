@@ -126,7 +126,11 @@ class SensitiveApiPermissionAspect constructor(
         val buildId = request.getHeader(AUTH_HEADER_DEVOPS_BUILD_ID)
         val vmSeqId = request.getHeader(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         val method = request.method
-        val uri = request.requestURI
+        val url = if (request.queryString.isNullOrBlank()) {
+            "${request.requestURI}?${request.queryString}"
+        } else {
+            request.requestURI
+        }
         // 如果没有签名头,则需要验证插件是否开通了接口权限
         if (
             signature.isNullOrBlank() ||
@@ -138,14 +142,14 @@ class SensitiveApiPermissionAspect constructor(
         }
         val serverSign = ApiSignUtil.signToRequest(
             method = method,
-            uri = uri,
+            url = url,
             timestamp = timestamp,
             nonce = nonce,
             token = signToken
         )
         logger.info(
             "buildId:$buildId|vmSeqId:$vmSeqId|timestamp:$timestamp|" +
-                "method:$method|uri:$uri|signToken:$signToken|" +
+                "method:$method|url:$url|signToken:$signToken|" +
                 "nonce:$nonce|signature:$signature|serverSign:$serverSign|verify sensitive api sign"
         )
         return serverSign == signature

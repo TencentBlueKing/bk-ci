@@ -41,7 +41,7 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
         val signHeaders = if (signToken.isNotBlank()) {
             ApiSignUtil.generateSignHeader(
                 method = HttpMethod.GET.name,
-                uri = "/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}",
+                url = "/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}",
                 token = signToken
             )
         } else {
@@ -63,7 +63,7 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
         val signHeaders = if (signToken.isNotBlank()) {
             ApiSignUtil.generateSignHeader(
                 method = HttpMethod.GET.name,
-                uri = "/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}",
+                url = "/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}",
                 token = signToken
             )
         } else {
