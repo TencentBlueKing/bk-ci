@@ -9,12 +9,12 @@ import org.apache.commons.codec.digest.HmacUtils
 
 object ApiSignUtil {
 
-    fun generateSignHeader(method: String, uri: String, token: String): Map<String, String> {
+    fun generateSignHeader(method: String, url: String, token: String): Map<String, String> {
         val timestamp = System.currentTimeMillis()
         val nonce = UUIDUtil.generate()
         val signature = signToRequest(
             method = method,
-            uri = uri,
+            url = url,
             timestamp = timestamp.toString(),
             nonce = nonce,
             token = token
@@ -28,12 +28,12 @@ object ApiSignUtil {
 
     fun signToRequest(
         method: String,
-        uri: String,
+        url: String,
         timestamp: String,
         nonce: String,
         token: String
     ): String {
-        val message = "${method}\n${uri}\n${timestamp}\n${nonce}\n"
+        val message = "${method}\n${url}\n${timestamp}\n${nonce}\n"
         return HmacUtils(HmacAlgorithms.HMAC_SHA_256, token).hmacHex(message)
     }
 }
