@@ -83,7 +83,10 @@ class SensitiveApiPermissionAspect constructor(
 
         if (apiName != null && atomCode != null) {
             logger.info("$buildId|$vmSeqId|$atomCode|$apiName|using sensitive api")
-            if (enableSensitiveApi && !verifyToken(request, signToken) && !verifyApi(atomCode, apiName)) {
+            if (enableSensitiveApi &&
+                !verifyToken(request, signToken) &&
+                !verifyApi(buildId, vmSeqId, atomCode, apiName)
+            ) {
                 logger.warn("$buildId|$vmSeqId|$atomCode|$apiName|verify sensitive api failed")
                 throw ErrorCodeException(
                     statusCode = 401,
@@ -95,8 +98,14 @@ class SensitiveApiPermissionAspect constructor(
         }
     }
 
-    private fun verifyApi(atomCode: String, apiName: String): Boolean {
+    private fun verifyApi(
+        buildId: String,
+        vmSeqId: String,
+        atomCode: String,
+        apiName: String
+    ): Boolean {
         val cacheKey = "$atomCode:$apiName"
+        logger.info("buildId:$buildId|vmSeqId:$vmSeqId|atomCode:$atomCode|apiName:$apiName|verify sensitive api")
         return apiPermissionCache.getIfPresent(cacheKey) ?: run {
             val apiPermission = client.get(ServiceSensitiveApiPermissionResource::class).verifyApi(
                 atomCode = atomCode,
@@ -134,7 +143,10 @@ class SensitiveApiPermissionAspect constructor(
             nonce = nonce,
             token = signToken
         )
-        logger.info("$buildId|$vmSeqId|$timestamp|$nonce|$signature|$serverSign|sensitive api sign")
+        logger.info(
+            "buildId:$buildId|vmSeqId:$vmSeqId|timestamp:$timestamp|" +
+                "nonce:$nonce|signature:$signature|serverSign:$serverSign|verify sensitive api sign"
+        )
         return serverSign == signature
     }
 
