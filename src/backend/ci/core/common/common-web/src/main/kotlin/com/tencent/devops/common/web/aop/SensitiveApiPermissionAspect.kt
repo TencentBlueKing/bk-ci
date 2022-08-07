@@ -145,6 +145,7 @@ class SensitiveApiPermissionAspect constructor(
         )
         logger.info(
             "buildId:$buildId|vmSeqId:$vmSeqId|timestamp:$timestamp|" +
+                "method:$method|uri:$uri|signToken:$signToken|" +
                 "nonce:$nonce|signature:$signature|serverSign:$serverSign|verify sensitive api sign"
         )
         return serverSign == signature
