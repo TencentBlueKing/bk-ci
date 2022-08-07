@@ -30,13 +30,18 @@ package com.tencent.devops.common.web.aop
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
+import com.tencent.devops.common.api.auth.SIGN_HEADER_NONCE
+import com.tencent.devops.common.api.auth.SIGN_HEADER_TIMESTAMP
+import com.tencent.devops.common.api.auth.SING_HEADER_SIGNATURE
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.SensitiveApiUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.util.ApiSignUtil
 import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.common.web.service.ServiceSensitiveApiPermissionResource
+import com.tencent.devops.common.web.utils.AtomRuntimeUtil
+import javax.servlet.http.HttpServletRequest
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before
@@ -68,15 +73,17 @@ class SensitiveApiPermissionAspect constructor(
         val method = (jp.signature as MethodSignature).method
         val apiName = method.getAnnotation(SensitiveApiPermission::class.java)?.value
 
-        var atomCode: String? = null
-        if (buildId != null && vmSeqId != null) {
-            val redisKey = SensitiveApiUtil.getRunningAtomCodeKey(buildId, vmSeqId)
-            atomCode = redisOperation.get(redisKey)
+        val (atomCode, signToken) = if (buildId != null && vmSeqId != null) {
+            AtomRuntimeUtil.getRunningAtomValue(
+                redisOperation = redisOperation, buildId = buildId, vmSeqId = vmSeqId
+            ) ?: Pair(null, null)
+        } else {
+            Pair(null, null)
         }
 
         if (apiName != null && atomCode != null) {
             logger.info("$buildId|$vmSeqId|$atomCode|$apiName|using sensitive api")
-            if (enableSensitiveApi && !verifyApi(atomCode, apiName)) {
+            if (enableSensitiveApi && !verifyToken(request, signToken) && !verifyApi(atomCode, apiName)) {
                 logger.warn("$buildId|$vmSeqId|$atomCode|$apiName|verify sensitive api failed")
                 throw ErrorCodeException(
                     statusCode = 401,
@@ -101,6 +108,34 @@ class SensitiveApiPermissionAspect constructor(
             }
             apiPermission
         }
+    }
+
+    private fun verifyToken(request: HttpServletRequest, signToken: String?): Boolean {
+        val signature = request.getHeader(SING_HEADER_SIGNATURE)
+        val timestamp = request.getHeader(SIGN_HEADER_TIMESTAMP)
+        val nonce = request.getHeader(SIGN_HEADER_NONCE)
+        val buildId = request.getHeader(AUTH_HEADER_DEVOPS_BUILD_ID)
+        val vmSeqId = request.getHeader(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
+        val method = request.method
+        val uri = request.requestURI
+        // 如果没有签名头,则需要验证插件是否开通了接口权限
+        if (
+            signature.isNullOrBlank() ||
+            timestamp.isNullOrBlank() ||
+            nonce.isNullOrBlank() ||
+            signToken.isNullOrBlank()
+        ) {
+            return false
+        }
+        val serverSign = ApiSignUtil.signToRequest(
+            method = method,
+            uri = uri,
+            timestamp = timestamp,
+            nonce = nonce,
+            token = signToken
+        )
+        logger.info("$buildId|$vmSeqId|$timestamp|$nonce|$signature|$serverSign|sensitive api sign")
+        return serverSign == signature
     }
 
     companion object {

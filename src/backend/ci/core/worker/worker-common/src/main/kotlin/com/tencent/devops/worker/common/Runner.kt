@@ -51,6 +51,7 @@ import com.tencent.devops.worker.common.service.EngineService
 import com.tencent.devops.worker.common.service.QuotaService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
+import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
@@ -183,6 +184,7 @@ object Runner {
                     try {
                         LoggerService.elementId = buildTask.taskId!!
                         LoggerService.elementName = buildTask.elementName ?: LoggerService.elementId
+                        CredentialUtils.signToken = buildTask.signToken ?: ""
 
                         // 开始Task执行
                         taskDaemon.runWithTimeout()
