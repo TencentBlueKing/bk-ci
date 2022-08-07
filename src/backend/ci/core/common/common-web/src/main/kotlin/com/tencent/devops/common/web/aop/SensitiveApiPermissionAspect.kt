@@ -132,12 +132,7 @@ class SensitiveApiPermissionAspect constructor(
             "${request.requestURI}?${request.queryString}"
         }
         // 如果没有签名头,则需要验证插件是否开通了接口权限
-        if (
-            signature.isNullOrBlank() ||
-            timestamp.isNullOrBlank() ||
-            nonce.isNullOrBlank() ||
-            signToken.isNullOrBlank()
-        ) {
+        if (isBlank(signature = signature, timestamp = timestamp, nonce = nonce, signToken = signToken)) {
             return false
         }
         val serverSign = ApiSignUtil.signToRequest(
@@ -145,13 +140,20 @@ class SensitiveApiPermissionAspect constructor(
             url = url,
             timestamp = timestamp,
             nonce = nonce,
-            token = signToken
+            token = signToken!!
         )
         logger.info(
             "buildId:$buildId|vmSeqId:$vmSeqId|timestamp:$timestamp|" +
                 "nonce:$nonce|signature:$signature|serverSign:$serverSign|verify sensitive api sign"
         )
         return serverSign == signature
+    }
+
+    private fun isBlank(signature: String?, timestamp: String?, nonce: String?, signToken: String?): Boolean {
+        return signature.isNullOrBlank() ||
+            timestamp.isNullOrBlank() ||
+            nonce.isNullOrBlank() ||
+            signToken.isNullOrBlank()
     }
 
     companion object {

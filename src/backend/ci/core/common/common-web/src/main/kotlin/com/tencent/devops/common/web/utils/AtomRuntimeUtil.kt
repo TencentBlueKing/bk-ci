@@ -30,7 +30,7 @@ object AtomRuntimeUtil {
     ) {
         redisOperation.set(
             key = getRunningAtomKey(buildId = buildId, vmSeqId = vmSeqId),
-            value = "$atomCode:$signToken",
+            value = atomCode,
             expiredInSecond = expiredInSecond
         )
     }
