@@ -88,6 +88,7 @@ import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
+import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
 import com.tencent.devops.quality.api.v2.pojo.response.QualityPipeline
 import org.jooq.DSLContext
 import org.jooq.Record4
@@ -462,10 +463,20 @@ class PipelineListFacadeService @Autowired constructor(
 
             val pipelineIds = mutableListOf<String>()
             pipelineIds.addAll(authPipelineIds)
-            val viewIdList =
-                listOf(PIPELINE_VIEW_FAVORITE_PIPELINES, PIPELINE_VIEW_MY_PIPELINES, PIPELINE_VIEW_ALL_PIPELINES)
+            val viewIdList = listOf(
+                PIPELINE_VIEW_FAVORITE_PIPELINES, PIPELINE_VIEW_MY_PIPELINES, PIPELINE_VIEW_ALL_PIPELINES,
+                PIPELINE_VIEW_UNCLASSIFIED
+            )
+            // 已分组的视图
             if (!viewIdList.contains(viewId)) {
                 pipelineIds.addAll(pipelineViewGroupService.listPipelineIdsByViewId(projectId, viewId))
+            }
+            // 非分组的视图
+            if (viewId == PIPELINE_VIEW_UNCLASSIFIED) {
+                val allPipelineIds = pipelineInfoDao.listPipelineIdByProject(dslContext, projectId).toMutableSet()
+                pipelineIds.addAll(
+                    allPipelineIds.subtract(pipelineViewGroupService.getClassifiedPipelineIds(projectId).toSet())
+                )
             }
             pipelineViewService.addUsingView(userId = userId, projectId = projectId, viewId = viewId)
 

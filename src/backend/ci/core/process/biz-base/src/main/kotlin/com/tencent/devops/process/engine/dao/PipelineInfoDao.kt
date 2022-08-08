@@ -166,7 +166,7 @@ class PipelineInfoDao {
         }
         logger.info(
             "Update the pipeline $pipelineId add new version($version) old version($latestVersion) " +
-                "and result=${count == 1}"
+                    "and result=${count == 1}"
         )
         return version
     }
@@ -570,6 +570,20 @@ class PipelineInfoDao {
             dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchAny()
+        }
+    }
+
+    fun countExcludePipelineIds(
+        dslContext: DSLContext,
+        projectId: String,
+        excludePipelineIds: List<String>
+    ): Int {
+        with(T_PIPELINE_INFO) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.notIn(excludePipelineIds))
+                .fetchOne()?.value1() ?: 0
         }
     }
 

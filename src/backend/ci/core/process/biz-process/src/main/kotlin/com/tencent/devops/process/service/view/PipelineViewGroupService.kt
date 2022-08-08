@@ -53,12 +53,14 @@ import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
+import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 @SuppressWarnings("LoopWithTooManyJumpStatements")
@@ -179,6 +181,10 @@ class PipelineViewGroupService @Autowired constructor(
             }
         }
         return result
+    }
+
+    fun getClassifiedPipelineIds(projectId: String): List<String> {
+        return pipelineViewGroupDao.distinctPipelineIds(dslContext, projectId)
     }
 
     fun listPipelineIdsByViewId(projectId: String, viewIdEncode: String): List<String> {
@@ -551,7 +557,27 @@ class PipelineViewGroupService @Autowired constructor(
     fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
         val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
         val countByViewId = pipelineViewGroupDao.countByViewId(dslContext, projectId, views.map { it.id })
-        return sortViews2Summary(projectId, userId, views, countByViewId)
+        val summaries = sortViews2Summary(projectId, userId, views, countByViewId)
+        if (projected == true) {
+            val classifiedPipelineIds = pipelineViewGroupDao.distinctPipelineIds(dslContext, projectId)
+            val unclassifiedCount =
+                pipelineInfoDao.countExcludePipelineIds(dslContext, projectId, classifiedPipelineIds)
+            summaries.add(
+                0, PipelineNewViewSummary(
+                    id = PIPELINE_VIEW_UNCLASSIFIED,
+                    projectId = projectId,
+                    name = "未分组",
+                    projected = true,
+                    createTime = LocalDateTime.now().timestamp(),
+                    updateTime = LocalDateTime.now().timestamp(),
+                    creator = "admin",
+                    top = true,
+                    viewType = PipelineViewType.DYNAMIC,
+                    pipelineCount = unclassifiedCount
+                )
+            )
+        }
+        return summaries
     }
 
     private fun sortViews2Summary(
@@ -559,7 +585,7 @@ class PipelineViewGroupService @Autowired constructor(
         userId: String,
         views: List<TPipelineViewRecord>,
         countByViewId: Map<Long, Int>
-    ): List<PipelineNewViewSummary> {
+    ): MutableList<PipelineNewViewSummary> {
         var score = 1
         val viewScoreMap = pipelineViewTopDao.list(dslContext, projectId, userId).associate { it.viewId to score++ }
 
@@ -578,7 +604,7 @@ class PipelineViewGroupService @Autowired constructor(
                 viewType = it.viewType,
                 pipelineCount = countByViewId[it.id] ?: 0
             )
-        }
+        }.toMutableList()
     }
 
     companion object {

@@ -175,7 +175,20 @@ class PipelineViewGroupDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(VIEW_ID.`in`(viewIds))
+                .groupBy(VIEW_ID)
                 .fetch().map { it.value1() to it.value2() }.toMap()
+        }
+    }
+
+    fun distinctPipelineIds(
+        dslContext: DSLContext,
+        projectId: String
+    ): List<String> {
+        with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+            return dslContext.selectDistinct(PIPELINE_ID)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetch().getValues(0, String::class.java)
         }
     }
 }
