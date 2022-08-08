@@ -25,17 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.openapi
 
-import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
-import com.tencent.devops.project.pojo.Result
-
-@Suppress("ALL")
-interface OpProjectService {
-
-    fun updateProjectFromOp(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Int
-
-    fun synProject(projectCode: String, isRefresh: Boolean? = true): Result<Boolean>
-
-    fun synProjectInit(isRefresh: Boolean? = true): Result<List<String>>
-}
+@Target(AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
+@kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
+@Suppress("LongParameterList")
+annotation class IgnoreProjectId(
+    val ignore: Boolean = true // 是否忽略项目ID
+)

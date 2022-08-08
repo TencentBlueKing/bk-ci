@@ -30,25 +30,6 @@ package com.tencent.devops.statistics.service.project
 import com.tencent.devops.project.pojo.ProjectVO
 
 interface ProjectService {
-    /**
-     * 获取所有项目信息
-     */
-    fun list(userId: String, accessToken: String?): List<ProjectVO>
 
     fun list(userId: String): List<ProjectVO>
-
-    fun list(projectCodes: Set<String>): List<ProjectVO>
-
-    fun listOnlyByProjectCode(projectCodes: Set<String>): List<ProjectVO>
-
-    fun list(projectCodes: List<String>): List<ProjectVO>
-
-    fun getAllProject(): List<ProjectVO>
-
-    /**
-     * 获取用户已的可访问项目列表=
-     */
-    fun getProjectByUser(userName: String): List<ProjectVO>
-
-    fun grayProjectSet(): Set<String>
 }

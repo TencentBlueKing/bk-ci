@@ -75,6 +75,6 @@ interface OpProjectTagResource {
     @Path("/ext/system/setTagByProject")
     fun setExtSystemTagByProject(
         @ApiParam(value = "consulTag请求入参", required = true)
-        opProjectTagUpdateDTO: ProjectExtSystemTagDTO
+        extSystemTagDTO: ProjectExtSystemTagDTO
     ): Result<Boolean>
 }

@@ -44,6 +44,7 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.exception.CommitCheck
@@ -58,7 +59,6 @@ import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
-import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -90,13 +90,14 @@ class StreamYamlTrigger @Autowired constructor(
     ): Boolean {
         logger.info("|${action.data.context.requestEventId}|triggerBuild|action|${action.format()}")
         var pipeline = action.data.context.pipeline!!
+
         // 提前创建新流水线，保证git提交后 stream上能看到
         if (pipeline.pipelineId.isBlank()) {
             pipeline = StreamTriggerPipeline(
                 gitProjectId = action.data.getGitProjectId(),
                 pipelineId = "",
                 filePath = pipeline.filePath,
-                displayName = pipeline.filePath,
+                displayName = getDisplayName(action),
                 enabled = true,
                 creator = action.data.getUserId(),
                 lastUpdateBranch = action.data.eventCommon.branch
@@ -226,6 +227,17 @@ class StreamYamlTrigger @Autowired constructor(
             )
         }
         return true
+    }
+
+    private fun getDisplayName(action: BaseAction): String {
+        val originYaml = action.data.context.originYaml!!
+        val ymlName = ScriptYmlUtils.parseName(originYaml)?.name
+        val pipeline = action.data.context.pipeline!!
+        return if (!ymlName.isNullOrBlank()) {
+            ymlName
+        } else {
+            pipeline.filePath
+        }
     }
 
     private fun needUpdateLastBuildBranch(action: BaseAction): Boolean {

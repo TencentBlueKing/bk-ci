@@ -25,30 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service.gray
+package com.tencent.devops.statistics.service.project.impl
 
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.BSProjectServiceCodec
+import com.tencent.devops.statistics.service.project.ProjectPermissionService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-class MacOSGray {
-    companion object {
-        const val repoGrayRedisKey = "project:setting:macosGray"
+@Service
+class StatProjectPermissionServiceImpl @Autowired constructor(
+    private val authProjectApi: AuthProjectApi,
+    private val bsProjectAuthServiceCode: BSProjectServiceCodec
+) : ProjectPermissionService {
+
+    override fun getUserProjects(userId: String): List<String> {
+        return authProjectApi.getUserProjects(bsProjectAuthServiceCode, userId, null)
     }
-
-    fun addGrayProject(projectId: String, redisOperation: RedisOperation) {
-        redisOperation.addSetValue(getRepoGrayRedisKey(), projectId) // 添加项目为灰度项目
-    }
-
-    fun removeGrayProject(projectId: String, redisOperation: RedisOperation) {
-        redisOperation.removeSetMember(getRepoGrayRedisKey(), projectId) // 取消项目为灰度项目
-    }
-
-    fun isGray(projectId: String, redisOperation: RedisOperation): Boolean {
-        return redisOperation.isMember(getRepoGrayRedisKey(), projectId)
-//        return grayProjectSet(redisOperation).contains(projectId)
-    }
-
-    fun grayProjectSet(redisOperation: RedisOperation) =
-        (redisOperation.getSetMembers(repoGrayRedisKey) ?: emptySet()).filter { !it.isBlank() }.toSet()
-
-    fun getRepoGrayRedisKey() = repoGrayRedisKey
 }

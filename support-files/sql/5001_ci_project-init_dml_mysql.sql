@@ -597,3 +597,6 @@ REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESS
 -- 数据源初始化
 REPLACE INTO `T_DATA_SOURCE`(`ID`, `MODULE_CODE`, `DATA_SOURCE_NAME`, `FULL_FLAG`, `CLUSTER_NAME`) VALUES ('eae3670d3716427881c93fde46e28534', 'PROCESS', 'ds_0', b'0', 'prod');
 REPLACE INTO `T_DATA_SOURCE`(`ID`, `MODULE_CODE`, `DATA_SOURCE_NAME`, `FULL_FLAG`, `CLUSTER_NAME`) VALUES ('a71b4a3cbbc84a5b8f8386f9d9cd0001', 'METRICS', 'ds_0', b'0', 'prod');
+
+REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES('a9fcc14f1c3f49b6b77bd7bc73dd5206','2101080','01','项目[{0}]已禁用，不能启动', '項目[{0}]已禁用，不能啟動', 'Project [{0}] has disabled and cannot be started');
+REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES('38768ac97fa44427b6f40835ccbe8431','2100021','00','[API permission denied]插件[{0}]无权限使用接口[{1}]，请先在插件工作台 -> 插件基本设置中申请接口使用权限', '[API permission denied]插件[{0}]無權限使用接口[{1}]，請先在插件工作台 -> 插件基本設置中申請接口使用權限', '[API permission denied]The plugin [{0}] does not have permission to use the interface [{1}], please apply for the permission to use the interface in the plugin workbench -> basic settings of the plugin');
