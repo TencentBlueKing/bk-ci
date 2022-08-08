@@ -47,7 +47,7 @@ object QueryParamCheckUtil {
         toDate: LocalDateTime
     ) = if (fromDate.isEqual(toDate)) 1 else ChronoUnit.DAYS.between(fromDate, toDate)
 
-    private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     fun getStartDateTime(): String {
         val startDateTime = LocalDate.now().minusMonths(1)
         return startDateTime.format(DATE_FORMATTER)
