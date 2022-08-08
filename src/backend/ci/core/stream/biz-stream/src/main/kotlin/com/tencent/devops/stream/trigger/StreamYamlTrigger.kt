@@ -110,7 +110,12 @@ class StreamYamlTrigger @Autowired constructor(
         val triggerEvent = if (trigger == null) {
             null
         } else {
-            triggerMatcher.isMatch(action, trigger)
+            val e = triggerMatcher.isMatch(action, trigger)
+            logger.info(
+                "${action.data.eventCommon.gitProjectId}|${action.data.context.pipeline?.pipelineId} " +
+                        "use trigger cache result ${trigger}"
+            )
+            e
         }
 
         // 这里判断，各类注册事件如果修改blobId肯定不同，相同的肯定注册过了，所以只要不触发git就直接跳过
