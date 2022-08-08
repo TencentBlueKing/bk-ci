@@ -25,19 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.ticket
+package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.ticket.pojo.CredentialInfo
-import com.tencent.devops.worker.common.api.WorkerRestApiSDK
+import com.tencent.devops.store.pojo.common.VersionInfo
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-interface CredentialSDKApi : WorkerRestApiSDK {
-    fun get(credentialId: String, publicKey: String, signToken: String): Result<CredentialInfo>
+@Api(tags = ["BUILD_PIPELINE_ATOM"], description = "流水线-插件")
+@Path("/service/pipeline/atoms")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildAtomResource {
 
-    fun getAcrossProject(
-        targetProjectId: String,
-        credentialId: String,
-        publicKey: String,
-        signToken: String
-    ): Result<CredentialInfo>
+    @ApiOperation("获取插件默认可用版本号信息")
+    @GET
+    @Path("/projects/{projectCode}/atoms/{atomCode}/default/valid/version")
+    fun getAtomDefaultValidVersion(
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String
+    ): Result<VersionInfo?>
 }

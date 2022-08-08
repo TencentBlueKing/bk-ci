@@ -627,7 +627,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val index = atomVersion.indexOf(".")
             val versionPrefix = atomVersion.substring(0, index + 1)
             var versionName = atomVersion
-            var latestVersionName = versionPrefix + "latest"
+            var latestVersionName = VersionUtils.convertLatestVersionName(atomVersion)
             val atomStatus = it[KEY_ATOM_STATUS] as Byte
             val atomVersionStatusList = listOf(
                 AtomStatusEnum.TESTING.status.toByte(),
@@ -1149,5 +1149,25 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         } else {
             Result(version)
         }
+    }
+
+    override fun getAtomDefaultValidVersion(projectCode: String, atomCode: String): Result<VersionInfo?> {
+        val defaultFlag = marketAtomCommonService.isPublicAtom(atomCode)
+        val defaultVersionRecord = atomDao.getVersionsByAtomCode(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            atomCode = atomCode,
+            defaultFlag = defaultFlag,
+            atomStatusList = generateAtomStatusList(atomCode, projectCode),
+            limitNum = 1
+        )?.getOrNull(0)
+        val versionInfo = defaultVersionRecord?.let {
+            val version = it[KEY_VERSION] as String
+            VersionInfo(
+                versionName = VersionUtils.convertLatestVersionName(version),
+                versionValue = VersionUtils.convertLatestVersion(version)
+            )
+        }
+        return Result(versionInfo)
     }
 }

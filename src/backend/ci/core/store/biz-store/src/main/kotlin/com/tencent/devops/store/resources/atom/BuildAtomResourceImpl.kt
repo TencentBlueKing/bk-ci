@@ -24,20 +24,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.worker.common.api.ticket
+package com.tencent.devops.store.resources.atom
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.ticket.pojo.CredentialInfo
-import com.tencent.devops.worker.common.api.WorkerRestApiSDK
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.atom.BuildAtomResource
+import com.tencent.devops.store.pojo.common.VersionInfo
+import com.tencent.devops.store.service.atom.AtomService
+import org.springframework.beans.factory.annotation.Autowired
 
-interface CredentialSDKApi : WorkerRestApiSDK {
-    fun get(credentialId: String, publicKey: String, signToken: String): Result<CredentialInfo>
+@RestResource
+class BuildAtomResourceImpl @Autowired constructor(
+    private val atomService: AtomService
+) : BuildAtomResource {
 
-    fun getAcrossProject(
-        targetProjectId: String,
-        credentialId: String,
-        publicKey: String,
-        signToken: String
-    ): Result<CredentialInfo>
+    override fun getAtomDefaultValidVersion(projectCode: String, atomCode: String): Result<VersionInfo?> {
+        return atomService.getAtomDefaultValidVersion(projectCode, atomCode)
+    }
 }
