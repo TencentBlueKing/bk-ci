@@ -51,5 +51,5 @@ data class PipelineNewViewSummary(
     @ApiModelProperty("流水线组类型,1--动态,2--静态", required = true)
     val viewType: Int,
     @ApiModelProperty("流水线个数", required = true)
-    val pipelineNum: Int
+    val pipelineCount: Int
 )

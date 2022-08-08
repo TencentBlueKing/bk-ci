@@ -307,7 +307,7 @@ class PipelineViewService @Autowired constructor(
                 updateTime = it.updateTime.timestamp(),
                 creator = it.createUser,
                 viewType = it.viewType,
-                pipelineNum = 0
+                pipelineCount = 0
             )
         }
     }
@@ -456,9 +456,11 @@ class PipelineViewService @Autowired constructor(
                 is PipelineViewFilterByName -> {
                     filterByNames.add(filter)
                 }
+
                 is PipelineViewFilterByCreator -> {
                     filterByCreators.add(filter)
                 }
+
                 is PipelineViewFilterByLabel -> {
                     filterByLabels.add(filter)
                 }
@@ -541,6 +543,7 @@ class PipelineViewService @Autowired constructor(
             PIPELINE_VIEW_FAVORITE_PIPELINES -> {
                 MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.FAVORITE_PIPELINES_LABEL)
             }
+
             PIPELINE_VIEW_MY_PIPELINES -> MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.MY_PIPELINES_LABEL)
             PIPELINE_VIEW_ALL_PIPELINES -> MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ALL_PIPELINES_LABEL)
             else -> throw ErrorCodeException(

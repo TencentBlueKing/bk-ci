@@ -576,7 +576,7 @@ class PipelineViewGroupService @Autowired constructor(
                 creator = it.createUser,
                 top = viewScoreMap.containsKey(it.id),
                 viewType = it.viewType,
-                pipelineNum = countByViewId[it.id] ?: 0
+                pipelineCount = countByViewId[it.id] ?: 0
             )
         }
     }
