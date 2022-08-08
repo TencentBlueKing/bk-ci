@@ -40,14 +40,14 @@ import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 
-object QueryParamCheckUtilo {
+object QueryParamCheckUtil {
 
     fun getIntervalTime(
         fromDate: LocalDateTime,
         toDate: LocalDateTime
     ) = if (fromDate.isEqual(toDate)) 1 else ChronoUnit.DAYS.between(fromDate, toDate)
 
-    val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     fun getStartDateTime(): String {
         val startDateTime = LocalDate.now().minusMonths(1)
         return startDateTime.format(DATE_FORMATTER)
@@ -105,6 +105,4 @@ object QueryParamCheckUtilo {
     fun getErrorTypeName(errorType: Int): String {
         return MessageCodeUtil.getCodeLanMessage(ERROR_TYPE_NAME_PREFIX + "$errorType")
     }
-
-    val metricsConfig: MetricsConfig = MetricsConfig()
 }
