@@ -32,6 +32,9 @@ class JerseyFeignClientFactoryBean(
             """com.tencent.devops.([a-z]+).api.([a-zA-Z]+)"""
     }
 
+    @Value("\${service-suffix:#{null}}")
+    private val serviceSuffix: String? = null
+
     private var applicationContext: ApplicationContext? = null
 
     private val interfaces = ConcurrentHashMap<KClass<*>, String>()
@@ -74,7 +77,7 @@ class JerseyFeignClientFactoryBean(
     }
 
     private fun findServiceName(clz: KClass<*>): String {
-        return interfaces.getOrPut(clz) {
+        val serviceName = interfaces.getOrPut(clz) {
             val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
             if (serviceInterface != null) {
                 serviceInterface.value
@@ -86,6 +89,12 @@ class JerseyFeignClientFactoryBean(
                 ?: throw ClientException("can not find service according to package [$packageName]")
                 matches.groupValues[1]
             }
+        }
+
+        return if (serviceSuffix.isNullOrBlank()) {
+            serviceName
+        } else {
+            "$serviceName$serviceSuffix"
         }
     }
 }
