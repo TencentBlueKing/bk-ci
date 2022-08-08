@@ -39,7 +39,7 @@ import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 
-object QueryParamCheckUtil {
+object QueryParamCheckUtilo {
 
     val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     fun getStartDateTime(): String {
@@ -79,13 +79,17 @@ object QueryParamCheckUtil {
         // 目前仅支持6个月内的数据查询
         val startDate = DateTimeUtil.stringToLocalDate(startTime)
         val endDate = DateTimeUtil.stringToLocalDate(endTime)
-        if ((startDate!!.until(endDate, ChronoUnit.DAYS)) > 180) {
+        if ((startDate!!.until(endDate, ChronoUnit.DAYS)) > metricsConfig.queryDaysMax) {
             throw ErrorCodeException(
                 errorCode = MetricsMessageCode.QUERY_DATE_BEYOND
             )
         }
         val currentDate = LocalDate.now()
-        if (startDate.isBefore(currentDate) && (startDate.until(currentDate, ChronoUnit.DAYS)) > 180) {
+        if (startDate.isBefore(currentDate) && ((startDate.until(
+                currentDate,
+                ChronoUnit.DAYS
+            )) > metricsConfig.queryDaysMax)
+        ) {
             throw ErrorCodeException(
                 errorCode = MetricsMessageCode.QUERY_DATE_BEYOND
             )
@@ -95,4 +99,6 @@ object QueryParamCheckUtil {
     fun getErrorTypeName(errorType: Int): String {
         return MessageCodeUtil.getCodeLanMessage(ERROR_TYPE_NAME_PREFIX + "$errorType")
     }
+
+    val metricsConfig: MetricsConfig = MetricsConfig()
 }
