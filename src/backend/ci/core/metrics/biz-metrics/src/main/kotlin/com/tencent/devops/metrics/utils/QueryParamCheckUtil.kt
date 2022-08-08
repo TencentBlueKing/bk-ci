@@ -34,14 +34,20 @@ import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.constant.Constants.ERROR_TYPE_NAME_PREFIX
 import com.tencent.devops.metrics.constant.MetricsMessageCode
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 
-object QueryParamCheckUtilo {
+object QueryParamCheckUtil {
 
-    val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    fun getIntervalTime(
+        fromDate: LocalDateTime,
+        toDate: LocalDateTime
+    ) = if (fromDate.isEqual(toDate)) 1 else ChronoUnit.DAYS.between(fromDate, toDate)
+
+    private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     fun getStartDateTime(): String {
         val startDateTime = LocalDate.now().minusMonths(1)
         return startDateTime.format(DATE_FORMATTER)
@@ -99,6 +105,4 @@ object QueryParamCheckUtilo {
     fun getErrorTypeName(errorType: Int): String {
         return MessageCodeUtil.getCodeLanMessage(ERROR_TYPE_NAME_PREFIX + "$errorType")
     }
-
-    val metricsConfig: MetricsConfig = MetricsConfig()
 }
