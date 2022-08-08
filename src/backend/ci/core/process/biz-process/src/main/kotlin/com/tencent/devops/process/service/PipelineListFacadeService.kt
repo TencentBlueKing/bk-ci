@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -34,6 +35,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
@@ -78,6 +80,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.classify.enums.Condition
 import com.tencent.devops.process.pojo.classify.enums.Logic
+import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -1223,6 +1226,10 @@ class PipelineListFacadeService @Autowired constructor(
             }
             pipelineBuildMap[pipelineId]?.let { lastBuild ->
                 it.lastBuildMsg = lastBuild.buildMsg
+                it.trigger = lastBuild.trigger
+                it.webhookRepoUrl = lastBuild.webhookInfo?.let { self ->
+                    JsonUtil.to(self, object : TypeReference<WebhookInfo?>() {})?.webhookRepoUrl
+                }
             }
             it.lastBuildFinishCount = buildTaskFinishCountMap.getOrDefault(pipelineId, 0)
             it.lastBuildTotalCount = buildTaskTotalCountMap.getOrDefault(pipelineId, 0)
