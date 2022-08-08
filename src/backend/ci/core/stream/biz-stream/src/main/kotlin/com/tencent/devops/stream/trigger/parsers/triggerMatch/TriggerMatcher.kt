@@ -94,7 +94,10 @@ class TriggerMatcher @Autowired constructor(
         }
 
         // 缓存触发器
-        if (confirmProjectUseTriggerCache(action.getProjectCode()) && action.data.context.triggerCache != null) {
+        if (confirmProjectUseTriggerCache(action.getProjectCode()) &&
+            action.data.context.triggerCache != null &&
+            !action.data.context.pipeline?.pipelineId.isNullOrBlank()
+        ) {
             streamPipelineTriggerDao.saveOrUpdate(
                 dslContext = dslContext,
                 projectId = action.getProjectCode(),
