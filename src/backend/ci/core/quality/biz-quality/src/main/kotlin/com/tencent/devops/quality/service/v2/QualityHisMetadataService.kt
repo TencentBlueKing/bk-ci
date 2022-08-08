@@ -61,15 +61,6 @@ class QualityHisMetadataService @Autowired constructor(
             buildIds = setOf(buildId),
             projectId = projectId
         ).data?.get(buildId) ?: "0"
-        // todo performance can be removed
-        hisMetadataDao.saveHisOriginMetadata(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            buildNo = buildNo,
-            callbackStr = objectMapper.writeValueAsString(callback)
-        )
         hisMetadataDao.batchSaveHisDetailMetadata(dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
