@@ -122,7 +122,7 @@ class TXDockerHostImageScanService(
         )
 
         val dockerIp = CommonUtils.getInnerIP()
-        val request = Request.Builder().url("http://$dockerIp:8888/scan/directory/")
+        val request = Request.Builder().url("http://$dockerIp:8887/scan/directory/")
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .post(
