@@ -87,6 +87,7 @@ const columns = [
   {
     label: t('Start Time'),
     field: 'startTime',
+    sort: true,
   },
   {
     label: t('Username'),
@@ -99,10 +100,12 @@ const columns = [
   {
     label: t('Error Code'),
     field: 'errorCode',
+    sort: true,
   },
   {
     label: t('Error Message'),
     field: 'errorMsg',
+    sort: true,
     render ({ cell, row }) {
       return h(
         'span',
@@ -170,6 +173,7 @@ onMounted(getData);
       :columns="columns"
       :data="tableData"
       remote-pagination
+      settings
       :pagination="pagination"
       @page-value-change="handlePageChange"
       @page-limit-change="handlePageLimitChange">
@@ -181,5 +185,15 @@ onMounted(getData);
 .analysis-table {
   margin-top: .15rem;
   margin-bottom: .08rem;
+}
+::v-deep(.bk-table .bk-table-body table td .cell) {
+  font-size: 12px;
+}
+::v-deep(.bk-table .bk-table-head table th .cell) {
+  font-size: 12px;
+  color: #313238;
+}
+::v-deep(.setting-content .setting-head) {
+  padding: 10px 24px;
 }
 </style>

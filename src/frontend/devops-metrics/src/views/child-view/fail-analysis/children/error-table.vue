@@ -156,6 +156,7 @@ onMounted(getData);
       :columns="columns"
       :data="tableData"
       remote-pagination
+      settings
       :pagination="pagination"
       @page-value-change="handlePageChange"
       @page-limit-change="handlePageLimitChange"
@@ -168,5 +169,13 @@ onMounted(getData);
 .error-table {
   margin-top: .15rem;
   margin-bottom: .08rem;
+}
+::v-deep(.bk-table .bk-table-body table td .cell) {
+  font-size: 12px;
+}
+::v-deep(.bk-table .bk-table-head table th .cell) {
+  font-size: 12px;
+  color: #313238;
+
 }
 </style>
