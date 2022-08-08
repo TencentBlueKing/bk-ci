@@ -40,7 +40,7 @@ import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.DSLContext
 import org.jooq.Record1
-import org.jooq.Record2
+import org.jooq.Record3
 import org.jooq.Result
 import org.jooq.impl.DSL.count
 import org.slf4j.LoggerFactory
@@ -394,17 +394,15 @@ class PipelineBuildTaskDao {
     fun countGroupByBuildId(
         dslContext: DSLContext,
         projectId: String,
-        buildIds: Collection<String>,
-        statusSet: Collection<BuildStatus>
-    ): Map<String, Int> {
+        buildIds: Collection<String>
+    ): Result<Record3<String/*BUILD_ID*/, Int/*STATUS*/, Int/*COUNT*/>> {
         with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
-            return dslContext.select(BUILD_ID, count())
+            return dslContext.select(BUILD_ID, STATUS, count())
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUILD_ID.`in`(buildIds))
-                .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .groupBy(BUILD_ID)
-                .fetch().map { it.value1() to it.value2() }.toMap()
+                .groupBy(BUILD_ID, STATUS)
+                .fetch()
         }
     }
 

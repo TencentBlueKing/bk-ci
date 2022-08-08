@@ -103,6 +103,8 @@ data class Pipeline(
     var viewNames: List<String>? = null,
     @ApiModelProperty("最后一次构建的构建信息", required = false)
     var lastBuildMsg: String? = null,
+    @ApiModelProperty("最后一次构建所有的任务个数", required = false)
+    var lastBuildTotalCount: Int? = null,
     @ApiModelProperty("最后一次构建已完成的任务个数", required = false)
     var lastBuildFinishCount: Int? = null
 )
