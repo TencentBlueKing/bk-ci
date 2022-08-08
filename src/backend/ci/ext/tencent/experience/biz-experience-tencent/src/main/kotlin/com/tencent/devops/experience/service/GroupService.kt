@@ -54,6 +54,7 @@ import com.tencent.devops.experience.pojo.NotifyType
 import com.tencent.devops.experience.pojo.GroupUsers
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.enums.ProjectGroup
+import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -278,16 +279,16 @@ class GroupService @Autowired constructor(
         // 向新增人员发送最新版本体验信息
         if (newAddOuterUsers.isNotEmpty()) {
             sendNotificationToNewAddUser(
-                    newAddUsers = newAddOuterUsers,
-                    userType = NEW_ADD_OUTER_USERS,
-                    groupId = groupId
+                newAddUsers = newAddOuterUsers,
+                userType = NEW_ADD_OUTER_USERS,
+                groupId = groupId
             )
         }
         if (newAddInnerUsers.isNotEmpty()) {
             sendNotificationToNewAddUser(
-                    newAddUsers = newAddInnerUsers,
-                    userType = NEW_ADD_INNER_USERS,
-                    groupId = groupId
+                newAddUsers = newAddInnerUsers,
+                userType = NEW_ADD_INNER_USERS,
+                groupId = groupId
             )
         }
 
@@ -316,15 +317,20 @@ class GroupService @Autowired constructor(
         val experienceIds = mutableSetOf<Long>()
         val groupIds = mutableSetOf<Long>()
         groupIds.add(groupId)
-        experienceIds.addAll(experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds)
-                .map { it.value1() }.toSet())
-        experienceIds.forEach { experienceId ->
+        experienceIds.addAll(
+            experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds)
+                .map { it.value1() }.toSet()
+        )
+        experienceIds.forEach continuing@{ experienceId ->
             val experienceRecord = experienceDao.get(dslContext, experienceId)
+            if (DateUtil.isExpired(experienceRecord.endDate)) {
+                return@continuing
+            }
             when (userType) {
                 NEW_ADD_OUTER_USERS -> {
                     experienceService.sendMessageToOuterReceivers(
-                            outerReceivers = newAddUsers,
-                            experienceRecord = experienceRecord
+                        outerReceivers = newAddUsers,
+                        experienceRecord = experienceRecord
                     )
                 }
                 NEW_ADD_INNER_USERS -> {
@@ -332,14 +338,14 @@ class GroupService @Autowired constructor(
                     val pcUrl = experienceService.getPcUrl(experienceRecord.projectId, experienceId)
                     val appUrl = experienceService.getShortExternalUrl(experienceId)
                     val projectName =
-                            client.get(ServiceProjectResource::class).get(experienceRecord.projectId).data!!.projectName
+                        client.get(ServiceProjectResource::class).get(experienceRecord.projectId).data!!.projectName
                     experienceService.sendMessageToInnerReceivers(
-                            notifyTypeList = notifyTypeList,
-                            projectName = projectName,
-                            innerReceivers = newAddUsers,
-                            experienceRecord = experienceRecord,
-                            pcUrl = pcUrl,
-                            appUrl = appUrl
+                        notifyTypeList = notifyTypeList,
+                        projectName = projectName,
+                        innerReceivers = newAddUsers,
+                        experienceRecord = experienceRecord,
+                        pcUrl = pcUrl,
+                        appUrl = appUrl
                     )
                 }
             }
