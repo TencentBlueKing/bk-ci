@@ -323,7 +323,7 @@ class GroupService @Autowired constructor(
         )
         experienceIds.forEach continuing@{ experienceId ->
             val experienceRecord = experienceDao.get(dslContext, experienceId)
-            if (DateUtil.isExpired(experienceRecord.endDate)) {
+            if (DateUtil.isExpired(experienceRecord.endDate) || !experienceRecord.online) {
                 return@continuing
             }
             when (userType) {
