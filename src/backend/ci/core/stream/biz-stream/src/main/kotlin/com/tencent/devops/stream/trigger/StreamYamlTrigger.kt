@@ -113,7 +113,7 @@ class StreamYamlTrigger @Autowired constructor(
             val e = triggerMatcher.isMatch(action, trigger)
             logger.info(
                 "${action.data.eventCommon.gitProjectId}|${action.data.context.pipeline?.pipelineId} " +
-                        "use trigger cache result ${trigger}"
+                    "use trigger cache result $trigger"
             )
             e
         }
