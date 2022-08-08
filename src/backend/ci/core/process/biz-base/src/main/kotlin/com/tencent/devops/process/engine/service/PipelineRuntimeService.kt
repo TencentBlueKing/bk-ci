@@ -492,7 +492,6 @@ class PipelineRuntimeService @Autowired constructor(
                 stageStatus = stageStatus?.let { self ->
                     JsonUtil.to(self, object : TypeReference<List<BuildStageStatus>>() {})
                 },
-                deleteReason = "",
                 currentTimestamp = currentTimestamp,
                 material =
                 material?.let { self ->

@@ -1231,7 +1231,6 @@ class PipelineBuildFacadeService(
             endTime = buildHistory.endTime,
             status = buildHistory.status,
             stageStatus = buildHistory.stageStatus,
-            deleteReason = buildHistory.deleteReason,
             currentTimestamp = buildHistory.currentTimestamp,
             isMobileStart = buildHistory.isMobileStart,
             material = buildHistory.material,

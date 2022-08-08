@@ -172,6 +172,7 @@ class StartActionTaskContainerCmd(
                 variables = containerContext.variables
             )
         }
+        val fastKill = FastKillUtils.isFastKillCode(containerContext.event.errorCode)
         var toDoTask: PipelineBuildTask? = null
         var continueWhenFailure = false // 失败继续
         var needTerminate = isTerminate(containerContext) // 是否终止类型
@@ -195,7 +196,7 @@ class StartActionTaskContainerCmd(
                 needTerminate = needTerminate || TaskUtils.isStartVMTask(t) // #4301 构建机启动失败，就需要终止[P0]
                 // 当前任务已经失败or取消，并且没有设置[失败继续]的， 设置给容器最终FAILED状态
                 if (!ControlUtils.continueWhenFailure(t.additionalOptions)) {
-                    containerContext.buildStatus = BuildStatusSwitcher.jobStatusMaker.forceFinish(t.status)
+                    containerContext.buildStatus = BuildStatusSwitcher.jobStatusMaker.forceFinish(t.status, fastKill)
                 } else {
                     continueWhenFailure = true
                     if (needTerminate || t.status.isCancel()) { // #4301 强制终止的标志为失败，不管是不是设置了失败继续[P0]
