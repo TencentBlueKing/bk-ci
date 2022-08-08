@@ -24,36 +24,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.resources.atom
 
-package com.tencent.devops.store.utils
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.atom.BuildAtomResource
+import com.tencent.devops.store.pojo.common.VersionInfo
+import com.tencent.devops.store.service.atom.AtomService
+import org.springframework.beans.factory.annotation.Autowired
 
-object VersionUtils {
+@RestResource
+class BuildAtomResourceImpl @Autowired constructor(
+    private val atomService: AtomService
+) : BuildAtomResource {
 
-    fun convertLatestVersion(version: String): String {
-        val versionPrefix = version.substring(0, version.indexOf(".") + 1)
-        return "$versionPrefix*"
+    override fun getAtomDefaultValidVersion(projectCode: String, atomCode: String): Result<VersionInfo?> {
+        return atomService.getAtomDefaultValidVersion(projectCode, atomCode)
     }
-
-    fun convertLatestVersionName(version: String): String {
-        val versionPrefix = version.substring(0, version.indexOf(".") + 1)
-        return "${versionPrefix}latest"
-    }
-
-    /**
-     * 生成查询版本号
-     * @param version 版本号
-     */
-    fun generateQueryVersion(version: String): String {
-        return if (isLatestVersion(version)) {
-            version.replace("*", "") + "%"
-        } else {
-            version
-        }
-    }
-
-    /**
-     * 是否是x.latest这种最新版本号
-     * @param version 版本号
-     */
-    fun isLatestVersion(version: String) = version.contains("*")
 }
