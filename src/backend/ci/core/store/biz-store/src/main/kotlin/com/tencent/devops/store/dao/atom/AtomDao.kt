@@ -452,7 +452,8 @@ class AtomDao : AtomBaseDao() {
         projectCode: String,
         atomCode: String,
         defaultFlag: Boolean,
-        atomStatusList: List<Byte>?
+        atomStatusList: List<Byte>? = null,
+        limitNum: Int? = null
     ): Result<out Record>? {
         val tAtom = TAtom.T_ATOM
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
@@ -500,7 +501,7 @@ class AtomDao : AtomBaseDao() {
             delim = ".",
             count = -1
         )
-        return dslContext.select(
+        val queryStep = dslContext.select(
             t.field(KEY_VERSION),
             t.field(KEY_ATOM_STATUS),
             firstVersion,
@@ -508,7 +509,8 @@ class AtomDao : AtomBaseDao() {
             thirdVersion
         ).from(t)
             .orderBy(firstVersion.plus(0).desc(), secondVersion.plus(0).desc(), thirdVersion.plus(0).desc())
-            .fetch()
+        limitNum?.let { queryStep.limit(it) }
+        return queryStep.fetch()
     }
 
     fun getPipelineAtoms(
