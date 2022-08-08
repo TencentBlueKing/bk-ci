@@ -47,7 +47,7 @@ class MetricsConfig {
     @Value("\${metrics.defaultLimitNum:10}")
     val defaultLimitNum = 10
 
-    @Value("\${metrics.queryDaysMax:6}")
+    @Value("\${metrics.queryDaysMax:180}")
     val queryDaysMax: Long = 180
 
     @Value("\${metrics.unReportClusterTags:}")
