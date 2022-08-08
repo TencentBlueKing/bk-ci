@@ -33,10 +33,11 @@ jobs:
       run: |
         go mod download
         go get -u github.com/gobuffalo/packr/v2/packr2
-    - name: GO Build 
+        sed -i '8s/^/\/\//'  bk_dist/dashboard/pkg/dashboard/dashboard-packr.go
+        go mod tidy
+        sed -i '8s/^\/\///' bk_dist/dashboard/pkg/dashboard/dashboard-packr.go
+    - name: GO Build
       working-directory: src/backend/booster
-      run: |
-        go mod download
-        make -j buildbooster dist
+      run: make -j buildbooster dist
       env:
         GITTAG: ${{ github.ref }}
