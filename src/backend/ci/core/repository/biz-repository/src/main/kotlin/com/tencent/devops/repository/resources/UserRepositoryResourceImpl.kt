@@ -230,7 +230,9 @@ class UserRepositoryResourceImpl @Autowired constructor(
         repositoryType: ScmType?,
         aliasName: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        sortBy: String?,
+        sortType: String?
     ): Result<RepositoryPage<RepositoryInfoWithPermission>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -247,7 +249,9 @@ class UserRepositoryResourceImpl @Autowired constructor(
             repositoryType = repositoryType,
             aliasName = aliasName,
             offset = limit.offset,
-            limit = limit.limit
+            limit = limit.limit,
+            sortBy = sortBy,
+            sortType = sortType
         )
         return Result(
             RepositoryPage(
