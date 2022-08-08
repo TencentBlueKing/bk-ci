@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
@@ -274,6 +275,22 @@ class PipelineBuildFacadeService(
             canElementSkip = canElementSkip,
             properties = params,
             buildNo = currentBuildNo
+        )
+    }
+
+    fun buildManualSearchOptions(
+        userId: String?,
+        projectId: String,
+        pipelineId: String,
+        search: String? = null,
+        property: BuildFormProperty
+    ): List<BuildFormValue> {
+        return paramFacadeService.filterOptions(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            search = search,
+            property = property
         )
     }
 
