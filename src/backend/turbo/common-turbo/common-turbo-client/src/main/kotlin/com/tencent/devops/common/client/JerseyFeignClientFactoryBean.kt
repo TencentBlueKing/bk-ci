@@ -11,6 +11,7 @@ import feign.jackson.JacksonEncoder
 import feign.jaxrs.JAXRSContract
 import org.springframework.beans.factory.FactoryBean
 import org.springframework.beans.factory.InitializingBean
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
