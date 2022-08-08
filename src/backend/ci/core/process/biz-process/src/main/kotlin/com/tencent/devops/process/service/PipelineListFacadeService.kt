@@ -68,7 +68,6 @@ import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
-import com.tencent.devops.process.pojo.PipelineListExtra
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineGroupLabels
@@ -616,12 +615,15 @@ class PipelineListFacadeService @Autowired constructor(
             }
             watcher.stop()
 
-            return PipelineViewPipelinePage(
+            val pipelineViewPipelinePage = PipelineViewPipelinePage(
                 page = page ?: 1,
                 pageSize = pageSize ?: totalSize.toInt(),
                 count = totalSize,
                 records = pipelineList
             )
+            pipelineViewPipelinePage.myCreatedCount = authPipelines.size
+            pipelineViewPipelinePage.myFavoriteCount = favorPipelines.size
+            return pipelineViewPipelinePage
         } finally {
             LogUtils.printCostTimeWE(watcher = watcher)
             processJmxApi.execute(ProcessJmxApi.LIST_NEW_PIPELINES, watcher.totalTimeMillis)
@@ -1725,15 +1727,5 @@ class PipelineListFacadeService @Autowired constructor(
             logger.info("listViewPipelines|[$projectId]|$userId|watch=$watch")
             processJmxApi.execute(ProcessJmxApi.LIST_NEW_PIPELINES, watch.totalTimeMillis)
         }
-    }
-
-    fun extra(userId: String, projectId: String): PipelineListExtra {
-        val myFavoriteCount = pipelineFavorDao.countByUserId(dslContext, projectId, userId)
-        val myCreatedCount = pipelinePermissionService.getResourceByPermission(
-            userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.LIST
-        ).size
-        return PipelineListExtra(myFavoriteCount, myCreatedCount)
     }
 }

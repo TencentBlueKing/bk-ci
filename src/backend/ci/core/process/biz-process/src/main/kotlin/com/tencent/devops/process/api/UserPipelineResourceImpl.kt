@@ -509,11 +509,6 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
     }
 
-    override fun extra(userId: String, projectId: String): Result<PipelineListExtra> {
-        checkParam(userId, projectId)
-        return Result(pipelineListFacadeService.extra(userId, projectId))
-    }
-
     override fun list(
         userId: String,
         projectId: String,
