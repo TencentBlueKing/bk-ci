@@ -218,8 +218,12 @@
                             ref="codeEditor"
                         />
                     </bk-form-item> -->
-                    <bk-form-item :label="$t('pipeline.variable')">
+                    <bk-form-item
+                        v-if="uiFormSchema && Object.keys(uiFormSchema).length"
+                        :label="$t('pipeline.variable')"
+                    >
                         <bk-ui-form
+                            class="ui-form"
                             v-bkloading="{ isLoading: isLoadingSchema }"
                             v-model="formData.inputs"
                             ref="bkUiForm"
@@ -914,6 +918,10 @@
         }
         /deep/ .bk-tag-selector .bk-tag-input .tag {
             max-width: 500px;
+        }
+        .ui-form {
+            padding: 10px;
+            border: 1px solid #c4c6cc;
         }
     }
     .mb8 {
