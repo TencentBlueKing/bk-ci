@@ -12,7 +12,6 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.store.tables.records.TStorePublisherInfoRecord
 import com.tencent.devops.model.store.tables.records.TStorePublisherMemberRelRecord
 import com.tencent.devops.project.api.service.ServiceUserResource
-import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.store.dao.common.PublishersDao
 import com.tencent.devops.store.dao.common.StoreDockingPlatformDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -39,7 +38,7 @@ class PublishersDataServiceImpl @Autowired constructor(
     private val storeMemberDao: StoreMemberDao,
     private val storeUserService: StoreUserService
 ) : PublishersDataService {
-    override fun createPublisherData(userId: String, publishers: List<PublishersRequest>): Int  {
+    override fun createPublisherData(userId: String, publishers: List<PublishersRequest>): Int {
         val storePublisherInfoRecords = mutableListOf<TStorePublisherInfoRecord>()
         val storePublisherMemberRelRecords = mutableListOf<TStorePublisherMemberRelRecord>()
         publishers.forEach {
@@ -111,7 +110,7 @@ class PublishersDataServiceImpl @Autowired constructor(
         return publishersDao.batchDelete(dslContext, publishers)
     }
 
-    override fun updatePublisherData(userId: String, publishers: List<PublishersRequest>): Int  {
+    override fun updatePublisherData(userId: String, publishers: List<PublishersRequest>): Int {
         val storePublisherInfoRecords = mutableListOf<TStorePublisherInfoRecord>()
         publishers.forEach {
             val deptInfos = analysisDept(userId, it.organization)
@@ -152,7 +151,7 @@ class PublishersDataServiceImpl @Autowired constructor(
     override fun deletePlatformsData(
         userId: String,
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
-    ): Int  {
+    ): Int {
         return storeDockingPlatformDao.batchDelete(dslContext, userId, storeDockingPlatformRequests)
     }
 
@@ -228,9 +227,9 @@ class PublishersDataServiceImpl @Autowired constructor(
         //  根据解析组织名称获取组织ID
         val deptNames = organization.split("/")
         val deptInfos = mutableListOf<DeptInfo>()
-        deptNames.forEachIndexed(){ index, deptName ->
+        deptNames.forEachIndexed() { index, deptName ->
             val result = client.get(ServiceDeptResource::class).getDeptByName(userId, deptName).data
-            result?.let { it -> deptInfos.add(index, it.results[0] ) }
+            result?.let { it -> deptInfos.add(index, it.results[0]) }
         }
         return deptInfos
     }

@@ -30,11 +30,11 @@ class PublishersDao {
                     .set(FIRST_LEVEL_DEPT_ID, publisherInfo.firstLevelDeptId.toLong())
                     .set(FIRST_LEVEL_DEPT_NAME, publisherInfo.firstLevelDeptName)
                     .set(SECOND_LEVEL_DEPT_ID, publisherInfo.secondLevelDeptId.toLong())
-                    .set(SECOND_LEVEL_DEPT_NAME,  publisherInfo.secondLevelDeptName)
+                    .set(SECOND_LEVEL_DEPT_NAME, publisherInfo.secondLevelDeptName)
                     .set(THIRD_LEVEL_DEPT_ID, publisherInfo.thirdLevelDeptId.toLong())
-                    .set(THIRD_LEVEL_DEPT_NAME,  publisherInfo.thirdLevelDeptName)
-                    .set(FOURTH_LEVEL_DEPT_ID,  publisherInfo.fourthLevelDeptId?.toLong())
-                    .set(FOURTH_LEVEL_DEPT_NAME,  publisherInfo.fourthLevelDeptName)
+                    .set(THIRD_LEVEL_DEPT_NAME, publisherInfo.thirdLevelDeptName)
+                    .set(FOURTH_LEVEL_DEPT_ID, publisherInfo.fourthLevelDeptId?.toLong())
+                    .set(FOURTH_LEVEL_DEPT_NAME, publisherInfo.fourthLevelDeptName)
                     .set(ORGANIZATION_NAME, publisherInfo.organizationName)
                     .set(OWNER_DEPT_NAME, publisherInfo.ownerDeptName)
                     .set(CERTIFICATION_FLAG, publisherInfo.certificationFlag)
@@ -116,7 +116,6 @@ class PublishersDao {
                 .where(MEMBER_ID.eq(memberId))
                 .fetchOne(0, String::class.java)
         }
-
     }
 
     fun getPublisherInfoById(

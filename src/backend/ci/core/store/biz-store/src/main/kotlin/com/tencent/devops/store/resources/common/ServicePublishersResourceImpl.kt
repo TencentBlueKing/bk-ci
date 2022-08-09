@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServicePublishersResourceImpl @Autowired constructor(
     private val publishersDataService: PublishersDataService
-): ServicePublishersResource {
+) : ServicePublishersResource {
     override fun synAddPublisherData(userId: String, publishers: List<PublishersRequest>): Result<Int> {
         return Result(publishersDataService.createPublisherData(userId, publishers))
     }
@@ -44,5 +44,4 @@ class ServicePublishersResourceImpl @Autowired constructor(
     ): Result<Int> {
         return Result(publishersDataService.updatePlatformsData(userId, storeDockingPlatformRequests))
     }
-
 }

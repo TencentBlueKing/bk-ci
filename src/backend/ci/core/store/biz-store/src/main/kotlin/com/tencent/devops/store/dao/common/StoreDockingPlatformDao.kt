@@ -28,7 +28,6 @@
 package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreDockingPlatform
 import com.tencent.devops.model.store.tables.records.TStoreDockingPlatformRecord

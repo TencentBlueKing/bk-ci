@@ -35,7 +35,7 @@ data class PublisherInfo(
     @ApiModelProperty("四级部门ID")
     val fourthLevelDeptId: Int? = null,
     @ApiModelProperty("四级部门名称")
-    val fourthLevelDeptName: String? =null,
+    val fourthLevelDeptName: String? = null,
     @ApiModelProperty("实体组织架构")
     val organizationName: String,
     @ApiModelProperty("所属工作组BG")
