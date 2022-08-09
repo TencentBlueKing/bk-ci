@@ -44,6 +44,7 @@ import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
@@ -51,6 +52,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewFilter
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
+import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
@@ -159,6 +161,39 @@ class PipelineViewGroupService @Autowired constructor(
             }
         }
         return result
+    }
+
+    fun getView(userId: String, projectId: String, viewId: String): PipelineNewView {
+        val viewRecord = pipelineViewDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            viewId = HashUtil.decodeIdToLong(viewId)
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
+            params = arrayOf(viewId)
+        )
+
+        val filters = pipelineViewService.getFilters(
+            filterByName = viewRecord.filterByPipeineName,
+            filterByCreator = viewRecord.filterByCreator,
+            filters = viewRecord.filters
+        )
+
+        val pipelineIds = pipelineViewGroupDao.listByViewId(dslContext, projectId, viewRecord.id).map { it.pipelineId }
+
+        return PipelineNewView(
+            id = viewId,
+            projectId = viewRecord.projectId,
+            name = viewRecord.name,
+            projected = viewRecord.isProject,
+            createTime = viewRecord.createTime.timestamp(),
+            updateTime = viewRecord.updateTime.timestamp(),
+            creator = viewRecord.createUser,
+            logic = Logic.valueOf(viewRecord.logic),
+            filters = filters,
+            viewType = viewRecord.viewType,
+            pipelineIds = pipelineIds
+        )
     }
 
     fun deleteViewGroup(

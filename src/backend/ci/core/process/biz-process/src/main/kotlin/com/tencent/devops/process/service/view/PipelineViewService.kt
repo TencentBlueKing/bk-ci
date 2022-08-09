@@ -312,34 +312,6 @@ class PipelineViewService @Autowired constructor(
         }
     }
 
-    fun getView(userId: String, projectId: String, viewId: String): PipelineNewView {
-        val viewRecord = pipelineViewDao.get(dslContext = dslContext, projectId = projectId, viewId = decode(viewId))
-            ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
-                params = arrayOf(viewId)
-            )
-
-        val filters =
-            getFilters(
-                filterByName = viewRecord.filterByPipeineName,
-                filterByCreator = viewRecord.filterByCreator,
-                filters = viewRecord.filters
-            )
-
-        return PipelineNewView(
-            id = encode(viewRecord.id),
-            projectId = viewRecord.projectId,
-            name = viewRecord.name,
-            projected = viewRecord.isProject,
-            createTime = viewRecord.createTime.timestamp(),
-            updateTime = viewRecord.updateTime.timestamp(),
-            creator = viewRecord.createUser,
-            logic = Logic.valueOf(viewRecord.logic),
-            filters = filters,
-            viewType = viewRecord.viewType
-        )
-    }
-
     fun addView(
         userId: String,
         projectId: String,
@@ -505,7 +477,7 @@ class PipelineViewService @Autowired constructor(
         return pipelineView.logic == Logic.AND.name
     }
 
-    private fun getFilters(
+    fun getFilters(
         filterByName: String,
         filterByCreator: String,
         filters: String?

@@ -65,7 +65,7 @@ class UserPipelineViewResourceImpl @Autowired constructor(
     }
 
     override fun getView(userId: String, projectId: String, viewId: String): Result<PipelineNewView> {
-        return Result(pipelineViewService.getView(userId, projectId, viewId))
+        return Result(pipelineViewGroupService.getView(userId, projectId, viewId))
     }
 
     override fun addView(

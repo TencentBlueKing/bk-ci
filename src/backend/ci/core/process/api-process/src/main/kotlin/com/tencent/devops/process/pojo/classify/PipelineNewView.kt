@@ -52,5 +52,7 @@ data class PipelineNewView(
     @ApiModelProperty("流水线视图过滤器列表", required = false)
     val filters: List<PipelineViewFilter>,
     @ApiModelProperty("视图类型", required = true)
-    val viewType: Int
+    val viewType: Int,
+    @ApiModelProperty("流水线ID列表", required = true)
+    val pipelineIds: List<String>
 )
