@@ -218,14 +218,16 @@
                             ref="codeEditor"
                         />
                     </bk-form-item> -->
-                    <bk-ui-form
-                        v-bkloading="{ isLoading: isLoadingSchema }"
-                        v-model="formData.inputs"
-                        ref="bkUiForm"
-                        :schema="uiFormSchema"
-                        :layout="uiFormLayout"
-                        :rules="uiFormRules"
-                    />
+                    <bk-form-item :label="$t('pipeline.variable')">
+                        <bk-ui-form
+                            v-bkloading="{ isLoading: isLoadingSchema }"
+                            v-model="formData.inputs"
+                            ref="bkUiForm"
+                            :schema="uiFormSchema"
+                            :layout="uiFormLayout"
+                            :rules="uiFormRules"
+                        />
+                    </bk-form-item>
                 </template>
                 <bk-form-item>
                     <bk-button
