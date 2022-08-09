@@ -407,8 +407,8 @@ class PipelineViewGroupService @Autowired constructor(
 
     fun dict(userId: String, projectId: String): PipelineViewDict {
         // 流水线组信息
-        val viewInfos = pipelineViewDao.list(dslContext, projectId)
-        if (viewInfos.isEmpty()) {
+        val viewInfoMap = pipelineViewDao.list(dslContext, projectId).associateBy { it.id }
+        if (viewInfoMap.isEmpty()) {
             return PipelineViewDict.EMPTY
         }
         // 流水线组映射关系
@@ -424,7 +424,9 @@ class PipelineViewGroupService @Autowired constructor(
                 viewGroupMap[viewId] = mutableListOf()
             }
             viewGroupMap[viewId]!!.add(it.pipelineId)
-            classifiedPipelineIds.add(it.pipelineId)
+            if (viewInfoMap[it.viewId]?.isProject == true) {
+                classifiedPipelineIds.add(it.pipelineId)
+            }
         }
         //流水线信息
         val pipelineInfoMap = allPipelineInfos(projectId).associateBy { it.pipelineId }
@@ -444,7 +446,7 @@ class PipelineViewGroupService @Autowired constructor(
             )
         )
         // 拼装返回结果
-        for (view in viewInfos) {
+        for (view in viewInfoMap.values) {
             if (!view.isProject && view.createUser != userId) {
                 continue
             }
