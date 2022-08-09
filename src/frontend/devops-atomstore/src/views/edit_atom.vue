@@ -446,7 +446,7 @@
                 initJobType: '',
                 initReleaseType: '',
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/store/plugins/create-plugin`,
+                docsLink: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=15008942`,
                 showContent: false,
                 isUploading: false,
                 initOs: [],

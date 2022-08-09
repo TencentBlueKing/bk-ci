@@ -155,7 +155,7 @@ class TGitMrActionGit(
         if (event.object_attributes.action == "update" &&
             event.object_attributes.extension_action != "push-update"
         ) {
-            logger.info("Git web hook is ${event.object_attributes.action} merge request")
+            logger.info("TGitMrActionGit|buildRequestEvent|merge request|action|${event.object_attributes.action}")
             return null
         }
 
@@ -299,19 +299,20 @@ class TGitMrActionGit(
         )
         val sourceContent = if (sourceFile?.content.isNullOrBlank()) {
             logger.warn(
-                "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
-                    "get file $fileName content from ${event.object_attributes.source_project_id} " +
-                    "source commit ${event.object_attributes.last_commit.id} is blank because no file"
+                "TGitMrActionGit|getYamlContent|no file|projectId|${data.getGitProjectId()}" +
+                    "|eventId|${data.context.requestEventId}" +
+                    "|file|$fileName|source_project_id|${event.object_attributes.source_project_id} " +
+                    "|commit ${event.object_attributes.last_commit.id}"
             )
             Pair(event.object_attributes.last_commit.id, "")
         } else {
             val c = String(Base64.getDecoder().decode(sourceFile!!.content))
             if (c.isBlank()) {
                 logger.warn(
-                    "${data.getGitProjectId()} mr request ${data.context.requestEventId}" +
-                        "get file $fileName content from ${event.object_attributes.source_project_id} " +
-                        "source commit ${event.object_attributes.last_commit.id} is blank " +
-                        "because git content blank"
+                    "TGitMrActionGit|getYamlContent|git content blank" +
+                        "|projectId|${data.getGitProjectId()}|eventId|${data.context.requestEventId}" +
+                        "|file|$fileName|source_project_id|${event.object_attributes.source_project_id} " +
+                        "|commit ${event.object_attributes.last_commit.id}"
                 )
             }
             Pair(event.object_attributes.last_commit.id, c)

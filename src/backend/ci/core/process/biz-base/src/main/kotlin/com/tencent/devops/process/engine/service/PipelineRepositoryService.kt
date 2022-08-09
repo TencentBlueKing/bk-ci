@@ -197,12 +197,14 @@ class PipelineRepositoryService constructor(
         userId: String,
         create: Boolean = true,
         channelCode: ChannelCode
-    ): Set<PipelineModelTask> {
+    ): List<PipelineModelTask> {
 
-        modelCheckPlugin.checkModelIntegrity(model, projectId)
+        val metaSize = modelCheckPlugin.checkModelIntegrity(model, projectId)
+        // 去重id
+        val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)
 
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
-        val modelTasks = mutableSetOf<PipelineModelTask>()
+        val modelTasks = ArrayList<PipelineModelTask>(metaSize)
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val containerSeqId = AtomicInteger(0)
         model.stages.forEachIndexed { index, s ->
@@ -219,7 +221,8 @@ class PipelineRepositoryService constructor(
                     userId = userId,
                     modelTasks = modelTasks,
                     channelCode = channelCode,
-                    create = create
+                    create = create,
+                    distIds = distinctIdSet
                 )
             } else {
                 initOtherContainer(
@@ -231,7 +234,8 @@ class PipelineRepositoryService constructor(
                     model = model,
                     modelTasks = modelTasks,
                     channelCode = channelCode,
-                    create = create
+                    create = create,
+                    distIds = distinctIdSet
                 )
             }
         }
@@ -246,9 +250,10 @@ class PipelineRepositoryService constructor(
         pipelineId: String,
         model: Model,
         userId: String,
-        modelTasks: MutableSet<PipelineModelTask>,
+        modelTasks: MutableList<PipelineModelTask>,
         channelCode: ChannelCode,
-        create: Boolean
+        create: Boolean,
+        distIds: HashSet<String>
     ) {
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
@@ -258,24 +263,27 @@ class PipelineRepositoryService constructor(
             )
         }
         val c = (
-                stage.containers.getOrNull(0) ?: throw ErrorCodeException(
+            stage.containers.getOrNull(0)
+                ?: throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
                     defaultMessage = "第一阶段的环境不能为空"
                 )
-                ) as TriggerContainer
+            ) as TriggerContainer
 
         // #4518 各个容器ID的初始化
         c.id = containerSeqId.get().toString()
         c.containerId = c.id
-        if (c.containerHashId.isNullOrBlank()) {
+        if (c.containerHashId.isNullOrBlank() || distIds.contains(c.containerHashId)) {
             c.containerHashId = modelContainerIdGenerator.getNextId()
         }
+        distIds.add(c.containerHashId!!)
 
         var taskSeq = 0
         c.elements.forEach { e ->
-            if (e.id.isNullOrBlank()) {
+            if (e.id.isNullOrBlank() || distIds.contains(e.id)) {
                 e.id = modelTaskIdGenerator.getNextId()
             }
+            distIds.add(e.id!!)
             ElementBizRegistrar.getPlugin(e)?.afterCreate(
                 element = e,
                 projectId = projectId,
@@ -314,9 +322,10 @@ class PipelineRepositoryService constructor(
         userId: String,
         pipelineId: String,
         model: Model,
-        modelTasks: MutableSet<PipelineModelTask>,
+        modelTasks: MutableList<PipelineModelTask>,
         channelCode: ChannelCode,
-        create: Boolean
+        create: Boolean,
+        distIds: HashSet<String>
     ) {
         if (stage.containers.isEmpty()) {
             throw ErrorCodeException(
@@ -377,14 +386,15 @@ class PipelineRepositoryService constructor(
             // #4518 Model中的containerId 和T_PIPELINE_BUILD_CONTAINER表的containerId保持一致，同为seq id
             c.id = containerSeqId.get().toString()
             c.containerId = c.id
-            if (c.containerHashId.isNullOrBlank()) {
+            if (c.containerHashId.isNullOrBlank() || distIds.contains(c.containerHashId)) {
                 c.containerHashId = modelContainerIdGenerator.getNextId()
             }
-
+            distIds.add(c.containerHashId!!)
             c.elements.forEach { e ->
-                if (e.id.isNullOrBlank()) {
+                if (e.id.isNullOrBlank() || distIds.contains(e.id)) {
                     e.id = modelTaskIdGenerator.getNextId()
                 }
+                distIds.add(e.id!!)
                 when (e) {
                     is SubPipelineCallElement -> { // 子流水线循环依赖检查
                         val existPipelines = HashSet<String>()
@@ -431,8 +441,8 @@ class PipelineRepositoryService constructor(
         if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
             throw InvalidParamException(
                 "构建矩阵并发数(${option.maxConcurrency}) 超过 $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
-                        "matrix maxConcurrency(${option.maxConcurrency}) " +
-                        "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
+                    "matrix maxConcurrency(${option.maxConcurrency}) " +
+                    "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )
         }
         MatrixContextUtils.schemaCheck(
@@ -455,7 +465,7 @@ class PipelineRepositoryService constructor(
         canManualStartup: Boolean,
         canElementSkip: Boolean,
         buildNo: BuildNo?,
-        modelTasks: Set<PipelineModelTask>,
+        modelTasks: Collection<PipelineModelTask>,
         useTemplateSettings: Boolean? = false,
         templateId: String? = null
     ): DeployPipelineResult {
@@ -581,7 +591,7 @@ class PipelineRepositoryService constructor(
         canManualStartup: Boolean,
         canElementSkip: Boolean,
         buildNo: BuildNo?,
-        modelTasks: Set<PipelineModelTask>,
+        modelTasks: Collection<PipelineModelTask>,
         channelCode: ChannelCode,
         maxPipelineResNum: Int? = null,
         updateLastModifyUser: Boolean? = true

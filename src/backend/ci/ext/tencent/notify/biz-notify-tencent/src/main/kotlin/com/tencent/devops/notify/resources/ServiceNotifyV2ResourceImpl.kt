@@ -49,7 +49,11 @@ class ServiceNotifyV2ResourceImpl @Autowired constructor(
     override fun sendRtxNotify(message: RtxNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkRtxMessage(message)
         checkV2ExtInfo(message)
-        rtxService.sendMqMsg(message)
+
+        if (message.getReceivers().isNotEmpty()) {
+            rtxService.sendMqMsg(message)
+        }
+
         return Result(true)
     }
 
@@ -59,7 +63,11 @@ class ServiceNotifyV2ResourceImpl @Autowired constructor(
     override fun sendEmailNotify(message: EmailNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkEmailMessage(message)
         checkV2ExtInfo(message)
-        emailService.sendMqMsg(message)
+
+        if (message.getReceivers().isNotEmpty()) {
+            emailService.sendMqMsg(message)
+        }
+
         return Result(true)
     }
 

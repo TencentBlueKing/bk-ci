@@ -26,11 +26,22 @@
  */
 
 dependencies {
-    api(project(":core:sign:biz-sign"))
-    api(project(":ext:tencent:sign:api-sign-tencent"))
-    api(project(":ext:tencent:common:common-archive-tencent"))
+    api(project(":core:common:common-service"))
+    api(project(":core:common:common-web"))
+    api(project(":core:common:common-client"))
+    api(project(":core:common:common-db"))
+    api(project(":core:artifactory:api-artifactory"))
+    api(project(":core:artifactory:api-artifactory"))
+    api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:common:common-client"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
+    api(project(":ext:tencent:common:common-archive-tencent"))
+    api(project(":ext:tencent:sign:api-sign-tencent"))
+    api(project(":ext:tencent:sign:model-sign-tencent"))
+
+    api("mysql:mysql-connector-java")
+    api("org.json:json")
+    api("com.googlecode.plist:dd-plist")
     api("io.jsonwebtoken:jjwt-api")
     runtimeOnly("io.jsonwebtoken:jjwt-impl")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson")

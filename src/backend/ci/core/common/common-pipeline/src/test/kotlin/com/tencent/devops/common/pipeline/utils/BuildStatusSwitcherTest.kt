@@ -50,8 +50,17 @@ class BuildStatusSwitcherTest {
                         BuildStatusSwitcher.pipelineStatusMaker.finish(status)
                     )
                 }
+                status == BuildStatus.TERMINATE -> {
+                    Assertions.assertEquals(
+                        BuildStatus.TERMINATE,
+                        BuildStatusSwitcher.pipelineStatusMaker.finish(status)
+                    )
+                }
                 status.isReadyToRun() -> {
-                    Assertions.assertEquals(BuildStatus.CANCELED, BuildStatusSwitcher.pipelineStatusMaker.finish(status))
+                    Assertions.assertEquals(
+                        BuildStatus.CANCELED,
+                        BuildStatusSwitcher.pipelineStatusMaker.finish(status)
+                    )
                 }
                 status.isRunning() -> {
                     Assertions.assertEquals(BuildStatus.SUCCEED, BuildStatusSwitcher.pipelineStatusMaker.finish(status))
@@ -120,6 +129,12 @@ class BuildStatusSwitcherTest {
                 status == BuildStatus.QUEUE_TIMEOUT -> {
                     Assertions.assertEquals(
                         BuildStatus.QUEUE_TIMEOUT,
+                        BuildStatusSwitcher.pipelineStatusMaker.forceFinish(status)
+                    )
+                }
+                status == BuildStatus.TERMINATE -> {
+                    Assertions.assertEquals(
+                        BuildStatus.TERMINATE,
                         BuildStatusSwitcher.pipelineStatusMaker.forceFinish(status)
                     )
                 }

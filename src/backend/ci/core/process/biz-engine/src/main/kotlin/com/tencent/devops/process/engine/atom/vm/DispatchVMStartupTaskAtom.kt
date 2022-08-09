@@ -302,7 +302,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         runVariables: Map<String, String>,
         force: Boolean
     ): AtomResponse {
-        monitorPrint(task)
         return if (force) {
             if (task.status.isFinish()) {
                 AtomResponse(
@@ -329,6 +328,13 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 defaultFailAtomResponse
             }
         } else {
+            // 第三方构建机支持打印监控
+            if (param.dispatchType is ThirdPartyAgentEnvDispatchType ||
+                param.dispatchType is ThirdPartyAgentIDDispatchType) {
+
+                thirdPartyAgentMnitorPrint(task)
+            }
+
             AtomResponse(
                 buildStatus = task.status,
                 errorType = task.errorType,
@@ -338,7 +344,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         }
     }
 
-    private fun monitorPrint(task: PipelineBuildTask) {
+    private fun thirdPartyAgentMnitorPrint(task: PipelineBuildTask) {
         // #5806 超过10秒，开始查询调度情况，并Log出来
         val timePasses = System.currentTimeMillis() - (task.startTime?.timestampmilli() ?: 0L)
         val modSeconds = TimeUnit.MILLISECONDS.toSeconds(timePasses) % 20

@@ -266,7 +266,7 @@ class V1GitCIDetailService @Autowired constructor(
             ).data!!
             return Url(getUrl(url.url)!!, getUrl(url.url2))
         } catch (e: Exception) {
-            logger.error("Artifactory download url failed. ${e.message}")
+            logger.warn("Artifactory download url failed. ${e.message}")
             throw CustomException(Response.Status.BAD_REQUEST, "Artifactory download url failed. ${e.message}")
         }
     }
