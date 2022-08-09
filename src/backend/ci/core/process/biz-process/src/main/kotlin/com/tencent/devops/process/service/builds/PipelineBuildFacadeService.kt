@@ -407,6 +407,13 @@ class PipelineBuildFacadeService(
                     model.stages.forEach { s ->
                         // stage 级重试
                         if (s.id == taskId) {
+                            pipelineStageService.getStage(projectId, buildId, stageId = s.id) ?: run {
+                                throw ErrorCodeException(
+                                    errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY,
+                                    defaultMessage = "构建数据已过期，请使用rebuild进行重试(Please use rebuild)"
+                                )
+                            }
+
                             paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
                                 key = PIPELINE_RETRY_START_TASK_ID, value = s.id!!
                             )
@@ -426,12 +433,26 @@ class PipelineBuildFacadeService(
                             val pos = if (c.id == taskId) 0 else -1 // 容器job级别的重试，则找job的第一个原子
                             c.elements.forEachIndexed { index, element ->
                                 if (index == pos) {
+                                    pipelineContainerService.getContainer(projectId, buildId, s.id, c.id!!) ?: run {
+                                        throw ErrorCodeException(
+                                            errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY,
+                                            defaultMessage = "构建数据已过期，请使用rebuild进行重试(Please use rebuild)"
+                                        )
+                                    }
                                     paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
                                         key = PIPELINE_RETRY_START_TASK_ID, value = element.id!!
                                     )
+
                                     return@run
                                 }
                                 if (element.id == taskId) {
+                                    pipelineTaskService.getByTaskId(null, projectId, buildId, taskId)
+                                        ?: run {
+                                            throw ErrorCodeException(
+                                                errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY,
+                                                defaultMessage = "构建数据已过期，请使用rebuild进行重试(Please use rebuild)"
+                                            )
+                                        }
                                     paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
                                         key = PIPELINE_RETRY_START_TASK_ID, value = element.id!!
                                     )
@@ -781,6 +802,7 @@ class PipelineBuildFacadeService(
                                 ManualReviewParamType.BOOLEAN -> {
                                     it.value = it.value ?: false
                                 }
+
                                 else -> {
                                     it.value = buildVariableService.replaceTemplate(
                                         projectId = projectId,
@@ -957,9 +979,11 @@ class PipelineBuildFacadeService(
             ControlPointPosition.BEFORE_POSITION -> {
                 Pair(buildStage.checkIn, true)
             }
+
             ControlPointPosition.AFTER_POSITION -> {
                 Pair(buildStage.checkOut, false)
             }
+
             else -> {
                 throw ErrorCodeException(
                     statusCode = Response.Status.FORBIDDEN.statusCode,
@@ -1024,6 +1048,7 @@ class PipelineBuildFacadeService(
                                 ManualReviewParamType.BOOLEAN -> {
                                     param.value = param.value ?: false
                                 }
+
                                 else -> {
                                     param.value = buildVariableService.replaceTemplate(
                                         projectId = projectId,
@@ -1248,7 +1273,6 @@ class PipelineBuildFacadeService(
             endTime = buildHistory.endTime,
             status = buildHistory.status,
             stageStatus = buildHistory.stageStatus,
-            deleteReason = buildHistory.deleteReason,
             currentTimestamp = buildHistory.currentTimestamp,
             isMobileStart = buildHistory.isMobileStart,
             material = buildHistory.material,
@@ -2046,14 +2070,17 @@ class PipelineBuildFacadeService(
                     throw ParamBlankException("param: ${originParam.key} value not in multipleParams")
                 }
             }
+
             ManualReviewParamType.ENUM -> {
                 if (!originParam.options!!.map { it.key }.toList().contains(param)) {
                     throw ParamBlankException("param: ${originParam.key} value not in enumParams")
                 }
             }
+
             ManualReviewParamType.BOOLEAN -> {
                 originParam.value = param.toBoolean()
             }
+
             else -> {
                 originParam.value = param
             }
