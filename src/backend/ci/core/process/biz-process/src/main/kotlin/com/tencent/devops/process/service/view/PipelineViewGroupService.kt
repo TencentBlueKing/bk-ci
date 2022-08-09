@@ -558,7 +558,7 @@ class PipelineViewGroupService @Autowired constructor(
         val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
         val countByViewId = pipelineViewGroupDao.countByViewId(dslContext, projectId, views.map { it.id })
         val summaries = sortViews2Summary(projectId, userId, views, countByViewId)
-        if (projected == true) {
+        if (projected != false) {
             val classifiedPipelineIds = pipelineViewGroupDao.distinctPipelineIds(dslContext, projectId)
             val unclassifiedCount =
                 pipelineInfoDao.countExcludePipelineIds(dslContext, projectId, classifiedPipelineIds)
