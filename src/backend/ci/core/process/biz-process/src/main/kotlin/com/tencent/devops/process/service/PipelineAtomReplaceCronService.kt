@@ -440,7 +440,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                                 baseId = baseId,
                                 itemId = atomReplaceItem.id,
                                 userId = userId,
-                                log = getErrorMessage(t)
+                                log = getErrorMessage(ignored)
                             )
                         )
                     }
@@ -566,7 +566,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             baseId = baseId,
                             itemId = itemId,
                             userId = userId,
-                            log = getErrorMessage(t)
+                            log = getErrorMessage(ignored)
                         )
                     )
                 }

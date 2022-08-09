@@ -1307,7 +1307,7 @@ class TemplateFacadeService @Autowired constructor(
             } catch (ignored: Throwable) {
                 logger.warn("Fail to update the pipeline $instance of project $projectId by user $userId", ignored)
                 failurePipelines.add(instance.pipelineName)
-                messages[instance.pipelineName] = t.message ?: "创建流水线失败"
+                messages[instance.pipelineName] = ignored.message ?: "创建流水线失败"
             }
         }
 
@@ -1376,7 +1376,7 @@ class TemplateFacadeService @Autowired constructor(
                     } catch (ignored: Throwable) {
                         logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", ignored)
                         failurePipelines.add(it.pipelineName)
-                        messages[it.pipelineName] = t.message ?: "更新流水线失败"
+                        messages[it.pipelineName] = ignored.message ?: "更新流水线失败"
                     }
             }
         return TemplateOperationRet(0, TemplateOperationMessage(successPipelines, failurePipelines, messages), "")
