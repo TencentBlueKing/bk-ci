@@ -417,21 +417,33 @@ class PipelineViewGroupService @Autowired constructor(
             return PipelineViewDict.EMPTY
         }
         val viewGroupMap = mutableMapOf<Long/*viewId*/, MutableList<String>/*pipelineIds*/>()
+        val classifiedPipelineIds = mutableSetOf<String>()
         viewGroups.forEach {
             val viewId = it.viewId
             if (!viewGroupMap.containsKey(viewId)) {
                 viewGroupMap[viewId] = mutableListOf()
             }
             viewGroupMap[viewId]!!.add(it.pipelineId)
+            classifiedPipelineIds.add(it.pipelineId)
         }
         //流水线信息
         val pipelineInfoMap = allPipelineInfos(projectId).associateBy { it.pipelineId }
         if (pipelineInfoMap.isEmpty()) {
             return PipelineViewDict.EMPTY
         }
-        // 拼装返回结果
         val personalViewList = mutableListOf<PipelineViewDict.ViewInfo>()
         val projectViewList = mutableListOf<PipelineViewDict.ViewInfo>()
+        // 未分组数据加入
+        projectViewList.add(
+            PipelineViewDict.ViewInfo(
+                viewId = PIPELINE_VIEW_UNCLASSIFIED,
+                viewName = "未分组",
+                pipelineList = pipelineInfoMap.values
+                    .filterNot { classifiedPipelineIds.contains(it.pipelineId) }
+                    .map { PipelineViewDict.ViewInfo.PipelineInfo(it.pipelineId, it.pipelineName) }
+            )
+        )
+        // 拼装返回结果
         for (view in viewInfos) {
             if (!view.isProject && view.createUser != userId) {
                 continue
