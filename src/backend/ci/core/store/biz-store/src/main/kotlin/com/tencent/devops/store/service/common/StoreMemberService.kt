@@ -50,6 +50,11 @@ interface StoreMemberService {
      */
     fun viewMemberInfo(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<StoreMemberItem?>
 
+    /**
+     * 获取可发布组件成员ID
+     */
+    fun getMemberId(storeCode: String, storeType: StoreTypeEnum, userName: List<String>): Result<List<String>>
+
     /***
      * 批量获取store组件成员列表
      */

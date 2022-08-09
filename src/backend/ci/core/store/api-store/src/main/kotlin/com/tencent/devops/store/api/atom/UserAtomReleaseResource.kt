@@ -32,7 +32,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomOfflineReq
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
+import com.tencent.devops.store.pojo.common.PublisherInfo
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -131,4 +133,19 @@ interface UserAtomReleaseResource {
         @ApiParam("下架请求报文")
         atomOfflineReq: AtomOfflineReq
     ): Result<Boolean>
+
+    @ApiOperation("获取发布组件可选发布者")
+    @GET
+    @Path("/publishers/get")
+    fun getPublishers(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("storeCode", required = true)
+        @QueryParam("storeCode")
+        storeCode: String,
+        @ApiParam("storeType", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum
+    ): Result<List<PublisherInfo>>
 }
