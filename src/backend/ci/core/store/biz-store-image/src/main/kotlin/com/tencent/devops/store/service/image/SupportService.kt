@@ -29,7 +29,6 @@ package com.tencent.devops.store.service.image
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope

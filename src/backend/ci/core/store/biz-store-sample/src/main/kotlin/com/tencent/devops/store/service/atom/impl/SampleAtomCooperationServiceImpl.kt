@@ -39,7 +39,5 @@ class SampleAtomCooperationServiceImpl @Autowired constructor() : AtomCooperatio
         atomCollaboratorCreateReq: AtomCollaboratorCreateReq,
         approveId: String,
         userId: String
-    ) {
-
-    }
+    ) = Unit
 }
