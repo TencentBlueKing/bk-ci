@@ -137,8 +137,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 logger.info("pipelineAtomReplace baseId:$baseId replace start!!")
                 try {
                     handleAtomReplaceBase(atomReplaceBaseRecord)
-                } catch (t: Throwable) {
-                    logger.info("pipelineAtomReplace baseId:$baseId replace fail:", t)
+                } catch (ignored: Throwable) {
+                    logger.warn("pipelineAtomReplace baseId:$baseId replace fail:", ignored)
                     val handleFailFlag = redisOperation.get("$PIPELINE_ATOM_REPLACE_FAIL_FLAG_KEY:$baseId")?.toBoolean()
                     // 判断是否需要处理异常情况
                     if (handleFailFlag != null && handleFailFlag) {
@@ -153,8 +153,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                     }
                 }
             }
-        } catch (t: Throwable) {
-            logger.warn("pipelineAtomReplace failed", t)
+        } catch (ignored: Throwable) {
+            logger.warn("pipelineAtomReplace failed", ignored)
         } finally {
             lock.unlock()
         }
@@ -383,8 +383,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         )
                         logger.info("handlePipelineAtomReplace itemId:$itemId replace success!!")
                     }
-                } catch (t: Throwable) {
-                    logger.warn("replacePipelineAtomByItem failed", t)
+                } catch (ignored: Throwable) {
+                    logger.warn("replacePipelineAtomByItem failed", ignored)
                     pipelineAtomReplaceItemDao.updateAtomReplaceItemByItemId(
                         dslContext = dslContext,
                         itemId = itemId,
@@ -427,8 +427,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             paramReplaceInfoList = paramReplaceInfoList,
                             baseId = baseId
                         )
-                    } catch (t: Throwable) {
-                        logger.warn("replaceTemplateModelAtom failed", t)
+                    } catch (ignored: Throwable) {
+                        logger.warn("replaceTemplateModelAtom failed", ignored)
                         pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(
                             dslContext = dslContext,
                             pipelineAtomReplaceHistory = PipelineAtomReplaceHistory(
@@ -550,8 +550,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         userId = userId
                     )
                 ) return@nextPipelineModel
-            } catch (t: Throwable) {
-                logger.warn("replacePipelineModelAtom failed", t)
+            } catch (ignored: Throwable) {
+                logger.warn("replacePipelineModelAtom failed", ignored)
                 val pipelineId = pipelineModelObj["PIPELINE_ID"] as String
                 val pipelineInfoRecord = pipelineInfoMap[pipelineId]
                 if (pipelineInfoRecord != null) {

@@ -46,7 +46,6 @@ import org.springframework.stereotype.Service
 class SupportService @Autowired constructor(
     private val client: Client
 ) {
-    private val logger = LoggerFactory.getLogger(SupportService::class.java)
 
     @Value("\${store.imageExecuteNullNotifyTplCode}")
     private lateinit var imageExecuteNullNotifyTplCode: String
@@ -63,8 +62,7 @@ class SupportService @Autowired constructor(
             titleParams = titleParams,
             bodyParams = bodyParams
         )
-        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+        client.get(ServiceNotifyMessageTemplateResource::class)
             .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
-        logger.info("sendNotifyResult is:$sendNotifyResult")
     }
 }

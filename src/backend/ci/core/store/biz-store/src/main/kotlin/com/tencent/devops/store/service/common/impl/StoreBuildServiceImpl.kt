@@ -58,15 +58,13 @@ class StoreBuildServiceImpl @Autowired constructor(
         buildId: String,
         storeBuildResultRequest: StoreBuildResultRequest
     ): Result<Boolean> {
+        logger.info("handleStoreBuildResult params:[$pipelineId|$buildId|$storeBuildResultRequest]")
         // 查看该次构建流水线属于研发商店哪个组件类型
         val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(dslContext, pipelineId)
-        logger.info("the storePipelineRelRecord is:$storePipelineRelRecord")
-        if (null == storePipelineRelRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageCodeUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(pipelineId)
             )
-        }
         val storeType = storePipelineRelRecord.storeType
         val storeHandleBuildResultService =
             getStoreHandleBuildResultService(StoreTypeEnum.getStoreType(storeType.toInt()))

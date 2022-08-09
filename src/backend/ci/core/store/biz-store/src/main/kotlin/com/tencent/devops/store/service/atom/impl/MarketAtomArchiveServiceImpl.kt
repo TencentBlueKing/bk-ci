@@ -90,11 +90,9 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         version: String,
         fileName: String
     ): String {
-        logger.info("getFileStr projectCode is:$projectCode,atomCode is :$atomCode")
-        logger.info("getFileStr version is :$version,fileName is :$fileName")
+        logger.info("getFileStr params:[$projectCode|$atomCode|$version|$fileName")
         val filePath = URLEncoder.encode("$projectCode/$atomCode/$version/$fileName", "UTF-8")
         val taskJsonStr = client.get(ServiceArchiveAtomResource::class).getAtomFileContent(filePath).data
-        logger.info("the taskJsonStr is :$taskJsonStr")
         return taskJsonStr!!
     }
 
@@ -148,7 +146,6 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             version = version,
             userId = userId
         )
-        logger.info("parseTaskJson result is :$taskJsonStr")
         return if (getAtomConfResult.errorCode != "0") {
             MessageCodeUtil.generateResponseDataObject(getAtomConfResult.errorCode, getAtomConfResult.errorParams)
         } else {

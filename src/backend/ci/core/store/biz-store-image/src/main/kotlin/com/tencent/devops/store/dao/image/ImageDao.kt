@@ -78,7 +78,6 @@ import java.time.LocalDateTime
 @Suppress("ALL")
 @Repository
 class ImageDao {
-    private val logger = LoggerFactory.getLogger(ImageDao::class.java)
 
     data class ImageUpdateBean constructor(
         val imageName: String?,
@@ -881,7 +880,6 @@ class ImageDao {
                         )
                     )
             )
-        logger.info(query.getSQL(ParamType.INLINED))
         return query.fetch()
     }
 
