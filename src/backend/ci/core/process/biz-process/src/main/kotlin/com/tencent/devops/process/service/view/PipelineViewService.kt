@@ -335,7 +335,8 @@ class PipelineViewService @Autowired constructor(
             updateTime = viewRecord.updateTime.timestamp(),
             creator = viewRecord.createUser,
             logic = Logic.valueOf(viewRecord.logic),
-            filters = filters
+            filters = filters,
+            viewType = viewRecord.viewType
         )
     }
 
