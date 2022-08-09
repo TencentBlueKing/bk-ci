@@ -155,6 +155,12 @@ const getData = () => {
             timeStr = timeMap.s + 's'
         }
         record.avgCostTime = timeStr
+
+        Object.keys(data.headerInfo).forEach(i => {
+          if (i.includes('errorCount') && !record.atomFailInfos[i]) {
+            record.atomFailInfos[i] = 0
+          }
+        });
         record.classifyCode = classifyCodeMap[record.classifyCode] || record.classifyCode
         return {
           ...record,

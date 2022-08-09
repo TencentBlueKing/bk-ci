@@ -102,7 +102,6 @@
                         return this.pipeline.stages[stageIndex].containers[jobIndex]
                     }
                 } catch (error) {
-                    console.trace()
                     return null
                 }
             },
@@ -116,10 +115,10 @@
                     stageIndex: stageIndex
                 }
                 const job = this.getJob(this.editingElementPos)
-                if (!Reflect.has(args, 'containerGroupIndex')) {
-                    this.editingElementPos.logData = job
-                } else if (Number.isInteger(elementIndex)) {
+                if (Number.isInteger(elementIndex)) {
                     this.editingElementPos.logData = job.elements[elementIndex]
+                } else if (!Reflect.has(args, 'containerGroupIndex')) {
+                    this.editingElementPos.logData = job
                 } else if (Number.isInteger(containerIndex)) {
                     this.editingElementPos.job = job
                 }
@@ -147,7 +146,7 @@
                 if (this.$route.query.stageIndex) {
                     const { stageIndex, elementIndex, containerGroupIndex, containerIndex } = this.$route.query
                     const params = {
-                        stageIndex: Number(stageIndex),
+                        stageIndex: Number(stageIndex) - 1,
                         elementIndex: Number(elementIndex),
                         containerIndex: Number(containerIndex)
                     }
