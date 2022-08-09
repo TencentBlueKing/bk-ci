@@ -86,8 +86,9 @@ class GitCheckService @Autowired constructor(
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
     ) {
         logger.info(
-            "Code web hook add commit check [projectId=$projectCode, pipelineId=$pipelineId, buildId=$buildId, " +
-                " commitId=$commitId, state=$state, block=$block]"
+            "GitCheckService|pushCommitCheck|Code web hook add commit check" +
+                "|projectId=$projectCode|pipelineId=$pipelineId|buildId=$buildId " +
+                "|commitId=$commitId|state=$state|block=$block]"
         )
 
         val buildHistoryResult = client.get(ServiceBuildResource::class).getBuildVars(
@@ -98,21 +99,24 @@ class GitCheckService @Autowired constructor(
             channelCode = ChannelCode.GIT
         )
         if (buildHistoryResult.isNotOk() || buildHistoryResult.data == null) {
-            logger.warn("Process instance($buildId) not exist: ${buildHistoryResult.message}")
+            logger.warn(
+                "GitCheckService|pushCommitCheck" +
+                    "|Process instance($buildId) not exist|${buildHistoryResult.message}"
+            )
             return
         }
         val buildInfo = buildHistoryResult.data!!
 
         val variables = buildInfo.variables
         if (variables.isEmpty()) {
-            logger.warn("Process instance($buildId) variables is empty")
+            logger.warn("GitCheckService|pushCommitCheck|variables is empty|buildId|$buildId")
             return
         }
 
         val buildNum = variables[PIPELINE_BUILD_NUM]
 
         if (buildNum == null) {
-            logger.warn("Build($buildId) number is null")
+            logger.warn("GitCheckService|pushCommitCheck|number is null|Build|$buildId")
             return
         }
 

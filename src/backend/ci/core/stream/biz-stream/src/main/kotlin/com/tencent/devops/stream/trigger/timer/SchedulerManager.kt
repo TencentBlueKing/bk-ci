@@ -66,13 +66,13 @@ abstract class SchedulerManager {
         val jobDetail = newJob(jobBeanClass).withIdentity(jobKey).build()
         return try {
             val nextFireTime = trigger.getFireTimeAfter(Date()) ?: throw InvalidTimerException()
-            logger.info("[$key]|nextFireTime=$nextFireTime")
+            logger.info("SchedulerManager|addJob|[$key]|nextFireTime=$nextFireTime")
             getScheduler().scheduleJob(jobDetail, trigger)
             true
         } catch (ignore: ObjectAlreadyExistsException) {
             resetJob(jobKey, jobDetail, trigger)
         } catch (ignored: Exception) {
-            logger.error("SchedulerManager.addJob fail! e:$ignored", ignored)
+            logger.warn("SchedulerManager|addJob|error", ignored)
             try {
                 getScheduler().deleteJob(jobKey)
             } catch (ignored: Exception) {
@@ -91,7 +91,7 @@ abstract class SchedulerManager {
             getScheduler().scheduleJob(jobDetail, trigger)
             true
         } catch (ignore: Exception) {
-            logger.error("SchedulerManager.addJob fail! ignore:$ignore", ignore)
+            logger.warn("SchedulerManager|resetJob|error", ignore)
             try {
                 getScheduler().deleteJob(jobKey)
             } catch (ignored: Exception) {
@@ -111,7 +111,7 @@ abstract class SchedulerManager {
         return try {
             getScheduler().deleteJob(JobKey.jobKey(crontabId, this.getTriggerGroup()))
         } catch (ignored: Exception) {
-            logger.error("SchedulerManager.deleteJob fail! e:$ignored", ignored)
+            logger.warn("SchedulerManager|deleteJob|error", ignored)
             false
         }
     }
@@ -127,7 +127,7 @@ abstract class SchedulerManager {
         return try {
             getScheduler().checkExists(JobKey.jobKey(crontabId, this.getJobGroup()))
         } catch (e: SchedulerException) {
-            logger.error("SchedulerManager.checkExists fail! e:$e", e)
+            logger.warn("SchedulerManager|checkExists|error", e)
             false
         }
     }
@@ -142,7 +142,7 @@ abstract class SchedulerManager {
         try {
             getScheduler().shutdown(waitForJobsToComplete)
         } catch (ignored: Exception) {
-            logger.error("SchedulerManager.shutdown fail! ignored:$ignored", ignored)
+            logger.warn("SchedulerManager|shutdown|error", ignored)
         }
     }
 
