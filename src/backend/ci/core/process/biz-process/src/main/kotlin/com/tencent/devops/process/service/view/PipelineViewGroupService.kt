@@ -296,7 +296,7 @@ class PipelineViewGroupService @Autowired constructor(
             watcher.start("initStaticViewGroup")
             pipelineView.pipelineIds.forEach {
                 pipelineViewGroupDao.create(
-                    dslContext = dslContext,
+                    dslContext = context,
                     projectId = projectId,
                     pipelineId = it,
                     viewId = viewId,
