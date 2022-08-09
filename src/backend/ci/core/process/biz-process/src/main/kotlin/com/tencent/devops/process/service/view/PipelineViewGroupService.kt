@@ -189,7 +189,7 @@ class PipelineViewGroupService @Autowired constructor(
             createTime = viewRecord.createTime.timestamp(),
             updateTime = viewRecord.updateTime.timestamp(),
             creator = viewRecord.createUser,
-            logic = Logic.valueOf(viewRecord.logic),
+            logic = Logic.of(viewRecord.logic),
             filters = filters,
             viewType = viewRecord.viewType,
             pipelineIds = pipelineIds
