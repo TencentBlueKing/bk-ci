@@ -362,7 +362,8 @@ class PipelineViewService @Autowired constructor(
                 isProject = pipelineView.projected,
                 filters = filters,
                 userId = userId,
-                id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_VIEW").data
+                id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_VIEW").data,
+                viewType = pipelineView.viewType
             )
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to create the pipeline $pipelineView by userId")
