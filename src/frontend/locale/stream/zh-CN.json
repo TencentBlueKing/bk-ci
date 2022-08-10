@@ -53,6 +53,8 @@
     "signInGithub": "使用 GITHUB 登录",
     "project": "项目",
     "group": "项目组",
+    "failToGetData": "获取数据失败",
+    "noPermToView": "没有查看权限",
     "header": {
         "pipelines": "流水线",
         "metrics": "数据分析",
@@ -157,7 +159,7 @@
         "qualityGate": "质量红线",
         "continue": "继续",
         "stop": "停止",
-        "gateTips": "Gate access requirement is not met. Gatekeeper【{0}】's approval is needed.",
+        "gateTips": "不符合准入要求. 需要审批人【{0}】的审批",
         "details": "查看详情",
         "Passed": "已通过",
         "Blocked": "已拦截",
@@ -171,7 +173,10 @@
         "alias": "别名",
         "options": "选项",
         "defaultValue": "默认值",
-        "required": "必填"
+        "required": "必填",
+        "yamError": "YAML 解析失败",
+        "noYamlOrDisable": "分支上没有此流水线，或者流水线未允许手动触发",
+        "variable": "变量"
     },
     "exception": {
         "systemErrTips": "'系统异常，请稍后再试!'",
