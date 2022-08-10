@@ -176,7 +176,7 @@ class TGitMrActionGit(
 
     override fun checkMrConflict(path2PipelineExists: Map<String, StreamTriggerPipeline>): Boolean {
         // 已合并的无需检查
-        if (event().object_attributes.action != TGitMergeActionKind.MERGE.value) {
+        if (event().object_attributes.action == TGitMergeActionKind.MERGE.value) {
             return true
         }
         return mrConflictCheck.checkMrConflict(this, path2PipelineExists)
