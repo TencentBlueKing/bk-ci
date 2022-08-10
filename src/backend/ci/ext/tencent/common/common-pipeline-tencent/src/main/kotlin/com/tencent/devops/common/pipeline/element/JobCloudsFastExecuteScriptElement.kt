@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Deprecated("已作废, 替代品插件ID：jobobktexecutescript")
 @ApiModel("海外蓝鲸-脚本执行", description = JobCloudsFastExecuteScriptElement.classType)
 data class JobCloudsFastExecuteScriptElement(
     @ApiModelProperty("任务名称", required = true)

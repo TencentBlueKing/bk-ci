@@ -29,4 +29,5 @@ dependencies {
     api(project(":ext:tencent:common:common-archive-tencent"))
     api(project(":ext:tencent:artifactory:api-artifactory-store-tencent"))
     api(project(":core:artifactory:biz-artifactory"))
+    api(project(":core:artifactory:biz-artifactory-store"))
 }

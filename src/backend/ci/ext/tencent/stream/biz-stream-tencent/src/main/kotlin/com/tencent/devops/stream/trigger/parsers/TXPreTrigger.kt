@@ -66,13 +66,13 @@ class TXPreTrigger @Autowired constructor(
         // TODO: 目前直接写死使用橘子的oauth去拿用户的名称，后续支持公共账号了再改成公共账号
         val token = streamOauthService.getOauthToken("fayewang")?.accessToken
         if (token.isNullOrBlank()) {
-            logger.warn("create from store atom get project members error: get token null")
+            logger.warn("TXPreTrigger|enableAtomCi|create from store atom get project members error: get token null")
             return
         }
         // 因为用户是 devops 所以需要修改
         val realUser = getRealUser(event, token)
         if (realUser.isNullOrBlank()) {
-            logger.warn("create from store atom get project members error: no develop user")
+            logger.warn("TXPreTrigger|enableAtomCi|create from store atom get project members error: no develop user")
             return
         }
 
@@ -84,7 +84,7 @@ class TXPreTrigger @Autowired constructor(
                 enabled = true
             )
         } catch (e: Throwable) {
-            logger.error("create from store atom error: ${e.message}")
+            logger.warn("TXPreTrigger|enableAtomCi|error=${e.message}")
         }
     }
 
@@ -97,7 +97,7 @@ class TXPreTrigger @Autowired constructor(
             search = null
         )
         if (projectMember.isNullOrEmpty()) {
-            logger.warn("create from store atom get project members error")
+            logger.warn("TXPreTrigger|getRealUser|create from store atom get project members error")
             return null
         }
         var realUser: String? = null

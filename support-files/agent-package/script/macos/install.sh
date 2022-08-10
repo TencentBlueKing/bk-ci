@@ -43,13 +43,13 @@ function download_agent()
     return
   fi
   if exists curl; then
-    curl -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip "##agent_url##?arch=${ARCH}"
+    curl -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip "##agent_url##"
     if [[ $? -ne 0 ]]; then
       echo "fail to use curl to download the agent, use wget"
-      wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##?arch=${ARCH}"
+      wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##"
     fi
   elif exists wget; then
-    wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##?arch=${ARCH}"
+    wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##"
   else
     echo "curl & wget command don't exist, download fail"
     exit 1

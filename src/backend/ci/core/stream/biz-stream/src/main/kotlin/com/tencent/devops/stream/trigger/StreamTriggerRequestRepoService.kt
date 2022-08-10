@@ -84,10 +84,13 @@ class StreamTriggerRequestRepoService @Autowired constructor(
 
         action.data.context.repoTrigger = RepoTrigger("", triggerPipelineList)
 
-        logger.info("|${action.data.context.requestEventId}|repoTriggerBuild|")
+        logger.info(
+            "StreamTriggerRequestRepoService|repoTriggerBuild" +
+                "|requestEventId|${action.data.context.requestEventId}"
+        )
 
         if (triggerPipelineList.isEmpty()) {
-            logger.info("repo trigger pipeline list is empty ,skip it")
+            logger.info("StreamTriggerRequestRepoService|repoTriggerBuild|pipeline list is empty ,skip it")
             return true
         }
 
@@ -119,13 +122,19 @@ class StreamTriggerRequestRepoService @Autowired constructor(
     private fun triggerPerPipeline(
         action: BaseAction
     ): Boolean {
-        logger.info("|${action.data.context.requestEventId}|triggerPerPipeline")
+        logger.info(
+            "StreamTriggerRequestRepoService|triggerPerPipeline" +
+                "|requestEventId|${action.data.context.requestEventId}"
+        )
         val pipeline = action.data.context.pipeline!!
 
         // 剔除不触发的情形
         streamSettingDao.getSetting(dslContext, pipeline.gitProjectId.toLong())?.let { setting ->
             action.data.setting = StreamTriggerSetting(setting)
-            logger.info("|${action.data.context.requestEventId}|triggerPerPipeline|action|${action.format()}")
+            logger.info(
+                "StreamTriggerRequestRepoService|triggerPerPipeline" +
+                    "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
+            )
             try {
                 CheckStreamSetting.checkGitProjectConf(action)
             } catch (triggerException: StreamTriggerException) {
@@ -139,7 +148,10 @@ class StreamTriggerRequestRepoService @Autowired constructor(
                     getProjectInfo = action.api::getGitProjectInfo
                 )
             } catch (error: ErrorCodeException) {
-                logger.warn("project[${pipeline.gitProjectId}] may be deleted, repo trigger error")
+                logger.warn(
+                    "StreamTriggerRequestRepoService|triggerPerPipeline" +
+                        "|may be deleted, repo trigger error|project[${pipeline.gitProjectId}]"
+                )
                 return false
             }
 

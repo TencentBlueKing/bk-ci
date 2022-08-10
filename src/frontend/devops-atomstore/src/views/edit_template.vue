@@ -167,7 +167,7 @@
             return {
                 showContent: false,
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/store/store-home`,
+                docsLink: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=15008944`,
                 sortList: [],
                 labelList: [],
                 categoryList: [],

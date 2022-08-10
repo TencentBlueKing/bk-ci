@@ -78,7 +78,7 @@ constructor(
                 checkEvent.actionSetting
             )
             if (action == null) {
-                logger.error("mr conflict event not support: $checkEvent")
+                logger.warn("StreamMrConflictCheckListener|listenGitCIRequestTriggerEvent|$checkEvent")
                 return
             }
 
@@ -110,7 +110,7 @@ constructor(
                 }
             }
         } catch (e: Throwable) {
-            logger.error("listenGitCIRequestTriggerEvent error ${e.message}")
+            logger.warn("StreamMrConflictCheckListener|listenGitCIRequestTriggerEvent|error", e)
         }
     }
 

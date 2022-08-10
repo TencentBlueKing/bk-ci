@@ -37,6 +37,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwArtifactoryFileTaskResourceV4
 import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -51,6 +52,7 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
         buildId: String,
         createFileTaskReq: CreateFileTaskReq
     ): Result<String> {
+        logger.info("OPENAPI_ARTIFACTORY_FILE_TASK_V4|$userId|create file task|$projectId|$pipelineId|$buildId")
         return client.get(ServiceArtifactoryFileTaskResource::class).createFileTask(
             userId = userId,
             projectId = projectId,
@@ -67,6 +69,7 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
         buildId: String,
         taskId: String
     ): Result<FileTaskInfo?> {
+        logger.info("OPENAPI_ARTIFACTORY_FILE_TASK_V4|$userId|get status|$projectId|$pipelineId|$buildId|$taskId")
         return client.get(ServiceArtifactoryFileTaskResource::class).getStatus(
             userId = userId,
             projectId = projectId,
@@ -85,6 +88,7 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
         buildId: String,
         taskId: String
     ): Result<Boolean> {
+        logger.info("OPENAPI_ARTIFACTORY_FILE_TASK_V4|$userId|clear file task|$projectId|$pipelineId|$buildId|$taskId")
         return client.get(ServiceArtifactoryFileTaskResource::class).clearFileTask(
             userId = userId,
             projectId = projectId,
@@ -103,5 +107,9 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
             throw ParamBlankException("PipelineId is invalid ")
         }
         return pipelineIdFormDB
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwArtifactoryFileTaskResourceV4Impl::class.java)
     }
 }

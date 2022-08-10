@@ -84,7 +84,7 @@ class OpStreamCheckResourceImpl @Autowired constructor(
                         }
                     }
                 } catch (t: Throwable) {
-                    logger.error("check failed with buildId(${record.buildId}): ", t)
+                    logger.warn("OpStreamCheckResourceImpl|conflictJobs|${record.buildId}", t)
                 }
             }
             offset += limit
