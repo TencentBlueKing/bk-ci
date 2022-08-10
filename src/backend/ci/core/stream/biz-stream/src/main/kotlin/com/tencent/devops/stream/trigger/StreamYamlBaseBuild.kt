@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
@@ -67,6 +68,7 @@ import com.tencent.devops.stream.trigger.pojo.StreamBuildLock
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerLock
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.StreamEventService
+import com.tencent.devops.stream.util.StreamCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -92,6 +94,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StreamYamlBaseBuild::class.java)
         private const val ymlVersion = "v2.0"
         private const val BUILD_COMMIT_PAGE_SIZE = 200
+        private const val STREAM_MODEL_MD5_CACHE_PROJECTS_KEY = "stream:model.md5.cache:project:list"
     }
 
     private val channelCode = ChannelCode.GIT
@@ -121,13 +124,51 @@ class StreamYamlBaseBuild @Autowired constructor(
                 dslContext = dslContext,
                 gitProjectId = gitProjectId,
                 pipeline = pipeline.toGitPipeline(),
-                version = ymlVersion
+                version = ymlVersion,
+                md5 = null
             )
             websocketService.pushPipelineWebSocket(
                 projectId = projectCode,
                 pipelineId = pipeline.pipelineId,
                 userId = userId
             )
+        } else if (confirmProjectUseModelMd5Cache(projectCode)) {
+            // 计算model的md值，缓存逻辑使用
+            val md5 = calculateModelMd5(modelAndSetting.model)
+            // 开启了md5缓存的项目
+            val (oldMd5, displayName, version) = gitPipelineResourceDao.getLastEditMd5ById(
+                dslContext = dslContext,
+                gitProjectId = gitProjectId,
+                pipelineId = pipeline.pipelineId
+            )
+
+            // md5不一致时更新蓝盾的model
+            if (oldMd5 != md5) {
+                // 编辑流水线model
+                processClient.edit(
+                    userId = userId,
+                    projectId = projectCode,
+                    pipelineId = pipeline.pipelineId,
+                    pipeline = modelAndSetting.model,
+                    channelCode = channelCode,
+                    updateLastModifyUser = updateLastModifyUser
+                )
+            } else {
+                logger.info("${pipeline.pipelineId} use md5 cache")
+            }
+
+            // 已有的流水线需要更新下Stream这里的状态
+            if (oldMd5 != md5 || displayName != pipeline.displayName || version != ymlVersion) {
+                logger.info("StreamYamlBaseBuild|savePipeline|update pipeline|$pipeline")
+                gitPipelineResourceDao.updatePipeline(
+                    dslContext = dslContext,
+                    gitProjectId = gitProjectId,
+                    pipelineId = pipeline.pipelineId,
+                    displayName = pipeline.displayName,
+                    version = ymlVersion,
+                    md5 = md5
+                )
+            }
         } else {
             // 编辑流水线model
             processClient.edit(
@@ -145,7 +186,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                 gitProjectId = gitProjectId,
                 pipelineId = pipeline.pipelineId,
                 displayName = pipeline.displayName,
-                version = ymlVersion
+                version = ymlVersion,
+                md5 = null
             )
         }
         processClient.saveSetting(
@@ -161,6 +203,23 @@ class StreamYamlBaseBuild @Autowired constructor(
             updateLastModifyUser = updateLastModifyUser,
             channelCode = channelCode
         )
+    }
+
+    // 计算蓝盾model的md5
+    private fun calculateModelMd5(model: Model): String? {
+        // 需要在计算前先做一次深拷贝
+        val modelJ = JsonUtil.toJson(model, false)
+        val nModel = JsonUtil.to(modelJ, Model::class.java)
+
+        // 之后将model中插件的ID置位空，因为用户无法定义插件ID，所以有的肯定都是随机生成的，md5对比会受影响
+        nModel.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                container.elements.forEach { element ->
+                    element.id = null
+                }
+            }
+        }
+        return StreamCommonUtils.getMD5(JsonUtil.toJson(nModel, false))
     }
 
     fun createNewPipeLine(pipeline: StreamTriggerPipeline, projectCode: String, action: BaseAction) {
@@ -524,5 +583,9 @@ class StreamYamlBaseBuild @Autowired constructor(
         } catch (ignore: Throwable) {
             logger.warn("StreamYamlBaseBuild|savePipelineBuildCommit|error", ignore)
         }
+    }
+
+    fun confirmProjectUseModelMd5Cache(projectId: String): Boolean {
+        return redisOperation.isMember(STREAM_MODEL_MD5_CACHE_PROJECTS_KEY, projectId)
     }
 }

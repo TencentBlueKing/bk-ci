@@ -271,7 +271,8 @@ class StreamPipelineService @Autowired constructor(
         projectCode: String,
         modelAndSetting: PipelineModelAndSetting,
         updateLastModifyUser: Boolean,
-        branch: String
+        branch: String,
+        md5: String?
     ) {
         val processClient = client.get(ServicePipelineResource::class)
         if (pipeline.pipelineId.isBlank()) {
@@ -293,7 +294,8 @@ class StreamPipelineService @Autowired constructor(
                 dslContext = dslContext,
                 gitProjectId = gitProjectId,
                 pipeline = pipeline.toGitPipeline(),
-                version = ymlVersion
+                version = ymlVersion,
+                md5 = md5
             )
             websocketService.pushPipelineWebSocket(
                 projectId = projectCode,
@@ -359,7 +361,9 @@ class StreamPipelineService @Autowired constructor(
                     projectCode = gitProjectCode,
                     modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(realPipeline.displayName),
                     updateLastModifyUser = true,
-                    branch = branch
+                    branch = branch,
+                    // 空model计算md5没有意义，直接传空
+                    md5 = null
                 )
             }
         }
