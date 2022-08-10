@@ -86,7 +86,7 @@ class StreamYamlTrigger @Autowired constructor(
         const val ymlVersion = "v2.0"
 
         // 针对filePath可能为空的情况下创建一个模板替换的根目录名称
-        private const val STREAM_TEMPLATE_ROOT_FILE = "STREAM_TEMPLATE_ROOT_FILE"
+        const val STREAM_TEMPLATE_ROOT_FILE = "STREAM_TEMPLATE_ROOT_FILE"
     }
 
     fun checkAndTrigger(
@@ -278,7 +278,8 @@ class StreamYamlTrigger @Autowired constructor(
                 gitBuildId = null,
                 // 没有触发只有特殊任务的需要保存一下蓝盾流水线
                 onlySavePipeline = !isTrigger,
-                yamlTransferData = yamlReplaceResult.yamlTransferData
+                yamlTransferData = yamlReplaceResult.yamlTransferData,
+                manualInputs = null
             )
         }
 
@@ -296,7 +297,8 @@ class StreamYamlTrigger @Autowired constructor(
                 gitBuildId = null,
                 // 没有触发只有特殊任务的不需要保存蓝盾流水线
                 onlySavePipeline = false,
-                yamlTransferData = yamlReplaceResult.yamlTransferData
+                yamlTransferData = yamlReplaceResult.yamlTransferData,
+                manualInputs = null
             )
         }
 
@@ -328,7 +330,8 @@ class StreamYamlTrigger @Autowired constructor(
                 yaml = yamlObject,
                 gitBuildId = gitBuildId,
                 onlySavePipeline = false,
-                yamlTransferData = yamlReplaceResult.yamlTransferData
+                yamlTransferData = yamlReplaceResult.yamlTransferData,
+                manualInputs = null
             )
         }
         return true
