@@ -477,7 +477,13 @@ class PipelineViewGroupService @Autowired constructor(
                 viewName = "未分组",
                 pipelineList = pipelineInfoMap.values
                     .filterNot { classifiedPipelineIds.contains(it.pipelineId) }
-                    .map { PipelineViewDict.ViewInfo.PipelineInfo(it.pipelineId, it.pipelineName) }
+                    .map {
+                        PipelineViewDict.ViewInfo.PipelineInfo(
+                            pipelineId = it.pipelineId,
+                            pipelineName = it.pipelineName,
+                            viewId = PIPELINE_VIEW_UNCLASSIFIED
+                        )
+                    }
             )
         )
         // 拼装返回结果
@@ -488,14 +494,19 @@ class PipelineViewGroupService @Autowired constructor(
             if (!viewGroupMap.containsKey(view.id)) {
                 continue
             }
+            val viewId = HashUtil.encodeLongId(view.id)
             val pipelineList = viewGroupMap[view.id]!!.filter { pipelineInfoMap.containsKey(it) }.map {
                 val pipelineInfo = pipelineInfoMap[it]!!
-                PipelineViewDict.ViewInfo.PipelineInfo(pipelineInfo.pipelineId, pipelineInfo.pipelineName)
+                PipelineViewDict.ViewInfo.PipelineInfo(
+                    pipelineId = pipelineInfo.pipelineId,
+                    pipelineName = pipelineInfo.pipelineName,
+                    viewId = viewId
+                )
             }
             val viewList = if (view.isProject) projectViewList else personalViewList
             viewList.add(
                 PipelineViewDict.ViewInfo(
-                    viewId = HashUtil.encodeLongId(view.id),
+                    viewId = viewId,
                     viewName = view.name,
                     pipelineList = pipelineList
                 )

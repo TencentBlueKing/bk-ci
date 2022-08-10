@@ -24,7 +24,9 @@ data class PipelineViewDict(
             @ApiModelProperty("流水线ID")
             val pipelineId: String,
             @ApiModelProperty("流水线名称")
-            val pipelineName: String
+            val pipelineName: String,
+            @ApiModelProperty("流水线组ID")
+            val viewId: String
         )
     }
 
