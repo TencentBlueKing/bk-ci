@@ -66,20 +66,20 @@ class StreamYamlService @Autowired constructor(
         return V2BuildYaml(parsedYaml = parsed, originYaml = eventBuild.originYaml)
     }
 
-    fun checkYaml(userId: String, yaml: StreamGitYamlString): Result<String> {
+    fun checkYaml(userId: String, yaml: StreamGitYamlString): Pair<Result<String>, Boolean> {
         // 检查yml版本，根据yml版本选择不同的实现
         val ymlVersion = ScriptYmlUtils.parseVersion(yaml.yaml)
         return when {
             ymlVersion == null -> {
-                Result(1, "Invalid yaml")
+                Pair(Result(1, "Invalid yaml version is null"), false)
             }
             else -> {
                 return try {
                     yamlSchemaCheck.check(yaml.yaml, null, true)
-                    Result("OK")
+                    Pair(Result("OK"), true)
                 } catch (e: Exception) {
                     logger.warn("StreamYamlService|checkYaml|failed", e)
-                    Result(1, "Invalid yaml: ${e.message}")
+                    Pair(Result(1, "Invalid yaml: ${e.message}"), false)
                 }
             }
         }
