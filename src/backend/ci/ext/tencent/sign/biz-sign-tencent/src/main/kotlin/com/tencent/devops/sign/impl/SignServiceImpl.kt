@@ -120,7 +120,7 @@ class SignServiceImpl @Autowired constructor(
                 resignIpaPackage(ipaUnzipDir, ipaSignInfo, mobileProvisionInfoMap)
             }
             if (!signFinished) {
-                logger.error("SIGN|[$resignId]|[${ipaSignInfo.buildId}] sign ipa failed.")
+                logger.warn("SIGN|[$resignId]|[${ipaSignInfo.buildId}] sign ipa failed.")
                 throw ErrorCodeException(errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA包签名失败")
             }
             signInfoService.finishResign(resignId, ipaSignInfo, taskExecuteCount)
@@ -133,7 +133,7 @@ class SignServiceImpl @Autowired constructor(
             // 压缩目录
             val signedIpaFile = SignUtils.zipIpaFile(ipaUnzipDir, ipaUnzipDir.parent + File.separator + uploadFileName)
             if (signedIpaFile == null) {
-                logger.error("SIGN|[$resignId]|[${ipaSignInfo.buildId}] zip ipa failed.")
+                logger.warn("SIGN|[$resignId]|[${ipaSignInfo.buildId}] zip ipa failed.")
                 throw ErrorCodeException(errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA文件生成失败")
             }
             signInfoService.finishZip(resignId, signedIpaFile, ipaSignInfo, taskExecuteCount)
@@ -171,7 +171,7 @@ class SignServiceImpl @Autowired constructor(
             signInfoService.successResign(resignId, ipaSignInfo, taskExecuteCount)
             finished = true
         } catch (ignore: Throwable) {
-            logger.error("SIGN|[$resignId] sign failed with error.", ignore)
+            logger.warn("SIGN|[$resignId] sign failed with error.", ignore)
             signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount, ignore.message ?: "Unknown error")
             finished = true
         } finally {
@@ -314,7 +314,7 @@ class SignServiceImpl @Autowired constructor(
         SignUtils.getAllAppsInDir(appDir, allAppsInPackage)
         allAppsInPackage.forEach { app ->
             if (!mobileProvisionInfoList.keys.contains(app.nameWithoutExtension)) {
-                logger.error("SIGN| Not found appex <${app.name}> MobileProvisionInfo")
+                logger.warn("SIGN| Not found appex <${app.name}> MobileProvisionInfo")
                 throw ErrorCodeException(
                     errorCode = SignMessageCode.ERROR_SIGN_INFO_ILLEGAL,
                     defaultMessage = "缺少${app.name}签名信息，请检查参数"

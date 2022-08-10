@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Deprecated("已作废")
 @ApiModel("发布CDN-生产", description = CosCdnDistributionElement.classType)
 data class CosCdnDistributionElement(
     @ApiModelProperty("任务名称", required = true)

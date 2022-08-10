@@ -134,7 +134,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                         val pool = Pool("devcloud/" + dispatchType.image!!.removePrefix("/"), null, null, false, dispatchType.performanceConfigId)
                         dispatchType.image = JsonUtil.toJson(pool)
                     } else {
-                        logger.error("dispatchType.image==null,buildId=$buildId,dispatchType=${JsonUtil.toJson(dispatchType)}")
+                        logger.warn("[$buildId]|image=null,dispatchType=${JsonUtil.toJson(dispatchType)}")
                     }
                 }
             } else {

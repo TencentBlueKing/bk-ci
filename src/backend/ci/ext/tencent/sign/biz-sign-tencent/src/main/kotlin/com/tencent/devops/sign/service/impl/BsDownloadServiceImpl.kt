@@ -58,12 +58,12 @@ class BsDownloadServiceImpl @Autowired constructor(
     override fun getDownloadUrl(userId: String, resignId: String, downloadType: String): String {
         val signIpaInfoResult = signIpaInfoDao.getSignInfo(dslContext, resignId)
         if (signIpaInfoResult == null) {
-            logger.error("签名任务签名信息(resignId=$resignId)不存在。")
+            logger.warn("签名任务签名信息(resignId=$resignId)不存在。")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_RESIGN_TASK_NOT_EXIST, defaultMessage = "签名任务不存在。")
         }
         val signHistoryResult = signHistoryDao.getSignHistory(dslContext, resignId)
         if (signHistoryResult == null) {
-            logger.error("签名任务签名历史(resignId=$resignId)不存在。")
+            logger.warn("签名任务签名历史(resignId=$resignId)不存在。")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_RESIGN_TASK_NOT_EXIST, defaultMessage = "签名任务不存在。")
         }
         var artifactoryType: ArtifactoryType? = null

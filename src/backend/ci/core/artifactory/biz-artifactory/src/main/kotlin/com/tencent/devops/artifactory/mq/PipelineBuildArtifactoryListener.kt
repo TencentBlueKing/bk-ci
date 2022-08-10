@@ -29,6 +29,7 @@ package com.tencent.devops.artifactory.mq
 
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.service.PipelineBuildArtifactoryService
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -78,17 +79,22 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Triple<String, String, String> {
-        val parentPipelineVars = client.get(ServiceBuildResource::class).getBuildVariableValue(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            variableNames = listOf(
-                PIPELINE_START_PARENT_PROJECT_ID,
-                PIPELINE_START_PARENT_PIPELINE_ID,
-                PIPELINE_START_PARENT_BUILD_ID
-            )
-        ).data!!
+        val parentPipelineVars = try {
+            client.get(ServiceBuildResource::class).getBuildVariableValue(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                variableNames = listOf(
+                    PIPELINE_START_PARENT_PROJECT_ID,
+                    PIPELINE_START_PARENT_PIPELINE_ID,
+                    PIPELINE_START_PARENT_BUILD_ID
+                )
+            ).data!!
+        } catch (ignore: RemoteServiceException) {
+            logger.info("[$pipelineId|$buildId] get parent pipeline vars failed: ${ignore.errorMessage}")
+            return Triple("", "", "")
+        }
         logger.info("[$pipelineId|$buildId] get parent pipeline vars: $parentPipelineVars")
         val parentProjectId = parentPipelineVars[PIPELINE_START_PARENT_PROJECT_ID].toString()
         val parentPipelineId = parentPipelineVars[PIPELINE_START_PARENT_PIPELINE_ID].toString()
