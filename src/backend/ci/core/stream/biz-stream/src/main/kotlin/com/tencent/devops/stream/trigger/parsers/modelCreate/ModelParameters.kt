@@ -128,9 +128,14 @@ object ModelParameters {
         }
         val buildFormProperties = mutableListOf<BuildFormProperty>()
         variables.forEach { (key, variable) ->
+            val keyWithPrefix = if (key.startsWith(VARIABLE_PREFIX)) {
+                key
+            } else {
+                VARIABLE_PREFIX + key
+            }
             buildFormProperties.add(
                 BuildFormProperty(
-                    id = VARIABLE_PREFIX + key,
+                    id = keyWithPrefix,
                     required = false,
                     type = BuildFormPropertyType.STRING,
                     defaultValue = ModelCommon.formatVariablesValue(variable.value, startParams) ?: "",

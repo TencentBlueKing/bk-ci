@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.engine.control
 
-import com.tencent.devops.common.api.expression.EvalExpress
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.expression.ExpressionParseException
+import com.tencent.devops.common.expression.ExpressionParser
+import com.tencent.devops.common.expression.expression.ParseExceptionKind
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
@@ -216,7 +218,8 @@ object ControlUtils {
         message: StringBuilder
     ): Boolean {
         if (additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH &&
-            !additionalOptions.customCondition.isNullOrBlank()) {
+            !additionalOptions.customCondition.isNullOrBlank()
+        ) {
             return !evalExpression(additionalOptions.customCondition, buildId, variables, message)
         }
 
@@ -268,7 +271,7 @@ object ControlUtils {
     // stage是否跳过判断
     fun checkStageSkipCondition(
         conditions: List<NameAndValue>,
-        variables: Map<String, Any>,
+        variables: Map<String, String>,
         buildId: String,
         runCondition: StageRunCondition,
         customCondition: String? = null,
@@ -298,41 +301,43 @@ object ControlUtils {
     private fun evalExpression(
         customCondition: String?,
         buildId: String,
-        variables: Map<String, Any>,
+        variables: Map<String, String>,
         message: StringBuilder
     ): Boolean {
         return if (!customCondition.isNullOrBlank()) {
             try {
-                val expressionResult = EvalExpress.eval(buildId, customCondition, variables)
+                val expressionResult = ExpressionParser.evaluateByMap(customCondition, variables)
                 logger.info(
-                    "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
+                    "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
                         "|result=$expressionResult"
                 )
+                val resultIsTrue = expressionResult == true
                 message.append(
                     "Custom condition($customCondition) result is $expressionResult. " +
-                        if (!expressionResult) {
+                        if (!resultIsTrue) {
                             " will be skipped! "
                         } else {
                             ""
                         }
                 )
-                expressionResult
-            } catch (ignore: Exception) {
+                resultIsTrue
+            } catch (ignore: ExpressionParseException) {
                 // 异常，则任务表达式为false
                 logger.info(
-                    "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                        "|result=exception: ${ignore.message}", ignore
+                    "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
+                        "|result=exception: ${ignore.message}",
+                    ignore
                 )
                 message.append(
                     "Custom condition($customCondition) parse failed, will be skipped! Detail: ${ignore.message}"
                 )
-                return false
+                throw ignore
             }
         } else {
             // 空表达式也认为是false
-            logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression is empty!")
+            logger.info("[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression is empty!")
             message.append("Custom condition is empty, will be skipped!")
-            false
+            throw ExpressionParseException(ParseExceptionKind.UnexpectedSymbol, null, "Custom condition is empty")
         }
     }
 

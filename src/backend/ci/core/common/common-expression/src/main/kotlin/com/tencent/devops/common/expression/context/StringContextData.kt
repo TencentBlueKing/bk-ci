@@ -25,19 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.pipeline.contextData
+package com.tencent.devops.common.expression.context
 
-import com.tencent.devops.common.expression.ExecutionContext
-import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
-import com.tencent.devops.common.expression.expression.sdk.NamedValue
-import com.tencent.devops.common.expression.expression.sdk.ResultMemory
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.TextNode
+import com.tencent.devops.common.expression.expression.sdk.IString
 
-class ContextValueNode : NamedValue() {
-    override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
-        return Pair(null, (context.state as ExecutionContext).expressionValues[name])
-    }
+class StringContextData(val value: String) : PipelineContextData(PipelineContextDataType.STRING), IString {
+    override fun getString(): String = value
 
-    override fun createNode(): NamedValue {
-        return ContextValueNode()
-    }
+    override fun clone(): PipelineContextData = StringContextData(value)
+
+    override fun toJson(): JsonNode = TextNode(value)
+    override fun fetchValue() = getString()
+
+    override fun toString(): String = value
 }
