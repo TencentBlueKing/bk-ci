@@ -275,7 +275,8 @@ class StreamPipelineService @Autowired constructor(
         projectCode: String,
         modelAndSetting: PipelineModelAndSetting,
         updateLastModifyUser: Boolean,
-        branch: String
+        branch: String,
+        md5: String?
     ) {
         val processClient = client.get(ServicePipelineResource::class)
         if (pipeline.pipelineId.isBlank()) {
@@ -297,7 +298,8 @@ class StreamPipelineService @Autowired constructor(
                 dslContext = dslContext,
                 gitProjectId = gitProjectId,
                 pipeline = pipeline.toGitPipeline(),
-                version = ymlVersion
+                version = ymlVersion,
+                md5 = md5
             )
             websocketService.pushPipelineWebSocket(
                 projectId = projectCode,
@@ -363,7 +365,9 @@ class StreamPipelineService @Autowired constructor(
                     projectCode = gitProjectCode,
                     modelAndSetting = createTriggerModel(realPipeline.displayName),
                     updateLastModifyUser = true,
-                    branch = branch
+                    branch = branch,
+                    // 空model计算md5没有意义，直接传空
+                    md5 = null
                 )
             }
         }
@@ -386,10 +390,6 @@ class StreamPipelineService @Autowired constructor(
         )?.let {
             StreamTriggerPipeline(it)
         } ?: pipeline
-
-    private fun getProjectCode(gitProjectId: String): String {
-        return "git_$gitProjectId"
-    }
 
     private fun createTriggerModel(displayName: String) = PipelineModelAndSetting(
         model = Model(
