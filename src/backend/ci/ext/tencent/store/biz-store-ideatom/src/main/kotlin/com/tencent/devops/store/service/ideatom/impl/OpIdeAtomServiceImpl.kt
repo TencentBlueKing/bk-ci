@@ -190,7 +190,10 @@ class OpIdeAtomServiceImpl @Autowired constructor(
     override fun deleteIdeAtomById(atomId: String): Result<Boolean> {
         logger.info("deleteIdeAtomById atomId is :$atomId")
         val atomRecord = ideAtomDao.getIdeAtomById(dslContext, atomId)
-            ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomId))
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomId)
+            )
         val atomCode = atomRecord.atomCode
         val releasedCount = ideAtomDao.countReleaseAtomById(dslContext, atomId)
         logger.info("releasedCount: $releasedCount")
