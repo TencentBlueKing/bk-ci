@@ -102,6 +102,7 @@
                         return this.pipeline.stages[stageIndex].containers[jobIndex]
                     }
                 } catch (error) {
+                    console.trace()
                     return null
                 }
             },
@@ -146,6 +147,7 @@
                 if (this.$route.query.stageIndex) {
                     const { stageIndex, elementIndex, containerGroupIndex, containerIndex } = this.$route.query
                     const params = {
+                        // stream 流水线隐藏了第一个stage,所以减去1
                         stageIndex: Number(stageIndex) - 1,
                         elementIndex: Number(elementIndex),
                         containerIndex: Number(containerIndex)
