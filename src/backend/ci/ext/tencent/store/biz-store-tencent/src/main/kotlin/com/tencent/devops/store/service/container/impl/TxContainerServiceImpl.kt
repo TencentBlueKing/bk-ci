@@ -95,8 +95,7 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
         containerOS: OS,
         buildType: BuildType
     ): Pair<ContainerResource, ContainerResourceValue> {
-        logger.info("getResource userId is :$userId,projectCode is :$projectCode,containerId is :$containerId")
-        logger.info("getResource containerOS is :$containerOS,buildType is :$buildType")
+        logger.info("getResource params:[$userId|$projectCode|$containerId|$containerOS|$buildType")
         val containerResourceValue: List<String>?
         val resource = when (buildType) {
             BuildType.THIRD_PARTY_DEVCLOUD -> {

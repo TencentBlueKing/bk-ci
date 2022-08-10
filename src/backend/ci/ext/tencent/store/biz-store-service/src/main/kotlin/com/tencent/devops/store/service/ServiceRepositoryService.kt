@@ -69,16 +69,16 @@ class ServiceRepositoryService {
      * @param serviceCode 扩展代码
      */
     fun updateServiceRepositoryUserInfo(userId: String, projectCode: String, serviceCode: String): Result<Boolean> {
-        logger.info("updateServiceRepositoryUserInfo userId is:$userId,projectCode is:$projectCode,serviceCode is:$serviceCode")
+        logger.info("updateServiceRepositoryUserInfo params:[$userId|$projectCode|$serviceCode]")
         // 判断用户是否是插件管理员，移交代码库只能针对插件管理员
-        if (! storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.ATOM.type.toByte())) {
+        if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.ATOM.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val serviceRecord = extServiceFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
-        logger.info("updateServiceRepositoryUserInfo serviceRecord is:$serviceRecord")
-        if (null == serviceRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(serviceCode))
-        }
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(serviceCode)
+            )
         val updateServiceRepositoryUserInfoResult = client.get(ServiceGitRepositoryResource::class)
             .updateRepositoryUserInfo(userId, projectCode, serviceRecord.repositoryHashId)
         logger.info("updateServiceRepositoryUserInfo is:$updateServiceRepositoryUserInfoResult")
@@ -87,7 +87,10 @@ class ServiceRepositoryService {
 
     fun getReadMeFile(userId: String, serviceCode: String): Result<String?> {
         val featureRecord = extServiceFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
-            ?: throw RuntimeException(MessageCodeUtil.getCodeMessage(StoreMessageCode.USER_SERVICE_NOT_EXIST, arrayOf(serviceCode)))
+            ?: throw RuntimeException(MessageCodeUtil.getCodeMessage(
+                messageCode = StoreMessageCode.USER_SERVICE_NOT_EXIST,
+                params = arrayOf(serviceCode))
+            )
         val fileStr = client.get(ServiceGitRepositoryResource::class).getFileContent(
             featureRecord.repositoryHashId,
             README, null, null, null

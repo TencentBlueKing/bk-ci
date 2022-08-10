@@ -44,10 +44,9 @@ class StatusReportService @Autowired constructor(
     fun reportScmCommitCheck(addCommitCheckStatus: AddCommitCheckStatus): Boolean {
         return try {
             influxdbClient.insert(addCommitCheckStatus)
-
             true
-        } catch (e: Throwable) {
-            logger.error("reportScmCommitCheck exception:", e)
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|reportScmCommitCheck|error=${ignored.message}", ignored)
             false
         }
     }
@@ -55,10 +54,9 @@ class StatusReportService @Autowired constructor(
     fun reportUserUsers(users: UsersStatus): Boolean {
         return try {
             influxdbClient.insert(users)
-
             true
-        } catch (e: Throwable) {
-            logger.error("reportUserUsers exception:", e)
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|reportUserUsers|error=${ignored.message}", ignored)
             false
         }
     }

@@ -128,7 +128,7 @@ class PipelineWebhookService @Autowired constructor(
                     )
                 } catch (ignore: Exception) {
                     failedElementNames.add("- ${element.name}: ${ignore.message}")
-                    logger.error("$projectId|$pipelineId|add webhook failed", ignore)
+                    logger.warn("$projectId|$pipelineId|add webhook failed", ignore)
                 }
             }
         }
@@ -259,7 +259,7 @@ class PipelineWebhookService @Autowired constructor(
         return try {
             objectMapper.readValue(modelString, Model::class.java)
         } catch (e: Exception) {
-            logger.error("get process($pipelineId) model fail", e)
+            logger.warn("get process($pipelineId) model fail", e)
             null
         }
     }

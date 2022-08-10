@@ -25,13 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.metrics.pojo.dto
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreMemberReq
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface TxStoreGitResitoryService {
-    fun addRepoMember(storeMemberReq: StoreMemberReq, userId: String, repositoryHashId: String): Result<Boolean>
-
-    fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean>
-}
+@ApiModel("codecc数据上报传输对象")
+data class CodeccDataReportDTO(
+    @ApiModelProperty("统计日期")
+    val statisticsTime: String,
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("代码库扫描平均分")
+    val repoCodeccAvgScore: Double,
+    @ApiModelProperty("已解决缺陷数量")
+    val resolvedDefectNum: Int
+)

@@ -25,19 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.pojo.message
+package com.tencent.devops.metrics.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
+import com.tencent.devops.metrics.pojo.message.CodeCheckReportEvent
+import com.tencent.devops.metrics.pojo.message.TurboReportEvent
 
-@ApiModel("Quality上报消息")
-data class QualityReportMessage(
-    @ApiModelProperty("统计日期")
-    val statisticsTime: String,
-    @ApiModelProperty("项目ID")
-    val projectId: String,
-    @ApiModelProperty("使用质量红线的流水线执行被拦截次数")
-    val qualityPipelineInterceptionNum: Int,
-    @ApiModelProperty("使用质量红线的流水线执行总次数")
-    val qualityPipelineExecuteNum: Int
-)
+interface MetricsThirdPlatformDataReportFacadeService {
+
+    /**
+     * 上报codecc指标数据
+     * @param codeCheckReportEvent codecc指标数据
+     * @return 布尔值
+     */
+    fun metricsCodeCheckDataReport(
+        codeCheckReportEvent: CodeCheckReportEvent
+    ): Boolean
+
+    /**
+     * 上报编译加速指标数据
+     * @param turboReportEvent 编译加速指标数据
+     * @return 布尔值
+     */
+    fun metricsTurboDataReport(
+        turboReportEvent: TurboReportEvent
+    ): Boolean
+
+    /**
+     * 上报质量红线指标数据
+     * @param qualityReportEvent 质量红线指标数据
+     * @return 布尔值
+     */
+    fun metricsQualityDataReport(
+        qualityReportEvent: QualityReportEvent
+    ): Boolean
+}

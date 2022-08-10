@@ -66,14 +66,11 @@ class TxImageRepoService @Autowired constructor(
             val imageCode: String?
             if (null != imageId) {
                 val imageRecord = imageDao.getImage(dslContext, imageId)
-                logger.info("getRelImageInfo imageRecord is:$imageRecord")
-                if (imageRecord == null) {
-                    return MessageCodeUtil.generateResponseDataObject(
-                        CommonMessageCode.PARAMETER_IS_EXIST,
-                        arrayOf(imageId),
-                        null
+                    ?: return MessageCodeUtil.generateResponseDataObject(
+                        messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                        params = arrayOf(imageId),
+                        data = null
                     )
-                }
                 imageCode = imageRecord.imageCode
                 val dockerRepoTags = dockerRepo.tags
                 dockerRepoTags?.forEach {

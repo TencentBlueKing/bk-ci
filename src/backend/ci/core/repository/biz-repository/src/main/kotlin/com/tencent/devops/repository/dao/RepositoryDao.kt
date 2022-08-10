@@ -30,6 +30,8 @@ package com.tencent.devops.repository.dao
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.model.repository.tables.TRepository
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
+import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -218,7 +220,9 @@ class RepositoryDao {
         aliasName: String?,
         repositoryIds: Set<Long>?,
         offset: Int,
-        limit: Int
+        limit: Int,
+        sortBy: String? = null,
+        sortType: String? = null
     ): Result<TRepositoryRecord> {
         with(TRepository.T_REPOSITORY) {
             val step = dslContext.selectFrom(this)
@@ -239,8 +243,20 @@ class RepositoryDao {
                     step.and(TYPE.`in`(repositoryTypes))
                 }
             }
+            val sortField = when (sortBy) {
+                RepositorySortEnum.ALIAS_NAME.name -> ALIAS_NAME
+                RepositorySortEnum.URL.name -> URL
+                RepositorySortEnum.TYPE.name -> TYPE
+                else -> REPOSITORY_ID
+            }
 
-            return step.orderBy(REPOSITORY_ID.desc())
+            val sort = when (sortType) {
+                RepositorySortTypeEnum.ASC.name -> sortField.asc()
+                RepositorySortTypeEnum.DESC.name -> sortField.desc()
+                else -> sortField.desc()
+            }
+
+            return step.orderBy(sort)
                 .offset(offset)
                 .limit(limit)
                 .fetch()

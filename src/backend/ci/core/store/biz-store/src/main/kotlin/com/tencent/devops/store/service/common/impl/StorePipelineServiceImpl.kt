@@ -292,8 +292,8 @@ class StorePipelineServiceImpl : StorePipelineService {
             if (updatePipelineModelResult.isNotOk()) {
                 batchAddOperateLogs(storeCodeList, storeType, userId, taskId)
             }
-        } catch (e: Exception) {
-            logger.error("updatePipelineModel error is :", e)
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|updatePipelineModel|error=${ignored.message}", ignored)
             // 将刷新失败的组件信息入库
             batchAddOperateLogs(storeCodeList, storeType, userId, taskId)
         }

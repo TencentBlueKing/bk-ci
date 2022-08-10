@@ -25,41 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.measure.pojo
+package com.tencent.devops.store.api.atom
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.enums.StartType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.VersionInfo
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("流水线构建度量数据")
-data class PipelineBuildData(
-    @ApiModelProperty("流水线对应的项目id")
-    val projectId: String,
-    @ApiModelProperty("流水线的id")
-    val pipelineId: String,
-    @ApiModelProperty("模板的id")
-    val templateId: String,
-    @ApiModelProperty("流水线的这次构建的id")
-    val buildId: String,
-    @ApiModelProperty("流水线的启动时间")
-    val beginTime: Long,
-    @ApiModelProperty("流水线的结束时间")
-    val endTime: Long,
-    @ApiModelProperty("流水线的启动方式")
-    val startType: StartType,
-    @ApiModelProperty("流水线的启动用户")
-    val buildUser: String,
-    @ApiModelProperty("流水线的是否并行")
-    val isParallel: Boolean,
-    @ApiModelProperty("流水线的构建结果")
-    val buildResult: BuildStatus,
-    @ApiModelProperty("流水线Element结构")
-    val pipeline: String,
-    @ApiModelProperty("构建版本号")
-    val buildNum: Int,
-    @ApiModelProperty("元数据")
-    val metaInfo: Map<String, Any>,
-    @ApiModelProperty("流水线错误信息集合", required = false)
-    var errorInfoList: String? = null
-)
+@Api(tags = ["BUILD_PIPELINE_ATOM"], description = "流水线-插件")
+@Path("/service/pipeline/atoms")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildAtomResource {
+
+    @ApiOperation("获取插件默认可用版本号信息")
+    @GET
+    @Path("/projects/{projectCode}/atoms/{atomCode}/default/valid/version")
+    fun getAtomDefaultValidVersion(
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String
+    ): Result<VersionInfo?>
+}

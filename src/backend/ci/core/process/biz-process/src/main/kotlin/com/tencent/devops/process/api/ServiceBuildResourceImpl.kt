@@ -35,6 +35,8 @@ import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -114,6 +116,24 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pipelineBuildFacadeService.buildManualStartupInfo(
                 userId, projectId, pipelineId,
                 channelCode, ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
+    override fun manualSearchOptions(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        search: String?,
+        buildFormProperty: BuildFormProperty
+    ): Result<List<BuildFormValue>> {
+        return Result(
+            pipelineBuildFacadeService.buildManualSearchOptions(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                search = search,
+                property = buildFormProperty
             )
         )
     }

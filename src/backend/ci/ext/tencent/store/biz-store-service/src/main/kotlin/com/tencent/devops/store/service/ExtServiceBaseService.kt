@@ -518,7 +518,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     fun getExtensionServiceInfo(userId: String, serviceId: String): Result<StoreProcessInfo> {
         logger.info("getProcessInfo userId is $userId,serviceId is $serviceId")
         val record = extServiceDao.getServiceById(dslContext, serviceId)
-        logger.info("getProcessInfo record is $record")
         return if (null == record) {
             MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(serviceId))
         } else {
@@ -696,8 +695,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             if (serviceEnvRecord != null && serviceEnvRecord.imagePath.isNotEmpty()) {
                 deleteNode(userId, serviceCode)
             }
-        } catch (e: Exception) {
-            logger.error("delete repository image error: $e")
+        } catch (ignored: Throwable) {
+            logger.warn("delete service[$serviceCode] repository image fail!", ignored)
         }
 
         // 删除代码库
@@ -733,13 +732,13 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     client.get(ServiceGitRepositoryResource::class)
                         .delete(
                             userId = userId,
-                            projectId = projectCode!!,
+                            projectId = projectCode,
                             repositoryHashId = repositoryHashId,
                             tokenType = tokenType
                         )
                 logger.info("the delGitRepositoryResult is :$delGitRepositoryResult")
-            } catch (e: Exception) {
-                logger.error("delGitRepositoryError: $e")
+            } catch (ignored: Throwable) {
+                logger.warn("delete service git repository fail!", ignored)
             }
         }
     }
@@ -819,7 +818,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         page: Int,
         pageSize: Int
     ): Result<Page<ServiceVersionListItem>> {
-        logger.info("getServiceVersionListByCode serviceCode[$serviceCode]")
+        logger.info("getServiceVersionListByCode params[$userId|$serviceCode|$page|$pageSize]")
         val totalCount = extServiceDao.countByCode(dslContext, serviceCode)
         val records = extServiceDao.listServiceByCode(dslContext, serviceCode)
         val atomVersions = mutableListOf<ServiceVersionListItem>()
@@ -858,14 +857,11 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     fun cancelRelease(userId: String, serviceId: String): Result<Boolean> {
         logger.info("extService cancelRelease, userId=$userId, serviceId=$serviceId")
         val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId)
-        logger.info("cancelRelease serviceRecord is:$serviceRecord")
-        if (null == serviceRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(serviceId),
-                false
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(serviceId),
+                data = false
             )
-        }
         val status = ExtServiceStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, status)
         if (!checkResult) {
@@ -897,11 +893,11 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 )
             )
             extServiceDao.setServiceStatusById(
-                context,
-                serviceId,
-                status,
-                userId,
-                MessageCodeUtil.getCodeLanMessage(UN_RELEASE)
+                dslContext = context,
+                serviceId = serviceId,
+                serviceStatus = status,
+                userId = userId,
+                msg = MessageCodeUtil.getCodeLanMessage(UN_RELEASE)
             )
         }
         return Result(true)
@@ -913,14 +909,11 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     fun passTest(userId: String, serviceId: String): Result<Boolean> {
         logger.info("passTest, userId=$userId, serviceId=$serviceId")
         val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId)
-        logger.info("passTest serviceRecord is:$serviceRecord")
-        if (null == serviceRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(serviceId),
-                false
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(serviceId),
+                data = false
             )
-        }
         // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
         val serviceStatus = ExtServiceStatusEnum.EDIT.status.toByte()
 
@@ -956,7 +949,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         dslContext.transaction { t ->
             val context = DSL.using(t)
             if (!fileStr.isNullOrEmpty()) {
-                val extensionJson = JsonUtil.to(fileStr!!, ExtensionJson::class.java)
+                val extensionJson = JsonUtil.to(fileStr, ExtensionJson::class.java)
                 logger.info("extensionJson is:$extensionJson")
                 val fileServiceCode = extensionJson.serviceCode
                 val fileItemList = extensionJson.itemList
@@ -1097,7 +1090,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             )
             logger.info("getServiceVersion projectCode: $projectCode")
             val featureInfoRecord = extFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
-            logger.info("getServiceVersion featureInfoRecord: $featureInfoRecord")
 
             val flag =
                 storeUserService.isCanInstallStoreComponent(defaultFlag, userId, serviceCode, StoreTypeEnum.SERVICE)
@@ -1276,7 +1268,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         userId: String,
         extensionInfo: InitExtServiceDTO
     ) {
-        logger.info("the validateExtServiceReq userId is :$userId,info[$extensionInfo]")
+        logger.info("validateExtServiceReq userId is :$userId,info[$extensionInfo]")
         val serviceCode = extensionInfo.serviceCode
         if (!Pattern.matches("^[a-z]([-a-z-0-9]*[a-z|0-9])?\$", serviceCode)) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(serviceCode))
@@ -1386,7 +1378,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             repositoryHashId,
             fileName, null, null, null
         ).data
-        logger.info("getFileStr fileStr is:$fileStr")
         if (fileStr.isNullOrEmpty()) {
             // 文件数据为空，直接返回输入数据
             return returnInputData(inputItemList)
@@ -1457,7 +1448,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         status: Byte,
         isNormalUpgrade: Boolean? = null
     ): Pair<Boolean, String> {
-        logger.info("checkServiceVersionOptRight, userId=$userId, serviceId=$serviceId, status=$status, isNormalUpgrade=$isNormalUpgrade")
+        logger.info("checkServiceVersionOptRight params[$userId|$serviceId|$status|$isNormalUpgrade]")
         val record =
             extServiceDao.getServiceById(dslContext, serviceId) ?: return Pair(
                 false,
@@ -1469,15 +1460,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
         // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
         if (!(storeMemberDao.isStoreAdmin(
-                dslContext,
-                userId,
-                serviceCode,
-                StoreTypeEnum.SERVICE.type.toByte()
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = serviceCode,
+                storeType = StoreTypeEnum.SERVICE.type.toByte()
             ) || owner == userId)
         ) {
             return Pair(false, CommonMessageCode.PERMISSION_DENIED)
         }
-        logger.info("record status=$recordStatus, status=$status")
         val allowDeployStatus = if (isNormalUpgrade != null && isNormalUpgrade) ExtServiceStatusEnum.EDIT
         else ExtServiceStatusEnum.AUDITING
         var validateFlag = true
