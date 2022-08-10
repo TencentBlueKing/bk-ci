@@ -72,8 +72,8 @@ class StoreDailyStatisticServiceImpl @Autowired constructor(
                 if (storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType)) {
                     (dailySuccessNum + atomMonitorFailDetailData.totalComponentFailNum)
                 } else {
-                    (dailySuccessNum + atomMonitorFailDetailData.totalUserFailNum
-                            + atomMonitorFailDetailData.totalThirdFailNum)
+                    (dailySuccessNum + atomMonitorFailDetailData
+                        .totalUserFailNum + atomMonitorFailDetailData.totalThirdFailNum)
                 }
             } else dailySuccessNum + dailyFailNum
             val dailySuccessRate =
