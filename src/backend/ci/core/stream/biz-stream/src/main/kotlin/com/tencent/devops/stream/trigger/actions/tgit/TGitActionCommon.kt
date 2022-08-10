@@ -12,6 +12,7 @@ import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitTreeFileInfo
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitTreeFileInfoType
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBuilder
 import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
@@ -39,7 +40,7 @@ object TGitActionCommon {
         triggerOn: TriggerOn?,
         needMatch: Boolean = true
     ): Pair<Boolean, Map<String, String>> {
-        logger.info("match and start params|triggerOn:$triggerOn")
+        logger.info("TGitActionCommon|matchAndStartParams|match and start params|triggerOn|$triggerOn")
 
         val gitEvent = action.data.event as GitEvent
 
@@ -51,7 +52,10 @@ object TGitActionCommon {
             element = element,
             variables = mapOf()
         )!!
-        logger.info("match and start params, element:$element, webHookParams:$webHookParams")
+        logger.info(
+            "TGitActionCommon|matchAndStartParams" +
+                "|match and start params|element|$element|webHookParams|$webHookParams"
+        )
 
         val matcher = TriggerBuilder.buildGitWebHookMatcher(gitEvent)
         val repository = if (action.data.context.repoTrigger != null) {
@@ -98,31 +102,35 @@ object TGitActionCommon {
 
     /**
      * 拿到所有的ci文件的文件列表
+     * @return file,blobId
      */
     fun getYamlPathList(
         action: BaseAction,
         gitProjectId: String,
         ref: String?,
         cred: StreamGitCred? = null
-    ): MutableList<String> {
+    ): MutableList<Pair<String, String?>> {
         // 获取指定目录下所有yml文件
         val yamlPathList = getCIYamlList(action, gitProjectId, ref, cred).toMutableList()
 
         // 兼容旧的根目录yml文件
-        val isCIYamlExist = isCIYamlExist(action, gitProjectId, ref, cred)
+        val (isCIYamlExist, blobId) = isCIYamlExist(action, gitProjectId, ref, cred)
 
         if (isCIYamlExist) {
-            yamlPathList.add(Constansts.ciFileName)
+            yamlPathList.add(Pair(Constansts.ciFileName, blobId))
         }
         return yamlPathList
     }
 
+    /**
+     * @return name,blobId
+     */
     private fun getCIYamlList(
         action: BaseAction,
         gitProjectId: String,
         ref: String?,
         cred: StreamGitCred?
-    ): List<String> {
+    ): List<Pair<String, String?>> {
         val ciFileList = action.api.getFileTree(
             gitProjectId = gitProjectId,
             cred = cred ?: action.getGitCred(),
@@ -131,7 +139,9 @@ object TGitActionCommon {
             recursive = true,
             retry = ApiRequestRetryInfo(true)
         ).filter { checkStreamYamlFile(it) }
-        return ciFileList.map { Constansts.ciFileDirectoryName + File.separator + it.name }.toList()
+        return ciFileList.map {
+            Pair(Constansts.ciFileDirectoryName + File.separator + it.name, getBlobId(it))
+        }.toList()
     }
 
     private fun checkStreamYamlFile(gitFileInfo: StreamGitTreeFileInfo): Boolean =
@@ -144,12 +154,23 @@ object TGitActionCommon {
             // 加以限制：最多仅限一级子目录
             (gitFileInfo.name.count { it == '/' } <= 1)
 
+    private fun getBlobId(f: StreamGitTreeFileInfo?): String? {
+        return if (f != null && f.type == StreamGitTreeFileInfoType.BLOB.value && !f.id.isNullOrBlank()) {
+            f.id
+        } else {
+            null
+        }
+    }
+
+    /**
+     * @return isExist,blobId
+     */
     private fun isCIYamlExist(
         action: BaseAction,
         gitProjectId: String,
         ref: String?,
         cred: StreamGitCred?
-    ): Boolean {
+    ): Pair<Boolean, String?> {
         val ciFileList = action.api.getFileTree(
             gitProjectId = gitProjectId,
             cred = cred ?: action.getGitCred(),
@@ -158,7 +179,7 @@ object TGitActionCommon {
             recursive = false,
             retry = ApiRequestRetryInfo(true)
         ).filter { it.name == Constansts.ciFileName }
-        return ciFileList.isNotEmpty()
+        return Pair(ciFileList.isNotEmpty(), getBlobId(ciFileList.ifEmpty { null }?.first()))
     }
 
     fun getTriggerBranch(branch: String): String {

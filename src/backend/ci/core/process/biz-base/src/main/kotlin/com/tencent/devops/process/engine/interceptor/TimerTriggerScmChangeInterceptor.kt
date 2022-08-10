@@ -261,7 +261,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 repositoryConfig.repositoryType
             )
         } catch (e: Exception) {
-            LOG.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            LOG.warn("[$pipelineId] scmService.getLatestRevision fail", e)
             AlertUtils.doAlert(
                 "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
                 "拉取上一次构建svn代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
@@ -305,7 +305,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 repositoryConfig.repositoryType
             )
         } catch (e: Exception) {
-            LOG.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            LOG.warn("[$pipelineId] scmService.getLatestRevision fail", e)
             AlertUtils.doAlert(
                 "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
                 "拉取上一次构建svn代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
@@ -391,7 +391,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 repositoryConfig.repositoryType
             )
         } catch (e: Exception) {
-            LOG.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            LOG.warn("[$pipelineId] scmService.getLatestRevision fail", e)
             AlertUtils.doAlert(
                 "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
                 "拉取上一次构建${ele.getClassType()}代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
@@ -456,7 +456,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 repositoryConfig.repositoryType
             )
         } catch (e: Exception) {
-            LOG.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            LOG.warn("[$pipelineId] scmService.getLatestRevision fail", e)
             AlertUtils.doAlert(
                 "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
                 "拉取上一次构建${ele.getAtomCode()}代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"

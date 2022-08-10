@@ -136,6 +136,8 @@ object ProcessMessageCode {
     const val FAIL_TEMPLATE_UPDATE_NUM_TOO_BIG = "2101079" // 模板实例更新数量[{0}]超过系统规定的最大值{1}，请调整参数或咨询助手
     const val ERROR_START_BUILD_PROJECT_UNENABLE = "2101080" // 流水线: 已禁用的项目不能启动
 
+    const val ERROR_BUILD_EXPIRED_CANT_RETRY = "2101081" // 构建数据已过期，请使用rebuild进行重试/Please use rebuild
+
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败
     const val ERROR_UPDATE_FAILED = "2101990" // 更新失败: {0}
