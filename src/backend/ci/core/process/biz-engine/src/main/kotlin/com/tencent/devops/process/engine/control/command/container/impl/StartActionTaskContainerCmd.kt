@@ -347,13 +347,13 @@ class StartActionTaskContainerCmd(
                 message.append("终止构建，跳过(UnExecute Task)[$taskName] cause: ${containerContext.latestSummary}!")
             }
             needSkip -> { // 检查条件跳过
-                val taskStatus = BuildStatusSwitcher.readyToSkipWhen(containerContext.buildStatus)
                 var taskStatus = BuildStatusSwitcher.readyToSkipWhen(containerContext.buildStatus)
                 // 将第一个因为构建取消而被设置为UNEXEC状态的插件，重置为取消，作为后续Container状态状态的抓手 #5048
                 if (containerContext.firstQueueTaskId == null && containerContext.buildStatus.isCancel()) {
                     taskStatus = BuildStatus.CANCELED
                     containerContext.firstQueueTaskId = this.taskId
-                }                LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId|$taskStatus")
+                }
+                LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId|$taskStatus")
                 // 更新任务状态
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
                 val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
