@@ -59,7 +59,7 @@ class QualityDailyDispatch constructor(
                 }
             }
         } catch (e: Exception) {
-            logger.error("Fail to dispatch the event($events)", e)
+            logger.error("QUALITY|dispatch|Fail to dispatch the event|$events|error=${e.message}")
         }
     }
 }
