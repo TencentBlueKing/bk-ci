@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Deprecated("已作废")
 @ApiModel("云石分发(IEG专用)", description = CloudStoneElement.classType)
 data class CloudStoneElement(
     @ApiModelProperty("任务名称", required = true)

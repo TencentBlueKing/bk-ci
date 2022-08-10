@@ -134,7 +134,7 @@ class V1GitCIRequestService @Autowired constructor(
                 channelCode = channelCode
             ).data
             if (buildList?.isEmpty() == false) {
-                logger.info("Get build history list buildHistoryList: $buildList, gitProjectId: $gitProjectId")
+                logger.info("V1GitCIRequestService|getRequestList|history list|$buildList|gitProjectId|$gitProjectId")
                 val records = mutableListOf<V1GitCIBuildHistory>()
                 buildsList.forEach nextBuild@{
                     try {
@@ -152,8 +152,8 @@ class V1GitCIRequestService @Autowired constructor(
                             )
                         )
                     } catch (e: Exception) {
-                        logger.error(
-                            "Load gitProjectId: ${it.gitProjectId}, " +
+                        logger.warn(
+                            "V1GitCIRequestService|getRequestList|gitProjectId: ${it.gitProjectId}, " +
                                 "eventId: ${it.eventId}, pipelineId: ${it.pipelineId} failed with error: ",
                             e
                         )
