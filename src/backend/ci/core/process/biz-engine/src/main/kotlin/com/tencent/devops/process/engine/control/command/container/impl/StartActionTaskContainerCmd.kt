@@ -275,7 +275,7 @@ class StartActionTaskContainerCmd(
         return toDoTask
     }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "ComplexMethod")
     private fun PipelineBuildTask.findNeedToRunTask(
         index: Int,
         hasFailedTaskInSuccessContainer: Boolean,
