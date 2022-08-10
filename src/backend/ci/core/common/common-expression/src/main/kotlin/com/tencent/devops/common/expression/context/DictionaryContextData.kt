@@ -25,21 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.pipeline.contextData
+package com.tencent.devops.common.expression.context
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.tencent.devops.common.expression.expression.sdk.IReadOnlyObject
-import com.tencent.devops.common.expression.utils.ExpJsonUtil
+import com.tencent.devops.common.expression.utils.ExpressionJsonUtil
+import java.util.TreeMap
 
-/**
- * 区分大小写的字段类型
- */
-class CaseSensitiveDictionaryContextData :
-    PipelineContextData(PipelineContextDataType.CASE_SENSITIVE_DICTIONARY),
+class DictionaryContextData :
+    PipelineContextData(PipelineContextDataType.DICTIONARY),
     Iterable<Pair<String, PipelineContextData?>>,
     IReadOnlyObject {
 
-    private var mIndexLookup: MutableMap<String, Int>? = null
+    private var mIndexLookup: TreeMap<String, Int>? = null
     private var mList: MutableList<DictionaryContextDataPair> = mutableListOf()
 
     override val values: Iterable<Any?>
@@ -61,7 +59,7 @@ class CaseSensitiveDictionaryContextData :
     private val indexLookup: MutableMap<String, Int>
         get() {
             if (mIndexLookup == null) {
-                mIndexLookup = mutableMapOf()
+                mIndexLookup = TreeMap<String, Int>(String.CASE_INSENSITIVE_ORDER)
                 if (mList.isNotEmpty()) {
                     mList.forEachIndexed { index, pair ->
                         mIndexLookup!![pair.key] = index
@@ -77,7 +75,7 @@ class CaseSensitiveDictionaryContextData :
             return mList
         }
 
-    operator fun set(k: String, value: PipelineContextData) {
+    operator fun set(k: String, value: PipelineContextData?) {
         // Existing
         val index = indexLookup[k]
         if (index != null) {
@@ -121,7 +119,7 @@ class CaseSensitiveDictionaryContextData :
     }
 
     override fun clone(): PipelineContextData {
-        val result = CaseSensitiveDictionaryContextData()
+        val result = DictionaryContextData()
 
         if (mList.isNotEmpty()) {
             result.mList = mutableListOf()
@@ -134,13 +132,23 @@ class CaseSensitiveDictionaryContextData :
     }
 
     override fun toJson(): JsonNode {
-        val json = ExpJsonUtil.createObjectNode()
+        val json = ExpressionJsonUtil.createObjectNode()
         if (mList.isNotEmpty()) {
             mList.forEach {
                 json.set<JsonNode>(it.key, it.value?.toJson())
             }
         }
         return json
+    }
+
+    override fun fetchValue(): Map<String, Any> {
+        val map = mutableMapOf<String, Any>()
+        if (mList.isNotEmpty()) {
+            mList.forEach {
+                map[it.key] = it.value?.fetchValue() ?: ""
+            }
+        }
+        return map
     }
 
     override fun iterator(): Iterator<Pair<String, PipelineContextData?>> {

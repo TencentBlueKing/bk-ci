@@ -25,13 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.pipeline.contextData
+package com.tencent.devops.common.expression
 
-import com.fasterxml.jackson.databind.JsonNode
+/**
+ * @param enableSubNameValueEvaluate 开启部分计算功能，方便一些变量的替换
+ * @param hasOtherNameValue 标记是否使用了不在部分计算外的变量进行了计算
+ * @param distinguishTypes 在完全计算后，对区分的类型加单引号用来区分
+ */
+data class SubNameValueEvaluateInfo(
+    val enableSubNameValueEvaluate: Boolean = true,
+    var hasOtherNameValue: Boolean = false,
+    val distinguishTypes: Set<DistinguishType>?
+)
 
-abstract class PipelineContextData(val type: Int) {
-
-    abstract fun clone(): PipelineContextData
-
-    abstract fun toJson(): JsonNode
+enum class DistinguishType {
+    ARRAY, BOOL, STRING, DICT, NUMBER
 }

@@ -54,11 +54,7 @@ class ScriptYmlUtilsTest {
             sb.append(str).append("\n")
         }
         val formatStr = ScriptYmlUtils.formatYaml(sb.toString())
-        val preTemplateYamlObject =
-            YamlUtil.getObjectMapper().readValue(formatStr, PreTemplateScriptBuildYaml::class.java)
-
-        println("dasdasd")
-        // val normalize = ScriptYmlUtils.normalizeGitCiYaml(obj, ".ci.yml")
+        YamlUtil.getObjectMapper().readValue(formatStr, PreTemplateScriptBuildYaml::class.java)
     }
 
     @Test

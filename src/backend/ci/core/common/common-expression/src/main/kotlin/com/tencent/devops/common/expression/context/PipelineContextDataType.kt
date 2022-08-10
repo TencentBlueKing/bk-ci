@@ -25,45 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.pipeline.contextData
+package com.tencent.devops.common.expression.context
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.tencent.devops.common.expression.expression.sdk.IReadOnlyArray
-import com.tencent.devops.common.expression.utils.ExpJsonUtil
+object PipelineContextDataType {
 
-class ArrayContextData : PipelineContextData(PipelineContextDataType.ARRAY), IReadOnlyArray<PipelineContextData?> {
+    const val STRING = 0
 
-    private var mItems = mutableListOf<PipelineContextData?>()
+    const val ARRAY = 1
 
-    override fun iterator(): Iterator<PipelineContextData?> = mItems.iterator()
+    const val DICTIONARY = 2
 
-    override val count: Int
-        get() = mItems.count()
+    const val BOOLEAN = 3
 
-    fun add(item: PipelineContextData?) {
-        mItems.add(item)
-    }
+    const val NUMBER = 4
 
-    override fun get(index: Int): Any? = mItems[index]
-
-    override fun clone(): PipelineContextData {
-        val result = ArrayContextData()
-        if (mItems.isNotEmpty()) {
-            result.mItems = mutableListOf()
-            mItems.forEach {
-                result.mItems.add(it)
-            }
-        }
-        return result
-    }
-
-    override fun toJson(): JsonNode {
-        val json = ExpJsonUtil.createArrayNode()
-        if (mItems.isNotEmpty()) {
-            mItems.forEach {
-                json.add(it?.toJson())
-            }
-        }
-        return json
-    }
+    const val CASE_SENSITIVE_DICTIONARY = 5
 }

@@ -25,18 +25,55 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.pipeline.contextData
+package com.tencent.devops.common.expression.context
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.TextNode
-import com.tencent.devops.common.expression.expression.sdk.IString
+import com.tencent.devops.common.expression.expression.sdk.IReadOnlyArray
+import com.tencent.devops.common.expression.utils.ExpressionJsonUtil
 
-class StringContextData(val value: String) : PipelineContextData(PipelineContextDataType.STRING), IString {
-    override fun getString(): String = value
+class ArrayContextData : PipelineContextData(PipelineContextDataType.ARRAY), IReadOnlyArray<PipelineContextData?> {
 
-    override fun clone(): PipelineContextData = StringContextData(value)
+    private var mItems = mutableListOf<PipelineContextData?>()
 
-    override fun toJson(): JsonNode = TextNode(value)
+    override fun iterator(): Iterator<PipelineContextData?> = mItems.iterator()
 
-    override fun toString(): String = value
+    override val count: Int
+        get() = mItems.count()
+
+    fun add(item: PipelineContextData?) {
+        mItems.add(item)
+    }
+
+    override fun get(index: Int): Any? = mItems[index]
+
+    override fun clone(): PipelineContextData {
+        val result = ArrayContextData()
+        if (mItems.isNotEmpty()) {
+            result.mItems = mutableListOf()
+            mItems.forEach {
+                result.mItems.add(it)
+            }
+        }
+        return result
+    }
+
+    override fun toJson(): JsonNode {
+        val json = ExpressionJsonUtil.createArrayNode()
+        if (mItems.isNotEmpty()) {
+            mItems.forEach {
+                json.add(it?.toJson())
+            }
+        }
+        return json
+    }
+
+    override fun fetchValue(): List<Any> {
+        val list = mutableListOf<Any>()
+        if (mItems.isNotEmpty()) {
+            mItems.forEach {
+                list.add(it?.fetchValue() ?: return@forEach)
+            }
+        }
+        return list
+    }
 }

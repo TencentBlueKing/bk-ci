@@ -25,19 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.pipeline.contextData
+package com.tencent.devops.common.expression.utils
 
-object PipelineContextDataType {
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import java.io.Reader
 
-    const val STRING = 0
+object ExpressionJsonUtil {
 
-    const val ARRAY = 1
+    private val objectMapper = ObjectMapper()
 
-    const val DICTIONARY = 2
+    fun createObjectNode(): ObjectNode = objectMapper.createObjectNode()
 
-    const val BOOLEAN = 3
+    fun createArrayNode(): ArrayNode = objectMapper.createArrayNode()
 
-    const val NUMBER = 4
+    fun read(jsonReader: Reader): JsonNode {
+        return objectMapper.readTree(jsonReader)
+    }
 
-    const val CASE_SENSITIVE_DICTIONARY = 5
+    fun getObjectMapper() = objectMapper
 }

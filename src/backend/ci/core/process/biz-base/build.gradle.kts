@@ -32,6 +32,7 @@ dependencies {
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-db-sharding"))
     api(project(":core:common:common-websocket")) // 依赖websocket枚举
+    api(project(":core:common:common-expression")) // 依赖表达式解析
     api(project(":core:dispatch:api-dispatch")) // Dispatch配额实现在dispatch，考虑移除
     api(project(":core:project:api-project")) // 依赖读取项目VO
     api(project(":core:process:api-process"))

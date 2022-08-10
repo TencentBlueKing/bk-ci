@@ -25,23 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.utils
+package com.tencent.devops.common.expression.context
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import java.io.Reader
+import com.fasterxml.jackson.databind.node.BooleanNode
+import com.tencent.devops.common.expression.expression.sdk.IBoolean
 
-object ExpJsonUtil {
+class BooleanContextData(val value: Boolean) : PipelineContextData(PipelineContextDataType.BOOLEAN), IBoolean {
+    override fun getBoolean(): Boolean = value
 
-    private val objectMapper = ObjectMapper()
+    override fun clone(): PipelineContextData = BooleanContextData(value)
 
-    fun createObjectNode(): ObjectNode = objectMapper.createObjectNode()
-
-    fun createArrayNode(): ArrayNode = objectMapper.createArrayNode()
-
-    fun read(jsonReader: Reader): JsonNode {
-        return objectMapper.readTree(jsonReader)
+    override fun toJson(): JsonNode {
+        return if (value) {
+            BooleanNode.TRUE
+        } else {
+            BooleanNode.FALSE
+        }
     }
+
+    override fun fetchValue() = getBoolean()
 }
