@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.trigger.service
 
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -38,14 +39,13 @@ import com.tencent.devops.stream.pojo.message.UserMessageType
 import com.tencent.devops.stream.service.StreamGitProjectInfoCache
 import com.tencent.devops.stream.service.StreamWebsocketService
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.pojo.StreamMessageSaveLock
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.pojo.enums.toGitState
 import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import com.tencent.devops.stream.util.StreamTriggerMessageUtils
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -55,6 +55,7 @@ import org.springframework.stereotype.Service
 @Service
 class StreamEventService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
     private val streamGitConfig: StreamGitConfig,
     private val gitCheckService: GitCheckService,
     private val userMessageDao: StreamUserMessageDao,
@@ -64,11 +65,6 @@ class StreamEventService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val streamGitProjectInfoCache: StreamGitProjectInfoCache
 ) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(StreamEventService::class.java)
-    }
-
     // 触发检查错误,未涉及版本解析
     fun saveTriggerNotBuildEvent(
         action: BaseAction,
@@ -154,7 +150,6 @@ class StreamEventService @Autowired constructor(
         branch: String?,
         projectCode: String
     ): Long {
-        var messageId = -1L
         val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId")
         val checkRepoHookTrigger = gitProjectId != event.gitProjectId
@@ -168,35 +163,44 @@ class StreamEventService @Autowired constructor(
             GitCommonUtils.checkAndGetRepoBranch(event, pathWithNamespace)
         } else event
         val messageTitle = StreamTriggerMessageUtils.getEventMessageTitle(realEvent, checkRepoHookTrigger)
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            messageId = gitRequestEventNotBuildDao.save(
-                dslContext = context,
-                eventId = eventId,
-                originYaml = originYaml,
-                parsedYaml = parsedYaml,
-                normalizedYaml = normalizedYaml,
-                reason = reason,
-                reasonDetail = reasonDetail,
-                pipelineId = pipelineId,
-                filePath = filePath,
-                gitProjectId = gitProjectId,
-                version = version,
-                branch = branch
-            )
-            // eventId只用保存一次
-            if (!userMessageDao.getMessageExist(context, projectCode, userId, event.id.toString())) {
-                userMessageDao.save(
-                    dslContext = context,
-                    projectId = projectCode,
-                    userId = userId,
-                    messageType = UserMessageType.REQUEST,
-                    messageId = event.id.toString(),
-                    messageTitle = messageTitle
-                )
-                websocketService.pushNotifyWebsocket(userId, gitProjectId.toString())
-            }
+
+        val messageId = gitRequestEventNotBuildDao.save(
+            dslContext = dslContext,
+            eventId = eventId,
+            originYaml = originYaml,
+            parsedYaml = parsedYaml,
+            normalizedYaml = normalizedYaml,
+            reason = reason,
+            reasonDetail = reasonDetail,
+            pipelineId = pipelineId,
+            filePath = filePath,
+            gitProjectId = gitProjectId,
+            version = version,
+            branch = branch
+        )
+
+        // eventId只用保存一次，先查询一次，如果没有在去修改
+        if (userMessageDao.getMessageExist(dslContext, projectCode, userId, event.id.toString())) {
+            return messageId
         }
+
+        val saveLock = StreamMessageSaveLock(redisOperation, userId, projectCode, event.id.toString())
+        saveLock.use {
+            saveLock.lock()
+            if (userMessageDao.getMessageExist(dslContext, projectCode, userId, event.id.toString())) {
+                return messageId
+            }
+            userMessageDao.save(
+                dslContext = dslContext,
+                projectId = projectCode,
+                userId = userId,
+                messageType = UserMessageType.REQUEST,
+                messageId = event.id.toString(),
+                messageTitle = messageTitle
+            )
+            websocketService.pushNotifyWebsocket(userId, gitProjectId.toString())
+        }
+
         return messageId
     }
 

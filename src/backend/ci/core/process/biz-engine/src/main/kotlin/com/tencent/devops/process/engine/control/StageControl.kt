@@ -118,7 +118,8 @@ class StageControl @Autowired constructor(
                 return
             }
 
-        if (stage.status.isReadyToRun()) { // #5048 首次运行时，先检查之前的Stage是否已经结束，防止串流
+        // #5048 首次运行时，先检查之前的Stage是否已经结束，防止串流
+        if (stage.status.isReadyToRun() && stage.controlOption?.finally != true) {
             pipelineStageService.getPrevStage(projectId, buildId, stage.seq)
                 ?.let { prevStage ->
                     if (!prevStage.status.isFinish()) { // 打回前一个未完成的Stage重走流程

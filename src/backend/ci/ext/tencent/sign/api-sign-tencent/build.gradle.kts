@@ -26,9 +26,10 @@
  */
 
 dependencies {
-    api(project(":core:sign:api-sign"))
+    api(project(":core:common:common-api"))
+    api(project(":core:common:common-web"))
 }
 
-plugins{
+plugins {
     `task-deploy-to-maven`
 }

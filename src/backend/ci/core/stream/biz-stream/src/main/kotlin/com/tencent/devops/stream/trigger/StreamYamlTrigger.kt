@@ -46,7 +46,9 @@ import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import com.tencent.devops.stream.trigger.actions.data.context.TriggerCache
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
+import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
@@ -55,7 +57,10 @@ import com.tencent.devops.stream.trigger.exception.YamlBlankException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
+import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
+import com.tencent.devops.stream.trigger.pojo.MrYamlInfo
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
@@ -68,6 +73,7 @@ import org.springframework.stereotype.Component
 class StreamYamlTrigger @Autowired constructor(
     private val dslContext: DSLContext,
     private val triggerMatcher: TriggerMatcher,
+    private val yamlSchemaCheck: YamlSchemaCheck,
     private val yamlTemplateService: YamlTemplateService,
     private val streamBasicSettingService: StreamBasicSettingService,
     private val yamlBuild: StreamYamlBuild,
@@ -80,13 +86,92 @@ class StreamYamlTrigger @Autowired constructor(
         const val ymlVersion = "v2.0"
 
         // 针对filePath可能为空的情况下创建一个模板替换的根目录名称
-        private const val STREAM_TEMPLATE_ROOT_FILE = "STREAM_TEMPLATE_ROOT_FILE"
+        const val STREAM_TEMPLATE_ROOT_FILE = "STREAM_TEMPLATE_ROOT_FILE"
+    }
+
+    fun checkAndTrigger(
+        action: BaseAction,
+        trigger: String?
+    ) {
+        logger.info("|${action.data.context.requestEventId}|checkAndTrigger|action|${action.format()}")
+        val buildPipeline = action.data.context.pipeline!!
+
+        val filePath = buildPipeline.filePath
+        // 流水线未启用则跳过
+        if (!buildPipeline.enabled) {
+            logger.warn(
+                "Pipeline $filePath is not enabled, gitProjectId: ${action.data.eventCommon.gitProjectId}, " +
+                    "eventId: ${action.data.context.requestEventId}"
+            )
+            throw StreamTriggerException(action, TriggerReason.PIPELINE_DISABLE)
+        }
+
+        // 使用触发缓存
+        val triggerEvent = if (trigger == null) {
+            null
+        } else {
+            val e = triggerMatcher.isMatch(action, trigger)
+            logger.info(
+                "${action.data.eventCommon.gitProjectId}|${action.data.context.pipeline?.pipelineId} " +
+                    "use trigger cache result $trigger"
+            )
+            e
+        }
+
+        // 这里判断，各类注册事件如果修改blobId肯定不同，相同的肯定注册过了，所以只要不触发git就直接跳过
+        if (triggerEvent != null && !triggerEvent.second.trigger) {
+            logger.info(
+                "${buildPipeline.pipelineId}| use trigger cache" +
+                    "Matcher is false, return, gitProjectId: ${action.data.getGitProjectId()}, " +
+                    "eventId: ${action.data.context.requestEventId}"
+            )
+            throw StreamTriggerException(action, TriggerReason.TRIGGER_NOT_MATCH)
+        }
+
+        val yamlContent = action.getYamlContent(filePath)
+        action.data.context.originYaml = yamlContent.content
+
+        // 如果当前文件没有内容直接不触发
+        if (yamlContent.content.isBlank()) {
+            throw StreamTriggerException(
+                action,
+                TriggerReason.CI_YAML_CONTENT_NULL,
+                commitCheck = CommitCheck(
+                    block = action.metaData.isStreamMr(),
+                    state = StreamCommitCheckState.FAILURE
+                )
+            )
+        }
+
+        // 因为mr获取文件后分支信息可能不同，这里单独重新更新触发器缓存信息
+        if (action is StreamMrAction) {
+            yamlContent as MrYamlInfo
+            if (yamlContent.ref.isNotBlank() && !yamlContent.blobId.isNullOrBlank())
+                action.data.context.triggerCache = TriggerCache(
+                    pipelineFileBranch = yamlContent.ref,
+                    blobId = yamlContent.blobId
+                )
+        }
+
+        yamlSchemaCheck.check(action = action, templateType = null, isCiFile = true)
+
+        // 进入触发流程
+        trigger(action, triggerEvent)
+    }
+
+    // 目前无多余扩展，方便后续多版本在这里进行逻辑处理
+    fun trigger(
+        action: BaseAction,
+        triggerEvent: Pair<List<Any>?, TriggerResult>?
+    ) {
+        triggerBuild(action, triggerEvent)
     }
 
     @Suppress("ComplexMethod")
     @BkTimed
     fun triggerBuild(
-        action: BaseAction
+        action: BaseAction,
+        triggerEvent: Pair<List<Any>?, TriggerResult>?
     ): Boolean {
         logger.info(
             "StreamYamlTrigger|triggerBuild|requestEventId" +
@@ -126,8 +211,20 @@ class StreamYamlTrigger @Autowired constructor(
         )!!
         action.data.setting = action.data.setting.copy(gitHttpUrl = gitProjectInfo.gitHttpUrl)
 
-        val triggerResult = triggerMatcher.isMatch(action)
-        val (isTrigger, _, isTiming, isDelete, repoHookName) = triggerResult
+        // 前面使用缓存触发器判断过得就不用再判断了
+        // 同时使用缓存触发成功的肯定不用在重复注册各类事件了
+        val tr = if (triggerEvent?.second != null) {
+            TriggerResult(
+                trigger = triggerEvent.second.trigger,
+                startParams = triggerEvent.second.startParams,
+                timeTrigger = false,
+                deleteTrigger = false,
+                repoHookName = null
+            )
+        } else {
+            triggerMatcher.isMatch(action)
+        }
+        val (isTrigger, _, isTiming, isDelete, repoHookName) = tr
         logger.info(
             "StreamYamlTrigger|triggerBuild|pipelineId|" +
                 "${pipeline.pipelineId}|Match return|isTrigger=$isTrigger|" +
@@ -176,12 +273,13 @@ class StreamYamlTrigger @Autowired constructor(
             )
             yamlBuild.gitStartBuild(
                 action = action,
-                triggerResult = triggerResult,
+                triggerResult = tr,
                 yaml = yamlObject,
                 gitBuildId = null,
                 // 没有触发只有特殊任务的需要保存一下蓝盾流水线
                 onlySavePipeline = !isTrigger,
-                yamlTransferData = yamlReplaceResult.yamlTransferData
+                yamlTransferData = yamlReplaceResult.yamlTransferData,
+                manualInputs = null
             )
         }
 
@@ -194,12 +292,13 @@ class StreamYamlTrigger @Autowired constructor(
             )
             yamlBuild.gitStartBuild(
                 action = action,
-                triggerResult = triggerResult,
+                triggerResult = tr,
                 yaml = yamlObject,
                 gitBuildId = null,
                 // 没有触发只有特殊任务的不需要保存蓝盾流水线
                 onlySavePipeline = false,
-                yamlTransferData = yamlReplaceResult.yamlTransferData
+                yamlTransferData = yamlReplaceResult.yamlTransferData,
+                manualInputs = null
             )
         }
 
@@ -227,11 +326,12 @@ class StreamYamlTrigger @Autowired constructor(
             )
             yamlBuild.gitStartBuild(
                 action = action,
-                triggerResult = triggerResult,
+                triggerResult = tr,
                 yaml = yamlObject,
                 gitBuildId = gitBuildId,
                 onlySavePipeline = false,
-                yamlTransferData = yamlReplaceResult.yamlTransferData
+                yamlTransferData = yamlReplaceResult.yamlTransferData,
+                manualInputs = null
             )
         }
         return true

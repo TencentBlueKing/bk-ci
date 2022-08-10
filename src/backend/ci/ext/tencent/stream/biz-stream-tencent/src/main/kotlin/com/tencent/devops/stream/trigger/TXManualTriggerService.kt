@@ -50,6 +50,7 @@ import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.service.StreamEventService
+import com.tencent.devops.stream.trigger.template.YamlTemplateService
 import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.v1.components.V1GitRequestEventHandle
@@ -76,6 +77,7 @@ class TXManualTriggerService @Autowired constructor(
     streamYamlTrigger: StreamYamlTrigger,
     streamBasicSettingDao: StreamBasicSettingDao,
     streamYamlBuild: StreamYamlBuild,
+    yamlTemplateService: YamlTemplateService,
     private val dslContext: DSLContext,
     private val gitRequestEventHandle: V1GitRequestEventHandle,
     private val gitRequestEventDao: GitRequestEventDao,
@@ -95,7 +97,8 @@ class TXManualTriggerService @Autowired constructor(
     gitRequestEventDao = gitRequestEventDao,
     gitPipelineResourceDao = gitPipelineResourceDao,
     gitRequestEventBuildDao = gitRequestEventBuildDao,
-    streamYamlBuild = streamYamlBuild
+    streamYamlBuild = streamYamlBuild,
+    yamlTemplateService = yamlTemplateService
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
@@ -125,7 +128,8 @@ class TXManualTriggerService @Autowired constructor(
                 yaml = triggerBuildReq.yaml,
                 description = triggerBuildReq.description,
                 commitId = triggerBuildReq.commitId
-            )
+            ),
+            inputs = triggerBuildReq.inputs
         )
     }
 
@@ -135,7 +139,8 @@ class TXManualTriggerService @Autowired constructor(
     fun triggerBuild(
         userId: String,
         pipelineId: String,
-        v1TriggerBuildReq: V1TriggerBuildReq
+        v1TriggerBuildReq: V1TriggerBuildReq,
+        inputs: Map<String, String>?
     ): TriggerBuildResult {
         logger.info(
             "TXManualTriggerService|triggerBuild" +
@@ -171,7 +176,8 @@ class TXManualTriggerService @Autowired constructor(
                     description = v1TriggerBuildReq.description,
                     commitId = v1TriggerBuildReq.commitId,
                     payload = v1TriggerBuildReq.payload,
-                    eventType = v1TriggerBuildReq.eventType
+                    eventType = v1TriggerBuildReq.eventType,
+                    inputs = inputs
                 )
             )
         }

@@ -270,7 +270,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                         )
                     ) return@outside
                 } catch (e: Throwable) {
-                    logger.error("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
+                    logger.warn("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
                 }
             }
             /* #3131,当对mr的commit check有强依赖，但是蓝盾与git的commit check交互存在一定的时延，可以增加双重锁。
