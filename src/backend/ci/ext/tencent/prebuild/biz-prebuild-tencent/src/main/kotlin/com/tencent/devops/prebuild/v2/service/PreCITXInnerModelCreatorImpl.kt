@@ -120,11 +120,12 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
             )
         } else {
             data["input"] = step.with ?: Any()
-            setWhitePath(atomCode, data, job, preCIData)
+            setWhitePathIfCodeCC(atomCode, data, job, preCIData)
 
             return MarketBuildAtomElement(
+                id = step.taskId,
                 name = step.name ?: step.uses!!.split('@')[0],
-                id = step.id,
+                stepId = step.id,
                 atomCode = step.uses!!.split('@')[0],
                 version = step.uses!!.split('@')[1],
                 data = data,
@@ -136,7 +137,7 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
     /**
      * 设置白名单
      */
-    private fun setWhitePath(
+    private fun setWhitePathIfCodeCC(
         atomCode: String,
         data: MutableMap<String, Any>,
         job: Job,
