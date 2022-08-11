@@ -100,7 +100,7 @@ class TXDockerHostImageScanService(
 
             return scanResult
         } catch (e: Throwable) {
-            logger.error("$logSuffix Docker image scan failed, msg: ${e.message}")
+            logger.error("$logSuffix Docker image scanSensitive failed, msg: ${e.message}")
             return ""
         }
     }
@@ -110,40 +110,42 @@ class TXDockerHostImageScanService(
         dockerClient: DockerClient,
         imageId: String
     ): String {
-        val dockerInspect = dockerClient.inspectImageCmd(imageId).exec()
+        try {
+            val script = "docker inspect $imageId"
+            val scanResult = ShellUtil.executeEnhance(script)
 
-        val script = "docker inspect $imageId"
-        val scanResult = ShellUtil.executeEnhance(script)
+            logger.info("TEST =======>> dockerInspect: $scanResult")
+            val leakScanReq = LeakScanReq(
+                content = scanResult,
+                format_type = SCAN_FORMAT
+            )
 
-        logger.info("TEST =======>> dockerInspect: $scanResult")
-        val leakScanReq = LeakScanReq(
-            content = scanResult,
-            format_type = SCAN_FORMAT
-        )
+            val dockerIp = CommonUtils.getInnerIP()
+            val request = Request.Builder().url("http://$dockerIp:8887/scan/directory/")
+                .addHeader("Accept", "application/json; charset=utf-8")
+                .addHeader("Content-Type", "application/json; charset=utf-8")
+                .post(
+                    RequestBody.create(
+                        MediaType.parse("application/json; charset=utf-8"),
+                        JsonUtil.toJson(leakScanReq)))
+                .build()
 
-        val dockerIp = CommonUtils.getInnerIP()
-        val request = Request.Builder().url("http://$dockerIp:8887/scan/directory/")
-            .addHeader("Accept", "application/json; charset=utf-8")
-            .addHeader("Content-Type", "application/json; charset=utf-8")
-            .post(
-                RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
-                    JsonUtil.toJson(leakScanReq)))
-            .build()
+            logger.info("$logSuffix Start leak scan, content: ${JsonUtil.toJson(leakScanReq)}")
 
-        logger.info("$logSuffix Start leak scan, content: ${JsonUtil.toJson(leakScanReq)}")
+            OkhttpUtils.doHttp(request).use { resp ->
+                val responseBody = resp.body()!!.string()
+                logger.info("$logSuffix Leak scan imageId: $imageId responseBody: $responseBody")
+                val response: LeakScanResponse = jacksonObjectMapper().readValue(responseBody)
 
-        OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
-            logger.info("$logSuffix Leak scan imageId: $imageId responseBody: $responseBody")
-            val response: LeakScanResponse = jacksonObjectMapper().readValue(responseBody)
-
-            // 请求结果OK
-            if (response.result) {
-                return response.data
-            } else {
-                logger.warn("$logSuffix Leak scan result: false, msg: ${response.message}")
+                // 请求结果OK
+                if (response.result) {
+                    return response.data
+                } else {
+                    logger.warn("$logSuffix Leak scan result: false, msg: ${response.message}")
+                }
             }
+        } catch (e: Exception) {
+            logger.error("$logSuffix Docker image scanLeak failed, msg: ${e.message}")
         }
 
         return ""
