@@ -111,8 +111,9 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
             data["input"] = input
 
             return MarketBuildAtomElement(
+                id = step.taskId,
                 name = step.name ?: "同步本地代码",
-                id = null,
+                stepId = step.id,
                 atomCode = "syncAgentCode",
                 version = "3.*",
                 data = data,
