@@ -118,23 +118,27 @@ class WeworkRobotServiceImpl @Autowired constructor(
                 }
             }
         }
-        if (sendRequest.isEmpty()) {
-            throw OperationException("no message to send")
-        }
         try {
-            sendRequest.asSequence().map {
-                sendWeweokRobot(it)
-            }
+            doSendRequest(sendRequest)
+            logger.info("send message success, $weworkNotifyTextMessage")
+            saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", true, null)
         } catch (e: Exception) {
             logger.warn("send message fail, $weworkNotifyTextMessage")
             saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", false, e.message)
             throw OperationException("send message fail")
         }
-        logger.info("send message success, $weworkNotifyTextMessage")
-        saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", true, null)
     }
 
-    private fun sendWeweokRobot(weworkMessage: WeweokRobotBaseMessage) {
+    private fun doSendRequest(requestBodies: List<WeweokRobotBaseMessage>) {
+        if (requestBodies.isEmpty()) {
+            throw OperationException("no message to send")
+        }
+        requestBodies.asSequence().map {
+            send(it)
+        }
+    }
+
+    private fun send(weworkMessage: WeweokRobotBaseMessage) {
         val url = buildUrl("$weworkHost/cgi-bin/webhook/send?key=$robotKey")
         val requestBody = JsonUtil.toJson(weworkMessage)
         OkhttpUtils.doPost(url, requestBody).use {
