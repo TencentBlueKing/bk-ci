@@ -220,7 +220,6 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     override fun getDeptByName(deptName: String, userId: String): DeptInfoVo? {
-        logger.info("get dept By Name: $deptName")
         val search = SearchUserAndDeptEntity(
             bk_app_code = appCode!!,
             bk_app_secret = appSecret!!,
@@ -286,6 +285,7 @@ class AuthDeptServiceImpl @Autowired constructor(
         val request = Request.Builder().url(url)
             .post(requestBody)
             .build()
+        logger.info("call user cente request: $request")
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
                 // 请求错误
