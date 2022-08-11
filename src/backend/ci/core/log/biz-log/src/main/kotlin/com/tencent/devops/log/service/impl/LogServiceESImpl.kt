@@ -1036,7 +1036,7 @@ class LogServiceESImpl constructor(
                     bulkLines
                 }
             } else {
-                logger.error("[$buildId] Add bulk lines failed because of unknown Exception. [$logMessages]", ignore)
+                logger.warn("[$buildId] Add bulk lines failed because of unknown Exception. [$logMessages]", ignore)
                 throw ignore
             }
         } finally {
