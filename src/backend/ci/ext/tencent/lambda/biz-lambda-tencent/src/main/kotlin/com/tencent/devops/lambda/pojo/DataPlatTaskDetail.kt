@@ -37,6 +37,7 @@ data class DataPlatTaskDetail(
     val itemId: String,
     val atomCode: String,
     val taskParams: JSONObject?,
+    val isSecrecy: Boolean?,
     val status: String,
     val errorType: Int?,
     val errorCode: Int?,

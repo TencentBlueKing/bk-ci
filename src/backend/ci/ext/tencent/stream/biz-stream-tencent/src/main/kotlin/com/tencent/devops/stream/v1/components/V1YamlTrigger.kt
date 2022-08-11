@@ -121,7 +121,7 @@ class V1YamlTrigger @Autowired constructor(
                     gitBuildId = gitBuildId
                 )
             } catch (e: Throwable) {
-                logger.error("Fail to start the git ci build($gitRequestEventForHandle)", e)
+                logger.warn("Fail to start the git ci build($gitRequestEventForHandle)", e)
             }
             if (!gitRequestEventForHandle.checkRepoTrigger) {
                 repositoryConfService.updateGitCISetting(gitRequestEventForHandle.gitProjectId)

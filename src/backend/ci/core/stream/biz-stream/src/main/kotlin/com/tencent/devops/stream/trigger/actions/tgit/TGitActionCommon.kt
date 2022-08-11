@@ -39,7 +39,7 @@ object TGitActionCommon {
         triggerOn: TriggerOn?,
         needMatch: Boolean = true
     ): Pair<Boolean, Map<String, String>> {
-        logger.info("match and start params|triggerOn:$triggerOn")
+        logger.info("TGitActionCommon|matchAndStartParams|match and start params|triggerOn|$triggerOn")
 
         val gitEvent = action.data.event as GitEvent
 
@@ -51,7 +51,10 @@ object TGitActionCommon {
             element = element,
             variables = mapOf()
         )!!
-        logger.info("match and start params, element:$element, webHookParams:$webHookParams")
+        logger.info(
+            "TGitActionCommon|matchAndStartParams" +
+                "|match and start params|element|$element|webHookParams|$webHookParams"
+        )
 
         val matcher = TriggerBuilder.buildGitWebHookMatcher(gitEvent)
         val repository = if (action.data.context.repoTrigger != null) {
