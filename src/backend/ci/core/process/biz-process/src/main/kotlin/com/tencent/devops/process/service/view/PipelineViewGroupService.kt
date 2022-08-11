@@ -432,12 +432,16 @@ class PipelineViewGroupService @Autowired constructor(
         }
 
         //新增流水线 = 新流水线 - 老流水线
-        val addedPipelineIds = newPipelineIds.filterNot { oldPipelineIds.contains(it) }
+        val addedPipelineInfos = newPipelineIds.filterNot { oldPipelineIds.contains(it) }
+            .map { allPipelineInfoMap[it]!! }
+            .map { PipelineViewPreview.PipelineInfo(pipelineId = it.pipelineId, pipelineName = it.pipelineName) }
 
         // 移除流水线 = 老流水线 - 新流水线
-        val removedPipelineIds = oldPipelineIds.filterNot { newPipelineIds.contains(it) }
+        val removedPipelineInfos = oldPipelineIds.filterNot { newPipelineIds.contains(it) }
+            .map { allPipelineInfoMap[it]!! }
+            .map { PipelineViewPreview.PipelineInfo(pipelineId = it.pipelineId, pipelineName = it.pipelineName) }
 
-        return PipelineViewPreview(addedPipelineIds, removedPipelineIds)
+        return PipelineViewPreview(addedPipelineInfos, removedPipelineInfos)
     }
 
     fun dict(userId: String, projectId: String): PipelineViewDict {
