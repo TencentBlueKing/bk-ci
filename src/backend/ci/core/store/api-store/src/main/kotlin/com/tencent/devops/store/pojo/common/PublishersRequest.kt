@@ -29,8 +29,10 @@ package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.store.pojo.common.enums.PublisherType
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@ApiModel("发布者数据同步请求")
 data class PublishersRequest(
     @ApiModelProperty("发布者标识", required = true)
     val publishersCode: String,

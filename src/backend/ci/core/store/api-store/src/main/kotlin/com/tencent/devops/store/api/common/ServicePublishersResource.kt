@@ -55,6 +55,7 @@ interface ServicePublishersResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("用户ID", required = true)
         userId: String,
+        @ApiParam("发布者数据同步请求", required = true)
         publishers: List<PublishersRequest>
     ): Result<Int>
 
@@ -65,6 +66,7 @@ interface ServicePublishersResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("用户ID", required = true)
         userId: String,
+        @ApiParam("发布者数据同步请求", required = true)
         publishers: List<PublishersRequest>
     ): Result<Int>
 
@@ -75,6 +77,7 @@ interface ServicePublishersResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("用户ID", required = true)
         userId: String,
+        @ApiParam("发布者数据同步请求", required = true)
         publishers: List<PublishersRequest>
     ): Result<Int>
 
@@ -85,6 +88,7 @@ interface ServicePublishersResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("用户ID", required = true)
         userId: String,
+        @ApiParam("store组件对接平台请求", required = true)
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Result<Int>
 
@@ -95,6 +99,7 @@ interface ServicePublishersResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("用户ID", required = true)
         userId: String,
+        @ApiParam("store组件对接平台请求", required = true)
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Result<Int>
 
@@ -105,6 +110,7 @@ interface ServicePublishersResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("用户ID", required = true)
         userId: String,
+        @ApiParam("store组件对接平台请求", required = true)
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Result<Int>
 }
