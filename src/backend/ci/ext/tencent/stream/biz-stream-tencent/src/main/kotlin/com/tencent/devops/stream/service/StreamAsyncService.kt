@@ -47,7 +47,7 @@ class StreamAsyncService @Autowired constructor(
 
     @Async("pipelineBranchCheckExecutor")
     fun checkPipelineBranch(gitProjectId: Long?, pipelineId: String?) {
-        logger.info("async check and delete pipeline branch start......")
+        logger.info("StreamAsyncService|checkPipelineBranch|start")
         if (gitProjectId == null) {
             var realMaxId = streamPipelineBranchDao.getMaxGitProjectId(dslContext)
             val minId = streamPipelineBranchDao.getMinGitProjectId(dslContext)
@@ -60,7 +60,7 @@ class StreamAsyncService @Autowired constructor(
         } else {
             checkBranch(gitProjectId, pipelineId)
         }
-        logger.info("async check and delete pipeline branch end")
+        logger.info("StreamAsyncService|checkPipelineBranch|end")
     }
 
     private fun checkBranch(gitProjectId: Long, pipelineId: String?) {
@@ -78,7 +78,7 @@ class StreamAsyncService @Autowired constructor(
         val token = try {
             scmService.getToken(gitProjectId.toString())
         } catch (e: Throwable) {
-            logger.warn("checkBranch $gitProjectId get token error ${e.message}")
+            logger.warn("StreamAsyncService|checkBranch|get token error|gitProjectId|$gitProjectId|error| ${e.message}")
             return
         }.accessToken
 
@@ -92,7 +92,7 @@ class StreamAsyncService @Autowired constructor(
                     pageSize = 100
                 )
             } catch (e: Throwable) {
-                logger.warn("checkBranch gitBranches $gitProjectId get branches error ${e.message}")
+                logger.warn("StreamAsyncService|checkBranch|get branches error|projectId|$gitProjectId |${e.message}")
                 return
             }?.toSet()
             if (gitBranches.isNullOrEmpty() && page == 1) {

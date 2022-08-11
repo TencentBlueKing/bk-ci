@@ -42,9 +42,9 @@ data class PipelineBuildContainer(
     val containerType: String,
     val seq: Int,
     var status: BuildStatus,
-    val startTime: LocalDateTime? = null,
-    val endTime: LocalDateTime? = null,
+    var startTime: LocalDateTime? = null,
+    var endTime: LocalDateTime? = null,
     val cost: Int = 0,
-    val executeCount: Int = 1,
+    var executeCount: Int = 1,
     val controlOption: PipelineBuildContainerControlOption?
 )

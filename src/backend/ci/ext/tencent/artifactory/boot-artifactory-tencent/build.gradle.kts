@@ -26,7 +26,6 @@
  */
 
 dependencies {
-    api(project(":core:artifactory:biz-artifactory-store")) // 对接研发商店
     api(project(":ext:tencent:artifactory:biz-artifactory-store-tencent"))
     api(project(":ext:tencent:artifactory:biz-artifactory-tencent"))
     api(project(":ext:tencent:artifactory:biz-artifactory-push-tencent"))

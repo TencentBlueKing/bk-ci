@@ -47,7 +47,7 @@ class GitCIServicesConfService @Autowired constructor(
     }
 
     fun create(userId: String, gitCIServicesConf: GitCIServicesConf): Boolean {
-        logger.info("Create git service, user: $userId, gitCIServicesConf: $gitCIServicesConf")
+        logger.info("GitCIServicesConfService|Create|user|$userId|gitCIServicesConf|$gitCIServicesConf")
         try {
             gitCIServicesConfDao.create(
                 dslContext = dslContext,
@@ -63,29 +63,29 @@ class GitCIServicesConfService @Autowired constructor(
             )
             return true
         } catch (e: Exception) {
-            logger.error("Create git service failed. ${e.message}")
+            logger.warn("GitCIServicesConfService|Create|error=${e.message}")
             throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "Create git service failed.")
         }
     }
 
     fun update(userId: String, id: Long, enable: Boolean?): Boolean {
-        logger.info("update git ci service, user: $userId, id: $id")
+        logger.info("GitCIServicesConfService|update|user|$userId|id|$id")
         try {
             gitCIServicesConfDao.update(dslContext, id, userId, enable)
             return true
         } catch (e: Exception) {
-            logger.error("update git service failed. ${e.message}")
+            logger.warn("GitCIServicesConfService|update|error=${e.message}")
             throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "update git service failed.")
         }
     }
 
     fun delete(userId: String, id: Long): Boolean {
-        logger.info("Delete git ci service, user: $userId, id: $id")
+        logger.info("GitCIServicesConfService|Delete|user|$userId|id|$id")
         try {
             gitCIServicesConfDao.delete(dslContext, id)
             return true
         } catch (e: Exception) {
-            logger.error("Delete git service failed. ${e.message}")
+            logger.warn("GitCIServicesConfService|Delete|error=${e.message}")
             throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "Delete git service failed.")
         }
     }
@@ -114,7 +114,7 @@ class GitCIServicesConfService @Autowired constructor(
             }
             return resultList
         } catch (e: Exception) {
-            logger.error("List git service failed. ${e.message}")
+            logger.warn("GitCIServicesConfService|List|error=${e.message}")
             throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "List git service failed.")
         }
     }

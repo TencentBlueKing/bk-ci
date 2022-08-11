@@ -61,25 +61,25 @@ class StreamActiveProjectsReportJob @Autowired constructor(
 
         // 增加逻辑判断：只在灰度环境执行
         if (!streamSlaConfig.switch.toBoolean()) {
-            logger.info("switch is false , no start")
+            logger.info("StreamActiveProjectsReportJob|reportActiveProjectsDaily|switch is false , no start")
             return
         }
         if (illegalConfig()) {
-            logger.info("some params is null , reportDaily no start")
+            logger.info("StreamActiveProjectsReportJob|reportActiveProjectsDaily|some params is null")
             return
         }
         val redisLock = RedisLock(redisOperation, STREAM_ACTIVE_PROJECT_SLA_REPORT_KEY, 60L)
         try {
-            logger.info("StreamActiveProjectsReportJob , reportDaily start")
+            logger.info("StreamActiveProjectsReportJob|reportActiveProjectsDaily|start")
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 doReport()
-                logger.info("StreamActiveProjectsReportJob , reportDaily finish")
+                logger.info("StreamActiveProjectsReportJob|reportActiveProjectsDaily|finish")
             } else {
-                logger.info("reportDaily is running")
+                logger.info("StreamActiveProjectsReportJob|reportActiveProjectsDaily|running")
             }
         } catch (e: Throwable) {
-            logger.error("reportDaily error:", e)
+            logger.warn("StreamActiveProjectsReportJob|reportActiveProjectsDail|error", e)
         }
     }
 
@@ -116,7 +116,10 @@ class StreamActiveProjectsReportJob @Autowired constructor(
         startTime: Long
     ) {
         if (null == streamSlaConfig.oteamUrl) {
-            logger.warn("null oteamUrl , can not oteam status , targetId: $targetId , data: $data")
+            logger.warn(
+                "StreamActiveProjectsReportJob|oteamStatus" +
+                    "|null oteamUrl , can not oteam status , targetId: $targetId , data: $data"
+            )
             return
         }
         try {
@@ -151,9 +154,13 @@ class StreamActiveProjectsReportJob @Autowired constructor(
                     "content-type" to "application/json;charset=UTF-8"
                 )
             )
-            logger.info("oteam status , id:{} , resp:{}", timestamp, response.body()!!.string())
+            logger.info(
+                "StreamActiveProjectsReportJob|oteamStatus" +
+                    "|oteam status , id:{} , resp:{}",
+                timestamp, response.body()!!.string()
+            )
         } catch (e: Exception) {
-            logger.error("error , ", e)
+            logger.warn("StreamActiveProjectsReportJob|oteamStatus|error", e)
         }
     }
 }

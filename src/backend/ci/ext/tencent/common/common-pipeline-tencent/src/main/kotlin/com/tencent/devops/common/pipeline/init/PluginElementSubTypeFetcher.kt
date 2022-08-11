@@ -155,7 +155,6 @@ class PluginElementSubTypeFetcher : ElementSubTypeFetcher {
             GitCommentCheckElement.classType to GitCommentCheckElement::class.java,
             AtomBuildArchiveElement.classType to AtomBuildArchiveElement::class.java,
             DeployDistributionElement.classType to DeployDistributionElement::class.java,
-            FileArchiveElement.classType to FileArchiveElement::class.java,
             MetaFileScanElement.classType to MetaFileScanElement::class.java,
             Unity3dBuildElement.classType to Unity3dBuildElement::class.java,
             XcodeBuildElement.classType to XcodeBuildElement::class.java,

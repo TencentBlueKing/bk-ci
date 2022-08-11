@@ -27,27 +27,7 @@
 
 package com.tencent.devops.statistics.service.project
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.project.pojo.user.UserDeptDetail
-
 interface ProjectPermissionService {
 
-    /**
-     * 校验用户是否有这个项目的权限
-     * @param accessToken 用于超级管理员绕过项目成员的限制，可为空
-     */
-    fun verifyUserProjectPermission(accessToken: String? = null, projectCode: String, userId: String): Boolean
-
-    fun createResources(userId: String, accessToken: String?, resourceRegisterInfo: ResourceRegisterInfo, userDeptDetail: UserDeptDetail?): String
-
-    fun deleteResource(projectCode: String)
-
-    fun modifyResource(projectCode: String, projectName: String)
-
     fun getUserProjects(userId: String): List<String>
-
-    fun getUserProjectsAvailable(userId: String): Map<String, String>
-
-    fun verifyUserProjectPermission(accessToken: String? = null, projectCode: String, userId: String, permission: AuthPermission): Boolean
 }

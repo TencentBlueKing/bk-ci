@@ -690,7 +690,7 @@ func (rm *resourceManager) isServicePreparing(resourceID, user string) (bool, er
 	}
 
 	switch r.status {
-	case resourceStatusInit, resourceStatusDeploying:
+	case resourceStatusInit:
 		return true, nil
 	default:
 		return false, nil

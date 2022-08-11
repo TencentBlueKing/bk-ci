@@ -41,7 +41,7 @@ class TBSCreateDataJob @Autowired constructor(
     }
 
     private fun fetchNewTurboRecord(engineCode: String) {
-        val compileTimeLeft = System.currentTimeMillis() / 1000 - 60
+        val compileTimeLeft = System.currentTimeMillis() / 1000 - 90
         val newTurboRecordList = TBSSdkApi.queryTurboRecordInfo(
             engineCode = engineCode,
             queryParam = mapOf(
