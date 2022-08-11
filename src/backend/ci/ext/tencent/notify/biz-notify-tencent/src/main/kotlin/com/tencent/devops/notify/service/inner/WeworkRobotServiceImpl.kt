@@ -133,7 +133,10 @@ class WeworkRobotServiceImpl @Autowired constructor(
         if (requestBodies.isEmpty()) {
             throw OperationException("no message to send")
         }
-        requestBodies.asSequence().map {
+        logger.info(
+            "requestBodies :$requestBodies"
+        )
+        requestBodies.map {
             send(it)
         }
     }
