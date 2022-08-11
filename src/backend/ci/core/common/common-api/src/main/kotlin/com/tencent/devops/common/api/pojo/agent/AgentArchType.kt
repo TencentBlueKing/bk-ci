@@ -25,9 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.model
+package com.tencent.devops.common.api.pojo.agent
 
 enum class AgentArchType(val arch: String) {
     ARM64("arm64"),
-    MIPS64("mips64")
+    MIPS64("mips64"),
+    AMD64("amd64")
 }

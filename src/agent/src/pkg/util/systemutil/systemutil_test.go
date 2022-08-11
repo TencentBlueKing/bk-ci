@@ -28,7 +28,6 @@
 package systemutil
 
 import (
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 	"net"
 	"testing"
 )
@@ -45,5 +44,5 @@ func Test_IP(t *testing.T) {
 }
 
 func Test_GetAgentIp(t *testing.T) {
-	t.Log(systemutil.GetAgentIp([]string{}))
+	t.Log(GetAgentIp([]string{}))
 }

@@ -65,6 +65,7 @@ import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentEnableProjectsDao
 import com.tencent.devops.environment.exception.AgentPermissionUnAuthorizedException
 import com.tencent.devops.environment.model.AgentHostInfo
+import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.enums.NodeStatus
@@ -1086,7 +1087,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     slaveVersion = "",
                     AgentStatus = AgentStatus.DELETE.name,
                     ParallelTaskCount = -1,
-                    envs = mapOf(), props = mapOf()
+                    envs = mapOf()
                 )
             }
 
@@ -1122,6 +1123,19 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (newHeartbeatInfo.startedUser != agentRecord.startedUser) {
                 agentRecord.startedUser = newHeartbeatInfo.startedUser
                 agentChanged = true
+            }
+            if (newHeartbeatInfo.props != null) {
+                val props = JsonUtil.toJson(
+                    AgentProps(
+                        newHeartbeatInfo.props!!.arch,
+                        newHeartbeatInfo.props!!.jdkVersion ?: listOf()
+                    ),
+                    false
+                )
+                if (props != agentRecord.agentProps) {
+                    agentRecord.agentProps = props
+                    agentChanged = true
+                }
             }
             if (agentChanged) {
                 thirdPartyAgentDao.saveAgent(context, agentRecord)
@@ -1172,7 +1186,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                                 slaveVersion = "",
                                 AgentStatus = AgentStatus.DELETE.name,
                                 ParallelTaskCount = -1,
-                                envs = mapOf(), props = mapOf()
+                                envs = mapOf()
                             )
                         }
                         if (nodeRecord.nodeIp != newHeartbeatInfo.agentIp ||
@@ -1206,12 +1220,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     envVar.associate { it.name to it.value }
                 },
                 gateway = agentRecord.gateway,
-                fileGateway = agentRecord.fileGateway,
-                props = try {
-                    agentRecord.agentProps?.let { self -> JsonUtil.to(self) } ?: mapOf()
-                } catch (ignore: Exception) {
-                    mapOf()
-                }
+                fileGateway = agentRecord.fileGateway
             )
         }
     }
@@ -1386,24 +1395,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
     }
 
-    fun saveAgentProps(userId: String, projectId: String, nodeHashId: String, props: Map<String, Any>) {
-        val nodeId = HashUtil.decodeIdToLong(nodeHashId)
-        checkEditPermmission(userId, projectId, nodeId)
-
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
-            ?: throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
-                params = arrayOf(nodeHashId)
-            )
-
-        thirdPartyAgentDao.saveAgentProps(
-            dslContext = dslContext,
-            agentId = agentRecord.id,
-            propsJsonStr = JsonUtil.toJson(props, formatted = false)
-        )
-    }
-
-    fun getAgentProps(projectId: String, nodeHashId: String): Map<String, Any> {
+    fun getAgentProps(projectId: String, nodeHashId: String): AgentProps? {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
         val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
             ?: throw ErrorCodeException(
@@ -1411,7 +1403,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 params = arrayOf(nodeHashId)
             )
 
-        return agentRecord.agentProps?.let { self -> JsonUtil.to(self) } ?: mapOf()
+        return agentRecord.agentProps?.let { self -> JsonUtil.to(self) }
     }
 
     companion object {
