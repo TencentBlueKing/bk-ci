@@ -220,6 +220,7 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     override fun getDeptByName(deptName: String, userId: String): DeptInfoVo? {
+        logger.info("get dept By Name: $deptName")
         val search = SearchUserAndDeptEntity(
             bk_app_code = appCode!!,
             bk_app_secret = appSecret!!,
