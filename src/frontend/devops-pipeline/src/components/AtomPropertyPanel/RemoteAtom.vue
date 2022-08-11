@@ -20,7 +20,6 @@
     import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
     import AtomOutput from './AtomOutput'
-    import { debounce } from '@/utils/util'
     export default {
         name: 'remote-atom',
         components: {
@@ -50,9 +49,6 @@
             src () {
                 return `${location.origin}/bk-plugin-fe/${this.atomCode}/${this.atomVersion}/index.html?projectId=${this.$route.params.projectId}&pipelineId=${this.pipelineId}`
             }
-        },
-        created () {
-            this.debounceUpdate = debounce(this.handleUpdateWholeAtomInput)
         },
         mounted () {
             window.addEventListener('message', this.receiveMsgFromIframe)
@@ -96,7 +92,7 @@
                     // 如果不含有elementId(旧版本的自定义插件)， 或者elementId与当前id相同，则更新
                     if (!e.data.elementId || (e.data.elementId && e.data.elementId === this.element?.id)) {
                         this.setPipelineEditing(true)
-                        this.debounceUpdate(e.data.atomValue)
+                        this.handleUpdateWholeAtomInput(e.data.atomValue)
                     } else {
                         console.log(`nowId: ${this.element.id}, 'fromId: ${e.data.elementId}`)
                     }
