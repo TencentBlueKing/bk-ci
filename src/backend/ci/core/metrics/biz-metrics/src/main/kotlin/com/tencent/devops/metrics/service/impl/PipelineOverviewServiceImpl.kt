@@ -27,6 +27,8 @@
 
 package com.tencent.devops.metrics.service.impl
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.constant.Constants.BK_FAIL_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_FAIL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
@@ -35,6 +37,7 @@ import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
+import com.tencent.devops.metrics.constant.MetricsMessageCode
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.PipelineOverviewDao
 import com.tencent.devops.metrics.pojo.`do`.PipelineSumInfoDO
@@ -51,9 +54,24 @@ import java.time.LocalDateTime
 @Service
 class PipelineOverviewServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineOverviewDao: PipelineOverviewDao
+    private val pipelineOverviewDao: PipelineOverviewDao,
+    private val metricsConfig: MetricsConfig
 ) : PipelineOverviewManageService {
     override fun queryPipelineSumInfo(queryPipelineOverviewDTO: QueryPipelineOverviewDTO): PipelineSumInfoDO? {
+        val queryPipelineSumInfoCount = pipelineOverviewDao.queryPipelineSumInfoCount(
+            dslContext,
+            QueryPipelineOverviewQO(
+                queryPipelineOverviewDTO.projectId,
+                queryPipelineOverviewDTO.baseQueryReq
+            )
+        )
+        // 查询记录过多，提醒用户缩小查询范围
+        if (queryPipelineSumInfoCount > metricsConfig.queryCountMax) {
+            throw ErrorCodeException(
+                errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND,
+                params = arrayOf("${metricsConfig.queryCountMax}")
+            )
+        }
         val result = pipelineOverviewDao.queryPipelineSumInfo(
             dslContext,
             QueryPipelineOverviewQO(
