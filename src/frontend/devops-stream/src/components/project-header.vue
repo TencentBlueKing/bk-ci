@@ -31,7 +31,6 @@
                     v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }"
                     :is="permission ? 'router-link' : 'span'"
                     :to="{ name: 'basicSetting' }"
-                    v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }"
                 >
                     <icon
                         name="setting-link"
