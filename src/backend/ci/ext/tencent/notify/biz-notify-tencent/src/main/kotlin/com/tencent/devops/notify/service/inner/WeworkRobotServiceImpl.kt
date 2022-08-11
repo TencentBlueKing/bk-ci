@@ -135,6 +135,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
         val errMsg = requestBodies.asSequence().map {
             send(it)
         }.joinToString(", ")
+        logger.info("errMsg :$errMsg")
         if (errMsg.isNotBlank())
             throw RemoteServiceException(errMsg)
     }
@@ -146,7 +147,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
             val responseBody = it.body()?.string() ?: ""
             logger.info(
                 "sendTextMessage : chatid = ${weworkMessage.chatid} | " +
-                    "charesponseBody = $responseBody"
+                    "responseBody = $responseBody"
             )
             kotlin.runCatching {
                 val sendMessageResp = JsonUtil.to(responseBody, jacksonTypeRef<WeworkSendMessageResp>())
