@@ -59,10 +59,11 @@ class PipelineOverviewDao {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val pipelineIds = queryPipelineOverview.baseQueryReq.pipelineIds
             val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo, pipelineIds)
+            val field = TOTAL_AVG_COST_TIME * TOTAL_EXECUTE_COUNT
             val step = dslContext.select(
                 sum<Long>(TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_EXECUTE_COUNT_SUM),
                 sum<Long>(SUCCESS_EXECUTE_COUNT).`as`(BK_SUCCESS_EXECUTE_COUNT_SUM),
-                sum<Long>(TOTAL_AVG_COST_TIME * TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_COST_TIME_SUM)
+                sum<Long>(field).`as`(BK_TOTAL_COST_TIME_SUM)
             ).from(this)
                 if (!queryPipelineOverview.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
                     step.join(tProjectPipelineLabelInfo).on(PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
