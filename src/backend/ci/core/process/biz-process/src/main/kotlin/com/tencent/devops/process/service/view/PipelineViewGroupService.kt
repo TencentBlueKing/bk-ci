@@ -396,7 +396,6 @@ class PipelineViewGroupService @Autowired constructor(
     fun preview(
         userId: String,
         projectId: String,
-        viewId: String?,
         pipelineView: PipelineViewForm
     ): PipelineViewPreview {
         // 获取所有流水线信息
@@ -406,6 +405,7 @@ class PipelineViewGroupService @Autowired constructor(
         }
 
         //获取老流水线组的流水线
+        val viewId = pipelineView.id
         val oldPipelineIds = if (null == viewId) {
             emptyList<String>()
         } else {
@@ -432,16 +432,27 @@ class PipelineViewGroupService @Autowired constructor(
         }
 
         //新增流水线 = 新流水线 - 老流水线
-        val addedPipelineInfos = newPipelineIds.filterNot { oldPipelineIds.contains(it) }
+        val addedPipelineInfos = newPipelineIds.asSequence()
+            .filterNot { oldPipelineIds.contains(it) }
             .map { allPipelineInfoMap[it]!! }
             .map { PipelineViewPreview.PipelineInfo(pipelineId = it.pipelineId, pipelineName = it.pipelineName) }
+            .toList()
 
         // 移除流水线 = 老流水线 - 新流水线
-        val removedPipelineInfos = oldPipelineIds.filterNot { newPipelineIds.contains(it) }
+        val removedPipelineInfos = oldPipelineIds.asSequence()
+            .filterNot { newPipelineIds.contains(it) }
             .map { allPipelineInfoMap[it]!! }
             .map { PipelineViewPreview.PipelineInfo(pipelineId = it.pipelineId, pipelineName = it.pipelineName) }
+            .toList()
 
-        return PipelineViewPreview(addedPipelineInfos, removedPipelineInfos)
+        // 保留流水线 = 老流水线 & 新流水线
+        val reservePipelineInfos = newPipelineIds.asSequence()
+            .filter { oldPipelineIds.contains(it) }
+            .map { allPipelineInfoMap[it]!! }
+            .map { PipelineViewPreview.PipelineInfo(pipelineId = it.pipelineId, pipelineName = it.pipelineName) }
+            .toList()
+
+        return PipelineViewPreview(addedPipelineInfos, removedPipelineInfos, reservePipelineInfos)
     }
 
     fun dict(userId: String, projectId: String): PipelineViewDict {

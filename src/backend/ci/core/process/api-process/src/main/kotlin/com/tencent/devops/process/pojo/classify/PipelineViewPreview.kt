@@ -8,7 +8,9 @@ data class PipelineViewPreview(
     @ApiModelProperty("新增的流水线ID列表", required = true)
     val addedPipelineIds: List<PipelineInfo>,
     @ApiModelProperty("删除的流水线ID列表", required = true)
-    val removedPipelineIds: List<PipelineInfo>
+    val removedPipelineIds: List<PipelineInfo>,
+    @ApiModelProperty("保留的流水线ID列表", required = true)
+    val reservePipelineIds: List<PipelineInfo>
 ) {
     data class PipelineInfo(
         @ApiModelProperty("名称", required = true)
@@ -18,6 +20,6 @@ data class PipelineViewPreview(
     )
 
     companion object {
-        val EMPTY = PipelineViewPreview(emptyList(), emptyList())
+        val EMPTY = PipelineViewPreview(emptyList(), emptyList(), emptyList())
     }
 }

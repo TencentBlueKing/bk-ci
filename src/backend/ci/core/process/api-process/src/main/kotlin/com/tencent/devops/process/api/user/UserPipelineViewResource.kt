@@ -198,9 +198,6 @@ interface UserPipelineViewResource {
         userId: String,
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("标签ID", required = true)
-        @QueryParam("viewId")
-        viewId: String? = null,
         pipelineView: PipelineViewForm
     ): Result<PipelineViewPreview>
 

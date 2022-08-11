@@ -88,10 +88,9 @@ class UserPipelineViewResourceImpl @Autowired constructor(
     override fun preview(
         userId: String,
         projectId: String,
-        viewId: String?,
         pipelineView: PipelineViewForm
     ): Result<PipelineViewPreview> {
-        return Result(pipelineViewGroupService.preview(userId, projectId, viewId, pipelineView))
+        return Result(pipelineViewGroupService.preview(userId, projectId, pipelineView))
     }
 
     override fun dict(userId: String, projectId: String): Result<PipelineViewDict> {

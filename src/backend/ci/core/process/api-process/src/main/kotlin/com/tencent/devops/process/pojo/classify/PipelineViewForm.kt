@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("流水线视图表单")
 data class PipelineViewForm(
+    @ApiModelProperty("ID", required = false)
+    val id: String? = null,
     @ApiModelProperty("视图名称", required = false)
     val name: String,
     @ApiModelProperty("是否项目", required = false)
