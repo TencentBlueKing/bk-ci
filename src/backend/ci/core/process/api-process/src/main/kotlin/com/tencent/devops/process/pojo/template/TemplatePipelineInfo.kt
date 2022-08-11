@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("流水线模板信息")
-class TemplatePipelineInfo (
+class TemplatePipelineInfo(
     @ApiModelProperty("模板id", required = false)
     val templateId: String? = null,
     @ApiModelProperty("版本名称", required = false)
