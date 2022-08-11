@@ -1153,7 +1153,7 @@ class PipelineListFacadeService @Autowired constructor(
     private fun finalPipelines(
         pipelines: MutableList<Pipeline>,
         pipelineModelMap: Map<String, Model?>,
-        pipelineTemplateMap:  Map<String, TemplatePipelineInfo>,
+        pipelineTemplateMap: Map<String, TemplatePipelineInfo>,
         pipelineGroupLabel: Map<String, List<PipelineGroupLabels>>,
         pipelineBuildSummaryMap: Map<String, TPipelineBuildSummaryRecord>,
         pipelineSettingMap: Map<String, Record4<String, String, Int, String>>
