@@ -139,6 +139,9 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     private fun send(weworkMessage: WeweokRobotBaseMessage) {
+        logger.info(
+            "sendTextMessage ：123"
+        )
         val url = buildUrl("$weworkHost/cgi-bin/webhook/send?key=$robotKey")
         val requestBody = JsonUtil.toJson(weworkMessage)
         OkhttpUtils.doPost(url, requestBody).use {
