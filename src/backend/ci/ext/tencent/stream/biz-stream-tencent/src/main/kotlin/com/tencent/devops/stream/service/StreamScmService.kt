@@ -166,7 +166,7 @@ class StreamScmService @Autowired constructor(
         useAccessToken: Boolean,
         isFirst: Boolean = true
     ): String {
-        logger.info("getYamlFromGit: [$gitProjectId|$fileName|$ref|$useAccessToken]")
+        logger.info("StreamScmService|getYamlFromGit|$gitProjectId|$fileName|$ref|$useAccessToken]")
         try {
             return retryFun(
                 log = "$gitProjectId get yaml $fileName fail",
@@ -196,7 +196,7 @@ class StreamScmService @Autowired constructor(
         useAccessToken: Boolean,
         isFirst: Boolean = true
     ): GitCIProjectInfo {
-        logger.info("getProjectInfoRetry: [$gitProjectId]")
+        logger.info("StreamScmService|getProjectInfoRetry|gitProjectId|$gitProjectId")
         try {
             return retryFun(
                 log = "$gitProjectId get project $gitProjectId fail",
@@ -224,7 +224,7 @@ class StreamScmService @Autowired constructor(
         useAccessToken: Boolean,
         isFirst: Boolean = true
     ): GitCIProjectInfo? {
-        logger.info("GitCIProjectInfo: [$gitProjectId|$useAccessToken]")
+        logger.info("StreamScmService|getProjectInfo|gitProjectId|$gitProjectId|useAccessToken|$useAccessToken")
         try {
             val result = client.getScm(ServiceGitCiResource::class).getProjectInfo(
                 accessToken = token,
@@ -234,7 +234,7 @@ class StreamScmService @Autowired constructor(
             return result.data
         } catch (e: RemoteServiceException) {
             logger.warn(
-                "getProjectInfo RemoteServiceException|" +
+                "StreamScmService|getProjectInfo|RemoteServiceException|" +
                     "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
             )
             when (e.httpStatus) {
@@ -267,7 +267,7 @@ class StreamScmService @Autowired constructor(
             }
             throw e
         } catch (e: Exception) {
-            logger.error("getProjectInfo Exception: $e")
+            logger.warn("StreamScmService|getProjectInfo|Exception", e)
             error(" getProjectInfo error ${e.message}", ErrorCodeEnum.GET_PROJECT_INFO_ERROR)
         }
         return null
@@ -284,7 +284,7 @@ class StreamScmService @Autowired constructor(
         perPage: Int?,
         isFirst: Boolean = true
     ): List<Commit>? {
-        logger.info("getCommits: [$gitProjectId|$filePath|$branch|$since|$until|$page|$perPage]")
+        logger.info("StreamScmService|getCommits|$gitProjectId|$filePath|$branch|$since|$until|$page|$perPage")
         try {
             return client.getScm(ServiceGitResource::class).getCommits(
                 gitProjectId = gitProjectId,
@@ -313,7 +313,7 @@ class StreamScmService @Autowired constructor(
         gitCICreateFile: GitCICreateFile,
         isFirst: Boolean = true
     ): Boolean {
-        logger.info("createNewFile: [$gitProjectId|$gitCICreateFile]")
+        logger.info("StreamScmService|createNewFile|$gitProjectId|$gitCICreateFile")
         try {
             return client.getScm(ServiceGitResource::class).gitCICreateFile(
                 gitProjectId = gitProjectId,
@@ -328,7 +328,7 @@ class StreamScmService @Autowired constructor(
             ).data!!
         } catch (e: RemoteServiceException) {
             logger.warn(
-                "createNewFile RemoteServiceException|" +
+                "StreamScmService|createNewFile|RemoteServiceException|" +
                     "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
             )
             if (GitCodeApiStatus.getStatus(e.httpStatus) != null) {
@@ -352,7 +352,7 @@ class StreamScmService @Autowired constructor(
             }
             throw e
         } catch (e: Exception) {
-            logger.error("createNewFile Exception: $e")
+            logger.warn("StreamScmService|createNewFile|Exception", e)
             error(" createNewFile error ${e.message}", ErrorCodeEnum.CREATE_NEW_FILE_ERROR)
         }
         return false
@@ -366,7 +366,7 @@ class StreamScmService @Autowired constructor(
         search: String?,
         isFirst: Boolean = true
     ): List<GitMember>? {
-        logger.info("getProjectMembers: [$gitProjectId|$page|$pageSize|$search]")
+        logger.info("StreamScmService|getProjectMembers|$gitProjectId|$page|$pageSize|$search")
         try {
             return client.getScm(ServiceGitCiResource::class).getMembers(
                 token = token,
@@ -457,7 +457,7 @@ class StreamScmService @Autowired constructor(
         sort: GitCodeBranchesSort?,
         isFirst: Boolean = true
     ): List<String>? {
-        logger.info("getProjectBranches: [$gitProjectId|$page|$pageSize|$search|$orderBy|$sort]")
+        logger.info("StreamScmService|getProjectBranches|$gitProjectId|$page|$pageSize|$search|$orderBy|$sort")
         return try {
             client.getScm(ServiceGitCiResource::class)
                 .getBranches(
@@ -496,7 +496,7 @@ class StreamScmService @Autowired constructor(
         mrId: Long,
         isFirst: Boolean = true
     ): GitMrChangeInfo? {
-        logger.info("getMergeRequestChangeInfo: [$gitProjectId|$mrId]")
+        logger.info("StreamScmService|getMergeRequestChangeInfo|$gitProjectId|$mrId")
         return try {
             retryFun(
                 log = "$gitProjectId get mr $mrId changeInfo error",
@@ -533,7 +533,7 @@ class StreamScmService @Autowired constructor(
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
     ): List<GitCodeProjectInfo>? {
-        logger.info("getProjectList: [$userId|$page|$pageSize|$search]")
+        logger.info("StreamScmService|getProjectList|$userId|$page|$pageSize|$search")
         return client.getScm(ServiceGitCiResource::class).getProjectList(
             accessToken = accessToken,
             userId = userId,
@@ -552,7 +552,7 @@ class StreamScmService @Autowired constructor(
         useAccessToken: Boolean,
         isFirst: Boolean = true
     ): GitCodeFileInfo? {
-        logger.info("getFileInfo: [$gitProjectId|$filePath][$ref]")
+        logger.info("StreamScmService|getFileInfo|$gitProjectId|$filePath][$ref")
         return try {
             retryFun(
                 log = "getFileInfo: [$gitProjectId|$filePath][$ref] error",
@@ -582,7 +582,7 @@ class StreamScmService @Autowired constructor(
         token: String,
         isFirst: Boolean = true
     ): GitCIMrInfo {
-        logger.info("getMergeInfo: [$gitProjectId|$mergeRequestId]")
+        logger.info("StreamScmService|getMergeInfo|$gitProjectId|$mergeRequestId")
         return try {
             retryFun(
                 log = "$gitProjectId get mr $mergeRequestId info error",
@@ -757,7 +757,7 @@ class StreamScmService @Autowired constructor(
         projectName: String,
         sha: String
     ): GitCommit? {
-        logger.info("getCommitInfo: [$projectName|$sha]")
+        logger.info("StreamScmService|getCommitInfo|$projectName|$sha")
         return client.getScm(ServiceGitResource::class).getRepoRecentCommitInfo(
             repoName = projectName,
             sha = sha,
@@ -773,7 +773,7 @@ class StreamScmService @Autowired constructor(
         mrBody: MrCommentBody,
         isFirst: Boolean = true
     ) {
-        logger.info("addMrComment: [$gitProjectId|$mrId]")
+        logger.info("StreamScmService|addMrComment|$gitProjectId|$mrId")
         try {
             client.getScm(ServiceGitCiResource::class).addMrComment(
                 token = token,
@@ -797,7 +797,7 @@ class StreamScmService @Autowired constructor(
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
     ): List<GitCodeGroup>? {
-        logger.info("getProjectGroupList: [$accessToken|$page|$pageSize]")
+        logger.info("StreamScmService|getProjectGroupList|$accessToken|$page|$pageSize")
         return client.getScm(ServiceGitCiResource::class).getProjectGroupsList(
             accessToken = accessToken,
             page = page,
@@ -830,27 +830,27 @@ class StreamScmService @Autowired constructor(
                 action()
             }
         } catch (e: ClientException) {
-            logger.warn("retry 5 times $log: ${e.message} ")
+            logger.warn("StreamScmService|retryFun|retry 5 times $log: ${e.message} ")
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
                 defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
             )
         } catch (e: RemoteServiceException) {
-            logger.warn("GIT_API_ERROR $log: ${e.message} ")
+            logger.warn("StreamScmService|retryFun|GIT_API_ERROR $log: ${e.message} ")
             throw ErrorCodeException(
                 statusCode = e.httpStatus,
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = "$log: ${e.errorMessage}"
             )
         } catch (e: CustomException) {
-            logger.warn("GIT_SCM_ERROR $log: ${e.message} ")
+            logger.warn("StreamScmService|retryFun|GIT_SCM_ERROR $log: ${e.message} ")
             throw ErrorCodeException(
                 statusCode = e.status.statusCode,
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = "$log: ${e.message}"
             )
         } catch (e: Throwable) {
-            logger.error("retryFun error $log: ${e.message} ")
+            logger.warn("StreamScmService|retryFun|error|$log|${e.message} ")
             throw ErrorCodeException(
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = if (e.message.isNullOrBlank()) {
@@ -864,7 +864,7 @@ class StreamScmService @Autowired constructor(
 
     // 返回给前端错误码异常
     private fun error(logMessage: String, errorCode: ErrorCodeEnum, exceptionMessage: String? = null) {
-        logger.warn(logMessage)
+        logger.warn("StreamScmService|error|$logMessage")
         throw ErrorCodeException(
             statusCode = 200,
             errorCode = errorCode.errorCode.toString(),

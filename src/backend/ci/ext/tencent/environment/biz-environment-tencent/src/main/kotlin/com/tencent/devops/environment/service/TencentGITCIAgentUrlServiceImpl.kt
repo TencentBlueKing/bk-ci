@@ -44,6 +44,6 @@ class TencentGITCIAgentUrlServiceImpl constructor(
 
     override fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
-        return "$v2GitUrl/external/agents/$agentHashId/agent?x-devops-project-id=${agentRecord.projectId}"
+        return "$v2GitUrl/external/agents/$agentHashId/agent?x-devops-project-id=${agentRecord.projectId}&arch=\${ARCH}"
     }
 }

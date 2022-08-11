@@ -142,7 +142,7 @@ class V1GitCIMergeService @Autowired constructor(
                             )
                         )
                     } catch (e: Exception) {
-                        logger.error(
+                        logger.warn(
                             "Load gitProjectId: ${it.gitProjectId}, " +
                                 "eventId: ${it.eventId}, pipelineId: ${it.pipelineId} failed with error: ",
                             e

@@ -146,7 +146,10 @@ class StreamBuildQualityCheckistener @Autowired constructor(
                     ?: throw RuntimeException("${buildQualityEvent.buildId} have none ruleids")
             )
         } catch (e: Exception) {
-            logger.warn("buildQualityCheckListener ${buildQualityEvent.buildId} error: ${e.message}")
+            logger.warn(
+                "StreamBuildQualityCheckistener" +
+                    "|buildQualityCheckListener|${buildQualityEvent.buildId}|error|${e.message}"
+            )
         }
     }
 

@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
-import com.tencent.devops.common.api.util.SensitiveApiUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -50,6 +50,7 @@ import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.AtomRuntimeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
@@ -86,12 +87,12 @@ import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Suppress("LongMethod", "LongParameterList", "ReturnCount", "TooManyFunctions", "MagicNumber")
 @Service
@@ -485,14 +486,15 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         userId = task.starter, buildId = buildId, taskId = task.taskId, actionType = ActionType.START
                     )
                 )
+                val signToken = UUIDUtil.generate()
                 // 标记正在运行的atom_code
                 if (!task.atomCode.isNullOrBlank()) {
-                    redisOperation.set(
-                        key = SensitiveApiUtil.getRunningAtomCodeKey(
-                            buildId = buildId,
-                            vmSeqId = vmSeqId
-                        ),
-                        value = task.atomCode!!,
+                    AtomRuntimeUtil.setRunningAtomValue(
+                        redisOperation = redisOperation,
+                        buildId = buildId,
+                        vmSeqId = vmSeqId,
+                        atomCode = task.atomCode!!,
+                        signToken = signToken,
                         expiredInSecond = transMinuteTimeoutToSec(task.additionalOptions?.timeout?.toInt())
                     )
                 }
@@ -512,7 +514,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         !it.first.startsWith("@type")
                     }.toMap(),
                     buildVariable = buildVariable,
-                    containerType = task.containerType
+                    containerType = task.containerType,
+                    signToken = signToken
                 )
             }
         }
@@ -568,7 +571,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             )
         } finally {
             redisOperation.delete(key = tCompleteTaskKey)
-            redisOperation.delete(SensitiveApiUtil.getRunningAtomCodeKey(buildId = buildId, vmSeqId = vmSeqId))
+            AtomRuntimeUtil.deleteRunningAtom(redisOperation = redisOperation, buildId = buildId, vmSeqId = vmSeqId)
             containerIdLock.unlock()
         }
     }
@@ -849,7 +852,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             )
         } finally {
             redisOperation.delete(key = completeTaskKey(buildId = buildId, vmSeqId = vmSeqId))
-            redisOperation.delete(SensitiveApiUtil.getRunningAtomCodeKey(buildId = buildId, vmSeqId = vmSeqId))
+            AtomRuntimeUtil.deleteRunningAtom(redisOperation = redisOperation, buildId = buildId, vmSeqId = vmSeqId)
             containerIdLock.unlock()
         }
     }

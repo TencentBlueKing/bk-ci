@@ -436,7 +436,7 @@ class MarketAtomDao : AtomBaseDao() {
             dslContext.update(this)
                 .set(NAME, marketAtomUpdateRequest.name)
                 .set(JOB_TYPE, marketAtomUpdateRequest.jobType.name)
-                .set(OS, JsonUtil.getObjectMapper().writeValueAsString(marketAtomUpdateRequest.os))
+                .set(OS, JsonUtil.toJson(marketAtomUpdateRequest.os, formatted = false))
                 .set(CLASSIFY_ID, classifyId)
                 .set(SUMMARY, marketAtomUpdateRequest.summary)
                 .set(DESCRIPTION, marketAtomUpdateRequest.description)
@@ -511,7 +511,7 @@ class MarketAtomDao : AtomBaseDao() {
                     atomRecord.atomCode,
                     atomRecord.serviceScope,
                     atomRequest.jobType.name,
-                    JsonUtil.getObjectMapper().writeValueAsString(atomRequest.os),
+                    JsonUtil.toJson(atomRequest.os, formatted = false),
                     classifyId,
                     atomRecord.docsLink,
                     atomRecord.atomType,
@@ -776,7 +776,7 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(ATOM_TYPE, approveReq.atomType.type.toByte())
                 .set(DEFAULT_FLAG, approveReq.defaultFlag)
                 .set(BUILD_LESS_RUN_FLAG, approveReq.buildLessRunFlag)
-                .set(SERVICE_SCOPE, JsonUtil.getObjectMapper().writeValueAsString(approveReq.serviceScope))
+                .set(SERVICE_SCOPE, JsonUtil.toJson(approveReq.serviceScope, formatted = false))
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
             val weight = approveReq.weight
