@@ -144,6 +144,10 @@ class WeworkRobotServiceImpl @Autowired constructor(
         val requestBody = JsonUtil.toJson(weworkMessage)
         return OkhttpUtils.doPost(url, requestBody).use {
             val responseBody = it.body()?.string() ?: ""
+            logger.info(
+                "sendTextMessage : chatid = ${weworkMessage.chatid} | " +
+                    "charesponseBody = $responseBody"
+            )
             kotlin.runCatching {
                 val sendMessageResp = JsonUtil.to(responseBody, jacksonTypeRef<WeworkSendMessageResp>())
                 if (!it.isSuccessful || 0 != sendMessageResp.errCode) {
