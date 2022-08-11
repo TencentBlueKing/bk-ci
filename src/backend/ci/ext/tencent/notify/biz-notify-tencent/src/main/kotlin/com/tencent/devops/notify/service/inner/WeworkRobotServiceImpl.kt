@@ -118,51 +118,40 @@ class WeworkRobotServiceImpl @Autowired constructor(
                 }
             }
         }
+        if (sendRequest.isEmpty()) {
+            throw OperationException("no message to send")
+        }
         try {
-            doSendRequest(sendRequest)
-            logger.info("send message success, $weworkNotifyTextMessage")
-            saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", true, null)
+            sendRequest.asSequence().map {
+                sendWeweokRobot(it)
+            }
         } catch (e: Exception) {
             logger.warn("send message fail, $weworkNotifyTextMessage")
             saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", false, e.message)
+            throw OperationException("send message fail")
         }
+        logger.info("send message success, $weworkNotifyTextMessage")
+        saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", true, null)
     }
 
-    private fun doSendRequest(requestBodies: List<WeweokRobotBaseMessage>) {
-        if (requestBodies.isEmpty()) {
-            throw OperationException("no message to send")
-        }
-        val errMsg = requestBodies.asSequence().map {
-            send(it)
-        }.joinToString(", ")
-        logger.info("errMsg :$errMsg")
-        if (errMsg.isNotBlank())
-            throw RemoteServiceException(errMsg)
-    }
-
-    private fun send(weworkMessage: WeweokRobotBaseMessage): Optional<Throwable> {
+    private fun sendWeweokRobot(weworkMessage: WeweokRobotBaseMessage) {
         val url = buildUrl("$weworkHost/cgi-bin/webhook/send?key=$robotKey")
         val requestBody = JsonUtil.toJson(weworkMessage)
-        return OkhttpUtils.doPost(url, requestBody).use {
+        OkhttpUtils.doPost(url, requestBody).use {
             val responseBody = it.body()?.string() ?: ""
             logger.info(
                 "sendTextMessage : chatid = ${weworkMessage.chatid} | " +
                     "responseBody = $responseBody"
             )
-            kotlin.runCatching {
-                val sendMessageResp = JsonUtil.to(responseBody, jacksonTypeRef<WeworkSendMessageResp>())
-                if (!it.isSuccessful || 0 != sendMessageResp.errCode) {
-                    throw RemoteServiceException(
-                        httpStatus = it.code(),
-                        responseContent = responseBody,
-                        errorMessage = "send wework robot message failed：${sendMessageResp.errMsg}",
-                        errorCode = sendMessageResp.errCode
-                    )
-                }
-            }.fold({ Optional.empty() }, { e ->
-                logger.warn("${it.request()}|send wework robot message failed, $responseBody")
-                Optional.of(e)
-            })
+            val sendMessageResp = JsonUtil.to(responseBody, jacksonTypeRef<WeworkSendMessageResp>())
+            if (!it.isSuccessful || 0 != sendMessageResp.errCode) {
+                throw RemoteServiceException(
+                    httpStatus = it.code(),
+                    responseContent = responseBody,
+                    errorMessage = "send wework robot message failed：${sendMessageResp.errMsg}",
+                    errorCode = sendMessageResp.errCode
+                )
+            }
         }
     }
 
