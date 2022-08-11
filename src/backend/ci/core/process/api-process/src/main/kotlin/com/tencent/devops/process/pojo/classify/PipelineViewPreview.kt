@@ -6,11 +6,11 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("Pipeline视图预览")
 data class PipelineViewPreview(
     @ApiModelProperty("新增的流水线ID列表", required = true)
-    val addedPipelineIds: List<PipelineInfo>,
+    val addedPipelineInfos: List<PipelineInfo>,
     @ApiModelProperty("删除的流水线ID列表", required = true)
-    val removedPipelineIds: List<PipelineInfo>,
+    val removedPipelineInfos: List<PipelineInfo>,
     @ApiModelProperty("保留的流水线ID列表", required = true)
-    val reservePipelineIds: List<PipelineInfo>
+    val reservePipelineInfos: List<PipelineInfo>
 ) {
     data class PipelineInfo(
         @ApiModelProperty("名称", required = true)
