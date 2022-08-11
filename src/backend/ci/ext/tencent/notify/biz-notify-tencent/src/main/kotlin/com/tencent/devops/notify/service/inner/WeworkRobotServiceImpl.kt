@@ -52,7 +52,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Configuration
-import java.util.Optional
 
 @Configuration
 @ConditionalOnProperty(prefix = "notify", name = ["weworkChannel"], havingValue = "weworkRobot")
@@ -120,12 +119,15 @@ class WeworkRobotServiceImpl @Autowired constructor(
         }
         try {
             doSendRequest(sendRequest)
-            logger.info("send message success, $weworkNotifyTextMessage")
+            logger.info("send wework robot message success : $weworkNotifyTextMessage")
             saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", true, null)
-        } catch (e: Exception) {
-            logger.warn("send message fail, $weworkNotifyTextMessage")
+        } catch (e: RemoteServiceException) {
+            logger.warn(
+                "send wework robot message fail : weworkNotifyTextMessage = $weworkNotifyTextMessage " +
+                    "| errorMessage :$e"
+            )
             saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", false, e.message)
-            throw OperationException("send message fail")
+            throw RemoteServiceException("send wework robot message fail")
         }
     }
 
@@ -133,18 +135,10 @@ class WeworkRobotServiceImpl @Autowired constructor(
         if (requestBodies.isEmpty()) {
             throw OperationException("no message to send")
         }
-        logger.info(
-            "requestBodies :$requestBodies"
-        )
-        requestBodies.map {
-            send(it)
-        }
+        requestBodies.map { send(it) }
     }
 
     private fun send(weworkMessage: WeweokRobotBaseMessage) {
-        logger.info(
-            "sendTextMessage ：123"
-        )
         val url = buildUrl("$weworkHost/cgi-bin/webhook/send?key=$robotKey")
         val requestBody = JsonUtil.toJson(weworkMessage)
         OkhttpUtils.doPost(url, requestBody).use {
