@@ -156,7 +156,8 @@ class PipelineViewDao {
         name: String,
         logic: String,
         isProject: Boolean,
-        filters: String
+        filters: String,
+        viewType: Int
     ): Boolean {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.update(this)
@@ -166,6 +167,7 @@ class PipelineViewDao {
                 .set(FILTER_BY_PIPEINE_NAME, "")
                 .set(FILTER_BY_CREATOR, "")
                 .set(FILTERS, filters)
+                .set(VIEW_TYPE, viewType)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(viewId).and(PROJECT_ID.eq(projectId)))
                 .execute() == 1

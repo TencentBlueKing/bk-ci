@@ -370,7 +370,8 @@ class PipelineViewService @Autowired constructor(
                 filters = objectMapper.writerFor(object :
                     TypeReference<List<PipelineViewFilter>>() {}).writeValueAsString(
                     pipelineView.filters
-                )
+                ),
+                viewType = pipelineView.viewType
             )
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to update the pipeline $pipelineView by userId")
