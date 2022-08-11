@@ -593,11 +593,11 @@ export default {
     },
 
     getMacSysVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions`)
+        return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions/v2`)
     },
 
     getMacXcodeVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions`)
+        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions/v2`)
     },
     setImportedPipelineJson ({ commit }, importedJson) {
         commit(SET_IMPORTED_JSON, importedJson)
