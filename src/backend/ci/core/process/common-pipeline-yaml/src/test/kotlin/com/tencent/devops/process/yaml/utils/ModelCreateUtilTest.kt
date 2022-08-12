@@ -25,30 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.yaml.utils
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.pipeline.ExtServiceMoaWorkItemReq
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
-@Api(tags = ["SERVICE_PIPELINE"], description = "服务-流水线moa审批资源")
-@Path("/external/review/moa")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceTXMoaCallBackResource {
+internal class ModelCreateUtilTest {
 
-    @ApiOperation("人工审核插件moa回调")
-    @POST
-    @Path("/manual_review_call_back")
-    fun manualReviewCallBack(
-        @ApiParam("MyOA返回的审批结果结构", required = true)
-        extServiceMoaWorkItemReq: ExtServiceMoaWorkItemReq
-    ): Result<Boolean>
+    @DisplayName("测试去掉if表达式中的花括号")
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "\${{variables.xxx == true}} => variables.xxx == true",
+            "variables.xxx }} == true => variables.xxx }} == true",
+            "\${{variables.xxx == true => \${{variables.xxx == true",
+            " \${{variables.xxx }} == true =>  variables.xxx  == true",
+            "\${{variables.xxx }} == true || \${{ variables.xxx}} => variables.xxx  == true ||  variables.xxx",
+            "\${{variables.\${{ a.xxx}} }} == true => variables.\${{ a.xxx}}  == true"
+        ]
+    )
+    fun testRemoveIfBrackets(exp: String) {
+        val (sample, expect) = exp.split(" => ")
+        Assertions.assertEquals(expect, ModelCreateUtil.removeIfBrackets(sample))
+    }
 }
