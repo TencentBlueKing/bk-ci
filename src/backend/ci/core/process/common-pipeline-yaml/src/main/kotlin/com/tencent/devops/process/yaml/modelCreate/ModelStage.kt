@@ -46,6 +46,7 @@ import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.inner.InnerModelCreator
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.pojo.QualityElementInfo
+import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.utils.PathMatchUtils
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
@@ -152,7 +153,7 @@ class ModelStage @Autowired(required = false) constructor(
         if (!finalStage && !stage.ifField.isNullOrBlank()) {
             stageControlOption = StageControlOption(
                 runCondition = StageRunCondition.CUSTOM_CONDITION_MATCH,
-                customCondition = stage.ifField.toString()
+                customCondition = ModelCreateUtil.removeIfBrackets(stage.ifField.toString())
             )
         }
         stageControlOption = stageControlOption.copy(enable = stageEnable)
@@ -203,11 +204,11 @@ class ModelStage @Autowired(required = false) constructor(
         check.timeout = stageCheck.timeoutHours
         if (stageCheck.reviews?.flows?.isNotEmpty() == true) {
             check.manualTrigger = true
-            check.reviewDesc = stageCheck.reviews?.description
-            check.reviewParams = createReviewParams(stageCheck.reviews?.variables)
-            check.reviewGroups = stageCheck.reviews?.flows?.map { it ->
+            check.reviewDesc = stageCheck.reviews.description
+            check.reviewParams = createReviewParams(stageCheck.reviews.variables)
+            check.reviewGroups = stageCheck.reviews.flows.map {
                 StageReviewGroup(name = it.name, reviewers = it.reviewers)
-            }?.toMutableList()
+            }.toMutableList()
         }
         if (stageCheck.gates?.isNotEmpty() == true) {
             check.ruleIds = createRules(
@@ -318,7 +319,7 @@ class ModelStage @Autowired(required = false) constructor(
                         notifyUserList = if (notify.receivers.isNullOrEmpty()) {
                             listOf(event.userId)
                         } else {
-                            notify.receivers?.toList()
+                            notify.receivers.toList()
                         },
                         notifyGroupList = null,
                         auditUserList = null,
@@ -355,7 +356,7 @@ class ModelStage @Autowired(required = false) constructor(
             ).data
             if (!resultList.isNullOrEmpty()) return resultList.map { it.ruleBuildId }
         } catch (ignore: Throwable) {
-            logger.warn("Failed to save quality rules with error: ", ignore.message)
+            logger.warn("Failed to save quality rules with error: ${ignore.message}")
             if (ignore is RemoteServiceException) {
                 throw QualityRulesException(ignore.errorMessage, ignore.errorCode.toString())
             } else {
@@ -377,7 +378,7 @@ class ModelStage @Autowired(required = false) constructor(
         if (op.isBlank()) {
             throw QualityRulesException("gates rules format error: no quality operations")
         }
-        return when (
+        when (
             rule.split(op).first().toCharArray()
                 .filter { it == '.' }
                 .groupBy { it.toString() }
