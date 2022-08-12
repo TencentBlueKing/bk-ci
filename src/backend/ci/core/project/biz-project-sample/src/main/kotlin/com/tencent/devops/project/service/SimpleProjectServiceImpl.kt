@@ -37,7 +37,6 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -50,7 +49,6 @@ import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.impl.AbsProjectServiceImpl
-import com.tencent.devops.project.util.ImageUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,24 +63,22 @@ class SimpleProjectServiceImpl @Autowired constructor(
     projectDao: ProjectDao,
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
-    gray: Gray,
     client: Client,
     projectDispatcher: ProjectDispatcher,
     authPermissionApi: AuthPermissionApi,
     projectAuthServiceCode: ProjectAuthServiceCode,
-    projectDataSourceAssignService: ProjectDataSourceAssignService
+    shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService
 ) : AbsProjectServiceImpl(
-    projectPermissionService,
-    dslContext,
-    projectDao,
-    projectJmxApi,
-    redisOperation,
-    gray,
-    client,
-    projectDispatcher,
-    authPermissionApi,
-    projectAuthServiceCode,
-    projectDataSourceAssignService
+    projectPermissionService = projectPermissionService,
+    dslContext = dslContext,
+    projectDao = projectDao,
+    projectJmxApi = projectJmxApi,
+    redisOperation = redisOperation,
+    client = client,
+    projectDispatcher = projectDispatcher,
+    authPermissionApi = authPermissionApi,
+    projectAuthServiceCode = projectAuthServiceCode,
+    shardingRoutingRuleAssignService = shardingRoutingRuleAssignService
 ) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
@@ -129,16 +125,6 @@ class SimpleProjectServiceImpl @Autowired constructor(
 
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
         return
-    }
-
-    override fun drawFile(projectCode: String): File {
-        // 随机生成首字母图片
-        val firstChar = projectCode.substring(0, 1).toUpperCase()
-        return ImageUtil.drawImage(
-            firstChar,
-            Width,
-            Height
-        )
     }
 
     override fun organizationMarkUp(

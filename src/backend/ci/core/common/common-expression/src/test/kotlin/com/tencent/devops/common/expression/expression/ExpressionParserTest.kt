@@ -27,116 +27,87 @@
 
 package com.tencent.devops.common.expression.expression
 
+import com.tencent.devops.common.expression.DistinguishType
 import com.tencent.devops.common.expression.ExecutionContext
+import com.tencent.devops.common.expression.ExpressionParseException
+import com.tencent.devops.common.expression.ExpressionParser
+import com.tencent.devops.common.expression.SubNameValueEvaluateInfo
+import com.tencent.devops.common.expression.context.ArrayContextData
+import com.tencent.devops.common.expression.context.BooleanContextData
+import com.tencent.devops.common.expression.context.ContextValueNode
+import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.NumberContextData
+import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
-import com.tencent.devops.common.expression.pipeline.contextData.ArrayContextData
-import com.tencent.devops.common.expression.pipeline.contextData.BooleanContextData
-import com.tencent.devops.common.expression.pipeline.contextData.ContextValueNode
-import com.tencent.devops.common.expression.pipeline.contextData.DictionaryContextData
-import com.tencent.devops.common.expression.pipeline.contextData.StringContextData
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod", "MaxLineLength")
 @DisplayName("表达式解析类综合测试")
 class ExpressionParserTest {
 
-    companion object {
-        val ex = ExpressionParser()
-        val ev = ExecutionContext(DictionaryContextData())
-        val nameValue = mutableListOf<NamedValueInfo>()
-
-        @BeforeAll
-        @JvmStatic
-        fun initData() {
-            // 初始化操作符测试数据
-            nameValue.add(NamedValueInfo("opTest", ContextValueNode()))
-            val oArrayContextData = ArrayContextData().apply {
-                add(StringContextData("test/test"))
-                add(ArrayContextData().apply { add(StringContextData("aaa_-*+")) })
-            }
-            val oDictContextData = DictionaryContextData().apply {
-                add("dic", StringContextData("dic"))
-                add("dd", DictionaryContextData().apply { add("ddd", StringContextData("dd")) })
-            }
-            val oContextData = DictionaryContextData().apply {
-                add("array", oArrayContextData)
-                add("dic", oDictContextData)
-                add("bool", BooleanContextData(false))
-                add("strBool", StringContextData("false"))
-            }
-            ev.expressionValues.add("opTest", oContextData)
-
-            // 初始化函数测试数据
-            nameValue.add(NamedValueInfo("funcTest", ContextValueNode()))
-            val fArrayContextData = ArrayContextData().apply {
-                add(StringContextData("push"))
-                add(StringContextData("mr"))
-                add(StringContextData("tag"))
-            }
-            val fDictContextData = DictionaryContextData().apply {
-                add(
-                    "scallions",
-                    DictionaryContextData().apply {
-                        add(
-                            "colors",
-                            ArrayContextData().apply {
-                                add(StringContextData("green"))
-                                add(StringContextData("white"))
-                                add(StringContextData("red"))
-                            }
-                        )
-                        add(
-                            "ediblePortions",
-                            ArrayContextData().apply {
-                                add(StringContextData("roots"))
-                                add(StringContextData("stalks"))
-                            }
-                        )
-                    }
-                )
-                add(
-                    "beets",
-                    DictionaryContextData().apply {
-                        add(
-                            "colors",
-                            ArrayContextData().apply {
-                                add(StringContextData("purple"))
-                                add(StringContextData("red"))
-                                add(StringContextData("gold"))
-                                add(StringContextData("pink"))
-                            }
-                        )
-                        add(
-                            "ediblePortions",
-                            ArrayContextData().apply {
-                                add(StringContextData("roots"))
-                                add(StringContextData("stems"))
-                            }
-                        )
-                    }
-                )
-            }
-            val farrayA = ArrayContextData().apply {
-                add(StringContextData("roots"))
-                add(StringContextData("stalks"))
-            }
-            val jsonTest = DictionaryContextData().apply {
-                add("strJson", StringContextData("[\"manager\", \"webhook\"]"))
-                add("boolJson", StringContextData("true"))
-                add("numJson", StringContextData("1"))
-            }
-            val fContextData = DictionaryContextData().apply {
-                add("array", fArrayContextData)
-                add("arrayA", farrayA)
-                add("dict", fDictContextData)
-                add("json", jsonTest)
-            }
-            ev.expressionValues.add("funcTest", fContextData)
+    @DisplayName("测试流水线变量转换")
+    @Test
+    fun variablesConvert() {
+        val variables = mapOf(
+            "variables.pipeline_name" to "流水线名称",
+            "variables.pipeline_id" to "p-xxx",
+            "ci.actor" to "royalhuang",
+            "envs.aaa" to "bbb",
+            "jobs.job_1.steps.step_1.outputs.key_1" to "value1",
+            "jobs.job_1.steps.step_2.outputs.key_1" to "value1",
+            "jobs.job_2.steps.step_1.outputs.key_1" to "value1",
+            "jobs.job_2.steps.step_1.outputs.key_2" to "value2",
+            "jobs.build.0.steps.runStep.outputs.myoutput" to "build_0",
+            "jobs.build.2.steps.runStep.outputs.myoutput" to "build_1",
+            "depends.job1.outputs.matrix_include" to
+                """[{"service":"api","var1":"b","var3":"yyy"},{"service":"c","cpu":"zzz"}]""",
+            "project.name.chinese" to "蓝盾项目"
+        )
+        val expected = listOf(
+            mapOf(
+                "service" to "api",
+                "var1" to "b",
+                "var3" to "yyy"
+            ),
+            mapOf(
+                "service" to "c",
+                "cpu" to "zzz"
+            )
+        )
+        Assertions.assertEquals(
+            expected,
+            ExpressionParser.evaluateByMap("fromJSON(depends.job1.outputs.matrix_include)", variables)
+        )
+        Assertions.assertEquals(
+            true,
+            ExpressionParser.evaluateByMap("jobs.build[0].steps.runStep.outputs.myoutput == 'build_0'", variables)
+        )
+        Assertions.assertEquals(
+            true,
+            ExpressionParser.evaluateByMap("jobs.build.0.steps.runStep.outputs.myoutput == 'build_0'", variables)
+        )
+        Assertions.assertEquals(
+            true,
+            ExpressionParser.evaluateByMap(
+                "contains(jobs.build.0.steps.runStep.outputs.myoutput, 'build_0')", variables
+            )
+        )
+        Assertions.assertEquals(
+            true,
+            ExpressionParser.evaluateByMap("variables.pipeline_name == '流水线名称'", variables)
+        )
+        Assertions.assertEquals(
+            "p-xxx",
+            ExpressionParser.evaluateByMap("variables.pipeline_id", variables)
+        )
+        assertThrows<ExpressionParseException> {
+            ExpressionParser.evaluateByMap("a==a", variables)
         }
     }
 
@@ -153,7 +124,7 @@ class ExpressionParserTest {
         )
 
         literals.forEach { (exp, v) ->
-            val res = ex.createTree(exp, null, null, null)!!.evaluate(null, null, null).value
+            val res = ExpressionParser.createTree(exp, null, null, null)!!.evaluate(null, null, null).value
             Assertions.assertEquals(v, res)
         }
     }
@@ -192,8 +163,8 @@ class ExpressionParserTest {
             "opTest.dic.dd.ddd => dd"
         ]
     )
-    fun operatorDereferenceTest(Dereference: String) {
-        valuesTest(Dereference)
+    fun operatorDereferenceTest(dereference: String) {
+        valuesTest(dereference)
     }
 
     @DisplayName("测试操作符: !")
@@ -313,8 +284,8 @@ class ExpressionParserTest {
             "(true != false) && (false != false) => false"
         ]
     )
-    fun operatorAndOrTest(Aor: String) {
-        valuesTest(Aor)
+    fun operatorAndOrTest(aor: String) {
+        valuesTest(aor)
     }
 
     @DisplayName("测试函数: contains(search, item)")
@@ -378,7 +349,7 @@ class ExpressionParserTest {
     )
     fun functionFromJsonTest(fromJson: String) {
         val (index, exp) = fromJson.split(" => ")
-        val res = ex.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
         when (index.toInt()) {
             1 -> {
                 Assertions.assertTrue(res is DictionaryContextData)
@@ -416,7 +387,7 @@ class ExpressionParserTest {
     )
     fun functionJoinTest(join: String) {
         val (index, exp) = join.split(" => ")
-        val res = ex.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
         when (index.toInt()) {
             1 -> {
                 Assertions.assertEquals("push|mr|tag", res)
@@ -436,9 +407,67 @@ class ExpressionParserTest {
         }
     }
 
+    @DisplayName("部分参数替换测试(不含区分)")
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "parameters => {\"int\":123,\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"str\":\"12138\"}}}",
+            "parameters.arry => [12312.12,false,\"12138\",[\"12138\"]]",
+            "fromJSON(parameters['arry']) == variables.arry => (fromJSON('[12312.12,false,\"12138\",[\"12138\"]]') == variables.arry) => false",
+            "fromJSON(parameters['arry'])[0] == variables.arry[0] => (fromJSON('[12312.12,false,\"12138\",[\"12138\"]]')[0] == variables.arry[0]) => true",
+            "parameters.doub => 12312.12",
+            "parameters.int => 123",
+            "parameters.bool => false",
+            "parameters.str => 12138",
+            "startsWith(parameters.str, '121') => true"
+        ]
+    )
+    fun subNameValueEvaluateTestDistinguishString(subDistinguish: String) {
+        val items = subDistinguish.split(" => ")
+        val exp = items[0]
+        val result = items[1]
+        val subInfo = SubNameValueEvaluateInfo(distinguishTypes = null)
+        val tree = ExpressionParser.createSubNameValueEvaluateTree(exp, null, parametersNameValue, null, subInfo)!!
+        val res = tree.subNameValueEvaluate(null, parametersEv, null, subInfo).first
+        Assertions.assertEquals(result, res)
+
+        if (items.size == 3) {
+            valuesTest(res + " => " + items[2])
+        }
+    }
+
+    @DisplayName("部分参数替换测试(区分逻辑)")
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "parameters => '{\"int\":123,\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"str\":\"12138\"}}}'",
+            "parameters.arry => '[12312.12,false,\"12138\",[\"12138\"]]'",
+            "fromJSON(parameters['arry']) == variables.arry => (fromJSON('[12312.12,false,\"12138\",[\"12138\"]]') == variables.arry) => false",
+            "fromJSON(parameters['arry'])[0] == variables.arry[0] => (fromJSON('[12312.12,false,\"12138\",[\"12138\"]]')[0] == variables.arry[0]) => true",
+            "parameters.doub => '12312.12'",
+            "parameters.int => '123'",
+            "parameters.bool => 'false'",
+            "parameters.str => '12138'",
+            "startsWith(parameters.str, '121') => 'true'"
+        ]
+    )
+    fun subNameValueEvaluateTest(sub: String) {
+        val items = sub.split(" => ")
+        val exp = items[0]
+        val result = items[1]
+        val subInfo = SubNameValueEvaluateInfo(distinguishTypes = DistinguishType.values().toSet())
+        val tree = ExpressionParser.createSubNameValueEvaluateTree(exp, null, parametersNameValue, null, subInfo)!!
+        val res = tree.subNameValueEvaluate(null, parametersEv, null, subInfo).first
+        Assertions.assertEquals(result, res)
+
+        if (items.size == 3) {
+            valuesTest(res + " => " + items[2])
+        }
+    }
+
     private fun valuesTest(param: String) {
         val (exp, result) = param.split(" => ")
-        val res = ex.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
         Assertions.assertEquals(
             when (result) {
                 "true", "false" -> {
@@ -453,5 +482,153 @@ class ExpressionParserTest {
             },
             res
         )
+    }
+
+    companion object {
+        val ev = ExecutionContext(DictionaryContextData())
+        val nameValue = mutableListOf<NamedValueInfo>()
+        val parametersNameValue = mutableListOf<NamedValueInfo>()
+        val parametersEv = ExecutionContext(DictionaryContextData())
+
+        @BeforeAll
+        @JvmStatic
+        fun initData() {
+            // 初始化操作符测试数据
+            nameValue.add(NamedValueInfo("opTest", ContextValueNode()))
+            val oArrayContextData = ArrayContextData().apply {
+                add(StringContextData("test/test"))
+                add(ArrayContextData().apply { add(StringContextData("aaa_-*+")) })
+            }
+            val oDictContextData = DictionaryContextData().apply {
+                add("dic", StringContextData("dic"))
+                add("dd", DictionaryContextData().apply { add("ddd", StringContextData("dd")) })
+            }
+            val oContextData = DictionaryContextData().apply {
+                add("array", oArrayContextData)
+                add("dic", oDictContextData)
+                add("bool", BooleanContextData(false))
+                add("strBool", StringContextData("false"))
+            }
+            ev.expressionValues.add("opTest", oContextData)
+
+            // 初始化函数测试数据
+            nameValue.add(NamedValueInfo("funcTest", ContextValueNode()))
+            val fArrayContextData = ArrayContextData().apply {
+                add(StringContextData("push"))
+                add(StringContextData("mr"))
+                add(StringContextData("tag"))
+            }
+            val fDictContextData = DictionaryContextData().apply {
+                add(
+                    "scallions",
+                    DictionaryContextData().apply {
+                        add(
+                            "colors",
+                            ArrayContextData().apply {
+                                add(StringContextData("green"))
+                                add(StringContextData("white"))
+                                add(StringContextData("red"))
+                            }
+                        )
+                        add(
+                            "ediblePortions",
+                            ArrayContextData().apply {
+                                add(StringContextData("roots"))
+                                add(StringContextData("stalks"))
+                            }
+                        )
+                    }
+                )
+                add(
+                    "beets",
+                    DictionaryContextData().apply {
+                        add(
+                            "colors",
+                            ArrayContextData().apply {
+                                add(StringContextData("purple"))
+                                add(StringContextData("red"))
+                                add(StringContextData("gold"))
+                                add(StringContextData("pink"))
+                            }
+                        )
+                        add(
+                            "ediblePortions",
+                            ArrayContextData().apply {
+                                add(StringContextData("roots"))
+                                add(StringContextData("stems"))
+                            }
+                        )
+                    }
+                )
+            }
+            val farrayA = ArrayContextData().apply {
+                add(StringContextData("roots"))
+                add(StringContextData("stalks"))
+            }
+            val jsonTest = DictionaryContextData().apply {
+                add("strJson", StringContextData("[\"manager\", \"webhook\"]"))
+                add("boolJson", StringContextData("true"))
+                add("numJson", StringContextData("1"))
+            }
+            val fContextData = DictionaryContextData().apply {
+                add("array", fArrayContextData)
+                add("arrayA", farrayA)
+                add("dict", fDictContextData)
+                add("json", jsonTest)
+            }
+            ev.expressionValues.add("funcTest", fContextData)
+
+            // 初始化部分参数替换测试数据
+            parametersNameValue.add(NamedValueInfo("parameters", ContextValueNode()))
+            val parametersData = DictionaryContextData().apply {
+                add("int", NumberContextData(123.0))
+                add("doub", NumberContextData(12312.12))
+                add("bool", BooleanContextData(false))
+                add("str", StringContextData("12138"))
+                add(
+                    "arry",
+                    ArrayContextData().apply {
+                        add(NumberContextData(12312.12))
+                        add(BooleanContextData(false))
+                        add(StringContextData("12138"))
+                        add(
+                            ArrayContextData().apply {
+                                add(StringContextData("12138"))
+                            }
+                        )
+                    }
+                )
+                add(
+                    "dic",
+                    DictionaryContextData().apply {
+                        add("doub", NumberContextData(12312.12))
+                        add("bool", BooleanContextData(false))
+                        add("str", StringContextData("12138"))
+                        add(
+                            "arry",
+                            ArrayContextData().apply {
+                                add(NumberContextData(12312.12))
+                                add(BooleanContextData(false))
+                                add(StringContextData("12138"))
+                                add(
+                                    ArrayContextData().apply {
+                                        add(StringContextData("12138"))
+                                    }
+                                )
+                            }
+                        )
+                        add(
+                            "dic",
+                            DictionaryContextData().apply {
+                                add("str", StringContextData("12138"))
+                            }
+                        )
+                    }
+                )
+            }
+            parametersEv.expressionValues.add("parameters", parametersData)
+            nameValue.add(NamedValueInfo("variables", ContextValueNode()))
+            ev.expressionValues.add("variables", parametersData)
+        }
     }
 }

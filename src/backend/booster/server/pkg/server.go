@@ -170,7 +170,7 @@ func (s *Server) Start() error {
 		blog.Errorf("add register discover observer failed: %v", err)
 		return err
 	}
-	s.manager = normal.NewManager(roleEvent, s.conf.DebugMode, s.getEngineQueueBriefInfoList(), engineList...)
+	s.manager = normal.NewManager(roleEvent, s.conf.DebugMode, s.getEngineQueueBriefInfoList(), *s.conf, engineList...)
 	go s.manager.Run()
 
 	if err = s.rd.Run(); err != nil {

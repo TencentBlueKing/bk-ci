@@ -2,14 +2,15 @@
     <bk-table class="devops-codelib-table"
         :data="records"
         :pagination="pagination"
+        @sort-change="handleSortChange"
         @page-change="handlePageChange"
         @page-limit-change="handlePageCountChange"
         v-bkloading="{ isLoading }"
     >
         <bk-table-column type="index" :label="$t('codelib.index')" align="center" width="60"></bk-table-column>
-        <bk-table-column :label="$t('codelib.aliasName')" prop="aliasName"></bk-table-column>
-        <bk-table-column :label="$t('codelib.address')" prop="url"></bk-table-column>
-        <bk-table-column :label="$t('codelib.type')" prop="type" :formatter="typeFormatter"></bk-table-column>
+        <bk-table-column :label="$t('codelib.aliasName')" sortable prop="aliasName"></bk-table-column>
+        <bk-table-column :label="$t('codelib.address')" sortable prop="url"></bk-table-column>
+        <bk-table-column :label="$t('codelib.type')" sortable prop="type" :formatter="typeFormatter"></bk-table-column>
         <bk-table-column :label="$t('codelib.authIdentity')">
             <template slot-scope="props">
                 <span>{{ props.row.authType }}@</span><!--
@@ -58,7 +59,18 @@
                     count: this.count,
                     limit: this.pageSize
                 },
-                isLoading: false
+                isLoading: false,
+                sortByMap: {
+                    aliasName: 'ALIAS_NAME',
+                    url: 'URL',
+                    type: 'TYPE',
+                    null: ''
+                },
+                sortTypeMap: {
+                    ascending: 'ASC',
+                    descending: 'DESC',
+                    null: ''
+                }
             }
         },
 
@@ -205,6 +217,12 @@
                         })
                     }
                 })
+            },
+            
+            handleSortChange ({ prop, order }) {
+                const sortBy = this.sortByMap[prop]
+                const sortType = this.sortTypeMap[order]
+                this.$emit('handleSortChange', { sortBy, sortType })
             }
         }
     }

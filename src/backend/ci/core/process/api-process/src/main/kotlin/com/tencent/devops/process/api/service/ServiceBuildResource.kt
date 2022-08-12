@@ -37,6 +37,8 @@ import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -155,6 +157,26 @@ interface ServiceBuildResource {
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<BuildManualStartupInfo>
+
+    @ApiOperation("搜索流水线参数")
+    @POST
+    @Path("/{projectId}/{pipelineId}/manualSearchOptions")
+    fun manualSearchOptions(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("搜索参数", required = false)
+        @QueryParam("search")
+        search: String? = null,
+        @ApiParam("流水线参数", required = false)
+        buildFormProperty: BuildFormProperty
+    ): Result<List<BuildFormValue>>
 
     @Deprecated(message = "do not use", replaceWith = ReplaceWith("@see ServiceBuildResource.manualStartupNew"))
     @ApiOperation("手动启动流水线")
@@ -332,7 +354,67 @@ interface ServiceBuildResource {
             required = false, defaultValue = "20"
         )
         @QueryParam("updateTimeDesc")
-        updateTimeDesc: Boolean? = null
+        updateTimeDesc: Boolean? = null,
+        @ApiParam("代码库别名", required = false)
+        @QueryParam("materialAlias")
+        materialAlias: List<String>? = null,
+        @ApiParam("代码库URL", required = false)
+        @QueryParam("materialUrl")
+        materialUrl: String? = null,
+        @ApiParam("分支", required = false)
+        @QueryParam("materialBranch")
+        materialBranch: List<String>? = null,
+        @ApiParam("commitId", required = false)
+        @QueryParam("materialCommitId")
+        materialCommitId: String? = null,
+        @ApiParam("commitMessage", required = false)
+        @QueryParam("materialCommitMessage")
+        materialCommitMessage: String? = null,
+        @ApiParam("状态", required = false)
+        @QueryParam("status")
+        status: List<BuildStatus>? = null,
+        @ApiParam("触发方式", required = false)
+        @QueryParam("trigger")
+        trigger: List<StartType>? = null,
+        @ApiParam("排队于-开始时间(时间戳形式)", required = false)
+        @QueryParam("queueTimeStartTime")
+        queueTimeStartTime: Long? = null,
+        @ApiParam("排队于-结束时间(时间戳形式)", required = false)
+        @QueryParam("queueTimeEndTime")
+        queueTimeEndTime: Long? = null,
+        @ApiParam("开始于-开始时间(时间戳形式)", required = false)
+        @QueryParam("startTimeStartTime")
+        startTimeStartTime: Long? = null,
+        @ApiParam("开始于-结束时间(时间戳形式)", required = false)
+        @QueryParam("startTimeEndTime")
+        startTimeEndTime: Long? = null,
+        @ApiParam("结束于-开始时间(时间戳形式)", required = false)
+        @QueryParam("endTimeStartTime")
+        endTimeStartTime: Long? = null,
+        @ApiParam("结束于-结束时间(时间戳形式)", required = false)
+        @QueryParam("endTimeEndTime")
+        endTimeEndTime: Long? = null,
+        @ApiParam("耗时最小值", required = false)
+        @QueryParam("totalTimeMin")
+        totalTimeMin: Long? = null,
+        @ApiParam("耗时最大值", required = false)
+        @QueryParam("totalTimeMax")
+        totalTimeMax: Long? = null,
+        @ApiParam("备注", required = false)
+        @QueryParam("remark")
+        remark: String? = null,
+        @ApiParam("构件号起始", required = false)
+        @QueryParam("buildNoStart")
+        buildNoStart: Int? = null,
+        @ApiParam("构件号结束", required = false)
+        @QueryParam("buildNoEnd")
+        buildNoEnd: Int? = null,
+        @ApiParam("构建信息", required = false)
+        @QueryParam("buildMsg")
+        buildMsg: String? = null,
+        @ApiParam("触发人", required = false)
+        @QueryParam("startUser")
+        startUser: List<String>? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @ApiOperation("获取构建详情")

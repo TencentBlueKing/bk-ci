@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
@@ -107,7 +108,7 @@ class BuildStartControl @Autowired constructor(
         private const val JOB_ID = "0"
         private const val DEFAULT_DELAY = 1000
     }
-
+    @BkTimed
     fun handle(event: PipelineBuildStartEvent) {
         val watcher = Watcher(id = "ENGINE|BuildStart|${event.traceId}|${event.buildId}|${event.status}")
         with(event) {
@@ -130,7 +131,6 @@ class BuildStartControl @Autowired constructor(
 
     fun PipelineBuildStartEvent.execute(watcher: Watcher) {
         val executeCount = buildVariableService.getBuildExecuteCount(projectId, buildId)
-        buildLogPrinter.startLog(buildId, null, null, executeCount)
         buildLogPrinter.addDebugLine(
             buildId = buildId, message = "Enter BuildStartControl",
             tag = TAG, jobId = JOB_ID, executeCount = executeCount
