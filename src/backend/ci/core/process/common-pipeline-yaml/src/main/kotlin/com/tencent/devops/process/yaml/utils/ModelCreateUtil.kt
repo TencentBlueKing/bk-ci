@@ -33,6 +33,7 @@ import java.util.ArrayDeque
 /**
  * Model生成中的一些通用逻辑
  */
+@Suppress("ComplexMethod", "ComplexCondition")
 object ModelCreateUtil {
 
     /**
