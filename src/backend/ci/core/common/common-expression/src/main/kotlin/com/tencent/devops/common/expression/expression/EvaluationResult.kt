@@ -33,7 +33,7 @@ import com.tencent.devops.common.expression.expression.sdk.IReadOnlyArray
 import com.tencent.devops.common.expression.expression.sdk.IReadOnlyObject
 import com.tencent.devops.common.expression.utils.FormatUtil
 
-@Suppress("EmptyIfBlock", "TooManyFunctions", "ReturnCount")
+@Suppress("EmptyIfBlock", "TooManyFunctions", "ReturnCount", "ComplexMethod")
 class EvaluationResult(
     val context: EvaluationContext?,
     private val level: Int,
@@ -383,7 +383,9 @@ class EvaluationResult(
             // Boolean, Any
             else if (leftKind == ValueKind.Boolean) {
                 // 针对string是true和false做特殊处理
-                if (rightKind == ValueKind.String && (canonicalRightValue == "true" || canonicalRightValue == "false")) {
+                if (rightKind == ValueKind.String &&
+                    (canonicalRightValue == "true" || canonicalRightValue == "false")
+                ) {
                     canonicalRightValue = canonicalRightValue == "true"
                 }
                 canonicalLeftValue = convertToNumber(canonicalLeftValue)
@@ -396,7 +398,9 @@ class EvaluationResult(
             // Any, Boolean
             else if (rightKind == ValueKind.Boolean) {
                 // 针对string是true和false做特殊处理
-                if (leftKind == ValueKind.String && (canonicalLeftValue == "true" || canonicalLeftValue == "false")) {
+                if (leftKind == ValueKind.String &&
+                    (canonicalLeftValue == "true" || canonicalLeftValue == "false")
+                ) {
                     canonicalLeftValue = canonicalLeftValue == "true"
                 }
                 canonicalRightValue = convertToNumber(canonicalRightValue)
