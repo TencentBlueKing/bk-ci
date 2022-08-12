@@ -30,7 +30,12 @@
         <section class="main-body section-box">
             <section class="build-filter">
                 <bk-input v-model="filterData.commitMsg" class="filter-item w300" :placeholder="$t('pipeline.commitMsg')"></bk-input>
-                <bk-user-selector v-model="filterData.triggerUser" class="filter-item" :placeholder="$t('pipeline.actor')" api="https://api.open.woa.com/api/c/compapi/v2/usermanage/fs_list_users/"></bk-user-selector>
+                <bk-member-selector
+                    class="filter-item"
+                    api="https://api.open.woa.com/api/c/compapi/v2/usermanage/fs_list_users/"
+                    :placeholder="$t('pipeline.actor')"
+                    v-model="filterData.triggerUser"
+                ></bk-member-selector>
                 <bk-select v-model="filterData.branch"
                     class="filter-item"
                     :placeholder="$t('pipeline.branch')"
@@ -270,17 +275,18 @@
     import optMenu from '@/components/opt-menu'
     import codeSection from '@/components/code-section'
     import { getPipelineStatusClass, getPipelineStatusCircleIconCls } from '@/components/status'
-    import BkUserSelector from '@blueking/user-selector'
     import register from '@/utils/websocket-register'
     import validateRule from '@/utils/validate-rule'
     import createForm from '@blueking/bkui-form'
     import '@blueking/bkui-form/dist/bkui-form.css'
     import UiTips from '@/components/ui-form/tips.vue'
     import UiSelector from '@/components/ui-form/selector.vue'
+    import UiCompanyStaff from '@/components/ui-form/company-staff.vue'
     const BkUiForm = createForm({
         components: {
             tips: UiTips,
-            selector: UiSelector
+            selector: UiSelector,
+            companyStaff: UiCompanyStaff
         }
     })
 
@@ -288,8 +294,7 @@
         components: {
             optMenu,
             codeSection,
-            BkUserSelector,
-            BkUiForm,
+            BkUiForm
         },
 
         filters: {

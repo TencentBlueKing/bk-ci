@@ -57,3 +57,11 @@
   overflow-y: auto;
   padding: 20px 24px;
 }
+
+.setting-content .setting-head {
+  padding: 15px 24px !important;
+}
+.setting-content .setting-head h2 {
+  font-size: revert;
+  font-weight: 700;
+}

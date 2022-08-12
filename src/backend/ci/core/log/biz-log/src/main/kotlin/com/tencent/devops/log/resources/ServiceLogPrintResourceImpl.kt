@@ -47,7 +47,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
 
     override fun addLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         return buildLogPrintService.asyncDispatchEvent(LogOriginEvent(buildId, listOf(logMessage)))
@@ -55,7 +55,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
 
     override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         buildLogPrintService.asyncDispatchEvent(LogOriginEvent(buildId, logMessages))
@@ -70,7 +70,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         // #7168 通过一次获取创建记录以及缓存
@@ -99,7 +99,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         logStorageMode: LogStorageMode?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(
