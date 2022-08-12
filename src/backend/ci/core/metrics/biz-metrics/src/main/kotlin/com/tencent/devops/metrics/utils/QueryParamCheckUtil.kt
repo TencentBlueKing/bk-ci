@@ -87,7 +87,8 @@ object QueryParamCheckUtil {
         val endDate = DateTimeUtil.stringToLocalDate(endTime)
         if ((startDate!!.until(endDate, ChronoUnit.DAYS)) > metricsConfig.queryDaysMax) {
             throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND
+                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
+                params = arrayOf("${metricsConfig.queryDaysMax}")
             )
         }
         val currentDate = LocalDate.now()
@@ -97,7 +98,8 @@ object QueryParamCheckUtil {
             )) > metricsConfig.queryDaysMax)
         ) {
             throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND
+                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
+                params = arrayOf("${metricsConfig.queryDaysMax}")
             )
         }
     }
