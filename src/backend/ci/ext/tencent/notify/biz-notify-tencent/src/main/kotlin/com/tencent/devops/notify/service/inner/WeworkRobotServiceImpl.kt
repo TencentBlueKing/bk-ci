@@ -75,7 +75,6 @@ class WeworkRobotServiceImpl @Autowired constructor(
 
     override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
         val sendRequest = mutableListOf<WeweokRobotBaseMessage>()
-        logger.info("进入第一层：$weworkNotifyTextMessage")
         val content = if (checkMessageSize(weworkNotifyTextMessage.message)) {
             weworkNotifyTextMessage.message.replace("\\n", "\n")
         } else {
@@ -89,7 +88,6 @@ class WeworkRobotServiceImpl @Autowired constructor(
             }
             WeworkReceiverType.single -> {
                 weworkNotifyTextMessage.receivers.forEach {
-                    logger.info("进入第二层：$it")
                     if (weworkNotifyTextMessage.textType == WeworkTextType.text) {
                         sendRequest.add(
                             WeworkRobotSingleTextMessage(
