@@ -43,7 +43,7 @@ internal class ModelCreateUtilTest {
             "\${{variables.xxx == true => \${{variables.xxx == true",
             " \${{variables.xxx }} == true =>  variables.xxx  == true",
             "\${{variables.xxx }} == true || \${{ variables.xxx}} => variables.xxx  == true ||  variables.xxx",
-            "\${{variables.\${{ a.xxx}} }} == true => variables.\${{ a.xxx}}  == true",
+            "\${{variables.\${{ a.xxx}} }} == true => variables.\${{ a.xxx}}  == true"
         ]
     )
     fun testRemoveIfBrackets(exp: String) {
