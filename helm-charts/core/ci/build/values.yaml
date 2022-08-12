@@ -1237,6 +1237,7 @@ turbo:
 # gateway Deployment
 gateway:
   enabled: true
+  type: ClusterIP
   replicas: 1
   podLabels: {}
   resources:
