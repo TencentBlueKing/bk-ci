@@ -79,7 +79,7 @@ object JooqUtils {
         )
     }
 
-    fun <T> sum(t1: Field<T>, t2: Field<T>): Field<BigDecimal> {
+    fun <T> productSum(t1: Field<T>, t2: Field<T>): Field<BigDecimal> {
         return DSL.field(
             "sum(${t1.name} * ${t2.name})",
             BigDecimal::class.java

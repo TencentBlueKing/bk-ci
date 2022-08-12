@@ -28,6 +28,7 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.service.utils.JooqUtils.productSum
 import com.tencent.devops.common.service.utils.JooqUtils.sum
 import com.tencent.devops.metrics.constant.Constants.BK_FAIL_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_FAIL_EXECUTE_COUNT
@@ -59,7 +60,7 @@ class PipelineOverviewDao {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val pipelineIds = queryPipelineOverview.baseQueryReq.pipelineIds
             val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo, pipelineIds)
-            val totalCostTimeSum = sum(TOTAL_AVG_COST_TIME, TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_COST_TIME_SUM)
+            val totalCostTimeSum = productSum(TOTAL_AVG_COST_TIME, TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_COST_TIME_SUM)
             val step = dslContext.select(
                 sum<Long>(TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_EXECUTE_COUNT_SUM),
                 sum<Long>(SUCCESS_EXECUTE_COUNT).`as`(BK_SUCCESS_EXECUTE_COUNT_SUM),

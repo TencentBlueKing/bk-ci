@@ -28,6 +28,7 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.service.utils.JooqUtils.productSum
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
@@ -148,7 +149,7 @@ class AtomStatisticsDao {
                 getAtomCodesByErrorType(dslContext, queryCondition)
             } else queryCondition.atomCodes
             val conditions = getConditions(queryCondition, tProjectPipelineLabelInfo, atomCodes)
-            val totalCostTimeSum = sum(AVG_COST_TIME, TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_COST_TIME_SUM)
+            val totalCostTimeSum = productSum(AVG_COST_TIME, TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_COST_TIME_SUM)
             val step = dslContext.select(
                 ATOM_CODE.`as`(BK_ATOM_CODE),
                 ATOM_NAME.`as`(BK_ATOM_NAME),
