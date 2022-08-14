@@ -56,6 +56,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @JsonTypeInfo(
@@ -94,6 +95,7 @@ import io.swagger.annotations.ApiModelProperty
     JsonSubTypes.Type(value = CodeP4WebHookTriggerElement::class, name = CodeP4WebHookTriggerElement.classType)
 )
 @Suppress("ALL")
+@ApiModel("Element 基类")
 abstract class Element(
     @ApiModelProperty("任务名称", required = false)
     open val name: String,
