@@ -45,6 +45,8 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import io.swagger.annotations.Example
+import io.swagger.annotations.ExampleProperty
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -81,7 +83,16 @@ interface ApigwBuildResourceV3 {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("启动参数：map<变量名(string),变量值(string)>", required = true)
+        @ApiParam(
+            "启动参数：map<变量名(string),变量值(string)>", required = true,
+            examples = Example(
+                value = [
+                    ExampleProperty(
+                        mediaType = "当需要指定启动时流水线变量 var1 为 foobar 时", value = "{\"var1\": \"foobar\"}"
+                    )
+                ]
+            )
+        )
         values: Map<String, String>,
         @ApiParam("手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
