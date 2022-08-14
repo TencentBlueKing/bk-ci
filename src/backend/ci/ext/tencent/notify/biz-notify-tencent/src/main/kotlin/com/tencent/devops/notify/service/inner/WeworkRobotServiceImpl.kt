@@ -117,25 +117,33 @@ class WeworkRobotServiceImpl @Autowired constructor(
                 }
             }
         }
-        try {
-            doSendRequest(sendRequest)
-            logger.info("send wework robot message success : $weworkNotifyTextMessage")
-            saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", true, null)
-        } catch (e: RemoteServiceException) {
+        val errMsg = doSendRequest(sendRequest)
+        if (errMsg.isNotEmpty()) {
             logger.warn(
                 "send wework robot message fail : weworkNotifyTextMessage = $weworkNotifyTextMessage " +
-                    "| errorMessage :$e"
+                    "| errorMessage :$errMsg"
             )
-            saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", false, e.message)
+            saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", false, errMsg)
             throw RemoteServiceException("send wework robot message fail")
+        } else {
+            logger.info("send wework robot message success : $weworkNotifyTextMessage")
+            saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", true, null)
         }
     }
 
-    private fun doSendRequest(requestBodies: List<WeweokRobotBaseMessage>) {
+    private fun doSendRequest(requestBodies: List<WeweokRobotBaseMessage>): String {
         if (requestBodies.isEmpty()) {
             throw OperationException("no message to send")
         }
-        requestBodies.map { send(it) }
+        var errMsg = ""
+        requestBodies.map {
+            try {
+                send(it)
+            } catch (e: RemoteServiceException) {
+                errMsg += e
+            }
+        }
+        return errMsg
     }
 
     private fun send(weworkMessage: WeweokRobotBaseMessage) {
@@ -152,7 +160,8 @@ class WeworkRobotServiceImpl @Autowired constructor(
                 throw RemoteServiceException(
                     httpStatus = it.code(),
                     responseContent = responseBody,
-                    errorMessage = "send wework robot message failed：${sendMessageResp.errMsg}",
+                    errorMessage = "send wework robot message failed：errMsg = ${sendMessageResp.errMsg}" +
+                        "|chatid = ${weworkMessage.chatid} ;",
                     errorCode = sendMessageResp.errCode
                 )
             }
