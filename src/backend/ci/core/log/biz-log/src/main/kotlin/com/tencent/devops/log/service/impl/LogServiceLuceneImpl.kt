@@ -571,7 +571,7 @@ class LogServiceLuceneImpl constructor(
             moreLogs.logs.addAll(logs)
             moreLogs.hasMore = moreLogs.logs.size >= Constants.SCROLL_MAX_LINES * Constants.SCROLL_MAX_TIMES
         } catch (ignore: Exception) {
-            logger.error("Query after logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
+            logger.warn("Query after logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             moreLogs.status = LogStatus.FAIL.status
             moreLogs.finished = true
             moreLogs.hasMore = false

@@ -143,7 +143,7 @@ class MessageCodeDetailService @Autowired constructor(
      * 添加code信息信息
      */
     fun addMessageCodeDetail(addMessageCodeRequest: AddMessageCodeRequest): Result<Boolean> {
-        logger.info("addMessageCodeRequest is: $addMessageCodeRequest")
+        logger.info("addMessageCodeRequest : messageCodeDetail = $addMessageCodeRequest")
         val messageCodeDetailResult = getMessageCodeDetail(addMessageCodeRequest.messageCode)
         // 判断code信息是否存在，存在才添加
         val messageCode = addMessageCodeRequest.messageCode

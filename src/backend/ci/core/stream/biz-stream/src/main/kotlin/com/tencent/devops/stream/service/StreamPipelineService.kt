@@ -31,17 +31,12 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
-import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant
@@ -55,6 +50,7 @@ import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerLock
 import com.tencent.devops.stream.util.GitCommonUtils
+import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -275,7 +271,8 @@ class StreamPipelineService @Autowired constructor(
         projectCode: String,
         modelAndSetting: PipelineModelAndSetting,
         updateLastModifyUser: Boolean,
-        branch: String
+        branch: String,
+        md5: String?
     ) {
         val processClient = client.get(ServicePipelineResource::class)
         if (pipeline.pipelineId.isBlank()) {
@@ -297,7 +294,8 @@ class StreamPipelineService @Autowired constructor(
                 dslContext = dslContext,
                 gitProjectId = gitProjectId,
                 pipeline = pipeline.toGitPipeline(),
-                version = ymlVersion
+                version = ymlVersion,
+                md5 = md5
             )
             websocketService.pushPipelineWebSocket(
                 projectId = projectCode,
@@ -361,9 +359,11 @@ class StreamPipelineService @Autowired constructor(
                     userId = userId,
                     gitProjectId = gitProjectId.toLong(),
                     projectCode = gitProjectCode,
-                    modelAndSetting = createTriggerModel(realPipeline.displayName),
+                    modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(realPipeline.displayName),
                     updateLastModifyUser = true,
-                    branch = branch
+                    branch = branch,
+                    // 空model计算md5没有意义，直接传空
+                    md5 = null
                 )
             }
         }
@@ -386,36 +386,6 @@ class StreamPipelineService @Autowired constructor(
         )?.let {
             StreamTriggerPipeline(it)
         } ?: pipeline
-
-    private fun getProjectCode(gitProjectId: String): String {
-        return "git_$gitProjectId"
-    }
-
-    private fun createTriggerModel(displayName: String) = PipelineModelAndSetting(
-        model = Model(
-            name = displayName,
-            desc = "",
-            stages = listOf(
-                Stage(
-                    id = VMUtils.genStageId(1),
-                    name = VMUtils.genStageId(1),
-                    containers = listOf(
-                        TriggerContainer(
-                            id = "0",
-                            name = "构建触发",
-                            elements = listOf(
-                                ManualTriggerElement(
-                                    name = "手动触发",
-                                    id = "T-1-1-1"
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        ),
-        setting = PipelineSetting(cleanVariablesWhenRetry = true)
-    )
 
     private fun getPipelineLastBuildBranch(
         gitProjectId: Long,

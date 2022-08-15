@@ -5,6 +5,6 @@ parameters:
 
 steps:
   - run: |
-      echo 123
-    if: parameters.iftest == [PYTHON]
+      echo ${{join(parameters.iftest) == join(fromJSON('["JAVA", "JS"]'))}}
+    if: "parameters.iftest == fromJSON('[\"PYTHON\"]')"
     id: 123123123

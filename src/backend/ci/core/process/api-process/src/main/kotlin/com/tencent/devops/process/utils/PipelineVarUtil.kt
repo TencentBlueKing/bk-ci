@@ -153,7 +153,6 @@ object PipelineVarUtil {
         "pipeline.start.pipeline.user.id" to PIPELINE_START_PIPELINE_USER_ID,
         "git_mr_number" to GIT_MR_NUMBER,
         "github_pr_number" to GITHUB_PR_NUMBER,
-        "project.name" to PROJECT_NAME,
         "pipeline.build.id" to PIPELINE_BUILD_ID,
         "pipeline.job.id" to PIPELINE_VMSEQ_ID,
         "pipeline.task.id" to PIPELINE_ELEMENT_ID,

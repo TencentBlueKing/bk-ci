@@ -51,7 +51,7 @@ onMounted(() => {
 
 <template>
   <metrics-header>
-    <span>Plugin trend</span>
+    <span>{{ t('Plugin trend') }}</span>
     <add-plugin @change="handleFilterChange"></add-plugin>
   </metrics-header>
   <main class="g-content">
