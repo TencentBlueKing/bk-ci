@@ -66,4 +66,10 @@ interface OpenIamCallBackResource {
         @ApiParam("token")
         token: String
     ): CallbackBaseResponseDTO?
+
+    @POST
+    @Path("/test")
+    @ApiOperation("测试")
+    fun test(
+    ): Boolean
 }
