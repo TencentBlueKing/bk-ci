@@ -72,7 +72,6 @@ class ClassifyServiceImpl @Autowired constructor(
      */
     override fun getClassify(id: String): Result<Classify?> {
         val classifyRecord = classifyDao.getClassify(dslContext, id)
-        logger.info("the pipelineContainerRecord is :{}", classifyRecord)
         return Result(
             if (classifyRecord == null) {
                 null
@@ -86,7 +85,7 @@ class ClassifyServiceImpl @Autowired constructor(
      * 保存分类信息
      */
     override fun saveClassify(classifyRequest: ClassifyRequest, type: Byte): Result<Boolean> {
-        logger.info("the save classifyRequest is:$classifyRequest,type is:$type")
+        logger.info("saveClassify params:[$classifyRequest|$type]")
         val classifyCode = classifyRequest.classifyCode
         // 判断分类代码是否存在
         val codeCount = classifyDao.countByCode(dslContext, classifyCode, type)
@@ -118,7 +117,7 @@ class ClassifyServiceImpl @Autowired constructor(
      * 更新分类信息
      */
     override fun updateClassify(id: String, classifyRequest: ClassifyRequest, type: Byte): Result<Boolean> {
-        logger.info("the update id is :$id,the update classifyRequest is:$classifyRequest,type is:$type")
+        logger.info("updateClassify params:[$id|$classifyRequest|$type]")
         val classifyCode = classifyRequest.classifyCode
         // 判断分类是否存在
         val codeCount = classifyDao.countByCode(dslContext, classifyCode, type)
@@ -157,7 +156,6 @@ class ClassifyServiceImpl @Autowired constructor(
      * 根据id删除分类信息
      */
     override fun deleteClassify(id: String): Result<Boolean> {
-        logger.info("the delete id is :$id")
         val classifyRecord = classifyDao.getClassify(dslContext, id)
         var flag = false
         if (null != classifyRecord) {
