@@ -493,7 +493,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         page: Int,
         pageSize: Int
     ): Result<MyAtomResp?> {
-        logger.info("the getMyAtoms userId is :$userId,atomName is :$atomName")
+        logger.info("getMyAtoms params:[$userId|$atomName|$page|$pageSize]")
         // 获取有权限的插件代码列表
         val records = marketAtomDao.getMyAtoms(dslContext, userId, atomName, page, pageSize)
         val count = marketAtomDao.countMyAtoms(dslContext, userId, atomName)
@@ -774,8 +774,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         installAtomReq: InstallAtomReq
     ): Result<Boolean> {
         // 判断插件标识是否合法
-        logger.info("installAtom accessToken is: $accessToken, userId is: $userId")
-        logger.info("installAtom channelCode is: $channelCode, installAtomReq is: $installAtomReq")
+        logger.info("installAtom params:[$accessToken|$userId|$channelCode|$installAtomReq]")
         val atom = marketAtomDao.getLatestAtomByCode(dslContext, installAtomReq.atomCode)
         if (null == atom || atom.deleteFlag == true) {
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID, false)
@@ -1021,7 +1020,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         )
         val getMap = getRelyAtom.thirdPartyElementList.map { it.atomCode to it.version }.toMap()
         val result = mutableMapOf<String, Map<String, Any>>()
-        logger.info("getAtomsRely atomList : $atomList")
         atomList.forEach lit@{
             if (it == null) return@lit
             var value = it
@@ -1304,30 +1302,18 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
         val rely = paramValueMap["rely"]
         if (null != rely) {
-            try {
-                parseRely(builder, rely as Map<String, Any>)
-            } catch (e: Exception) {
-                throw Exception("rely 配置解析错误")
-            }
+            parseRely(builder, rely as Map<String, Any>)
         }
         val options = paramValueMap["options"]
         if (null != options) {
             builder.append(", $selectorTypeName")
             builder.append(", $optionsName:")
-            try {
-                parseOptions(builder, options as List<Map<String, Any>>)
-            } catch (e: Exception) {
-                throw Exception("options 配置解析错误")
-            }
+            parseOptions(builder, options as List<Map<String, Any>>)
         }
         val list = paramValueMap["list"]
         if (null != list) {
             builder.append(", $optionsName:")
-            try {
-                parseList(builder, list as List<Map<String, Any>>)
-            } catch (e: Exception) {
-                throw Exception("list 配置解析错误")
-            }
+            parseList(builder, list as List<Map<String, Any>>)
         }
     }
 
@@ -1349,8 +1335,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 }
                 builder.append(timeToSelect)
             }
-        } catch (e: Exception) {
-            println("load atom input[rely] with error: ${e.message}")
+        } catch (ignored: Throwable) {
+            logger.warn("load atom input[rely] with error", ignored)
         }
     }
 
@@ -1361,8 +1347,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 else builder.append(" ${map["id"]}[${map["name"]}] |")
             }
             builder.removeSuffix("|")
-        } catch (e: Exception) {
-            println("load atom input[options] with error: ${e.message}")
+        } catch (ignored: Throwable) {
+            logger.warn("load atom input[options] with error", ignored)
         }
     }
 
@@ -1377,8 +1363,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 else builder.append(" $key[$value] |")
             }
             builder.removeSuffix("|")
-        } catch (e: Exception) {
-            println("load atom input[list] with error: ${e.message} ")
+        } catch (ignored: Throwable) {
+            logger.warn("load atom input[list] with error", ignored)
         }
     }
 }

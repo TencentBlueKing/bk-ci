@@ -70,7 +70,7 @@ class InfluxdbClient {
     private val influxDB by lazy {
 
         val influxdb = InfluxDBFactory.connect(influxdbServer, influxdbUserName, influxdbPassword)
-//
+
         try {
             // 如果指定的数据库不存在，则新建一个新的数据库，并新建一个默认的数据保留规则
             if (!databaseExist(influxdb, dbName)) {
@@ -89,9 +89,9 @@ class InfluxdbClient {
             .flushDuration(flushDuration)
             .bufferLimit(bufferLimit)
             .jitterDuration(jitterDuration)
-            .exceptionHandler { points: Iterable<Point>, e: Throwable? ->
+            .exceptionHandler { points: Iterable<Point>, ignored: Throwable? ->
                 try {
-                    points.forEach { logger.error("failed to write point $it", e) }
+                    points.forEach { logger.error("BKSystemErrorMonitor|failed to write point $it", ignored) }
                 } catch (ignored: Exception) {
                     // Do nothing , 这个handler不能抛异常,否则influxdb批量插入的线程就会停止
                 }

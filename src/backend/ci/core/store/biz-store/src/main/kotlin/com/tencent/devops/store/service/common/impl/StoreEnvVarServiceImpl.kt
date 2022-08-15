@@ -117,8 +117,8 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                     storeEnvVarRequest = storeEnvVarRequest
                 )
             }
-        } catch (t: Throwable) {
-            logger.error("storeEnvVar create failed", t)
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|addEnvVar|$storeEnvVarRequest|error=${ignored.message}", ignored)
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         } finally {
             lock.unlock()
@@ -213,8 +213,8 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                     )
                 }
             }
-        } catch (t: Throwable) {
-            logger.error("storeEnvVar update failed", t)
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|updateEnvVar|$storeEnvVarRequest|error=${ignored.message}", ignored)
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         } finally {
             lock.unlock()
@@ -318,8 +318,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         scope: String,
         varName: String
     ): Result<List<StoreEnvChangeLogInfo>?> {
-        logger.info("storeEnvVar getEnvVarChangeLogList userId:$userId,storeType:$storeType,storeCode:$storeCode")
-        logger.info("storeEnvVar getEnvVarChangeLogList varName:$varName")
+        logger.info("storeEnvVar getEnvVarChangeLogList params:[$userId|$storeType|$storeCode|$varName]")
         val storeTypeObj = StoreTypeEnum.valueOf(storeType)
         if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeTypeObj.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
