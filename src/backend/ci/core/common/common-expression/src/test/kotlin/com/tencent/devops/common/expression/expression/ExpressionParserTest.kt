@@ -238,7 +238,8 @@ class ExpressionParserTest {
             "opTest.array == NaN => false",
             "opTest == NaN => false",
             "null == null => true",
-            "true == true => true",
+            "'false' == 0 => false",
+            "'true' == true => true",
             "'str' == 'str' => true",
             "1.0 == 1 => true",
             "opTest.array[0] == 'test/test' => true",
@@ -361,13 +362,16 @@ class ExpressionParserTest {
                     "Release", ((t2 as DictionaryContextData)["config"] as StringContextData).value
                 )
             }
+
             2 -> {
                 Assertions.assertTrue(res is ArrayContextData)
                 Assertions.assertEquals("manager", ((res as ArrayContextData)[0] as StringContextData).value)
             }
+
             3 -> {
                 Assertions.assertEquals(true, res)
             }
+
             4 -> {
                 Assertions.assertEquals(1.0, res)
             }
@@ -392,15 +396,19 @@ class ExpressionParserTest {
             1 -> {
                 Assertions.assertEquals("push|mr|tag", res)
             }
+
             2 -> {
                 Assertions.assertEquals("push,mr,tag", res)
             }
+
             3 -> {
                 Assertions.assertEquals("[\"manager\", \"webhook\"]", res)
             }
+
             4 -> {
                 Assertions.assertEquals("123", res)
             }
+
             5 -> {
                 Assertions.assertEquals("manager,webhook", res)
             }
@@ -473,9 +481,11 @@ class ExpressionParserTest {
                 "true", "false" -> {
                     result.toBoolean()
                 }
+
                 "null" -> {
                     null
                 }
+
                 else -> {
                     result
                 }
