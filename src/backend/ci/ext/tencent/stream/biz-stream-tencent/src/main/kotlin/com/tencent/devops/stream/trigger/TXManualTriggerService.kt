@@ -289,6 +289,7 @@ class TXManualTriggerService @Autowired constructor(
         )
         return TriggerBuildResult(
             projectId = v1TriggerBuildReq.gitProjectId,
+            projectCode = GitCommonUtils.getCiProjectId(v1TriggerBuildReq.gitProjectId),
             branch = v1TriggerBuildReq.branch,
             customCommitMsg = v1TriggerBuildReq.customCommitMsg,
             description = v1TriggerBuildReq.description,
