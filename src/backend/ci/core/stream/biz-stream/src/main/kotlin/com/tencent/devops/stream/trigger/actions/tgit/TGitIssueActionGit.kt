@@ -50,6 +50,7 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.CheckType
+import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.service.GitCheckService
 import org.jooq.DSLContext
@@ -83,7 +84,7 @@ class TGitIssueActionGit(
         val setting = basicSettingDao.getSetting(dslContext, event().objectAttributes.projectId)
         if (null == setting || !setting.enableCi) {
             logger.info(
-                "git ci is not enabled, but it has repo trigger , git project id: ${event().objectAttributes.projectId}"
+                "TGitIssueActionGit|init|not enabled, but trigger|git project id|${event().objectAttributes.projectId}"
             )
             return null
         }
@@ -150,13 +151,15 @@ class TGitIssueActionGit(
             action = this,
             gitProjectId = this.getGitProjectIdOrName(),
             ref = this.data.eventCommon.branch
-        ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
+        ).map { (name, blobId) ->
+            YamlPathListEntry(name, CheckType.NO_NEED_CHECK, this.data.eventCommon.branch, blobId)
+        }
     }
 
-    override fun getYamlContent(fileName: String): Pair<String, String> {
-        return Pair(
-            data.eventCommon.branch,
-            api.getFileContent(
+    override fun getYamlContent(fileName: String): YamlContent {
+        return YamlContent(
+            ref = data.eventCommon.branch,
+            content = api.getFileContent(
                 cred = this.getGitCred(),
                 gitProjectId = getGitProjectIdOrName(),
                 fileName = fileName,

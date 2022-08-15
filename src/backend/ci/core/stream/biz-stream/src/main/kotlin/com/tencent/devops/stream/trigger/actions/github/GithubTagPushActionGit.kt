@@ -57,6 +57,7 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GithubRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.CheckType
+import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.service.GitCheckService
 import org.slf4j.LoggerFactory
@@ -134,11 +135,13 @@ class GithubTagPushActionGit(
             action = this,
             gitProjectId = this.getGitProjectIdOrName(),
             ref = this.data.eventCommon.branch
-        ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
+        ).map { (name, blobId) ->
+            YamlPathListEntry(name, CheckType.NO_NEED_CHECK, this.data.eventCommon.branch, blobId)
+        }
     }
 
-    override fun getYamlContent(fileName: String): Pair<String, String> {
-        return Pair(
+    override fun getYamlContent(fileName: String): YamlContent {
+        return YamlContent(
             data.eventCommon.branch,
             api.getFileContent(
                 cred = this.getGitCred(),

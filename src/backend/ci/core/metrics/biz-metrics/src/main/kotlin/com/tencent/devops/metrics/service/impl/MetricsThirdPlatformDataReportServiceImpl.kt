@@ -33,14 +33,13 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.MetricsThirdPlatformInfoDao
-import com.tencent.devops.metrics.pojo.message.CodeCheckReportEvent
-import com.tencent.devops.metrics.pojo.message.QualityReportMessage
-import com.tencent.devops.metrics.pojo.message.TurboReportEvent
+import com.tencent.devops.metrics.pojo.dto.CodeccDataReportDTO
+import com.tencent.devops.metrics.pojo.dto.QualityDataReportDTO
+import com.tencent.devops.metrics.pojo.dto.TurboDataReportDTO
 import com.tencent.devops.metrics.pojo.po.ThirdPlatformDatePO
 import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -55,18 +54,17 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
 ) : MetricsThirdPlatformDataReportService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(MetricsThirdPlatformDataReportServiceImpl::class.java)
         private fun metricsThirdPlatformDataReportKey(projectId: String, statisticsTime: String): String {
             return "metricsThirdPlatformDataReport:$projectId:$statisticsTime"
         }
     }
-    override fun metricsCodeCheckDataReport(codeCheckReportEvent: CodeCheckReportEvent): Boolean {
-        val projectId = codeCheckReportEvent.projectId
-        val statisticsTime = DateTimeUtil.stringToLocalDateTime(codeCheckReportEvent.statisticsTime, YYYY_MM_DD)
+    override fun metricsCodeccDataReport(codeccDataReportDTO: CodeccDataReportDTO): Boolean {
+        val projectId = codeccDataReportDTO.projectId
+        val statisticsTime = DateTimeUtil.stringToLocalDateTime(codeccDataReportDTO.statisticsTime, YYYY_MM_DD)
         val lock = RedisLock(
-            redisOperation,
-            metricsThirdPlatformDataReportKey(projectId, statisticsTime.toString()),
-            10
+            redisOperation = redisOperation,
+            lockKey = metricsThirdPlatformDataReportKey(projectId, statisticsTime.toString()),
+            expiredTimeInSeconds = 10
         )
         val currentTime = LocalDateTime.now()
         try {
@@ -82,8 +80,8 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                         .generateSegmentId("METRICS_PROJECT_THIRD_PLATFORM_DATA").data ?: 0,
                     projectId = projectId,
                     statisticsTime = statisticsTime,
-                    resolvedDefectNum = codeCheckReportEvent.resolvedDefectNum,
-                    repoCodeccAvgScore = BigDecimal(codeCheckReportEvent.repoCodeccAvgScore),
+                    resolvedDefectNum = codeccDataReportDTO.resolvedDefectNum,
+                    repoCodeccAvgScore = BigDecimal(codeccDataReportDTO.repoCodeccAvgScore),
                     qualityPipelineExecuteNum = null,
                     qualityPipelineInterceptionNum = null,
                     turboSaveTime = null,
@@ -95,8 +93,8 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                     id = metricsThirdPlatformRecord.id,
                     projectId = metricsThirdPlatformRecord.projectId,
                     statisticsTime = statisticsTime,
-                    resolvedDefectNum = codeCheckReportEvent.resolvedDefectNum,
-                    repoCodeccAvgScore = BigDecimal(codeCheckReportEvent.repoCodeccAvgScore),
+                    resolvedDefectNum = codeccDataReportDTO.resolvedDefectNum,
+                    repoCodeccAvgScore = BigDecimal(codeccDataReportDTO.repoCodeccAvgScore),
                     qualityPipelineExecuteNum = metricsThirdPlatformRecord.qualityPipelineExecuteNum,
                     qualityPipelineInterceptionNum = metricsThirdPlatformRecord.qualityPipelineInterceptionNum,
                     turboSaveTime = metricsThirdPlatformRecord.turboSaveTime,
@@ -105,8 +103,8 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                 )
             }
             metricsThirdPlatformInfoDao.saveMetricsThirdPlatformData(
-                dslContext,
-                thirdPlatformDatePO
+                dslContext = dslContext,
+                thirdPlatformDate = thirdPlatformDatePO
             )
         } finally {
             lock.unlock()
@@ -114,63 +112,9 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun metricsTurboDataReport(turboReportMessage: TurboReportEvent): Boolean {
-        val projectId = turboReportMessage.projectId
-        val statisticsTime = DateTimeUtil.stringToLocalDateTime(turboReportMessage.statisticsTime, YYYY_MM_DD)
-        val lock = RedisLock(
-            redisOperation,
-            metricsThirdPlatformDataReportKey(projectId, statisticsTime.toString()),
-            10
-        )
-        val currentTime = LocalDateTime.now()
-        try {
-            lock.lock()
-            val metricsThirdPlatformRecord = metricsThirdPlatformInfoDao.getMetricsThirdPlatformInfo(
-                dslContext,
-                projectId,
-                statisticsTime
-            )
-            val thirdPlatformDatePO = if (metricsThirdPlatformRecord == null) {
-                ThirdPlatformDatePO(
-                    id = client.get(ServiceAllocIdResource::class)
-                        .generateSegmentId("METRICS_PROJECT_THIRD_PLATFORM_DATA").data ?: 0,
-                    projectId = projectId,
-                    statisticsTime = statisticsTime,
-                    resolvedDefectNum = null,
-                    repoCodeccAvgScore = null,
-                    qualityPipelineExecuteNum = null,
-                    qualityPipelineInterceptionNum = null,
-                    turboSaveTime = BigDecimal(turboReportMessage.turboSaveTime),
-                    createTime = currentTime,
-                    updateTime = currentTime
-                )
-            } else {
-                ThirdPlatformDatePO(
-                    id = metricsThirdPlatformRecord.id,
-                    projectId = metricsThirdPlatformRecord.projectId,
-                    statisticsTime = statisticsTime,
-                    resolvedDefectNum = metricsThirdPlatformRecord.resolvedDefectNum,
-                    repoCodeccAvgScore = metricsThirdPlatformRecord.repoCodeccAvgScore,
-                    qualityPipelineExecuteNum = metricsThirdPlatformRecord.qualityPipelineExecuteNum,
-                    qualityPipelineInterceptionNum = metricsThirdPlatformRecord.qualityPipelineInterceptionNum,
-                    turboSaveTime = BigDecimal(turboReportMessage.turboSaveTime),
-                    createTime = metricsThirdPlatformRecord.createTime,
-                    updateTime = currentTime
-                )
-            }
-            metricsThirdPlatformInfoDao.saveMetricsThirdPlatformData(
-                dslContext,
-                thirdPlatformDatePO
-            )
-        } finally {
-            lock.unlock()
-        }
-        return true
-    }
-
-    override fun metricsQualityDataReport(qualityReportMessage: QualityReportMessage): Boolean {
-        val projectId = qualityReportMessage.projectId
-        val statisticsTime = DateTimeUtil.stringToLocalDateTime(qualityReportMessage.statisticsTime, YYYY_MM_DD)
+    override fun metricsTurboDataReport(turboDataReportDTO: TurboDataReportDTO): Boolean {
+        val projectId = turboDataReportDTO.projectId
+        val statisticsTime = DateTimeUtil.stringToLocalDateTime(turboDataReportDTO.statisticsTime, YYYY_MM_DD)
         val lock = RedisLock(
             redisOperation = redisOperation,
             lockKey = metricsThirdPlatformDataReportKey(projectId, statisticsTime.toString()),
@@ -192,8 +136,62 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                     statisticsTime = statisticsTime,
                     resolvedDefectNum = null,
                     repoCodeccAvgScore = null,
-                    qualityPipelineExecuteNum = qualityReportMessage.qualityPipelineExecuteNum,
-                    qualityPipelineInterceptionNum = qualityReportMessage.qualityPipelineInterceptionNum,
+                    qualityPipelineExecuteNum = null,
+                    qualityPipelineInterceptionNum = null,
+                    turboSaveTime = BigDecimal(turboDataReportDTO.turboSaveTime),
+                    createTime = currentTime,
+                    updateTime = currentTime
+                )
+            } else {
+                ThirdPlatformDatePO(
+                    id = metricsThirdPlatformRecord.id,
+                    projectId = metricsThirdPlatformRecord.projectId,
+                    statisticsTime = statisticsTime,
+                    resolvedDefectNum = metricsThirdPlatformRecord.resolvedDefectNum,
+                    repoCodeccAvgScore = metricsThirdPlatformRecord.repoCodeccAvgScore,
+                    qualityPipelineExecuteNum = metricsThirdPlatformRecord.qualityPipelineExecuteNum,
+                    qualityPipelineInterceptionNum = metricsThirdPlatformRecord.qualityPipelineInterceptionNum,
+                    turboSaveTime = BigDecimal(turboDataReportDTO.turboSaveTime),
+                    createTime = metricsThirdPlatformRecord.createTime,
+                    updateTime = currentTime
+                )
+            }
+            metricsThirdPlatformInfoDao.saveMetricsThirdPlatformData(
+                dslContext = dslContext,
+                thirdPlatformDate = thirdPlatformDatePO
+            )
+        } finally {
+            lock.unlock()
+        }
+        return true
+    }
+
+    override fun metricsQualityDataReport(qualityDataReportDTO: QualityDataReportDTO): Boolean {
+        val projectId = qualityDataReportDTO.projectId
+        val statisticsTime = DateTimeUtil.stringToLocalDateTime(qualityDataReportDTO.statisticsTime, YYYY_MM_DD)
+        val lock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = metricsThirdPlatformDataReportKey(projectId, statisticsTime.toString()),
+            expiredTimeInSeconds = 10
+        )
+        val currentTime = LocalDateTime.now()
+        try {
+            lock.lock()
+            val metricsThirdPlatformRecord = metricsThirdPlatformInfoDao.getMetricsThirdPlatformInfo(
+                dslContext,
+                projectId,
+                statisticsTime
+            )
+            val thirdPlatformDatePO = if (metricsThirdPlatformRecord == null) {
+                ThirdPlatformDatePO(
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("METRICS_PROJECT_THIRD_PLATFORM_DATA").data ?: 0,
+                    projectId = projectId,
+                    statisticsTime = statisticsTime,
+                    resolvedDefectNum = null,
+                    repoCodeccAvgScore = null,
+                    qualityPipelineExecuteNum = qualityDataReportDTO.qualityPipelineExecuteNum,
+                    qualityPipelineInterceptionNum = qualityDataReportDTO.qualityPipelineInterceptionNum,
                     turboSaveTime = null,
                     createTime = currentTime,
                     updateTime = currentTime
@@ -205,20 +203,17 @@ class MetricsThirdPlatformDataReportServiceImpl @Autowired constructor(
                     statisticsTime = statisticsTime,
                     resolvedDefectNum = metricsThirdPlatformRecord.resolvedDefectNum,
                     repoCodeccAvgScore = metricsThirdPlatformRecord.repoCodeccAvgScore,
-                    qualityPipelineExecuteNum = qualityReportMessage.qualityPipelineExecuteNum,
-                    qualityPipelineInterceptionNum = qualityReportMessage.qualityPipelineInterceptionNum,
+                    qualityPipelineExecuteNum = qualityDataReportDTO.qualityPipelineExecuteNum,
+                    qualityPipelineInterceptionNum = qualityDataReportDTO.qualityPipelineInterceptionNum,
                     turboSaveTime = metricsThirdPlatformRecord.turboSaveTime,
                     createTime = metricsThirdPlatformRecord.createTime,
                     updateTime = currentTime
                 )
             }
             metricsThirdPlatformInfoDao.saveMetricsThirdPlatformData(
-                dslContext,
-                thirdPlatformDatePO
+                dslContext = dslContext,
+                thirdPlatformDate = thirdPlatformDatePO
             )
-            logger.info("metricsQualityDataReport thirdPlatformDatePO: $thirdPlatformDatePO")
-        } catch (e: Exception) {
-            logger.error("metricsQualityDataReport Exception e:$e   qualityReportMessage: $qualityReportMessage")
         } finally {
             lock.unlock()
         }

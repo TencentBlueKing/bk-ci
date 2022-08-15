@@ -28,6 +28,7 @@ type ServerConfig struct {
 	conf.ServerOnlyCertConfig
 	conf.LocalConfig
 	conf.MetricConfig
+	conf.CommonEngineConfig
 
 	EtcdEndpoints string `json:"etcd_endpoints" value:"" usage:"etcd endpoints for register and discover"`
 	EtcdRootPath  string `json:"etcd_root_path" value:"" usage:"etcd root path"`

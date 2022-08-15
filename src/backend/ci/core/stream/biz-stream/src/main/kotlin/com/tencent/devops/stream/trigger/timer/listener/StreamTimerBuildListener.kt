@@ -76,7 +76,7 @@ class StreamTimerBuildListener @Autowired constructor(
                     hasLastInfo = false
                 )
                 if (record == null) {
-                    logger.warn("[$pipelineId]|git config not exist")
+                    logger.warn("StreamTimerBuildListener|run|git config not exist|pipelineiId|$pipelineId")
                     return
                 }
 
@@ -115,9 +115,12 @@ class StreamTimerBuildListener @Autowired constructor(
                     )
                 }
             } catch (t: OperationException) {
-                logger.info("[$pipelineId]|TimerTrigger no start| msg=${t.message}")
+                logger.info("StreamTimerBuildListener|run|no start|pipelineId|$pipelineId|msg|${t.message}")
             } catch (ignored: Throwable) {
-                logger.warn("[$pipelineId]|TimerTrigger fail event=$event| error=${ignored.message}")
+                logger.warn(
+                    "StreamTimerBuildListener|run|TimerTrigger fail" +
+                        "|pipelineId|$pipelineId|event|$event|error|${ignored.message}"
+                )
             }
         }
     }
@@ -156,7 +159,11 @@ class StreamTimerBuildListener @Autowired constructor(
                 scheduleTriggerService.triggerBuild(this, branch, latestRevisionInfo)
             }
         } catch (ignored: Throwable) {
-            logger.warn("[$pipelineId]|branch:$branch|TimerTrigger fail|", ignored)
+            logger.warn(
+                "StreamTimerBuildListener|timerTrigger|fail" +
+                    "|pipelineId|$pipelineId|branch|$branch|error",
+                ignored
+            )
         }
     }
 
@@ -171,7 +178,8 @@ class StreamTimerBuildListener @Autowired constructor(
         ) {
             val buildId = scheduleTriggerService.triggerBuild(this, branch, latestRevisionInfo)
             logger.info(
-                "[$pipelineId]|branch:$branch|revision:$latestRevision|TimerTrigger start| buildId=${buildId?.id}"
+                "StreamTimerBuildListener|branchChangeTimerTrigger|start" +
+                    "|pipelineId|$pipelineId|branch|$branch|revision|$latestRevision|buildId|${buildId?.id}"
             )
             if (buildId != null) {
                 streamTimerBranchService.save(
@@ -185,7 +193,10 @@ class StreamTimerBuildListener @Autowired constructor(
                 )
             }
         } else {
-            logger.info("$pipelineId|branch:$branch|revision:${timerBranch.revision}|revision not change")
+            logger.info(
+                "StreamTimerBuildListener|branchChangeTimerTrigger|revision not change" +
+                    "|pipelineId|$pipelineId|branch:$branch|revision:${timerBranch.revision}"
+            )
         }
     }
 }

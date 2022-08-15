@@ -108,7 +108,10 @@ class ScheduleTriggerService @Autowired constructor(
             )
         }
         if (streamTriggerSetting == null || !streamTriggerSetting.enableCi) {
-            logger.warn("project ${streamTimerEvent.projectId} not enable ci no trigger schedule")
+            logger.warn(
+                "ScheduleTriggerService|triggerBuild" +
+                    "|not enable ci no trigger schedule|project|${streamTimerEvent.projectId}"
+            )
             return null
         }
 
@@ -170,7 +173,10 @@ class ScheduleTriggerService @Autowired constructor(
         action: StreamScheduleAction,
         originYaml: String
     ): BuildId? {
-        logger.info("|${action.data.context.requestEventId}|handleTrigger|action|${action.format()}")
+        logger.info(
+            "ScheduleTriggerService|handleTrigger" +
+                "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
+        )
         return exHandler.handle(action) {
             trigger(action, originYaml)
         }
@@ -235,7 +241,8 @@ class ScheduleTriggerService @Autowired constructor(
             yaml = yamlReplaceResult.normalYaml,
             gitBuildId = gitBuildId,
             onlySavePipeline = false,
-            yamlTransferData = yamlReplaceResult.yamlTransferData
+            yamlTransferData = yamlReplaceResult.yamlTransferData,
+            manualInputs = null
         )
     }
 }

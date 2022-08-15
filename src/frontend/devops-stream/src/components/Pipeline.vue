@@ -116,10 +116,10 @@
                     stageIndex: stageIndex
                 }
                 const job = this.getJob(this.editingElementPos)
-                if (!Reflect.has(args, 'containerGroupIndex')) {
-                    this.editingElementPos.logData = job
-                } else if (Number.isInteger(elementIndex)) {
+                if (Number.isInteger(elementIndex)) {
                     this.editingElementPos.logData = job.elements[elementIndex]
+                } else if (!Reflect.has(args, 'containerGroupIndex')) {
+                    this.editingElementPos.logData = job
                 } else if (Number.isInteger(containerIndex)) {
                     this.editingElementPos.job = job
                 }
@@ -145,7 +145,15 @@
 
             autoOpenLog () {
                 if (this.$route.query.stageIndex) {
-                    this.handlePipelineClick(this.$route.query)
+                    const { stageIndex, elementIndex, containerGroupIndex, containerIndex } = this.$route.query
+                    const params = {
+                        // stream 流水线隐藏了第一个stage,所以减去1
+                        stageIndex: Number(stageIndex) - 1,
+                        elementIndex: Number(elementIndex),
+                        containerIndex: Number(containerIndex)
+                    }
+                    if (containerGroupIndex) params.containerGroupIndex = Number(containerGroupIndex)
+                    this.handlePipelineClick(params)
                 }
             },
 

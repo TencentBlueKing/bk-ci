@@ -66,7 +66,11 @@ class StreamRequestListener @Autowired constructor(
                 event = streamRequestEvent.event
             )
         } catch (ignore: Throwable) {
-            logger.warn("Fail to request stream $streamRequestEvent", ignore)
+            logger.warn(
+                "StreamRequestListener|listenStreamRequestEvent" +
+                    "|Fail to request stream $streamRequestEvent",
+                ignore
+            )
         }
     }
 

@@ -137,7 +137,7 @@ data class StreamGitRequestEventReq(
                 } else {
                     jumpUrl = event.repository.homepage + "/commit/" + gitRequestEvent.commitId
                     buildTitle = commitMsg
-                    buildSource = commitId.take(9)
+                    buildSource = commitId.take(8)
                 }
             }
             is GitTagPushEvent -> {
@@ -202,7 +202,7 @@ data class StreamGitRequestEventReq(
                     StreamGitObjectKind.SCHEDULE.value,
                     StreamGitObjectKind.OPENAPI.value,
                     StreamGitObjectKind.MANUAL.value -> {
-                        buildSource = commitId.take(9)
+                        buildSource = commitId.take(8)
                         jumpUrl = homepage + "/commit/" + gitRequestEvent.commitId
                     }
                     else -> {

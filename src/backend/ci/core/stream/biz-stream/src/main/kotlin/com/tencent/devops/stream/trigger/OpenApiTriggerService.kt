@@ -116,6 +116,8 @@ class OpenApiTriggerService @Autowired constructor(
         }
     }
 
+    override fun getInputParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String>? = null
+
     private fun loadPayloadOpenApiAction(
         streamTriggerSetting: StreamTriggerSetting,
         triggerBuildReq: TriggerBuildReq
@@ -165,7 +167,10 @@ class OpenApiTriggerService @Autowired constructor(
             ScmType.CODE_GIT -> try {
                 objectMapper.readValue<GitEvent>(eventStr)
             } catch (ignore: Exception) {
-                logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
+                logger.warn(
+                    "OpenApiTriggerService|mockWebhookTrigger" +
+                        "|Fail to parse the git web hook commit event|errMsg|${ignore.message}"
+                )
                 throw CustomException(
                     status = Response.Status.BAD_REQUEST,
                     message = "Fail to parse the git web hook commit event, errMsg: ${ignore.message}"

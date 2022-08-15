@@ -6,6 +6,7 @@ import {
 
 export default {
   getPipelineList(params) {
+    params.channelCodes = 'GIT,BS'
     return fetch.get(`${PROCESS_API}/pipelineInfos/get/names`, params);
   },
   getPipelineLabels(params) {

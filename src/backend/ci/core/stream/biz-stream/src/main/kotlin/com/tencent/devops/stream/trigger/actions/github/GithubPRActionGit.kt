@@ -66,6 +66,7 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GithubRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
+import com.tencent.devops.stream.trigger.pojo.MrYamlInfo
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.GitCheckService
@@ -266,15 +267,18 @@ class GithubPRActionGit(
     override fun getYamlPathList(): List<YamlPathListEntry> {
         val event = event()
         // 获取目标分支的文件列表
+        val targetRef = GitActionCommon.getTriggerBranch(event.pullRequest.base.ref)
         val targetBranchYamlPathList = GitActionCommon.getYamlPathList(
             action = this,
             gitProjectId = getGitProjectIdOrName(),
-            ref = GitActionCommon.getTriggerBranch(event.pullRequest.base.ref)
+            ref = targetRef
         ).toSet()
 
         // 已经merged的直接返回目标分支的文件列表即可
         if (event.pullRequest.merged == true) {
-            return targetBranchYamlPathList.map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
+            return targetBranchYamlPathList.map { (name, blobId) ->
+                YamlPathListEntry(name, CheckType.NO_NEED_CHECK, targetRef, blobId)
+            }
         }
 
         // 获取源分支文件列表
@@ -289,8 +293,13 @@ class GithubPRActionGit(
             }
         ).toSet()
 
-        return checkMrYamlPathList(sourceBranchYamlPathList, targetBranchYamlPathList, getChangeSet()!!)
-            .map { YamlPathListEntry(it.key, it.value) }
+        return checkPrYamlPathList(
+            sourceBranchYamlPathList = sourceBranchYamlPathList,
+            targetBranchYamlPathList = targetBranchYamlPathList,
+            changeSet = getChangeSet()!!,
+            sourceRef = event.pullRequest.head.ref,
+            targetRef = targetRef
+        )
     }
 
     /**
@@ -303,18 +312,19 @@ class GithubPRActionGit(
      *      - 如果不同，报错提示用户yml文件版本落后需要更新
      * 注：注意存在fork库不同projectID的提交
      */
-    override fun getYamlContent(fileName: String): Pair<String, String> {
+    override fun getYamlContent(fileName: String): MrYamlInfo {
         val event = event()
         if (event.pullRequest.merged == true) {
-            return Pair(
-                data.eventCommon.branch,
-                api.getFileContent(
+            return MrYamlInfo(
+                ref = data.eventCommon.branch,
+                content = api.getFileContent(
                     cred = this.getGitCred(),
                     gitProjectId = getGitProjectIdOrName(),
                     fileName = fileName,
                     ref = data.eventCommon.branch,
                     retry = ApiRequestRetryInfo(true)
-                )
+                ),
+                blobId = ""
             )
         }
 
@@ -333,8 +343,8 @@ class GithubPRActionGit(
                         "get file $fileName content from ${event.pullRequest.base.repo.fullName} " +
                         "branch ${event.pullRequest.base.ref} is blank because no file"
                 )
-                Pair(
-                    event.pullRequest.base.ref, ""
+                MrYamlInfo(
+                    event.pullRequest.base.ref, "", targetFile?.blobId
                 )
             } else {
                 val c = targetFile!!.getDecodedContentAsString()
@@ -346,7 +356,7 @@ class GithubPRActionGit(
                             "because git content blank"
                     )
                 }
-                Pair(event.pullRequest.base.ref, c)
+                MrYamlInfo(event.pullRequest.base.ref, c, targetFile.blobId)
             }
         }
 
@@ -367,7 +377,7 @@ class GithubPRActionGit(
                     "get file $fileName content from ${event.pullRequest.head.repo.fullName} " +
                     "source commit ${event.pullRequest.head.sha} is blank because no file"
             )
-            Pair(event.pullRequest.head.sha, "")
+            MrYamlInfo(event.pullRequest.head.sha, "", sourceFile?.blobId)
         } else {
             val c = sourceFile!!.getDecodedContentAsString()
             if (c.isBlank()) {
@@ -378,7 +388,7 @@ class GithubPRActionGit(
                         "because git content blank"
                 )
             }
-            Pair(event.pullRequest.head.sha, c)
+            MrYamlInfo(event.pullRequest.head.sha, c,sourceFile.blobId)
         }
 
         if (targetFile?.blobId.isNullOrBlank()) {
@@ -469,50 +479,56 @@ class GithubPRActionGit(
         }
     }
 
-    @Suppress("ComplexMethod")
-    fun checkMrYamlPathList(
-        sourceBranchYamlPathList: Set<String>,
-        targetBranchYamlPathList: Set<String>,
-        changeSet: Set<String>
-    ): MutableMap<String, CheckType> {
-        val comparedMap = mutableMapOf<String, CheckType>()
-        sourceBranchYamlPathList.forEach { source ->
-            when {
-                // 源分支有，目标分支没有，变更列表有，以源分支为主，不需要校验版本
-                source !in targetBranchYamlPathList && source in changeSet -> {
-                    comparedMap[source] = CheckType.NO_NEED_CHECK
-                }
-                // 源分支有，目标分支没有，变更列表没有，不触发且提示错误
-                source !in targetBranchYamlPathList && source !in changeSet -> {
-                    comparedMap[source] = CheckType.NO_TRIGGER
-                }
-                // 源分支有，目标分支有，变更列表有，需要校验版本
-                source in targetBranchYamlPathList && source in changeSet -> {
-                    comparedMap[source] = CheckType.NEED_CHECK
-                }
-                // 源分支有，目标分支有，变更列表无，以目标分支为主，不需要校验版本
-                source in targetBranchYamlPathList && source !in changeSet -> {
-                    comparedMap[source] = CheckType.NO_NEED_CHECK
+        @Suppress("ComplexMethod")
+        fun checkPrYamlPathList(
+            sourceBranchYamlPathList: Set<Pair<String, String?>>,
+            targetBranchYamlPathList: Set<Pair<String, String?>>,
+            changeSet: Set<String>,
+            sourceRef: String,
+            targetRef: String
+        ): List<YamlPathListEntry> {
+            val sourceList = sourceBranchYamlPathList.map { it.first }
+            val targetList = targetBranchYamlPathList.map { it.first }
+            val result = mutableListOf<YamlPathListEntry>()
+
+            sourceBranchYamlPathList.forEach { (source, blobId) ->
+                when {
+                    // 源分支有，目标分支没有，变更列表有，以源分支为主，不需要校验版本
+                    source !in targetList && source in changeSet -> {
+                        result.add(YamlPathListEntry(source, CheckType.NO_NEED_CHECK, sourceRef, blobId))
+                    }
+                    // 源分支有，目标分支没有，变更列表没有，不触发且提示错误
+                    source !in targetList && source !in changeSet -> {
+                        result.add(YamlPathListEntry(source, CheckType.NO_TRIGGER, sourceRef, blobId))
+                    }
+                    // 源分支有，目标分支有，变更列表有，需要校验版本
+                    source in targetList && source in changeSet -> {
+                        result.add(YamlPathListEntry(source, CheckType.NEED_CHECK, sourceRef, blobId))
+                    }
+                    // 源分支有，目标分支有，变更列表无，以目标分支为主，不需要校验版本
+                    source in targetList && source !in changeSet -> {
+                        result.add(YamlPathListEntry(source, CheckType.NO_NEED_CHECK, targetRef, blobId))
+                    }
                 }
             }
-        }
-        targetBranchYamlPathList.forEach { target ->
-            if (target in comparedMap.keys) {
-                return@forEach
-            }
-            when {
-                // 源分支没有，目标分支有，变更列表有，说明是删除，无需触发
-                target !in sourceBranchYamlPathList && target in changeSet -> {
+
+            targetBranchYamlPathList.forEach { (target, blobId) ->
+                if (target in result.map { it.yamlPath }.toSet()) {
                     return@forEach
                 }
-                // 源分支没有，目标分支有，变更列表没有，说明是目标分支新增的，加入文件列表
-                target !in sourceBranchYamlPathList && target !in changeSet -> {
-                    comparedMap[target] = CheckType.NO_NEED_CHECK
+                when {
+                    // 源分支没有，目标分支有，变更列表有，说明是删除，无需触发
+                    target !in sourceList && target in changeSet -> {
+                        return@forEach
+                    }
+                    // 源分支没有，目标分支有，变更列表没有，说明是目标分支新增的，加入文件列表
+                    target !in sourceList && target !in changeSet -> {
+                        result.add(YamlPathListEntry(target, CheckType.NO_NEED_CHECK, targetRef, blobId))
+                    }
                 }
             }
+            return result
         }
-        return comparedMap
-    }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         val event = event()

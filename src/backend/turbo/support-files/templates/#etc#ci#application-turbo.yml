@@ -22,6 +22,7 @@ spring:
       discovery:
         tags: __BK_CI_TURBO_CONSUL_DISCOVERY_TAG__
         instance-id: ${spring.application.name}-${server.port}-${spring.cloud.client.hostname}
+        healthCheckPath: /api/actuator/health
 
 server:
   port: __BK_CI_TURBO_API_PORT__

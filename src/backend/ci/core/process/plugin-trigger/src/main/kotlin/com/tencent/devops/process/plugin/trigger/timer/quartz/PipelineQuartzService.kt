@@ -32,7 +32,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
@@ -137,7 +136,6 @@ class PipelineJobBean(
     private val schedulerManager: SchedulerManager,
     private val pipelineTimerService: PipelineTimerService,
     private val redisOperation: RedisOperation,
-    private val gray: Gray,
     private val client: Client
 ) {
 

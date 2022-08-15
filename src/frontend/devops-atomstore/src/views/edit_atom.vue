@@ -381,7 +381,7 @@
                 return toolbars
             },
             releasePackageUrl () {
-                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/atoms/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
+                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/ids/${this.atomForm.atomId}atoms/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
             },
             navList () {
                 const name = `${this.curTitle}（${this.atomForm.atomCode}）`
@@ -564,9 +564,7 @@
             },
 
             uploadPackageSuccess (data) {
-                if (data.atomEnvRequest) {
-                    this.atomForm.packageShaContent = data.atomEnvRequest.shaContent
-                    this.atomForm.pkgName = data.atomEnvRequest.pkgName
+                if (data.atomEnvRequests && data.atomEnvRequests.length) {
                     this.formErrors.releasePackageError = false
                 }
             },
@@ -617,11 +615,6 @@
                 if (!this.atomForm.releaseType) {
                     this.formErrors.releaseTypeError = true
                     ref = ref || 'releaseTypeError'
-                    errorCount++
-                }
-
-                if (!this.atomForm.packageShaContent) {
-                    this.formErrors.releasePackageError = true
                     errorCount++
                 }
 
@@ -676,8 +669,6 @@
                         summary: this.atomForm.summary || undefined,
                         description: this.atomForm.description || undefined,
                         visibilityLevel: this.atomForm.visibilityLevel,
-                        packageShaContent: this.atomForm.packageShaContent,
-                        pkgName: this.atomForm.pkgName,
                         frontendType: this.atomForm.frontendType,
                         fieldCheckConfirmFlag,
                         branch: this.atomForm.branch
