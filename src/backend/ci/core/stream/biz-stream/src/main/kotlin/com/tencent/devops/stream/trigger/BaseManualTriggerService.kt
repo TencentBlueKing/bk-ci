@@ -154,6 +154,7 @@ abstract class BaseManualTriggerService @Autowired constructor(
         )
         return TriggerBuildResult(
             projectId = action.data.eventCommon.gitProjectId.toLong(),
+            projectCode = GitCommonUtils.getCiProjectId(action.data.eventCommon.gitProjectId.toLong()),
             branch = triggerBuildReq.branch,
             customCommitMsg = triggerBuildReq.customCommitMsg,
             description = triggerBuildReq.description,
