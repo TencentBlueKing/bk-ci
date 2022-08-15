@@ -114,7 +114,6 @@ class TXDockerHostImageScanService(
             val script = "docker inspect $imageId"
             val scanResult = ShellUtil.executeEnhance(script)
 
-            logger.info("TEST =======>> dockerInspect: $scanResult")
             val leakScanReq = LeakScanReq(
                 content = scanResult,
                 format_type = SCAN_FORMAT
@@ -129,8 +128,6 @@ class TXDockerHostImageScanService(
                         MediaType.parse("application/json; charset=utf-8"),
                         JsonUtil.toJson(leakScanReq)))
                 .build()
-
-            logger.info("$logSuffix Start leak scan, content: ${JsonUtil.toJson(leakScanReq)}")
 
             OkhttpUtils.doHttp(request).use { resp ->
                 val responseBody = resp.body()!!.string()
