@@ -45,7 +45,7 @@ class ShortUrlCleanJob(
                 count = shortUrls.size
             } while (count > 0 && lockExpiredTime > LocalDateTime.now())
         } catch (e: Exception) {
-            logger.error("clean short url error", e)
+            logger.error("BKSystemErrorMonitor|cleanShortUrl|error=${e.message}", e)
         } finally {
             redisLock.unlock()
         }
