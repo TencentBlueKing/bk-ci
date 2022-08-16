@@ -124,7 +124,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         val atomTrendInfoMap = mutableMapOf<String, AtomTrendInfoDO>()
         //  查询的时间区间
         val betweenDate = getBetweenDate(queryAtomTrendInfoDTO.startTime, queryAtomTrendInfoDTO.endTime)
-        result.forEach { record ->
+        result?.forEach { record ->
             //  按插件code和统计时间分组数据
             val atomCode = record[BK_ATOM_CODE] as String
             val statisticsTime = (record[BK_STATISTICS_TIME] as LocalDateTime).toLocalDate()
