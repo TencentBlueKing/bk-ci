@@ -29,6 +29,7 @@ package com.tencent.devops.artifactory.mq
 
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.service.PipelineBuildArtifactoryService
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -78,17 +79,26 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Triple<String, String, String> {
-        val parentPipelineVars = client.get(ServiceBuildResource::class).getBuildVariableValue(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            variableNames = listOf(
-                PIPELINE_START_PARENT_PROJECT_ID,
-                PIPELINE_START_PARENT_PIPELINE_ID,
-                PIPELINE_START_PARENT_BUILD_ID
-            )
-        ).data!!
+        val parentPipelineVars = try {
+            client.get(ServiceBuildResource::class).getBuildVariableValue(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                variableNames = listOf(
+                    PIPELINE_START_PARENT_PROJECT_ID,
+                    PIPELINE_START_PARENT_PIPELINE_ID,
+                    PIPELINE_START_PARENT_BUILD_ID
+                )
+            ).data!!
+        } catch (ignore: RemoteServiceException) {
+            if (ignore.httpStatus >= 500) {
+                logger.error("BKSystemErrorMonitor|getBuildVariableValue|$pipelineId-$buildId|${ignore.errorMessage}")
+            } else {
+                logger.info("getBuildVariableValue|$pipelineId-$buildId|${ignore.errorMessage}")
+            }
+            return Triple("", "", "")
+        }
         logger.info("[$pipelineId|$buildId] get parent pipeline vars: $parentPipelineVars")
         val parentProjectId = parentPipelineVars[PIPELINE_START_PARENT_PROJECT_ID].toString()
         val parentPipelineId = parentPipelineVars[PIPELINE_START_PARENT_PIPELINE_ID].toString()
@@ -105,7 +115,7 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
         val artifactList: List<FileInfo> = try {
             pipelineBuildArtifactoryService.getArtifactList(userId, projectId, pipelineId, buildId)
         } catch (ignored: Throwable) {
-            logger.error("[$pipelineId]|getArtifactList-$buildId exception:", ignored)
+            logger.error("BKSystemErrorMonitor|getArtifactList|$pipelineId-$buildId|error=${ignored.message}", ignored)
             emptyList()
         }
         logger.info("[$pipelineId]|getArtifactList-$buildId artifact: ${JsonUtil.toJson(artifactList)}")
@@ -125,7 +135,7 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
 
             logger.info("[$buildId]|update artifact result: ${result.status} ${result.message}")
         } catch (e: Exception) {
-            logger.error("[$buildId| update artifact list fail: ${e.localizedMessage}", e)
+            logger.error("BKSystemErrorMonitor|updateArtifactList|$buildId|error=${e.localizedMessage}", e)
             // rollback
             client.get(ServicePipelineRuntimeResource::class).updateArtifactList(
                 userId = userId,

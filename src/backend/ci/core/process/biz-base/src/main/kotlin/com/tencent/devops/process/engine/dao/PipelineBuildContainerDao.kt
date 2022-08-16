@@ -37,6 +37,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import org.jooq.DSLContext
 import org.jooq.DatePart
+import org.jooq.RecordMapper
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -125,7 +126,7 @@ class PipelineBuildContainerDao {
         }
     }
 
-    fun batchUpdate(dslContext: DSLContext, containerList: List<TPipelineBuildContainerRecord>) {
+    fun batchUpdate(dslContext: DSLContext, containerList: List<PipelineBuildContainer>) {
         with(T_PIPELINE_BUILD_CONTAINER) {
             containerList.forEach {
                 dslContext.update(this)
@@ -134,14 +135,13 @@ class PipelineBuildContainerDao {
                     .set(CONTAINER_TYPE, it.containerType)
                     .set(CONTAINER_ID, it.containerId)
                     .set(CONTAINER_HASH_ID, it.containerHashId)
-                    .set(STATUS, it.status)
+                    .set(STATUS, it.status.ordinal)
                     .set(START_TIME, it.startTime)
                     .set(END_TIME, it.endTime)
                     .set(COST, it.cost)
                     .set(EXECUTE_COUNT, it.executeCount)
-                    .set(CONDITIONS, it.conditions)
-                    .where(BUILD_ID.eq(it.buildId)
-                        .and(STAGE_ID.eq(it.stageId)).and(SEQ.eq(it.seq)))
+                    .set(CONDITIONS, it.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                    .where(BUILD_ID.eq(it.buildId).and(STAGE_ID.eq(it.stageId)).and(SEQ.eq(it.seq)))
                     .execute()
             }
         }
@@ -153,15 +153,13 @@ class PipelineBuildContainerDao {
         buildId: String,
         stageId: String?,
         containerId: String
-    ): TPipelineBuildContainerRecord? {
-
+    ): PipelineBuildContainer? {
         return with(T_PIPELINE_BUILD_CONTAINER) {
             val query = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
-            if (stageId.isNullOrBlank()) {
-                query.and(CONTAINER_ID.eq(containerId)).fetchAny()
-            } else {
-                query.and(STAGE_ID.eq(stageId)).and(CONTAINER_ID.eq(containerId)).fetchAny()
+            if (!stageId.isNullOrBlank()) {
+                query.and(STAGE_ID.eq(stageId))
             }
+            query.and(CONTAINER_ID.eq(containerId)).fetchAny(mapper)
         }
     }
 
@@ -186,7 +184,8 @@ class PipelineBuildContainerDao {
                 update.set(END_TIME, endTime)
                 if (buildStatus.isFinish()) {
                     update.set(
-                        COST, COST + JooqUtils.timestampDiff(
+                        COST,
+                        COST + JooqUtils.timestampDiff(
                             DatePart.SECOND,
                             START_TIME.cast(java.sql.Timestamp::class.java),
                             END_TIME.cast(java.sql.Timestamp::class.java)
@@ -223,7 +222,7 @@ class PipelineBuildContainerDao {
         stageId: String? = null,
         containsMatrix: Boolean? = true,
         statusSet: Set<BuildStatus>? = null
-    ): Collection<TPipelineBuildContainerRecord> {
+    ): List<PipelineBuildContainer> {
         return with(T_PIPELINE_BUILD_CONTAINER) {
             val conditionStep = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId)).and(BUILD_ID.eq(buildId))
@@ -240,7 +239,7 @@ class PipelineBuildContainerDao {
             if (containsMatrix == false) {
                 conditionStep.and(MATRIX_GROUP_ID.isNull)
             }
-            conditionStep.orderBy(SEQ.asc()).fetch()
+            conditionStep.orderBy(SEQ.asc()).fetch(mapper)
         }
     }
 
@@ -265,32 +264,32 @@ class PipelineBuildContainerDao {
         projectId: String,
         buildId: String,
         matrixGroupId: String
-    ): Collection<TPipelineBuildContainerRecord> {
+    ): List<PipelineBuildContainer> {
         return with(T_PIPELINE_BUILD_CONTAINER) {
             dslContext.selectFrom(this).where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(MATRIX_GROUP_ID.eq(matrixGroupId))
-                .orderBy(SEQ.asc()).fetch()
+                .orderBy(SEQ.asc()).fetch(mapper)
         }
     }
 
-    fun listBuildContainerInMatrixGroup(
+    fun listBuildContainerIdsInMatrixGroup(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         buildId: String,
         matrixGroupId: String,
         stageId: String? = null
-    ): Collection<TPipelineBuildContainerRecord> {
+    ): Collection<String> {
         return with(T_PIPELINE_BUILD_CONTAINER) {
-            val conditionStep = dslContext.selectFrom(this)
+            val conditionStep = dslContext.select(CONTAINER_ID).from(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(MATRIX_GROUP_ID.eq(matrixGroupId))
             if (!stageId.isNullOrBlank()) {
                 conditionStep.and(STAGE_ID.eq(stageId))
             }
-            conditionStep.orderBy(SEQ.asc()).fetch()
+            conditionStep.orderBy(SEQ.asc()).fetch(CONTAINER_ID)
         }
     }
 
@@ -320,35 +319,38 @@ class PipelineBuildContainerDao {
         }
     }
 
-    fun convert(tTPipelineBuildContainerRecord: TPipelineBuildContainerRecord): PipelineBuildContainer? {
-        return with(tTPipelineBuildContainerRecord) {
-            val controlOption = if (!conditions.isNullOrBlank()) {
-                JsonUtil.to(conditions, PipelineBuildContainerControlOption::class.java)
-            } else {
-                PipelineBuildContainerControlOption(jobControlOption = JobControlOption())
+    class PipelineBuildContainerJooqMapper : RecordMapper<TPipelineBuildContainerRecord, PipelineBuildContainer> {
+        override fun map(record: TPipelineBuildContainerRecord?): PipelineBuildContainer? {
+            return record?.run {
+                val controlOption = if (!conditions.isNullOrBlank()) {
+                    JsonUtil.to(conditions, PipelineBuildContainerControlOption::class.java)
+                } else {
+                    PipelineBuildContainerControlOption(jobControlOption = JobControlOption())
+                }
+                PipelineBuildContainer(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerType = containerType,
+                    containerId = containerId,
+                    containerHashId = containerHashId,
+                    matrixGroupFlag = matrixGroupFlag,
+                    matrixGroupId = matrixGroupId,
+                    seq = seq,
+                    status = BuildStatus.values()[status],
+                    startTime = startTime,
+                    endTime = endTime,
+                    cost = cost ?: 0,
+                    executeCount = executeCount ?: 1,
+                    controlOption = controlOption
+                )
             }
-            PipelineBuildContainer(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                stageId = stageId,
-                containerType = containerType,
-                containerId = containerId,
-                containerHashId = containerHashId,
-                matrixGroupFlag = matrixGroupFlag,
-                matrixGroupId = matrixGroupId,
-                seq = seq,
-                status = BuildStatus.values()[status],
-                startTime = startTime,
-                endTime = endTime,
-                cost = cost ?: 0,
-                executeCount = executeCount ?: 1,
-                controlOption = controlOption
-            )
         }
     }
 
     companion object {
+        private val mapper = PipelineBuildContainerJooqMapper()
         private val logger = LoggerFactory.getLogger(PipelineBuildContainerDao::class.java)
     }
 }

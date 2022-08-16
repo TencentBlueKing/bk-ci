@@ -27,14 +27,13 @@
 
 package com.tencent.devops.store.service.atom.impl
 
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_DESCRIPTION
 import com.tencent.devops.common.api.constant.KEY_DOCSLINK
 import com.tencent.devops.common.api.constant.KEY_OS
 import com.tencent.devops.common.api.constant.KEY_SUMMARY
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.constant.VERSION
@@ -51,6 +50,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -103,7 +103,6 @@ import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.STORE_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.UnInstallReq
@@ -121,6 +120,7 @@ import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
+import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -187,31 +187,16 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    private val cache = CacheBuilder.newBuilder().maximumSize(2000)
-        .expireAfterWrite(1, TimeUnit.MINUTES)
-        .build(object : CacheLoader<String, Map<String, String>>() {
-            override fun load(projectId: String): Map<String, String> {
-                val elementMapData = serviceGetPipelineAtoms(
-                    userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-                    serviceScope = null,
-                    jobType = null,
-                    os = null,
-                    projectCode = projectId,
-                    category = null,
-                    classifyId = null,
-                    recommendFlag = null,
-                    keyword = null,
-                    page = null,
-                    pageSize = null
-                ).data
-                return elementMapData?.records?.associate { it.atomCode to it.name } ?: mapOf()
-            }
-        })
+    private val atomNameCache = Caffeine.newBuilder()
+        .maximumSize(2000)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
+        .build<String, Map<String, String>>()
 
     /**
      * 获取插件列表
      */
     @Suppress("UNCHECKED_CAST")
+    @BkTimed(extraTags = ["get", "getPipelineAtom"], value = "store_get_pipeline_atom")
     override fun getPipelineAtoms(
         accessToken: String,
         userId: String,
@@ -238,11 +223,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     projectCode = projectCode,
                     userId = userId
                 ).data
-            } catch (e: Exception) {
-                logger.info("verifyUserProjectPermission error is :$e")
+            } catch (ignored: Throwable) {
+                logger.warn("verifyUserProjectPermission error, params[$userId|$projectCode]", ignored)
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             }
-            logger.info("the validateFlag is :$validateFlag")
+            logger.info("verifyUserProjectPermission validateFlag is :$validateFlag")
             if (null == validateFlag || !validateFlag) {
                 // 抛出错误提示
                 return MessageCodeUtil.generateResponseDataObject(
@@ -424,12 +409,43 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     }
 
     override fun getProjectElements(projectCode: String): Result<Map<String, String>> {
-        return Result(cache.get(projectCode))
+        // 从缓存中取出插件的名称集合信息
+        var atomNameMap = atomNameCache.getIfPresent(projectCode)
+        if (atomNameMap == null) {
+            // 缓存中没有名称信息则实时去DB查
+            val defaultAtomCodeRecords = atomDao.batchGetDefaultAtomCode(dslContext)
+            val defaultAtomCodeList = defaultAtomCodeRecords.map { it.value1() }
+            val projectAtomCodeRecords = storeProjectRelDao.getValidStoreCodes(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                storeType = StoreTypeEnum.ATOM
+            )
+            val projectAtomCodeList = projectAtomCodeRecords?.map { it.value1() }
+            if (!projectAtomCodeList.isNullOrEmpty()) {
+                defaultAtomCodeList.addAll(projectAtomCodeList)
+            }
+            // 插件去重
+            val atomCodeList = defaultAtomCodeList.toSet().toList()
+            atomNameMap = mutableMapOf()
+            // 分批获取插件的名称
+            ListUtils.partition(atomCodeList, 50).forEach { rids ->
+                val atomNameRecords = atomDao.batchGetAtomName(dslContext, rids)
+                atomNameRecords?.forEach { atomNameRecord ->
+                    val atomCode = atomNameRecord.value1()
+                    val atomName = atomNameRecord.value2()
+                    atomNameMap[atomCode] = atomName
+                }
+            }
+            // 把插件的名称信息放入缓存
+            atomNameCache.put(projectCode, atomNameMap)
+        }
+        return Result(atomNameMap)
     }
 
     /**
      * 根据插件代码和版本号获取插件信息
      */
+    @BkTimed(extraTags = ["get", "getPipelineAtom"], value = "store_get_pipeline_atom")
     override fun getPipelineAtom(
         projectCode: String,
         atomCode: String,
@@ -469,6 +485,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 根据项目代码、插件代码和版本号获取插件信息
      */
     @Suppress("UNCHECKED_CAST")
+    @BkTimed(extraTags = ["get", "getPipelineAtom"], value = "store_get_pipeline_atom")
     override fun getPipelineAtomDetail(
         projectCode: String?,
         atomCode: String,
@@ -578,6 +595,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 根据项目代码、插件代码和版本号获取插件信息
      */
     @Suppress("UNCHECKED_CAST")
+    @BkTimed(extraTags = ["get", "getPipelineAtom"], value = "store_get_pipeline_atom")
     override fun getPipelineAtomVersions(projectCode: String?, atomCode: String): Result<List<VersionInfo>> {
         logger.info("getPipelineAtomVersions projectCode is: $projectCode,atomCode is: $atomCode")
         val atomStatusList = if (projectCode != null) {
@@ -609,7 +627,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val index = atomVersion.indexOf(".")
             val versionPrefix = atomVersion.substring(0, index + 1)
             var versionName = atomVersion
-            var latestVersionName = versionPrefix + "latest"
+            var latestVersionName = VersionUtils.convertLatestVersionName(atomVersion)
             val atomStatus = it[KEY_ATOM_STATUS] as Byte
             val atomVersionStatusList = listOf(
                 AtomStatusEnum.TESTING.status.toByte(),
@@ -638,7 +656,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         projectCode: String
     ): MutableList<Byte> {
         val flag = storeProjectRelDao.isTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
-        logger.info("the isInitTestProjectCode flag is :$flag")
+        logger.info("isInitTestProjectCode atomCode=$atomCode|projectCode=$projectCode|flag=$flag")
         // 普通项目的查已发布和下架中的插件
         var atomStatusList =
             mutableListOf(AtomStatusEnum.RELEASED.status.toByte(), AtomStatusEnum.UNDERCARRIAGING.status.toByte())
@@ -661,7 +679,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      */
     override fun savePipelineAtom(userId: String, atomRequest: AtomCreateRequest): Result<Boolean> {
         val id = UUIDUtil.generate()
-        logger.info("the atomRequest is :$atomRequest")
+        logger.info("savePipelineAtom userId=$userId|atomRequest=$atomRequest")
         // 判断插件代码是否存在
         val atomCode = atomRequest.atomCode
         val codeCount = atomDao.countByCode(dslContext, atomCode)
@@ -709,8 +727,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     /**
      * 更新插件信息
      */
-    override fun updatePipelineAtom(userId: String, id: String, atomUpdateRequest: AtomUpdateRequest): Result<Boolean> {
-        logger.info("the update id is :$id , the atomUpdateRequest is :$atomUpdateRequest")
+    override fun updatePipelineAtom(
+        userId: String,
+        id: String,
+        atomUpdateRequest: AtomUpdateRequest
+    ): Result<Boolean> {
+        logger.info("updatePipelineAtom userId=$userId|id=$id|atomUpdateRequest=$atomUpdateRequest")
         // 校验插件分类是否合法
         classifyService.getClassify(atomUpdateRequest.classifyId).data
             ?: return MessageCodeUtil.generateResponseDataObject(
@@ -798,7 +820,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 删除插件信息
      */
     override fun deletePipelineAtom(id: String): Result<Boolean> {
-        logger.info("the delete id is :$id")
         dslContext.transaction { t ->
             val context = DSL.using(t)
             // 删除插件信息
@@ -811,7 +832,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 根据插件ID和插件代码判断插件是否存在
      */
     override fun judgeAtomExistByIdAndCode(atomId: String, atomCode: String): Result<Boolean> {
-        logger.info("the atomId is:$atomId, atomCode is:$atomCode")
+        logger.info("judgeAtomExistByIdAndCode atomId=$atomId|atomCode=$atomCode")
         val count = atomDao.countByIdAndCode(dslContext, atomId, atomCode)
         if (count < 1) {
             return MessageCodeUtil.generateResponseDataObject(
@@ -827,7 +848,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 根据用户ID和插件代码判断该插件是否由该用户创建
      */
     override fun judgeAtomIsCreateByUserId(userId: String, atomCode: String): Result<Boolean> {
-        logger.info("judgeAtomExistByIdAndCode userId is:$userId, atomCode is:$atomCode")
+        logger.info("judgeAtomExistByIdAndCode userId=$userId|atomCode=$atomCode")
         val count = atomDao.countByUserIdAndCode(dslContext, userId, atomCode)
         if (count < 1) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, false)
@@ -1067,7 +1088,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         if (null != latestAtomRecord) {
             atomIdList.add(latestAtomRecord.id)
         }
-        logger.info("updateAtomBaseInfo atomIdList is :$atomIdList")
         dslContext.transaction { t ->
             val context = DSL.using(t)
             atomDao.updateAtomBaseInfo(context, userId, atomIdList, atomBaseInfoUpdateRequest)
@@ -1131,5 +1151,25 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         } else {
             Result(version)
         }
+    }
+
+    override fun getAtomDefaultValidVersion(projectCode: String, atomCode: String): Result<VersionInfo?> {
+        val defaultFlag = marketAtomCommonService.isPublicAtom(atomCode)
+        val defaultVersionRecord = atomDao.getVersionsByAtomCode(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            atomCode = atomCode,
+            defaultFlag = defaultFlag,
+            atomStatusList = generateAtomStatusList(atomCode, projectCode),
+            limitNum = 1
+        )?.getOrNull(0)
+        val versionInfo = defaultVersionRecord?.let {
+            val version = it[KEY_VERSION] as String
+            VersionInfo(
+                versionName = VersionUtils.convertLatestVersionName(version),
+                versionValue = VersionUtils.convertLatestVersion(version)
+            )
+        }
+        return Result(versionInfo)
     }
 }

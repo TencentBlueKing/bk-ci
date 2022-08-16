@@ -66,7 +66,7 @@ class StreamLogService @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("get init logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
+        logger.info("StreamLogService|getInitLogs|gitProjectId|$gitProjectId|pipelineId|$pipelineId|build|$buildId")
         val pipeline = getProjectPipeline(gitProjectId, pipelineId)
         return client.get(ServiceLogResource::class).getInitLogs(
             userId = userId,
@@ -91,7 +91,7 @@ class StreamLogService @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("get after logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
+        logger.info("StreamLogServic|getAfterLogs|gitProjectId|$gitProjectId|pipelineId|$pipelineId|build|$buildId")
         val pipeline = getProjectPipeline(gitProjectId, pipelineId)
         return client.get(ServiceLogResource::class).getAfterLogs(
             userId = userId,
@@ -115,7 +115,7 @@ class StreamLogService @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Response {
-        logger.info("download logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
+        logger.info("StreamLogServic|downloadLogs|gitProjectId|$gitProjectId|pipelineId|$pipelineId|build|$buildId")
         val pipeline = getProjectPipeline(gitProjectId, pipelineId)
         val path = StringBuilder("http://$gatewayUrl/log/api/service/logs/")
         path.append(StreamPipelineUtils.genGitProjectCode(pipeline.gitProjectId))

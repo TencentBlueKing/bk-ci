@@ -57,13 +57,13 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         checkPermissionFlag: Boolean,
         testProjectCode: String?
     ): Result<Boolean> {
-        logger.info("addAtomMember userId is:$userId,storeMemberReq is:$storeMemberReq,storeType is:$storeType")
+        logger.info("addAtomMember params:$userId|$storeMemberReq|$storeType|$collaborationFlag|$sendNotify")
         val atomCode = storeMemberReq.storeCode
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
-        logger.info("addAtomMember atomRecord is:$atomRecord")
-        if (null == atomRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
-        }
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomCode)
+            )
         if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
                 dslContext = dslContext,
                 userId = userId,
@@ -106,15 +106,12 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         storeType: StoreTypeEnum,
         checkPermissionFlag: Boolean
     ): Result<Boolean> {
-        logger.info("deleteAtomMember userId is:$userId,id is:$id,storeCode is:$storeCode,storeType is:$storeType")
+        logger.info("deleteAtomMember params:[$userId|$id|$storeCode|$storeType|$checkPermissionFlag]")
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, storeCode)
-        logger.info("addAtomMember atomRecord is:$atomRecord")
-        if (null == atomRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageCodeUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(storeCode)
             )
-        }
         val memberRecord = storeMemberDao.getById(dslContext, id)
             ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(id))
         // 如果删除的是管理员，只剩一个管理员则不允许删除

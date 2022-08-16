@@ -425,7 +425,7 @@ class ThirdPartyAgentDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(AGENT_ID.eq(agentId))
-                .orderBy(ACTION_TIME.desc())
+                .orderBy(ACTION_TIME.desc(), ID.desc()) // fix 时间相同时，增加ID排序
                 .limit(offset, limit)
                 .fetch()
         }

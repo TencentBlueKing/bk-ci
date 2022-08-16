@@ -562,8 +562,12 @@
             getMacOsData () {
                 this.isLoadingMac = true
                 Promise.all([this.getMacSysVersion(), this.getMacXcodeVersion()]).then(([sysVersion, xcodeVersion]) => {
-                    this.xcodeVersionList = xcodeVersion.data || []
-                    this.systemVersionList = sysVersion.data || []
+                    this.xcodeVersionList = xcodeVersion.data?.versionList || []
+                    this.systemVersionList = sysVersion.data?.versionList || []
+                    if (this.container.dispatchType?.systemVersion === undefined && this.container.dispatchType?.xcodeVersion === undefined) {
+                        this.chooseMacSystem(sysVersion.data?.defaultVersion)
+                        this.chooseXcode(xcodeVersion.data?.defaultVersion)
+                    }
                 }).catch((err) => {
                     this.$bkMessage({ message: (err.message || err), theme: 'error' })
                 }).finally(() => (this.isLoadingMac = false))

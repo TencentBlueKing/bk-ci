@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.enums.StreamPushActionType
 import com.tencent.devops.process.yaml.v2.models.PreRepositoryHook
@@ -12,6 +13,7 @@ import com.tencent.devops.process.yaml.v2.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v2.parsers.template.models.NoReplaceTemplate
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import com.tencent.devops.stream.dao.StreamPipelineTriggerDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
@@ -23,6 +25,7 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMat
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.UserMatchUtils
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.RepoTriggerEventService
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -30,8 +33,12 @@ import org.springframework.stereotype.Component
 @Component
 @Suppress("ComplexCondition")
 class TriggerMatcher @Autowired constructor(
-    private val repoTriggerEventService: RepoTriggerEventService
+    private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
+    private val repoTriggerEventService: RepoTriggerEventService,
+    private val streamPipelineTriggerDao: StreamPipelineTriggerDao
 ) {
+
     @Throws(StreamTriggerBaseException::class)
     fun isMatch(
         action: BaseAction
@@ -59,11 +66,11 @@ class TriggerMatcher @Autowired constructor(
             }
         }
 
-        return if (action.data.context.repoTrigger != null) {
+        val result = if (action.data.context.repoTrigger != null) {
             val repoTriggerPipelineList = action.data.context.repoTrigger!!.repoTriggerPipelineList
             val repoTriggerOn = ScriptYmlUtils.formatRepoHookTriggerOn(
-                newYaml.triggerOn,
-                repoTriggerPipelineList.find {
+                preTriggerOn = newYaml.triggerOn,
+                name = repoTriggerPipelineList.find {
                     it.pipelineId == action.data.context.pipeline!!.pipelineId
                 }?.sourceGitProjectPath
             )
@@ -81,27 +88,104 @@ class TriggerMatcher @Autowired constructor(
             action.isMatch(ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn)).copy(
                 repoHookName = checkRepoHook(
                     action = action,
-                    preTriggerOn = newYaml.triggerOn
+                    repoHooks = newYaml.triggerOn?.repoHook
                 )
             )
         }
+
+        // 缓存触发器
+        if (confirmProjectUseTriggerCache(action.getProjectCode()) &&
+            action.data.context.triggerCache != null &&
+            !action.data.context.pipeline?.pipelineId.isNullOrBlank()
+        ) {
+            streamPipelineTriggerDao.saveOrUpdate(
+                dslContext = dslContext,
+                projectId = action.getProjectCode(),
+                pipelineId = action.data.context.pipeline!!.pipelineId,
+                branch = action.data.context.triggerCache!!.pipelineFileBranch,
+                ciFileBlobId = action.data.context.triggerCache!!.blobId,
+                trigger = if (newYaml.triggerOn == null) {
+                    ""
+                } else {
+                    JsonUtil.getObjectMapper().writeValueAsString(newYaml.triggerOn)
+                }
+            )
+        }
+
+        return result
     }
 
-    private fun checkRepoHook(
+    fun isMatch(
         action: BaseAction,
-        preTriggerOn: PreTriggerOn?
+        triggerStr: String
+    ): Pair<List<Any>?, TriggerResult> {
+        val trigger = if (triggerStr.isBlank()) {
+            null
+        } else {
+            try {
+                JsonUtil.getObjectMapper().readValue(triggerStr, object : TypeReference<PreTriggerOn>() {})
+            } catch (e: Throwable) {
+                when (e) {
+                    is JsonProcessingException, is TypeCastException -> {
+                        throw StreamTriggerException(
+                            action,
+                            TriggerReason.CI_TRIGGER_FORMAT_ERROR,
+                            reasonParams = listOf(e.message ?: ""),
+                            commitCheck = CommitCheck(
+                                block = action.metaData.isStreamMr(),
+                                state = StreamCommitCheckState.FAILURE
+                            )
+                        )
+                    }
+                    else -> {
+                        throw e
+                    }
+                }
+            }
+        }
+
+        // 跨库触发这里跨库触发信息放回空，防止重复注册跨库触发信息
+        return if (action.data.context.repoTrigger != null) {
+            val repoTriggerPipelineList = action.data.context.repoTrigger!!.repoTriggerPipelineList
+            val repoTriggerOn = ScriptYmlUtils.formatRepoHookTriggerOn(
+                preTriggerOn = trigger,
+                name = repoTriggerPipelineList.find {
+                    it.pipelineId == action.data.context.pipeline!!.pipelineId
+                }?.sourceGitProjectPath
+            )
+            if (repoTriggerOn == null) {
+                repoTriggerEventService.deleteRepoTriggerEvent(action.data.context.pipeline!!.pipelineId)
+                return Pair(
+                    null,
+                    TriggerResult(
+                        trigger = false,
+                        timeTrigger = false,
+                        startParams = emptyMap(),
+                        deleteTrigger = false
+                    )
+                )
+            }
+            Pair(null, action.isMatch(repoTriggerOn))
+        } else {
+            Pair(trigger?.repoHook, action.isMatch(ScriptYmlUtils.formatTriggerOn(trigger)))
+        }
+    }
+
+    fun checkRepoHook(
+        action: BaseAction,
+        repoHooks: List<Any>? = null
     ): List<String> {
-        logger.info("checkRepoHook|preTriggerOn=$preTriggerOn")
-        if (preTriggerOn?.repoHook == null) {
+        logger.info("checkRepoHook|repoHook=$repoHooks")
+        if (repoHooks == null) {
             return emptyList()
         }
         val repositoryHookList = try {
             YamlUtil.getObjectMapper().readValue(
-                JsonUtil.toJson(preTriggerOn.repoHook!!),
+                JsonUtil.toJson(repoHooks),
                 object : TypeReference<List<PreRepositoryHook>>() {}
             )
         } catch (e: MismatchedInputException) {
-            logger.error("Format triggerOn repoHook failed.", e)
+            logger.warn("TriggerMatcher|checkRepoHook|failed", e)
             return emptyList()
         }
         val repoHookList = mutableListOf<String>()
@@ -119,7 +203,13 @@ class TriggerMatcher @Autowired constructor(
         return repoHookList
     }
 
+    fun confirmProjectUseTriggerCache(projectId: String): Boolean {
+        return redisOperation.isMember(STREAM_TRIGGER_CACHE_PROJECTS_KEY, projectId)
+    }
+
     companion object {
+        const val STREAM_TRIGGER_CACHE_PROJECTS_KEY = "stream:trigger.cache:project:list"
+
         private val logger = LoggerFactory.getLogger(TriggerMatcher::class.java)
 
         fun isPushMatch(
