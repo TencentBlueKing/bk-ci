@@ -36,7 +36,7 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 data class WindowsDispatchType(
     @JsonProperty("value") var env: String,
     var systemVersion: String? = ""
-) : DispatchType("$systemVersion", DispatchRouteKeySuffix.MACOS) {
+) : DispatchType("$systemVersion", DispatchRouteKeySuffix.WINDOWS) {
     override fun cleanDataBeforeSave() {
         this.env = this.env.trim()
         this.systemVersion = this.systemVersion?.trim()
@@ -46,5 +46,5 @@ data class WindowsDispatchType(
         env = EnvUtils.parseEnv(env, variables)
     }
 
-    override fun buildType() = BuildType.valueOf(BuildType.MACOS.name)
+    override fun buildType() = BuildType.valueOf(BuildType.WINDOWS.name)
 }
