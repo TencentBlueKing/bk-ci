@@ -178,13 +178,12 @@ const router = new VueRouter({
     routes: routes
 })
 
-router.afterEach(route => {
-    websocket.changeRoute(route)
-})
-
 // 自动携带项目信息
 router.beforeEach((to, from, next) => {
+    // 清除
     websocket.loginOut(from)
+    // 写入
+    websocket.changeRoute(to)
     const params = {
         ...to,
         hash: to.hash || from.hash
