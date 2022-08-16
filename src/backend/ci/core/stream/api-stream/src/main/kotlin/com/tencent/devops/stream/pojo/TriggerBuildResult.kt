@@ -32,11 +32,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("手动触发返回结果")
 data class TriggerBuildResult(
-    @ApiModelProperty("项目ID")
-    @Deprecated("用户有用到，不敢删，新接口不再使用该字段")
-    val projectId: Long? = null,
     @ApiModelProperty("蓝盾项目ID")
-    val projectCode: String,
+    val projectId: String,
     @ApiModelProperty("分支")
     val branch: String,
     @ApiModelProperty("Custom commit message")
