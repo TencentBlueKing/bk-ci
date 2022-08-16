@@ -261,7 +261,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             DateTimeUtil.stringToLocalDate(queryAtomTrendInfoDTO.endTime)!!.atStartOfDay()
         )
         val atomExecutionStatisticsInfos = mutableListOf<AtomExecutionStatisticsInfoDO>()
-        atomStatisticResult.forEach {
+        atomStatisticResult?.forEach {
             val totalExecuteCount = (it[BK_TOTAL_EXECUTE_COUNT_SUM] as BigDecimal).toLong()
             val successExecuteCount = (it[BK_SUCCESS_EXECUTE_COUNT_SUM] as BigDecimal).toLong()
             val avgCostTimeSum = (it[BK_TOTAL_AVG_COST_TIME_SUM] as BigDecimal).toLong()
