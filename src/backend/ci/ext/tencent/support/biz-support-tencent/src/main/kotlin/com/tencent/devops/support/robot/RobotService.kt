@@ -77,6 +77,7 @@ class RobotService @Autowired constructor(
         logger.info("reqData:$reqData")
         val robotCallBack = getCallbackInfo(signature, timestamp, nonce, reqData)
         logger.info("chitId:${robotCallBack.chatId}")
+        logger.info("robotCallBack:$robotCallBack")
         if (robotCallBack.eventType == "enter_chat") {
             // 如为进入机器人单聊, 直接返回空包
             return true
