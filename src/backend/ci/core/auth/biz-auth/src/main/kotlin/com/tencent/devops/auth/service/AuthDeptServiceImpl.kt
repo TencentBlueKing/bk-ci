@@ -355,6 +355,7 @@ class AuthDeptServiceImpl @Autowired constructor(
      * 生成请求url
      */
     private fun getAuthRequestUrl(uri: String): String {
+        logger.info("getAuthRequestUrl bkUserHost is $bkUserHost")
         return if (bkUserHost?.endsWith("/")!!) {
             bkUserHost + uri
         } else {
