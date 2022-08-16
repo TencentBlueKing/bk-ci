@@ -153,8 +153,7 @@ abstract class BaseManualTriggerService @Autowired constructor(
                 "(${TriggerReason.PIPELINE_RUN_ERROR.detail})"
         )
         return TriggerBuildResult(
-            projectId = action.data.eventCommon.gitProjectId.toLong(),
-            projectCode = GitCommonUtils.getCiProjectId(action.data.eventCommon.gitProjectId.toLong()),
+            projectId = GitCommonUtils.getCiProjectId(action.data.eventCommon.gitProjectId.toLong()),
             branch = triggerBuildReq.branch,
             customCommitMsg = triggerBuildReq.customCommitMsg,
             description = triggerBuildReq.description,
