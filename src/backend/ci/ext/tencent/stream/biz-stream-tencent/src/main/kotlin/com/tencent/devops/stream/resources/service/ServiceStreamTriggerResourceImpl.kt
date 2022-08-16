@@ -84,7 +84,7 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
                         eventType = null,
                         inputs = ManualTriggerService.parseInputs(inputs)
                     )
-                ).copy(projectId = null)
+                )
             )
         }
     }
