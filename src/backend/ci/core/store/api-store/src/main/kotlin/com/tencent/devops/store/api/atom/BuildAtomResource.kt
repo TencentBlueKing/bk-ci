@@ -40,7 +40,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_PIPELINE_ATOM"], description = "流水线-插件")
-@Path("/service/pipeline/atoms")
+@Path("/build/pipeline/atoms")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildAtomResource {
