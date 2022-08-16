@@ -255,7 +255,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             }
         }
         val atomExecutionStatisticsInfos = mutableListOf<AtomExecutionStatisticsInfoDO>()
-        atomStatisticResult.forEach {
+        atomStatisticResult?.forEach {
             val totalExecuteCount = (it[BK_TOTAL_EXECUTE_COUNT_SUM] as BigDecimal).toLong()
             val successExecuteCount = (it[BK_SUCCESS_EXECUTE_COUNT_SUM] as BigDecimal).toLong()
             val totalCostTimeSum = (it[BK_TOTAL_COST_TIME_SUM] as BigDecimal).toLong()

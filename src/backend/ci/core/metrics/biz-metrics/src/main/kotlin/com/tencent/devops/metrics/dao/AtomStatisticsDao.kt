@@ -143,12 +143,13 @@ class AtomStatisticsDao {
     fun queryAtomExecuteStatisticsInfo(
         dslContext: DSLContext,
         queryCondition: QueryAtomStatisticsQO
-    ): Result<Record6<String, String, String, BigDecimal, BigDecimal, BigDecimal>> {
+    ): Result<Record6<String, String, String, BigDecimal, BigDecimal, BigDecimal>>? {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val atomCodes = if (!queryCondition.errorTypes.isNullOrEmpty()) {
                 getAtomCodesByErrorType(dslContext, queryCondition)
             } else queryCondition.atomCodes
+            if (atomCodes.isNullOrEmpty()) return null
             val conditions = getConditions(queryCondition, tProjectPipelineLabelInfo, atomCodes)
             val totalCostTimeSum = productSum(AVG_COST_TIME, TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_COST_TIME_SUM)
             val step = dslContext.select(
@@ -200,6 +201,7 @@ class AtomStatisticsDao {
             val atomCodes = if (!queryCondition.errorTypes.isNullOrEmpty()) {
                 getAtomCodesByErrorType(dslContext, queryCondition)
             } else queryCondition.atomCodes
+            if (atomCodes.isNullOrEmpty()) return 0L
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val conditions = getConditions(queryCondition, tProjectPipelineLabelInfo, atomCodes)
             val step = dslContext.selectCount().from(this)
