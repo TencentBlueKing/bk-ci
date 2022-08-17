@@ -45,4 +45,18 @@ object RetryUtils {
             clientRetry(action = action, retryTime = retryTime - 1, retryPeriodMills = retryPeriodMills)
         }
     }
+
+    fun <T> retryAnyException(retryTime: Int = 3, retryPeriodMills: Long = 50, action: () -> T): T {
+        return try {
+            action()
+        } catch (re: Throwable) {
+            if (retryTime - 1 < 0) {
+                throw re
+            }
+            if (retryPeriodMills > 0) {
+                Thread.sleep(retryPeriodMills)
+            }
+            retryAnyException(action = action, retryTime = retryTime - 1, retryPeriodMills = retryPeriodMills)
+        }
+    }
 }
