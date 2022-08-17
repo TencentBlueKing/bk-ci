@@ -82,32 +82,32 @@ class ExpressionParserTest {
         )
         Assertions.assertEquals(
             expected,
-            ExpressionParser.evaluateByMap("fromJSON(depends.job1.outputs.matrix_include)", variables)
+            ExpressionParser.evaluateByMap("fromJSON(depends.job1.outputs.matrix_include)", variables, true)
         )
         Assertions.assertEquals(
             true,
-            ExpressionParser.evaluateByMap("jobs.build[0].steps.runStep.outputs.myoutput == 'build_0'", variables)
+            ExpressionParser.evaluateByMap("jobs.build[0].steps.runStep.outputs.myoutput == 'build_0'", variables, true)
         )
         Assertions.assertEquals(
             true,
-            ExpressionParser.evaluateByMap("jobs.build.0.steps.runStep.outputs.myoutput == 'build_0'", variables)
+            ExpressionParser.evaluateByMap("jobs.build.0.steps.runStep.outputs.myoutput == 'build_0'", variables, true)
         )
         Assertions.assertEquals(
             true,
             ExpressionParser.evaluateByMap(
-                "contains(jobs.build.0.steps.runStep.outputs.myoutput, 'build_0')", variables
+                "contains(jobs.build.0.steps.runStep.outputs.myoutput, 'build_0')", variables, true
             )
         )
         Assertions.assertEquals(
             true,
-            ExpressionParser.evaluateByMap("variables.pipeline_name == '流水线名称'", variables)
+            ExpressionParser.evaluateByMap("variables.pipeline_name == '流水线名称'", variables, true)
         )
         Assertions.assertEquals(
             "p-xxx",
-            ExpressionParser.evaluateByMap("variables.pipeline_id", variables)
+            ExpressionParser.evaluateByMap("variables.pipeline_id", variables, true)
         )
         assertThrows<ExpressionParseException> {
-            ExpressionParser.evaluateByMap("a==a", variables)
+            ExpressionParser.evaluateByMap("a==a", variables, true)
         }
     }
 
