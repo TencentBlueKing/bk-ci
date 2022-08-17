@@ -236,7 +236,9 @@ class TGitPushTriggerHandler(
                 authorName = it.author.name,
                 message = it.message,
                 repoType = ScmType.CODE_TGIT.name,
-                commitTime = commitTime
+                commitTime = commitTime,
+                eventType = CodeEventType.PUSH.name,
+                mrId = null
             )
         }
     }

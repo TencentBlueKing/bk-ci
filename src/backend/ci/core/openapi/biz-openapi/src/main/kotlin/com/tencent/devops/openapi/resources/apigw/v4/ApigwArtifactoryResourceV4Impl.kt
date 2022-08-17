@@ -41,6 +41,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwArtifactoryResourceV4
 import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -58,6 +59,7 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<Url> {
+        logger.info("OPENAPI_ARTIFACTORY_V4|$userId|get user download url|$projectId|$artifactoryType|$path")
         return client.get(ServiceArtifactoryResource::class).downloadUrlForOpenApi(
             userId = userId,
             projectId = projectId,
@@ -76,6 +78,7 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<FileInfo>> {
+        logger.info("OPENAPI_ARTIFACTORY_V4|$userId|search|$projectId|$pipelineId|$buildId|$page|$pageSize")
         val map = mutableMapOf<String, String>()
         map["pipelineId"] = checkPipelineId(projectId, pipelineId, buildId)
         map["buildId"] = buildId
@@ -100,6 +103,10 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
         elementId: String,
         executeCount: String
     ): Result<Url> {
+        logger.info(
+            "OPENAPI_ARTIFACTORY_V4|$userId|get plugin log url|$projectId|$pipelineId|$buildId|$elementId" +
+                "|$executeCount"
+        )
         return client.get(ServiceLogFileResource::class).getPluginLogUrl(
             userId = userId,
             projectId = projectId,
@@ -121,6 +128,10 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<FileInfo>> {
+        logger.info(
+            "OPENAPI_ARTIFACTORY_V4|$userId|list custom files|$projectId|$fullPath|$includeFolder|$deep" +
+                "|$page|$pageSize"
+        )
         return client.get(ServiceArtifactoryResource::class).listCustomFiles(
             userId = userId,
             projectId = projectId,
@@ -141,5 +152,9 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
             throw ParamBlankException("PipelineId is invalid ")
         }
         return pipelineIdFormDB
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwArtifactoryResourceV4Impl::class.java)
     }
 }

@@ -1,7 +1,7 @@
 <template>
-    <bk-sideslider :is-show.sync="show" :quick-close="true" @hidden="hidden" :width="622" :title="isEdit ? 'Edit Credential' : 'Add Credential'">
+    <bk-sideslider :is-show.sync="show" :quick-close="true" @hidden="hidden" :width="622" :title="isEdit ? $t('setting.ticket.editCredential') : $t('setting.ticket.addCredential')">
         <bk-form :model="formData" ref="credentialForm" slot="content" class="credential-form" form-type="vertical" label-width="400">
-            <bk-form-item label="Type" :required="true" property="credentialType" :desc="{ content: computedTicket.desc, width: '400px' }" error-display-type="normal">
+            <bk-form-item :label="$t('type')" :required="true" property="credentialType" :desc="{ content: computedTicket.desc, width: '400px' }" error-display-type="normal">
                 <bk-select v-model="formData.credentialType" :clearable="false" @change="changeCredentialType" :disabled="isEdit">
                     <bk-option v-for="option in ticketTypes"
                         :key="option.id"
@@ -11,20 +11,20 @@
                 </bk-select>
             </bk-form-item>
             <bk-form-item label="Key" :required="true" :rules="[requireRule('Code'), idRule]" property="credentialId" error-display-type="normal">
-                <bk-input v-model="formData.credentialId" placeholder="It is composed of English letters, numbers or underscores (_), no more than 40 words" :disabled="isEdit"></bk-input>
+                <bk-input v-model="formData.credentialId" :placeholder="$t('setting.ticket.credentialIdPlaceholder')" :disabled="isEdit"></bk-input>
             </bk-form-item>
-            <bk-form-item label="Display Name" property="credentialName" :rules="[nameRule]" :desc="{ content: 'When referencing credentials through variables in the pipeline, only referencing by name is supported', width: '400px' }" error-display-type="normal">
-                <bk-input v-model="formData.credentialName" placeholder="It is composed of Chinese characters, English letters, numbers, hyphens (-), underscores (_) or English periods, and no more than 30 characters"></bk-input>
+            <bk-form-item :label="$t('displayName')" property="credentialName" :rules="[nameRule]" error-display-type="normal">
+                <bk-input v-model="formData.credentialName" :placeholder="$t('setting.ticket.credentialIdPlaceholder')"></bk-input>
             </bk-form-item>
             <bk-form-item :label="com.label" :required="com.required" :property="com.id" v-for="com in computedTicket.content" :key="com.id" error-display-type="normal" :rules="com.rules">
                 <bk-input v-model="formData[com.id]" :type="com.type" :placeholder="com.placeholder"></bk-input>
             </bk-form-item>
-            <bk-form-item label="Description" property="credentialRemark">
-                <bk-input type="textarea" v-model="formData.credentialRemark" placeholder="Please enter a credential description"></bk-input>
+            <bk-form-item :label="$t('description')" property="credentialRemark">
+                <bk-input type="textarea" v-model="formData.credentialRemark" :placeholder="$t('descriptionPlaceholder')"></bk-input>
             </bk-form-item>
             <bk-form-item>
-                <bk-button ext-cls="mr5" theme="primary" title="Submit" @click.stop.prevent="submitData" :loading="isLoading">Submit</bk-button>
-                <bk-button ext-cls="mr5" title="Cancel" @click="hidden" :disabled="isLoading">Cancel</bk-button>
+                <bk-button ext-cls="mr5" theme="primary" title="Submit" @click.stop.prevent="submitData" :loading="isLoading">{{$t('submit')}}</bk-button>
+                <bk-button ext-cls="mr5" title="Cancel" @click="hidden" :disabled="isLoading">{{$t('cancel')}}</bk-button>
             </bk-form-item>
         </bk-form>
     </bk-sideslider>
@@ -45,58 +45,58 @@
                 ticketTypes: [
                     {
                         id: 'PASSWORD',
-                        name: 'Password',
-                        desc: 'Used for information that needs to be encrypted and saved in the Tencent CI, such as certificate passwords, fields that need to be encrypted in scripts, etc.',
+                        name: this.$t('setting.ticket.password'),
+                        desc: this.$t('setting.ticket.passwordDesc'),
                         content: [
-                            { id: 'v1', label: 'password', type: 'text', required: true, rules: [this.requireRule('password')], placeholder: 'Please enter the password' }
+                            { id: 'v1', label: this.$t('setting.ticket.password'), type: 'password', required: true, rules: [this.requireRule('password')], placeholder: this.$t('setting.ticket.passwordPlaceholder') }
                         ]
                     },
                     {
                         id: 'MULTI_LINE_PASSWORD',
-                        name: 'Multi-line password',
-                        desc: 'Used for information that needs to be encrypted and saved in the Tencent CI, such as certificate passwords, fields that need to be encrypted in scripts, etc.',
+                        name: this.$t('setting.ticket.multiLinePassword'),
+                        desc: this.$t('setting.ticket.passwordDesc'),
                         content: [
-                            { id: 'v1', label: 'password', type: 'textarea', required: true, rules: [this.requireRule('password')], placeholder: 'Please enter the password' }
+                            { id: 'v1', label: this.$t('setting.ticket.password'), type: 'textarea', required: true, rules: [this.requireRule('password')], placeholder: this.$t('setting.ticket.passwordPlaceholder') }
                         ]
                     },
                     {
                         id: 'USERNAME_PASSWORD',
-                        name: 'User name+password',
-                        desc: 'Used for information that needs to be encrypted and saved in the Tencent CI, such as certificate passwords, fields that need to be encrypted in scripts, etc.',
+                        name: this.$t('setting.ticket.usernamePassword'),
+                        desc: this.$t('setting.ticket.passwordDesc'),
                         content: [
-                            { id: 'v1', label: 'username', type: 'text', placeholder: 'please enter user name' },
-                            { id: 'v2', label: 'password', type: 'text', required: true, rules: [this.requireRule('password')], placeholder: 'Please enter the password' }
+                            { id: 'v1', label: this.$t('setting.ticket.username'), type: 'text', placeholder: this.$t('setting.ticket.usernamePlaceholder') },
+                            { id: 'v2', label: this.$t('setting.ticket.password'), type: 'password', required: true, rules: [this.requireRule('password')], placeholder: this.$t('setting.ticket.passwordPlaceholder') }
                         ]
                     },
                     {
                         id: 'ACCESSTOKEN',
-                        name: 'AccessToken',
-                        desc: 'An access token contains the security information of this login session, which is used to associate the Gitlab type code library',
+                        name: this.$t('setting.ticket.accessToken'),
+                        desc: this.$t('setting.ticket.accessTokenDesc'),
                         content: [
-                            { id: 'v1', label: 'access_token', type: 'text', required: true, rules: [this.requireRule('access_token')], placeholder: 'Please enter AccessToken' }
+                            { id: 'v1', label: this.$t('setting.ticket.accessToken'), type: 'password', required: true, rules: [this.requireRule('access_token')], placeholder: this.$t('setting.ticket.accessTokenDesc') }
                         ]
                     },
                     {
                         id: 'SECRETKEY',
-                        name: 'SecretKey',
-                        desc: 'Used for information that needs to be encrypted and saved in the Tencent CI, such as certificate passwords, fields that need to be encrypted in scripts, etc.',
+                        name: this.$t('setting.ticket.secretKey'),
+                        desc: this.$t('setting.ticket.passwordDesc'),
                         content: [
-                            { id: 'v1', label: 'secretKey', type: 'text', required: true, rules: [this.requireRule('secretKey')], placeholder: 'Please enter SecretKey' }
+                            { id: 'v1', label: this.$t('setting.ticket.secretKey'), type: 'password', required: true, rules: [this.requireRule('secretKey')], placeholder: this.$t('setting.ticket.secretKeyPlaceholder') }
                         ]
                     },
                     {
                         id: 'APPID_SECRETKEY',
-                        name: 'AppId+SecretKey',
-                        desc: 'The key-value pair type used to set the key value, such as the user account password to be filled in by the bugly atom, api call, etc.',
+                        name: this.$t('setting.ticket.appIdSecretKey'),
+                        desc: this.$t('setting.ticket.appIdDesc'),
                         content: [
-                            { id: 'v1', label: 'appId', type: 'text', required: true, rules: [this.requireRule('appId')], placeholder: 'Please enter appId' },
-                            { id: 'v2', label: 'secretKey', type: 'text', required: true, rules: [this.requireRule('secretKey')], placeholder: 'Please enter SecretKey' }
+                            { id: 'v1', label: this.$t('setting.ticket.appId'), type: 'text', required: true, rules: [this.requireRule('appId')], placeholder: this.$t('setting.ticket.appIdPlaceholder') },
+                            { id: 'v2', label: this.$t('setting.ticket.secretKey'), type: 'password', required: true, rules: [this.requireRule('secretKey')], placeholder: this.$t('setting.ticket.secretKeyPlaceholder') }
                         ]
                     },
                     {
                         id: 'SSH_PRIVATEKEY',
-                        name: 'SSH key',
-                        desc: 'SSH contains public and private keys, which are used to associate with SVN type code libraries. For SSH configuration instructions, please refer to the Blue Shield documentation center',
+                        name: this.$t('setting.ticket.sshKey'),
+                        desc: this.$t('setting.ticket.sshKeyDesc'),
                         content: [
                             {
                                 id: 'v1',
@@ -106,48 +106,48 @@
                                 rules: [
                                     {
                                         validator: (val) => (/^(-----BEGIN (RSA|OPENSSH) PRIVATE KEY-----){1}[\s\S]*(-----END (RSA|OPENSSH) PRIVATE KEY-----)$/.test(val)),
-                                        message: 'SSH contains public and private keys, which are used to associate with SVN type code libraries. For SSH configuration instructions, please refer to the Blue Shield documentation center',
+                                        message: this.$t('setting.ticket.sshKeyDesc'),
                                         trigger: 'blur'
                                     },
                                     this.requireRule('privateKey')
                                 ],
-                                placeholder: 'SSH contains public and private keys, which are used to associate with SVN type code libraries. For SSH configuration instructions, please refer to the Blue Shield documentation center'
+                                placeholder: this.$t('setting.ticket.sshKeyDesc')
                             },
-                            { id: 'v2', label: 'passphrase', type: 'text', placeholder: 'Please enter the private key password' }
+                            { id: 'v2', label: this.$t('setting.ticket.passphrase'), type: 'password', placeholder: this.$t('setting.ticket.keyPasswordPlaceholder') }
                         ]
                     },
                     {
                         id: 'TOKEN_SSH_PRIVATEKEY',
-                        name: 'SSH private key + private Token',
-                        desc: 'Used to associate Git type code libraries using ssh',
+                        name: this.$t('setting.ticket.sshKeyToken'),
+                        desc: this.$t('setting.ticket.sshKeyTokenDesc'),
                         content: [
-                            { id: 'v1', label: 'token', type: 'text', required: true, rules: [this.requireRule('token')], placeholder: 'Please enter token' },
+                            { id: 'v1', label: this.$t('setting.ticket.token'), type: 'password', required: true, rules: [this.requireRule('token')], placeholder: this.$t('setting.ticket.tokenPlaceholder') },
                             {
                                 id: 'v2',
-                                label: 'privateKey',
+                                label: this.$t('setting.ticket.privateKey'),
                                 type: 'textarea',
                                 required: true,
                                 rules: [
                                     {
                                         validator: (val) => (/^(-----BEGIN (RSA|OPENSSH) PRIVATE KEY-----){1}[\s\S]*(-----END (RSA|OPENSSH) PRIVATE KEY-----)$/.test(val)),
-                                        message: 'SSH contains public and private keys, which are used to associate with SVN type code libraries. For SSH configuration instructions, please refer to the Blue Shield documentation center',
+                                        message: this.$t('setting.ticket.sshKeyDesc'),
                                         trigger: 'blur'
                                     },
                                     this.requireRule('privateKey')
                                 ],
-                                placeholder: 'SSH contains public and private keys, which are used to associate with SVN type code libraries. For SSH configuration instructions, please refer to the Blue Shield documentation center'
+                                placeholder: this.$t('setting.ticket.sshKeyDesc')
                             },
-                            { id: 'v3', label: 'passphrase', type: 'text', placeholder: 'Please enter the private key password' }
+                            { id: 'v3', label: this.$t('setting.ticket.passphrase'), type: 'password', placeholder: this.$t('setting.ticket.keyPasswordPlaceholder') }
                         ]
                     },
                     {
                         id: 'TOKEN_USERNAME_PASSWORD',
-                        name: 'User password+private token',
-                        desc: 'Used to associate Git type code libraries using http',
+                        name: this.$t('setting.ticket.passwordToken'),
+                        desc: this.$t('setting.ticket.passwordTokenDesc'),
                         content: [
-                            { id: 'v1', label: 'token', type: 'text', required: true, rules: [this.requireRule('token')], placeholder: 'Please enter token' },
-                            { id: 'v2', label: 'username', type: 'text', required: true, rules: [this.requireRule('username')], placeholder: 'please enter user name' },
-                            { id: 'v3', label: 'password', type: 'text', required: true, rules: [this.requireRule('password')], placeholder: 'Please enter the password' }
+                            { id: 'v1', label: this.$t('setting.ticket.token'), type: 'password', required: true, rules: [this.requireRule('token')], placeholder: this.$t('setting.ticket.tokenPlaceholder') },
+                            { id: 'v2', label: this.$t('setting.ticket.username'), type: 'text', required: true, rules: [this.requireRule('username')], placeholder: this.$t('setting.ticket.usernamePlaceholder') },
+                            { id: 'v3', label: this.$t('setting.ticket.password'), type: 'password', required: true, rules: [this.requireRule('password')], placeholder: this.$t('setting.ticket.passwordPlaceholder') }
                         ]
                     }
                 ],
@@ -163,12 +163,12 @@
                 },
                 idRule: {
                     validator: (val) => (/^[a-zA-Z0-9\_]{1,40}$/.test(val)),
-                    message: 'It is composed of English letters, numbers or underscores (_), no more than 40 words',
+                    message: this.$t('setting.ticket.credentialIdPlaceholder'),
                     trigger: 'blur'
                 },
                 nameRule: {
                     validator: (val) => (/^[\u4e00-\u9fa5a-zA-Z0-9\-\.\_]{0,30}$/.test(val)),
-                    message: 'It is composed of Chinese characters, English letters, numbers, hyphens (-), underscores (_) or English periods, no more than 30 characters, only for display',
+                    message: this.$t('setting.ticket.credentialNamePlaceholder'),
                     trigger: 'blur'
                 },
                 isLoading: false
@@ -212,7 +212,7 @@
             requireRule (name) {
                 return {
                     required: true,
-                    message: name + ' is required',
+                    message: name + this.$t('isRequired'),
                     trigger: 'blur'
                 }
             },

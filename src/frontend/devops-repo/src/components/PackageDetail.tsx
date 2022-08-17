@@ -29,7 +29,7 @@ import { useI18n } from 'vue-i18n';
 
 import { useStore } from '@/store';
 import { FETCH_PACKAGE_DETAIL } from '@/store/constants';
-import { useInstallGuide, useRouteParams, useDownloadPackage } from '@/hooks';
+import { useInstallGuide, useRouteParams, useDownloadPackage, useDomain } from '@/hooks';
 import SectionBox from './SectionBox';
 import CodeBox from './CodeBox';
 import OperationMenu from './OperationMenu';
@@ -56,6 +56,8 @@ export default defineComponent({
     const routeParams = useRouteParams();
     const loading = ref(true);
     const packageDetail = ref();
+    const domain = useDomain();
+    console.log(domain);
 
     const basicGridInfo = computed(() => [
       { name: 'version', label: t('version') },

@@ -3,7 +3,7 @@
         <div class="node-overview-chart">
             <div class="part top-left">
                 <div class="info">
-                    <div class="left">{{ $t('environment.nodeInfo.cpuUsage') }}</div>
+                    <div class="left">{{ $t('setting.nodeInfo.cpuUsage') }}</div>
                     <div class="right">
                         <bk-dropdown-menu :align="'right'" ref="cpuDropdown">
                             <div style="cursor: pointer;" slot="dropdown-trigger">
@@ -14,13 +14,13 @@
                             </div>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '1')">{{ $t('environment.nodeInfo.perHour') }}</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '1')">{{ $t('setting.nodeInfo.perHour') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '2')">{{ $t('environment.nodeInfo.perDay') }}</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '2')">{{ $t('setting.nodeInfo.perDay') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '3')">{{ $t('environment.nodeInfo.perWeek') }}</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu_summary', '3')">{{ $t('setting.nodeInfo.perWeek') }}</a>
                                 </li>
                             </ul>
                         </bk-dropdown-menu>
@@ -28,12 +28,12 @@
                 </div>
                 <chart :options="cpuLine" ref="cpuLine1" auto-resize v-show="!isEmptyCpu"></chart>
                 <div class="paas-ci-empty" v-show="isEmptyCpu">
-                    <img :src="calcSrc" :alt="$t('environment.noData')" class="empty-pic">
+                    <img :src="calcSrc" :alt="$t('noData')" class="empty-pic">
                 </div>
             </div>
             <div class="part top-right">
                 <div class="info">
-                    <div class="left">{{ $t('environment.nodeInfo.memoryUsage') }}</div>
+                    <div class="left">{{ $t('setting.nodeInfo.memoryUsage') }}</div>
                     <div class="right">
                         <bk-dropdown-menu :align="'right'" ref="memoryDropdown">
                             <div style="cursor: pointer;" slot="dropdown-trigger">
@@ -44,13 +44,13 @@
                             </div>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '1')">{{ $t('environment.nodeInfo.perHour') }}</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '1')">{{ $t('setting.nodeInfo.perHour') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '2')">{{ $t('environment.nodeInfo.perDay') }}</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '2')">{{ $t('setting.nodeInfo.perDay') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '3')">{{ $t('environment.nodeInfo.perWeek') }}</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '3')">{{ $t('setting.nodeInfo.perWeek') }}</a>
                                 </li>
                             </ul>
                         </bk-dropdown-menu>
@@ -58,14 +58,14 @@
                 </div>
                 <chart :options="memoryLine" ref="memoryLine1" auto-resize v-show="!isEmptyMemory"></chart>
                 <div class="paas-ci-empty" v-show="isEmptyMemory">
-                    <img :src="calcSrc" :alt="$t('environment.noData')" class="empty-pic">
+                    <img :src="calcSrc" :alt="$t('noData')" class="empty-pic">
                 </div>
             </div>
         </div>
         <div class="node-overview-chart">
             <div class="part bottom-left">
                 <div class="info">
-                    <div class="left">{{ $t('environment.nodeInfo.networkIo') }}</div>
+                    <div class="left">{{ $t('setting.nodeInfo.networkIo') }}</div>
                     <div class="right">
                         <bk-dropdown-menu :align="'right'" ref="networkDropdown">
                             <div style="cursor: pointer;" slot="dropdown-trigger">
@@ -76,13 +76,13 @@
                             </div>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '1')">{{ $t('environment.nodeInfo.perHour') }}</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '1')">{{ $t('setting.nodeInfo.perHour') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '2')">{{ $t('environment.nodeInfo.perDay') }}</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '2')">{{ $t('setting.nodeInfo.perDay') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '3')">{{ $t('environment.nodeInfo.perWeek') }}</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('networkDropdown', 'networkToggleRangeStr', 'net', '3')">{{ $t('setting.nodeInfo.perWeek') }}</a>
                                 </li>
                             </ul>
                         </bk-dropdown-menu>
@@ -90,12 +90,12 @@
                 </div>
                 <chart :options="networkLine" ref="networkLine1" auto-resize v-show="!isEmptyNetwork"></chart>
                 <div class="paas-ci-empty" v-show="isEmptyNetwork">
-                    <img :src="calcSrc" :alt="$t('environment.noData')" class="empty-pic">
+                    <img :src="calcSrc" :alt="$t('noData')" class="empty-pic">
                 </div>
             </div>
             <div class="part">
                 <div class="info">
-                    <div class="left">{{ $t('environment.nodeInfo.diskIo') }}</div>
+                    <div class="left">{{ $t('setting.nodeInfo.diskIo') }}</div>
                     <div class="right">
                         <bk-dropdown-menu :align="'right'" ref="storageDropdown">
                             <div style="cursor: pointer;" slot="dropdown-trigger">
@@ -106,13 +106,13 @@
                             </div>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '1')">{{ $t('environment.nodeInfo.perHour') }}</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '1')">{{ $t('setting.nodeInfo.perHour') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '2')">{{ $t('environment.nodeInfo.perDay') }}</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '2')">{{ $t('setting.nodeInfo.perDay') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '3')">{{ $t('environment.nodeInfo.perWeek') }}</a>
+                                    <a href="javascript:;" @click.stop="toggleRange('storageDropdown', 'storageToggleRangeStr', 'io', '3')">{{ $t('setting.nodeInfo.perWeek') }}</a>
                                 </li>
                             </ul>
                         </bk-dropdown-menu>
@@ -120,7 +120,7 @@
                 </div>
                 <chart :options="storageLine" ref="storageLine1" auto-resize v-show="!isEmptyDiskio"></chart>
                 <div class="paas-ci-empty" v-show="isEmptyDiskio">
-                    <img :src="calcSrc" :alt="$t('environment.noData')" class="empty-pic">
+                    <img :src="calcSrc" :alt="$t('noData')" class="empty-pic">
                 </div>
             </div>
         </div>
@@ -147,10 +147,10 @@
                 isEmptyMemory: false,
                 isEmptyNetwork: false,
                 isEmptyDiskio: false,
-                cpuToggleRangeStr: this.$t('environment.nodeInfo.perHour'),
-                memToggleRangeStr: this.$t('environment.nodeInfo.perHour'),
-                networkToggleRangeStr: this.$t('environment.nodeInfo.perHour'),
-                storageToggleRangeStr: this.$t('environment.nodeInfo.perHour'),
+                cpuToggleRangeStr: this.$t('setting.nodeInfo.perHour'),
+                memToggleRangeStr: this.$t('setting.nodeInfo.perHour'),
+                networkToggleRangeStr: this.$t('setting.nodeInfo.perHour'),
+                storageToggleRangeStr: this.$t('setting.nodeInfo.perHour'),
                 cpuLine: nodeOverview.cpu,
                 memoryLine: nodeOverview.memory,
                 networkLine: nodeOverview.network,
@@ -167,10 +167,10 @@
         created () {
             bus.$off('refreshCharts')
             bus.$on('refreshCharts', () => {
-                this.fetchData('cpu_summary', this.cpuToggleRangeStr === this.$t('environment.nodeInfo.perHour') ? '1' : this.cpuToggleRangeStr === this.$t('environment.nodeInfo.perDay') ? '2' : '3')
-                this.fetchData('mem', this.memToggleRangeStr === this.$t('environment.nodeInfo.perHour') ? '1' : this.memToggleRangeStr === this.$t('environment.nodeInfo.perDay') ? '2' : '3')
-                this.fetchData('net', this.networkToggleRangeStr === this.$t('environment.nodeInfo.perHour') ? '1' : this.networkToggleRangeStr === this.$t('environment.nodeInfo.perDay') ? '2' : '3')
-                this.fetchData('io', this.storageToggleRangeStr === this.$t('environment.nodeInfo.perHour') ? '1' : this.storageToggleRangeStr === this.$t('environment.nodeInfo.perDay') ? '2' : '3')
+                this.fetchData('cpu_summary', this.cpuToggleRangeStr === this.$t('setting.nodeInfo.perHour') ? '1' : this.cpuToggleRangeStr === this.$t('setting.nodeInfo.perDay') ? '2' : '3')
+                this.fetchData('mem', this.memToggleRangeStr === this.$t('setting.nodeInfo.perHour') ? '1' : this.memToggleRangeStr === this.$t('setting.nodeInfo.perDay') ? '2' : '3')
+                this.fetchData('net', this.networkToggleRangeStr === this.$t('setting.nodeInfo.perHour') ? '1' : this.networkToggleRangeStr === this.$t('setting.nodeInfo.perDay') ? '2' : '3')
+                this.fetchData('io', this.storageToggleRangeStr === this.$t('setting.nodeInfo.perHour') ? '1' : this.storageToggleRangeStr === this.$t('setting.nodeInfo.perDay') ? '2' : '3')
             })
         },
         mounted () {
@@ -182,11 +182,11 @@
         methods: {
             toggleRange (dropdownRef, toggleRangeStr, idx, range) {
                 if (range === '1') {
-                    this[toggleRangeStr] = this.$t('environment.nodeInfo.perHour')
+                    this[toggleRangeStr] = this.$t('setting.nodeInfo.perHour')
                 } else if (range === '2') {
-                    this[toggleRangeStr] = this.$t('environment.nodeInfo.perDay')
+                    this[toggleRangeStr] = this.$t('setting.nodeInfo.perDay')
                 } else if (range === '3') {
-                    this[toggleRangeStr] = this.$t('environment.nodeInfo.perWeek')
+                    this[toggleRangeStr] = this.$t('setting.nodeInfo.perWeek')
                 }
 
                 this.$refs[dropdownRef].hide()
@@ -218,7 +218,7 @@
                 }
 
                 ref && ref.showLoading({
-                    text: this.$t('environment.loading'),
+                    text: this.$t('setting.loading'),
                     color: '#30d878',
                     maskColor: 'rgba(255, 255, 255, 0.8)'
                 })
@@ -387,12 +387,6 @@
                         theme
                     })
                 }
-            },
-            
-            $t (message) {
-                const arr = message.split('.')
-                const str = arr[arr.length - 1] || message
-                return str.replace(/^\S/, s => s.toUpperCase())
             }
         }
     }

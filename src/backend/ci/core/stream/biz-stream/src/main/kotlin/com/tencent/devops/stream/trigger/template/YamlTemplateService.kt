@@ -79,27 +79,28 @@ class YamlTemplateService @Autowired constructor(
             if (targetRepo == null) {
                 val content = extraParameters.getYamlContent(templateDirectory + path)
 
-                if (content.isBlank()) {
-                    throw YamlBlankException(templateDirectory + path)
+                if (content.content.isBlank()) {
+                    throw YamlBlankException(templateDirectory + path, content.ref)
                 }
 
-                schemaCheck(templateDirectory + path, content, templateType)
+                schemaCheck(templateDirectory + path, content.content, templateType)
 
-                return ScriptYmlUtils.formatYaml(content)
+                return ScriptYmlUtils.formatYaml(content.content)
             }
             // 获取目标库模板，但没有填写凭证token信息，使用开启人的
             if (targetRepo?.credentials?.personalAccessToken.isNullOrBlank()) {
+                val ref = targetRepo?.ref ?: streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                    gitProjectKey = targetRepo!!.repository,
+                    action = extraParameters,
+                    getProjectInfo = extraParameters.api::getGitProjectInfo
+                )!!.defaultBranch!!
                 val content = extraParameters.api.getFileContent(
                     cred = extraParameters.getGitCred(),
                     gitProjectId = targetRepo!!.repository,
                     fileName = templateDirectory + path,
-                    ref = targetRepo?.ref ?: streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                        gitProjectKey = targetRepo!!.repository,
-                        action = extraParameters,
-                        getProjectInfo = extraParameters.api::getGitProjectInfo
-                    )!!.defaultBranch!!,
+                    ref = ref,
                     retry = ApiRequestRetryInfo(true)
-                ).ifBlank { throw YamlBlankException(templateDirectory + path, targetRepo?.repository) }
+                ).ifBlank { throw YamlBlankException(templateDirectory + path, ref, targetRepo?.repository) }
 
                 schemaCheck(templateDirectory + path, content, templateType)
 
@@ -122,18 +123,19 @@ class YamlTemplateService @Autowired constructor(
             } else {
                 key
             }
+            val ref = targetRepo?.ref ?: streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                gitProjectKey = targetRepo?.repository!!,
+                action = extraParameters,
+                getProjectInfo = extraParameters.api::getGitProjectInfo,
+                cred = extraParameters.getGitCred(personToken)
+            )!!.defaultBranch!!
             val content = extraParameters.api.getFileContent(
                 cred = extraParameters.getGitCred(personToken = personToken),
                 gitProjectId = targetRepo?.repository!!,
                 fileName = templateDirectory + path,
-                ref = targetRepo?.ref ?: streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                    gitProjectKey = targetRepo?.repository!!,
-                    action = extraParameters,
-                    getProjectInfo = extraParameters.api::getGitProjectInfo,
-                    cred = extraParameters.getGitCred(personToken)
-                )!!.defaultBranch!!,
+                ref = ref,
                 retry = ApiRequestRetryInfo(true)
-            ).ifBlank { throw YamlBlankException(templateDirectory + path, targetRepo?.repository) }
+            ).ifBlank { throw YamlBlankException(templateDirectory + path, ref, targetRepo?.repository) }
 
             // 针对模板替换时，如果类型为空就不校验
             schemaCheck(templateDirectory + path, content, templateType)

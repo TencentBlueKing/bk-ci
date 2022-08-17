@@ -110,12 +110,12 @@ func (server *Server) Start() error {
 
 // Run brings up the server
 func Run(conf *config.ServerConfig) error {
-	if !conf.DisableFileLock {
-		if !lock() {
-			return types.ErrFileLock
-		}
-		defer unlock()
-	}
+	// if !conf.DisableFileLock {
+	// 	if !lock() {
+	// 		return types.ErrFileLock
+	// 	}
+	// 	defer unlock()
+	// }
 
 	// if err := common.SavePid(conf.ProcessConfig); err != nil {
 	// 	blog.Errorf("save pid failed: %v", err)

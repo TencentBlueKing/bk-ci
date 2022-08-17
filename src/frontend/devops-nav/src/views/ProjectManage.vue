@@ -287,7 +287,7 @@
 
         async fetchAllProjects () {
             this.isDataLoading = true
-            await this.getProjects(true)
+            await this.getProjects()
             this.isDataLoading = false
         }
 

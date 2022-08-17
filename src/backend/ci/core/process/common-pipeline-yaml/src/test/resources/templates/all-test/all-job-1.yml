@@ -1,0 +1,37 @@
+parameters:
+- name: mutex-label
+  type: string
+- name: mutex-queue-length
+  type: number
+  default: 0
+- name: mutex-timeout-minutes
+  type: number
+  default: 10
+
+jobs:
+  all-job-1:
+    env:
+      output_content: "all-job-1 [基本语法] 执行完成"
+    name: all-job-1
+    steps:
+    - run: 123
+  all-job-1-2:
+    name: 互斥组放弃测试
+    mutex:
+      label: ${{parameters.mutex-label}}
+      # queue-length: ${{parameters.mutex-label}}     # [非必填]队列长度，默认为0（若资源已被占用，执行失败）
+      # timeout-minutes: 10 # [非必填]排队超时时间，默认为10分钟，不超过 480 分钟
+    steps:
+    - run: |
+          echo 123
+    continue-on-error: true
+  all-job-1-3:
+    name: 互斥组等待测试
+    mutex:
+      label: mutex-2
+      queue-length: ${{parameters.mutex-queue-length}}     # [非必填]队列长度，默认为0（若资源已被占用，执行失败）
+      timeout-minutes: ${{parameters.mutex-timeout-minutes}} # [非必填]排队超时时间，默认为10分钟，不超过 480 分钟
+    steps:
+    - run: |
+          echo 123
+    continue-on-error: true

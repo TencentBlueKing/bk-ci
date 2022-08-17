@@ -30,9 +30,13 @@ package com.tencent.bkrepo.common.service.feign
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JAutoConfiguration
 import org.springframework.cloud.openfeign.FeignClientsConfiguration
+import org.springframework.context.annotation.Configuration
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 
 /**
  * 需要配置FeignClientsConfiguration在Resilience4JAutoConfiguration之后配置feign才会使用resilience4j进行熔断隔离
  */
+@Configuration
+@ConditionalOnClass(FeignClientsConfiguration::class)
 @AutoConfigureAfter(Resilience4JAutoConfiguration::class)
 class CustomFeignClientsConfiguration: FeignClientsConfiguration()

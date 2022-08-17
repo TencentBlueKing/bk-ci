@@ -182,8 +182,9 @@
                     pageSize: this.defaultPaging.limit,
                     classifyCode: classifyCode
                 }).then(res => {
-                    this.atomList = res.data.records || []
-                    this.defaultPaging.count = res.data.count
+                    const data = res.data || {}
+                    this.atomList = data.records || []
+                    this.defaultPaging.count = data.count || 0
                 })
             },
 

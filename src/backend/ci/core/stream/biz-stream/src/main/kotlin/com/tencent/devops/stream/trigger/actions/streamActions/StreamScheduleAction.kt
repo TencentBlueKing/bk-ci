@@ -49,6 +49,7 @@ import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
+import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.pojo.enums.toGitState
@@ -126,13 +127,16 @@ class StreamScheduleAction(
         return emptyList()
     }
 
-    override fun getYamlContent(fileName: String): String {
-        return api.getFileContent(
-            cred = this.getGitCred(),
-            gitProjectId = data.getGitProjectId(),
-            fileName = fileName,
+    override fun getYamlContent(fileName: String): YamlContent {
+        return YamlContent(
             ref = data.eventCommon.branch,
-            retry = ApiRequestRetryInfo(true)
+            content = api.getFileContent(
+                cred = this.getGitCred(),
+                gitProjectId = data.getGitProjectId(),
+                fileName = fileName,
+                ref = data.eventCommon.branch,
+                retry = ApiRequestRetryInfo(true)
+            )
         )
     }
 

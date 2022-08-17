@@ -14,6 +14,7 @@ import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.pojo.CheckType
+import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 
@@ -55,16 +56,19 @@ class StreamDeleteAction(
             action = gitAction,
             gitProjectId = data.getGitProjectId(),
             ref = data.context.defaultBranch
-        ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
+        ).map { (name, blobId) -> YamlPathListEntry(name, CheckType.NO_NEED_CHECK, data.context.defaultBranch, blobId) }
     }
 
-    override fun getYamlContent(fileName: String): String {
-        return api.getFileContent(
-            cred = gitAction.getGitCred(),
-            gitProjectId = data.getGitProjectId(),
-            fileName = fileName,
+    override fun getYamlContent(fileName: String): YamlContent {
+        return YamlContent(
             ref = data.context.defaultBranch!!,
-            retry = ApiRequestRetryInfo(true)
+            content = api.getFileContent(
+                cred = gitAction.getGitCred(),
+                gitProjectId = data.getGitProjectId(),
+                fileName = fileName,
+                ref = data.context.defaultBranch!!,
+                retry = ApiRequestRetryInfo(true)
+            )
         )
     }
 

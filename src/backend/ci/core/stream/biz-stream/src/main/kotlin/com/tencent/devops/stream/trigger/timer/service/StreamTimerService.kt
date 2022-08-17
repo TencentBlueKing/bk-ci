@@ -197,7 +197,7 @@ class StreamTimerService @Autowired constructor(
                 channelCode = try {
                     ChannelCode.valueOf(channel)
                 } catch (e: IllegalArgumentException) {
-                    logger.warn("Unkown channel code", e)
+                    logger.warn("StreamTimerService|convert|Unkown channel code", e)
                     return null
                 },
                 eventId = eventId,

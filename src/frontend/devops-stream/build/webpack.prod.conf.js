@@ -16,7 +16,6 @@ import bundleAnalyzer from 'webpack-bundle-analyzer'
 import config from './config'
 import { assetsPath } from './util'
 import baseConf from './webpack.base.conf'
-import manifest from '../static/lib-manifest.json'
 import ReplaceCssStaticUrl from './replace-css-static-url-plugin'
 
 const prodConf = merge(baseConf, {
@@ -128,13 +127,8 @@ const prodConf = merge(baseConf, {
     plugins: [
         new webpack.DefinePlugin(config.build.env),
 
-        new webpack.DllReferencePlugin({
-            context: __dirname,
-            manifest: manifest
-        }),
-
         new HtmlWebpackPlugin({
-            filename: 'index.html',
+            filename: 'frontend#stream#index.html',
             template: join(__dirname, '..', '/index.html'),
             inject: true,
             minify: {

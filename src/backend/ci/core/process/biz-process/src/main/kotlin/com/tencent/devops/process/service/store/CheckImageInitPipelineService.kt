@@ -248,7 +248,8 @@ class CheckImageInitPipelineService @Autowired constructor(
             pipelineSettingFacadeService.saveSetting(
                 userId = userId,
                 setting = setting,
-                checkPermission = false
+                checkPermission = false,
+                dispatchPipelineUpdateEvent = false
             )
         }
         logger.info("createPipeline result is:$pipelineId")

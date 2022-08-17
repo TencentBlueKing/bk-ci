@@ -1,23 +1,23 @@
 <template>
-    <bk-sideslider :is-show.sync="show" :quick-close="true" @hidden="hidden" :width="622" :title="isEdit ? 'Edit experience group' : 'Add experience group'">
+    <bk-sideslider :is-show.sync="show" :quick-close="true" @hidden="hidden" :width="622" :title="isEdit ? $t('setting.userGroup.editGroup') : $t('setting.userGroup.addGroup')">
         <bk-form :model="formData" ref="groupForm" slot="content" class="group-form" form-type="vertical" :label-width="400">
-            <bk-form-item label="Name" :required="true" :rules="[requireRule('Name'), nameRule]" property="name" error-display-type="normal">
+            <bk-form-item :label="$t('name')" :required="true" :rules="[requireRule('Name'), nameRule]" property="name" error-display-type="normal">
                 <bk-input v-model="formData.name" placeholder="No more than 10 characters"></bk-input>
             </bk-form-item>
-            <bk-form-item label="users" property="innerUsers" error-display-type="normal">
+            <bk-form-item :label="$t('setting.userGroup.innerUsers')" property="innerUsers" error-display-type="normal">
                 <bk-input
                     v-model="formData.innerUsers"
                     class="user-select-item"
                     style="height: 100px"
-                    placeholder="Please enter users"
+                    :placeholder="$t('setting.userGroup.innerUsersPlaceholder')"
                 ></bk-input>
             </bk-form-item>
-            <bk-form-item label="Description" property="remark">
-                <bk-input type="textarea" v-model="formData.remark" placeholder="Please enter a group description"></bk-input>
+            <bk-form-item :label="$t('description')" property="remark">
+                <bk-input type="textarea" v-model="formData.remark" :placeholder="$t('descriptionPlaceholder')"></bk-input>
             </bk-form-item>
             <bk-form-item>
-                <bk-button ext-cls="mr5" theme="primary" title="Submit" @click.stop.prevent="submitData" :loading="isLoading">Submit</bk-button>
-                <bk-button ext-cls="mr5" title="Cancel" @click="hidden" :disabled="isLoading">Cancel</bk-button>
+                <bk-button ext-cls="mr5" theme="primary" title="Submit" @click.stop.prevent="submitData" :loading="isLoading">{{$t('submit')}}</bk-button>
+                <bk-button ext-cls="mr5" title="Cancel" @click="hidden" :disabled="isLoading">{{$t('cancel')}}</bk-button>
             </bk-form-item>
         </bk-form>
     </bk-sideslider>
@@ -83,7 +83,7 @@
             requireRule (name) {
                 return {
                     required: true,
-                    message: name + ' is required',
+                    message: name + this.$t('isRequired'),
                     trigger: 'blur'
                 }
             },

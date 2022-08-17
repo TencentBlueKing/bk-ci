@@ -89,6 +89,7 @@ enum class CallBackEvent {
     DELETE_PIPELINE,
     CREATE_PIPELINE,
     UPDATE_PIPELINE,
+    STREAM_ENABLED,
     RESTORE_PIPELINE,
     BUILD_START,
     BUILD_END,
@@ -104,6 +105,13 @@ data class PipelineEvent(
     val pipelineName: String,
     val userId: String,
     val updateTime: Long
+)
+
+data class StreamEnabledEvent(
+    val userId: String,
+    val gitProjectId: Long,
+    val gitProjectUrl: String,
+    val enable: Boolean
 )
 
 data class BuildEvent(

@@ -34,9 +34,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.log.service.LogPermissionService
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 
-class StreamLogPermissionService @Autowired constructor(
+class StreamLogPermissionService constructor(
     val client: Client,
     private val tokenCheckService: ClientTokenService
 ) : LogPermissionService {

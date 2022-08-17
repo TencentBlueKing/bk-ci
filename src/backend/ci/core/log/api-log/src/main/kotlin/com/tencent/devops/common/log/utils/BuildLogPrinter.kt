@@ -28,12 +28,13 @@
 package com.tencent.devops.common.log.utils
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.log.api.print.ServiceLogPrintResource
 import com.tencent.devops.log.meta.Ansi
-import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.common.log.pojo.enums.LogType
 import org.slf4j.LoggerFactory
 
+@Suppress("LongParameterList", "TooManyFunctions")
 class BuildLogPrinter(
     private val client: Client
 ) {
@@ -58,8 +59,8 @@ class BuildLogPrinter(
                     executeCount = executeCount
                 )
             )
-        } catch (e: Exception) {
-            logger.error("[$buildId]|addLine error|message=$message", e)
+        } catch (ignore: Exception) {
+            logger.error("[$buildId]|addLine error|message=$message", ignore)
         }
     }
 
@@ -69,8 +70,8 @@ class BuildLogPrinter(
                 buildId = buildId,
                 logMessages = logMessages
             )
-        } catch (e: Exception) {
-            logger.error("[$buildId]|addLines error|logMessages=$logMessages", e)
+        } catch (ignore: Exception) {
+            logger.error("[$buildId]|addLines error|logMessages=$logMessages", ignore)
         }
     }
 
@@ -126,8 +127,8 @@ class BuildLogPrinter(
                     executeCount = executeCount
                 )
             )
-        } catch (e: Exception) {
-            logger.error("[$buildId]|addErrorLine error|message=$message", e)
+        } catch (ignore: Exception) {
+            logger.error("[$buildId]|addErrorLine error|message=$message", ignore)
         }
     }
 
@@ -151,8 +152,33 @@ class BuildLogPrinter(
                     executeCount = executeCount
                 )
             )
-        } catch (e: Exception) {
-            logger.error("[$buildId]|addDebugLine error|message=$message", e)
+        } catch (ignore: Exception) {
+            logger.error("[$buildId]|addDebugLine error|message=$message", ignore)
+        }
+    }
+
+    fun addWarnLine(
+        buildId: String,
+        message: String,
+        tag: String,
+        jobId: String? = null,
+        executeCount: Int,
+        subTag: String? = null
+    ) {
+        try {
+            genLogPrintPrintResource().addLogLine(
+                buildId = buildId,
+                logMessage = genLogMessage(
+                    message = "$LOG_WARN_FLAG${message.replace("\n", "\n$LOG_WARN_FLAG")}",
+                    tag = tag,
+                    subTag = subTag,
+                    jobId = jobId,
+                    logType = LogType.DEBUG,
+                    executeCount = executeCount
+                )
+            )
+        } catch (ignore: Exception) {
+            logger.error("[$buildId]|addWarnLine error|message=$message", ignore)
         }
     }
 
@@ -221,8 +247,28 @@ class BuildLogPrinter(
                 jobId = jobId ?: "",
                 executeCount = executeCount
             )
-        } catch (e: Exception) {
-            logger.error("[$buildId]|stopLog fail", e)
+        } catch (ignore: Exception) {
+            logger.error("[$buildId]|stopLog fail", ignore)
+        }
+    }
+
+    fun startLog(
+        buildId: String,
+        tag: String?,
+        jobId: String?,
+        executeCount: Int? = null,
+        subTag: String? = null
+    ) {
+        try {
+            genLogPrintPrintResource().addLogStatus(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId ?: "",
+                executeCount = executeCount
+            )
+        } catch (ignore: Exception) {
+            logger.error("[$buildId]|stopLog fail", ignore)
         }
     }
 
@@ -254,7 +300,6 @@ class BuildLogPrinter(
 
         private const val LOG_ERROR_FLAG = "##[error]"
 
-        @Suppress("UNUSED")
         private const val LOG_WARN_FLAG = "##[warning]"
     }
 }

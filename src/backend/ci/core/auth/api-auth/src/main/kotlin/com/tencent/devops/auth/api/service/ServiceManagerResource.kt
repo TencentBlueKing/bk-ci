@@ -42,7 +42,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_MANAGER"], description = "权限校验--超级管理员")
-@Path("/service/auth/manager")
+@Path("/open/service/auth/manager")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceManagerResource {

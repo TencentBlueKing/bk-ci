@@ -1,11 +1,11 @@
 <template>
     <section>
-        <span class="review-title">Manual Approvals</span>
-        <span class="review-subtitle">Approval description</span>
+        <span class="review-title">{{$t('pipeline.manualApprovals')}}</span>
+        <span class="review-subtitle">{{$t('pipeline.approveDesc')}}</span>
         <section :class="{ 'review-desc': true, 'show-more': isShowMore }">{{ desc }}</section>
         <bk-button text title="primary" @click="isShowMore = !isShowMore" v-if="isShowMoreButton">
-            <span v-if="!isShowMore" class="opt-button">More<i class="bk-icon icon-angle-down"></i></span>
-            <span v-else class="opt-button">Collapse<i class="bk-icon icon-angle-up"></i></span>
+            <span v-if="!isShowMore" class="opt-button">{{$t('more')}}<i class="bk-icon icon-angle-down"></i></span>
+            <span v-else class="opt-button">{{$t('collapse')}}<i class="bk-icon icon-angle-up"></i></span>
         </bk-button>
     </section>
 </template>

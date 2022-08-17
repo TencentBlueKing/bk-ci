@@ -32,7 +32,6 @@ import com.tencent.bkrepo.common.security.permission.Principal
 import com.tencent.bkrepo.common.security.permission.PrincipalType
 import com.tencent.bkrepo.common.service.util.ResponseBuilder
 import com.tencent.bkrepo.repository.job.DeletedNodeCleanupJob
-import com.tencent.bkrepo.repository.job.FileReferenceCleanupJob
 import com.tencent.bkrepo.repository.job.NodeDeletedCorrectionJob
 import com.tencent.bkrepo.repository.job.PackageDownloadsMigrationJob
 import com.tencent.bkrepo.repository.job.PackageVersionCorrectionJob
@@ -54,7 +53,6 @@ class SystemJobController(
     private val storageInstanceMigrationJob: StorageInstanceMigrationJob,
     private val rootNodeCleanupJob: RootNodeCleanupJob,
     private val deletedNodeCleanupJob: DeletedNodeCleanupJob,
-    private val fileReferenceCleanupJob: FileReferenceCleanupJob,
     private val nodeDeletedCorrectionJob: NodeDeletedCorrectionJob,
     private val packageDownloadsMigrationJob: PackageDownloadsMigrationJob,
     private val packageVersionCorrectionJob: PackageVersionCorrectionJob,
@@ -113,12 +111,6 @@ class SystemJobController(
     @PostMapping("/cleanup/deletedNode")
     fun cleanupDeletedNode(): Response<Void> {
         deletedNodeCleanupJob.start()
-        return ResponseBuilder.success()
-    }
-
-    @PostMapping("/cleanup/fileReference")
-    fun cleanupFileReference(): Response<Void> {
-        fileReferenceCleanupJob.start()
         return ResponseBuilder.success()
     }
 

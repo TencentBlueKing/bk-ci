@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
@@ -37,6 +38,7 @@ import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 /**
  * @version 1.0
@@ -127,9 +129,36 @@ class ControlUtilsTest : TestBase() {
                 variables = variables,
                 buildId = buildId,
                 runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
-                customCondition = "a==a"
+                customCondition = "key3=='un'"
             )
         )
+        Assertions.assertFalse(
+            ControlUtils.checkJobSkipCondition(
+                conditions = conditions,
+                variables = variables,
+                buildId = buildId,
+                runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
+                customCondition = "key3==key3"
+            )
+        )
+        Assertions.assertFalse(
+            ControlUtils.checkJobSkipCondition(
+                conditions = conditions,
+                variables = variables,
+                buildId = buildId,
+                runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
+                customCondition = "true==true"
+            )
+        )
+        assertThrows<ExpressionParseException> {
+            ControlUtils.checkJobSkipCondition(
+                conditions = conditions,
+                variables = variables,
+                buildId = buildId,
+                runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
+                customCondition = "a==a"
+            )
+        }
     }
 
     @Test

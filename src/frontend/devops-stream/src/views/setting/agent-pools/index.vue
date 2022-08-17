@@ -1,23 +1,22 @@
 <template>
     <article class="agent-pools" @scroll.passive="mainScroll" v-bkloading="{ isLoading: isLoadingSysPools }">
-        <h3 :class="{ 'pool-title': true, 'fix-top': scrollTop > 60 && scrollTop < 370 }">Default agent pools</h3>
+        <h3 :class="{ 'pool-title': true, 'fix-top': scrollTop > 60 && scrollTop < 370 }">{{$t('setting.agent.defaultPool')}}</h3>
         <section class="agent-pools-container">
             <agent-pool-card class="agent-pool" :editable="false" v-for="pool in systemPools" :key="pool.envHashId" :pool="pool"></agent-pool-card>
         </section>
 
         <h3 :class="{ 'pool-title': true, 'fix-top': scrollTop > 370 }">
-            Self-hosted agent pools
-            <bk-button @click="showAddPool" class="add-pool" theme="primary" size="small" v-if="thirdPools.length">Add Self-hosted Agent Pool</bk-button>
+            {{$t('setting.agent.selfPool')}}
+            <bk-button @click="showAddPool" class="add-pool" theme="primary" size="small" v-if="thirdPools.length">{{$t('setting.agent.addSelfPool')}}</bk-button>
         </h3>
         <section class="agent-pools-container" v-bkloading="{ isLoading: isLoadingThirdPools }">
             <agent-pool-card class="agent-pool" @refresh="getThirdPool" v-for="pool in thirdPools" :key="pool.envHashId" :pool="pool"></agent-pool-card>
             <section v-if="thirdPools.length <= 0" class="table-empty">
-                <h3>No self-hosted agent pools yet</h3>
-                <h5>Agent pools is consisted of one or more Agents</h5>
-                <bk-button theme="primary" @click="showAddPool">Add Self-hosted Agent Pool</bk-button>
+                <h3>{{$t('setting.agent.emptySelfPoolTitle')}}</h3>
+                <h5>{{$t('setting.agent.emptySelfPoolTips')}}</h5>
+                <bk-button theme="primary" @click="showAddPool">{{$t('setting.agent.addSelfPool')}}</bk-button>
             </section>
         </section>
-
         <add-pool :show.sync="isShowAddPool" @refresh="getThirdPool"></add-pool>
     </article>
 </template>
@@ -96,7 +95,7 @@
 <style lang="postcss" scoped>
     .agent-pools {
         overflow-y: auto;
-        height: calc(100vh - 60px);
+        height: calc(100vh - 61px);
         padding: 0 16px 16px;
         margin: 0;
         width: 100%;
