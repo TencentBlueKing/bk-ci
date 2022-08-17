@@ -64,7 +64,7 @@
             </form-field>
             <form-field
                 :label="$t('editPage.assignResource')"
-                v-if="buildResourceType !== 'MACOS' && !isPublicResourceType && containerModalId && !showImagePublicTypeList.includes(buildResourceType)"
+                v-if="buildResourceType !== 'MACOS' && buildResourceType !== 'WINDOWS' && !isPublicResourceType && containerModalId && !showImagePublicTypeList.includes(buildResourceType)"
                 :is-error="errors.has('buildResource')"
                 :error-msg="errors.first('buildResource')"
                 :desc="buildResourceType === 'THIRD_PARTY_AGENT_ENV' ? this.$t('editPage.thirdSlaveTips') : ''"
@@ -87,6 +87,13 @@
                     name="buildResource"
                 />
             </form-field>
+
+            <!-- windows公共构建机类型 -->
+            <template v-if="buildResourceType === 'WINDOWS'">
+                <form-field :label="$t('editPage.winSystemVersion')" :required="true" :is-error="errors.has('systemVersion')" :error-msg="errors.first(`systemVersion`)">
+                    <vuex-input :handle-change="changeBuildResourceWithoutEnv" :value="systemVersion" :disabled="!editable" class="bk-image" v-validate.initial="'required'" name="systemVersion" />
+                </form-field>
+            </template>
 
             <template v-if="buildResourceType === 'MACOS'">
                 <form-field :label="$t('editPage.macSystemVersion')" :required="true" :is-error="errors.has('systemVersion')" :error-msg="errors.first(`systemVersion`)">
