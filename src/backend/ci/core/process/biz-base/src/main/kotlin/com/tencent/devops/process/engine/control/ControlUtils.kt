@@ -307,7 +307,7 @@ object ControlUtils {
     ): Boolean {
         return if (!customCondition.isNullOrBlank()) {
             try {
-                val expressionResult = ExpressionParser.evaluateByMap(customCondition, variables,false)
+                val expressionResult = ExpressionParser.evaluateByMap(customCondition, variables, false)
                 logger.info(
                     "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
                         "|result=$expressionResult"
