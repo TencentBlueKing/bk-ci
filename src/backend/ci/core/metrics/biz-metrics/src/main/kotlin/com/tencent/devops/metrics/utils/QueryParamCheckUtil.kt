@@ -82,10 +82,21 @@ object QueryParamCheckUtil {
 
     fun checkDateInterval(startTime: String, endTime: String) {
         val metricsConfig = MetricsConfig()
-        // 目前仅支持6个月的数据查询
+        // 目前仅支持6个月内的数据查询
         val startDate = DateTimeUtil.stringToLocalDate(startTime)
         val endDate = DateTimeUtil.stringToLocalDate(endTime)
         if ((startDate!!.until(endDate, ChronoUnit.DAYS)) > metricsConfig.queryDaysMax) {
+            throw ErrorCodeException(
+                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
+                params = arrayOf("${metricsConfig.queryDaysMax}")
+            )
+        }
+        val currentDate = LocalDate.now()
+        if (startDate.isBefore(currentDate) && ((startDate.until(
+                currentDate,
+                ChronoUnit.DAYS
+            )) > metricsConfig.queryDaysMax)
+        ) {
             throw ErrorCodeException(
                 errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
                 params = arrayOf("${metricsConfig.queryDaysMax}")
