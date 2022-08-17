@@ -91,7 +91,6 @@ object QueryParamCheckUtil {
                 params = arrayOf("${metricsConfig.queryDaysMax}")
             )
         }
-        val currentDate = LocalDate.now()
     }
 
     fun getErrorTypeName(errorType: Int): String {
