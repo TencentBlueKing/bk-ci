@@ -14,6 +14,7 @@ import com.tencent.devops.stream.api.service.v1.GitCIPipelineResource
 import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.stream.api.service.ServiceGitCIProjectResource
 import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
+import com.tencent.devops.stream.pojo.OpenapiTriggerReq
 import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.openapi.GitCIBasicSetting
@@ -50,6 +51,22 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
             projectId = "git_$gitProjectId",
             pipelineId = pipelineId,
             streamTriggerBuildReq = streamTriggerBuildReq
+        )
+    }
+
+    override fun openapiTrigger(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        triggerBuildReq: OpenapiTriggerReq
+    ): Result<TriggerBuildResult> {
+        return client.get(ServiceStreamTriggerResource::class).openapiTrigger(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            triggerBuildReq = triggerBuildReq
         )
     }
 
