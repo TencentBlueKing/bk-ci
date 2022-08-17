@@ -9,6 +9,7 @@ package command
 
 import (
 	"fmt"
+
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/disttask"
 )
@@ -36,6 +37,16 @@ var (
 	projectNeedIncreaseCpu []CpuStats
 	projectNeedDecreaseCpu []CpuStats
 	projectCpuReasonable   []CpuStats
+
+	packDir string = ""
+
+	taskMapUE = map[string]map[string]string{
+		"4.27.2": {
+			"linux":   "",
+			"windows": "disttask-62c3a74cfcbf7948167040c6_ue4-1660551798-ztjfg",
+			"darwin":  "",
+		},
+	}
 )
 
 // const vars
@@ -65,6 +76,9 @@ var (
 	ErrNoWork            = fmt.Errorf("no work in this task")
 	ErrScopeFormatWrong  = fmt.Errorf("scope invalid,use default scope ")
 	ErrNotInStats        = fmt.Errorf("not in stats")
+	ErrUEVersionRequired = fmt.Errorf("UE version need to be declared")
+	ErrDirNotExist       = fmt.Errorf("download dir not exist")
+	ErrOSRequired        = fmt.Errorf("os required")
 )
 
 type ProjectInfo struct {

@@ -10,9 +10,13 @@ package command
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -45,6 +49,8 @@ func action(c *commandCli.Context) error {
 		return getConfig(c)
 	case CommandGetWorkStats:
 		return getCPUStats(c)
+	case CommandCompileTest:
+		return compileTest(c)
 	default:
 		return fmt.Errorf("unknown command[%s]", c.Command.Name)
 	}
@@ -278,7 +284,7 @@ func calculateConcurrency(task disttask.TableTask) (float64, error) {
 
 func getWorkList(taskID string) ([]disttask.TableWorkStats, error) {
 	url := gatewayHost + GetProjectWorkerStatsURI + taskID + "&selector=job_stats,success"
-
+	//fmt.Println(url)
 	resp, err := http.Get(url)
 	if err != nil {
 		blog.Errorf("get failed :%v", err)
@@ -368,4 +374,158 @@ func printHeader() {
 	fmt.Printf("%d projects need to increase request_cpu:\n", len(projectNeedIncreaseCpu))
 	fmt.Printf("%d projects need to decrease request_cpu:\n", len(projectNeedDecreaseCpu))
 	fmt.Printf("\n")
+}
+
+func compileTest(c *commandCli.Context) error {
+	if !c.IsSet(FlagUE) {
+		return ErrUEVersionRequired
+	}
+
+	dir := filepath.Join(dcUtil.GetRuntimeDir(), "tmp")
+	_ = os.MkdirAll(dir, os.ModePerm)
+
+	count, _ := strconv.Atoi(c.String(FlagCnt))
+
+	if count <= 0 {
+		return fmt.Errorf("commands cnt(%d) wrong", count)
+	}
+
+	preCmds, compileCmds, err := getCommands(c)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("preCmds(%d),compileCmds(%d)", len(preCmds), len(compileCmds))
+	timeStats := runCmds(preCmds, c)
+	fmt.Println(timeStats)
+	return nil
+}
+
+func getCommands(c *commandCli.Context) ([][]string, [][]string, error) {
+	ueVersion := c.String(FlagUE)
+	os := runtime.GOOS
+	submap, ok := taskMapUE[ueVersion]
+	if !ok {
+		return nil, nil, fmt.Errorf("UE version(%s) is wrong or not supported", ueVersion)
+	}
+	task, ok := submap[os]
+	if !ok {
+		return nil, nil, fmt.Errorf("OS(%s) wrong, need to be linux/windows/darwin", os)
+	}
+	task = "disttask-62c3a74cfcbf7948167040c6_ue4-1660551798-ztjfg"
+	worklist, err := getWorkList(task)
+	if err != nil {
+		return nil, nil, fmt.Errorf("get task(%s) cmds failed,err:(%v)", task, err)
+	}
+	var preCmds [][]string
+	var compileCmds [][]string
+	//var i int = 0
+	for _, work := range worklist {
+		jobStatsData := string(compress.ToSourceCode(work.JobStats))
+		var jobstats []sdk.ControllerJobStats
+		err = json.Unmarshal([]byte(jobStatsData), &jobstats)
+		if err != nil || len(jobstats) == 0 {
+			fmt.Printf("err in work(%s),err:%v\n", work.WorkID, err)
+			continue
+		}
+		for _, job := range jobstats {
+			res, _ := handle(c, job.OriginArgs)
+			tail := res[len(res)-1]
+			if strings.Contains(tail, "showIncludes") {
+				tail = res[len(res)-2]
+			}
+
+			//if runtime.GOOS == "windows" {
+			if strings.Contains(tail, ".h") {
+				preCmds = append(preCmds, res)
+			}
+			if strings.Contains(tail, ".obj") {
+				compileCmds = append(compileCmds, res)
+			}
+			/*} else if runtime.GOOS == "linux" {
+				if strings.Contains(tail, ".o") {
+					preCmds = append(preCmds, res)
+				}
+				if strings.Contains(tail, ".h") {
+					compileCmds = append(compileCmds, res)
+				}
+			}*/
+		}
+	}
+	return preCmds, compileCmds, nil
+}
+
+// 替换路径、打包文件
+func handle(c *commandCli.Context, cmd []string) ([]string, error) {
+	var res []string
+	for _, s := range cmd {
+		if index := strings.Index(s, ":\\"); index > 0 {
+			src := s[index-1:]
+			//dir := filepath.Join(dcUtil.GetRuntimeDir(), "tmp")
+			des := "C:\\Users\\michealhe\\.bk_dist\\tmp" + s[:index+1]
+			if c.IsSet(FlagPack) {
+				copyFile(src, des)
+			}
+			dir := "C:\\Users\\michealhe\\.bk_dist\\" + "tmp\\"
+			ss := strings.ReplaceAll(s, s[index-1:index+1], dir)
+			res = append(res, ss)
+		}
+	}
+	return res, nil
+}
+
+func runCmds(Cmds [][]string, c *commandCli.Context) []float64 {
+	count, _ := strconv.Atoi(c.String(FlagCnt))
+	maxccy, _ := strconv.Atoi(c.String(FlagCcy))
+	ch := make(chan time.Duration, 10)
+
+	var index int = 0
+	var ccy int = 0
+	var timeStats []float64
+	for {
+		if !(index < count && index < len(Cmds)) {
+			break
+		}
+		if ccy < maxccy {
+			ccy++
+			index++
+			go runCmd(ch, Cmds[index-1])
+		}
+		select {
+		case t := <-ch:
+			ccy--
+			timeStats = append(timeStats, t.Seconds())
+		default:
+			continue
+		}
+	}
+	return timeStats
+}
+func runCmd(ch chan time.Duration, s []string) {
+	start := time.Now()
+	cmd := exec.Command(s[0], s[1:]...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Printf("combined out with err:\n%s\n", string(out))
+	}
+	fmt.Printf("combined out:\n%s\n", string(out))
+	ch <- time.Since(start)
+}
+func copyFile(src, des string) (written int64, err error) {
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return 0, err
+	}
+	defer srcFile.Close()
+
+	fi, _ := srcFile.Stat()
+	perm := fi.Mode()
+
+	desFile, err := os.OpenFile(des, os.O_RDWR|os.O_CREATE|os.O_TRUNC, perm) //复制源文件的所有权限
+	if err != nil {
+		return 0, err
+	}
+	defer desFile.Close()
+
+	return io.Copy(desFile, srcFile)
 }

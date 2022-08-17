@@ -17,14 +17,21 @@ import (
 )
 
 const (
-	FlagProjectID      = "project_id"
-	FlagBoosterType    = "booster_type"
-	FlagAllInfo        = "all"
-	FlagUseTestAdderss = "test"
-	FlagDay            = "within_days"
-
+	FlagProjectID       = "project_id"
+	FlagBoosterType     = "booster_type"
+	FlagAllInfo         = "all"
+	FlagUseTestAdderss  = "test"
+	FlagDay             = "within_days"
+	FlagUE              = "ue"
+	FlagCnt             = "count"
+	FlagOs              = "os"
+	FlagPack            = "pack"
+	FlagCcy             = "concurrency"
+	FlagRunDir          = "run_dir"
+	FlagPackDir         = "pack_dir"
 	CommandGetConfig    = "get_config"
 	CommandGetWorkStats = "get_stats"
+	CommandCompileTest  = "compile_test"
 )
 
 func Run(ct ClientType) {
@@ -75,6 +82,34 @@ var (
 			Usage: "print all the task_id",
 		},
 	}
+	compileTestFlags = []commandCli.Flag{
+		commandCli.StringFlag{
+			Name:  "concurrency, ccy",
+			Value: "2",
+			Usage: "concurrency of running commands",
+		},
+		commandCli.StringFlag{
+			Name:  "pack",
+			Usage: "weather pack toolchain and input file",
+		},
+		commandCli.StringFlag{
+			Name:  "count , c",
+			Value: "10",
+			Usage: "counts of command to run",
+		},
+		commandCli.StringFlag{
+			Name:  "ue",
+			Usage: "ue version to test",
+		},
+		commandCli.StringFlag{
+			Name:  "run_dir",
+			Usage: "declare a absolute path to run cmd",
+		},
+		commandCli.StringFlag{
+			Name:  "pack_dir",
+			Usage: "declare a absolute path to pack file",
+		},
+	}
 )
 
 // GetApp get app by type
@@ -99,6 +134,13 @@ func GetApp(ct ClientType) *commandCli.App {
 			Usage:   "get work stats by project id",
 			Action:  Action,
 			Flags:   getstatsFlags,
+		},
+		{
+			Name:    CommandCompileTest,
+			Aliases: []string{"compiletest"},
+			Usage:   "run complile commands to test",
+			Action:  Action,
+			Flags:   compileTestFlags,
 		},
 	}
 
