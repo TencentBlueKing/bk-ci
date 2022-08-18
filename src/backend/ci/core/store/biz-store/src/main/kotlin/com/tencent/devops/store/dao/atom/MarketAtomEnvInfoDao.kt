@@ -75,7 +75,7 @@ class MarketAtomEnvInfoDao {
                         UUIDUtil.generate(),
                         atomId,
                         atomEnvRequest.pkgName,
-                        atomEnvRequest.pkgPath,
+                        atomEnvRequest.pkgRepoPath,
                         atomEnvRequest.language,
                         atomEnvRequest.minVersion,
                         atomEnvRequest.target,
@@ -245,7 +245,7 @@ class MarketAtomEnvInfoDao {
     fun updateMarketAtomEnvInfo(dslContext: DSLContext, atomId: String, atomEnvRequest: AtomEnvRequest) {
         with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
             val baseStep = dslContext.update(this)
-                .set(PKG_PATH, atomEnvRequest.pkgPath)
+                .set(PKG_PATH, atomEnvRequest.pkgRepoPath)
             if (!atomEnvRequest.language.isNullOrEmpty()) {
                 baseStep.set(LANGUAGE, atomEnvRequest.language)
             }
