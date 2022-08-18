@@ -131,4 +131,26 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_MANAGER_WHITELIST` (
    KEY `idx_manager` (`MANAGER_ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+-- ----------------------------
+-- Table structure for T_AUTH_MANAGER_APPROVAL
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AUTH_MANAGER_APPROVAL`
+(
+    `ID`           int(11)                             NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+    `USER_ID`      varchar(64)                         NOT NULL COMMENT '用户ID',
+    `MANAGER_ID`   int                                 NOT NULL COMMENT '管理员权限ID',
+    `EXPIRED_TIME` timestamp                           NOT NULL COMMENT '权限过期时间',
+    `START_TIME`   timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '审批单生效时间',
+    `END_TIME`     timestamp                           NOT NULL COMMENT '审批单失效时间',
+    `STATUS`       int(2)                              NOT NULL COMMENT '发送状态 0-审核流程中 ,1-用户拒绝续期,2-用户同意续期,3-审批人拒绝续期，4-审批人同意续期',
+    `CREATE_TIME`  timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `UPDATE_TIME`  timestamp                           NOT NULL COMMENT '修改时间',
+    INDEX `IDX_USER_ID` (`USER_ID`),
+    INDEX `IDX_MANAGER_ID` (`MANAGER_ID`),
+    PRIMARY KEY (`ID`)
+) ENGINE = InnoDB
+DEFAULT CHARSET = utf8mb4 COMMENT '蓝盾超级管理员权限续期审核表';
+
+
 SET FOREIGN_KEY_CHECKS = 1;

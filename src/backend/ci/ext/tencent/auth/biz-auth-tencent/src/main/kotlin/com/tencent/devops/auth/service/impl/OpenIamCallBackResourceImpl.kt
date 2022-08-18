@@ -62,10 +62,6 @@ class OpenIamCallBackResourceImpl @Autowired constructor(
         )
     }
 
-    override fun test(): Boolean {
-        return true
-    }
-
     companion object {
         val logger = LoggerFactory.getLogger(OpenIamCallBackResourceImpl::class.java)
     }

@@ -75,6 +75,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
 
     override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
         val sendRequest = mutableListOf<WeweokRobotBaseMessage>()
+        val attachments = weworkNotifyTextMessage.attachments
         val content = if (checkMessageSize(weworkNotifyTextMessage.message)) {
             weworkNotifyTextMessage.message.replace("\\n", "\n")
         } else {
@@ -108,7 +109,8 @@ class WeworkRobotServiceImpl @Autowired constructor(
                                 markdown = WeworkRobotContentMessage(
                                     content = content,
                                     mentionedList = null,
-                                    mentionedMobileList = null
+                                    mentionedMobileList = null,
+                                    attachments = attachments
                                 ),
                                 postId = null
                             )

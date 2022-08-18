@@ -24,23 +24,10 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.pojo
 
-import com.tencent.devops.common.notify.enums.WeworkReceiverType
-import com.tencent.devops.common.notify.enums.WeworkTextType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+package com.tencent.devops.auth.pojo.enum
 
-@ApiModel("企业微信机器人消息")
-data class WeworkRobotNotifyMessage(
-    @ApiModelProperty("接收人Id", required = true)
-    val receivers: String,
-    @ApiModelProperty("接收人类型", required = true)
-    val receiverType: WeworkReceiverType,
-    @ApiModelProperty("文本内容类型", required = true)
-    var textType: WeworkTextType,
-    @ApiModelProperty("文本内容", required = true)
-    var message: String,
-    @ApiModelProperty("attachments消息事件", required = false)
-    var attachments: WeworkMarkdownAttachment? = null
-)
+enum class ApprovalType(private val type: String) {
+    AGREE("agree"),
+    REFUSE("refuse")
+}

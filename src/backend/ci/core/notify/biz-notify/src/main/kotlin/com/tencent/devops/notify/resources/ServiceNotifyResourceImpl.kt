@@ -127,7 +127,8 @@ class ServiceNotifyResourceImpl @Autowired constructor(
             receivers = weworkRobotNotifyMessage.receivers.split(",|;".toRegex()),
             receiverType = weworkRobotNotifyMessage.receiverType,
             textType = weworkRobotNotifyMessage.textType,
-            message = weworkRobotNotifyMessage.message
+            message = weworkRobotNotifyMessage.message,
+            attachments = weworkRobotNotifyMessage.attachments
         )
         weworkService.sendTextMessage(weworkNotifyTextMessage)
         return Result(true)

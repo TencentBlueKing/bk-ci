@@ -24,23 +24,30 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package com.tencent.devops.notify.pojo
 
-import com.tencent.devops.common.notify.enums.WeworkReceiverType
-import com.tencent.devops.common.notify.enums.WeworkTextType
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("企业微信机器人消息")
-data class WeworkRobotNotifyMessage(
-    @ApiModelProperty("接收人Id", required = true)
-    val receivers: String,
-    @ApiModelProperty("接收人类型", required = true)
-    val receiverType: WeworkReceiverType,
-    @ApiModelProperty("文本内容类型", required = true)
-    var textType: WeworkTextType,
-    @ApiModelProperty("文本内容", required = true)
-    var message: String,
-    @ApiModelProperty("attachments消息事件", required = false)
-    var attachments: WeworkMarkdownAttachment? = null
+@ApiModel("企业微信机器人markdown动作")
+data class WeworkMarkdownAction(
+    @ApiModelProperty("按钮名字", required = true)
+    val name: String,
+    @ApiModelProperty("按钮文案", required = true)
+    val text: String,
+    @ApiModelProperty("动作类型", required = true)
+    val type: String,
+    @ApiModelProperty("按钮值", required = true)
+    val value: String,
+    @ApiModelProperty("按钮点击后显示值", required = true)
+    @JsonProperty("replace_text")
+    val replaceText: String,
+    @ApiModelProperty("按钮边框颜色", required = true)
+    @JsonProperty("border_color")
+    val borderColor: String,
+    @ApiModelProperty("按钮文本颜色", required = true)
+    @JsonProperty("text_color")
+    val textColor: String
 )

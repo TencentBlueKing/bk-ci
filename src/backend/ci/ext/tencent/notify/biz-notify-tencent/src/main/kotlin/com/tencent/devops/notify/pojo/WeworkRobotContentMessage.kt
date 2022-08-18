@@ -51,5 +51,8 @@ data class WeworkRobotContentMessage(
      */
     @JsonProperty("mentioned_mobile_list")
     @ApiModelProperty("手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人", name = "mentioned_mobile_list")
-    val mentionedMobileList: Set<String>?
+    val mentionedMobileList: Set<String>?,
+
+    @ApiModelProperty("attachments消息事件", required = false)
+    val attachments: WeworkMarkdownAttachment? = null,
 )

@@ -24,23 +24,18 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package com.tencent.devops.notify.pojo
 
-import com.tencent.devops.common.notify.enums.WeworkReceiverType
-import com.tencent.devops.common.notify.enums.WeworkTextType
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("企业微信机器人消息")
-data class WeworkRobotNotifyMessage(
-    @ApiModelProperty("接收人Id", required = true)
-    val receivers: String,
-    @ApiModelProperty("接收人类型", required = true)
-    val receiverType: WeworkReceiverType,
-    @ApiModelProperty("文本内容类型", required = true)
-    var textType: WeworkTextType,
-    @ApiModelProperty("文本内容", required = true)
-    var message: String,
-    @ApiModelProperty("attachments消息事件", required = false)
-    var attachments: WeworkMarkdownAttachment? = null
+@ApiModel("企业微信机器人attachment事件消息")
+data class WeworkMarkdownAttachment(
+    @ApiModelProperty("回调id", required = true)
+    @JsonProperty("callback_id")
+    val callbackId: String,
+    @ApiModelProperty("动作集合", required = true)
+    val actions: List<WeworkMarkdownAction>
 )
