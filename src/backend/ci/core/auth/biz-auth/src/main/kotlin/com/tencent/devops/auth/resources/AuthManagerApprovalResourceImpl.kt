@@ -29,6 +29,7 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.manager.AuthManagerApprovalResource
 import com.tencent.devops.auth.pojo.enum.ApprovalType
+import com.tencent.devops.auth.service.AuthManagerApprovalService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
@@ -36,13 +37,14 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class AuthManagerApprovalResourceImpl @Autowired constructor(
+    val authManagerApprovalService: AuthManagerApprovalService
 ) : AuthManagerApprovalResource {
     override fun userRenewalAuth(
         approvalId: Int,
         approvalType: ApprovalType
     ): Result<Boolean> {
         logger.info("userRenewalAuth : approvalId = $approvalId | approvalType = $approvalType")
-        return Result(true)
+        return Result(authManagerApprovalService.userRenewalAuth(approvalId,approvalType))
     }
 
     override fun managerApproval(
@@ -50,7 +52,7 @@ class AuthManagerApprovalResourceImpl @Autowired constructor(
         approvalType: ApprovalType
     ): Result<Boolean> {
         logger.info("managerApproval : approvalId = $approvalId | approvalType = $approvalType")
-        return Result(true)
+        return Result(authManagerApprovalService.managerApproval(approvalId,approvalType))
     }
 
     companion object {
