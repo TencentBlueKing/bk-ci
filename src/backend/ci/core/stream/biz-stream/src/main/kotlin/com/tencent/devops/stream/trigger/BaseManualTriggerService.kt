@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.enums.needInput
 import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
