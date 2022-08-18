@@ -72,24 +72,31 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-      - name: Gradle Build Backend Service
+      # - name: Gradle Build Backend Service
+      #   working-directory: src/backend/ci
+      #   run: |
+      #     ./gradlew clean test build :core:worker:worker-agent:shadowJar \
+      #     -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root
+
+      # - name: Gradle Build Turbo Service
+      #   working-directory: src/backend/turbo
+      #   run: |
+      #     ./gradlew clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
+      #     # copy jar to ci release dir
+      #     cp -vf release/boot-turbo.jar ${{ github.workspace }}/src/backend/ci/release/
+      #     # copy turbo service config template to ci templates dir
+      #     cp -vrf support-files/templates/* ${{ github.workspace }}/support-files/templates/
+
+      # - name: Create artifact - Step1:init
+      #   run: |
+      #     true  # 暂无init需求, 保留此步骤.
+
+      ## TODO 放到下面
+      - name: Gradle Build Backend Service -- Docker Image
         working-directory: src/backend/ci
         run: |
-          ./gradlew clean test build :core:worker:worker-agent:shadowJar \
+          ./gradlew clean test build :core:worker:worker-agent:shadowJar -Ddevops.assemblyMode=K8S \
           -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root
-
-      - name: Gradle Build Turbo Service
-        working-directory: src/backend/turbo
-        run: |
-          ./gradlew clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
-          # copy jar to ci release dir
-          cp -vf release/boot-turbo.jar ${{ github.workspace }}/src/backend/ci/release/
-          # copy turbo service config template to ci templates dir
-          cp -vrf support-files/templates/* ${{ github.workspace }}/support-files/templates/
-
-      - name: Create artifact - Step1:init
-        run: |
-          true  # 暂无init需求, 保留此步骤.
 
       - name: Create artifact - Step2:get Agent
         uses: actions/download-artifact@v1
@@ -103,75 +110,82 @@ jobs:
           name: frontend
           path: src/frontend/frontend
 
-      - name: Create artifact - Step4:make package
+      # - name: Create artifact - Step4:make package
+      #   id: create-artifact
+      #   run: |
+      #     version="$(basename $GITHUB_REF)"
+      #     echo "::set-output name=version::$version"
+      #     ci_ms_wip="sign,monitoring" ci_pkg_dir=/dev/shm/ci ./scripts/packager-ci.sh "$version" bkci-slim.tar.gz
+
+      - name: Create artifact - Docker Image
         id: create-artifact
         run: |
           version="$(basename $GITHUB_REF)"
           echo "::set-output name=version::$version"
-          ci_ms_wip="sign,monitoring" ci_pkg_dir=/dev/shm/ci ./scripts/packager-ci.sh "$version" bkci-slim.tar.gz
+          ci_ms_wip="sign,monitoring" ci_pkg_dir=/dev/shm/ci-docker ./scripts/packager-ci.sh "$version" bkci-docker.tar.gz
 
       - uses: docker-practice/actions-setup-docker@master
-      - name: Create Docker Image - Step5:make docker image
+      - name: Create Docker Image
         id: make-docker-image
         working-directory: docker-images/core/ci
         run: |
           version="$(basename $GITHUB_REF)"
-          docker login --username=$DOCKER_USER --password=$DOCKER_PASS $DOCKER_HOST
+          docker login --username=${{ secrets.DOCKER_USER }} --password=${{ secrets.DOCKER_PASS }} ${{ secrets.DOCKER_HOST }}
           ./0.get_release.sh
-          ./1.build_gateway_image.sh $DOCKER_IMAGE_REGISTRY $version
-          ./2.build_backend_image.sh $DOCKER_IMAGE_REGISTRY $version
+          ./1.build_gateway_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
+          ./2.build_backend_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: bk-ci ${{ github.ref }}
-          draft: true
-          prerelease: true
+      # - name: Create Release
+      #   id: create_release
+      #   uses: actions/create-release@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: ${{ github.ref }}
+      #     release_name: bk-ci ${{ github.ref }}
+      #     draft: true
+      #     prerelease: true
 
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bkci-slim.tar.gz
-          asset_name: bkci-slim.tar.gz
-          asset_content_type: application/gzip
+      # - name: Upload Release Asset
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./bkci-slim.tar.gz
+      #     asset_name: bkci-slim.tar.gz
+      #     asset_content_type: application/gzip
 
-      - name: download codecc
-        uses: actions/download-artifact@v1
-        with:
-          name: codecc
-          path: ./
+      # - name: download codecc
+      #   uses: actions/download-artifact@v1
+      #   with:
+      #     name: codecc
+      #     path: ./
 
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bkcodecc-slim.tar.gz
-          asset_name: bkcodecc-slim.tar.gz
-          asset_content_type: application/gzip
-      - name: download bkrepo
-        uses: actions/download-artifact@v1
-        with:
-          name: bkrepo
-          path: ./
+      # - name: Upload Release Asset
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./bkcodecc-slim.tar.gz
+      #     asset_name: bkcodecc-slim.tar.gz
+      #     asset_content_type: application/gzip
+      # - name: download bkrepo
+      #   uses: actions/download-artifact@v1
+      #   with:
+      #     name: bkrepo
+      #     path: ./
 
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bkrepo-slim.tar.gz
-          asset_name: bkrepo-slim.tar.gz
-          asset_content_type: application/gzip
+      # - name: Upload Release Asset
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./bkrepo-slim.tar.gz
+      #     asset_name: bkrepo-slim.tar.gz
+      #     asset_content_type: application/gzip
 
   codecc:
     name: Build CodeCC
