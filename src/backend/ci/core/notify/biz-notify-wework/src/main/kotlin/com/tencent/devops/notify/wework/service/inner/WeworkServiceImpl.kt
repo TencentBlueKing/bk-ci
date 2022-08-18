@@ -40,7 +40,6 @@ import com.tencent.devops.notify.ROUTE_WEWORK
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
-import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
 import com.tencent.devops.notify.service.WeworkService
 import com.tencent.devops.notify.wework.config.WeworkConfiguration
 import com.tencent.devops.notify.wework.pojo.AbstractSendMessageRequest

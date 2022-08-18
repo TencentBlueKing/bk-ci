@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,16 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-event"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:auth:api-auth"))
-    api(project(":core:auth:model-auth"))
-    api(project(":core:notify:api-notify"))
-    testImplementation(project(":core:common:common-test"))
-    api(project(":core:project:api-project"))
-    api("com.github.ben-manes.caffeine:caffeine")
-}
+package com.tencent.devops.notify.pojo
+
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("企业微信机器人markdown动作")
+data class WeworkMarkdownAction(
+    @ApiModelProperty("按钮名字", required = true)
+    val name: String,
+    @ApiModelProperty("按钮文案", required = true)
+    val text: String,
+    @ApiModelProperty("动作类型", required = true)
+    val type: String,
+    @ApiModelProperty("按钮值", required = true)
+    val value: String,
+    @ApiModelProperty("按钮点击后显示值", required = true)
+    @JsonProperty("replace_text")
+    val replaceText: String,
+    @ApiModelProperty("按钮边框颜色", required = true)
+    @JsonProperty("border_color")
+    val borderColor: String,
+    @ApiModelProperty("按钮文本颜色", required = true)
+    @JsonProperty("text_color")
+    val textColor: String
+)
