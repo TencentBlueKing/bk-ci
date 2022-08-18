@@ -565,7 +565,7 @@ class PipelineListFacadeService @Autowired constructor(
                         permissionFlag = false,
                         page = page - totalAvailablePipelinePage,
                         pageSize = pageSize,
-                        offsetNum = lastPageRemainNum.toInt()
+                        pageOffsetNum = lastPageRemainNum.toInt()
                     )
                 }
             } else {
@@ -627,7 +627,7 @@ class PipelineListFacadeService @Autowired constructor(
         permissionFlag: Boolean? = null,
         page: Int? = null,
         pageSize: Int? = null,
-        offsetNum: Int? = 0
+        pageOffsetNum: Int? = 0
     ) {
         val pipelineRecords = pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
             dslContext = dslContext,
@@ -642,7 +642,7 @@ class PipelineListFacadeService @Autowired constructor(
             permissionFlag = permissionFlag,
             page = page,
             pageSize = pageSize,
-            offsetNum = offsetNum
+            pageOffsetNum = pageOffsetNum
         )
         pipelineList.addAll(
             buildPipelines(
