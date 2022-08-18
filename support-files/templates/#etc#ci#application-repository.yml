@@ -42,7 +42,7 @@ scm:
     github:
       clientId: __BK_CI_REPOSITORY_GITHUB_CLIENT_ID__
       clientSecret: __BK_CI_REPOSITORY_GITHUB_CLIENT_SECRET__
-      callbackUrl: __BK_CI_PUBLIC_URL__/repository/api/external/github/oauth/callback
+      callbackUrl: __BK_CI_PUBLIC_URL__/__BK_CI_REPOSITORY_GITHUB_SERVER__/api/external/github/oauth/callback
       redirectUrl: __BK_CI_PUBLIC_URL__/console/codelib
       appUrl: https://github.com/apps/__BK_CI_REPOSITORY_GITHUB_APP__
       signSecret: __BK_CI_REPOSITORY_GITHUB_SIGN_SECRET__
