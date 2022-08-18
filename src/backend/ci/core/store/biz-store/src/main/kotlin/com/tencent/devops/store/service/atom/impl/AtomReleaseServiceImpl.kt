@@ -354,7 +354,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         var atomId = if (atomPackageSourceType == AtomPackageSourceTypeEnum.UPLOAD) {
             redisOperation.get("$ATOM_UPLOAD_ID_KEY_PREFIX:$atomCode:$version")
-                ?: throw  ErrorCodeException(errorCode = USER_UPLOAD_PACKAGE_INVALID)
+                ?: throw ErrorCodeException(errorCode = USER_UPLOAD_PACKAGE_INVALID)
         } else {
             UUIDUtil.generate()
         }
