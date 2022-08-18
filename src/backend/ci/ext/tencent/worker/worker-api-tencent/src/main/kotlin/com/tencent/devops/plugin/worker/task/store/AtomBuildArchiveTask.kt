@@ -139,7 +139,7 @@ class AtomBuildArchiveTask : ITask() {
         val request = AtomEnvRequest(
             userId = userId,
             pkgName = packageName,
-            pkgPath = destPath,
+            pkgRepoPath = destPath,
             language = language,
             minVersion = atomEnv.minVersion,
             target = target ?: atomEnv.target,

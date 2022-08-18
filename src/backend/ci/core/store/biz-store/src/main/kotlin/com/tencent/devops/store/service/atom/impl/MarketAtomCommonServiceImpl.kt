@@ -315,6 +315,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     @Suppress("UNCHECKED_CAST")
     override fun parseBaseTaskJson(
         taskJsonStr: String,
+        projectCode: String,
         atomCode: String,
         version: String,
         userId: String
@@ -408,9 +409,11 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 } else {
                     osDefaultEnvNumMap[osName] = increaseDefaultEnvNum
                 }
+                val pkgLocalPath = osExecutionInfoMap[KEY_PACKAGE_PATH] as? String ?: ""
                 val atomEnvRequest = AtomEnvRequest(
                     userId = userId,
-                    pkgPath = osExecutionInfoMap[KEY_PACKAGE_PATH] as? String ?: "",
+                    pkgLocalPath = pkgLocalPath,
+                    pkgRepoPath = getPkgRepoPath(pkgLocalPath, projectCode, atomCode, version),
                     language = language,
                     minVersion = executionInfoMap[KEY_MINIMUM_VERSION] as? String,
                     target = osExecutionInfoMap[KEY_TARGET] as String,
@@ -442,9 +445,11 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     params = arrayOf(KEY_TARGET)
                 )
             }
+            val pkgLocalPath = executionInfoMap[KEY_PACKAGE_PATH] as? String ?: ""
             val atomEnvRequest = AtomEnvRequest(
                 userId = userId,
-                pkgPath = executionInfoMap[KEY_PACKAGE_PATH] as? String ?: "",
+                pkgLocalPath = pkgLocalPath,
+                pkgRepoPath = getPkgRepoPath(pkgLocalPath, projectCode, atomCode, version),
                 language = language,
                 minVersion = executionInfoMap[KEY_MINIMUM_VERSION] as? String,
                 target = executionInfoMap[KEY_TARGET] as String,
@@ -474,6 +479,13 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         }
         return GetAtomConfigResult("0", arrayOf(""), taskDataMap, atomEnvRequests)
     }
+
+    private fun getPkgRepoPath(pkgLocalPath: String, projectCode: String, atomCode: String, version: String) =
+        if (pkgLocalPath.isNotBlank()) {
+            "$projectCode/$atomCode/$version/$pkgLocalPath"
+        } else {
+            ""
+        }
 
     override fun checkEditCondition(atomCode: String): Boolean {
         // 查询插件的最新记录

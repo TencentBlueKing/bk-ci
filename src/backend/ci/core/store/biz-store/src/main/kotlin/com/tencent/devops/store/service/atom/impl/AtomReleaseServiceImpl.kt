@@ -732,6 +732,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         return marketAtomCommonService.parseBaseTaskJson(
             taskJsonStr = taskJsonStr,
+            projectCode = projectCode,
             atomCode = atomCode,
             version = atomVersion,
             userId = userId

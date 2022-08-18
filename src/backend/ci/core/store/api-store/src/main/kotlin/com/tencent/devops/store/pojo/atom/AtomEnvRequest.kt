@@ -36,8 +36,10 @@ data class AtomEnvRequest(
     val userId: String,
     @ApiModelProperty("插件包名", required = false)
     var pkgName: String? = "",
-    @ApiModelProperty("安装包路径", required = true)
-    var pkgPath: String,
+    @ApiModelProperty("安装包位于本地的路径", required = false)
+    var pkgLocalPath: String? = "",
+    @ApiModelProperty("安装包位于仓库的路径", required = true)
+    var pkgRepoPath: String = "",
     @ApiModelProperty("插件开发语言", required = false)
     val language: String?,
     @ApiModelProperty("支持插件开发语言的最低版本", required = false)
