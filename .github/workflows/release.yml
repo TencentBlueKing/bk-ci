@@ -115,10 +115,11 @@ jobs:
         id: make-docker-image
         working-directory: docker-images/core/ci
         run: |
+          version="$(basename $GITHUB_REF)"
           docker login --username=$DOCKER_USER --password=$DOCKER_PASS $DOCKER_HOST
-          bash -c 0.get_release.sh
-          bash -c 1.build_gateway_image.sh $DOCKER_IMAGE_REGISTRY $version
-          bash -c 2.build_backend_image.sh $DOCKER_IMAGE_REGISTRY $version
+          ./0.get_release.sh
+          ./1.build_gateway_image.sh $DOCKER_IMAGE_REGISTRY $version
+          ./2.build_backend_image.sh $DOCKER_IMAGE_REGISTRY $version
 
       - name: Create Release
         id: create_release
