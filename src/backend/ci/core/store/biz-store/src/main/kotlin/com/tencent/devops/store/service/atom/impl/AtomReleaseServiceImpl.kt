@@ -500,8 +500,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             releaseType = releaseType,
             versionContent = marketAtomUpdateRequest.versionContent
         )
-        marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
-        marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
+        atomEnvRequests.forEach { atomEnvRequest ->
+            marketAtomEnvInfoDao.updateMarketAtomEnvInfo(context, atomId, atomEnvRequest)
+        }
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
     }
