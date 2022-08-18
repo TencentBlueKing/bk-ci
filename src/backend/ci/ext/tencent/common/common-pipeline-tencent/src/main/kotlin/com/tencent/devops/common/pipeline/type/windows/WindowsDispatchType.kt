@@ -34,11 +34,11 @@ import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.DispatchType
 
 data class WindowsDispatchType(
-    @JsonProperty("value") var env: String,
+    @JsonProperty("value") var env: String? = "",
     var systemVersion: String? = ""
 ) : DispatchType("$systemVersion", DispatchRouteKeySuffix.WINDOWS) {
     override fun cleanDataBeforeSave() {
-        this.env = this.env.trim()
+        this.env = this.env!!.trim()
         this.systemVersion = this.systemVersion?.trim()
     }
 
