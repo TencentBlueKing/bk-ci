@@ -28,13 +28,13 @@
 package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.pojo.ManagerUserEntity
-import com.tencent.devops.model.auth.tables.TAuthManager
+import com.tencent.devops.auth.service.AuthManagerApprovalService
 import com.tencent.devops.model.auth.tables.TAuthManagerUser
 import com.tencent.devops.model.auth.tables.records.TAuthManagerUserRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL.currentLocalDateTime
-import org.jooq.impl.DSL.currentTimestamp
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -81,20 +81,31 @@ class ManagerUserDao {
 
     fun getExpiringRecord(dslContext: DSLContext, managerId: Int, userId: String): TAuthManagerUserRecord? {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
+            logger.info("getExpiringRecord: ${END_TIME.sub(7)}")
             return dslContext.selectFrom(this).where(
                 MANAGER_ID.eq(managerId)
                     .and(USER_ID.eq(userId))
-                    .and(END_TIME.sub(7).ge(currentLocalDateTime()))
+                    .and(END_TIME.sub(7).le(currentLocalDateTime()))
             )
                 .fetchOne()
         }
     }
-
+    companion object {
+        private val logger = LoggerFactory.getLogger(AuthManagerApprovalService::class.java)
+    }
     fun listExpiringRecords(dslContext: DSLContext): Result<TAuthManagerUserRecord>? {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
             return dslContext.selectFrom(this).where(
                 END_TIME.sub(7).ge(currentLocalDateTime())
             ).fetch()
+        }
+    }
+
+    fun updateRecordsExpireTime(dslContext: DSLContext, managerId: Int, userId: String): Int {
+        with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
+            logger.info("updateRecordsExpireTime: ${END_TIME.add(100)}")
+            return dslContext.update(this)
+                .set(END_TIME, END_TIME.add(100)).where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId))).execute()
         }
     }
 
