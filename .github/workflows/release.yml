@@ -132,8 +132,8 @@ jobs:
           version="$(basename $GITHUB_REF)"
           docker login --username=${{ secrets.DOCKER_USER }} --password=${{ secrets.DOCKER_PASS }} ${{ secrets.DOCKER_HOST }}
           ./0.get_release.sh
-          ./1.build_gateway_image.sh ${{ secrets.DOCKER_HOST }} $version
-          ./2.build_backend_image.sh ${{ secrets.DOCKER_HOST }} $version
+          ./1.build_gateway_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
+          ./2.build_backend_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
 
       # - name: Create Release
       #   id: create_release
