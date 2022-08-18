@@ -129,13 +129,13 @@ export function extendParsePathAlias (type, path, authType, svnType) {
         case (authType === 'T_GIT_OAUTH') || (isTGit(type) && authType === 'HTTPS'): {
             reg = /^https\:\/\/([\-\.a-z0-9A-Z]+)[\:|\/](.*)\.git$/
             msg = `${codelibLocaleObj.tgitHttpRule}${type}${codelibLocaleObj.address}`
-            const result = path.match(reg)
-            alias = result ? result[2] : ''
+            nameMatchIndex = 2
             break
         }
         case isTGit(type):
             reg = /^git@([\-\.a-z0-9A-Z]+)[\:|\/](.*)\.git$/
             msg = `${codelibLocaleObj.tgitRule}${type}${codelibLocaleObj.address}`
+            nameMatchIndex = 2
             break
     }
 
