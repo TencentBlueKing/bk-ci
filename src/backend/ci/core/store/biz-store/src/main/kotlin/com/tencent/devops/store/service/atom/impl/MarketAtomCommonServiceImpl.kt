@@ -243,9 +243,12 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         validateReleaseTypeList: List<ReleaseTypeEnum>
     ): Boolean {
         var cancelValidateFlag = false
+        if (releaseType != ReleaseTypeEnum.CANCEL_RE_RELEASE) {
+            return cancelValidateFlag
+        }
         val atomVersionRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
         val dbReleaseType = ReleaseTypeEnum.getReleaseTypeObj(atomVersionRecord.releaseType.toInt())!!
-        if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE && dbReleaseType in validateReleaseTypeList) {
+        if (dbReleaseType in validateReleaseTypeList) {
             cancelValidateFlag = true
         }
         return cancelValidateFlag

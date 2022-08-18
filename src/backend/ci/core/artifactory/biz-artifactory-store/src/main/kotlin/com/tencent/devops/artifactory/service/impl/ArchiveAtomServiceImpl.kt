@@ -40,10 +40,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
+import com.tencent.devops.store.pojo.common.ATOM_UPLOAD_ID_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import org.apache.commons.io.FileUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
@@ -54,6 +57,7 @@ import org.springframework.util.FileSystemUtils
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
+import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
@@ -68,6 +72,9 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
 
     @Autowired
     lateinit var dslContext: DSLContext
+
+    @Autowired
+    lateinit var redisOperation: RedisOperation
 
     @Autowired
     lateinit var fileDao: FileDao
@@ -134,15 +141,26 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             // 清理服务器的解压的临时文件
             clearServerTmpFile(projectCode, atomCode, version)
         }
+        val finalAtomId = if (releaseType == ReleaseTypeEnum.NEW || releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
+            atomId
+        } else {
+            // 普通发布类型会重新生成一条插件版本记录
+            UUIDUtil.generate()
+        }
         val updateAtomInfoResult = client.get(ServiceMarketAtomArchiveResource::class)
             .updateAtomPkgInfo(
                 userId = userId,
-                atomId = atomId,
+                atomId = finalAtomId,
                 atomPkgInfoUpdateRequest = AtomPkgInfoUpdateRequest(atomEnvRequests, taskDataMap)
             )
         if (updateAtomInfoResult.isNotOk()) {
             return Result(updateAtomInfoResult.status, updateAtomInfoResult.message, null)
         }
+        redisOperation.set(
+            key = "$ATOM_UPLOAD_ID_KEY_PREFIX:$atomCode:$version",
+            value = finalAtomId,
+            expiredInSecond = TimeUnit.DAYS.toSeconds(1)
+        )
         dslContext.transaction { t ->
             val context = DSL.using(t)
             packageFileInfos.forEach { packageFileInfo ->
