@@ -1,7 +1,12 @@
 #artifactory StatefulSet
 {{ if .Values.artifactory.enabled -}}
+{{ if eq .Values.bkCiArtifactoryRealm "bkrepo"}}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+{{ else }}
 apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
 kind: StatefulSet
+{{ end }}
 metadata:
   name: {{ include "bkci.names.fullname" . }}-artifactory
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
