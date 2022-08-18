@@ -173,8 +173,9 @@ class InnerModelCreatorImpl @Autowired constructor(
             }
             StreamObjectKind.MANUAL -> {
                 if (gitData.commitId.isNotBlank()) {
-                    inputMap["pullType"] = "COMMIT_ID"
-                    inputMap["refName"] = gitData.commitId
+                    inputMap["pullType"] = "BRANCH"
+                    inputMap["refName"] = gitData.branch
+                    inputMap["commit"] = gitData.commitId
                 } else {
                     inputMap["pullType"] = "BRANCH"
                     inputMap["refName"] = gitData.branch

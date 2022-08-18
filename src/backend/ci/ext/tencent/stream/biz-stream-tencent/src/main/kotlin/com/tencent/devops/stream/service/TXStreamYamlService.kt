@@ -57,12 +57,12 @@ class TXStreamYamlService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(TXStreamYamlService::class.java)
     }
 
-    override fun checkYaml(userId: String, yaml: StreamGitYamlString): Result<String> {
+    override fun checkYaml(userId: String, yaml: StreamGitYamlString): Pair<Result<String>, Boolean> {
         // 检查yml版本，根据yml版本选择不同的实现
         val ymlVersion = ScriptYmlUtils.parseVersion(yaml.yaml)
         return when {
             ymlVersion == null -> {
-                Result(1, "Invalid yaml")
+                Pair(Result(1, "Invalid yaml version is null"), false)
             }
             ymlVersion.version != "v2.0" -> {
                 try {
@@ -71,24 +71,24 @@ class TXStreamYamlService @Autowired constructor(
 
                     val (validate, message) = v1streamYamlService.validateCIBuildYaml(yamlStr)
                     if (!validate) {
-                        logger.error("Check yaml failed, error: $message")
+                        logger.warn("TXStreamYamlService|checkYaml|error=$message")
                         Result(1, "Invalid yaml: $message", message)
                     }
                     v1streamYamlService.createCIBuildYaml(yaml.yaml)
 
-                    Result("OK")
+                    Pair(Result("OK"), true)
                 } catch (e: Throwable) {
-                    logger.error("Check yaml failed, error: ${e.message}, yaml: $yaml")
-                    Result(1, "Invalid yaml", e.message)
+                    logger.warn("TXStreamYamlService|checkYaml|error|${e.message}|yaml|$yaml")
+                    Pair(Result(1, "Invalid yaml", e.message), false)
                 }
             }
             else -> {
                 return try {
                     yamlSchemaCheck.check(yaml.yaml, null, true)
-                    Result("OK")
+                    Pair(Result("OK"), true)
                 } catch (e: Exception) {
-                    logger.warn("Check yaml schema failed.", e)
-                    Result(1, "Invalid yaml: ${e.message}")
+                    logger.warn("TXStreamYamlService|checkYaml|failed", e)
+                    Pair(Result(1, "Invalid yaml: ${e.message}"), false)
                 }
             }
         }

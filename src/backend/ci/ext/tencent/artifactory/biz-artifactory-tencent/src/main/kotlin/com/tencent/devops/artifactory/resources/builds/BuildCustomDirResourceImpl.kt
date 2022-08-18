@@ -33,6 +33,8 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.PathList
 import com.tencent.devops.artifactory.pojo.PathPair
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoBuildCustomDirService
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
@@ -47,7 +49,11 @@ class BuildCustomDirResourceImpl @Autowired constructor(
 ) : BuildCustomDirResource {
     override fun list(pipelineId: String, projectId: String, path: String): List<FileInfo> {
         if (path.contains(".")) {
-            throw RuntimeException("please confirm the param is directory...")
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                defaultMessage = "please confirm the param is directory...",
+                params = arrayOf(path)
+            )
         }
         val userId = getLastModifyUser(projectId, pipelineId)
         return bkRepoBuildCustomDirService.list(userId, projectId, path)

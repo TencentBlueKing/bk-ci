@@ -293,7 +293,7 @@
                     category: '',
                     agentTypeScope: []
                 },
-                docsLink: `${DOCS_URL_PREFIX}/store/ci-images/image-build`,
+                docsLink: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=22118721`,
                 ticketList: [],
                 classifys: [],
                 labelList: [],

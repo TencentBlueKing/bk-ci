@@ -96,7 +96,6 @@ class BkRepoBuildCustomDirService @Autowired constructor(
         combinationPath.srcPaths.map { srcPath ->
             val normalizedSrcPath = JFrogUtil.normalize(srcPath)
             if (JFrogUtil.getParentFolder(normalizedSrcPath) == normalizeDestPath) {
-                logger.error("Cannot copy in same path ($normalizedSrcPath, $normalizeDestPath)")
                 throw BadRequestException("不能在拷贝到当前目录")
             }
 
@@ -121,12 +120,10 @@ class BkRepoBuildCustomDirService @Autowired constructor(
 
             if (normalizedSrcPath == normalizedDestPath ||
                 JFrogUtil.getParentFolder(normalizedSrcPath) == normalizedDestPath) {
-                logger.error("Cannot move in same path ($normalizedSrcPath, $normalizedDestPath)")
                 throw BadRequestException("不能移动到当前目录")
             }
 
             if (normalizedDestPath.startsWith(normalizedSrcPath)) {
-                logger.error("Cannot move parent path to sub path ($normalizedSrcPath, $normalizedDestPath)")
                 throw BadRequestException("不能将父目录移动到子目录")
             }
 

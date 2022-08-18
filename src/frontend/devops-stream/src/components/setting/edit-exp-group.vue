@@ -5,13 +5,13 @@
                 <bk-input v-model="formData.name" placeholder="No more than 10 characters"></bk-input>
             </bk-form-item>
             <bk-form-item :label="$t('setting.userGroup.innerUsers')" property="innerUsers" error-display-type="normal">
-                <bk-user-selector
+                <bk-member-selector
                     v-model="formData.innerUsers"
                     class="user-select-item"
                     style="height: 100px"
                     :placeholder="$t('setting.userGroup.innerUsersPlaceholder')"
-                    api="https://api.open.woa.com/api/c/compapi/v2/usermanage/fs_list_users/">
-                </bk-user-selector>
+                >
+                </bk-member-selector>
             </bk-form-item>
             <bk-form-item :label="$t('setting.userGroup.outerUsers')" property="outerUsers" :desc="{ content: 'Non-OA users 为外部协作用户，需要在蓝鲸用户管理先注册用户，指引参考：https://iwiki.woa.com/pages/viewpage.action?pageId=1556183163', width: '400px' }">
                 <bk-select
@@ -42,12 +42,8 @@
 <script>
     import { setting } from '@/http'
     import { mapState } from 'vuex'
-    import BkUserSelector from '@blueking/user-selector'
 
     export default {
-        components: {
-            BkUserSelector
-        },
         props: {
             show: Boolean,
             form: Object

@@ -78,7 +78,7 @@ class BSAuthTokenApi @Autowired constructor(
 
             redisLock.use {
                 if (!redisLock.tryLock()) {
-                    logger.error("auth try lock $lockKey fail")
+                    logger.info("auth try lock $lockKey fail")
                     Thread.sleep(SleepMills)
                     return@use
                 }

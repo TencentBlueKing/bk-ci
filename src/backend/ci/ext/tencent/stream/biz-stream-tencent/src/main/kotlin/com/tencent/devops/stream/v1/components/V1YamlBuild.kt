@@ -414,7 +414,7 @@ class V1YamlBuild @Autowired constructor(
                 )
             }
             else -> {
-                logger.error("event.objectKind invalid")
+                logger.warn("event.objectKind invalid")
                 null
             }
         }

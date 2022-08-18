@@ -809,5 +809,5 @@ class GitRequestEventBuildDao {
             .and(eventTable.CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
 
         return countResult.fetchOne(0, Int::class.java)!!
-        }
+    }
 }

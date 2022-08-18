@@ -58,7 +58,8 @@ import java.time.Instant
 
 @Suppress("NestedBlockDepth")
 @Service
-class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvisionService {
+class
+KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvisionService {
     @Value("\${keystore.url:}")
     private val keyStoreUrl = ""
 
@@ -163,7 +164,7 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
                 }
             }
         } catch (ignore: Exception) {
-            logger.error("插入entitlement文件(${entitlementFile.canonicalPath})的keychain-access-groups失败。", ignore)
+            logger.warn("插入entitlement文件(${entitlementFile.canonicalPath})的keychain-access-groups失败。", ignore)
             throw ErrorCodeException(
                 errorCode = SignMessageCode.ERROR_INSERT_KEYCHAIN_GROUPS,
                 defaultMessage = "entitlement插入keychain失败"

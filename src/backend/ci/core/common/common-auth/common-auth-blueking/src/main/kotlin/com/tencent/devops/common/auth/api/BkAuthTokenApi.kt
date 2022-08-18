@@ -76,7 +76,7 @@ class BkAuthTokenApi constructor(
             val redisLock = RedisLock(redisOperation, lockKey, expiredTimeInSeconds)
             redisLock.use {
                 if (!redisLock.tryLock()) {
-                    logger.error("auth try lock $lockKey fail")
+                    logger.warn("auth try lock $lockKey fail")
                     Thread.sleep(SleepMills)
                     return@use
                 }

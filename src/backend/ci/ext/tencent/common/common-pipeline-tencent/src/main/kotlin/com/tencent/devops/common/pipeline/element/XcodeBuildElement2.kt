@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Deprecated("已作废")
 @ApiModel("xcode构建任务二(支持xcode10)", description = XcodeBuildElement2.classType)
 data class XcodeBuildElement2(
     @ApiModelProperty("任务名称", required = true)

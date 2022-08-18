@@ -85,7 +85,7 @@ class TXStreamBasicSettingService @Autowired constructor(
     ): Boolean {
         val setting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
         if (setting == null) {
-            logger.info("git repo not exists.")
+            logger.warn("TXStreamBasicSettingService|updateProjectSetting|git repo not exists.")
             return false
         }
 
@@ -124,7 +124,7 @@ class TXStreamBasicSettingService @Autowired constructor(
         val userResult =
             client.get(ServiceTxUserResource::class).get(userId)
         val userUpdateInfo = if (userResult.isNotOk()) {
-            logger.error("Update git ci project in devops failed, msg: ${userResult.message}")
+            logger.warn("TXStreamBasicSettingService|updateProjectOrganizationInfo|msg=${userResult.message}")
             // 如果userId是公共账号则tof接口获取不到用户信息，需调用User服务获取信息
             val userInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data ?: return null
             userInfo
@@ -167,7 +167,7 @@ class TXStreamBasicSettingService @Autowired constructor(
     }
 
     override fun saveStreamConf(userId: String, setting: StreamBasicSetting): Boolean {
-        logger.info("save git ci conf, repositoryConf: $setting")
+        logger.info("TXStreamBasicSettingService|saveStreamConf|setting|$setting")
         val gitRepoConf = streamBasicSettingDao.getSetting(dslContext, setting.gitProjectId)
         if (gitRepoConf?.projectCode == null) {
 
@@ -202,7 +202,7 @@ class TXStreamBasicSettingService @Autowired constructor(
         } else {
             val projectResult = client.get(ServiceTxUserResource::class).get(gitRepoConf.enableUserId)
             if (projectResult.isNotOk()) {
-                logger.error("Update git ci project in devops failed, msg: ${projectResult.message}")
+                logger.warn("TXStreamBasicSettingService|saveStreamConf|error=${projectResult.message}")
                 return false
             }
             val userInfo = projectResult.data!!
@@ -222,11 +222,14 @@ class TXStreamBasicSettingService @Autowired constructor(
                 refresh(it)
                 count++
             }
-            logger.info("fixProjectInfo project ${currProjects.map { it.id }.toList()}, fixed count: $count")
+            logger.info(
+                "TXStreamBasicSettingService|fixProjectInfo" +
+                    "|project|${currProjects.map { it.id }.toList()}|fixed count|$count"
+            )
             Thread.sleep(100)
             currProjects = streamBasicSettingDao.getProjectNoHttpUrl(dslContext)
         }
-        logger.info("fixProjectInfo finished count: $count")
+        logger.info("TXStreamBasicSettingService|fixProjectInfo|finished count|$count")
         return count
     }
 
@@ -238,11 +241,14 @@ class TXStreamBasicSettingService @Autowired constructor(
                 refreshNameSpace(it)
                 count++
             }
-            logger.info("fixProjectNameSpace project ${currProjects.map { it.id }.toList()}, fixed count: $count")
+            logger.info(
+                "TXStreamBasicSettingService|fixProjectNameSpace" +
+                    "|project|${currProjects.map { it.id }.toList()}|fixed count|$count"
+            )
             Thread.sleep(100)
             currProjects = streamBasicSettingDao.getProjectNoNameSpace(dslContext)
         }
-        logger.info("fixProjectNameSpace finished count: $count")
+        logger.info("TXStreamBasicSettingService|fixProjectNameSpace|finished count|$count")
         return count
     }
 
@@ -266,7 +272,7 @@ class TXStreamBasicSettingService @Autowired constructor(
                 )
             }
         } catch (t: Throwable) {
-            logger.error("refreshNameSpace | Update git ci project in devops failed, msg: ${t.message}")
+            logger.warn("refreshNameSpace | Update git ci project in devops failed, msg: ${t.message}")
         }
     }
 
@@ -286,7 +292,7 @@ class TXStreamBasicSettingService @Autowired constructor(
                 )
             }
         } catch (t: Throwable) {
-            logger.error("Update git ci project in devops failed, msg: ${t.message}")
+            logger.warn("TXStreamBasicSettingService|refresh|msg=${t.message}")
         }
     }
 
@@ -311,7 +317,7 @@ class TXStreamBasicSettingService @Autowired constructor(
                     )
                 }
             } catch (e: Throwable) {
-                logger.error("requestGitProjectInfo, msg: ${e.message}")
+                logger.warn("TXStreamBasicSettingService|requestGitProjectInfo|error=${e.message}")
                 return null
             }
             else -> TODO("对接其他Git平台时需要补充")

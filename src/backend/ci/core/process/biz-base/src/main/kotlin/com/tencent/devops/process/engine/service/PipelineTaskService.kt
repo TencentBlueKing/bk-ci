@@ -42,7 +42,6 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.engine.common.Timeout
@@ -140,16 +139,16 @@ class PipelineTaskService @Autowired constructor(
                     taskName = taskName,
                     taskType = taskType,
                     taskAtom = taskAtom,
-                    status = BuildStatus.values()[status],
+                    status = status,
                     taskParams = JsonUtil.toMutableMap(taskParams),
-                    additionalOptions = JsonUtil.toOrNull(additionalOptions, ElementAdditionalOptions::class.java),
+                    additionalOptions = additionalOptions,
                     executeCount = executeCount ?: 1,
                     starter = starter,
                     approver = approver,
                     subBuildId = subBuildId,
                     startTime = startTime?.timestampmilli() ?: 0L,
                     endTime = endTime?.timestampmilli() ?: 0L,
-                    errorType = if (errorType == null) null else ErrorType.values()[errorType],
+                    errorType = errorType,
                     errorCode = errorCode,
                     errorMsg = errorMsg
                 )
@@ -158,14 +157,7 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun getAllBuildTask(projectId: String, buildId: String): Collection<PipelineBuildTask> {
-        val list = pipelineBuildTaskDao.getByBuildId(dslContext, projectId, buildId)
-        val result = mutableListOf<PipelineBuildTask>()
-        if (list.isNotEmpty()) {
-            list.forEach {
-                result.add(pipelineBuildTaskDao.convert(it)!!)
-            }
-        }
-        return result
+        return pipelineBuildTaskDao.getByBuildId(dslContext, projectId, buildId)
     }
 
     fun getRunningTask(projectId: String, buildId: String): List<Map<String, Any>> {
@@ -177,30 +169,29 @@ class PipelineTaskService @Autowired constructor(
             statusSet = listOf(BuildStatus.RUNNING, BuildStatus.REVIEWING)
         )
         val list = mutableListOf<Map<String, Any>>()
-        val buildStatus = BuildStatus.values()
         listByStatus.forEach {
             list.add(
                 mapOf(
                     "taskId" to it.taskId,
                     "containerId" to it.containerId,
-                    "status" to buildStatus[it.status].name,
-                    "executeCount" to it.executeCount
+                    "status" to it.status,
+                    "executeCount" to (it.executeCount ?: 1)
                 )
             )
         }
         return list
     }
 
-    fun listByBuildId(projectId: String, buildId: String): Collection<TPipelineBuildTaskRecord> {
+    fun listByBuildId(projectId: String, buildId: String): Collection<PipelineBuildTask> {
         return pipelineBuildTaskDao.getByBuildId(dslContext, projectId, buildId)
     }
 
-    fun batchSave(transactionContext: DSLContext?, stageList: Collection<PipelineBuildTask>) {
-        return pipelineBuildTaskDao.batchSave(transactionContext ?: dslContext, stageList)
+    fun batchSave(transactionContext: DSLContext?, taskList: Collection<PipelineBuildTask>) {
+        return pipelineBuildTaskDao.batchSave(transactionContext ?: dslContext, taskList)
     }
 
-    fun batchUpdate(transactionContext: DSLContext?, stageList: List<TPipelineBuildTaskRecord>) {
-        return pipelineBuildTaskDao.batchUpdate(transactionContext ?: dslContext, stageList)
+    fun batchUpdate(transactionContext: DSLContext?, taskList: List<PipelineBuildTask>) {
+        return pipelineBuildTaskDao.batchUpdate(transactionContext ?: dslContext, taskList)
     }
 
     fun deletePipelineBuildTasks(transactionContext: DSLContext?, projectId: String, pipelineId: String) {
@@ -227,12 +218,12 @@ class PipelineTaskService @Autowired constructor(
         )
     }
 
-    fun getTaskRecord(
+    fun getByTaskId(
         transactionContext: DSLContext? = null,
         projectId: String,
         buildId: String,
         taskId: String
-    ): TPipelineBuildTaskRecord? {
+    ): PipelineBuildTask? {
         return pipelineBuildTaskDao.get(
             dslContext = transactionContext ?: dslContext,
             projectId = projectId,
@@ -289,34 +280,22 @@ class PipelineTaskService @Autowired constructor(
         containerSeqId: String,
         buildStatusSet: Set<BuildStatus>? = null
     ): List<PipelineBuildTask> {
-        val list = pipelineBuildTaskDao.listByStatus(
+        return pipelineBuildTaskDao.listByStatus(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
             containerId = containerSeqId,
             statusSet = buildStatusSet
         )
-        val result = mutableListOf<PipelineBuildTask>()
-        if (list.isNotEmpty()) {
-            list.forEach {
-                result.add(pipelineBuildTaskDao.convert(it)!!)
-            }
-        }
-        return result
     }
 
     fun getBuildTask(projectId: String, buildId: String, taskId: String): PipelineBuildTask? {
-        val t = pipelineBuildTaskDao.get(
+        return pipelineBuildTaskDao.get(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
             taskId = taskId
         )
-        return if (t != null) {
-            pipelineBuildTaskDao.convert(t)
-        } else {
-            null
-        }
     }
 
     fun updateSubBuildId(
@@ -373,7 +352,6 @@ class PipelineTaskService @Autowired constructor(
             taskId = taskId
         )
         val dbStartTime = taskRecord?.startTime
-        val additionalOptions = JsonUtil.toOrNull(taskRecord?.additionalOptions, ElementAdditionalOptions::class.java)
         val executeCount = taskRecord?.executeCount
         if (taskStatus.isFinish()) {
             endTime = LocalDateTime.now()
@@ -389,7 +367,7 @@ class PipelineTaskService @Autowired constructor(
         if (taskStatus.isRunning() && TaskUtils.isRefreshTaskTime(
                 buildId = buildId,
                 taskId = taskId,
-                additionalOptions = additionalOptions,
+                additionalOptions = taskRecord?.additionalOptions,
                 executeCount = executeCount
             )
         ) {
