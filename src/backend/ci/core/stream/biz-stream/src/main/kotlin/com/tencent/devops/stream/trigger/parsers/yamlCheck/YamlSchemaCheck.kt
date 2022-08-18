@@ -89,6 +89,7 @@ class YamlSchemaCheck @Autowired constructor() {
         val loadYaml = try {
             YamlUtil.toYaml(Yaml().load(originYaml))
         } catch (ignored: Throwable) {
+            logger.warn("YAML_SCHEMA_CHECK|originYaml=$originYaml", ignored)
             throw YamlFormatException("There may be a problem with your yaml syntax ${ignored.message}")
         }
         // 解析锚点

@@ -25,35 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.auth.resources
 
+import com.tencent.devops.auth.api.manager.AuthManagerApprovalResource
+import com.tencent.devops.auth.pojo.enum.ApprovalType
+import com.tencent.devops.auth.service.AuthManagerApprovalService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.VersionInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["BUILD_PIPELINE_ATOM"], description = "流水线-插件")
-@Path("/build/pipeline/atoms")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface BuildAtomResource {
+@RestResource
+class AuthManagerApprovalResourceImpl @Autowired constructor(
+    val authManagerApprovalService: AuthManagerApprovalService
+) : AuthManagerApprovalResource {
+    override fun userRenewalAuth(
+        approvalId: Int,
+        approvalType: ApprovalType
+    ): Result<Boolean> {
+        logger.info("userRenewalAuth : approvalId = $approvalId | approvalType = $approvalType")
+        return Result(authManagerApprovalService.userRenewalAuth(approvalId,approvalType))
+    }
 
-    @ApiOperation("获取插件默认可用版本号信息")
-    @GET
-    @Path("/projects/{projectCode}/atoms/{atomCode}/default/valid/version")
-    fun getAtomDefaultValidVersion(
-        @ApiParam("项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("插件代码", required = true)
-        @PathParam("atomCode")
-        atomCode: String
-    ): Result<VersionInfo?>
+    override fun managerApproval(
+        approvalId: Int,
+        approvalType: ApprovalType
+    ): Result<Boolean> {
+        logger.info("managerApproval : approvalId = $approvalId | approvalType = $approvalType")
+        return Result(authManagerApprovalService.managerApproval(approvalId,approvalType))
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(AuthManagerApprovalResourceImpl::class.java)
+    }
 }

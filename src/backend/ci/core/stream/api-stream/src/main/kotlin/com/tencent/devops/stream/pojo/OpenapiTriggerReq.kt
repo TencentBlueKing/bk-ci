@@ -25,35 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.VersionInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Api(tags = ["BUILD_PIPELINE_ATOM"], description = "流水线-插件")
-@Path("/build/pipeline/atoms")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface BuildAtomResource {
-
-    @ApiOperation("获取插件默认可用版本号信息")
-    @GET
-    @Path("/projects/{projectCode}/atoms/{atomCode}/default/valid/version")
-    fun getAtomDefaultValidVersion(
-        @ApiParam("项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("插件代码", required = true)
-        @PathParam("atomCode")
-        atomCode: String
-    ): Result<VersionInfo?>
-}
+@ApiModel("openapi触发请求")
+data class OpenapiTriggerReq(
+    @ApiModelProperty("蓝盾项目ID(带前缀 如git_xxx)")
+    val projectId: String,
+    @ApiModelProperty("分支")
+    val branch: String,
+    @ApiModelProperty("yaml路径")
+    val path: String,
+    @ApiModelProperty("Custom commit message")
+    val customCommitMsg: String,
+    @ApiModelProperty("用户选择的触发CommitId")
+    val commitId: String? = null,
+    @ApiModelProperty("输入参数(json对象)")
+    val inputs: Map<String, Any?>?
+)
