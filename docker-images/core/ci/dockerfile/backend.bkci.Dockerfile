@@ -15,7 +15,7 @@ RUN wget "https://github.com/bkdevops-projects/devops-jre/raw/main/linux/jre.zip
     wget "https://github.com/bkdevops-projects/devops-jre/raw/main/windows/jre.zip" -P /data/workspace/agent-package/jre/windows/ &&\
     wget "https://github.com/bkdevops-projects/devops-jre/raw/main/macos/jre.zip" -P /data/workspace/agent-package/jre/macos/ 
 
-COPY ./ci /data/workspace/
+COPY ./ci-docker /data/workspace/
 COPY ./dockerfile/backend.bkci.sh /data/workspace/
 
 WORKDIR /data/workspace
