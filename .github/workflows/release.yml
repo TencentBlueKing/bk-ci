@@ -110,6 +110,16 @@ jobs:
           echo "::set-output name=version::$version"
           ci_ms_wip="sign,monitoring" ci_pkg_dir=/dev/shm/ci ./scripts/packager-ci.sh "$version" bkci-slim.tar.gz
 
+      - name: Create Docker Image - Step5:make docker image
+        id: make-docker-image
+        uses: docker-practice/actions-setup-docker@master
+        working-directory: docker-images/core/ci
+        run: |
+          docker login --username=$DOCKER_USER --password=$DOCKER_PASS $DOCKER_HOST
+          bash -c 0.get_release.sh
+          bash -c 1.build_gateway_image.sh $DOCKER_IMAGE_REGISTRY $version
+          bash -c 2.build_backend_image.sh $DOCKER_IMAGE_REGISTRY $version
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1

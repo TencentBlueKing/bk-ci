@@ -47,7 +47,7 @@ default_value_dict = {
     'bkCiStreamScmType': 'CODE_GIT',
     'bkCiStreamUrl': 'devops.example.com',
     'bkCiStreamGitUrl': 'www.github.com',
-    'bkCiClusterTag':'devops'
+    'bkCiClusterTag': 'devops'
 }
 
 if os.path.isfile(default_value_json):
@@ -93,10 +93,12 @@ for line in env_file:
 env_file.close()
 
 # 生成value.yaml
-image_gateway_tag = sys.argv[1]
-image_backend_tag = sys.argv[2]
+image_registry = sys.argv[1]
+image_gateway_tag = sys.argv[2]
+image_backend_tag = sys.argv[3]
 value_file = open(output_value_yaml, 'w')
 for line in open(default_value_yaml, 'r'):
+    line = line.replace("__image_registry__", image_registry)
     line = line.replace("__image_gateway_tag__", image_gateway_tag)
     line = line.replace("__image_backend_tag__", image_backend_tag)
     value_file.write(line)
@@ -134,7 +136,7 @@ for config_name in os.listdir(config_parent):
 
 # 生成网关的configmap
 gateway_envs = set(["__BK_CI_PUBLIC_URL__", "__BK_CI_DOCS_URL__",
-                   "__BK_CI_PAAS_LOGIN_URL__", "__BK_CI_VERSION__", "__BK_CI_BADGE_URL__"])  # frondend需要的变量
+                    "__BK_CI_PAAS_LOGIN_URL__", "__BK_CI_VERSION__", "__BK_CI_BADGE_URL__"])  # frondend需要的变量
 for file in os.listdir(config_parent):
     if file.startswith('gateway'):
         for line in open(config_parent+file, 'r'):
@@ -158,10 +160,10 @@ gateway_config_file.flush()
 gateway_config_file.close()
 
 # 上传chart
-# if len(sys.argv) < 5:
-#     exit(0)
-# charts_version = sys.argv[3]
-# app_version = sys.argv[4]
-# os.system("helm package . --version " + charts_version + " --app-version "+app_version)
-# os.system('curl -F "chart=@bk-ci-' + charts_version +
-#           '.tgz" -u ${bkrepo_helm_bkce}:${bkrepo_helm_pass} ${bkrepo_helm_url}')
+if len(sys.argv) < 5:
+    exit(0)
+charts_version = sys.argv[4]
+app_version = sys.argv[5]
+os.system("helm package . --version " + charts_version + " --app-version "+app_version)
+os.system('curl -F "chart=@bk-ci-' + charts_version +
+          '.tgz" -u ${bkrepo_helm_bkce}:${bkrepo_helm_pass} ${bkrepo_helm_url}')

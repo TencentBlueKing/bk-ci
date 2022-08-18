@@ -26,13 +26,13 @@ configmap:
 
 # 镜像配置
 gatewayImage:
-  registry: mirrors.tencent.com/bkce
+  registry: __image_registry__
   repository: bkci-gateway
   tag: __image_gateway_tag__
   pullPolicy: IfNotPresent 
   pullSecrets: []
 backendImage:
-  registry: mirrors.tencent.com/bkce
+  registry: __image_registry__
   repository: bkci-backend
   tag: __image_backend_tag__
   pullPolicy: IfNotPresent 
